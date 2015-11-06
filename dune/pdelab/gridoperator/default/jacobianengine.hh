@@ -244,11 +244,17 @@ namespace Dune{
       template<typename IG, typename LFSUC, typename LFSVC, typename Buf>
       void assembleUVProcessBoundaryGather(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache, Buf& buf)
       {
+        al_view.setWeight(local_assembler.weight);
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaProcessBoundaryGather>::
+          jacobian_process_boundary_gather(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),al_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC, typename Buf>
       void assembleUVProcessBoundaryScatter(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache, Buf& buf)
       {
+        al_view.setWeight(local_assembler.weight);
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaProcessBoundaryScatter>::
+          jacobian_process_boundary_scatter(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),al_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -278,12 +284,12 @@ namespace Dune{
       // needed for DG nonoverlapping communication
       bool communicationFixedSize() const
       {
-        return true;
+        return lop.jacobianCommunicationFixedSize();
       }
       template <typename IG, typename LFSUC, typename LFSVC>
       size_t communicationSize(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache) const
       {
-        return 0;
+        return lop.alphaCommunicationSize(ig,lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace());
       }
 
     private:
