@@ -43,11 +43,13 @@ namespace Dune {
     };
 
 
-    template<class GO, class GFS>
+
+    template<class GO>
     class ISTLBackend_DGNOVLP_CG_NOPREC
       : public SequentialNorm, public LinearResultStorage
     {
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      using GFS = typename GO::Traits::TrialGridFunctionSpace;
+      using PHELPER = istl::ParallelHelper<GFS>;
 
     public:
       /*! \brief make a linear solver object
@@ -56,10 +58,9 @@ namespace Dune {
         \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_DGNOVLP_CG_NOPREC (const GO& go_,
-                                              const GFS& gfs_,
                                               unsigned maxiter_=5000,
                                               int verbose_=1)
-        : go(go_), gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), verbose(verbose_)
+        : go(go_), gfs(go_.trialGridFunctionSpace()), phelper(gfs,verbose_), maxiter(maxiter_), verbose(verbose_)
       {}
 
 
