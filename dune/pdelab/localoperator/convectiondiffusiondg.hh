@@ -1080,9 +1080,9 @@ namespace Dune {
       void alpha_process_boundary_gather (const IG& ig, const LFSU& lfsu_s, const X& x_s,
                                            const LFSV& lfsv_s, R& r_s, Buf& buf) const
       {
-        if(lfsu_s.gridFunctionSpace().entitySet().gridView().comm().rank()==0){
-          std::cout << "palpo alpha process boundary gather" << std::endl;
-        }
+        // if(lfsu_s.gridFunctionSpace().entitySet().gridView().comm().rank()==0){
+        //   std::cout << "palpo alpha process boundary gather" << std::endl;
+        // }
 
         // domain and range field type
         typedef typename LFSV::Traits::FiniteElementType::
@@ -1196,9 +1196,9 @@ namespace Dune {
       void alpha_process_boundary_scatter (const IG& ig, const LFSU& lfsu_s, const X& x_s,
                                            const LFSV& lfsv_s, R& r_s, Buf& buf) const
       {
-        if(lfsu_s.gridFunctionSpace().entitySet().gridView().comm().rank()==0){
-          std::cout << "palpo alpha process boundary scatter" << std::endl;
-        }
+        // if(lfsu_s.gridFunctionSpace().entitySet().gridView().comm().rank()==0){
+        //   std::cout << "palpo alpha process boundary scatter" << std::endl;
+        // }
 
         // domain and range field type
         typedef typename LFSV::Traits::FiniteElementType::
@@ -1407,6 +1407,230 @@ namespace Dune {
         return comSize;
       }
 
+
+      // apply jacobian for volume
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
+      {
+        this->alpha_volume(eg,lfsu,x,lfsv,y);
+      }
+
+      // apply jacobian for skeleton
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      void jacobian_apply_skeleton (const IG& ig,
+                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+                           Y& y_s, Y& y_n) const
+      {
+        this->alpha_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,y_s,y_n);
+      }
+
+      // apply jacobian for boundary
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      void jacobian_apply_boundary (const IG& ig,
+                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                           Y& y_s) const
+      {
+        // domain and range field type
+        typedef typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        typedef typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        typedef typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType RangeType;
+        typedef typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::JacobianType JacobianType;
+        typedef typename LFSV::Traits::SizeType size_type;
+
+        // dimensions
+        const int dim = IG::dimension;
+        const int order = std::max(
+            lfsu_s.finiteElement().localBasis().order(),
+            lfsv_s.finiteElement().localBasis().order()
+            );
+        const int intorder = intorderadd+quadrature_factor*order;
+
+        // make copy of inside cell w.r.t. the boundary
+        auto inside_cell = ig.inside();
+
+        // evaluate permeability tensors
+        const Dune::FieldVector<DF,dim>&
+          inside_local = Dune::ReferenceElements<DF,dim>::general(inside_cell.type()).position(0,0);
+        typename T::Traits::PermTensorType A_s;
+        A_s = param.A(inside_cell,inside_local);
+
+        // select quadrature rule
+        Dune::GeometryType gtface = ig.geometryInInside().type();
+        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
+
+        // face diameter
+        DF h_s;
+        DF hmax_s = 0.;
+        element_size(inside_cell.geometry(),h_s,hmax_s);
+        RF h_F = h_s;
+        h_F = inside_cell.geometry().volume()/ig.geometry().volume(); // Houston!
+
+        // transformation
+        Dune::FieldMatrix<DF,dim,dim> jac;
+
+        // compute weights
+        const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
+        Dune::FieldVector<RF,dim> An_F_s;
+        A_s.mv(n_F,An_F_s);
+        RF harmonic_average;
+        if (weights==ConvectionDiffusionDGWeights::weightsOn)
+          harmonic_average = An_F_s*n_F;
+        else
+          harmonic_average = 1.0;
+
+        // get polynomial degree
+        const int order_s = lfsu_s.finiteElement().localBasis().order();
+        int degree = order_s;
+
+        // penalty factor
+        RF penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
+
+        // loop over quadrature points
+        for (const auto& ip : rule)
+          {
+            BCType bctype = param.bctype(ig.intersection(),ip.position());
+
+            if (bctype == ConvectionDiffusionBoundaryConditions::None ||
+                bctype == ConvectionDiffusionBoundaryConditions::Neumann)
+              continue;
+
+            // position of quadrature point in local coordinates of elements
+            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(ip.position());
+
+            // local normal
+            const Dune::FieldVector<DF,dim> n_F_local = ig.unitOuterNormal(ip.position());
+
+            // evaluate basis functions
+#if USECACHE==0
+            std::vector<RangeType> phi_s(lfsu_s.size());
+            lfsu_s.finiteElement().localBasis().evaluateFunction(iplocal_s,phi_s);
+            std::vector<RangeType> psi_s(lfsv_s.size());
+            lfsv_s.finiteElement().localBasis().evaluateFunction(iplocal_s,psi_s);
+#else
+            const std::vector<RangeType>& phi_s = cache[order_s].evaluateFunction(iplocal_s,lfsu_s.finiteElement().localBasis());
+            const std::vector<RangeType>& psi_s = cache[order_s].evaluateFunction(iplocal_s,lfsv_s.finiteElement().localBasis());
+#endif
+
+            // integration factor
+            RF factor = ip.weight() * ig.geometry().integrationElement(ip.position());
+
+            // evaluate u
+            RF u_s=0.0;
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              u_s += x_s(lfsu_s,i)*phi_s[i];
+
+            // evaluate velocity field and upwinding, assume H(div) velocity field => choose any side
+            typename T::Traits::RangeType b = param.b(inside_cell,iplocal_s);
+            RF normalflux = b*n_F_local;
+
+            if (bctype == ConvectionDiffusionBoundaryConditions::Outflow)
+              {
+                if (normalflux<-1e-30)
+                  DUNE_THROW(Dune::Exception,
+                    "Outflow boundary condition on inflow! [b("
+                    << ig.geometry().global(ip.position()) << ") = "
+                    << b << ")");
+
+                // convection term
+                RF term1 = u_s * normalflux *factor;
+                for (size_type i=0; i<lfsv_s.size(); i++)
+                  y_s.accumulate(lfsv_s,i,term1 * psi_s[i]);
+
+                continue;
+              }
+
+            // evaluate gradient of basis functions
+            assert (bctype == ConvectionDiffusionBoundaryConditions::Dirichlet);
+#if USECACHE==0
+            std::vector<JacobianType> gradphi_s(lfsu_s.size());
+            lfsu_s.finiteElement().localBasis().evaluateJacobian(iplocal_s,gradphi_s);
+            std::vector<JacobianType> gradpsi_s(lfsv_s.size());
+            lfsv_s.finiteElement().localBasis().evaluateJacobian(iplocal_s,gradpsi_s);
+#else
+            const std::vector<JacobianType>& gradphi_s = cache[order_s].evaluateJacobian(iplocal_s,lfsu_s.finiteElement().localBasis());
+            const std::vector<JacobianType>& gradpsi_s = cache[order_s].evaluateJacobian(iplocal_s,lfsv_s.finiteElement().localBasis());
+#endif
+
+            // transform gradients of shape functions to real element
+            jac = inside_cell.geometry().jacobianInverseTransposed(iplocal_s);
+            std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
+            for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
+            std::vector<Dune::FieldVector<RF,dim> > tgradpsi_s(lfsv_s.size());
+            for (size_type i=0; i<lfsv_s.size(); i++) jac.mv(gradpsi_s[i][0],tgradpsi_s[i]);
+
+            // compute gradient of u
+            Dune::FieldVector<RF,dim> gradu_s(0.0);
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              gradu_s.axpy(x_s(lfsu_s,i),tgradphi_s[i]);
+
+            // upwind
+            RF omegaup_s, omegaup_n;
+            if (normalflux>=0.0)
+              {
+                omegaup_s = 1.0;
+                omegaup_n = 0.0;
+              }
+            else
+              {
+                omegaup_s = 0.0;
+                omegaup_n = 1.0;
+              }
+
+            // convection term
+            RF term1 = (omegaup_s*u_s) * normalflux *factor;
+            for (size_type i=0; i<lfsv_s.size(); i++)
+              y_s.accumulate(lfsv_s,i,term1 * psi_s[i]);
+
+            // diffusion term
+            RF term2 =  (An_F_s*gradu_s) * factor;
+            for (size_type i=0; i<lfsv_s.size(); i++)
+              y_s.accumulate(lfsv_s,i,-term2 * psi_s[i]);
+
+            // (non-)symmetric IP term
+            RF term3 = u_s * factor;
+            for (size_type i=0; i<lfsv_s.size(); i++)
+              y_s.accumulate(lfsv_s,i,term3 * theta * (An_F_s*tgradpsi_s[i]));
+
+            // standard IP term
+            RF term4 = penalty_factor * u_s * factor;
+            for (size_type i=0; i<lfsv_s.size(); i++)
+              y_s.accumulate(lfsv_s,i,term4 * psi_s[i]);
+          }
+      }
+
+      // communicate data in order to apply jacobian on process boundary
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y, typename Buf>
+      void jacobian_apply_process_boundary_gather (const IG& ig, const LFSU& lfsu_s, const X& x_s,
+                                           const LFSV& lfsv_s, Y& y_s, Buf& buf) const
+      {
+        this->alpha_process_boundary_gather(ig,lfsu_s,x_s,lfsv_s,y_s,buf);
+      }
+
+      // communicate data in order to apply jacobian on process boundary
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y, typename Buf>
+      void jacobian_apply_process_boundary_scatter (const IG& ig, const LFSU& lfsu_s, const X& x_s,
+                                           const LFSV& lfsv_s, Y& y_s, Buf& buf) const
+      {
+        this->alpha_process_boundary_scatter(ig,lfsu_s,x_s,lfsv_s,y_s,buf);
+      }
+
+      // the size we have to communicate is fixed
+      bool jacobianApplyCommunicationFixedSize() const
+      {
+        return this->alphaCommunicationFixedSize();
+      }
+
+      // returns the size we have to communicate
+      template <typename IG, typename LFSU, typename LFSV>
+      size_t jacobianApplyCommunicationSize(const IG& ig, const LFSU& lfsu_s, const LFSV& lfsv_s) const
+      {
+        return this->alphaCommunication(ig,lfsu_s,lfsv_s);
+      }
 
       //! set time in parameter class
       void setTime (double t)
