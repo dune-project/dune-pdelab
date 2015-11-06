@@ -253,6 +253,22 @@ namespace Dune{
           jacobian_apply_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),rl_view);
       }
 
+      template<typename IG, typename LFSUC, typename LFSVC, typename Buf>
+      void assembleUVProcessBoundaryGather(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache, Buf& buf)
+      {
+        rl_view.setWeight(local_assembler.weight);
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaProcessBoundaryGather>::
+          jacobian_apply_process_boundary_gather(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),rl_view,buf);
+      }
+
+      template<typename IG, typename LFSUC, typename LFSVC, typename Buf>
+      void assembleUVProcessBoundaryScatter(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache, Buf& buf)
+      {
+        rl_view.setWeight(local_assembler.weight);
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaProcessBoundaryScatter>::
+          jacobian_apply_process_boundary_scatter(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),rl_view,buf);
+      }
+
       template<typename IG, typename LFSUC, typename LFSVC>
       static void assembleUVEnrichedCoupling(const IG & ig,
                                              const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
@@ -269,6 +285,17 @@ namespace Dune{
       }
 
       //! @}
+
+      // needed for DG nonoverlapping communication
+      bool communicationFixedSize() const
+      {
+        return lop.alphaCommunicationFixedSize();
+      }
+      template <typename IG, typename LFSUC, typename LFSVC>
+      size_t communicationSize(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache) const
+      {
+        return lop.alphaCommunicationSize(ig,lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace());
+      }
 
     private:
       //! Reference to the wrapping local assembler object which
