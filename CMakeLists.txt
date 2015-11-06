@@ -2,7 +2,7 @@
 project("dune-pdelab" C CXX)
 
 # general stuff
-cmake_minimum_required(VERSION 2.8.6)
+cmake_minimum_required(VERSION 2.8.12)
 
 # guess dune-common build dir
 if(NOT (dune-common_DIR OR dune-common_ROOT OR
@@ -18,8 +18,12 @@ list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH}
 
 #include the dune macros
 include(DuneMacros)
+
 # start a dune project with information from dune.module
 dune_project()
+
+# Disable the upstream testing magic, that builds tests during "make test"
+set(DUNE_TEST_MAGIC OFF)
 
 # To have enable all packages work with cmake-2.8, the module
 # libraries need to be added before the call to dune_enable_all_packages()

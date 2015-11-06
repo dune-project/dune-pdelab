@@ -170,10 +170,10 @@ namespace Dune {
         : gv(gv_), orient(gv_.size(0))
       {
         typedef typename GV::Grid::ctype ct;
-        const ReferenceElement<ct, dim> &refElem =
+        auto& refElem =
           ReferenceElements<ct, dim>::general(FE().type());
 
-        const typename GV::Grid::GlobalIdSet &idSet = gv.grid().globalIdSet();
+        auto &idSet = gv.grid().globalIdSet();
 
         // create all variants
         variant.resize(1 << refElem.size(dim-1));
@@ -181,19 +181,17 @@ namespace Dune {
           variant[i] = FE(i);
 
         // compute orientation for all elements
-        typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-
-        const typename GV::IndexSet& indexSet = gv.indexSet();
+        auto& indexSet = gv.indexSet();
 
         // loop once over the grid
-        for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
+        for (const auto& element : elements(gv))
           {
-            unsigned int elemid = indexSet.template index<0>(*it);
+            auto elemid = indexSet.index(element);
             orient[elemid] = 0;
 
             std::vector<typename GV::Grid::GlobalIdSet::IdType> vid(refElem.size(dim));
             for(unsigned int i = 0; i < vid.size(); ++i)
-              vid[i] = idSet.subId(*it, i, dim);
+              vid[i] = idSet.subId(element, i, dim);
 
             // loop over all edges of the element
             for(int i = 0; i < refElem.size(dim-1); ++i) {
@@ -210,12 +208,69 @@ namespace Dune {
       template<class EntityType>
       const typename Traits::FiniteElementType& find (const EntityType& e) const
       {
-        return variant[orient[gv.indexSet().template index<0>(e)]];
+        return variant[orient[gv.indexSet().index(e)]];
       }
 
     private:
       GV gv;
       std::vector<FE> variant;
+      std::vector<unsigned char> orient;
+    };
+
+    //! wrap up element from local functions
+    //! \ingroup FiniteElementMap
+    template<typename GV, typename FE, typename Imp, std::size_t Variants>
+    class RTLocalFiniteElementMap :
+      public LocalFiniteElementMapInterface<
+        LocalFiniteElementMapTraits<FE>,
+        Imp >
+    {
+      typedef FE FiniteElement;
+      typedef typename GV::IndexSet IndexSet;
+
+    public:
+      //! \brief export type of the signature
+      typedef LocalFiniteElementMapTraits<FE> Traits;
+
+      //! \brief Use when Imp has a standard constructor
+      RTLocalFiniteElementMap(const GV& gv_)
+        : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
+      {
+        // create all variants
+        for (int i = 0; i < Variants; i++)
+        {
+          variant[i] = FiniteElement(i);
+        }
+
+        // compute orientation for all elements
+        // loop once over the grid
+        for(const auto& cell : elements(gv))
+        {
+          unsigned int myId = is.index(cell);
+          orient[myId] = 0;
+
+          for (const auto& intersection : intersections(gv,cell))
+          {
+            if (intersection.neighbor()
+                && is.index(intersection.outside()) > myId)
+            {
+              orient[myId] |= 1 << intersection.indexInInside();
+            }
+          }
+        }
+      }
+
+      //! \brief get local basis functions for entity
+      template<class EntityType>
+      const typename Traits::FiniteElementType& find(const EntityType& e) const
+      {
+        return variant[orient[is.index(e)]];
+      }
+
+    private:
+      GV gv;
+      std::array<FiniteElement,Variants> variant;
+      const IndexSet& is;
       std::vector<unsigned char> orient;
     };
 

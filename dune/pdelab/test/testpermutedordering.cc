@@ -22,7 +22,7 @@
 #include <dune/pdelab/ordering/interleavedordering.hh>
 #include <dune/pdelab/ordering/permutedordering.hh>
 
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 
 template<typename GFS>
 void check_ordering_reference(const GFS& gfs)
@@ -44,7 +44,7 @@ void check_ordering_reference(const GFS& gfs)
         ordering.mapIndex(di.view(),ci);
         std::cout << di << "    " << ci << std::endl;
       }
-    typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;
+    using V = Dune::PDELab::Backend::Vector<GFS,double>;
     V x(gfs);
     x = 0.0;
     std::cout << std::endl;
@@ -97,7 +97,7 @@ static void testpermutedordering(const GV& gv)
 
   typedef Dune::PDELab::NoConstraints CON;
 
-  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::istl::VectorBackend<> VBE;
 
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,CON,VBE> P0GFS;
@@ -117,7 +117,7 @@ static void testpermutedordering(const GV& gv)
 
   P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),{{1,1,1}});
 
-  typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,6> NVBE;
+  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed,6> NVBE;
 
   typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,NVBE,Dune::PDELab::InterleavedOrderingTag> PGFS;
   std::vector<std::size_t> p_gfs_block_sizes(2);

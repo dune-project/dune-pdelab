@@ -80,7 +80,7 @@ namespace Dune {
         , public TypeTree::DynamicTraversal
       {
 
-        static const int dim  = Cell::Geometry::dimension;
+        static const int dim  = Cell::Geometry::mydimension;
         typedef std::size_t size_type;
         typedef typename MassMatrices::value_type MassMatrix;
         typedef typename MassMatrix::field_type DF;
@@ -89,17 +89,16 @@ namespace Dune {
         template<typename GFS, typename TreePath>
         void leaf(const GFS& gfs, TreePath treePath)
         {
-          typedef typename GFS::Traits::FiniteElementMap FEM;
-          const FEM& fem = gfs.finiteElementMap();
-          typedef typename FEM::Traits::FiniteElement FiniteElement;
-          const FiniteElement& fe = fem.find(_element);
+          auto& fem = gfs.finiteElementMap();
+          auto& fe = fem.find(_element);
           size_type local_size = fe.localBasis().size();
 
           MassMatrix& mass_matrix = _mass_matrices[_leaf_index];
           mass_matrix.resize(local_size,local_size);
 
-
-          std::vector<typename FiniteElement::Traits::LocalBasisType::Traits::RangeType> phi;
+          using Range = typename GFS::Traits::FiniteElementMap::Traits::
+            FiniteElement::Traits::LocalBasisType::Traits::RangeType;
+          std::vector<Range> phi;
           phi.resize(std::max(phi.size(),local_size));
 
           for (const auto& ip : _quadrature_rule)
@@ -107,8 +106,8 @@ namespace Dune {
               fe.localBasis().evaluateFunction(ip.position(),phi);
               const DF factor = ip.weight();
 
-              for (int i = 0; i < local_size; ++i)
-                for (int j = 0; j < local_size; ++j)
+              for (size_type i = 0; i < local_size; ++i)
+                for (size_type j = 0; j < local_size; ++j)
                   mass_matrix[i][j] += phi[i] * phi[j] * factor;
             }
 
@@ -144,15 +143,15 @@ namespace Dune {
     template<class GFS, class U>
     class L2Projection
     {
-      typedef typename GFS::Traits::GridViewType::Grid Grid;
-      typedef typename Grid::template Codim<0>::Entity Element;
+      using EntitySet = typename GFS::Traits::EntitySet;
+      using Element = typename EntitySet::Element;
       typedef LocalFunctionSpace<GFS> LFS;
       typedef typename U::ElementType DF;
 
     public:
 
       typedef DynamicMatrix<typename U::ElementType> MassMatrix;
-      typedef array<MassMatrix,TypeTree::TreeInfo<GFS>::leafCount> MassMatrices;
+      typedef std::array<MassMatrix,TypeTree::TreeInfo<GFS>::leafCount> MassMatrices;
 
       /*! @brief The constructor.
        *
@@ -171,8 +170,8 @@ namespace Dune {
        */
       const MassMatrices& inverseMassMatrices(const Element& e)
       {
-        const GeometryType gt = e.geometry().type();
-        MassMatrices& inverse_mass_matrices = _inverse_mass_matrices[GlobalGeometryTypeIndex::index(gt)];
+        auto gt = e.geometry().type();
+        auto& inverse_mass_matrices = _inverse_mass_matrices[GlobalGeometryTypeIndex::index(gt)];
         // if the matrix isn't empty, it has already been cached
         if (inverse_mass_matrices[0].N() > 0)
           return inverse_mass_matrices;
@@ -206,11 +205,11 @@ namespace Dune {
       typedef LFSIndexCache<LFS> LFSCache;
       typedef Dune::PDELab::LeafOffsetCache<GFS> LeafOffsetCache;
 
-      typedef typename GFS::Traits::GridView::Grid::LocalIdSet IDSet;
-      typedef typename GFS::Traits::GridView::template Codim<0>::Entity Cell;
-      typedef typename Cell::Geometry Geometry;
-      static const int dim = Geometry::dimension;
-      typedef typename Cell::HierarchicIterator HierarchicIterator;
+      using EntitySet = typename GFS::Traits::EntitySet;
+      using IDSet = typename EntitySet::Traits::GridView::Grid::LocalIdSet;
+      using Element = typename EntitySet::Element;
+      typedef typename Element::Geometry Geometry;
+      static const int dim = Geometry::mydimension;
       typedef typename DOFVector::ElementType RF;
       typedef typename TransferMap::mapped_type LocalDOFVector;
 
@@ -220,33 +219,32 @@ namespace Dune {
       typedef typename Projection::MassMatrix MassMatrix;
 
       typedef std::size_t size_type;
-      typedef typename GFS::Traits::GridView::ctype DF;
+      using DF = typename EntitySet::Traits::CoordinateField;
 
       template<typename LFSLeaf, typename TreePath>
       void leaf(const LFSLeaf& leaf_lfs, TreePath treePath)
       {
 
-        typedef typename LFSLeaf::Traits::GridFunctionSpace::Traits::FiniteElementMap FEM;
-        typedef typename FEM::Traits::FiniteElement FE;
-        const FEM& fem = leaf_lfs.gridFunctionSpace().finiteElementMap();
-        size_type fine_offset = _leaf_offset_cache[_current.type()][_leaf_index];
-        size_type coarse_offset = _leaf_offset_cache[_ancestor.type()][_leaf_index];
+        auto& fem = leaf_lfs.gridFunctionSpace().finiteElementMap();
+        auto fine_offset = _leaf_offset_cache[_current.type()][_leaf_index];
+        auto coarse_offset = _leaf_offset_cache[_ancestor.type()][_leaf_index];
 
-        typedef typename FE::Traits::LocalBasisType::Traits::RangeType Range;
+        using Range = typename LFSLeaf::Traits::GridFunctionSpace::Traits::FiniteElementMap::
+          Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType;
 
-        const MassMatrix& inverse_mass_matrix = _projection.inverseMassMatrices(_element)[_leaf_index];
+        auto& inverse_mass_matrix = _projection.inverseMassMatrices(_element)[_leaf_index];
 
-        std::vector<Range> coarse_phi;
-        std::vector<Range> fine_phi;
+        auto coarse_phi = std::vector<Range>{};
+        auto fine_phi = std::vector<Range>{};
 
-        Geometry fine_geometry = _current.geometry();
-        Geometry coarse_geometry = _ancestor.geometry();
+        auto fine_geometry = _current.geometry();
+        auto coarse_geometry = _ancestor.geometry();
 
         // iterate over quadrature points
         for (const auto& ip : QuadratureRules<DF,dim>::rule(_current.type(),_int_order))
           {
-            typename Geometry::LocalCoordinate coarse_local = coarse_geometry.local(fine_geometry.global(ip.position()));
-            const FE* fe = &fem.find(_current);
+            auto coarse_local = coarse_geometry.local(fine_geometry.global(ip.position()));
+            auto fe = &fem.find(_current);
             fe->localBasis().evaluateFunction(ip.position(),fine_phi);
             fe = &fem.find(_ancestor);
             fe->localBasis().evaluateFunction(coarse_local,coarse_phi);
@@ -254,7 +252,7 @@ namespace Dune {
               * fine_geometry.integrationElement(ip.position())
               / coarse_geometry.integrationElement(coarse_local);
 
-            Range val(0.0);
+            auto val = Range{0.0};
             for (size_type i = 0; i < fine_phi.size(); ++i)
               {
                 val.axpy(_u_fine[fine_offset + i],fine_phi[i]);
@@ -262,7 +260,7 @@ namespace Dune {
 
             for (size_type i = 0; i < coarse_phi.size(); ++i)
               {
-                Range x(0.0);
+                auto x = Range{0.0};
                 for (size_type j = 0; j < inverse_mass_matrix.M(); ++j)
                   x.axpy(inverse_mass_matrix[i][j],coarse_phi[j]);
                 (*_u_coarse)[coarse_offset + i] += factor * (x * val);
@@ -272,7 +270,7 @@ namespace Dune {
         ++_leaf_index;
       }
 
-      void operator()(const Cell& element)
+      void operator()(const Element& element)
       {
         _element = element;
 
@@ -348,9 +346,9 @@ namespace Dune {
       LFS _lfs;
       LFSCache _lfs_cache;
       const IDSet& _id_set;
-      Cell _element;
-      Cell _ancestor;
-      Cell _current;
+      Element _element;
+      Element _ancestor;
+      Element _current;
       Projection& _projection;
       typename DOFVector::template ConstLocalView<LFSCache> _u_view;
       TransferMap& _transfer_map;
@@ -374,13 +372,20 @@ namespace Dune {
       typedef LFSIndexCache<LFS> LFSCache;
       typedef Dune::PDELab::LeafOffsetCache<GFS> LeafOffsetCache;
 
-      typedef typename LFS::Traits::GridFunctionSpace::Traits::GridView::template Codim<0>::Entity Cell;
-      typedef typename Cell::Geometry Geometry;
+      using EntitySet = typename GFS::Traits::EntitySet;
+      using IDSet = typename EntitySet::Traits::GridView::Grid::LocalIdSet;
+      using Element = typename EntitySet::Element;
+      using Geometry = typename Element::Geometry;
       typedef typename DOFVector::ElementType RF;
       typedef std::vector<RF> LocalDOFVector;
       typedef std::vector<typename CountVector::ElementType> LocalCountVector;
 
       typedef std::size_t size_type;
+      using DF = typename EntitySet::Traits::CoordinateField;
+
+      using FiniteElement = typename GFS::Traits::FiniteElementMap::Traits::FiniteElement;
+
+      using Range = typename FiniteElement::Traits::LocalBasisType::Traits::RangeType;
 
       template<typename FiniteElement>
       struct coarse_function
@@ -408,7 +413,7 @@ namespace Dune {
         Geometry _coarse_geometry;
         Geometry _fine_geometry;
         const LocalDOFVector& _dofs;
-        mutable std::vector<typename FiniteElement::Traits::LocalBasisType::Traits::RangeType> _phi;
+        mutable std::vector<Range> _phi;
         size_type _offset;
 
       };
@@ -418,13 +423,12 @@ namespace Dune {
       void leaf(const LeafLFS& leaf_lfs, TreePath treePath)
       {
 
-        typedef typename LeafLFS::Traits::GridFunctionSpace::Traits::FiniteElementMap FEM;
-        const FEM& fem = leaf_lfs.gridFunctionSpace().finiteElementMap();
-        size_type element_offset = _leaf_offset_cache[_element.type()][_leaf_index];
-        size_type ancestor_offset = _leaf_offset_cache[_ancestor.type()][_leaf_index];
+        auto& fem = leaf_lfs.gridFunctionSpace().finiteElementMap();
+        auto element_offset = _leaf_offset_cache[_element.type()][_leaf_index];
+        auto ancestor_offset = _leaf_offset_cache[_ancestor.type()][_leaf_index];
 
-        coarse_function<typename FEM::Traits::FiniteElement> f(fem.find(_ancestor),_ancestor.geometry(),_element.geometry(),*_u_coarse,ancestor_offset);
-        const typename FEM::Traits::FiniteElement& fe = fem.find(_element);
+        coarse_function<FiniteElement> f(fem.find(_ancestor),_ancestor.geometry(),_element.geometry(),*_u_coarse,ancestor_offset);
+        auto& fe = fem.find(_element);
 
         _u_tmp.resize(fe.localBasis().size());
         std::fill(_u_tmp.begin(),_u_tmp.end(),RF(0.0));
@@ -434,7 +438,7 @@ namespace Dune {
         ++_leaf_index;
       }
 
-      void operator()(const Cell& element, const Cell& ancestor, const LocalDOFVector& u_coarse)
+      void operator()(const Element& element, const Element& ancestor, const LocalDOFVector& u_coarse)
       {
         _element = element;
         _ancestor = ancestor;
@@ -445,8 +449,7 @@ namespace Dune {
         _u_view.bind(_lfs_cache);
 
         // test identity using ids
-        if (_lfs.gridFunctionSpace().gridView().grid().localIdSet().id(element) ==
-            _lfs.gridFunctionSpace().gridView().grid().localIdSet().id(ancestor))
+        if (_id_set.id(element) == _id_set.id(ancestor))
           {
             // no interpolation necessary, just copy the saved data
             _u_view.add(*_u_coarse);
@@ -470,6 +473,7 @@ namespace Dune {
       replay_visitor(const GFS& gfs, DOFVector& u, CountVector& uc, LeafOffsetCache& leaf_offset_cache)
         : _lfs(gfs)
         , _lfs_cache(_lfs)
+        , _id_set(gfs.entitySet().gridView().grid().localIdSet())
         , _u_view(u)
         , _uc_view(uc)
         , _leaf_offset_cache(leaf_offset_cache)
@@ -478,8 +482,9 @@ namespace Dune {
 
       LFS _lfs;
       LFSCache _lfs_cache;
-      Cell _element;
-      Cell _ancestor;
+      const IDSet& _id_set;
+      Element _element;
+      Element _ancestor;
       typename DOFVector::template LocalView<LFSCache> _u_view;
       typename CountVector::template LocalView<LFSCache> _uc_view;
       const LocalDOFVector* _u_coarse;
@@ -521,9 +526,7 @@ namespace Dune {
 
       /*! @brief The constructor.
        *
-       * @param grid_       The grid we want to adapt
-       * @param gfsu_       The ansatz space, we need to update it
-       * @param projection_ The Projection used when Elems vanish
+       * @param gfs         The ansatz space, we need to update it
        */
       explicit GridAdaptor(const GFSU& gfs)
         : _leaf_offset_cache(gfs)
@@ -541,7 +544,7 @@ namespace Dune {
         Visitor visitor(gfsu,projection,u,_leaf_offset_cache,transfer_map);
 
         // iterate over all elems
-        for(const auto& cell : elements(grid.leafGridView(),Partitions::interior))
+        for(const auto& cell : elements(gfsu.entitySet(),Partitions::interior))
           visitor(cell);
       }
 
@@ -552,17 +555,16 @@ namespace Dune {
        */
       void replayData(Grid& grid, GFSU& gfsu, Projection& projection, U& u, const MapType& transfer_map)
       {
-        const IDSet& id_set = grid.globalIdSet();
+        const IDSet& id_set = grid.localIdSet();
 
-        typedef typename BackendVectorSelector<GFSU,int>::Type CountVector;
+        using CountVector = Backend::Vector<GFSU,int>;
         CountVector uc(gfsu,0);
 
         typedef replay_visitor<GFSU,U,CountVector> Visitor;
         Visitor visitor(gfsu,u,uc,_leaf_offset_cache);
 
         // iterate over all elems
-        LeafGridView leafView = grid.leafGridView();
-        for (const auto& cell : elements(leafView,Partitions::interior))
+        for (const auto& cell : elements(gfsu.entitySet(),Partitions::interior))
           {
             Element ancestor = cell;
 
@@ -580,12 +582,12 @@ namespace Dune {
 
         typedef Dune::PDELab::AddDataHandle<GFSU,U> DOFHandle;
         DOFHandle addHandle1(gfsu,u);
-        leafView.communicate (addHandle1,
-                              Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+        gfsu.entitySet().gridView().communicate(addHandle1,
+                                                Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
         typedef Dune::PDELab::AddDataHandle<GFSU,CountVector> CountHandle;
         CountHandle addHandle2(gfsu,uc);
-        leafView.communicate (addHandle2,
-                              Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+        gfsu.entitySet().gridView().communicate(addHandle2,
+                                                Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
 
         // normalize multiple-interpolated DOFs by taking the arithmetic average
         typename CountVector::iterator ucit = uc.begin();
@@ -628,7 +630,7 @@ namespace Dune {
       grid.adapt();
 
       // update the function spaces
-      gfs.update();
+      gfs.update(true);
 
       // reset u
       x1 = X(gfs,0.0);
@@ -670,7 +672,7 @@ namespace Dune {
       grid.adapt();
 
       // update the function spaces
-      gfs.update();
+      gfs.update(true);
 
       // interpolate solution
       x1 = X(gfs,0.0);
@@ -681,28 +683,6 @@ namespace Dune {
       // clean up
       grid.postAdapt();
     }
-
-    // deprecated versions which always force the mass matrix integration order to 2
-    // function attributes are only allowed on function declarations, not defitions, so we have to do the double
-    // dance of first declaring and then immediately defining those functions...
-    template<class Grid, class GFS, class X>
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1) DUNE_DEPRECATED_MSG("Please use the version of adapt_grid() that explicity specifies the integration order instead");
-
-    template<class Grid, class GFS, class X>
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2) DUNE_DEPRECATED_MSG("Please use the version of adapt_grid() that explicity specifies the integration order instead");
-
-    template<class Grid, class GFS, class X>
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1)
-    {
-      adapt_grid(grid,gfs,x1,2);
-    }
-
-    template<class Grid, class GFS, class X>
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2)
-    {
-      adapt_grid(grid,gfs,x1,x2,2);
-    }
-
 
 
     template<typename T>

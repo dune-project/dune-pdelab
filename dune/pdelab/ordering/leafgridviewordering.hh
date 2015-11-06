@@ -23,7 +23,7 @@ namespace Dune {
 
     private:
 
-      typedef typename Traits::GridView GV;
+      using ES = typename Traits::EntitySet;
 
       typedef LeafOrderingBase<LocalOrdering> BaseT;
       typedef typename BaseT::NodeT NodeT;
@@ -32,7 +32,7 @@ namespace Dune {
 
       LeafGridViewOrdering(const typename NodeT::NodeStorage& local_ordering, bool container_blocked, typename BaseT::GFSData* gfs_data)
         : BaseT(local_ordering, container_blocked, gfs_data)
-        , _gv(this->template child<0>().gridView())
+        , _es(this->template child<0>().entitySet())
       {}
 
 #ifndef DOXYGEN
@@ -42,12 +42,12 @@ namespace Dune {
 
       LeafGridViewOrdering(const LeafGridViewOrdering& r)
         : BaseT(r)
-        , _gv(r._gv)
+        , _es(r._es)
       {}
 
       LeafGridViewOrdering(LeafGridViewOrdering&& r)
         : BaseT(std::move(r))
-        , _gv(r._gv)
+        , _es(r._es)
       {}
 
 #endif // DOXYGEN
@@ -57,17 +57,20 @@ namespace Dune {
         LocalOrdering& lo = this->localOrdering();
         lo.update_a_priori_fixed_size();
 
-        const std::size_t dim = GV::dimension;
+        const std::size_t dim = ES::dimension;
+
+        typename ES::CodimMask codims;
+        codims.set(0); // always need cells
+        lo.collect_used_codims(codims);
+
+        for (typename ES::dim_type codim = 0; codim <= ES::dimension; ++codim)
+          if (codims.test(codim))
+            _es.addCodim(codim);
+
+        _es.update();
 
         typedef typename Traits::SizeType size_type;
-        typedef std::vector<GeometryType> GTVector;
-        GTVector geom_types;
-
-        for (size_type cc = 0; cc <= dim; ++cc)
-          {
-            auto per_codim_geom_types = _gv.indexSet().types(cc);
-            std::copy(per_codim_geom_types.begin(),per_codim_geom_types.end(),std::back_inserter(geom_types));
-          }
+        auto geom_types = _es.indexSet().types();
 
         if (lo._fixed_size)
           {
@@ -77,19 +80,16 @@ namespace Dune {
           {
             lo.pre_collect_used_geometry_types_from_cell();
 
-            typedef typename GV::template Codim<0>::Iterator CellIterator;
-
-            const CellIterator end_it = _gv.template end<0>();
-            for (CellIterator it = _gv.template begin<0>(); it != end_it; ++it)
+            for (const auto& element : elements(_es))
               {
-                lo.collect_used_geometry_types_from_cell(*it);
+                lo.collect_used_geometry_types_from_cell(element);
               }
 
             lo.allocate_entity_offset_vector(geom_types.begin(),geom_types.end());
 
-            for (CellIterator it = _gv.template begin<0>(); it != end_it; ++it)
+            for (const auto& element : elements(_es))
               {
-                lo.extract_per_entity_sizes_from_cell(*it);
+                lo.extract_per_entity_sizes_from_cell(element);
               }
 
             // FIXME: handling of blocked containers!
@@ -103,12 +103,11 @@ namespace Dune {
             _gt_dof_offsets.assign(GlobalGeometryTypeIndex::size(dim) + 1,0);
             _size = 0;
 
-            const GTVector::const_iterator end_it = geom_types.end();
-            for (GTVector::const_iterator it = geom_types.begin(); it != end_it; ++it)
+            for (auto gt : geom_types)
               {
-                const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
+                const size_type gt_index = GlobalGeometryTypeIndex::index(gt);
                 size_type gt_size = lo.size(gt_index,0);
-                size_type entity_count = _gv.indexSet().size(*it);
+                size_type entity_count = _es.indexSet().size(gt);
                 _size += gt_size * entity_count;
                 if (_container_blocked)
                   gt_size = gt_size > 0;
@@ -145,7 +144,7 @@ namespace Dune {
       using BaseT::_codim_fixed_size;
       using BaseT::_gt_dof_offsets;
 
-      typename Traits::GridView _gv;
+      typename Traits::EntitySet _es;
     };
 
 
@@ -157,7 +156,7 @@ namespace Dune {
 
       typedef DirectLeafLocalOrdering<typename GFS::Traits::OrderingTag,
                                       typename GFS::Traits::FiniteElementMap,
-                                      typename GFS::Traits::GridView,
+                                      typename GFS::Traits::EntitySet,
                                       typename Transformation::DOFIndex,
                                       typename Transformation::ContainerIndex
                                       > LocalOrdering;
@@ -169,12 +168,12 @@ namespace Dune {
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        return transformed_type(make_tuple(std::make_shared<LocalOrdering>(gfs.finiteElementMapStorage(),gfs.gridView())),gfs.backend().blocked(gfs),const_cast<GFS*>(&gfs));
+        return transformed_type(make_tuple(std::make_shared<LocalOrdering>(gfs.finiteElementMapStorage(),gfs.entitySet())),gfs.backend().blocked(gfs),const_cast<GFS*>(&gfs));
       }
 
       static transformed_storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        return std::make_shared<transformed_type>(make_tuple(std::make_shared<LocalOrdering>(gfs->finiteElementMapStorage(),gfs->gridView())),gfs->backend().blocked(*gfs),const_cast<GFS*>(gfs.get()));
+        return std::make_shared<transformed_type>(make_tuple(std::make_shared<LocalOrdering>(gfs->finiteElementMapStorage(),gfs->entitySet())),gfs->backend().blocked(*gfs),const_cast<GFS*>(gfs.get()));
       }
 
     };

@@ -17,7 +17,7 @@
 #include <dune/pdelab/gridoperator/onestep/prestageengine.hh>
 #include <dune/pdelab/gridoperator/onestep/jacobianresidualengine.hh>
 
-#include <dune/pdelab/gridoperator/common/timesteppingparameterinterface.hh>
+#include <dune/pdelab/instationary/onestepparameter.hh>
 
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 

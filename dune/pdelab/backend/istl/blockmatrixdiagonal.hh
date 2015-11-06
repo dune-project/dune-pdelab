@@ -3,8 +3,8 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_BLOCKMATRIXDIAGONAL_HH
 #define DUNE_PDELAB_BACKEND_ISTL_BLOCKMATRIXDIAGONAL_HH
 
-#include <dune/pdelab/backend/istlmatrixbackend.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrix.hh>
+#include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/istl/utility.hh>
 #include <dune/pdelab/gridfunctionspace/entityindexcache.hh>
 
@@ -35,7 +35,7 @@ namespace Dune {
         // TMP to the block type.
         template<typename Block, typename Allocator>
         struct matrix_element_vector<
-          BCRSMatrix<Block,Allocator>
+          Dune::BCRSMatrix<Block,Allocator>
           >
         {
           typedef BlockVector<
@@ -214,7 +214,7 @@ namespace Dune {
       struct BlockMatrixDiagonal
       {
 
-        typedef typename raw_type<M>::type Matrix;
+        typedef Backend::Native<M> Matrix;
 
         struct MatrixElementVector
         {
@@ -227,7 +227,7 @@ namespace Dune {
 
           MatrixElementVector(const M& m)
           {
-            diagonal::matrix_element_vector_from_matrix(container_tag(_container),_container,raw(m));
+            diagonal::matrix_element_vector_from_matrix(container_tag(_container),_container,Backend::native(m));
           }
 
           void invert()
@@ -238,7 +238,7 @@ namespace Dune {
           template<typename X, typename Y>
           void mv(const X& x, Y& y) const
           {
-            diagonal::mv(container_tag(_container),_container,raw(x),raw(y));
+            diagonal::mv(container_tag(_container),_container,Backend::native(x),Backend::native(y));
           }
 
           template<typename ContainerIndex>

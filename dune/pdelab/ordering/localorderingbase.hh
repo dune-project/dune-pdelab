@@ -4,7 +4,6 @@
 #ifndef DUNE_PDELAB_ORDERING_LOCALORDERINGBASE_HH
 #define DUNE_PDELAB_ORDERING_LOCALORDERINGBASE_HH
 
-#include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
 
@@ -16,9 +15,8 @@ namespace Dune {
     //! \addtogroup Ordering
     //! \{
 
-    template<typename GV, typename DI, typename CI>
+    template<typename ES, typename DI, typename CI>
     class LocalOrderingBase
-      : public PartitionInfoProvider
     {
 
       friend struct collect_a_priori_fixed_size;
@@ -56,7 +54,7 @@ namespace Dune {
 
       static const bool consume_tree_index = true;
 
-      typedef LocalOrderingTraits<GV,DI,CI> Traits;
+      typedef LocalOrderingTraits<ES,DI,CI> Traits;
 
     protected:
 
@@ -264,16 +262,15 @@ namespace Dune {
 
       template<typename Node>
       LocalOrderingBase(Node& node, bool container_blocked, GFSData* gfs_data)
-        : _container_blocked(container_blocked)
+        : _fixed_size(false)
+        , _fixed_size_possible(false)
+        , _container_blocked(container_blocked)
         , _max_local_size(0)
         , _child_count(Node::CHILDREN)
         , _children(Node::CHILDREN,nullptr)
         , _gfs_data(gfs_data)
       {
         TypeTree::applyToTree(node,extract_child_bases<LocalOrderingBase>(_children));
-
-        // We contain all grid PartitionTypes that any of our children contain.
-        mergePartitionSets(_children.begin(),_children.end());
       }
 
       bool fixedSize() const

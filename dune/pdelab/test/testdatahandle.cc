@@ -17,7 +17,7 @@
 #include <dune/pdelab/finiteelementmap/qkdg.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
 
@@ -74,7 +74,7 @@ static void testdatahandle(const GV& gv)
   DG22DFEM dg22dfem;
 
   typedef Dune::PDELab::NoConstraints NoConstraints;
-  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::istl::VectorBackend<> VBE;
 
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,NoConstraints,VBE> P0GFS;
@@ -90,7 +90,7 @@ static void testdatahandle(const GV& gv)
   GFS3 gfs3(gv,q22dfem);
   gfs3.name("gfs3");
 
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS1,int>::Type V;
+  using V = Dune::PDELab::Backend::Vector<GFS1,int>;
 
   V v(gfs1);
   v = 1;
@@ -108,7 +108,7 @@ static void testdatahandle(const GV& gv)
   info(gfs2,"DG2");
   info(gfs3,"Q2");
 
-  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::istl::VectorBackend<> VBE;
 
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE> PGFS1;
   PGFS1 pgfs1(gfs1);
@@ -146,8 +146,8 @@ static void testdatahandle(const GV& gv)
   typedef Dune::PDELab::PowerGridFunctionSpace<
     GFS3,
     3,
-    Dune::PDELab::ISTLVectorBackend<
-      Dune::PDELab::ISTLParameters::static_blocking
+    Dune::PDELab::istl::VectorBackend<
+      Dune::PDELab::istl::Blocking::fixed
       >,
     Dune::PDELab::EntityBlockedOrderingTag
     > VGFS;
@@ -156,8 +156,8 @@ static void testdatahandle(const GV& gv)
   info(vgfs,"P2^3 (entity-wise blocked, matrix blocks)");
 
   typedef Dune::PDELab::CompositeGridFunctionSpace<
-    Dune::PDELab::ISTLVectorBackend<
-      Dune::PDELab::ISTLParameters::dynamic_blocking
+    Dune::PDELab::istl::VectorBackend<
+      Dune::PDELab::istl::Blocking::bcrs
       >,
     Dune::PDELab::LexicographicOrderingTag,
     GFS1,
@@ -170,7 +170,7 @@ static void testdatahandle(const GV& gv)
 
 #if 0
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,Dune::PDELab::NoConstraints,
-                                          Dune::PDELab::ISTLVectorBackend<1>,
+                                          Dune::PDELab::istl::VectorBackend<1>,
                                           Dune::PDELab::GridFunctionRestrictedMapper> GFS3;
   GFS3 gfs3(gv,q22dfem);
 
@@ -199,10 +199,10 @@ static void testdatahandle(const GV& gv)
   PGFS17B pgfs17b(gfs2);
 
   // make coefficent Vectors
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS1,double>::Type V1;
+  using V1 = Dune::PDELab::Backend::Vector<GFS1,double>;
   V1 x1(gfs1);
   x1 = 0.0;
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS2,double>::Type V2;
+  using V2 = Dune::PDELab::Backend::Vector<GFS2,double>;
   V2 x2(gfs2);
   x2 = 0.0;
 

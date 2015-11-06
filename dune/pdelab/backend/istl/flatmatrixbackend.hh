@@ -11,6 +11,7 @@
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/backend/istl/flat/pattern.hh>
+#include <dune/pdelab/backend/interface.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -19,7 +20,10 @@ namespace Dune {
 
     template<typename GFSV, typename GFSU, typename C>
     class FlatELLMatrixContainer
+      : public Backend::impl::Wrapper<C>
     {
+
+      friend Backend::impl::Wrapper<C>;
 
     public:
 
@@ -237,16 +241,6 @@ namespace Dune {
         return (*_container)(ri[0],ci[0]);
       }
 
-      const Container& base() const
-      {
-        return *_container;
-      }
-
-      Container& base()
-      {
-        return *_container;
-      }
-
       void flush()
       {}
 
@@ -261,6 +255,16 @@ namespace Dune {
       }
 
     private:
+
+      Container& native()
+      {
+        return *_container;
+      }
+
+      const Container& native() const
+      {
+        return *_container;
+      }
 
       shared_ptr<Container> _container;
 

@@ -17,11 +17,9 @@
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/localoperator/linearelasticity.hh>
-#include <dune/pdelab/backend/istlsolverbackend.hh>
 
 #include <dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
@@ -114,6 +112,8 @@ private:
 template<class GV>
 void testp1 (const GV& gv, double mu, double lambda, double constG)
 {
+  using Dune::PDELab::Backend::native;
+
   typedef typename GV::Grid::ctype DF;
 
   const int dim = GV::dimension;
@@ -124,7 +124,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
 
   // make function space
   typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-  typedef Dune::PDELab::ISTLVectorBackend<> ComponentVectorBackend;
+  typedef Dune::PDELab::istl::VectorBackend<> ComponentVectorBackend;
 
   typedef Dune::PDELab::DefaultLeafOrderingTag Mapper;
 
@@ -133,7 +133,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
     GV,
     FEM,
     dim,
-    Dune::PDELab::ISTLVectorBackend<>,
+    Dune::PDELab::istl::VectorBackend<>,
     ComponentVectorBackend,
     Constraints,
     OrderingTag,
@@ -186,7 +186,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   m = 0.0;
   gos.jacobian(x0,m);
   if (gfs.size() <= 16)
-    Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,3);
+    Dune::printmatrix(std::cout,native(m),"global stiffness matrix","row",9,3);
 
   // evaluate residual w.r.t initial guess
   V r(gfs);
@@ -196,8 +196,8 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   // make ISTL solver
   typedef typename M::BaseT ISTL_M;
   typedef typename V::BaseT ISTL_V;
-  Dune::MatrixAdapter<ISTL_M,ISTL_V,ISTL_V> opa(m.base());
-  Dune::SeqILU0<ISTL_M,ISTL_V,ISTL_V> ilu0(m.base(),1e-2);
+  Dune::MatrixAdapter<ISTL_M,ISTL_V,ISTL_V> opa(native(m));
+  Dune::SeqILU0<ISTL_M,ISTL_V,ISTL_V> ilu0(native(m),1e-2);
 
   Dune::CGSolver<ISTL_V> solver(opa,ilu0,1E-20,5000,2);
   Dune::InverseOperatorResult stat;
@@ -206,7 +206,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   r *= -1.0; // need -residual
   V x(gfs,0.0);
   Dune::PDELab::set_nonconstrained_dofs(cg,1.0,x);
-  solver.apply(x.base(),r.base(),stat);
+  solver.apply(native(x),native(r),stat);
   x += x0;
 
   // output grid function with VTKWriter

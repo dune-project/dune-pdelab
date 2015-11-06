@@ -257,14 +257,16 @@ bool poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   r = 0.0;
   gridoperator.residual(x0,r);
 
+  using Dune::PDELab::Backend::Native;
+
   // make ISTL solver
-  Dune::MatrixAdapter<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> opa(m.base());
+  Dune::MatrixAdapter<Native<M>,Native<DV>,Native<RV> > opa(native(m));
   typedef Dune::PDELab::OnTheFlyOperator<DV,RV,
                                          GridOperator> ISTLOnTheFlyOperator;
   ISTLOnTheFlyOperator opb(gridoperator);
-  Dune::SeqSSOR<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ssor(m.base(),1,1.0);
-  Dune::SeqILU0<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ilu0(m.base(),1.0);
-  Dune::Richardson<typename DV::BaseT,typename RV::BaseT> richardson(1.0);
+  Dune::SeqSSOR<Native<M>,Native<DV>,Native<RV> > ssor(native(m),1,1.0);
+  Dune::SeqILU0<Native<M>,Native<DV>,Native<RV > ilu0(native(m),1.0);
+  Dune::Richardson<Native<DV>,Native<RV> > richardson(1.0);
   Dune::Richardson<DV,RV> richardsonb(1.0);
 
 //   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
@@ -279,7 +281,7 @@ bool poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 //   typedef Dune::Amg::AMG<Dune::MatrixAdapter<M,V,V>,V,Smoother> AMG;
 //   AMG amg(opa,criterion,smootherArgs,1,1);
 
-  Dune::CGSolver<typename DV::BaseT> solvera(opa,ilu0,1E-10,5000,2);
+  Dune::CGSolver<Native<DV> > solvera(opa,ilu0,1E-10,5000,2);
   Dune::CGSolver<DV> solverb(opb,richardsonb,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
@@ -288,7 +290,7 @@ bool poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   {
     RV ra = r;
     ra *= -1.0; // need -residual
-    solvera.apply(xa.base(),ra.base(),stat);
+    solvera.apply(native(xa),native(ra),stat);
   }
   if(!stat.converged)
   {

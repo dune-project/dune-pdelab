@@ -15,7 +15,6 @@
 
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/common/elementmapper.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
@@ -98,11 +97,12 @@ namespace Dune {
         typedef LFSIndexCache<LFS> LFSCache;
         typedef typename X::template ConstLocalView<LFSCache> XView;
         typedef LocalVector<typename X::ElementType> XLocalVector;
-        typedef typename GFS::Traits::GridView::template Codim<0>::Entity Cell;
+        using EntitySet = typename GFS::Traits::EntitySet;
+        using Cell = typename EntitySet::Traits::Element;
+        using IndexSet = typename EntitySet::Traits::IndexSet;
         typedef typename GFS::Traits::SizeType size_type;
-        typedef typename GFS::Traits::GridView::IndexSet IndexSet;
 
-        static const size_type dim = GFS::Traits::GridView::dimension;
+        static const auto dim = EntitySet::dimension;
 
       public:
 
@@ -115,7 +115,7 @@ namespace Dune {
           , _lfs_cache(_lfs)
           , _x_view(x)
           , _x_local(_lfs.maxSize())
-          , _element_mapper(gfs.gridView())
+          , _index_set(gfs.entitySet().indexSet())
           , _current_cell_index(std::numeric_limits<size_type>::max())
         {}
 
@@ -123,7 +123,7 @@ namespace Dune {
 
         void bind(const Cell& cell)
         {
-          size_type cell_index = _element_mapper.map(cell);
+          auto cell_index = _index_set.uniqueIndex(cell);
           if (_current_cell_index == cell_index)
             return;
 
@@ -139,7 +139,7 @@ namespace Dune {
         LFSCache _lfs_cache;
         XView _x_view;
         XLocalVector _x_local;
-        ElementMapper<typename GFS::Traits::GridView> _element_mapper;
+        const IndexSet& _index_set;
         size_type _current_cell_index;
 
       };
@@ -429,7 +429,7 @@ namespace Dune {
 
           static const bool value =
             // Do not descend into children of VectorGridFunctionSpace
-            !is_same<
+            !std::is_convertible<
               typename LFS::Traits::GridFunctionSpace::ImplementationTag,
               VectorGridFunctionSpaceTag
             >::value;
@@ -469,8 +469,8 @@ namespace Dune {
         /**
          * This is the default version for different types of spaces that does nothing.
          */
-        template<typename LFS, typename TreePath, typename Tag>
-        void add_vector_solution(const LFS& lfs, TreePath tp, Tag tag)
+        template<typename LFS, typename TreePath>
+        void add_vector_solution(const LFS& lfs, TreePath tp, GridFunctionSpaceTag tag)
         {
           // do nothing here - not a vector space
         }
@@ -584,58 +584,52 @@ namespace Dune {
         template<typename Factory, typename TreePath>
         OutputCollector& addCellFunction(Factory factory, TreePath tp, std::string name)
         {
-          typedef typename std::remove_reference<decltype(*factory.create(TypeTree::extract_child(_data->_lfs,tp),_data))>::type DGF;
-          _vtk_writer.addCellData(std::make_shared<VTKGridFunctionAdapter<DGF> >(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
+          typedef typename std::remove_reference<decltype(*factory.create(_data->_lfs.child(tp),_data))>::type DGF;
+          _vtk_writer.addCellData(std::make_shared<VTKGridFunctionAdapter<DGF> >(factory.create(_data->_lfs.child(tp),_data),name));
           return *this;
         }
 
         template<template<typename...> class Function, typename TreePath, typename... Params>
         OutputCollector& addCellFunction(TreePath tp, std::string name, Params&&... params)
         {
-          typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
+          using LFS = TypeTree::ChildForTreePath<typename Data::LFS,TreePath>;
           typedef Function<LFS,Data,Params...> DGF;
           _vtk_writer.addCellData(
             std::make_shared<VTKGridFunctionAdapter<DGF> >(
               std::make_shared<DGF>(
-                TypeTree::extract_child(
-                  _data->_lfs,
-                  tp
+                TypeTree::child(_data->_lfs,tp)
                 ),
                 _data,
                 std::forward<Params>(params)...
               ),
               name
-            )
-          );
+            );
           return *this;
         }
 
         template<typename Factory, typename TreePath>
         OutputCollector& addVertexFunction(Factory factory, TreePath tp, std::string name)
         {
-          typedef typename std::remove_reference<decltype(*factory.create(TypeTree::extract_child(_data->_lfs,tp),_data))>::type DGF;
-          _vtk_writer.addVertexData(std::make_shared<VTKGridFunctionAdapter<DGF> >(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
+          typedef typename std::remove_reference<decltype(*factory.create(_data->_lfs.child(tp),_data))>::type DGF;
+          _vtk_writer.addVertexData(std::make_shared<VTKGridFunctionAdapter<DGF> >(factory.create(_data->_lfs.child(tp),_data),name));
           return *this;
         }
 
         template<template<typename...> class Function, typename TreePath, typename... Params>
         OutputCollector& addVertexFunction(TreePath tp, std::string name, Params&&... params)
         {
-          typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
+          using LFS = TypeTree::ChildForTreePath<typename Data::LFS,TreePath>;
           typedef Function<LFS,Data,Params...> DGF;
           _vtk_writer.addVertexData(
             std::make_shared<VTKGridFunctionAdapter<DGF> >(
               std::make_shared<DGF>(
-                TypeTree::extract_child(
-                  _data->_lfs,
-                  tp
+                TypeTree::child(_data->_lfs,tp)
                 ),
                 _data,
                 std::forward<Params>(params)...
               ),
               name
-            )
-          );
+            );
           return *this;
         }
 

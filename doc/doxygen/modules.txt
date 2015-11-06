@@ -1,0 +1,33 @@
+/**
+  @defgroup PDELab dune-pdelab
+
+  @defgroup GridFunctionSpace Grid Function Space
+  @ingroup  PDELab
+
+    @defgroup FiniteElementMap Finite Element Map
+    @ingroup  GridFunctionSpace
+
+    @defgroup Ordering Ordering
+    @ingroup  GridFunctionSpace
+
+  @defgroup PDELab_Function PDELab Function
+  @ingroup  PDELab
+
+  @defgroup Operator Grid Operator
+  @ingroup  PDELab
+
+    @defgroup OneStepMethod One-step methods
+    @ingroup  Operator
+
+    @brief Time stepping with one step methods.
+
+    Use the class OneStepMethod to create a one step method.
+    the actual method is chosen by providing the constructor
+    with the correct parameter class, e.g. ExplicitEulerParameter.
+
+    @defgroup MultiStepMethods Multi-step methods
+    @ingroup  Operator
+
+  @defgroup Backend Backends
+  @ingroup  PDELab
+*/

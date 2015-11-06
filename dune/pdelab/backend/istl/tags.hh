@@ -179,7 +179,7 @@ namespace Dune {
 
 
         template<typename Block, typename Alloc>
-        struct container<BlockVector<Block,Alloc> >
+        struct container<Dune::BlockVector<Block,Alloc> >
         {
           typedef block_vector type;
         };
@@ -232,7 +232,7 @@ namespace Dune {
 
 
         template<typename Block, typename Alloc>
-        struct container<BCRSMatrix<Block,Alloc> >
+        struct container<Dune::BCRSMatrix<Block,Alloc> >
         {
           typedef bcrs_matrix type;
         };

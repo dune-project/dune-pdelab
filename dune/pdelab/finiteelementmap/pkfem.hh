@@ -40,13 +40,27 @@ namespace Dune {
           return true;
         }
 
+        bool hasDOFs(int codim) const
+        {
+          switch (codim)
+            {
+            case 1: // vertex
+              return k > 0;
+            case 0: // line
+              return k != 1;
+            default:
+              assert(false && "Invalid codim specified!");
+            }
+          return false;
+        }
+
         std::size_t size(GeometryType gt) const
         {
-        if (gt.isVertex())
-          return k > 0 ? 1 : 0;
-        if (gt.isLine())
-          return k > 0 ? k - 1 : 1;
-        return 0;
+          if (gt.isVertex())
+            return k > 0 ? 1 : 0;
+          if (gt.isLine())
+            return k > 0 ? k - 1 : 1;
+          return 0;
         }
 
         std::size_t maxLocalSize() const
@@ -112,6 +126,22 @@ namespace Dune {
           return true;
         }
 
+        bool hasDOFs(int codim) const
+        {
+          switch (codim)
+            {
+            case 2: // vertex
+              return k > 0;
+            case 1: // line
+              return k > 1;
+            case 0: // triangle
+              return k > 2 || k == 0;
+            default:
+              assert(false && "Invalid codim specified!");
+            }
+          return false;
+        }
+
         std::size_t size(GeometryType gt) const
         {
           if (gt.isVertex())
@@ -129,7 +159,7 @@ namespace Dune {
         }
 
       private:
-        array<FE,6> _variant;
+        std::array<FE,6> _variant;
         GV _gv;
 
       };
@@ -214,6 +244,24 @@ namespace Dune {
           return true;
         }
 
+        bool hasDOFs(int codim) const
+        {
+          switch (codim)
+            {
+            case 3: // vertex
+              return k > 0;
+            case 2: // line
+              return k > 1;
+            case 1: // triangle
+              return k > 2;
+            case 0: // tetrahedron
+              return k == 0 || k > 3;
+            default:
+              assert(false && "Invalid codim specified!");
+            }
+          return false;
+        }
+
         std::size_t size(GeometryType gt) const
         {
           if (gt.isVertex())
@@ -239,50 +287,24 @@ namespace Dune {
           return vertexmap[0] + (vertexmap[1]<<2) + (vertexmap[2]<<4) + (vertexmap[3]<<6);
         }
 
-        array<FE,24> _variant;
-        array<unsigned int,256> _perm_index;
+        std::array<FE,24> _variant;
+        std::array<unsigned int,256> _perm_index;
         GV _gv;
 
       };
 
-
-#ifndef DOXYGEN
-
-      template<unsigned int d>
-      struct DUNE_DEPRECATED_MSG("The fifth template parameter for PkLocalFiniteElementMap (the dimension) is deprecated") warn_deprecated_pk_interface
-      {
-        warn_deprecated_pk_interface() DUNE_DEPRECATED_MSG("The fifth template parameter for PkLocalFiniteElementMap (the dimension) is deprecated")
-          {}
-      };
-
-      template<>
-      struct warn_deprecated_pk_interface<0>
-      {
-        warn_deprecated_pk_interface()
-        {}
-      };
-
-#endif // DOXYGEN
-
-
     } // namespace fem
 
 
-    template<typename GV, typename D, typename R, unsigned int k, unsigned int d = 0>
+    template<typename GV, typename D, typename R, unsigned int k>
     class PkLocalFiniteElementMap
       : public fem::PkLocalFiniteElementMapBase<GV,D,R,k,GV::dimension>
-#ifndef DOXYGEN
-      , public fem::warn_deprecated_pk_interface<d>
-#endif
     {
 
     public:
 
       PkLocalFiniteElementMap(const GV& gv)
         : fem::PkLocalFiniteElementMapBase<GV,D,R,k,GV::dimension>(gv)
-#ifndef DOXYGEN
-        , fem::warn_deprecated_pk_interface<d>()
-#endif
       {}
 
     };

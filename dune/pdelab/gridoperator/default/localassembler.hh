@@ -45,7 +45,7 @@ namespace Dune{
       // The GridOperator has to be a friend to modify the do{Pre,Post}Processing flags
       template<typename, typename, typename,
                typename, typename, typename, typename,
-               typename, typename, bool>
+               typename, typename, int>
       friend class GridOperator;
 
     public:
@@ -66,9 +66,6 @@ namespace Dune{
       //! The base class of this local assembler
       typedef Dune::PDELab::LocalAssemblerBase<typename Traits::MatrixBackend,CU,CV> Base;
 
-      //! The current grid view type
-      typedef typename GFSU::Traits::GridViewType GridView;
-
       //! The local operator
       typedef LOP LocalOperator;
 
@@ -81,9 +78,6 @@ namespace Dune{
       typedef Dune::PDELab::LocalFunctionSpace<GFSV, Dune::PDELab::TestSpaceTag> LFSV;
       typedef LFSIndexCache<LFSU,CU> LFSUCache;
       typedef LFSIndexCache<LFSV,CV> LFSVCache;
-
-      typedef LFSUCache NoConstraintsLFSUCache DUNE_DEPRECATED_MSG("NoConstraintsLFSUCache is deprecated, use LFSUCache instead and use the runtime interface to disable constraints caching");
-      typedef LFSVCache NoConstraintsLFSVCache DUNE_DEPRECATED_MSG("NoConstraintsLFSVCache is deprecated, use LFSVCache instead and use the runtime interface to disable constraints caching");
 
       //! @}
 

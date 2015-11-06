@@ -8,9 +8,11 @@
 #include <unordered_map>
 
 #include <dune/common/typetraits.hh>
+#include <dune/geometry/dimension.hh>
 #include <dune/geometry/typeindex.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/common/capabilities.hh>
+#include <dune/grid/common/partitionset.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -26,11 +28,12 @@ namespace Dune {
     {
 
       typedef GFS GridFunctionSpace;
+      using EntitySet = typename GridFunctionSpace::Traits::EntitySet;
       typedef typename GFS::Traits::GridView GridView;
       typedef typename GridView::Grid Grid;
 
       typedef std::size_t size_type;
-      typedef typename GFS::Traits::GridView::IndexSet::IndexType index_type;
+      using index_type = typename EntitySet::Traits::Index;
       typedef typename GFS::Traits::GridView::Grid::GlobalIdSet::IdType id_type;
 
 
@@ -80,7 +83,7 @@ namespace Dune {
 
       BorderIndexIdCache(const GFS& gfs)
         : _gfs(gfs)
-        , _grid_view(gfs.gridView())
+        , _entity_set(gfs.entitySet())
       {
         update();
       }
@@ -90,7 +93,7 @@ namespace Dune {
         _border_entities.resize(GlobalGeometryTypeIndex::size(Grid::dimension));
         _index_to_id.resize(GlobalGeometryTypeIndex::size(Grid::dimension));
 
-        const typename GridView::IndexSet& index_set = _grid_view.indexSet();
+        auto& index_set = _entity_set.indexSet();
 
         // Skip codim 0 - cells can't ever be border entities
         for (int codim = 1; codim <= Grid::dimension; ++codim)
@@ -144,7 +147,7 @@ namespace Dune {
     private:
 
       const GFS& _gfs;
-      GridView _grid_view;
+      EntitySet _entity_set;
       BorderEntitySet _border_entities;
       IndexToIdMap _index_to_id;
       IdToIndexMap _id_to_index;
@@ -155,25 +158,21 @@ namespace Dune {
         >::type
       create_for_codim()
       {
-        const typename GridView::IndexSet& index_set = _grid_view.indexSet();
-        const typename Grid::GlobalIdSet& id_set = _grid_view.grid().globalIdSet();
+        auto& index_set = _entity_set.indexSet();
+        auto& id_set = _entity_set.gridView().grid().globalIdSet();
 
         if (_gfs.ordering().contains(codim))
           {
-            typedef typename GridView::template Codim<codim>::template Partition<InteriorBorder_Partition>::Iterator EntityIterator;
-            for (EntityIterator it = _grid_view.template begin<codim,InteriorBorder_Partition>(),
-                   end_it = _grid_view.template end<codim,InteriorBorder_Partition>();
-                 it != end_it;
-                 ++it)
+            for (const auto& e : entities(_entity_set,Codim<codim>{},Partitions::interiorBorder))
               {
-                index_type index = index_set.index(*it);
-                size_type gt_index = GlobalGeometryTypeIndex::index(it->type());
+                index_type index = index_set.index(e);
+                size_type gt_index = GlobalGeometryTypeIndex::index(e.type());
 
-                bool border_entity = _border_entities[gt_index][index] = (it->partitionType() == BorderEntity);
+                bool border_entity = _border_entities[gt_index][index] = (e.partitionType() == BorderEntity);
                 if (!border_entity)
                   continue;
 
-                id_type id = id_set.id(*it);
+                id_type id = id_set.id(e);
 
                 _index_to_id[gt_index][index] = id;
                 _id_to_index[id] = EntityIndex(gt_index,index);

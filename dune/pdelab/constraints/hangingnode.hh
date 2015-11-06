@@ -32,21 +32,20 @@ namespace Dune {
                                         const IG& ig)
         {
           typedef IG Intersection;
-          typedef typename Intersection::EntityPointer CellEntityPointer;
           typedef typename Intersection::Entity Cell;
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
           typedef typename LFS::Traits::SizeType SizeType;
 
           typedef typename LFS::Traits::GridFunctionSpace::Traits::GridView::IndexSet IndexSet;
-          const CellEntityPointer e = ig.inside();
-          const CellEntityPointer f = ! ig.boundary() ? ig.outside() : ig.inside();
+          auto e = ig.inside();
+          auto f = ! ig.boundary() ? ig.outside() : ig.inside();
 
           const std::size_t dimension = Intersection::dimension;
 
           typedef Dune::ReferenceElement<DT,dimension> GRE;
-          const GRE& refelement_e = Dune::ReferenceElements<DT,dimension>::general(e->type());
-          const GRE& refelement_f = Dune::ReferenceElements<DT,dimension>::general(f->type());
+          const GRE& refelement_e = Dune::ReferenceElements<DT,dimension>::general(e.type());
+          const GRE& refelement_f = Dune::ReferenceElements<DT,dimension>::general(f.type());
 
           // If both entities have hangingnodes, then the face is
           // conforming and no constraints have to be applied.
@@ -57,7 +56,7 @@ namespace Dune {
           const LFS & lfs = e_has_hangingnodes ? lfs_e : lfs_f;
           const IndexSet& indexSet = lfs.gridFunctionSpace().gridView().indexSet();
 
-          const Cell& cell = *(e_has_hangingnodes ? e : f);
+          const Cell& cell = e_has_hangingnodes ? e : f;
           const int faceindex = e_has_hangingnodes ? ig.indexInInside() : ig.indexInOutside();
           const GRE & refelement = e_has_hangingnodes ? refelement_e : refelement_f;
           const FlagVector & nodeState = e_has_hangingnodes ? nodeState_e : nodeState_f;
@@ -199,21 +198,20 @@ namespace Dune {
                                          const IG& ig)
         {
           typedef IG Intersection;
-          typedef typename Intersection::EntityPointer CellEntityPointer;
           typedef typename Intersection::Entity Cell;
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
           typedef typename LFS::Traits::SizeType SizeType;
           typedef typename LFS::Traits::GridFunctionSpace::Traits::GridView::IndexSet IndexSet;
 
-          const CellEntityPointer e = ig.inside();
-          const CellEntityPointer f = ! ig.boundary() ? ig.outside() : ig.inside();
+          auto e = ig.inside();
+          auto f = ! ig.boundary() ? ig.outside() : ig.inside();
 
           const std::size_t dimension = Intersection::dimension;
 
           typedef Dune::ReferenceElement<DT,dimension> GRE;
-          const GRE& refelement_e = Dune::ReferenceElements<DT,dimension>::general(e->type());
-          const GRE& refelement_f = Dune::ReferenceElements<DT,dimension>::general(f->type());
+          const GRE& refelement_e = Dune::ReferenceElements<DT,dimension>::general(e.type());
+          const GRE& refelement_f = Dune::ReferenceElements<DT,dimension>::general(f.type());
 
           // If both entities have hangingnodes, then the face is
           // conforming and no constraints have to be applied.
@@ -224,7 +222,7 @@ namespace Dune {
           const LFS & lfs = e_has_hangingnodes ? lfs_e : lfs_f;
           const IndexSet& indexSet = lfs.gridFunctionSpace().gridView().indexSet();
 
-          const Cell& cell = *(e_has_hangingnodes ? e : f);
+          const Cell& cell = e_has_hangingnodes ? e : f;
           const int faceindex = e_has_hangingnodes ? ig.indexInInside() : ig.indexInOutside();
           const GRE & refelement = e_has_hangingnodes ? refelement_e : refelement_f;
           const FlagVector & nodeState = e_has_hangingnodes ? nodeState_e : nodeState_f;
@@ -356,22 +354,21 @@ namespace Dune {
                      T& trafo_e, T& trafo_f) const
       {
         typedef IG Intersection;
-        typedef typename Intersection::EntityPointer CellEntityPointer;
         typedef typename Intersection::Geometry FaceGeometry;
         typedef typename FaceGeometry::ctype DT;
 
-        const CellEntityPointer e = ig.inside();
-        const CellEntityPointer f = ig.outside();
+        auto e = ig.inside();
+        auto f = ig.outside();
 
         const Dune::ReferenceElement<DT,dimension>& refelem_e
-          = Dune::ReferenceElements<DT,dimension>::general(e->type());
+          = Dune::ReferenceElements<DT,dimension>::general(e.type());
         const Dune::ReferenceElement<DT,dimension>& refelem_f
-          = Dune::ReferenceElements<DT,dimension>::general(f->type());
+          = Dune::ReferenceElements<DT,dimension>::general(f.type());
 
         // the return values of the hanging node manager
         typedef typename std::vector<typename HangingNodeManager::NodeState> FlagVector;
-        const FlagVector isHangingNode_e(manager.hangingNodes(*e));
-        const FlagVector isHangingNode_f(manager.hangingNodes(*f));
+        const FlagVector isHangingNode_e(manager.hangingNodes(e));
+        const FlagVector isHangingNode_f(manager.hangingNodes(f));
 
         // just to make sure that the hanging node manager is doing
         // what is expected of him

@@ -9,7 +9,7 @@
 
 #include <dune/common/iteratorfacades.hh>
 
-#include <dune/pdelab/backend/tags.hh>
+#include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>

@@ -12,7 +12,6 @@ gridfunctionspace_HEADERS =			\
 	lexicographicordering.hh		\
 	localorderingbase.hh			\
 	orderingbase.hh				\
-	orderinginterface.hh			\
 	permutationordering.hh			\
 	permutedordering.hh			\
 	redblackdg.hh				\

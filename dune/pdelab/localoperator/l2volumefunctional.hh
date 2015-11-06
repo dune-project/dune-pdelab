@@ -42,6 +42,7 @@ namespace Dune {
 
       /** \brief Constructor
        *
+       * \param f Function f to integrate over
        * \param quadOrder Order of the quadrature rule used for integrating over the element
        */
       L2VolumeFunctional (const F& f, unsigned int quadOrder)

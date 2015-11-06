@@ -4,7 +4,6 @@ install(FILES conforming.hh
               hangingnode.hh
               hangingnodemanager.hh
               interiornode.hh
-              mfd.hh
               noconstraints.hh
               p0.hh
               p0ghost.hh

@@ -1,6 +1,8 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_STOKESDGPARAMETER_HH
 #define DUNE_PDELAB_LOCALOPERATOR_STOKESDGPARAMETER_HH
 
+#warning This file is deprecated, include the header dune/pdelab/localoperator/dgnavierstokesparameter.hh instead!
+
 #include <dune/common/parametertreeparser.hh>
 
 #include <dune/pdelab/common/geometrywrapper.hh>
@@ -19,12 +21,12 @@ namespace Dune {
         \tparam J Neumann stress boundary function (vector- or scalar-valued).
                   Scalar values will be interpreted as the magnitude of a vector
                   oriented in outer normal direction.
-                  For prescribed pressure you can use $J=p \cdot n$.
+                  For prescribed pressure you can use \f$J=p \cdot n\f$.
         \tparam IP A class providing the interior penalty factor for each face
     */
     template<typename GV, typename RF, typename F, typename B, typename V, typename J,
              typename IP = DefaultInteriorPenalty<typename V::Traits::RangeFieldType> >
-    class StokesDGParameters
+    class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!") StokesDGParameters
       : public NavierStokesDefaultParameters<GV,RF,F,B,V,J>
     {
     private:
@@ -64,6 +66,7 @@ namespace Dune {
       }
 
     protected:
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
       StokesDGParameters(const std::string & method, const RF mu, const RF rho,
                          F & f, B & b, V & v, J & j, IP & ip)
         : Base(mu,rho,f,b,v,j),
@@ -78,6 +81,7 @@ namespace Dune {
       //! Traits class
       typedef typename Base::Traits Traits;
 
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
       StokesDGParameters(const std::string & method, const RF mu,
                          F & f, B & b, V & v, J & j, IP & ip)
         : Base(mu,1.0,f,b,v,j),
@@ -86,6 +90,7 @@ namespace Dune {
         initFromString(method);
       }
 
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
       StokesDGParameters(const Dune::ParameterTree & configuration,
                          F & f, B & b, V & v, J & j, IP & ip)
         : Base(configuration,f,b,v,j),
@@ -147,12 +152,12 @@ namespace Dune {
         \tparam J Neumann stress boundary function (vector- or scalar-valued).
                   Scalar values will be interpreted as the magnitude of a vector
                   oriented in outer normal direction.
-                  For prescribed pressure you can use $J=p \cdot n$.
+                  For prescribed pressure you can use \f$J=p \cdot n\f$.
         \tparam IP A class providing the interior penalty factor for each face
     */
     template<typename GV, typename RF, typename F, typename B, typename V, typename J,
              typename IP = DefaultInteriorPenalty<typename V::Traits::RangeField> >
-    class NavierStokesDGParameters
+    class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!") NavierStokesDGParameters
       : public StokesDGParameters<GV,RF,F,B,V,J,IP>
     {
 
@@ -161,11 +166,13 @@ namespace Dune {
 
     public:
 
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
       NavierStokesDGParameters(const std::string & method, const RF mu, const RF rho,
                                F & f, B & b, V & v, J & j, IP & ip)
         : Base(method,mu,rho,f,b,v,j,ip)
       {}
 
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
       NavierStokesDGParameters(const Dune::ParameterTree & configuration,
                                F & f, B & b, V & v, J & j, IP & ip)
         : Base(configuration,f,b,v,j,ip)

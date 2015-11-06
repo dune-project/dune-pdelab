@@ -21,7 +21,7 @@
 namespace Dune {
   namespace PDELab {
 
-    /** a local operator for solving convection-diffusion equation with standard FEM
+    /** a local operator for solving the linear convection-diffusion equation with standard FEM
      *
      * \f{align*}{
      *   \nabla\cdot(-A(x) \nabla u + b(x) u) + c(x)u &=& f \mbox{ in } \Omega,  \\
@@ -75,7 +75,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Entity::dimension;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -88,12 +88,12 @@ namespace Dune {
         tensor = param.A(eg.entity(),localcenter);
 
         // loop over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // evaluate basis functions
             // std::vector<RangeType> phi(lfsu.size());
-            // lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
-            const std::vector<RangeType>& phi = cache.evaluateFunction(it->position(),lfsu.finiteElement().localBasis());
+            // lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
+            const std::vector<RangeType>& phi = cache.evaluateFunction(ip.position(),lfsu.finiteElement().localBasis());
 
             // evaluate u
             RF u=0.0;
@@ -102,12 +102,12 @@ namespace Dune {
 
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             // std::vector<JacobianType> js(lfsu.size());
-            // lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
-            const std::vector<JacobianType>& js = cache.evaluateJacobian(it->position(),lfsu.finiteElement().localBasis());
+            // lfsu.finiteElement().localBasis().evaluateJacobian(ip.position(),js);
+            const std::vector<JacobianType>& js = cache.evaluateJacobian(ip.position(),lfsu.finiteElement().localBasis());
 
             // transform gradients of shape functions to real element
             const typename EG::Geometry::JacobianInverseTransposed jac =
-              eg.geometry().jacobianInverseTransposed(it->position());
+              eg.geometry().jacobianInverseTransposed(ip.position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               jac.mv(js[i][0],gradphi[i]);
@@ -122,12 +122,12 @@ namespace Dune {
             tensor.umv(gradu,Agradu);
 
             // evaluate velocity field, sink term and source term
-            typename T::Traits::RangeType b = param.b(eg.entity(),it->position());
-            typename T::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
-            typename T::Traits::RangeFieldType f = param.f(eg.entity(),it->position());
+            typename T::Traits::RangeType b = param.b(eg.entity(),ip.position());
+            typename T::Traits::RangeFieldType c = param.c(eg.entity(),ip.position());
+            typename T::Traits::RangeFieldType f = param.f(eg.entity(),ip.position());
 
             // integrate (A grad u)*grad phi_i - u b*grad phi_i + c*u*phi_i
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
             for (size_type i=0; i<lfsu.size(); i++)
               r.accumulate(lfsu,i,( Agradu*gradphi[i] - u*(b*gradphi[i]) + (c*u-f)*phi[i] )*factor);
           }
@@ -150,7 +150,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Entity::dimension;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -163,16 +163,16 @@ namespace Dune {
         tensor = param.A(eg.entity(),localcenter);
 
         // loop over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             // std::vector<JacobianType> js(lfsu.size());
-            // lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
-            const std::vector<JacobianType>& js = cache.evaluateJacobian(it->position(),lfsu.finiteElement().localBasis());
+            // lfsu.finiteElement().localBasis().evaluateJacobian(ip.position(),js);
+            const std::vector<JacobianType>& js = cache.evaluateJacobian(ip.position(),lfsu.finiteElement().localBasis());
 
             // transform gradient to real element
             const typename EG::Geometry::JacobianInverseTransposed jac
-              = eg.geometry().jacobianInverseTransposed(it->position());
+              = eg.geometry().jacobianInverseTransposed(ip.position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             std::vector<Dune::FieldVector<RF,dim> > Agradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
@@ -183,15 +183,15 @@ namespace Dune {
 
             // evaluate basis functions
             // std::vector<RangeType> phi(lfsu.size());
-            // lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
-            const std::vector<RangeType>& phi = cache.evaluateFunction(it->position(),lfsu.finiteElement().localBasis());
+            // lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
+            const std::vector<RangeType>& phi = cache.evaluateFunction(ip.position(),lfsu.finiteElement().localBasis());
 
             // evaluate velocity field, sink term and source te
-            typename T::Traits::RangeType b = param.b(eg.entity(),it->position());
-            typename T::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
+            typename T::Traits::RangeType b = param.b(eg.entity(),ip.position());
+            typename T::Traits::RangeFieldType c = param.c(eg.entity(),ip.position());
 
             // integrate (A grad phi_j)*grad phi_i - phi_j b*grad phi_i + c*phi_j*phi_i
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
                 mat.accumulate(lfsu,i,lfsu,j,( Agradphi[j]*gradphi[i]-phi[j]*(b*gradphi[i])+c*phi[j]*phi[i] )*factor);
@@ -217,6 +217,9 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
+        // get cell entity
+        auto inside_cell = ig.inside();
+
         // evaluate boundary condition type
         Dune::GeometryType gtface = ig.geometryInInside().type();
         Dune::FieldVector<DF,dim-1> facecenterlocal = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
@@ -231,10 +234,10 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
         // loop over quadrature points and integrate normal flux
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // position of quadrature point in local coordinates of element
-            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
+            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(ip.position());
 
             // evaluate shape functions (assume Galerkin method)
             // std::vector<RangeType> phi(lfsu_s.size());
@@ -244,10 +247,10 @@ namespace Dune {
             if (bctype==ConvectionDiffusionBoundaryConditions::Neumann)
               {
                 // evaluate flux boundary condition
-                typename T::Traits::RangeFieldType j = param.j(ig.intersection(),it->position());
+                typename T::Traits::RangeFieldType j = param.j(ig.intersection(),ip.position());
 
                 // integrate j
-                RF factor = it->weight()*ig.geometry().integrationElement(it->position());
+                RF factor = ip.weight()*ig.geometry().integrationElement(ip.position());
                 for (size_type i=0; i<lfsu_s.size(); i++)
                   r_s.accumulate(lfsu_s,i,j*phi[i]*factor);
               }
@@ -260,14 +263,14 @@ namespace Dune {
                   u += x_s(lfsu_s,i)*phi[i];
 
                 // evaluate velocity field and outer unit normal
-                typename T::Traits::RangeType b = param.b(*(ig.inside()),local);
-                const Dune::FieldVector<DF,dim> n = ig.unitOuterNormal(it->position());
+                typename T::Traits::RangeType b = param.b(inside_cell,local);
+                const Dune::FieldVector<DF,dim> n = ig.unitOuterNormal(ip.position());
 
                 // evaluate outflow boundary condition
-                typename T::Traits::RangeFieldType o = param.o(ig.intersection(),it->position());
+                typename T::Traits::RangeFieldType o = param.o(ig.intersection(),ip.position());
 
                 // integrate o
-                RF factor = it->weight()*ig.geometry().integrationElement(it->position());
+                RF factor = ip.weight()*ig.geometry().integrationElement(ip.position());
                 for (size_type i=0; i<lfsu_s.size(); i++)
                   r_s.accumulate(lfsu_s,i,( (b*n)*u + o)*phi[i]*factor);
               }
@@ -293,6 +296,9 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
+        // get cell entity
+        auto inside_cell = ig.inside();
+
         // evaluate boundary condition type
         Dune::GeometryType gtface = ig.geometryInInside().type();
         Dune::FieldVector<DF,dim-1> facecenterlocal = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
@@ -308,10 +314,10 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
         // loop over quadrature points and integrate normal flux
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // position of quadrature point in local coordinates of element
-            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
+            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(ip.position());
 
             // evaluate shape functions (assume Galerkin method)
             // std::vector<RangeType> phi(lfsu_s.size());
@@ -319,11 +325,11 @@ namespace Dune {
             const std::vector<RangeType>& phi = cache.evaluateFunction(local,lfsu_s.finiteElement().localBasis());
 
             // evaluate velocity field and outer unit normal
-            typename T::Traits::RangeType b = param.b(*(ig.inside()),local);
-            const Dune::FieldVector<DF,dim> n = ig.unitOuterNormal(it->position());
+            typename T::Traits::RangeType b = param.b(inside_cell,local);
+            const Dune::FieldVector<DF,dim> n = ig.unitOuterNormal(ip.position());
 
             // integrate
-            RF factor = it->weight()*ig.geometry().integrationElement(it->position());
+            RF factor = ip.weight()*ig.geometry().integrationElement(ip.position());
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
                 mat_s.accumulate(lfsu_s,i,lfsu_s,j,(b*n)*phi[j]*phi[i]*factor);
@@ -349,13 +355,13 @@ namespace Dune {
     /** a local operator for residual-based error estimation
      *
      * A call to residual() of a grid operator space will assemble
-     * the quantity \eta_T^2 for each cell. Note that the squares
-     * of the cell indicator \eta_T is stored. To compute the global
+     * the quantity \f$\eta_T^2\f$ for each cell. Note that the squares
+     * of the cell indicator \f$\eta_T\f$ is stored. To compute the global
      * error estimate sum up all values and take the square root.
      *
      * Assumptions and limitations:
-     * - Assumes that LFSU is P_k/Q_k finite element space
-     *   and LFSV is a P_0 finite element space (one value per cell).
+     * - Assumes that LFSU is \f$P_k\f$/\f$Q_k\f$ finite element space
+     *   and LFSV is a \f$P_0\f$ finite element space (one value per cell).
      *   However, the second order derivatives are ignored!
      * - Convection term is ignored (but reaction term is included)
      *
@@ -399,7 +405,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
         const int intorder = 2*lfsu.finiteElement().localBasis().order();
 
         // select quadrature rule
@@ -408,11 +414,11 @@ namespace Dune {
 
         // loop over quadrature points
         RF sum(0.0);
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
-            lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
+            lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
 
             // evaluate u
             RF u=0.0;
@@ -420,13 +426,13 @@ namespace Dune {
               u += x(lfsu,i)*phi[i];
 
             // evaluate reaction term
-            typename T::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
+            typename T::Traits::RangeFieldType c = param.c(eg.entity(),ip.position());
 
             // evaluate right hand side parameter function
-            typename T::Traits::RangeFieldType f = param.f(eg.entity(),it->position());
+            typename T::Traits::RangeFieldType f = param.f(eg.entity(),ip.position());
 
             // integrate f^2
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
             sum += (f*f-c*c*u*u)*factor;
           }
 
@@ -456,14 +462,18 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
+        // get cell entities from both sides of the intersection
+        auto inside_cell = ig.inside();
+        auto outside_cell = ig.outside();
+
         // evaluate permeability tensors
         const Dune::FieldVector<DF,dim>&
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,dim>::general(inside_cell.type()).position(0,0);
         const Dune::FieldVector<DF,dim>&
-          outside_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::ReferenceElements<DF,dim>::general(outside_cell.type()).position(0,0);
         typename T::Traits::PermTensorType A_s, A_n;
-        A_s = param.A(*(ig.inside()),inside_local);
-        A_n = param.A(*(ig.outside()),outside_local);
+        A_s = param.A(inside_cell,inside_local);
+        A_n = param.A(outside_cell,outside_local);
 
         // select quadrature rule
         const int intorder = 2*lfsu_s.finiteElement().localBasis().order();
@@ -482,11 +492,11 @@ namespace Dune {
 
         // loop over quadrature points and integrate normal flux
         RF sum(0.0);
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // position of quadrature point in local coordinates of elements
-            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
-            Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(it->position());
+            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(ip.position());
+            Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(ip.position());
 
             // evaluate gradient of basis functions
             std::vector<JacobianType> gradphi_s(lfsu_s.size());
@@ -495,10 +505,10 @@ namespace Dune {
             lfsu_n.finiteElement().localBasis().evaluateJacobian(iplocal_n,gradphi_n);
 
             // transform gradients of shape functions to real element
-            jac = ig.inside()->geometry().jacobianInverseTransposed(iplocal_s);
+            jac = inside_cell.geometry().jacobianInverseTransposed(iplocal_s);
             std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
             for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
-            jac = ig.outside()->geometry().jacobianInverseTransposed(iplocal_n);
+            jac = outside_cell.geometry().jacobianInverseTransposed(iplocal_n);
             std::vector<Dune::FieldVector<RF,dim> > tgradphi_n(lfsu_n.size());
             for (size_type i=0; i<lfsu_n.size(); i++) jac.mv(gradphi_n[i][0],tgradphi_n[i]);
 
@@ -511,14 +521,14 @@ namespace Dune {
               gradu_n.axpy(x_n(lfsu_n,i),tgradphi_n[i]);
 
             // integrate
-            RF factor = it->weight() * ig.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * ig.geometry().integrationElement(ip.position());
             RF jump = (An_F_s*gradu_s)-(An_F_n*gradu_n);
             sum += 0.25*jump*jump*factor;
           }
 
         // accumulate indicator
         // DF h_T = diameter(ig.geometry());
-        DF h_T = std::max(diameter(ig.inside()->geometry()),diameter(ig.outside()->geometry()));
+        DF h_T = std::max(diameter(inside_cell.geometry()),diameter(outside_cell.geometry()));
         r_s.accumulate(lfsv_s,0,h_T*sum);
         r_n.accumulate(lfsv_n,0,h_T*sum);
       }
@@ -543,11 +553,12 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
+        auto inside_cell = ig.inside();
         // evaluate permeability tensors
         const Dune::FieldVector<DF,dim>&
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,dim>::general(inside_cell.type()).position(0,0);
         typename T::Traits::PermTensorType A_s;
-        A_s = param.A(*(ig.inside()),inside_local);
+        A_s = param.A(inside_cell,inside_local);
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
         Dune::FieldVector<RF,dim> An_F_s;
         A_s.mv(n_F,An_F_s);
@@ -569,17 +580,17 @@ namespace Dune {
 
         // loop over quadrature points and integrate normal flux
         RF sum(0.0);
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // position of quadrature point in local coordinates of elements
-            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
+            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(ip.position());
 
             // evaluate gradient of basis functions
             std::vector<JacobianType> gradphi_s(lfsu_s.size());
             lfsu_s.finiteElement().localBasis().evaluateJacobian(iplocal_s,gradphi_s);
 
             // transform gradients of shape functions to real element
-            jac = ig.inside()->geometry().jacobianInverseTransposed(iplocal_s);
+            jac = inside_cell.geometry().jacobianInverseTransposed(iplocal_s);
             std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
             for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
 
@@ -589,17 +600,17 @@ namespace Dune {
               gradu_s.axpy(x_s(lfsu_s,i),tgradphi_s[i]);
 
             // evaluate flux boundary condition
-            RF j = param.j(ig.intersection(),it->position());
+            RF j = param.j(ig.intersection(),ip.position());
 
             // integrate
-            RF factor = it->weight() * ig.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * ig.geometry().integrationElement(ip.position());
             RF jump = j+(An_F_s*gradu_s);
             sum += jump*jump*factor;
           }
 
         // accumulate indicator
         //DF h_T = diameter(ig.geometry());
-        DF h_T = diameter(ig.inside()->geometry());
+        DF h_T = diameter(inside_cell.geometry());
         r_s.accumulate(lfsv_s,0,h_T*sum);
       }
 
@@ -631,13 +642,13 @@ namespace Dune {
     /** a local operator for evaluating the temporal part of error estimator
      *
      * A call to residual() of a grid operator space will assemble
-     * the quantity \eta_T^2 for each cell. Note that the squares
-     * of the cell indicator \eta_T is stored. To compute the global
+     * the quantity \f$\eta_T^2\f$ for each cell. Note that the squares
+     * of the cell indicator \f$\eta_T\f$ is stored. To compute the global
      * error estimate sum up all values and take the square root.
      *
      * Assumptions and limitations:
-     * - Assumes that LFSU is P_k/Q_k finite element space
-     *   and LFSV is a P_0 finite element space (one value per cell).
+     * - Assumes that LFSU is \f$P_k\f$/\f$Q_k\f$ finite element space
+     *   and LFSV is a \f$P_0\f$ finite element space (one value per cell).
      * - Assumes that x is the jump from one time interval to the next, i.e. x=xnew-xold.
      * - Data oscillation part is currently not yet implemented
      *
@@ -681,7 +692,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
         const int intorder = 2*lfsu.finiteElement().localBasis().order();
 
         // select quadrature rule
@@ -693,11 +704,11 @@ namespace Dune {
         RF fsum_up(0.0);
         RF fsum_mid(0.0);
         RF fsum_down(0.0);
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
-            lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
+            lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
 
             // evaluate u
             RF u=0.0;
@@ -705,16 +716,16 @@ namespace Dune {
               u += x(lfsu,i)*phi[i];
 
             // integrate f^2
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
             sum += u*u*factor;
 
             // evaluate right hand side parameter function
             param.setTime(time);
-            typename T::Traits::RangeFieldType f_down = param.f(eg.entity(),it->position());
+            typename T::Traits::RangeFieldType f_down = param.f(eg.entity(),ip.position());
             param.setTime(time+0.5*dt);
-            typename T::Traits::RangeFieldType f_mid = param.f(eg.entity(),it->position());
+            typename T::Traits::RangeFieldType f_mid = param.f(eg.entity(),ip.position());
             param.setTime(time+dt);
-            typename T::Traits::RangeFieldType f_up = param.f(eg.entity(),it->position());
+            typename T::Traits::RangeFieldType f_up = param.f(eg.entity(),ip.position());
             RF f_average = (1.0/6.0)*f_down + (2.0/3.0)*f_mid + (1.0/6.0)*f_up;
 
             // integrate f-f_average
@@ -788,13 +799,13 @@ namespace Dune {
     /** a local operator for evaluating the temporal part of error estimator
      *
      * A call to residual() of a grid operator space will assemble
-     * the quantity \eta_T^2 for each cell. Note that the squares
-     * of the cell indicator \eta_T is stored. To compute the global
+     * the quantity \f$\eta_T^2\f$ for each cell. Note that the squares
+     * of the cell indicator \f$\eta_T\f$ is stored. To compute the global
      * error estimate sum up all values and take the square root.
      *
      * Assumptions and limitations:
-     * - Assumes that LFSU is P_k/Q_k finite element space
-     *   and LFSV is a P_0 finite element space (one value per cell).
+     * - Assumes that LFSU is \f$P_k\f$/\f$Q_k\f$ finite element space
+     *   and LFSV is a \f$P_0\f$ finite element space (one value per cell).
      * - Assumes that x is the jump from one time interval to the next, i.e. x=xnew-xold.
      * - Neumann boundary part not completely implemented
      *
@@ -841,7 +852,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
         const int intorder = 2*lfsu.finiteElement().localBasis().order();
 
         // select quadrature rule
@@ -864,11 +875,11 @@ namespace Dune {
         RF fsum_grad_up(0.0);
         RF fsum_grad_mid(0.0);
         RF fsum_grad_down(0.0);
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
-            lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
+            lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
 
             // evaluate u
             RF u=0.0;
@@ -876,16 +887,16 @@ namespace Dune {
               u += x(lfsu,i)*phi[i];
 
             // integrate jump
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
             sum += u*u*factor;
 
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType> js(lfsu.size());
-            lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
+            lfsu.finiteElement().localBasis().evaluateJacobian(ip.position(),js);
 
             // transform gradients of shape functions to real element
             const typename EG::Geometry::JacobianInverseTransposed jac =
-              eg.geometry().jacobianInverseTransposed(it->position());
+              eg.geometry().jacobianInverseTransposed(ip.position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               jac.mv(js[i][0],gradphi[i]);
@@ -955,25 +966,26 @@ namespace Dune {
         // loop over quadrature points and integrate
         RF sum_up(0.0);
         RF sum_down(0.0);
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // evaluate flux boundary condition
             param.setTime(time);
-            RF j_down = param.j(ig.intersection(),it->position());
+            RF j_down = param.j(ig.intersection(),ip.position());
             param.setTime(time+0.5*dt);
-            RF j_mid = param.j(ig.intersection(),it->position());
+            RF j_mid = param.j(ig.intersection(),ip.position());
             param.setTime(time+dt);
-            RF j_up = param.j(ig.intersection(),it->position());
+            RF j_up = param.j(ig.intersection(),ip.position());
 
             // integrate
-            RF factor = it->weight() * ig.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * ig.geometry().integrationElement(ip.position());
             sum_down += (j_down-j_mid)*(j_down-j_mid)*factor;
             sum_up += (j_up-j_mid)*(j_up-j_mid)*factor;
           }
 
         // accumulate indicator
         //DF h_T = diameter(ig.geometry());
-        DF h_T = diameter(ig.inside()->geometry());
+        auto inside_cell = ig.inside();
+        DF h_T = diameter(inside_cell.geometry());
         r_s.accumulate(lfsv_s,0,(h_T+dt*dt/h_T)*dt*0.5*(sum_down+sum_up));
       }
 

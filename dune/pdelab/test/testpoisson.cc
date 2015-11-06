@@ -6,30 +6,28 @@
 #endif
 
 #include <iostream>
+#include <vector>
 #include <map>
 #include <string>
-#include <vector>
 
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-#include <dune/pdelab/backend/istlsolverbackend.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/constraints/conforming.hh>
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
 #include <dune/pdelab/finiteelementmap/pkfem.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab/constraints/conforming.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/localoperator/laplacedirichletp12d.hh>
-#include <dune/pdelab/localoperator/poisson.hh>
+#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
+#include <dune/pdelab/gridfunctionspace/vtk.hh>
 
 #include"gridexamples.hh"
 
@@ -46,106 +44,95 @@
 // Define parameter functions f,g,j and \partial\Omega_D/N
 //===============================================================
 
-// function for defining the source term
 template<typename GV, typename RF>
-class F
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  F<GV,RF> >
+class PoissonModelProblem
 {
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,F<GV,RF> > BaseT;
+  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
-  F (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x,
-                              typename Traits::RangeType& y) const
+public:
+  typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
+
+  //! tensor diffusion coefficient
+  typename Traits::PermTensorType
+  A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    if (x[0]>0.25 && x[0]<0.375 && x[1]>0.25 && x[1]<0.375)
-      y = 50.0;
+    typename Traits::PermTensorType I;
+    for (std::size_t i=0; i<Traits::dimDomain; i++)
+      for (std::size_t j=0; j<Traits::dimDomain; j++)
+        I[i][j] = (i==j) ? 1 : 0;
+    return I;
+  }
+
+  //! velocity field
+  typename Traits::RangeType
+  b (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename Traits::RangeType v(0.0);
+    return v;
+  }
+
+  //! sink term
+  typename Traits::RangeFieldType
+  c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    return 0.0;
+  }
+
+  //! source term
+  typename Traits::RangeFieldType
+  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    const auto& xglobal = e.geometry().global(x);
+    if (xglobal[0]>0.25 && xglobal[0]<0.375 && xglobal[1]>0.25 && xglobal[1]<0.375)
+      return 50.0;
     else
-      y = 0.0;
-  }
-};
-
-
-// boundary grid function selecting boundary conditions
-class ConstraintsParameters
-  : public Dune::PDELab::DirichletConstraintsParameters
-{
-
-public:
-
-  template<typename I>
-  bool isDirichlet(const I & ig, const Dune::FieldVector<typename I::ctype, I::dimension-1> & x) const
-  {
-    Dune::FieldVector<typename I::ctype,I::dimension>
-      xg = ig.geometry().global(x);
-
-    if (xg[1]<1E-6 || xg[1]>1.0-1E-6)
-      {
-        return false;
-      }
-    if (xg[0]>1.0-1E-6 && xg[1]>0.5+1E-6)
-      {
-        return false;
-      }
-    return true;
+      return 0.0;
   }
 
-  template<typename I>
-  bool isNeumann(const I & ig, const Dune::FieldVector<typename I::ctype, I::dimension-1> & x) const
+  //! boundary condition type function
+  BCType
+  bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
-    return !isDirichlet(ig,x);
+    typename Traits::DomainType xglobal = is.geometry().global(x);
+
+    if (xglobal[1]<1E-6 || xglobal[1]>1.0-1E-6)
+      {
+        return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
+      }
+    if (xglobal[0]>1.0-1E-6 && xglobal[1]>0.5+1E-6)
+      {
+        return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
+      }
+    return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
 
-};
-
-
-// function for Dirichlet boundary conditions and initialization
-template<typename GV, typename RF>
-class G
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  G<GV,RF> >
-{
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G<GV,RF> > BaseT;
-
-  G (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x,
-                              typename Traits::RangeType& y) const
+  //! Dirichlet boundary condition value
+  typename Traits::RangeFieldType
+  g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    typename Traits::DomainType center;
-    for (int i=0; i<GV::dimension; i++) center[i] = 0.5;
-    center -= x;
-    y = exp(-center.two_norm2());
+    typename Traits::DomainType xglobal = e.geometry().global(x);
+    xglobal -= 0.5;
+    return exp(-xglobal.two_norm2());
   }
-};
 
-// function for defining the flux boundary condition
-template<typename GV, typename RF>
-class J
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  J<GV,RF> >
-{
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,J<GV,RF> > BaseT;
-
-  J (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x,
-                              typename Traits::RangeType& y) const
+  //! Neumann boundary condition
+  typename Traits::RangeFieldType
+  j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
-    if (x[1]<1E-6 || x[1]>1.0-1E-6)
-      {
-        y = 0;
-        return;
-      }
-    if (x[0]>1.0-1E-6 && x[1]>0.5+1E-6)
-      {
-        y = -5.0;
-        return;
-      }
+    typename Traits::DomainType xglobal = is.geometry().global(x);
+
+    if (xglobal[0] > 1.0 - 1E-6 && xglobal[1] > 0.5 + 1E-6) {
+      return -5.0;
+    } else {
+      return 0.0;
+    }
+  }
+
+  //! outflow boundary condition
+  typename Traits::RangeFieldType
+  o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
+  {
+    return 0.0;
   }
 };
 
@@ -155,34 +142,34 @@ public:
 
 // generate a P1 function and output it
 template<typename GV, typename FEM, typename CON>
-bool poisson (const GV& gv, const FEM& fem, std::string filename, int q)
+void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 {
+  using Dune::PDELab::Backend::native;
+
   // constants and types
   typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
-    Dune::PDELab::ISTLVectorBackend<> > GFS;
+    Dune::PDELab::istl::VectorBackend<> > GFS;
   GFS gfs(gv,fem);
   gfs.name("solution");
+
+  // make model problem
+  typedef PoissonModelProblem<GV,R> Problem;
+  Problem problem;
 
   // make constraints map and initialize it from a function
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
   C cg;
   cg.clear();
-  ConstraintsParameters constraintsparameters;
-  Dune::PDELab::constraints(constraintsparameters,gfs,cg);
+  Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> bctype(gv,problem);
+  Dune::PDELab::constraints(bctype,gfs,cg);
 
   // make local operator
-  typedef G<GV,R> GType;
-  GType g(gv);
-  typedef F<GV,R> FType;
-  FType f(gv);
-  typedef J<GV,R> JType;
-  JType j(gv);
-  typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType> LOP;
-  LOP lop(f,constraintsparameters,j, q);
+  typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
+  LOP lop(problem);
 
 #ifdef OLD_BACKEND
   typedef Dune::PDELab::ISTLMatrixBackend MBE;
@@ -204,7 +191,7 @@ bool poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   // it's there to test the copy constructor and assignment operator of the
   // matrix wrapper
   typedef typename GridOperator::Traits::Domain DV;
-  DV x0(gfs,Dune::PDELab::tags::unattached_container());
+  DV x0(gfs,Dune::PDELab::Backend::unattached_container());
   {
     DV x1(gfs);
     DV x2(x1);
@@ -213,6 +200,9 @@ bool poisson (const GV& gv, const FEM& fem, std::string filename, int q)
     x0 = x2;
   }
 
+  // initialize DOFs from Dirichlet extension
+  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
+  G g(gv,problem);
   Dune::PDELab::interpolate(g,gfs,x0);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
 
@@ -245,14 +235,11 @@ bool poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   gridoperator.residual(x0,r);
 
   // make ISTL solver
-  Dune::MatrixAdapter<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> opa(m.base());
-  typedef Dune::PDELab::OnTheFlyOperator<DV,RV,
-                                         GridOperator> ISTLOnTheFlyOperator;
-  ISTLOnTheFlyOperator opb(gridoperator);
-  Dune::SeqSSOR<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ssor(m.base(),1,1.0);
-  Dune::SeqILU0<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ilu0(m.base(),1.0);
+  Dune::MatrixAdapter<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> opa(native(m));
+  //ISTLOnTheFlyOperator opb(gridoperator);
+  Dune::SeqSSOR<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ssor(native(m),1,1.0);
+  Dune::SeqILU0<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ilu0(native(m),1.0);
   Dune::Richardson<typename DV::BaseT,typename RV::BaseT> richardson(1.0);
-  Dune::Richardson<DV,RV> richardsonb(1.0);
 
 //   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
 //     Dune::Amg::FirstDiagonal> > Criterion;
@@ -267,58 +254,25 @@ bool poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 //   AMG amg(opa,criterion,smootherArgs,1,1);
 
   Dune::CGSolver<typename DV::BaseT> solvera(opa,ilu0,1E-10,5000,2);
-  Dune::CGSolver<DV> solverb(opb,richardsonb,1E-10,5000,2);
+  // FIXME: Use ISTLOnTheFlyOperator in the second solver again
+  Dune::CGSolver<typename DV::BaseT> solverb(opa,richardson,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
-  std::cout << "Solve with assembled matrix" << std::endl;
-  DV xa(gfs,0.0);
-  {
-    RV ra = r;
-    ra *= -1.0; // need -residual
-    solvera.apply(xa.base(),ra.base(),stat);
-  }
-  if(!stat.converged)
-  {
-    std::cerr << "Error: matrix solver did not converge" << std::endl;
-    return false;
-  }
-  xa += x0;
-
-  std::cout << "Solve with on-the-fly assembly" << std::endl;
-  DV xb(gfs,0.0);
-  {
-    RV rb = r;
-    rb *= -1.0; // need -residual
-    solverb.apply(xb,rb,stat);
-  }
-  if(!stat.converged)
-  {
-    std::cerr << "Error: on-the-fly solver did not converge" << std::endl;
-    return false;
-  }
-  xb += x0;
+  // solve the jacobian system
+  r *= -1.0; // need -residual
+  DV x(gfs,0.0);
+  solvera.apply(native(x),native(r),stat);
+  x += x0;
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,xa,
-        Dune::PDELab::vtk::DefaultFunctionNameGenerator("matrix"));
-  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,xb,
-        Dune::PDELab::vtk::DefaultFunctionNameGenerator("on_the_fly"));
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
   vtkwriter.write(filename,Dune::VTK::ascii);
-
-  return true;
 }
 
 //===============================================================
 // Main program with grid setup
 //===============================================================
-
-void accumulate_result(int &acc, bool good) {
-  if(good && acc == 77)
-    acc = 0;
-  if(!good)
-    acc = 1;
-}
 
 int main(int argc, char** argv)
 {
@@ -326,11 +280,8 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-    int result = 77;
-
+    // YaspGrid Q1 2D test
     {
-      std::cout << "#### Testing YaspGrid Q1 2D" << std::endl;
-
       // make grid
       Dune::FieldVector<double,2> L(1.0);
       Dune::array<int,2> N(Dune::fill_array<int,2>(1));
@@ -347,13 +298,11 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      bool good = poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q1_2d",2);
-      accumulate_result(result, good);
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q1_2d",2);
     }
 
+    // YaspGrid Q2 2D test
     {
-      std::cout << "#### Testing YaspGrid Q2 2D" << std::endl;
-
       // make grid
       Dune::FieldVector<double,2> L(1.0);
       Dune::array<int,2> N(Dune::fill_array<int,2>(1));
@@ -370,13 +319,11 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      bool good = poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q2_2d",2);
-      accumulate_result(result, good);
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q2_2d",2);
     }
 
+    // YaspGrid Q1 3D test
     {
-      std::cout << "#### Testing YaspGrid Q1 3D" << std::endl;
-
       // make grid
       Dune::FieldVector<double,3> L(1.0);
       Dune::array<int,3> N(Dune::fill_array<int,3>(1));
@@ -393,13 +340,11 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      bool good = poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q1_3d",2);
-      accumulate_result(result, good);
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q1_3d",2);
     }
 
+    // YaspGrid Q2 3D test
     {
-      std::cout << "#### Testing YaspGrid Q2 3D" << std::endl;
-
       // make grid
       Dune::FieldVector<double,3> L(1.0);
       Dune::array<int,3> N(Dune::fill_array<int,3>(1));
@@ -416,14 +361,12 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      bool good = poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q2_3d",2);
-      accumulate_result(result, good);
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q2_3d",2);
     }
 
+    // UG Pk 2D test
 #if HAVE_UG
     {
-      std::cout << "#### Testing UG P3 2D" << std::endl;
-
       // make grid
       std::shared_ptr<Dune::UGGrid<2> > grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
       grid->globalRefine(4);
@@ -440,15 +383,12 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      bool good = poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_UG_Pk_2d",q);
-      accumulate_result(result, good);
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_UG_Pk_2d",q);
     }
 #endif
 
 #if HAVE_ALBERTA
     {
-      std::cout << "#### Testing Alberta P3 2D" << std::endl;
-
       // make grid
       AlbertaUnitSquare grid;
       grid.globalRefine(8);
@@ -465,15 +405,12 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      bool good = poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_Alberta_Pk_2d",q);
-      accumulate_result(result, good);
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_Alberta_Pk_2d",q);
     }
 #endif
 
 #if HAVE_DUNE_ALUGRID
     {
-      std::cout << "#### Testing ALUGrid(simplex) P3 2D" << std::endl;
-
       // make grid
       ALUUnitSquare grid;
       grid.globalRefine(4);
@@ -490,20 +427,19 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      bool good = poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_ALU_Pk_2d",q);
-      accumulate_result(result, good);
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_ALU_Pk_2d",q);
     }
 #endif
 
-    // test passed
-    return result;
+	// test passed
+	return 0;
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-    throw;
+	return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-    throw;
+	return 1;
   }
 }

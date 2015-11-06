@@ -193,9 +193,10 @@ namespace Dune {
       // this is the leaf version now
 
       // get some types
-      typedef typename GFS::Traits::GridViewType GV;
-      typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-      typedef typename GV::Traits::template Codim<0>::Entity Element;
+      using EntitySet = typename GFS::Traits::EntitySet;
+      using Element = typename EntitySet::Element;
+
+      auto entity_set = gfs.entitySet();
 
       // make local function space
       typedef LocalFunctionSpace<GFS> LFS;
@@ -207,16 +208,15 @@ namespace Dune {
       XView x_view(xg);
 
       // loop once over the grid
-      for (ElementIterator it = gfs.gridView().template begin<0>();
-           it!=gfs.gridView().template end<0>(); ++it)
+      for (const auto& element : elements(entity_set))
         {
           // bind local function space to element
-          lfs.bind(*it);
+          lfs.bind(element);
           lfs_cache.update();
           x_view.bind(lfs_cache);
 
           // call interpolate
-          TypeTree::applyToTreePair(f,lfs,InterpolateVisitor<InterpolateBackendStandard,Element,XView>(InterpolateBackendStandard(),*it,x_view));
+          TypeTree::applyToTreePair(f,lfs,InterpolateVisitor<InterpolateBackendStandard,Element,XView>(InterpolateBackendStandard(),element,x_view));
 
           x_view.unbind();
         }

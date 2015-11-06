@@ -5,9 +5,8 @@
 
 #include <iterator>
 #include <cassert>
+#include <tuple>
 
-#include <dune/common/nullptr.hh>
-#include <dune/common/tuples.hh>
 #include <dune/pdelab/backend/istl/tags.hh>
 
 namespace Dune {
@@ -42,26 +41,26 @@ namespace Dune {
         template<typename T, typename... Iterators>
         struct _extract_iterators<T,true,tags::field_vector,Iterators...>
         {
-          typedef tuple<Iterators...,typename T::const_iterator> type;
+          typedef std::tuple<Iterators...,typename T::const_iterator> type;
         };
 
         template<typename T, typename... Iterators>
         struct _extract_iterators<T,false,tags::field_vector,Iterators...>
         {
-          typedef tuple<Iterators...,typename T::iterator> type;
+          typedef std::tuple<Iterators...,typename T::iterator> type;
         };
 
 
         template<typename T, typename... Iterators>
         struct _extract_iterators<T,true,tags::dynamic_vector,Iterators...>
         {
-          typedef tuple<Iterators...,typename T::const_iterator> type;
+          typedef std::tuple<Iterators...,typename T::const_iterator> type;
         };
 
         template<typename T, typename... Iterators>
         struct _extract_iterators<T,false,tags::dynamic_vector,Iterators...>
         {
-          typedef tuple<Iterators...,typename T::iterator> type;
+          typedef std::tuple<Iterators...,typename T::iterator> type;
         };
 
 
@@ -139,7 +138,7 @@ namespace Dune {
         // We disable this one if the two types are identical to avoid hiding
         // the default copy constructor
         template<typename W>
-        vector_iterator(const vector_iterator<W>& r, typename enable_if<is_const && !is_same<V,W>::value && is_same<vector,W>::value,void*>::type = nullptr)
+        vector_iterator(const vector_iterator<W>& r, typename std::enable_if<is_const && !std::is_same<V,W>::value && std::is_same<vector,W>::value,void*>::type = nullptr)
           : _at_end(r._at_end)
           , _current(r._current)
           , _iterators(r._iterators)
@@ -151,8 +150,8 @@ namespace Dune {
         // We disable this one if the two types are identical to avoid hiding
         // the default assignment operator
         template<typename W>
-        typename enable_if<
-          is_const && !is_same<vector,W>::value && is_same<vector,W>::value,
+        typename std::enable_if<
+          is_const && !std::is_same<vector,W>::value && std::is_same<vector,W>::value,
           vector_iterator&
           >::type
         operator=(const vector_iterator<W>& r)
@@ -191,8 +190,8 @@ namespace Dune {
         }
 
         template<typename W>
-        typename enable_if<
-          is_same<vector,typename vector_iterator<W>::vector>::value,
+        typename std::enable_if<
+          std::is_same<vector,typename vector_iterator<W>::vector>::value,
           bool
           >::type
         operator==(const vector_iterator<W>& r) const
@@ -208,8 +207,8 @@ namespace Dune {
         }
 
         template<typename W>
-        typename enable_if<
-          is_same<vector,typename vector_iterator<W>::vector>::value,
+        typename std::enable_if<
+          std::is_same<vector,typename vector_iterator<W>::vector>::value,
           bool
           >::type
         operator!=(const vector_iterator<W>& r) const
@@ -221,7 +220,7 @@ namespace Dune {
 
         template<std::size_t l>
         struct level
-          : public integral_constant<std::size_t,l>
+          : public std::integral_constant<std::size_t,l>
         {};
 
         void increment()
@@ -234,9 +233,9 @@ namespace Dune {
         template<std::size_t l, typename Block>
         bool start_leaf(level<l>, Block& block)
         {
-          typedef typename tuple_element<l,Iterators>::type iterator;
-          iterator& it = get<l>(_iterators);
-          iterator& end = get<l>(_end);
+          typedef typename std::tuple_element<l,Iterators>::type iterator;
+          iterator& it = std::get<l>(_iterators);
+          iterator& end = std::get<l>(_end);
 
           it = block.begin();
           end = block.end();
@@ -272,9 +271,9 @@ namespace Dune {
         template<std::size_t l, typename Block>
         bool start(tags::block_vector, level<l>, Block& block)
         {
-          typedef typename tuple_element<l,Iterators>::type iterator;
-          iterator& it = get<l>(_iterators);
-          iterator& end = get<l>(_end);
+          typedef typename std::tuple_element<l,Iterators>::type iterator;
+          iterator& it = std::get<l>(_iterators);
+          iterator& end = std::get<l>(_end);
 
           it = block.begin();
           end = block.end();
@@ -294,9 +293,9 @@ namespace Dune {
         template<std::size_t l>
         bool advance_leaf(level<l>)
         {
-          typedef typename tuple_element<l,Iterators>::type iterator;
-          iterator& it = get<l>(_iterators);
-          const iterator& end = get<l>(_end);
+          typedef typename std::tuple_element<l,Iterators>::type iterator;
+          iterator& it = std::get<l>(_iterators);
+          const iterator& end = std::get<l>(_end);
 
           ++it;
 
@@ -330,9 +329,9 @@ namespace Dune {
         template<std::size_t l>
         bool advance(tags::block_vector, level<l>)
         {
-          typedef typename tuple_element<l,Iterators>::type iterator;
-          iterator& it = get<l>(_iterators);
-          iterator& end = get<l>(_end);
+          typedef typename std::tuple_element<l,Iterators>::type iterator;
+          iterator& it = std::get<l>(_iterators);
+          iterator& end = std::get<l>(_end);
 
           if (advance(container_tag(*it),level<l+1>()))
             return true;

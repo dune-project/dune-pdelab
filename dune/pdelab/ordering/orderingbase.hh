@@ -5,7 +5,6 @@
 #define DUNE_PDELAB_ORDERING_ORDERINGBASE_HH
 
 #include <dune/pdelab/common/exceptions.hh>
-#include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
 
@@ -19,7 +18,6 @@ namespace Dune {
 
     template<typename DI, typename CI>
     class OrderingBase
-      : public PartitionInfoProvider
     {
 
       template<typename size_type>
@@ -143,7 +141,8 @@ namespace Dune {
                    bool container_blocked,
                    GFSData* gfs_data,
                    VirtualOrderingBase<DI,CI>* delegate = nullptr)
-        : _container_blocked(container_blocked)
+        : _fixed_size(false)
+        , _container_blocked(container_blocked)
         , _merge_mode(MergeMode::lexicographic)
         , _child_count(Node::has_dynamic_ordering_children ? Node::CHILDREN : 0)
         , _children(_child_count,nullptr)
@@ -156,8 +155,6 @@ namespace Dune {
         , _gfs_data(gfs_data)
       {
         TypeTree::applyToTree(node,extract_child_bases<OrderingBase>(_children));
-        // We contain all grid PartitionTypes that any of our children contain.
-        mergePartitionSets(_children.begin(),_children.end());
       }
 
       template<typename Node>
@@ -166,7 +163,8 @@ namespace Dune {
                    const std::vector<std::size_t>& merge_offsets,
                    GFSData* gfs_data,
                    VirtualOrderingBase<DI,CI>* delegate = nullptr)
-        : _container_blocked(container_blocked)
+        : _fixed_size(false)
+        , _container_blocked(container_blocked)
         , _merge_mode(MergeMode::interleaved)
         , _child_count(Node::has_dynamic_ordering_children ? Node::CHILDREN : 0)
         , _children(_child_count,nullptr)
@@ -180,8 +178,6 @@ namespace Dune {
         , _gfs_data(gfs_data)
       {
         TypeTree::applyToTree(node,extract_child_bases<OrderingBase>(_children));
-        // We contain all grid PartitionTypes that any of our children contain.
-        mergePartitionSets(_children.begin(),_children.end());
       }
 
 

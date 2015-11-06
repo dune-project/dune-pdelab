@@ -3,6 +3,7 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_DESCRIPTORS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_DESCRIPTORS_HH
 
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/istl/forwarddeclarations.hh>
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
 #include <dune/pdelab/backend/istl/utility.hh>
@@ -11,9 +12,82 @@
 namespace Dune {
   namespace PDELab {
 
+#ifndef DOXYGEN
+      template<typename T>
+      constexpr bool deactivate_standard_blocking_for_ordering(const T&)
+      {
+        return false;
+      }
+#endif
+
+    namespace istl {
+
+      //! The type of blocking employed at this node in the function space tree.
+      enum class Blocking
+      {
+        //! No blocking at this level.
+        none,
+        //! Creates one macro block for each child space, each block is a BlockVector / BCRS matrix.
+        bcrs,
+        //! Create fixed size blocks that each group together a fixed number of DOFs from each child space.
+        /**
+         * Creates a block structure with fixed size child blocks that each group together a fixed number
+         * of DOFs from each child space. Typically used for entity-wise blocking of DOFs across child spaces
+         * for e.g. velocity in flow problems or concentrations in multi-component transport.
+         *
+         * \note This type of blocking cannot be nested due to limitations in ISTL.
+         */
+        fixed,
+      };
+
+      //! Tag describing an ISTL BlockVector backend.
+      struct vector_backend_tag {};
+
+      template<Blocking blocking = Blocking::none, std::size_t block_size_ = 1>
+      struct VectorBackend
+      {
+
+        using tag = vector_backend_tag;
+
+        static_assert((block_size_ > 0),"block size for FieldVector has to be positive");
+
+        using size_type = std::size_t;
+
+        static const size_type blockSize = block_size_;
+
+        struct Traits
+        {
+          static const Blocking block_type = blocking;
+          static const size_type block_size = block_size_;
+
+          static const bool blocked = blocking != Blocking::none;
+
+          static const size_type max_blocking_depth = blocked ? 1 : 0;
+        };
+
+        template<typename GFS>
+        bool blocked(const GFS& gfs) const
+        {
+          if (deactivate_standard_blocking_for_ordering(gfs.orderingTag()))
+            return false;
+          // We have to make an exception for static blocking and block_size == 1:
+          // In that case, the ISTL backends expect the redundant index information
+          // at that level to be elided, and keeping it in here will break vector
+          // and matrix accesses.
+          // To work around that problem, we override the user and just turn off
+          // blocking internally.
+          return Traits::blocked && (blocking != Blocking::fixed || !GFS::isLeaf || block_size_ > 1);
+        }
+
+      };
+
+    }
+
     namespace ISTLParameters {
 
-      enum Blocking
+      enum
+      DUNE_DEPRECATED_MSG("ISTLParameters::blocking is deprecated and will be removed after PDELab 2.4. Use the new istl::VectorBackend and istl::Blocking instead. Note that the enum values of istl::Blocking are named differently!")
+      Blocking
         {
           no_blocking,
           dynamic_blocking,
@@ -21,51 +95,13 @@ namespace Dune {
         };
     }
 
-    template<typename T>
-    DUNE_CONSTEXPR bool deactivate_standard_blocking_for_ordering(const T&)
-    {
-      return false;
-    }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-    struct istl_vector_backend_tag {};
+    template<ISTLParameters::Blocking blocking = ISTLParameters::no_blocking, std::size_t block_size = 1>
+    using ISTLVectorBackend DUNE_DEPRECATED_MSG("ISTLVectorBackend is deprecated and will be removed after PDELab 2.4. Use istl::VectorBackend instead") = istl::VectorBackend<static_cast<istl::Blocking>(blocking),block_size>;
 
-    template<ISTLParameters::Blocking blocking = ISTLParameters::no_blocking, std::size_t block_size_ = 1>
-    struct ISTLVectorBackend
-    {
-
-      typedef istl_vector_backend_tag tag;
-
-      static_assert((block_size_ > 0),"block size for FieldVector has to be positive");
-
-      typedef std::size_t size_type;
-
-      static const size_type blockSize = block_size_;
-
-      struct Traits
-      {
-        static const ISTLParameters::Blocking block_type = blocking;
-        static const size_type block_size = block_size_;
-
-        static const bool blocked = blocking != ISTLParameters::no_blocking;
-
-        static const size_type max_blocking_depth = blocked ? 1 : 0;
-      };
-
-      template<typename GFS>
-      bool blocked(const GFS& gfs) const
-      {
-        if (deactivate_standard_blocking_for_ordering(gfs.orderingTag()))
-          return false;
-        // We have to make an exception for static blocking and block_size == 1:
-        // In that case, the ISTL backends expect the redundant index information
-        // at that level to be elided, and keeping it in here will break vector
-        // and matrix accesses.
-        // To work around that problem, we override the user and just turn off
-        // blocking internally.
-        return Traits::blocked && (blocking != ISTLParameters::static_blocking || !GFS::isLeaf || block_size_ > 1);
-      }
-
-    };
+#pragma GCC diagnostic pop
 
     //! Backend using ISTL matrices.
     /**
@@ -73,15 +109,15 @@ namespace Dune {
      * both the ansatz and the test function space use ISTL vectors and automatically deduces
      * the correct matrix type from those two vector backends.
      */
-    struct ISTLMatrixBackend
+    struct
+    DUNE_DEPRECATED_MSG("ISTLMatrixBackend has been deprecated and will be removed after the release of PDELab 2.4. Use istl::BCRSMatrixBackend with the newer pattern construction method instead")
+    ISTLMatrixBackend
     {
 
       typedef std::size_t size_type;
 
       // The default matrix construction method does not collect statistics, so provide a dummy type here.
       typedef int Statistics;
-
-#if HAVE_TEMPLATE_ALIASES || DOXYGEN
 
       //! The type of the pattern object passed to the GridOperator for pattern construction.
       template<typename Matrix, typename GFSV, typename GFSU>
@@ -92,46 +128,10 @@ namespace Dune {
         typename GFSV::Ordering::ContainerAllocationTag
         >::type;
 
-#else // HAVE_TEMPLATE_ALIASES
-
-      template<typename Matrix, typename GFSV, typename GFSU>
-      struct Pattern
-        : public istl::build_pattern_type<typename Matrix::Container,
-                                          GFSV,
-                                          GFSU,
-                                          typename GFSV::Ordering::ContainerAllocationTag
-                                          >::type
-      {
-
-        typedef OrderingBase<
-          typename GFSV::Ordering::Traits::DOFIndex,
-          typename GFSV::Ordering::Traits::ContainerIndex
-          > RowOrdering;
-
-        typedef OrderingBase<
-          typename GFSU::Ordering::Traits::DOFIndex,
-          typename GFSU::Ordering::Traits::ContainerIndex
-          > ColOrdering;
-
-        typedef typename istl::build_pattern_type<
-          typename Matrix::Container,
-          GFSV,
-          GFSU,
-          typename GFSV::Ordering::ContainerAllocationTag
-          >::type BaseT;
-
-        Pattern(const RowOrdering& row_ordering, const ColOrdering& col_ordering)
-          : BaseT(row_ordering,col_ordering)
-        {}
-
-      };
-
-#endif // HAVE_TEMPLATE_ALIASES
-
       template<typename VV, typename VU, typename E>
       struct MatrixHelper
       {
-        typedef ISTLMatrixContainer<
+        typedef istl::BCRSMatrix<
           typename VV::GridFunctionSpace,
           typename VU::GridFunctionSpace,
           typename istl::build_matrix_type<
@@ -155,7 +155,7 @@ namespace Dune {
         allocate_matrix(grid_operator.testGridFunctionSpace().ordering(),
                         grid_operator.trialGridFunctionSpace().ordering(),
                         pattern,
-                        istl::raw(matrix)
+                        Backend::native(matrix)
                         );
         return std::vector<Statistics>();
       }

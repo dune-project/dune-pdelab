@@ -122,6 +122,28 @@ void test_2d_simplex(const Constraints& constraints, const VBE& vbe)
       test_fem(*pfem,gv,constraints,vbe);
     }
 
+#elif HAVE_UG
+
+    {
+      // make grid
+      typedef Dune::UGGrid<2> Grid;
+      std::shared_ptr<Grid> gridptr = TriangulatedUnitSquareMaker<Grid>::create();
+      Grid& grid = *gridptr;
+      grid.globalRefine(3);
+
+      // get view
+      typedef Grid::LeafGridView GV;
+      const GV& gv=grid.leafGridView();
+
+      typedef GV::Grid::ctype DF;
+
+      typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::pointer PFEM;
+
+      PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::simplex>(gv);
+
+      test_fem(*pfem,gv,constraints,vbe);
+    }
+
 #else
 
 #warning Could not find supported 2D simplex grid, 2D simplex tests will be skipped.
@@ -158,6 +180,28 @@ void test_3d_simplex(const Constraints& constraints, const VBE& vbe)
       test_fem(*pfem,gv,constraints,vbe);
     }
 
+#elif HAVE_UG
+
+    {
+      // make grid
+      typedef Dune::UGGrid<3> Grid;
+      std::shared_ptr<Grid> gridptr = TriangulatedUnitCubeMaker<Grid>::create();
+      Grid& grid = *gridptr;
+      grid.globalRefine(3);
+
+      // get view
+      typedef Grid::LeafGridView GV;
+      const GV& gv=grid.leafGridView();
+
+      typedef GV::Grid::ctype DF;
+
+      typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::pointer PFEM;
+
+      PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::simplex>(gv);
+
+      test_fem(*pfem,gv,constraints,vbe);
+    }
+
 #else
 
 #warning Could not find supported 3D simplex grid, 3D simplex tests will be skipped.
@@ -177,7 +221,7 @@ int main(int argc, char** argv)
     typedef Dune::PDELab::NoConstraints Constraints;
     Constraints constraints;
 
-    typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+    typedef Dune::PDELab::istl::VectorBackend<> VBE;
     VBE vbe;
 
     typedef double RF;

@@ -1,26 +1,8 @@
 #ifndef DUNE_PDELAB_BACKENDSELECTOR_HH
 #define DUNE_PDELAB_BACKENDSELECTOR_HH
-namespace Dune {
-  namespace PDELab {
 
-    template<typename Backend, typename GridFunctionSpace, typename FieldType>
-    struct BackendVectorSelectorHelper
-    {};
+#warning This file has been deprecated and will be removed after the release of PDELab 2.4. Use dune/pdelab/backend/interface.hh instead
 
-    template<typename GridFunctionSpace, typename FieldType>
-    struct BackendVectorSelector
-    {
-      typedef typename GridFunctionSpace::Traits::Backend Backend;
-      typedef typename BackendVectorSelectorHelper<Backend, GridFunctionSpace, FieldType>::Type Type;
-    };
-
-    template<typename Backend, typename VU, typename VV, typename E>
-    struct BackendMatrixSelector
-    {
-      typedef typename Backend::template MatrixHelper<VV,VU,E>::type Type;
-    };
-
-  }
-}
+#include <dune/pdelab/backend/interface.hh>
 
 #endif

@@ -29,6 +29,11 @@ namespace Dune {
         return true;
       }
 
+      bool hasDOFs(int codim) const
+      {
+        return codim == 0;
+      }
+
       std::size_t size(GeometryType gt) const
       {
         return gt == _gt ? 1 : 0;

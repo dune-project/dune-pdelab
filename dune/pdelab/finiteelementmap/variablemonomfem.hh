@@ -105,6 +105,11 @@ namespace Dune {
         return false;
       }
 
+      bool hasDOFs(int codim) const
+      {
+        return codim == 0;
+      }
+
       std::size_t size(GeometryType gt) const
       {
         DUNE_THROW(VariableElementSize,"VariableMonomLocalFiniteElementMap can contain elements of variable order.");

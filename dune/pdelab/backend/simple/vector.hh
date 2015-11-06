@@ -11,11 +11,10 @@
 #include <dune/common/fvector.hh>
 #include <dune/istl/bvector.hh>
 
-#include <dune/pdelab/backend/tags.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
-#include <dune/pdelab/backend/tags.hh>
-#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/common/tags.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/simple/descriptors.hh>
 
@@ -41,7 +40,10 @@ namespace Dune {
 
       template<typename GFS, typename C>
       class VectorContainer
+        : public Backend::impl::Wrapper<C>
       {
+
+        friend Backend::impl::Wrapper<C>;
 
       public:
         typedef C Container;
@@ -59,58 +61,25 @@ namespace Dune {
         typedef typename Container::iterator iterator;
         typedef typename Container::const_iterator const_iterator;
 
-#if HAVE_TEMPLATE_ALIASES
-
         template<typename LFSCache>
         using LocalView = UncachedVectorView<VectorContainer,LFSCache>;
 
         template<typename LFSCache>
         using ConstLocalView = ConstUncachedVectorView<const VectorContainer,LFSCache>;
 
-#else
-
-        template<typename LFSCache>
-        struct LocalView
-          : public UncachedVectorView<VectorContainer,LFSCache>
-        {
-
-          LocalView()
-          {}
-
-          LocalView(VectorContainer& vc)
-            : UncachedVectorView<VectorContainer,LFSCache>(vc)
-          {}
-
-        };
-
-        template<typename LFSCache>
-        struct ConstLocalView
-          : public ConstUncachedVectorView<const VectorContainer,LFSCache>
-        {
-
-          ConstLocalView()
-          {}
-
-          ConstLocalView(const VectorContainer& vc)
-            : ConstUncachedVectorView<const VectorContainer,LFSCache>(vc)
-          {}
-
-        };
-
-#endif // HAVE_TEMPLATE_ALIASES
 
         VectorContainer(const VectorContainer& rhs)
           : _gfs(rhs._gfs)
           , _container(std::make_shared<Container>(*(rhs._container)))
         {}
 
-        VectorContainer (const GFS& gfs, tags::attached_container = tags::attached_container())
+        VectorContainer (const GFS& gfs, Backend::attached_container = Backend::attached_container())
           : _gfs(gfs)
           , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
         {}
 
         //! Creates a VectorContainer without allocating storage.
-        VectorContainer(const GFS& gfs, tags::unattached_container)
+        VectorContainer(const GFS& gfs, Backend::unattached_container)
           : _gfs(gfs)
         {}
 
@@ -268,6 +237,20 @@ namespace Dune {
           return *_container;
         }
 
+      private:
+
+        Container& native ()
+        {
+          return *_container;
+        }
+
+        const Container& native () const
+        {
+          return *_container;
+        }
+
+      public:
+
         iterator begin()
         {
           return _container->begin();
@@ -319,10 +302,16 @@ namespace Dune {
 
     };
 
-    template<template<typename> class Container, typename GFS, typename E>
-    struct BackendVectorSelectorHelper<SimpleVectorBackend<Container>, GFS, E>
-      : public SimpleVectorSelectorHelper<GFS,E>
-    {};
+    namespace Backend {
+      namespace impl {
+
+        template<template<typename> class Container, typename GFS, typename E>
+        struct BackendVectorSelectorHelper<SimpleVectorBackend<Container>, GFS, E>
+          : public SimpleVectorSelectorHelper<GFS,E>
+        {};
+
+      } // namespace impl
+    } // namespace Backend
 
 #endif // DOXYGEN
 

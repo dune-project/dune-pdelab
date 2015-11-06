@@ -61,7 +61,7 @@ namespace Dune {
         // find all local indices of this face
         Dune::GeometryType gt = ig.inside().type();
         typedef typename IG::ctype DT;
-        const int dim = IG::Entity::Geometry::dimension;
+        const int dim = IG::Entity::dimension;
         const Dune::ReferenceElement<DT,dim>& refelem = Dune::ReferenceElements<DT,dim>::general(gt);
 
         const Dune::ReferenceElement<DT,dim-1> &
@@ -122,7 +122,7 @@ namespace Dune {
         // find all local indices of this face
         Dune::GeometryType gt = ig.inside().type();
         typedef typename IG::ctype DT;
-        const int dim = IG::Entity::Geometry::dimension;
+        const int dim = IG::Entity::dimension;
 
         const Dune::ReferenceElement<DT,dim>& refelem = Dune::ReferenceElements<DT,dim>::general(gt);
 
@@ -160,14 +160,14 @@ namespace Dune {
        * \tparam LFS local function space
        * \tparam T   TransformationType
        */
-      template<typename EG, typename LFS, typename T>
-      void volume (const EG& eg, const LFS& lfs, T& trafo) const
+      template<typename P, typename EG, typename LFS, typename T>
+      void volume (const P& param, const EG& eg, const LFS& lfs, T& trafo) const
       {
         typedef FiniteElementInterfaceSwitch<
-        typename LFS::Traits::FiniteElementType
+          typename LFS::Traits::FiniteElementType
           > FESwitch;
 
-        auto entity = eg.entity();
+        auto& entity = eg.entity();
 
         // nothing to do for interior entities
         if (entity.partitionType()==Dune::InteriorEntity)
@@ -179,8 +179,7 @@ namespace Dune {
         // empty map means Dirichlet constraint
         typename T::RowType empty;
 
-        const ReferenceElement<typename GV::ctype,GV::dimension>& ref_el =
-          ReferenceElements<typename GV::ctype,GV::dimension>::general(entity.type());
+        auto& ref_el = ReferenceElements<typename GV::ctype,GV::dimension>::general(entity.type());
 
         // loop over all degrees of freedom and check if it is not owned by this processor
         for (size_t i = 0; i < coeffs.size(); ++i)

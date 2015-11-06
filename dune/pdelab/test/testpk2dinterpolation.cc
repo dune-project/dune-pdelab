@@ -23,8 +23,7 @@
 #include <dune/grid/uggrid.hh>
 #endif
 
-#include <dune/pdelab/backend/backendselector.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/finiteelementmap/pkfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -67,7 +66,7 @@ double interpolationerror (const GV& gv, const FEM &fem)
   typedef Dune::PDELab::GridFunctionSpace<GV, FEM> GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS, R>::Type X;
+  using X = Dune::PDELab::Backend::Vector<GFS, R>;
   X x(gfs,0.0);                       // make coefficient vector
 
   U<GV,R> u(gv);                      // make analytic function object

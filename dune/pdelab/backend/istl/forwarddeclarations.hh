@@ -47,13 +47,13 @@ namespace Dune {
 
   namespace PDELab {
 
-    template<typename GFS, typename C>
-    class ISTLBlockVectorContainer;
-
-    template<typename GFSV, typename GFSU, typename C, typename Stats>
-    class ISTLMatrixContainer;
-
     namespace istl {
+
+      template<typename GFS, typename C>
+      class BlockVector;
+
+      template<typename GFSV, typename GFSU, typename C, typename Stats>
+      class BCRSMatrix;
 
       template<typename E, typename VV, typename VU>
       struct build_matrix_type;

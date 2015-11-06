@@ -9,11 +9,10 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/grid/yaspgrid.hh>
-#include <dune/pdelab/backend/backendselector.hh>
 #include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/pkfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
-#include"../backend/istlvectorbackend.hh"
+#include"../backend/istl.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
 #include"../common/function.hh"
@@ -60,7 +59,7 @@ void testpk (const GV& gv)
   typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,k> PkFEM;
   PkFEM pkfem(gv);
 
-  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::istl::VectorBackend<> VBE;
   typedef Dune::PDELab::NoConstraints CON;
 
   // make a grid function space
@@ -72,16 +71,13 @@ void testpk (const GV& gv)
   PkGFS pkgfs(gv,pkfem);
 
   // make coefficent Vectors
-  typedef typename Dune::PDELab::BackendVectorSelector<P0GFS, double>::Type
-    P0V;
+  using P0V = Dune::PDELab::Backend::Vector<P0GFS, double>;
   P0V p0xg(p0gfs);
   p0xg = 0.0;
-  typedef typename Dune::PDELab::BackendVectorSelector<P1GFS, double>::Type
-    P1V;
+  using P1V = Dune::PDELab::Backend::Vector<P1GFS, double>;
   P1V p1xg(p1gfs);
   p1xg = 0.0;
-  typedef typename Dune::PDELab::BackendVectorSelector<PkGFS, double>::Type
-    PkV;
+  using PkV = Dune::PDELab::Backend::Vector<PkGFS, double>;
   PkV pkxg(pkgfs);
   pkxg = 0.0;
 

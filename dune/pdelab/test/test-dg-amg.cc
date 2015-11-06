@@ -8,9 +8,7 @@
 #include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
 #include <dune/pdelab/localoperator/l2.hh>
 
-#include <dune/pdelab/backend/istl/cg_to_dg_prolongation.hh>
-#include <dune/pdelab/backend/istl/seq_amg_dg_backend.hh>
-#include <dune/pdelab/backend/istl/ovlp_amg_dg_backend.hh>
+#include <dune/pdelab/backend/istl.hh>
 
 /** Parameter class for the stationary convection-diffusion equation of the following form:
  *
@@ -104,49 +102,6 @@ public:
   }
 };
 
-template<typename GV, typename RF>
-class AuxilliaryBoundaryCondition
-{
-  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
-
-public:
-  typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
-
-  //! boundary condition type function
-  /* return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet for Dirichlet boundary conditions
-   * return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann for flux boundary conditions
-   * return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Outflow for outflow boundary conditions
-   */
-  BCType
-  bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
-  }
-
-  //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType
-  g (const typename Traits::ElementType& e, const typename Traits::DomainType& xlocal) const
-  {
-    typename Traits::DomainType x = e.geometry().global(xlocal);
-    return 0.0;
-  }
-
-  //! flux boundary condition
-  typename Traits::RangeFieldType
-  j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! outflow boundary condition
-  typename Traits::RangeFieldType
-  o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return 0.0;
-  }
-};
-
-
 int main(int argc, char **argv)
 {
   // initialize MPI, finalize is done automatically on exit
@@ -177,11 +132,12 @@ int main(int argc, char **argv)
   // make problem parameters
   typedef GenericEllipticProblem<GM::LeafGridView,NumberType> Problem;
   Problem problem;
-  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
-  BCType bctype(grid->leafGridView(),problem);
+  // make dummy constraints parameters, DG has no essential boundary conditions
+  typedef Dune::PDELab::DirichletConstraintsParameters BCType;
+  BCType bctype;
 
   // make DG finite element space
-  typedef Dune::PDELab::DGPkSpace<GM,NumberType,degree,elemtype,solvertype> FS;
+  typedef Dune::PDELab::DGQkSpace<GM,NumberType,degree,elemtype,solvertype> FS;
   FS fs(grid->leafGridView());
   fs.assembleConstraints(bctype);
   //std::cout << "number of constraints is " << fs.getCC().size() << std::endl;
@@ -189,19 +145,19 @@ int main(int argc, char **argv)
   // assembler for finite elemenent problem
   typedef Dune::PDELab::ConvectionDiffusionDG<Problem,typename FS::FEM> LOP;
   LOP lop(problem,Dune::PDELab::ConvectionDiffusionDGMethod::SIPG,Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn,2.0);
-  typedef Dune::PDELab::GalerkinGlobalAssembler<FS,LOP,solvertype> ASSEMBLER;
-  ASSEMBLER assembler(fs,lop);
+  typedef Dune::PDELab::GalerkinGlobalAssemblerNewBackend<FS,LOP,solvertype> ASSEMBLER;
+  ASSEMBLER assembler(fs,lop,ASSEMBLER::MBE(5)); // 5 entries per row with cartesian mesh in 2D and blocked DG space
 
-  // allocate solution vector; DG has no essential boundary conditions
+  // allocate solution vector
   typedef FS::DOF V;
   V x(fs.getGFS(),0.0);
-  std::cout << "number of elements is " << x.base().N() << std::endl;
+  std::cout << "number of elements is " << Dune::PDELab::Backend::native(x).N() << std::endl;
 
+  // use purely Neumann-zero boundary conditions
+  // projected matrix from DG space has no essential boundary conditions
+  typedef Dune::PDELab::NoDirichletConstraintsParameters CGBCType;
+  CGBCType cgbctype;
   // CG space
-  typedef AuxilliaryBoundaryCondition<GM::LeafGridView,NumberType> AuxilliaryProblem;
-  AuxilliaryProblem auxilliaryproblem;
-  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<AuxilliaryProblem> CGBCType;
-  CGBCType cgbctype(grid->leafGridView(),auxilliaryproblem);
   typedef Dune::PDELab::CGSpace<GM,NumberType,1,CGBCType,elemtype,meshtype,solvertype> CGFS;
   CGFS cgfs(*grid,cgbctype);
   cgfs.assembleConstraints(cgbctype);
@@ -210,9 +166,9 @@ int main(int argc, char **argv)
   typedef typename FS::GFS GFS;
   typedef typename FS::CC DGCC2;
   DGCC2 dgcc2; // empty: no constraints!
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,DGCC2,DGCC2> DGGO2;
-  DGGO2 dggo2(fs.getGFS(),dgcc2,fs.getGFS(),dgcc2,lop);
+  DGGO2 dggo2(fs.getGFS(),dgcc2,fs.getGFS(),dgcc2,lop,MBE(5));
 
   /////////////////// SEQUENTIAL
   // make linear solver and solve problem
@@ -220,6 +176,16 @@ int main(int argc, char **argv)
       typedef Dune::PDELab::ISTLBackend_SEQ_AMG_4_DG<ASSEMBLER::GO,CGFS::GFS,
                                                      Dune::PDELab::CG2DGProlongation,Dune::SeqSSOR,Dune::CGSolver> LS;
       LS ls(assembler.getGO(),cgfs.getGFS(),1000,3);
+      // set parameters for AMG in CG-subspace
+      Dune::Amg::Parameters params = ls.parameters();
+      params.setCoarsenTarget(2000);
+      params.setMaxLevel(20);
+      params.setProlongationDampingFactor(1.8);
+      params.setNoPreSmoothSteps(2);
+      params.setNoPostSmoothSteps(2);
+      params.setGamma(1);
+      params.setAdditive(false);
+      ls.setParameters(params);
       typedef Dune::PDELab::StationaryLinearProblemSolver<DGGO2,LS,V> SLP;
       SLP slp(dggo2,ls,x,1e-8);
       slp.setHangingNodeModifications(false);
@@ -227,12 +193,24 @@ int main(int argc, char **argv)
   }
 
   /////////////////// OVERLAPPING
+  // reset initial iterate
+  x = 0.0;
   // make linear solver and solve problem
 #if HAVE_MPI
   {
       typedef Dune::PDELab::ISTLBackend_OVLP_AMG_4_DG<ASSEMBLER::GO,FS::CC,CGFS::GFS,CGFS::CC,
                                                       Dune::PDELab::CG2DGProlongation,Dune::SeqSSOR,Dune::CGSolver> LS;
       LS ls(assembler.getGO(),fs.getCC(),cgfs.getGFS(),cgfs.getCC(),1000,3);
+      // set parameters for AMG in CG-subspace
+      Dune::Amg::Parameters params = ls.parameters();
+      params.setCoarsenTarget(2000);
+      params.setMaxLevel(20);
+      params.setProlongationDampingFactor(1.8);
+      params.setNoPreSmoothSteps(2);
+      params.setNoPostSmoothSteps(2);
+      params.setGamma(1);
+      params.setAdditive(false);
+      ls.setParameters(params);
       typedef Dune::PDELab::StationaryLinearProblemSolver<DGGO2,LS,V> SLP;
       SLP slp(dggo2,ls,x,1e-8);
       slp.setHangingNodeModifications(false);

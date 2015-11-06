@@ -1,6 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_LAPLACEDIRICHLETP12D_HH
 #define DUNE_PDELAB_LAPLACEDIRICHLETP12D_HH
+#warning This file is deprecated and will be removed after the Dune-PDELab 2.4 release! Use the ConvectionDiffusionFEM local operator from dune/pdelab/localoperator/convectiondiffusionfem.hh instead!
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
@@ -19,10 +20,11 @@ namespace Dune {
     //     - \Delta u = 0 in \Omega,
     //              u = g on \partial\Omega
     // with P1 conforming finite elements on triangles
-    class LaplaceDirichletP12D : public NumericalJacobianApplyVolume<LaplaceDirichletP12D>,
-                                 public NumericalJacobianVolume<LaplaceDirichletP12D>,
-                                 public FullVolumePattern,
-                                 public LocalOperatorDefaultFlags
+    class DUNE_DEPRECATED_MSG("Deprecated in Dune-PDELab 2.4, use the local operator ConvectionDiffusionFEM instead!") LaplaceDirichletP12D
+        : public NumericalJacobianApplyVolume<LaplaceDirichletP12D>,
+        public NumericalJacobianVolume<LaplaceDirichletP12D>,
+        public FullVolumePattern,
+        public LocalOperatorDefaultFlags
     {
     public:
       // pattern assembly flags

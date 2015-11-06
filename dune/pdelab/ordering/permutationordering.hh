@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_ORDERING_PERMUTATIONORDERING_HH
 #define DUNE_PDELAB_ORDERING_PERMUTATIONORDERING_HH
 
+#warning "The file dune/pdelab/ordering/permutationordering.hh and the contained variants of PermutationOrdering are deprecated and will be removed after PDELab 2.4. Please use the Permuted<> decorator from dune/pdelab/ordering/permutedordering.hh instead."
+
 #include <cstddef>
 #include <ostream>
 #include <string>

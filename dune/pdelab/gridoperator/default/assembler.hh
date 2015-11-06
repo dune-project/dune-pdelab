@@ -5,8 +5,8 @@
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
-#include <dune/pdelab/common/elementmapper.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
+#include <dune/pdelab/common/intersectiontype.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -25,11 +25,9 @@ namespace Dune{
 
       //! Types related to current grid view
       //! @{
-      typedef typename GFSU::Traits::GridViewType GV;
-      typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-      typedef typename GV::Traits::template Codim<0>::Entity Element;
-      typedef typename GV::IntersectionIterator IntersectionIterator;
-      typedef typename IntersectionIterator::Intersection Intersection;
+      using EntitySet = typename GFSU::Traits::EntitySet;
+      using Element = typename EntitySet::Element;
+      using Intersection = typename EntitySet::Intersection;
       //! @}
 
       //! Grid function spaces
@@ -100,8 +98,6 @@ namespace Dune{
       template<class LocalAssemblerEngine>
       void assemble(LocalAssemblerEngine & assembler_engine) const
       {
-        typedef typename GV::Traits::template Codim<0>::Entity Element;
-
         typedef LFSIndexCache<LFSU,CU> LFSUCache;
 
         typedef LFSIndexCache<LFSV,CV> LFSVCache;
@@ -116,9 +112,6 @@ namespace Dune{
         // Notify assembler engine about oncoming assembly
         assembler_engine.preAssembly();
 
-        // Map each cell to unique id
-        ElementMapper<GV> cell_mapper(gfsu.gridView());
-
         // Extract integration requirements from the local assembler
         const bool require_uv_skeleton = assembler_engine.requireUVSkeleton();
         const bool require_v_skeleton = assembler_engine.requireVSkeleton();
@@ -130,20 +123,22 @@ namespace Dune{
         const bool require_v_post_skeleton = assembler_engine.requireVVolumePostSkeleton();
         const bool require_skeleton_two_sided = assembler_engine.requireSkeletonTwoSided();
 
+        auto entity_set = gfsu.entitySet();
+        auto& index_set = entity_set.indexSet();
+
         // Traverse grid view
-        for (ElementIterator it = gfsu.gridView().template begin<0>();
-             it!=gfsu.gridView().template end<0>(); ++it)
+        for (const auto& element : elements(entity_set))
           {
             // Compute unique id
-            const typename GV::IndexSet::IndexType ids = cell_mapper.map(*it);
+            auto ids = index_set.uniqueIndex(element);
 
-            ElementGeometry<Element> eg(*it);
+            ElementGeometry<Element> eg(element);
 
             if(assembler_engine.assembleCell(eg))
               continue;
 
             // Bind local test function space to element
-            lfsv.bind( *it );
+            lfsv.bind( element );
             lfsv_cache.update();
 
             // Notify assembler engine about bind
@@ -153,7 +148,7 @@ namespace Dune{
             assembler_engine.assembleVVolume(eg,lfsv_cache);
 
             // Bind local trial function space to element
-            lfsu.bind( *it );
+            lfsu.bind( element );
             lfsu_cache.update();
 
             // Notify assembler engine about bind
@@ -172,14 +167,16 @@ namespace Dune{
               {
                 // Traverse intersections
                 unsigned int intersection_index = 0;
-                IntersectionIterator endit = gfsu.gridView().iend(*it);
-                IntersectionIterator iit = gfsu.gridView().ibegin(*it);
-                for(; iit!=endit; ++iit, ++intersection_index)
+                for(const auto& intersection : intersections(entity_set,element))
                   {
 
-                    IntersectionGeometry<Intersection> ig(*iit,intersection_index);
+                    IntersectionGeometry<Intersection> ig(intersection,intersection_index);
 
-                    switch (IntersectionType::get(*iit))
+                    auto intersection_data = classifyIntersection(entity_set,intersection);
+                    auto intersection_type = std::get<0>(intersection_data);
+                    auto& outside_element = std::get<1>(intersection_data);
+
+                    switch (intersection_type)
                       {
                       case IntersectionType::skeleton:
                         // the specific ordering of the if-statements in the old code caused periodic
@@ -189,7 +186,7 @@ namespace Dune{
                           {
                             // compute unique id for neighbor
 
-                            const typename GV::IndexSet::IndexType idn = cell_mapper.map(iit->outside());
+                            auto idn = index_set.uniqueIndex(outside_element);
 
                             // Visit face if id is bigger
                             bool visit_face = ids > idn || require_skeleton_two_sided;
@@ -198,7 +195,7 @@ namespace Dune{
                             if (visit_face)
                               {
                                 // Bind local test space to neighbor element
-                                lfsvn.bind(iit->outside());
+                                lfsvn.bind(outside_element);
                                 lfsvn_cache.update();
 
                                 // Notify assembler engine about binds
@@ -210,7 +207,7 @@ namespace Dune{
                                 if(require_uv_skeleton){
 
                                   // Bind local trial space to neighbor element
-                                  lfsun.bind(iit->outside());
+                                  lfsun.bind(outside_element);
                                   lfsun_cache.update();
 
                                   // Notify assembler engine about binds
@@ -265,6 +262,7 @@ namespace Dune{
                         break;
                       } // switch
 
+                    ++intersection_index;
                   } // iit
               } // do skeleton
 

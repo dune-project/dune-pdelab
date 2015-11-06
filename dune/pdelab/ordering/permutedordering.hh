@@ -135,10 +135,7 @@ namespace Dune {
         : NodeT(ordering)
         , BaseT(*this,false,nullptr,this)
         , _tag(tag)
-      {
-        // copy grid partition information from local ordering.
-        this->setPartitionSet(this->ordering());
-      }
+      {}
 
       PermutedOrdering(const PermutedOrdering& r)
         : NodeT(r.nodeStorage())

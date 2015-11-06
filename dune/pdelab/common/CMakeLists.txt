@@ -11,10 +11,12 @@ install(FILES benchmarkhelper.hh
               geometrywrapper.hh
               globaldofindex.hh
               hostname.hh
+              instationaryfilenamehelper.hh
+              intersectiontype.hh
               jacobiantocurl.hh
               logtag.hh
               multiindex.hh
-              partitioninfoprovider.hh
+              partitionviewentityset.hh
               polymorphicbufferwrapper.hh
               range.hh
               simpledofindex.hh

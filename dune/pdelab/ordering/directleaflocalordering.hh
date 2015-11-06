@@ -6,11 +6,9 @@
 
 #include <dune/typetree/leafnode.hh>
 
-#include <dune/common/nullptr.hh>
 #include <dune/geometry/referenceelements.hh>
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
-#include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
 
@@ -23,10 +21,9 @@ namespace Dune {
     //! \addtogroup Ordering
     //! \{
 
-    template<typename OrderingTag, typename FEM, typename GV, typename DI, typename CI>
+    template<typename OrderingTag, typename FEM, typename ES, typename DI, typename CI>
     class DirectLeafLocalOrdering
       : public TypeTree::LeafNode
-      , public PartitionInfoProvider
     {
 
       template<typename>
@@ -40,7 +37,7 @@ namespace Dune {
 
     public:
 
-      typedef LocalOrderingTraits<GV,DI,CI> Traits;
+      typedef LocalOrderingTraits<ES,DI,CI> Traits;
 
     private:
 
@@ -113,20 +110,17 @@ namespace Dune {
         return 0;
       }
 
-      DirectLeafLocalOrdering(const shared_ptr<const FEM>& fem, const GV& gv)
+      DirectLeafLocalOrdering(const shared_ptr<const FEM>& fem, const ES& es)
         : _fem(fem)
-        , _gv(gv)
+        , _es(es)
         , _fixed_size(false)
         , _container_blocked(false)
         , _gfs_data(nullptr)
-      {
-        // Extract contained grid PartitionTypes from OrderingTag.
-        this->setPartitionSet(OrderingTag::partition_mask);
-      }
+      {}
 
-      const typename Traits::GridView& gridView() const
+      const typename Traits::EntitySet& entitySet() const
       {
-        return _gv;
+        return _es;
       }
 
       const FEM& finiteElementMap() const
@@ -143,7 +137,15 @@ namespace Dune {
 
       void update_a_priori_fixed_size()
       {
-        _fixed_size = (!OrderingTag::no_const_ordering_size) && _fem->fixedSize();
+        _fixed_size = _fem->fixedSize();
+      }
+
+      template<typename CodimMask>
+      void collect_used_codims(CodimMask& codims) const
+      {
+        for (typename ES::dim_type codim = 0; codim <= ES::dimension; ++codim)
+          if (_fem->hasDOFs(codim))
+            codims.set(codim);
       }
 
       template<typename It>
@@ -180,7 +182,7 @@ namespace Dune {
         _gt_dof_sizes.assign(GlobalGeometryTypeIndex::size(dim),0);
         _local_gt_dof_sizes.resize(GlobalGeometryTypeIndex::size(dim));
         _max_local_size = 0;
-        _fixed_size_possible = !OrderingTag::no_const_ordering_size;
+        _fixed_size_possible = true;
       }
 
 
@@ -208,11 +210,11 @@ namespace Dune {
       template<typename It>
       void allocate_entity_offset_vector(It it, const It end)
       {
-        _gt_entity_offsets.assign(GlobalGeometryTypeIndex::size(GV::dimension) + 1,0);
+        _gt_entity_offsets.assign(GlobalGeometryTypeIndex::size(ES::dimension) + 1,0);
         for (; it != end; ++it)
           {
             if (_gt_used[GlobalGeometryTypeIndex::index(*it)])
-              _gt_entity_offsets[GlobalGeometryTypeIndex::index(*it) + 1] = _gv.indexSet().size(*it);
+              _gt_entity_offsets[GlobalGeometryTypeIndex::index(*it) + 1] = _es.indexSet().size(*it);
           }
         std::partial_sum(_gt_entity_offsets.begin(),_gt_entity_offsets.end(),_gt_entity_offsets.begin());
         _entity_dof_offsets.assign(_gt_entity_offsets.back() + 1,0);
@@ -243,7 +245,7 @@ namespace Dune {
             GeometryType gt = ref_el.type(key.subEntity(),key.codim());
             const size_type geometry_type_index = GlobalGeometryTypeIndex::index(gt);
 
-            const size_type entity_index = _gv.indexSet().subIndex(cell,key.subEntity(),key.codim());
+            const size_type entity_index = _es.indexSet().subIndex(cell,key.subEntity(),key.codim());
             const size_type index = _gt_entity_offsets[geometry_type_index] + entity_index;
             _local_gt_dof_sizes[geometry_type_index] = _entity_dof_offsets[index+1] = std::max(_entity_dof_offsets[index+1],static_cast<size_type>(key.index() + 1));
           }
@@ -302,7 +304,7 @@ namespace Dune {
       shared_ptr<const FEM> _fem;
       typename FESwitch::Store _fe_store;
 
-      GV _gv;
+      ES _es;
       bool _fixed_size;
       bool _fixed_size_possible;
       typename Traits::SizeType _max_local_size;

@@ -21,9 +21,7 @@
 #include <dune/grid/uggrid/uggridfactory.hh>
 #endif
 
-#include <dune/pdelab/backend/backendselector.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istl/utility.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
@@ -47,9 +45,9 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
     > GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS, R>::Type X;
+  using X = Dune::PDELab::Backend::Vector<GFS, R>;
   X x(gfs,0.0);                       // make coefficient vector
-  Dune::PDELab::istl::raw(x)[2] = 1.0;                         // set a component
+  Dune::PDELab::Backend::native(x)[2] = 1.0;                         // set a component
 
   typedef Dune::PDELab::DiscreteGridFunctionPiola<GFS,X> DGF;
   DGF dgf(gfs,x);                     // make a grid function

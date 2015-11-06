@@ -7,11 +7,13 @@ common_HEADERS =				\
 	convectiondiffusionfem.hh		\
 	convectiondiffusionparameter.hh		\
 	defaultimp.hh				\
+	dgnavierstokes.hh			\
+	dgnavierstokesparameter.hh		\
+	dgnavierstokesvelvecfem.hh 		\
 	dgparameter.hh				\
 	diffusion.hh				\
 	diffusionccfv.hh			\
 	diffusiondg.hh				\
-	diffusionmfd.hh				\
 	diffusionmixed.hh			\
 	diffusionparam.hh			\
 	electrodynamic.hh			\
@@ -31,7 +33,7 @@ common_HEADERS =				\
 	linearacousticsparameter.hh		\
 	maxwelldg.hh				\
 	maxwellparameter.hh			\
-	mfdcommon.hh				\
+	navierstokesmass.hh			\
 	pattern.hh				\
 	poisson.hh				\
 	scaled.hh				\
@@ -40,9 +42,9 @@ common_HEADERS =				\
         stokesdgparameter.hh                    \
         stokesparameter.hh                      \
         stokesdg_vecfem.hh                      \
+	taylorhoodnavierstokes.hh  		\
 	transportccfv.hh			\
 	twophaseccfv.hh				\
-	vectorwave.hh				\
 	weightedsum.hh				\
 	zero.hh
 

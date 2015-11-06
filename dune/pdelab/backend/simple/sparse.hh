@@ -10,8 +10,8 @@
 #include <unordered_set>
 
 #include <dune/common/typetraits.hh>
-#include <dune/pdelab/backend/tags.hh>
-#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/common/tags.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/simple/descriptors.hh>
 
@@ -86,11 +86,19 @@ namespace Dune {
        */
       template<typename GFSV, typename GFSU, template<typename> class C, typename ET, typename I>
       class SparseMatrixContainer
+        : public Backend::impl::Wrapper<SparseMatrixData<C,ET,I> >
       {
 
       public:
 
         typedef SparseMatrixData<C,ET,I> Container;
+
+      private:
+
+        friend Backend::impl::Wrapper<Container>;
+
+      public:
+
         typedef ET ElementType;
 
         typedef ElementType field_type;
@@ -136,11 +144,11 @@ namespace Dune {
         }
 
         //! Creates an SparseMatrixContainer without allocating an underlying ISTL matrix.
-        explicit SparseMatrixContainer(tags::unattached_container = tags::unattached_container())
+        explicit SparseMatrixContainer(Backend::unattached_container = Backend::unattached_container())
         {}
 
         //! Creates an SparseMatrixContainer with an empty underlying ISTL matrix.
-        explicit SparseMatrixContainer(tags::attached_container)
+        explicit SparseMatrixContainer(Backend::attached_container)
         : _container(std::make_shared<Container>())
         {}
 
@@ -257,6 +265,20 @@ namespace Dune {
         {
           return *_container;
         }
+
+      private:
+
+        const Container& native() const
+        {
+          return *_container;
+        }
+
+        Container& native()
+        {
+          return *_container;
+        }
+
+      public:
 
         void flush()
         {}

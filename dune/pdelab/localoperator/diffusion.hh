@@ -1,6 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_DIFFUSION_HH
 #define DUNE_PDELAB_DIFFUSION_HH
+#warning This file is deprecated and will be removed after the Dune-PDELab 2.4 release! Use the ConvectionDiffusionFEM local operator from dune/pdelab/localoperator/convectiondiffusionfem.hh instead!
 
 #include<vector>
 
@@ -50,6 +51,7 @@ namespace Dune {
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
 
+      DUNE_DEPRECATED_MSG("Deprecated in Dune-PDELab 2.4, use the local operator ConvectionDiffusionFEM instead!")
       Diffusion (const K& k_, const A0& a0_, const F& f_, const B& bctype_, const J& j_, int intorder_=2)
         : k(k_), a0(a0_), f(f_), bctype(bctype_), j(j_), intorder(intorder_)
       {}

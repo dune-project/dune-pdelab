@@ -3,6 +3,7 @@
 
 #ifndef DUNE_PDELAB_LOCALOPERATOR_LAPLACE_HH
 #define DUNE_PDELAB_LOCALOPERATOR_LAPLACE_HH
+#warning This file is deprecated and will be removed after the Dune-PDELab 2.4 release! Use the ConvectionDiffusionFEM local operator from dune/pdelab/localoperator/convectiondiffusionfem.hh instead!
 
 #include <vector>
 
@@ -52,6 +53,7 @@ namespace Dune {
        *
        * \param quadOrder Order of the quadrature rule used for integrating over the element
        */
+      DUNE_DEPRECATED_MSG("Deprecated in Dune-PDELab 2.4, use the local operator ConvectionDiffusionFEM instead!")
       Laplace (unsigned int quadOrder)
       : quadOrder_(quadOrder)
       {}
@@ -151,7 +153,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Entity::dimension;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();

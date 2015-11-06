@@ -7,7 +7,6 @@
 #include <dune/typetree/traversal.hh>
 
 #include <dune/pdelab/common/exceptions.hh>
-#include <dune/pdelab/common/partitioninfoprovider.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -49,7 +48,6 @@ namespace Dune {
 
       template<typename size_type>
       class GridFunctionSpaceOrderingData
-        : public PartitionInfoProvider
       {
 
         template<typename,typename>
@@ -100,7 +98,6 @@ namespace Dune {
               data._global_size = _global_size;
               data._max_local_size = _max_local_size;
               data._size_available = ordering.update_gfs_data_size(data._size,data._block_count);
-              data.setPartitionSet(ordering);
             }
         }
 
@@ -199,18 +196,17 @@ namespace Dune {
         return _max_local_size;
       }
 
-      //! Returns whether this GridFunctionSpace contains entities with PartitionType partition.
-      bool containsPartition(PartitionType partition) const
+      //! Update the indexing information of the GridFunctionSpace.
+      /**
+       *
+       * \ param force   Set to true if the underlying grid has changed (e.g. due to adaptivity)
+       *                 to force an update of the embedded EntitySet.
+       */
+      void update(bool force = false)
       {
-        if (!_initialized)
-          {
-            DUNE_THROW(UninitializedGridFunctionSpaceError,"space is not initialized");
-          }
-        return PartitionInfoProvider::containsPartition(partition);
-      }
-
-      void update()
-      {
+        std::cout << "Updating entity set" << std::endl;
+        auto entity_set = gfs().entitySet();
+        entity_set.update(force);
         // We bypass the normal access using ordering() here to avoid a double
         // update if the Ordering has not been created yet.
         if (!gfs()._ordering)

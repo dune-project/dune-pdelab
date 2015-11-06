@@ -1,6 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_TRANSPORTCCFV_HH
 #define DUNE_PDELAB_TRANSPORTCCFV_HH
+#warning This file is deprecated and will be removed after the Dune-PDELab 2.4 release! Use the local operators from dune/pdelab/localoperator/convectiondiffusionccfv.hh instead!
 
 #include<dune/common/fvector.hh>
 #include<dune/geometry/referenceelements.hh>
@@ -15,12 +16,12 @@
 namespace Dune {
   namespace PDELab {
 
-	//! traits class for two phase parameter class
-	template<typename GV, typename RF>
-	struct TransportParameterTraits
-	{
-	  //! \brief the grid view
-	  typedef GV GridViewType;
+    //! traits class for two phase parameter class
+    template<typename GV, typename RF>
+    struct TransportParameterTraits
+    {
+      //! \brief the grid view
+      typedef GV GridViewType;
 
       //! \brief Enum for domain dimension
       enum {
@@ -182,18 +183,19 @@ namespace Dune {
       const T& t;
     };
 
-    /** a local operator for a cell-centered finite folume scheme for
-        the transport equation
-
-        \nabla \cdot \{v u - D \nabla u \} = q in \Omega
-        u = g on \Gamma_D
-        \{v u - D \nabla u \} \cdot \nu = j on \Gamma_N
-        outflow on \Gamma_O
-
-        Can be used for stationary and time-dependent computations
-
-        \tparam TP  parameter class implementing ComponentTransportParameterInterface
-    */
+    /**
+     * \brief A local operator for a cell-centered finite volume scheme for
+     * the transport equation
+     *
+     * \f$\nabla \cdot \{v u - D \nabla u \} = q\f$ in \f$\Omega\f$
+     * \f$u = g\f$ on \f$\Gamma_D\f$
+     * \f$\{v u - D \nabla u \} \cdot \nu = j\f$ on \f$\Gamma_N\f$
+     * outflow on \f$\Gamma_O\f$
+     *
+     * Can be used for stationary and time-dependent computations
+     *
+     * \tparam TP parameter class implementing ComponentTransportParameterInterface
+     */
     template<typename TP>
     class CCFVSpatialTransportOperator :
       public NumericalJacobianApplySkeleton<CCFVSpatialTransportOperator<TP> >,
@@ -223,6 +225,7 @@ namespace Dune {
 
       enum { doSkeletonTwoSided = true }; // need to see face from both sides for CFL calculation
 
+      DUNE_DEPRECATED_MSG("Deprecated in Dune-PDELab 2.4, use the local operator ConvectionDiffusionCCFV instead!")
       CCFVSpatialTransportOperator (TP& tp_)
         : tp(tp_)
       {
@@ -482,6 +485,7 @@ namespace Dune {
       // residual assembly flags
       enum { doAlphaVolume = true };
 
+      DUNE_DEPRECATED_MSG("Deprecated in Dune-PDELab 2.4, use the local operator ConvectionDiffusionCCFVTemporalOperator instead!")
       CCFVTemporalOperator (TP& tp_)
         : tp(tp_)
       {

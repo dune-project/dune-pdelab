@@ -22,7 +22,8 @@
 
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/interface.hh>
+#include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/istl/utility.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 
@@ -50,9 +51,9 @@ namespace Dune {
         typedef int RankIndex;
 
         //! Type used to store owner rank values of all DOFs.
-        typedef typename Dune::PDELab::BackendVectorSelector<GFS,RankIndex>::Type RankVector;
+        using RankVector = Dune::PDELab::Backend::Vector<GFS,RankIndex>;
         //! Type used to store ghost flag of all DOFs.
-        typedef typename Dune::PDELab::BackendVectorSelector<GFS,bool>::Type GhostVector;
+        using GhostVector = Dune::PDELab::Backend::Vector<GFS,bool>;
 
         //! ContainerIndex of the underlying GridFunctionSpace.
         typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
@@ -69,7 +70,8 @@ namespace Dune {
 
           // Let's try to be clever and reduce the communication overhead by picking the smallest
           // possible communication interface depending on the overlap structure of the GFS.
-          if (gfs.ordering().containedPartitions() == NonOverlappingPartitionSelector::partition_mask)
+          // FIXME: Switch to simple comparison as soon as dune-grid:1b3e83ec0 is reliably available!
+          if (gfs.entitySet().partitions().value == Partitions::interiorBorder.value)
             {
               // The GFS only spans the interior and border partitions, so we can skip sending or
               // receiving anything else.
@@ -106,8 +108,9 @@ namespace Dune {
         template<typename X>
         void maskForeignDOFs(X& x) const
         {
+          using Backend::native;
           // dispatch to implementation.
-          maskForeignDOFs(istl::container_tag(istl::raw(x)),istl::raw(x),istl::raw(_ranks));
+          maskForeignDOFs(istl::container_tag(native(x)),native(x),native(_ranks));
         }
 
       private:
@@ -158,10 +161,11 @@ namespace Dune {
           >::PromotedType
         disjointDot(const X& x, const Y& y) const
         {
-          return disjointDot(istl::container_tag(istl::raw(x)),
-                             istl::raw(x),
-                             istl::raw(y),
-                             istl::raw(_ranks)
+          using Backend::native;
+          return disjointDot(istl::container_tag(native(x)),
+                             native(x),
+                             native(y),
+                             native(_ranks)
                              );
         }
 
@@ -311,15 +315,7 @@ namespace Dune {
         // restricted to a single DOF.
         bool owned_for_amg(std::size_t i) const
         {
-          return _ranks.base()[i][0] == _rank;
-        }
-
-        // Checks whether a matrix block is associated with a ghost entity. Used for the AMG
-        // construction and thus assumes a single level of blocking and blocks with ownership
-        // restricted to a single DOF.
-        bool is_ghost_for_amg(std::size_t i) const
-        {
-          return _ghosts.base()[i][0];
+          return Backend::native(_ranks)[i][0] == _rank;
         }
 
 #endif // HAVE_MPI
@@ -346,10 +342,12 @@ namespace Dune {
       void ParallelHelper<GFS>::createIndexSetAndProjectForAMG(M& m, C& c)
       {
 
+        using Backend::native;
+
         const bool is_bcrs_matrix =
           is_same<
             typename istl::tags::container<
-              typename istl::raw_type<M>::type
+              Backend::Native<M>
               >::type::base_tag,
           istl::tags::bcrs_matrix
           >::value;
@@ -357,7 +355,7 @@ namespace Dune {
         const bool block_type_is_field_matrix =
           is_same<
             typename istl::tags::container<
-              typename istl::raw_type<M>::type::block_type
+              typename Backend::Native<M>::block_type
               >::type::base_tag,
           istl::tags::field_matrix
           >::value;
@@ -380,7 +378,7 @@ namespace Dune {
         const bool need_communication = _gfs.gridView().comm().size() > 1;
 
         // First find out which dofs we share with other processors
-        typedef typename BackendVectorSelector<GFS,bool>::Type BoolVector;
+        using BoolVector = Backend::Vector<GFS,bool>;
         BoolVector sharedDOF(_gfs, false);
 
         if (need_communication)
@@ -394,7 +392,7 @@ namespace Dune {
         GlobalIndex count = 0;
 
         for (size_type i = 0; i < sharedDOF.N(); ++i)
-          if (owned_for_amg(i) && sharedDOF.base()[i][0])
+          if (owned_for_amg(i) && native(sharedDOF)[i][0])
             ++count;
 
         dverb << gv.comm().rank() << ": shared block count is " << count.touint() << std::endl;
@@ -406,13 +404,13 @@ namespace Dune {
         // Compute start index start_p = \sum_{i=0}^{i<p} counts_i
         GlobalIndex start = std::accumulate(counts.begin(),counts.begin() + _rank,GlobalIndex(0));
 
-        typedef typename Dune::PDELab::BackendVectorSelector<GFS,GlobalIndex>::Type GIVector;
+        using GIVector = Dune::PDELab::Backend::Vector<GFS,GlobalIndex>;
         GIVector scalarIndices(_gfs, std::numeric_limits<GlobalIndex>::max());
 
         for (size_type i = 0; i < sharedDOF.N(); ++i)
-          if (owned_for_amg(i) && sharedDOF.base()[i][0])
+          if (owned_for_amg(i) && native(sharedDOF)[i][0])
             {
-              scalarIndices.base()[i][0] = start;
+              native(scalarIndices)[i][0] = start;
               ++start;
             }
 
@@ -428,7 +426,7 @@ namespace Dune {
         for (size_type i=0; i<scalarIndices.N(); ++i)
           {
             Dune::OwnerOverlapCopyAttributeSet::AttributeSet attr;
-            if(scalarIndices.base()[i][0] != std::numeric_limits<GlobalIndex>::max())
+            if(native(scalarIndices)[i][0] != std::numeric_limits<GlobalIndex>::max())
               {
                 // global index exist in index set
                 if (owned_for_amg(i))
@@ -436,16 +434,11 @@ namespace Dune {
                     // This dof is managed by us.
                     attr = Dune::OwnerOverlapCopyAttributeSet::owner;
                   }
-                else if (is_ghost_for_amg(i) && c.getSolverCategory() == static_cast<int>(SolverCategory::nonoverlapping))
-                  {
-                    //use attribute overlap for ghosts in novlp grids
-                    attr = Dune::OwnerOverlapCopyAttributeSet::overlap;
-                  }
                 else
                   {
                     attr = Dune::OwnerOverlapCopyAttributeSet::copy;
                   }
-                c.indexSet().add(scalarIndices.base()[i][0], typename C::ParallelIndexSet::LocalIndex(i,attr));
+                c.indexSet().add(native(scalarIndices)[i][0], typename C::ParallelIndexSet::LocalIndex(i,attr));
               }
           }
         c.indexSet().endResize();

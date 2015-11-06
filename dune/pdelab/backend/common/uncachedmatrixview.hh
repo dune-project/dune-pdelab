@@ -2,8 +2,7 @@
 #ifndef DUNE_PDELAB_BACKEND_COMMON_UNCACHEDMATRIXVIEW_HH
 #define DUNE_PDELAB_BACKEND_COMMON_UNCACHEDMATRIXVIEW_HH
 
-#include <dune/common/typetraits.hh>
-#include <dune/common/nullptr.hh>
+#include <type_traits>
 
 namespace Dune {
   namespace PDELab {
@@ -15,7 +14,7 @@ namespace Dune {
 
     public:
 
-      typedef typename remove_const<M_>::type Container;
+      typedef typename std::remove_const<M_>::type Container;
 
       static_assert(
         (std::is_same<

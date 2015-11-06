@@ -71,11 +71,10 @@ namespace Dune {
       typedef typename GridOperatorTraits::JacobianField Scalar;
       typedef typename GridOperatorTraits::TrialGridFunctionSpace GFSU;
       typedef typename GridOperatorTraits::TestGridFunctionSpace GFSV;
-      typedef typename GFSV::Traits::GridViewType GridView;
-      static const int dim = GridView::dimension;
-      typedef typename GridView::Traits::Grid Grid;
+      using EntitySet = typename GFSV::Traits::EntitySet;
+      static const int dim = EntitySet::dimension;
+      using Grid = typename EntitySet::Traits::GridView::Traits::Grid;
       typedef typename Matrix::block_type BlockType;
-      typedef typename GridView::template Codim<dim>::Iterator VertexIterator;
       typedef typename Grid::Traits::GlobalIdSet IdSet;
       typedef typename IdSet::IdType IdType;
 
@@ -83,7 +82,7 @@ namespace Dune {
       typedef Dune::PDELab::GlobalDOFIndex<
         typename GFSV::Ordering::Traits::DOFIndex::value_type,
         GFSV::Ordering::Traits::DOFIndex::max_depth,
-        typename GFSV::Traits::GridView::Grid::GlobalIdSet::IdType
+        typename IdSet::IdType
         > GlobalDOFIndex;
 
     public:
@@ -109,13 +108,15 @@ namespace Dune {
         > ValueMPIData;
 
     public:
-      /*! \brief Constructor. Sets up the local to global relations.
-
-      \param[in] gridView The grid view to operate on.
-      */
+      /*!
+       * \brief Constructor. Sets up the local to global relations.
+       *
+       * \param[in] grid_operator The grid operator to access grid view
+       *                          and communication cache.
+       */
       NonOverlappingBorderDOFExchanger(const GridOperator& grid_operator)
         : _communication_cache(std::make_shared<CommunicationCache>(grid_operator))
-        , _grid_view(grid_operator.testGridFunctionSpace().gridView())
+        , _entity_set(grid_operator.testGridFunctionSpace().entitySet())
       {}
 
       void update(const GridOperator& grid_operator)
@@ -203,6 +204,8 @@ namespace Dune {
         template<typename Entity>
         size_type size(const Entity& e) const
         {
+          if (!_gfsu.entitySet().contains(e))
+            return 0;
           _entity_cache.update(e);
           size_type n = 0;
           for (size_type i = 0; i < _entity_cache.size(); ++i)
@@ -219,6 +222,8 @@ namespace Dune {
         template<typename Buffer, typename Entity>
         void gather_pattern(Buffer& buf, const Entity& e) const
         {
+          if (!_gfsu.entitySet().contains(e))
+            return;
           _entity_cache.update(e);
           for (size_type i = 0; i < _entity_cache.size(); ++i)
             {
@@ -236,6 +241,8 @@ namespace Dune {
         template<typename Buffer, typename Entity>
         void gather_data(Buffer& buf, const Entity& e, const M& matrix) const
         {
+          if (!_gfsu.entitySet().contains(e))
+            return;
           _entity_cache.update(e);
           for (size_type i = 0; i < _entity_cache.size(); ++i)
             {
@@ -350,7 +357,7 @@ namespace Dune {
               RowDOFIndex di;
               GFSV::Ordering::Traits::DOFIndexAccessor::store(di,
                                                               e.type(),
-                                                              _grid_view.indexSet().index(e),
+                                                              _entity_set.indexSet().index(e),
                                                               data.first);
 
               ColDOFIndex dj;
@@ -368,7 +375,7 @@ namespace Dune {
                         const GFSV& gfsv,
                         Pattern& pattern)
           : _communication_cache(dof_exchanger.communicationCache())
-          , _grid_view(dof_exchanger.gridView())
+          , _entity_set(dof_exchanger.entitySet())
           , _gfsu(gfsu)
           , _gfsv(gfsv)
           , _pattern(pattern)
@@ -377,7 +384,7 @@ namespace Dune {
       private:
 
         const CommunicationCache& _communication_cache;
-        GridView _grid_view;
+        const EntitySet _entity_set;
         const GFSU& _gfsu;
         const GFSV& _gfsv;
         Pattern& _pattern;
@@ -446,7 +453,7 @@ namespace Dune {
               RowDOFIndex di;
               GFSV::Ordering::Traits::DOFIndexAccessor::store(di,
                                                               e.type(),
-                                                              _grid_view.indexSet().index(e),
+                                                              _entity_set.indexSet().index(e),
                                                               get<0>(data));
 
               ColDOFIndex dj;
@@ -465,7 +472,7 @@ namespace Dune {
                          const GFSV& gfsv,
                          Matrix& matrix)
           : _communication_cache(dof_exchanger.communicationCache())
-          , _grid_view(dof_exchanger.gridView())
+          , _entity_set(dof_exchanger.entitySet())
           , _gfsu(gfsu)
           , _gfsv(gfsv)
           , _matrix(matrix)
@@ -474,27 +481,30 @@ namespace Dune {
       private:
 
         const CommunicationCache& _communication_cache;
-        GridView _grid_view;
+        EntitySet _entity_set;
         const GFSU& _gfsu;
         const GFSV& _gfsv;
         Matrix& _matrix;
 
       };
 
-      /** @brief Sums up the entries corresponding to border vertices.
-      @param matrix Matrix to operate on.
-      */
+      /**
+       * \brief Sums up the entries corresponding to border vertices.
+       *
+       * \param grid_operator Grid operator.
+       * \param matrix Matrix to operate on.
+       */
       void accumulateBorderEntries(const GridOperator& grid_operator, Matrix& matrix)
       {
-        if (_grid_view.comm().size() > 1)
+        if (_entity_set.gridView().comm().size() > 1)
           {
             EntryAccumulator data_handle(*this,
                                          grid_operator.testGridFunctionSpace(),
                                          grid_operator.trialGridFunctionSpace(),
                                          matrix);
-            _grid_view.communicate(data_handle,
-                                   InteriorBorder_InteriorBorder_Interface,
-                                   ForwardCommunication);
+            _entity_set.gridView().communicate(data_handle,
+                                               InteriorBorder_InteriorBorder_Interface,
+                                               ForwardCommunication);
           }
       }
 
@@ -513,15 +523,15 @@ namespace Dune {
         return _communication_cache;
       }
 
-      const GridView& gridView() const
+      const EntitySet& entitySet() const
       {
-        return _grid_view;
+        return _entity_set;
       }
 
     private:
 
       shared_ptr<CommunicationCache> _communication_cache;
-      GridView _grid_view;
+      EntitySet _entity_set;
 
     };
 

@@ -15,7 +15,7 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
-#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/interface.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -23,7 +23,10 @@ namespace Dune {
 
     template<typename GFS, typename C>
     class FlatVectorContainer
+      : public Backend::impl::Wrapper<C>
     {
+
+      friend Backend::impl::Wrapper<C>;
 
     public:
       typedef typename C::value_type ElementType;
@@ -228,17 +231,6 @@ namespace Dune {
         return *this;
       }
 
-      // for debugging and AMG access
-      Container& base ()
-      {
-        return *_container;
-      }
-
-      const Container& base () const
-      {
-        return *_container;
-      }
-
       iterator begin()
       {
         return _container->begin();
@@ -270,8 +262,20 @@ namespace Dune {
       }
 
     private:
+
+      Container& native()
+      {
+        return *_container;
+      }
+
+      const Container& native() const
+      {
+        return *_container;
+      }
+
       const GFS& _gfs;
       shared_ptr<Container> _container;
+
     };
 
 

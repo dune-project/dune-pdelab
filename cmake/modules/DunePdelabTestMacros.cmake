@@ -79,19 +79,26 @@ function(pdelab_add_test)
     endif()
 
     if(MPI_FOUND)
-      set(PDELABTEST_COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PDELABTEST_MPIRANKS} ${MPIEXEC_PREFLAGS} ${PDELABTEST_COMMAND} ${MPIEXEC_POSTFLAGS})
+      set(PDELABTEST_COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PDELABTEST_MPIRANKS} ${MPIEXEC_PREFLAGS} "${CMAKE_CURRENT_BINARY_DIR}/${PDELABTEST_COMMAND}" ${MPIEXEC_POSTFLAGS})
     else()
-      message(WARNING "Test '$PDELABTEST_NAME' requires MPI, but MPI was not found. Test will be built, but not run")
+      message(WARNING "Test '${PDELABTEST_NAME}' requires MPI, but MPI was not found. Test will be built, but not run")
       set(register_test FALSE)
     endif()
   endif()
 
   if(${register_test})
     # by default, the test is run by simply invoking the built executable
-    add_test(
+    _add_test(
       NAME ${PDELABTEST_NAME}
       COMMAND ${PDELABTEST_COMMAND}
       )
   endif()
-
 endfunction()
+
+# Override the builtin add_test command to give a warning if used from within dune-pdelab
+macro(add_test)
+  if(CMAKE_PROJECT_NAME STREQUAL dune-pdelab)
+    message(WARNING "You are using the command add_test from within dune-pdelab. Please use pdelab_add_test instead.")
+  endif()
+  _add_test(${ARGN})
+endmacro()

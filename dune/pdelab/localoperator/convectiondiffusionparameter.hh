@@ -14,8 +14,6 @@
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/constraints/common/constraintsparameters.hh>
 
-#include"diffusionparam.hh"
-
 namespace Dune {
   namespace PDELab {
 
@@ -162,7 +160,9 @@ namespace Dune {
     */
     template<typename T>
     class ConvectionDiffusionBoundaryConditionAdapter
-      : public Dune::PDELab::DirichletConstraintsParameters   /*@\label{bcp:base}@*/
+      :
+      public Dune::PDELab::FluxConstraintsParameters,
+      public Dune::PDELab::DirichletConstraintsParameters   /*@\label{bcp:base}@*/
     {
       const T& t;
 
@@ -186,7 +186,75 @@ namespace Dune {
                 == ConvectionDiffusionBoundaryConditions::Dirichlet );
       }
 
+      template<typename I>
+      bool isNeumann(const I & ig,   /*@\label{bcp:name}@*/
+                     const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                     ) const
+      {
+        return !isDirichlet( ig, coord );
+      }
+
     };
+
+
+
+
+
+    /*! Adapter that extracts the flux boundary conditions from the parameter class
+
+      \tparam T  model of ConvectionDiffusionParameterInterface
+    */
+    template<typename T>
+    class ConvectionDiffusionVelocityExtensionAdapter
+      : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits
+                                                      <typename T::Traits::GridViewType,
+                                                       typename T::Traits::RangeFieldType,
+                                                       T::Traits::GridViewType::dimension>,
+                                                      ConvectionDiffusionVelocityExtensionAdapter<T> >
+    {
+    public:
+      typedef Dune::PDELab::AnalyticGridFunctionTraits<typename T::Traits::GridViewType,
+                                                       typename T::Traits::RangeFieldType,
+                                                       T::Traits::GridViewType::dimension> Traits;
+      typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,ConvectionDiffusionVelocityExtensionAdapter<T> > BaseT;
+
+
+      //! constructor
+      ConvectionDiffusionVelocityExtensionAdapter (const typename Traits::GridViewType& gv_, T& t_)
+        : BaseT(gv_), gv(gv_), t(t_)
+      {}
+
+      inline void evaluateGlobal (const typename Traits::DomainType& x,
+                                  typename Traits::RangeType& y) const
+      {
+        y = t.b(x);
+      }
+
+      //! \copydoc GridFunctionBase::evaluate()
+      inline void evaluate (const typename Traits::ElementType& e,
+                            const typename Traits::DomainType& x,
+                            typename Traits::RangeType& y) const
+      {
+        y = t.b(e,x);
+      }
+
+      inline const typename Traits::GridViewType& getGridView () const
+      {
+        return gv;
+      }
+
+      inline void setTime(double time_)
+      {
+        t.setTime(time_);
+      }
+
+    private:
+      const typename Traits::GridViewType gv;
+      T& t;
+    };
+
+
+
 
 
   /*! Adapter that extracts Dirichlet boundary conditions from parameter class
@@ -234,7 +302,6 @@ namespace Dune {
   };
 
 
-
 /*! Adapter that extracts gradient of exact solution from parameter class
 
   \tparam T  model of ConvectionDiffusionParameterInterface
@@ -271,104 +338,6 @@ private:
   const typename Traits::GridViewType g;
   const T& t;
 };
-
-    /** \brief Adapter to get ConvectionDiffusion parameter object from the old style separate parameter grid functions
-     *
-     */
-    template<typename K, typename A0, typename F, typename B, typename G, typename J>
-    class ConvectionDiffusion_Diffusion_Adapter
-    {
-      typedef typename F::Traits::RangeFieldType RF;
-      typedef typename F::Traits::GridViewType GV;
-
-      typedef ConvectionDiffusionBoundaryConditions::Type BCType;
-
-    public:
-      typedef ConvectionDiffusionParameterTraits<GV,RF> Traits;
-
-      //! constructor
-      ConvectionDiffusion_Diffusion_Adapter (const K& k_, const A0& a0_, const F& f_, const B& b_, const G& g_, const J& j_) :
-        k__(k_), a0__(a0_), f__(f_), b__(b_), g__(g_), j__(j_)
-      {}
-
-      //! tensor diffusion coefficient
-      typename Traits::PermTensorType
-      A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-      {
-        typename K::Traits::RangeType tensor(0.0);
-        k__.evaluate(e,x,tensor);
-        return tensor;
-      }
-
-      //! velocity field
-      typename Traits::RangeType
-      b (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-      {
-        typename Traits::RangeType v(0.0);
-        return v;
-      }
-
-      //! sink term
-      typename Traits::RangeFieldType
-      c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-      {
-        typename A0::Traits::RangeType y;
-        a0__.evaluate(e,x,y);
-        return y;
-      }
-
-      //! source term
-      typename Traits::RangeFieldType
-      f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-      {
-        typename F::Traits::RangeType y;
-        f__.evaluate(e,x,y);
-        return y;
-      }
-
-      //! boundary condition type function
-      BCType
-      bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-      {
-        typename B::Traits::RangeType bctype;
-        b__.evaluate(Dune::PDELab::IntersectionGeometry<typename Traits::IntersectionType>(is,0),x,bctype);
-        if (DiffusionBoundaryCondition::isDirichlet(bctype)) return ConvectionDiffusionBoundaryConditions::Dirichlet;
-        return ConvectionDiffusionBoundaryConditions::Neumann;
-      }
-
-      //! Dirichlet boundary condition value
-      typename Traits::RangeFieldType
-      g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-      {
-        typename G::Traits::RangeType y;
-        g__.evaluate(e,x,y);
-        return y;
-      }
-
-      //! Neumann boundary condition
-      typename Traits::RangeFieldType
-      j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-      {
-        typename J::Traits::RangeType y;
-        j__.evaluate(*(is.inside()),is.geometryInInside().global(x),y);
-        return y;
-      }
-
-      //! outflow boundary condition
-      typename Traits::RangeFieldType
-      o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-      {
-        return 0.0;
-      }
-
-    private:
-      const K& k__;
-      const A0& a0__;
-      const F& f__;
-      const B& b__;
-      const G& g__;
-      const J& j__;
-    };
   }
 }
 

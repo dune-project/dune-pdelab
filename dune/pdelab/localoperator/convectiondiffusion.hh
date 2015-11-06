@@ -1,6 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_CONVECTIONDIFFUSION_HH
 #define DUNE_PDELAB_CONVECTIONDIFFUSION_HH
+#warning This file is deprecated and will be removed after the Dune-PDELab 2.4 release! Include the header dune/pdelab/localoperator/nonlinearconvectiondiffusionfem.hh instead!
 
 #include<vector>
 
@@ -26,7 +27,7 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-    /** a local operator for solving the convection-diffusion equation
+    /** a local operator for solving the non-linear convection-diffusion equation with standard FEM
      *
      * \f{align*}{
      *   \nabla\cdot\{q(x,u) - D(x) v(u) \nabla w(u)\} &=& f(u) \mbox{ in } \Omega,  \\
@@ -221,7 +222,7 @@ namespace Dune {
      * \tparam T model of ConvectionDiffusionParameterInterface
      */
     template<typename T>
-    class ConvectionDiffusion :
+    class DUNE_DEPRECATED_MSG("Deprecated in Dune-PDELab 2.4, use the local operator NonLinearConvectionDiffusionFEM instead!") ConvectionDiffusion :
       public NumericalJacobianApplyVolume<ConvectionDiffusion<T> >,
       public NumericalJacobianApplyBoundary<ConvectionDiffusion<T> >,
       public NumericalJacobianVolume<ConvectionDiffusion<T> >,
@@ -238,6 +239,7 @@ namespace Dune {
       enum { doAlphaVolume = true };
       enum { doAlphaBoundary = true };
 
+      DUNE_DEPRECATED_MSG("Deprecated in Dune-PDELab 2.4, use the local operator NonLinearConvectionDiffusionFEM instead!")
       ConvectionDiffusion (T& param_, int intorder_=2)
         : param(param_), intorder(intorder_)
       {}
@@ -259,7 +261,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -351,8 +353,9 @@ namespace Dune {
         Dune::FieldVector<DF,dim-1> facecenterlocal = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
         Dune::FieldVector<DF,dim> facecenterinelement = ig.geometryInInside().global( facecenterlocal );
         std::vector<typename T::Traits::RangeFieldType> w(lfsu_s.size());
+        auto cell_inside = ig.inside();
         for (size_type i=0; i<lfsu_s.size(); i++)
-          w[i] = param.w(*(ig.inside()),facecenterinelement,x_s(lfsu_s,i));
+          w[i] = param.w(cell_inside,facecenterinelement,x_s(lfsu_s,i));
 
         // loop over quadrature points and integrate normal flux
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -376,7 +379,7 @@ namespace Dune {
 
             // evaluate flux boundary condition
             typename T::Traits::RangeFieldType j;
-            j = param.j(*(ig.inside()),local,u);
+            j = param.j(cell_inside,local,u);
 
             // integrate j
             RF factor = it->weight()*ig.geometry().integrationElement(it->position());

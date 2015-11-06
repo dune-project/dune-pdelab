@@ -13,12 +13,13 @@ common_HEADERS =				\
 	geometrywrapper.hh			\
 	globaldofindex.hh			\
 	hostname.hh				\
+	instationaryfilenamehelper.hh		\
+	intersectiontype.hh			\
 	jacobiantocurl.hh			\
 	lockmanager.hh				\
 	logtag.hh				\
 	multiindex.hh				\
 	nullmutex.hh				\
-	partitioninfoprovider.hh		\
 	polymorphicbufferwrapper.hh		\
 	range.hh				\
 	simpledofindex.hh			\

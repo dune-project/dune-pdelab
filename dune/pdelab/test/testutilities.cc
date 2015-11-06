@@ -9,7 +9,6 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/backend/backendselector.hh>
 #include  <dune/pdelab/finiteelementmap/qkfem.hh>
 #include  <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include  <dune/pdelab/gridfunctionspace/subspace.hh>
@@ -17,8 +16,7 @@
 #include  <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include  <dune/pdelab/common/function.hh>
 #include  <dune/pdelab/common/vtkexport.hh>
-#include  <dune/pdelab/backend/istlvectorbackend.hh>
-#include  <dune/pdelab/backend/istl/utility.hh>
+#include  <dune/pdelab/backend/istl.hh>
 
 // generate a Q1 function and output it
 template<class GV>
@@ -33,11 +31,11 @@ void testq1 (const GV& gv)
   Q1GFS q1gfs(gv,q12dfem);
 
   // make coefficent Vectors
-  typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS, double>::Type V;
+  using V = Dune::PDELab::Backend::Vector<Q1GFS, double>;
   V x(q1gfs);
   x = 0.0;
   // Don't do this at home: access raw vector
-  Dune::PDELab::istl::raw(x)[3] = 1.0;
+  Dune::PDELab::Backend::native(x)[3] = 1.0;
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<Q1GFS,V> DGF;
@@ -102,21 +100,21 @@ void testinterpolate (const GV& gv)
   Q1GFS q1gfs(gv,q12dfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
   Q2GFS q2gfs(gv,q22dfem);
-  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
     Dune::PDELab::LexicographicOrderingTag,Q1GFS,Q2GFS> CGFS;
   CGFS cgfs(q1gfs,q2gfs);
-  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,2,Dune::PDELab::ISTLVectorBackend<> > PGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,2,Dune::PDELab::istl::VectorBackend<> > PGFS;
   PGFS pgfs(q2gfs,q2gfs);
 
   // make coefficent Vectors
-  typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS, double>::Type V;
+  using V = Dune::PDELab::Backend::Vector<Q1GFS, double>;
   Q1GFS q1gfs2(gv,q12dfem);
   V xg(q1gfs2);
   xg = 0.0;
-  typedef typename Dune::PDELab::BackendVectorSelector<CGFS, double>::Type CV;
+  using CV = Dune::PDELab::Backend::Vector<CGFS, double>;
   CV cxg(cgfs);
   cxg = 0.0;
-  typedef typename Dune::PDELab::BackendVectorSelector<PGFS, double>::Type PV;
+  using PV = Dune::PDELab::Backend::Vector<PGFS, double>;
   PV pxg(pgfs);
   pxg = 0.0;
 
@@ -264,14 +262,14 @@ void testtaylorhood (const GV& gv)
   Q1GFS q1gfs(gv,q12dfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
   Q2GFS q2gfs(gv,q22dfem);
-  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension,Dune::PDELab::ISTLVectorBackend<> > VGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension,Dune::PDELab::istl::VectorBackend<> > VGFS;
   VGFS vgfs(q2gfs);
-  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
     Dune::PDELab::LexicographicOrderingTag,VGFS,Q1GFS> THGFS;
   THGFS thgfs(vgfs,q1gfs);
 
   // make coefficent Vector
-  typedef typename Dune::PDELab::BackendVectorSelector<THGFS, double>::Type V;
+  using V = Dune::PDELab::Backend::Vector<THGFS, double>;
   V xg(thgfs);
   xg = 0.0;
 
@@ -297,18 +295,18 @@ void testtaylorhood (const GV& gv)
 
   // check entries of global vector
   for (typename V::size_type i=0; i<xg.flatsize(); i++)
-    std::cout << "[" << i << ":" << Dune::PDELab::istl::raw(xg)[i] << "] ";
+    std::cout << "[" << i << ":" << Dune::PDELab::Backend::native(xg)[i] << "] ";
   std::cout << std::endl;
 
   // check entries
   for (int i=0; i<25; i++)
-    if (Dune::PDELab::istl::raw(xg)[i]!=1.0)
+    if (Dune::PDELab::Backend::native(xg)[i]!=1.0)
       exit(1);
   for (int i=25; i<50; i++)
-    if (Dune::PDELab::istl::raw(xg)[i]!=2.0)
+    if (Dune::PDELab::Backend::native(xg)[i]!=2.0)
       exit(1);
   for (int i=50; i<59; i++)
-    if (Dune::PDELab::istl::raw(xg)[i]!=3.0)
+    if (Dune::PDELab::Backend::native(xg)[i]!=3.0)
       exit(1);
   std::cout << "all entries correct" << std::endl;
 
@@ -352,11 +350,11 @@ void testgridfunctions (const GV& gv)
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
   Q2GFS q2gfs(gv,q22dfem);
-  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension,Dune::PDELab::ISTLVectorBackend<> > VGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension,Dune::PDELab::istl::VectorBackend<> > VGFS;
   VGFS vgfs(q2gfs);
 
   // make coefficent Vector
-  typedef typename Dune::PDELab::BackendVectorSelector<VGFS, double>::Type V;
+  using V = Dune::PDELab::Backend::Vector<VGFS, double>;
   V xv(vgfs);
   xv = 0.0;
 
@@ -389,9 +387,17 @@ void testgridfunctions (const GV& gv)
   typedef Dune::PDELab::VectorDiscreteGridFunctionGradient<VGFS,V> DGFVG;
   DGFVG dgfvg(vgfs,xv);
 
+  // divergence gridfunction of vector
+  typedef Dune::PDELab::VectorDiscreteGridFunctionDiv<VGFS,V> DGFVD;
+  DGFVD dgfvd(vgfs,xv);
+
+  // curl gridfunction of vector
+  typedef Dune::PDELab::VectorDiscreteGridFunctionCurl<VGFS,V> DGFVC;
+  DGFVC dgfvc(vgfs,xv);
+
   // check entries of velocity vector
   for (typename V::size_type i=0; i<xv.flatsize(); i++)
-    std::cout << "[" << i << ":" << Dune::PDELab::istl::raw(xv)[i] << "] ";
+    std::cout << "[" << i << ":" << Dune::PDELab::Backend::native(xv)[i] << "] ";
   std::cout << std::endl;
 
   // values at element centers
@@ -401,6 +407,8 @@ void testgridfunctions (const GV& gv)
   typename DGFV0G::Traits::RangeType v0grad;
   typename DGFV1G::Traits::RangeType v1grad;
   typename DGFVG::Traits::RangeType vgrad;
+  typename DGFVD::Traits::RangeType vdiv;
+  typename DGFVC::Traits::RangeType vcurl;
 
   // evaluate gridfunctions
   for(typename GV::template Codim<0>::Iterator eit = gv.template begin<0>();
@@ -411,6 +419,8 @@ void testgridfunctions (const GV& gv)
     dgfv0g.evaluate(*eit, x, v0grad);
     dgfv1g.evaluate(*eit, x, v1grad);
     dgfvg.evaluate(*eit, x, vgrad);
+    dgfvd.evaluate(*eit, x, vdiv);
+    dgfvc.evaluate(*eit, x, vcurl);
 
     // check matching components of gradients
     if (v0grad[0]!=1.0)
@@ -422,6 +432,14 @@ void testgridfunctions (const GV& gv)
     if (vgrad[0][0]!=1.0)
       exit(1);
     if (vgrad[1][1]!=2.0)
+      exit(1);
+
+    // check divergence
+    if(vdiv[0]!=3.0)
+      exit(1);
+
+    // check curl
+    if(vcurl[0]!=0.0)
       exit(1);
   }
 }
