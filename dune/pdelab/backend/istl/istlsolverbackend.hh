@@ -6,7 +6,7 @@
 #include "seqistlsolverbackend.hh"
 #include "ovlpistlsolverbackend.hh"
 #include "novlpistlsolverbackend.hh"
-#include "novldgistlsolverbackend.hh"
+#include "novlpdgistlsolverbackend.hh"
 
   /**
    * @brief For better handling istlsolverbackend.hh is now divided into:
