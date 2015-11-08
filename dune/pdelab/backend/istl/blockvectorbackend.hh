@@ -283,21 +283,27 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-    template<typename Allocator, typename GFS, typename E>
-    struct BackendVectorSelectorHelper<istl::BlockVectorBackend<Allocator>, GFS, E>
-    {
+    namespace Backend {
+      namespace impl {
 
-      typedef istl::BlockVectorContainer<
-        GFS,
-        Dune::ISTL::BlockVector<
-          E,
-          Allocator
-          >
-        > type;
+        template<typename Allocator, typename GFS, typename E>
+        struct BackendVectorSelectorHelper<istl::BlockVectorBackend<Allocator>, GFS, E>
+        {
 
-      typedef type Type;
+          typedef istl::BlockVectorContainer<
+            GFS,
+            Dune::ISTL::BlockVector<
+              E,
+              Allocator
+              >
+            > type;
 
-    };
+          typedef type Type;
+
+        };
+
+      }
+    }
 
 #endif // DOXYGEN
 
