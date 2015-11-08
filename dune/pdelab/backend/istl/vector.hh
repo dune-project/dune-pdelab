@@ -38,6 +38,8 @@ namespace Dune {
         typedef typename Container::block_type block_type;
         typedef typename Container::size_type size_type;
 
+        using value_type = E;
+
         typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
 
         typedef istl::vector_iterator<C> iterator;
