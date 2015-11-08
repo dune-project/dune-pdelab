@@ -87,7 +87,7 @@ namespace Dune {
 
       BlockVectorContainer(const BlockVectorContainer& rhs)
         : _gfs(rhs._gfs)
-        , _container(make_shared<Container>(raw(rhs)))
+        , _container(make_shared<Container>(native(rhs)))
       {}
 
       BlockVectorContainer (const GFS& gfs, Dune::PDELab::tags::attached_container = Dune::PDELab::tags::attached_container())
@@ -138,11 +138,11 @@ namespace Dune {
           return *this;
         if (attached())
           {
-            (*_container) = raw(r);
+            (*_container) = native(r);
           }
         else
           {
-            _container = make_shared<Container>(raw(r));
+            _container = make_shared<Container>(native(r));
           }
         return *this;
       }
@@ -168,13 +168,13 @@ namespace Dune {
 
       BlockVectorContainer& operator+=(const BlockVectorContainer& e)
       {
-        (*_container) += raw(e);
+        (*_container) += native(e);
         return *this;
       }
 
       BlockVectorContainer& operator-=(const BlockVectorContainer& e)
       {
-        (*_container) -= raw(e);
+        (*_container) -= native(e);
         return *this;
       }
 
@@ -217,17 +217,17 @@ namespace Dune {
 
       E operator*(const BlockVectorContainer& y) const
       {
-        return (*_container) * raw(y);
+        return (*_container) * native(y);
       }
 
       E dot(const BlockVectorContainer& y) const
       {
-        return _container->dot(raw(y));
+        return _container->dot(native(y));
       }
 
       BlockVectorContainer& axpy(const E& a, const BlockVectorContainer& y)
       {
-        _container->axpy(a, raw(y));
+        _container->axpy(a, native(y));
         return *this;
       }
 
