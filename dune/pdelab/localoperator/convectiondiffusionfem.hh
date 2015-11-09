@@ -26,7 +26,7 @@ namespace Dune {
      * \f{align*}{
      *   \nabla\cdot(-A(x) \nabla u + b(x) u) + c(x)u &=& f \mbox{ in } \Omega,  \\
      *                                              u &=& g \mbox{ on } \partial\Omega_D \\
-     *                (b(x,u) - A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_N \\
+     *                (b(x) u - A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_N \\
      *                        -(A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_O
      * \f}
      * Note:
