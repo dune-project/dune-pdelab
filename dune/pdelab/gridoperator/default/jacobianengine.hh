@@ -84,6 +84,8 @@ namespace Dune{
       { return local_assembler.doAlphaBoundary(); }
       bool requireUVVolumePostSkeleton() const
       { return local_assembler.doAlphaVolumePostSkeleton(); }
+      bool requireProcessBoundaryGather() const
+      { return local_assembler.doAlphaProcessBoundaryGather(); }
       //! @}
 
       //! Public access to the wrapping local assembler
@@ -253,7 +255,7 @@ namespace Dune{
       void assembleUVProcessBoundaryScatter(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache, Buf& buf)
       {
         al_view.setWeight(local_assembler.weight);
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaProcessBoundaryScatter>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaProcessBoundaryGather>::
           jacobian_process_boundary_scatter(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),al_view);
       }
 

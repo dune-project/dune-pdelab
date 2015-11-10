@@ -79,7 +79,6 @@ namespace Dune {
       enum { doAlphaBoundary  = true };
       enum { doLambdaVolume  = true };
       enum { doAlphaProcessBoundaryGather = true };
-      enum { doAlphaProcessBoundaryScatter = true };
 
       //! constructor: pass parameter object
       ConvectionDiffusionDG (T& param_,

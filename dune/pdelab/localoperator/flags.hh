@@ -56,6 +56,10 @@ namespace Dune
             //! \brief Whether to call the local operator's alpha_boundary(),
             //!        jacobian_apply_boundary() and jacobian_boundary().
             enum { /*! \hideinitializer */ doAlphaBoundary = false };
+            //! \brief Whether to call the local operator's alpha_process_boundary_gather(),
+            //!        alpha_process_boundary_scatter(), jacobian_process_boundary_gather()
+            //!        and jacobian_process_boundary_scatter().
+            enum { /*! \hideinitializer */ doAlphaProcessBoundaryGather = false };
 
             //! \} Flags for the non-constant part of the residual and the jacobian
 

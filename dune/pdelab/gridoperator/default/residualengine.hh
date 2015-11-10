@@ -299,7 +299,7 @@ namespace Dune{
       void assembleUVProcessBoundaryScatter(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache, Buf& buf)
       {
         rl_view.setWeight(local_assembler.weight);
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaProcessBoundaryScatter>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaProcessBoundaryGather>::
           alpha_process_boundary_scatter(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),rl_view,buf);
       }
 
