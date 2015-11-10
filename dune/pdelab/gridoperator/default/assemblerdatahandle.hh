@@ -70,13 +70,14 @@ namespace Dune{
       using DataType = char;
 
       AssemblerDataHandle(const GFSU& gfsu, const GFSV& gfsv,
+                          const CU& cu, const CV& cv,
                           LocalAssemblerEngine& assemblerEngine)
         : cdim_(1)
         , assemblerEngine_(assemblerEngine)
         , lfsu_(gfsu)
         , lfsv_(gfsv)
-        , lfsuCache_(lfsu_)
-        , lfsvCache_(lfsv_)
+        , lfsuCache_(lfsu_,cu,assemblerEngine.needsConstraintsCaching(cu,cv))
+        , lfsvCache_(lfsv_,cv,assemblerEngine.needsConstraintsCaching(cu,cv))
       {}
 
       //! returns true if data for this codim should be communicated

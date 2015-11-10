@@ -276,7 +276,7 @@ namespace Dune{
         // Use yasp grid intersection communication on process boundary intersections.
         // This calls gather and scatter methods form AssemblerDataHandle.
         using DH = AssemblerDataHandle<GFSU,GFSV,CU,CV,LocalAssemblerEngine>;
-        DH dh(gfsu,gfsv,assembler_engine);
+        DH dh(gfsu,gfsv,cu,cv,assembler_engine);
         int level (gfsu.gridView().grid().maxLevel());
         auto iftype = Dune::InteriorBorder_InteriorBorder_Interface;
         auto dir = Dune::ForwardCommunication;
