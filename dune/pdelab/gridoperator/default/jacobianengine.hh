@@ -284,12 +284,14 @@ namespace Dune{
       // needed for DG nonoverlapping communication
       bool communicationFixedSize() const
       {
-        return lop.jacobianCommunicationFixedSize();
+        return Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
+          jacobianCommunicationFixedSize(lop);
       }
       template <typename IG, typename LFSUC, typename LFSVC>
       size_t communicationSize(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache) const
       {
-        return lop.alphaCommunicationSize(ig,lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace());
+        return Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
+          jacobianCommunicationSize(lop,ig,lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace());
       }
 
     private:

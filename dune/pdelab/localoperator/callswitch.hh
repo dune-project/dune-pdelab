@@ -56,6 +56,16 @@ namespace Dune {
         R& r_s)
       {
       }
+      static bool alphaCommunicationFixedSize(const LA& la)
+      {
+        return true;
+      }
+      template <typename IG, typename LFSU, typename LFSV>
+      static size_t alphaCommunicationSize(const LA& la, const IG& ig,
+                                           const LFSU& lfsu_s, const LFSV& lfsv_s)
+      {
+        return 0.0;
+      }
 
       template<typename EG, typename LFSV, typename R>
       static void lambda_volume (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
@@ -118,6 +128,16 @@ namespace Dune {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         M & mat_ss)
       {
+      }
+      static bool jacobianCommunicationFixedSize(const LA& la)
+      {
+        return true;
+      }
+      template <typename IG, typename LFSU, typename LFSV>
+      static size_t jacobianCommunicationSize(const LA& la, const IG& ig,
+                                                   const LFSU& lfsu_s, const LFSV& lfsv_s)
+      {
+        return 0.0;
       }
     };
     template<typename LA>
@@ -191,6 +211,16 @@ namespace Dune {
                                   R& r_s, Buf& buf)
       {
         la.alpha_process_boundary_scatter(ig,lfsu_s,x_s,lfsv_s,r_s,buf);
+      }
+      static bool alphaCommunicationFixedSize(const LA& la)
+      {
+        return la.alphaCommunicationFixedSize();
+      }
+      template <typename IG, typename LFSU, typename LFSV>
+      static size_t alphaCommunicationSize(const LA& la, const IG& ig,
+                                           const LFSU& lfsu_s, const LFSV& lfsv_s)
+      {
+        return la.alphaCommunicationSize(ig,lfsu_s,lfsv_s);
       }
       template<typename EG, typename LFSV, typename R>
       static void lambda_volume (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
@@ -295,6 +325,16 @@ namespace Dune {
         M & mat_ss)
       {
         la.jacobian_process_boundary_scatter(ig,lfsu_s,x_s,lfsv_s,mat_ss);
+      }
+      static bool jacobianCommunicationFixedSize(const LA& la)
+      {
+        return la.jacobianCommunicationFixedSize();
+      }
+      template <typename IG, typename LFSU, typename LFSV>
+      static size_t jacobianCommunicationSize(const LA& la, const IG& ig,
+                                                   const LFSU& lfsu_s, const LFSV& lfsv_s)
+      {
+        return la.jacobianCommunicationSize(ig,lfsu_s,lfsv_s);
       }
     };
 
