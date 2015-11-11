@@ -87,6 +87,8 @@ namespace Dune{
       { return lae0->requireUVVolumePostSkeleton() || lae1->requireUVVolumePostSkeleton();}
       bool requireVVolumePostSkeleton() const
       { return lae0->requireVVolumePostSkeleton() || lae1->requireVVolumePostSkeleton(); }
+      bool requireProcessBoundaryGather() const
+      { return lae0->requireProcessBoundaryGather() || lae1->requireProcessBoundaryGather(); }
       //! @}
 
 

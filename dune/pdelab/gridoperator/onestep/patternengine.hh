@@ -85,6 +85,27 @@ namespace Dune{
       }
       //! @}
 
+      template<typename IG, typename LFSUC, typename LFSVC, typename Buf>
+      void assembleUVProcessBoundaryGather(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache, Buf& buf)
+      {
+      }
+
+      template<typename IG, typename LFSUC, typename LFSVC, typename Buf>
+      void assembleUVProcessBoundaryScatter(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache, Buf& buf)
+      {
+      }
+
+      // needed for DG nonoverlapping communication
+      bool communicationFixedSize() const
+      {
+        return true;
+      }
+      template <typename IG, typename LFSUC, typename LFSVC>
+      size_t communicationSize(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache) const
+      {
+        return 0;
+      }
+
     private:
 
       //! Default value indicating an invalid solution pointer

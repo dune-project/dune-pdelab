@@ -88,6 +88,8 @@ namespace Dune{
       { return local_assembler.doAlphaVolumePostSkeleton(); }
       bool requireVVolumePostSkeleton() const
       { return local_assembler.doLambdaVolumePostSkeleton(); }
+      bool requireProcessBoundaryGather() const
+      { return local_assembler.doAlphaProcessBoundaryGather(); }
       //! @}
 
       //! Public access to the wrapping local assembler

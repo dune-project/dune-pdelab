@@ -335,6 +335,26 @@ namespace Dune{
           jacobian_engine->assembleVBoundary(ig,lfsv_s);
       }
 
+      template<typename IG, typename LFSU, typename LFSV, typename Buf>
+      void assembleUVProcessBoundaryGather(const IG& ig, const LFSU& lfsu_s, const LFSV& lfsv_s, Buf& buf)
+      {
+        if (prestage_engine->requireProcessBoundaryGather()){
+          prestage_engine->assembleUVProcessBoundaryGather(ig,lfsu_s,lfsv_s,buf);
+        }
+        if (jacobian_engine->requireProcessBoundaryGather()){
+          jacobian_engine->assembleUVProcessBoundaryGather(ig,lfsu_s,lfsv_s,buf);
+        }
+
+      }
+      template<typename IG, typename LFSU, typename LFSV, typename Buf>
+      void assembleUVProcessBoundaryScatter(const IG& ig, const LFSU& lfsu_s, const LFSV& lfsv_s, Buf& buf)
+      {
+        if (prestage_engine->requireProcessBoundaryGather())
+          prestage_engine->assembleUVProcessBoundaryScatter(ig,lfsu_s,lfsv_s,buf);
+        if (jacobian_engine->requireProcessBoundaryGather())
+          jacobian_engine->assembleUVProcessBoundaryScatter(ig,lfsu_s,lfsv_s,buf);
+      }
+
       template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N,
                typename LFSU_C, typename LFSV_C>
       void assembleUVEnrichedCoupling(const IG & ig,
@@ -380,6 +400,17 @@ namespace Dune{
 
       //! @}
 
+      // needed for DG nonoverlapping communication
+      bool communicationFixedSize() const
+      {
+        return jacobian_engine->communicationFixedSize() && prestage_engine->communicationFixedSize();
+      }
+      template <typename IG, typename LFSUC, typename LFSVC>
+      size_t communicationSize(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache) const
+      {
+        return (jacobian_engine->communicationSize(ig,lfsu_s_cache,lfsv_s_cache)
+                +prestage_engine->communicationSize(ig,lfsu_s_cache,lfsv_s_cache));
+      }
     private:
 
       //! Reference to the wrapping local assembler object which

@@ -56,6 +56,18 @@ namespace Dune {
         R& r_s)
       {
       }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R, typename Buf>
+      static void alpha_process_boundary_gather (const LA& la, const IG& ig,
+                                  const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                  R& r_s, Buf& buf)
+      {
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R, typename Buf>
+      static void alpha_process_boundary_scatter (const LA& la, const IG& ig,
+                                  const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                  R& r_s, Buf& buf)
+      {
+      }
       static bool alphaCommunicationFixedSize(const LA& la)
       {
         return true;
@@ -107,6 +119,18 @@ namespace Dune {
         Y& y_s)
       {
       }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R, typename Buf>
+      static void jacobian_apply_process_boundary_gather (const LA& la, const IG& ig,
+                                  const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                  R& r_s, Buf& buf)
+      {
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R, typename Buf>
+      static void jacobian_apply_process_boundary_scatter (const LA& la, const IG& ig,
+                                  const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                  R& r_s, Buf& buf)
+      {
+      }
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
       {
@@ -125,6 +149,18 @@ namespace Dune {
       }
       template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
       static void jacobian_boundary (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        M & mat_ss)
+      {
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
+      static void jacobian_process_boundary_gather (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        M & mat_ss)
+      {
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
+      static void jacobian_process_boundary_scatter (const LA& la, const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         M & mat_ss)
       {

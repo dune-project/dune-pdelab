@@ -317,6 +317,58 @@ namespace Dune{
         }
       }
 
+      template<typename IG, typename LFSU_S, typename LFSV_S, typename Buf>
+      void assembleUVProcessBoundaryGather(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s, Buf& buf)
+      {
+        for (int s=0; s<la.stage; ++s){
+          // Reset the time in the local assembler
+          la.la0.setTime(la.time+d[s]*la.dt);
+          la.la1.setTime(la.time+d[s]*la.dt);
+
+          lae0->setSolution(*((*solutions)[s]));
+          lae1->setSolution(*((*solutions)[s]));
+
+          lae0->loadCoefficientsLFSUInside(lfsu_s);
+          lae1->loadCoefficientsLFSUInside(lfsu_s);
+
+          if(do0[s]){
+            la.la0.setWeight(b[s]*la.dt_factor0);
+            lae0->assembleUVProcessBoundaryGather(ig,lfsu_s,lfsv_s,buf);
+          }
+
+          if(do1[s]){
+            la.la1.setWeight(a[s]*la.dt_factor1);
+            lae1->assembleUVProcessBoundaryGather(ig,lfsu_s,lfsv_s,buf);
+          }
+        }
+      }
+
+      template<typename IG, typename LFSU_S, typename LFSV_S, typename Buf>
+      void assembleUVProcessBoundaryScatter(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s, Buf& buf)
+      {
+        for (int s=0; s<la.stage; ++s){
+          // Reset the time in the local assembler
+          la.la0.setTime(la.time+d[s]*la.dt);
+          la.la1.setTime(la.time+d[s]*la.dt);
+
+          lae0->setSolution(*((*solutions)[s]));
+          lae1->setSolution(*((*solutions)[s]));
+
+          lae0->loadCoefficientsLFSUInside(lfsu_s);
+          lae1->loadCoefficientsLFSUInside(lfsu_s);
+
+          if(do0[s]){
+            la.la0.setWeight(b[s]*la.dt_factor0);
+            lae0->assembleUVProcessBoundaryScatter(ig,lfsu_s,lfsv_s,buf);
+          }
+
+          if(do1[s]){
+            la.la1.setWeight(a[s]*la.dt_factor1);
+            lae1->assembleUVProcessBoundaryScatter(ig,lfsu_s,lfsv_s,buf);
+          }
+        }
+      }
+
       template<typename IG, typename LFSU_S, typename LFSV_S>
       void assembleUVProcessor(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s)
       {
@@ -471,6 +523,17 @@ namespace Dune{
       }
       //! @}
 
+      // needed for DG nonoverlapping communication
+      bool communicationFixedSize() const
+      {
+        return lae0->communicationFixedSize() && lae1->communicationFixedSize();
+      }
+      template <typename IG, typename LFSUC, typename LFSVC>
+      size_t communicationSize(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache) const
+      {
+        return (lae0->communicationSize(ig,lfsu_s_cache,lfsv_s_cache)+
+                lae1->communicationSize(ig,lfsu_s_cache,lfsv_s_cache));
+      }
     private:
 
       //! Default value indicating an invalid residual pointer
