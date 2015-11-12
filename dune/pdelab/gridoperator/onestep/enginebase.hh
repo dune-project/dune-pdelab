@@ -374,6 +374,21 @@ namespace Dune{
         lae1->assembleVBoundary(ig,lfsv_s);
       }
 
+      template<typename IG, typename LFSU, typename LFSV, typename Buf>
+      void assembleUVProcessBoundaryGather(const IG& ig, const LFSU& lfsu_s, const LFSV& lfsv_s, Buf& buf)
+      {
+        if(implicit)
+          lae0->assembleUVProcessBoundaryGather(ig,lfsu_s,lfsv_s,buf);
+        lae1->assembleUVProcessBoundaryGather(ig,lfsu_s,lfsv_s,buf);
+      }
+      template<typename IG, typename LFSU, typename LFSV, typename Buf>
+      void assembleUVProcessBoundaryScatter(const IG& ig, const LFSU& lfsu_s, const LFSV& lfsv_s, Buf& buf)
+      {
+        if(implicit)
+          lae0->assembleUVProcessBoundaryScatter(ig,lfsu_s,lfsv_s,buf);
+        lae1->assembleUVProcessBoundaryScatter(ig,lfsu_s,lfsv_s,buf);
+      }
+
       template<typename IG, typename LFSU_S, typename LFSV_S>
       void assembleUVProcessor(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s)
       {
@@ -427,6 +442,25 @@ namespace Dune{
       }
       //! @}
 
+      // needed for DG nonoverlapping communication
+      bool communicationFixedSize() const
+      {
+        if(implicit)
+          return lae0->communicationFixedSize() && lae1->communicationFixedSize();
+        else
+          return lae1->communicationFixedSize();
+      }
+      template <typename IG, typename LFSUC, typename LFSVC>
+      size_t communicationSize(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache) const
+      {
+        if(implicit){
+          return (lae0->communicationSize(ig,lfsu_s_cache,lfsv_s_cache)
+                  +lae1->communicationSize(ig,lfsu_s_cache,lfsv_s_cache));
+        }
+
+        else
+          return (lae1->communicationSize(ig,lfsu_s_cache,lfsv_s_cache));
+      }
     private:
 
       LocalAssemblerEngineDT0 * const invalid_lae0;

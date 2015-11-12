@@ -532,7 +532,7 @@ namespace Dune{
       size_t communicationSize(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache) const
       {
         return (lae0->communicationSize(ig,lfsu_s_cache,lfsv_s_cache)+
-                lae1->communicationSize(ig,lfsu_s_cache,lfsv_s_cache));
+                lae1->communicationSize(ig,lfsu_s_cache,lfsv_s_cache))*la.stage;
       }
     private:
 
