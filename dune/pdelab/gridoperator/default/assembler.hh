@@ -237,17 +237,19 @@ namespace Dune{
                         break;
 
                       case IntersectionType::processor:
-                      //   if(require_uv_processor || require_v_processor )
-                      //     {
+                        if(nonoverlapping_mode==false){
+                          if(require_uv_processor || require_v_processor )
+                          {
+                            // Processor integration
+                            assembler_engine.assembleVProcessor(ig,lfsv_cache);
 
-                      //       // Processor integration
-                      //       assembler_engine.assembleVProcessor(ig,lfsv_cache);
+                            if(require_uv_processor){
+                              // Processor integration
+                              assembler_engine.assembleUVProcessor(ig,lfsu_cache,lfsv_cache);
+                            }
+                          }
+                        }
 
-                      //       if(require_uv_processor){
-                      //         // Processor integration
-                      //         assembler_engine.assembleUVProcessor(ig,lfsu_cache,lfsv_cache);
-                      //       }
-                      //     }
                         break;
                       } // switch
 
@@ -273,14 +275,16 @@ namespace Dune{
 
           } // it
 
-        // Use yasp grid intersection communication on process boundary intersections.
-        // This calls gather and scatter methods form AssemblerDataHandle.
-        using DH = AssemblerDataHandle<GFSU,GFSV,CU,CV,LocalAssemblerEngine>;
-        DH dh(gfsu,gfsv,cu,cv,assembler_engine);
-        int level (gfsu.gridView().grid().maxLevel());
-        auto iftype = Dune::InteriorBorder_InteriorBorder_Interface;
-        auto dir = Dune::ForwardCommunication;
-        gfsu.gridView().grid().communicateIntersection(dh,iftype,dir,level);
+        if(nonoverlapping_mode==true){
+          // Use yasp grid intersection communication on process boundary intersections.
+          // This calls gather and scatter methods form AssemblerDataHandle.
+          using DH = AssemblerDataHandle<GFSU,GFSV,CU,CV,LocalAssemblerEngine>;
+          DH dh(gfsu,gfsv,cu,cv,assembler_engine);
+          int level (gfsu.gridView().grid().maxLevel());
+          auto iftype = Dune::InteriorBorder_InteriorBorder_Interface;
+          auto dir = Dune::ForwardCommunication;
+          gfsu.gridView().grid().communicateIntersection(dh,iftype,dir,level);
+        }
 
         // Notify assembler engine that assembly is finished
         assembler_engine.postAssembly(gfsu,gfsv);
