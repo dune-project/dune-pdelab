@@ -4,15 +4,17 @@ dune_add_test(SOURCES testanalytic.cc)
 
 dune_add_test(SOURCES testclock.cc)
 
-dune_add_test(NAME testcomplexnumbers-istl
-              SOURCES testcomplexnumbers.cc
-              COMPILE_DEFINITIONS SUPERLU_NTYPE=3
-                                  USE_ISTL)
+if(HAVE_UG)
+  dune_add_test(NAME testcomplexnumbers-istl
+                SOURCES testcomplexnumbers.cc
+                COMPILE_DEFINITIONS SUPERLU_NTYPE=3
+                                    USE_ISTL)
 
-dune_add_test(NAME testcomplexnumbers-istlbackend
-              SOURCES testcomplexnumbers.cc
-              COMPILE_DEFINITIONS SUPERLU_NTYPE=3
-                                  USE_ISTL_BACKEND)
+  dune_add_test(NAME testcomplexnumbers-istlbackend
+                SOURCES testcomplexnumbers.cc
+                COMPILE_DEFINITIONS SUPERLU_NTYPE=3
+                                    USE_ISTL_BACKEND)
+endif()
 
 dune_add_test(SOURCES testconstraints.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
