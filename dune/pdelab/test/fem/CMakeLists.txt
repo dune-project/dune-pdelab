@@ -18,7 +18,7 @@ foreach(geometry ${geometries})
                       FEM_FACTORY=RTBDMFEMFactory
                       FEM_FACTORY_FEM_CLASS=Dune::PDELab::RaviartThomasLocalFiniteElementMap
                       FEM_FACTORY_ORDER=${order}
-                      GRIDSDIR=${CMAKE_CURRENT_SOURCE_DIR}/grids
+                      GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids"
     )
   endforeach()
 endforeach()
