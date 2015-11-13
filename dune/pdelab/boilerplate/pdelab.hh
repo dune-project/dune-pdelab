@@ -41,8 +41,7 @@
 #endif
 #if HAVE_DUNE_ALUGRID
 #include<dune/alugrid/grid.hh>
-#include<dune/grid/io/file/dgfparser/dgfalu.hh>
-#include<dune/grid/io/file/dgfparser/dgfparser.hh>
+#include <dune/alugrid/dgf.hh>
 #endif
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/io/file/gmshreader.hh>
