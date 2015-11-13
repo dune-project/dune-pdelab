@@ -44,11 +44,6 @@
 #include<dune/common/float_cmp.hh>
 #include<dune/common/typetraits.hh>
 #include<dune/grid/yaspgrid.hh>
-#if HAVE_UG
-#include<dune/grid/uggrid.hh>
-#else
-#error UGERR!
-#endif
 #include<dune/grid/io/file/vtk.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/istl/bvector.hh>
