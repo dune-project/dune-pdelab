@@ -93,34 +93,40 @@ foreach(degree IN ITEMS 1 2)
     dune_add_test(NAME testpoisson-periodic-2d-deg${degree}-dg${dg}-parallel
                   SOURCES testpoisson-periodic-2d.cc
                   MPI_RANKS 1 2
-                  COMPILE_DEFINITIONS DEGREE=${degree} DG=${dg})
+                  COMPILE_DEFINITIONS DEGREE=${degree} DG=${dg}
+                  TIMEOUT 20)
 
     dune_add_test(NAME testpoisson-periodic-3d-deg${degree}-dg${dg}-parallel
                   SOURCES testpoisson-periodic-3d.cc
                   MPI_RANKS 1 4
-                  COMPILE_DEFINITIONS DEGREE=${degree} DG=${dg})
+                  COMPILE_DEFINITIONS DEGREE=${degree} DG=${dg}
+                  TIMEOUT 20)
   endforeach()
 endforeach()
 
 dune_add_test(NAME testnonoverlappingsinglephaseflow-yasp
               SOURCES testnonoverlappingsinglephaseflow.cc
-              MPI_RANKS 1 2)
+              MPI_RANKS 1 2
+              TIMEOUT 20)
 
 if(UG_FOUND)
   dune_add_test(NAME testnonoverlappingsinglephaseflow-ug
                 SOURCES testnonoverlappingsinglephaseflow.cc
                 COMPILE_DEFINITIONS GRID_UG
-                MPI_RANKS 1 2)
+                MPI_RANKS 1 2
+                TIMEOUT 20)
 
   dune_add_test(SOURCES testnonoverlappingsinglephaseflow-boilerplate.cc
                 COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
-                MPI_RANKS 2)
+                MPI_RANKS 2
+                TIMEOUT 20)
 
   dune_add_test(SOURCES testadaptivity.cc)
 
   dune_add_test(SOURCES testnonoverlapping.cc
-                MPI_RANKS 2)
-endif (UG_FOUND)
+                MPI_RANKS 2
+                TIMEOUT 20)
+endif()
 
 exclude_from_headercheck(
   gridexamples.hh
