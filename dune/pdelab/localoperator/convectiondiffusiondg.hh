@@ -1111,6 +1111,9 @@ namespace Dune {
         typename T::Traits::PermTensorType A_s;
         A_s = param.A(inside_cell,inside_local);
 
+        // face diameter
+        buf.write(inside_cell.geometry().volume());
+
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
@@ -1228,7 +1231,9 @@ namespace Dune {
         A_s = param.A(inside_cell,inside_local);
 
         // face diameter; this should be revised for anisotropic meshes?
-        RF h_F = inside_cell.geometry().volume()/ig.geometry().volume(); // Houston!
+        RF outside_volume;
+        buf.read(outside_volume);
+        RF h_F = std::min(inside_cell.geometry().volume(),outside_volume)/ig.geometry().volume();
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
@@ -1384,6 +1389,9 @@ namespace Dune {
         // store size here
         size_t comSize(0);
 
+        // communicate outside_volume
+        comSize += sizeof(RF);
+
         // communicate delta_s
         if (weights==ConvectionDiffusionDGWeights::weightsOn){
           comSize += sizeof(RF);
@@ -1429,13 +1437,15 @@ namespace Dune {
         typename T::Traits::PermTensorType A_s;
         A_s = param.A(inside_cell,inside_local);
 
+        // face diameter
+        buf.write(inside_cell.geometry().volume());
+
         // tensor times normal
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
         Dune::FieldVector<RF,dim> An_F_s;
         A_s.mv(n_F,An_F_s);
 
         // compute weights
-        RF omega_s;
         if (weights==ConvectionDiffusionDGWeights::weightsOn)
         {
           RF delta_s = (An_F_s*n_F);
@@ -1480,12 +1490,10 @@ namespace Dune {
         Dune::GeometryType gtface = ig.geometryInInside().type();
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
-        // face diameter
-        DF h_s;
-        DF hmax_s = 0.;
-        element_size(inside_cell.geometry(),h_s,hmax_s);
-        RF h_F = h_s;
-        h_F = inside_cell.geometry().volume()/ig.geometry().volume(); // Houston!
+        // face diameter; this should be revised for anisotropic meshes?
+        RF outside_volume;
+        buf.read(outside_volume);
+        RF h_F = std::min(inside_cell.geometry().volume(),outside_volume)/ig.geometry().volume();
 
         // transformation
         Dune::FieldMatrix<DF,dim,dim> jac;
@@ -1604,6 +1612,9 @@ namespace Dune {
 
         // store size here
         size_t comSize(0);
+
+        // communicate outside_volume
+        comSize += sizeof(RF);
 
         // communicate delta_s
         if (weights==ConvectionDiffusionDGWeights::weightsOn){
