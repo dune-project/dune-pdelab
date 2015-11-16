@@ -369,19 +369,19 @@ namespace Dune {
       {
         la.jacobian_boundary(ig,lfsu_s,x_s,lfsv_s,mat_ss);
       }
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename M, typename Buf>
       static void jacobian_process_boundary_gather (const LA& la, const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        M & mat_ss)
+                                                    const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                                    M & mat_ss, Buf& buf)
       {
-        la.jacobian_process_boundary_gather(ig,lfsu_s,x_s,lfsv_s,mat_ss);
+        la.jacobian_process_boundary_gather(ig,lfsu_s,x_s,lfsv_s,mat_ss,buf);
       }
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename M, typename Buf>
       static void jacobian_process_boundary_scatter (const LA& la, const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        M & mat_ss)
+                                                     const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                                     M & mat_ss, Buf& buf)
       {
-        la.jacobian_process_boundary_scatter(ig,lfsu_s,x_s,lfsv_s,mat_ss);
+        la.jacobian_process_boundary_scatter(ig,lfsu_s,x_s,lfsv_s,mat_ss,buf);
       }
       static bool jacobianCommunicationFixedSize(const LA& la)
       {
@@ -389,7 +389,7 @@ namespace Dune {
       }
       template <typename IG, typename LFSU, typename LFSV>
       static size_t jacobianCommunicationSize(const LA& la, const IG& ig,
-                                                   const LFSU& lfsu_s, const LFSV& lfsv_s)
+                                              const LFSU& lfsu_s, const LFSV& lfsv_s)
       {
         return la.jacobianCommunicationSize(ig,lfsu_s,lfsv_s);
       }

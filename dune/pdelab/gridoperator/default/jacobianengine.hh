@@ -248,7 +248,7 @@ namespace Dune{
       {
         al_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaProcessBoundaryGather>::
-          jacobian_process_boundary_gather(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),al_view);
+          jacobian_process_boundary_gather(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),al_view,buf);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC, typename Buf>
@@ -256,7 +256,7 @@ namespace Dune{
       {
         al_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaProcessBoundaryGather>::
-          jacobian_process_boundary_scatter(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),al_view);
+          jacobian_process_boundary_scatter(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),al_view,buf);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>

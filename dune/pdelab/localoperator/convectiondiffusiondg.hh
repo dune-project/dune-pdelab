@@ -1406,17 +1406,47 @@ namespace Dune {
         return comSize;
       }
 
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename M, typename Buf>
       void jacobian_process_boundary_gather (const IG& ig,
-                              const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                              M& mat_ss) const
+                                             const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                             M& mat_ss, Buf& buf) const
       {
+        // domain and range field type
+        typedef typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        typedef typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
+
+        // dimensions
+        const int dim = IG::dimension;
+
+        // make copy of inside and outside cell w.r.t. the intersection
+        auto inside_cell = ig.inside();
+
+        // evaluate permeability tensors
+        const Dune::FieldVector<DF,dim>&
+          inside_local = Dune::ReferenceElements<DF,dim>::general(inside_cell.type()).position(0,0);
+        typename T::Traits::PermTensorType A_s;
+        A_s = param.A(inside_cell,inside_local);
+
+        // tensor times normal
+        const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
+        Dune::FieldVector<RF,dim> An_F_s;
+        A_s.mv(n_F,An_F_s);
+
+        // compute weights
+        RF omega_s;
+        if (weights==ConvectionDiffusionDGWeights::weightsOn)
+        {
+          RF delta_s = (An_F_s*n_F);
+          buf.write(delta_s);
+        }
       }
 
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename M, typename Buf>
       void jacobian_process_boundary_scatter (const IG& ig,
-                              const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                              M& mat_ss) const
+                                              const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                              M& mat_ss, Buf& buf) const
       {
         // domain and range field type
         typedef typename LFSV::Traits::FiniteElementType::
@@ -1464,11 +1494,21 @@ namespace Dune {
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
         Dune::FieldVector<RF,dim> An_F_s;
         A_s.mv(n_F,An_F_s);
-        RF harmonic_average;
-        if (weights==ConvectionDiffusionDGWeights::weightsOn)
-          harmonic_average = An_F_s*n_F;
-        else
+        RF harmonic_average(0.0);
+        RF omega_s;
+        RF omega_n;
+        if (weights==ConvectionDiffusionDGWeights::weightsOn){
+          RF delta_s = (An_F_s*n_F);
+          RF delta_n;
+          buf.read(delta_n);
+          omega_s = delta_n/(delta_s+delta_n+1e-20);
+          omega_n = delta_s/(delta_s+delta_n+1e-20);
+          harmonic_average = 2.0*delta_s*delta_n/(delta_s+delta_n+1e-20);
+        }
+        else{
+          omega_s = omega_n = 0.5;
           harmonic_average = 1.0;
+        }
 
         // get polynomial degree
         const int order_s = lfsu_s.finiteElement().localBasis().order();
@@ -1535,12 +1575,12 @@ namespace Dune {
             // diffusion term
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
-                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,-(An_F_s*tgradphi_s[j]) * factor * phi_s[i]);
+                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,-(An_F_s*tgradphi_s[j]) * omega_s * factor * phi_s[i]);
 
             // (non-)symmetric IP term
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
-                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,phi_s[j] * factor * theta * (An_F_s*tgradphi_s[i]));
+                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,phi_s[j] * factor * theta * omega_s * (An_F_s*tgradphi_s[i]));
 
             // standard IP term
             for (size_type j=0; j<lfsu_s.size(); j++)
