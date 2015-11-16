@@ -1559,7 +1559,18 @@ namespace Dune {
       template <typename IG, typename LFSU, typename LFSV>
       size_t jacobianCommunicationSize(const IG& ig, const LFSU& lfsu_s, const LFSV& lfsv_s) const
       {
-        return 0;
+        typedef typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
+
+        // store size here
+        size_t comSize(0);
+
+        // communicate delta_s
+        if (weights==ConvectionDiffusionDGWeights::weightsOn){
+          comSize += sizeof(RF);
+        }
+
+        return comSize;
       }
 
 
@@ -1784,7 +1795,7 @@ namespace Dune {
       template <typename IG, typename LFSU, typename LFSV>
       size_t jacobianApplyCommunicationSize(const IG& ig, const LFSU& lfsu_s, const LFSV& lfsv_s) const
       {
-        return this->alphaCommunication(ig,lfsu_s,lfsv_s);
+        return this->alphaCommunicationSize(ig,lfsu_s,lfsv_s);
       }
 
       //! set time in parameter class

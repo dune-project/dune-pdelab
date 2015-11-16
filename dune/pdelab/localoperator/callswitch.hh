@@ -131,6 +131,17 @@ namespace Dune {
                                   R& r_s, Buf& buf)
       {
       }
+      static bool jacobianApplyCommunicationFixedSize(const LA& la)
+      {
+        return true;
+      }
+      template <typename IG, typename LFSU, typename LFSV>
+      static size_t jacobianApplyCommunicationSize(const LA& la, const IG& ig,
+                                           const LFSU& lfsu_s, const LFSV& lfsv_s)
+      {
+        return 0.0;
+      }
+
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
       {
@@ -319,6 +330,16 @@ namespace Dune {
                                   R& r_s, Buf& buf)
       {
         la.jacobian_apply_process_boundary_scatter(ig,lfsu_s,x_s,lfsv_s,r_s,buf);
+      }
+      static bool jacobianApplyCommunicationFixedSize(const LA& la)
+      {
+        return la.jacobianApplyCommunicationFixedSize();
+      }
+      template <typename IG, typename LFSU, typename LFSV>
+      static size_t jacobianApplyCommunicationSize(const LA& la, const IG& ig,
+                                           const LFSU& lfsu_s, const LFSV& lfsv_s)
+      {
+        return la.jacobianApplyCommunicationSize(ig,lfsu_s,lfsv_s);
       }
 
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>

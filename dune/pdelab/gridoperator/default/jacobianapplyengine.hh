@@ -290,13 +290,13 @@ namespace Dune{
       bool communicationFixedSize() const
       {
         return Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaProcessBoundaryGather>::
-          alphaCommunicationFixedSize(lop);
+          jacobianApplyCommunicationFixedSize(lop);
       }
       template <typename IG, typename LFSUC, typename LFSVC>
       size_t communicationSize(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache) const
       {
         return Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaProcessBoundaryGather>::
-          alphaCommunicationSize(lop,ig,lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace());
+          jacobianApplyCommunicationSize(lop,ig,lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace());
       }
 
     private:
