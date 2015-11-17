@@ -11,6 +11,7 @@
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/common/typetraits.hh>
 #include<dune/pdelab/common/intersectiontype.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include"constraintstransformation.hh"
 #include"constraintsparameters.hh"
@@ -912,7 +913,8 @@ namespace Dune {
       // extra loop because constrained dofs might have contributions
       // to constrained dofs
       for (const auto& col : cg)
-        xg[col.first] = typename XG::ElementType(0);
+        Backend::native(xg)[col.first.back()] = typename XG::ElementType(0);
+      // xg[col.first] = typename XG::ElementType(0);
     }
 
 
