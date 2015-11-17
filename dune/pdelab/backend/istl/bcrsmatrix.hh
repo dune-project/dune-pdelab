@@ -241,6 +241,12 @@ namespace Dune {
           istl::write_matrix_element_if_exists(diagonal_entry,istl::container_tag(*_container),*_container,ri,ri,ri.size()-1,ri.size()-1);
         }
 
+        void clear_row_block(const RowIndex& ri, const E& diagonal_entry)
+        {
+          istl::clear_matrix_row_block(istl::container_tag(*_container),*_container,ri,ri.size()-1);
+          istl::write_matrix_element_if_exists_to_block(diagonal_entry,istl::container_tag(*_container),*_container,ri,ri,ri.size()-1,ri.size()-1);
+        }
+
       private:
 
         std::shared_ptr<Container> _container;
