@@ -5,6 +5,7 @@
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
+#include <dune/pdelab/backend/common/aliasedmatrixview.hh>
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 
@@ -59,6 +60,12 @@ namespace Dune {
 
         template<typename RowCache, typename ColCache>
         using ConstLocalView = ConstUncachedMatrixView<const BCRSMatrix,RowCache,ColCache>;
+
+        template<typename RowCache, typename ColCache>
+        using AliasedLocalView = AliasedMatrixView<BCRSMatrix,RowCache,ColCache>;
+
+        template<typename RowCache, typename ColCache>
+        using ConstAliasedLocalView = ConstAliasedMatrixView<const BCRSMatrix,RowCache,ColCache>;
 
         template<typename GO>
         explicit BCRSMatrix (const GO& go)

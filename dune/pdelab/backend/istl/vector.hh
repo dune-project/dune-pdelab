@@ -10,6 +10,7 @@
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
+#include <dune/pdelab/backend/common/aliasedvectorview.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/backend/istl/vectorhelpers.hh>
 #include <dune/pdelab/backend/istl/vectoriterator.hh>
@@ -52,6 +53,11 @@ namespace Dune {
         template<typename LFSCache>
         using ConstLocalView = ConstUncachedVectorView<const BlockVector,LFSCache>;
 
+        template<typename LFSCache>
+        using AliasedLocalView = AliasedVectorView<BlockVector,LFSCache>;
+
+        template<typename LFSCache>
+        using ConstAliasedLocalView = ConstAliasedVectorView<const BlockVector,LFSCache>;
 
         BlockVector(const BlockVector& rhs)
           : _gfs(rhs._gfs)
