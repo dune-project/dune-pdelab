@@ -99,6 +99,18 @@ namespace Dune {
           _container.reset();
         }
 
+        template<typename LFSCache>
+        value_type* data(const LFSCache& lfs_cache)
+        {
+          return &((*this)[lfs_cache.containerIndex(0)]);
+        }
+
+        template<typename LFSCache>
+        const value_type* data(const LFSCache& lfs_cache) const
+        {
+          return &((*this)[lfs_cache.containerIndex(0)]);
+        }
+
         void attach(std::shared_ptr<Container> container)
         {
           _container = container;

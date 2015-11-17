@@ -229,6 +229,18 @@ namespace Dune {
 
       public:
 
+        template<typename RowCache, typename ColCache>
+        value_type* data(const RowCache& row_cache, const ColCache& col_cache)
+        {
+          return &((*this)(row_cache.containerIndex(0),col_cache.containerIndex(0)));
+        }
+
+        template<typename RowCache, typename ColCache>
+        const value_type* data(const RowCache& row_cache, const ColCache& col_cache) const
+        {
+          return &((*this)(row_cache.containerIndex(0),col_cache.containerIndex(0)));
+        }
+
         void flush()
         {}
 
