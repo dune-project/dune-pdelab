@@ -40,6 +40,8 @@ namespace Dune {
 
         typedef Stats PatternStatistics;
 
+        using value_type = E;
+
 #ifndef DOXYGEN
 
         // some trickery to avoid exposing average users to the fact that there might
