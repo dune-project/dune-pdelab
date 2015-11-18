@@ -175,6 +175,16 @@ namespace oc {
 
     };
 
+    static void additions(std::size_t n)
+    {
+      counters.addition_count += n;
+    }
+
+    static void multiplications(std::size_t n)
+    {
+      counters.multiplication_count += n;
+    }
+
     static void reset()
     {
       counters.reset();
