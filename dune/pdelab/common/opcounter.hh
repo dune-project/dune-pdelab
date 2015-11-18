@@ -849,38 +849,4 @@ namespace oc {
 
 }
 
-namespace std {
-
-  using oc::exp;
-  using oc::pow;
-  using oc::sin;
-  using oc::cos;
-  using oc::sqrt;
-
-  template<typename F>
-  inline oc::OpCounter<F> abs(const oc::OpCounter<F>& a)
-  {
-    ++oc::OpCounter<F>::counters.comparison_count;
-    return {std::abs(a._v)};
-  }
-
-  /*
-    template<typename F>
-    inline oc::OpCounter<F> abs(oc::OpCounter<F>& a)
-    {
-    ++oc::OpCounter<F>::comparison_count;
-    return {std::abs(a._v)};
-    }
-
-    template<typename F>
-    inline oc::OpCounter<F> abs(oc::OpCounter<F> a)
-    {
-    ++oc::OpCounter<F>::comparison_count;
-    return {std::abs(a._v)};
-    }
-  */
-
-}
-
-
 #endif // __OPCOUNTER__
