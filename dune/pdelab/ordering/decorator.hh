@@ -158,7 +158,7 @@ namespace Dune {
       struct gfs_to_decorator_descriptor
         : public TypeTree::meta_function
       {
-        typedef DUNE_DECLTYPE(
+        typedef decltype(
           register_gfs_to_decorator_descriptor(
             TypeTree::declptr<GFS>(),             // the source GridFunctionSpace
             TypeTree::declptr<Transformation>(),  // the full transformation descriptor
