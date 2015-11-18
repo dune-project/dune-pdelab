@@ -30,6 +30,8 @@ namespace oc {
 
     typedef std::size_t size_type;
 
+    using value_type = F;
+
     OpCounter()
       : _v()
     {}
@@ -78,6 +80,16 @@ namespace oc {
     {
       os << "OC(" << f._v << ")";
       return os;
+    }
+
+    F* data()
+    {
+      return &_v;
+    }
+
+    const F* data() const
+    {
+      return &_v;
     }
 
     F _v;
