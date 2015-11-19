@@ -175,7 +175,7 @@ namespace Dune {
 
             // evaluate flux boundary condition
             typename J::Traits::RangeType y(0.0);
-            j.evaluate(*(ig.inside()),local,y);
+            j.evaluate(ig.inside(),local,y);
 
             // integrate J
             RF factor = r.weight() * it->weight()*ig.geometry().integrationElement(it->position());
