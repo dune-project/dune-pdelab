@@ -170,8 +170,7 @@ namespace Dune {
         set_constrained_dofs(cc,0.0,dd);
         prec.apply(Backend::native(v),Backend::native(dd));
         Dune::PDELab::AddDataHandle<GFS,domain_type> adddh(gfs,v);
-        if (gfs.gridView().comm().size()>1)
-          gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
+        gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
       }
 
       /*!
@@ -235,11 +234,8 @@ namespace Dune {
         Dune::InverseOperatorResult stat;
         Y b(d); // need copy, since solver overwrites right hand side
         solver.apply(Backend::native(v),Backend::native(b),stat);
-        if (gfs.gridView().comm().size()>1)
-          {
-            AddDataHandle<GFS,X> adddh(gfs,v);
-            gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
-          }
+        AddDataHandle<GFS,X> adddh(gfs,v);
+        gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
       }
 
       /*!
@@ -299,12 +295,9 @@ namespace Dune {
         Dune::InverseOperatorResult stat;
         Y b(d); // need copy, since solver overwrites right hand side
         solver.apply(native(v),native(b),stat);
-        if (gfs.gridView().comm().size()>1)
-          {
-            helper.maskForeignDOFs(native(v));
-            AddDataHandle<GFS,X> adddh(gfs,v);
-            gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
-          }
+        helper.maskForeignDOFs(native(v));
+        AddDataHandle<GFS,X> adddh(gfs,v);
+        gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
       }
 
       /*!
@@ -909,11 +902,8 @@ namespace Dune {
         jac.pre(native(z),native(r));
         jac.apply(native(z),native(r));
         jac.post(native(z));
-        if (gfs.gridView().comm().size()>1)
-        {
-          CopyDataHandle<GFS,V> copydh(gfs,z);
-          gfs.gridView().communicate(copydh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
-        }
+        CopyDataHandle<GFS,V> copydh(gfs,z);
+        gfs.gridView().communicate(copydh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
         res.converged  = true;
         res.iterations = 1;
         res.elapsed    = 0.0;
