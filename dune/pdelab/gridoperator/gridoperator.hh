@@ -97,7 +97,8 @@ namespace Dune{
 
       //! Constructor for non trivial constraints
       GridOperator(const GFSU & gfsu_, const CU & cu_, const GFSV & gfsv_, const CV & cv_, LOP & lop_, const MB& mb_ = MB())
-        : global_assembler(gfsu_,gfsv_,cu_,cv_)
+        : lop(lop_)
+        , global_assembler(gfsu_,gfsv_,cu_,cv_)
         , dof_exchanger(std::make_shared<BorderDOFExchanger>(*this))
         , local_assembler(lop_, cu_, cv_,dof_exchanger)
         , backend(mb_)
@@ -105,7 +106,8 @@ namespace Dune{
 
       //! Constructor for empty constraints
       GridOperator(const GFSU & gfsu_, const GFSV & gfsv_, LOP & lop_, const MB& mb_ = MB())
-        : global_assembler(gfsu_,gfsv_)
+        : lop(lop_)
+        , global_assembler(gfsu_,gfsv_)
         , dof_exchanger(std::make_shared<BorderDOFExchanger>(*this))
         , local_assembler(lop_,dof_exchanger)
         , backend(mb_)
@@ -134,6 +136,10 @@ namespace Dune{
       {
         return testGridFunctionSpace().globalSize();
       }
+
+      LOP & localOperator() { return lop; }
+
+      const LOP & localOperator() const { return lop; }
 
       Assembler & assembler() { return global_assembler; }
 
@@ -238,6 +244,7 @@ namespace Dune{
       Assembler global_assembler;
       shared_ptr<BorderDOFExchanger> dof_exchanger;
 
+      mutable LOP lop;
       mutable LocalAssembler local_assembler;
       MB backend;
 
