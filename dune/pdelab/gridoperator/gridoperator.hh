@@ -244,7 +244,7 @@ namespace Dune{
       Assembler global_assembler;
       shared_ptr<BorderDOFExchanger> dof_exchanger;
 
-      mutable LOP lop;
+      LOP& lop;
       mutable LocalAssembler local_assembler;
       MB backend;
 
