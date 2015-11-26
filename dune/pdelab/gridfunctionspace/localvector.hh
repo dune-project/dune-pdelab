@@ -227,6 +227,9 @@ namespace Dune {
         return _container[lfs.localIndex(i)];
       }
 
+      //! Access underlying container
+      auto data() { return _container.data(); }
+      const auto data() const { return _container.data(); }
       //! Assigns v to all entries.
       LocalVector& operator=(const value_type& v)
       {
