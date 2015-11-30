@@ -236,8 +236,8 @@ namespace Dune
     {
       enum { n = LegendreSize<k,d>::value };
       LegendrePolynomials1d<D,R,k> poly;
-      std::vector<std::vector<R> > v;
-      std::vector<std::vector<R> > a;
+      mutable std::vector<std::vector<R> > v;
+      mutable std::vector<std::vector<R> > a;
 
     public:
       typedef LocalBasisTraits<D,d,Dune::FieldVector<D,d>,R,1,Dune::FieldVector<R,1>,Dune::FieldMatrix<R,1,d> > Traits;
@@ -410,7 +410,7 @@ namespace Dune
   {
     typedef LegendreStuff::DGLegendreLocalBasis<D,R,k,d> LocalBasis;
     typedef LegendreStuff::DGLegendreLocalCoefficients<k,d> LocalCoefficients;
-    typedef LegendreStuff::DGLegendreLocalBasis<D,R,k,d> LocalInterpolation;
+    typedef LegendreStuff::DGLegendreLocalInterpolation<D,R,k,d> LocalInterpolation;
 
   public:
     // static number of basis functions
