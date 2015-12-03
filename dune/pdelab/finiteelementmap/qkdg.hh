@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-#ifndef DUNE_QkDG_LOCALFINITEELEMENT_HH
-#define DUNE_QkDG_LOCALFINITEELEMENT_HH
+#ifndef DUNE_PDELAB_FINITEELEMENTMAP_QKDG_HH
+#define DUNE_PDELAB_FINITEELEMENTMAP_QKDG_HH
 
 #include <dune/common/fvector.hh>
 #include <dune/common/deprecated.hh>
