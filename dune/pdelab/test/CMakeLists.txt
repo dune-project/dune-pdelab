@@ -28,6 +28,8 @@ dune_add_test(SOURCES testlaplacedirichletccfv.cc
 
 dune_add_test(SOURCES testelasticity.cc)
 
+dune_add_test(SOURCES testdglegendre.cc)
+
 dune_add_test(SOURCES testlocalfunctionspace.cc)
 
 dune_add_test(SOURCES testpk2dinterpolation.cc
