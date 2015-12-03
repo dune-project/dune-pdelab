@@ -1,7 +1,11 @@
-#ifndef DUNE_PDELAB_DGLegendre_LOCALFINITEELEMENTMAP_HH
-#define DUNE_PDELAB_DGLegendre_LOCALFINITEELEMENTMAP_HH
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
 
-#include "dglegendre_finiteelement.hh"
+#ifndef DUNE_PDELAB_FINITEELEMENTMAP_DGLEGENDRE_HH
+#define DUNE_PDELAB_FINITEELEMENTMAP_DGLEGENDRE_HH
+
+#include "finiteelementmap.hh"
+#include <dune/pdelab/finiteelement/dglegendre.hh>
 
 namespace Dune {
   namespace PDELab {
