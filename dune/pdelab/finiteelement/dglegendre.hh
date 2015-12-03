@@ -3,8 +3,8 @@
 
 // DG tensor product basis with Legendre polynomials
 
-#ifndef DUNE_DGLegendre_LOCALFINITEELEMENT_HH
-#define DUNE_DGLegendre_LOCALFINITEELEMENT_HH
+#ifndef DUNE_PDELAB_FINITEELEMENT_DGLEGENDRE_HH
+#define DUNE_PDELAB_FINITEELEMENT_DGLEGENDRE_HH
 
 #include <vector>
 
