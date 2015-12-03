@@ -76,6 +76,7 @@
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/finiteelementmap/qkdg.hh>
 #include <dune/pdelab/finiteelementmap/qkdggl.hh>
+#include <dune/pdelab/finiteelementmap/dglegendre.hh>
 #include <dune/pdelab/adaptivity/adaptivity.hh>
 #include <dune/pdelab/instationary/onestep.hh>
 #include <dune/pdelab/common/instationaryfilenamehelper.hh>
@@ -1271,6 +1272,101 @@ namespace Dune {
             std::shared_ptr<CC> ccp;
         };
 
+
+        // Discontinuous space using Legendre polynomials (use only for cube elements)
+        template<typename T, typename N, unsigned int degree,
+                 Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
+                 //typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
+                 typename VBET=istl::VectorBackend<> >
+        class DGLegendreSpace
+        {
+        public:
+
+            // export types
+            typedef T Grid;
+            typedef typename T::LeafGridView GV;
+            typedef typename T::ctype ctype;
+            static const int dim = T::dimension;
+            static const int dimworld = T::dimensionworld;
+            typedef N NT;
+            typedef DGLegendreLocalFiniteElementMap<ctype,NT,degree,dim> FEM;
+            typedef DGCONBase<st> CONB;
+            typedef typename CONB::CON CON;
+            typedef VBET VBE;
+            typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
+            using DOF = Backend::Vector<GFS,N>;
+            typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
+            typedef typename GFS::template ConstraintsContainer<N>::Type CC;
+            typedef VTKGridFunctionAdapter<DGF> VTKF;
+
+            // constructor making the grid function space an all that is needed
+            DGLegendreSpace (const GV& gridview) : gv(gridview), conb()
+            {
+                femp = std::shared_ptr<FEM>(new FEM());
+                gfsp = std::shared_ptr<GFS>(new GFS(gv,*femp));
+                // initialize ordering
+                gfsp->update();
+                ccp = std::shared_ptr<CC>(new CC());
+            }
+
+            FEM& getFEM() { return *femp; }
+            const FEM& getFEM() const { return *femp; }
+
+            // return gfs reference
+            GFS& getGFS () { return *gfsp; }
+
+            // return gfs reference const version
+            const GFS& getGFS () const {return *gfsp;}
+
+            // return gfs reference
+            CC& getCC () { return *ccp;}
+
+            // return gfs reference const version
+            const CC& getCC () const { return *ccp;}
+
+            template<class BCTYPE>
+            void assembleConstraints (const BCTYPE& bctype)
+            {
+                ccp->clear();
+                constraints(bctype,*gfsp,*ccp);
+            }
+
+            void clearConstraints ()
+            {
+                ccp->clear();
+            }
+
+            void setConstrainedDOFS (DOF& x, NT nt) const
+            {
+                set_constrained_dofs(*ccp,nt,x);
+                conb.make_consistent(*gfsp,x);
+            }
+
+            void setNonConstrainedDOFS (DOF& x, NT nt) const
+            {
+                set_nonconstrained_dofs(*ccp,nt,x);
+                conb.make_consistent(*gfsp,x);
+            }
+
+            void copyConstrainedDOFS (const DOF& xin, DOF& xout) const
+            {
+                copy_constrained_dofs(*ccp,xin,xout);
+                conb.make_consistent(*gfsp,xout);
+            }
+
+            void copyNonConstrainedDOFS (const DOF& xin, DOF& xout) const
+            {
+                copy_nonconstrained_dofs(*ccp,xin,xout);
+                conb.make_consistent(*gfsp,xout);
+            }
+
+        private:
+            GV gv; // need this object here because FEM and GFS store a const reference !!
+            CONB conb;
+            std::shared_ptr<FEM> femp;
+            std::shared_ptr<GFS> gfsp;
+            std::shared_ptr<CC> ccp;
+        };
 
 
         // Discontinuous P0 space
