@@ -1,11 +1,11 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_FINITEELEMENTMAP_DGLEGENDRE_HH
-#define DUNE_PDELAB_FINITEELEMENTMAP_DGLEGENDRE_HH
+#ifndef DUNE_PDELAB_FINITEELEMENTMAP_QKDGLEGENDRE_HH
+#define DUNE_PDELAB_FINITEELEMENTMAP_QKDGLEGENDRE_HH
 
 #include "finiteelementmap.hh"
-#include <dune/pdelab/finiteelement/dglegendre.hh>
+#include <dune/pdelab/finiteelement/qkdglegendre.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -13,8 +13,8 @@ namespace Dune {
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
     template<class D, class R, int k, int d>
-    class DGLegendreLocalFiniteElementMap
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::DGLegendreLocalFiniteElement<D,R,k,d> >
+    class QkDGLegendreLocalFiniteElementMap
+      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGLegendreLocalFiniteElement<D,R,k,d> >
     {
 
     public:
