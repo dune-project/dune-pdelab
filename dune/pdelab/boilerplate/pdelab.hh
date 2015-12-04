@@ -75,7 +75,7 @@
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/finiteelementmap/qkdg.hh>
 #include <dune/pdelab/finiteelementmap/qkdggl.hh>
-#include <dune/pdelab/finiteelementmap/dglegendre.hh>
+#include <dune/pdelab/finiteelementmap/qkdglegendre.hh>
 #include <dune/pdelab/adaptivity/adaptivity.hh>
 #include <dune/pdelab/instationary/onestep.hh>
 #include <dune/pdelab/common/instationaryfilenamehelper.hh>
@@ -1288,7 +1288,7 @@ namespace Dune {
             static const int dim = T::dimension;
             static const int dimworld = T::dimensionworld;
             typedef N NT;
-            typedef DGLegendreLocalFiniteElementMap<ctype,NT,degree,dim> FEM;
+            typedef QkDGLegendreLocalFiniteElementMap<ctype,NT,degree,dim> FEM;
             typedef DGCONBase<st> CONB;
             typedef typename CONB::CON CON;
             typedef VBET VBE;
