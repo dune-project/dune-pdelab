@@ -677,6 +677,33 @@ namespace Dune {
     };
 
     /**
+     * @brief Overlapping parallel CGS solver with Jacobi preconditioner
+     * @tparam GFS The Type of the GridFunctionSpace.
+     * @tparam CC The Type of the Constraints Container.
+     */
+    template<class GFS, class CC>
+    class ISTLBackend_OVLP_CG_Jac
+      : public ISTLBackend_OVLP_Base<GFS,CC,Dune::SeqJac, Dune::CGSolver>
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] gfs a grid function space
+        \param[in] cc a constraints container object
+        \param[in] maxiter maximum number of iterations to do
+        \param[in] steps number of Jacobi steps to apply as inner iteration
+        \param[in] verbose print messages if true
+      */
+      ISTLBackend_OVLP_CG_Jac (const GFS& gfs,
+                               const CC& cc,
+                               unsigned maxiter=5000,
+                               int steps=3,
+                               int verbose=1)
+        : ISTLBackend_OVLP_Base<GFS,CC,Dune::SeqJac, Dune::CGSolver>(gfs, cc, maxiter, steps, verbose)
+      {}
+    };
+
+    /**
      * @brief Overlapping parallel restarted GMRes solver with ILU0 preconditioner
      * @tparam GFS The Type of the GridFunctionSpace.
      * @tparam CC The Type of the Constraints Container.
