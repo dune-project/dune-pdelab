@@ -288,7 +288,7 @@ namespace Dune
   /** \todo Please doc me !
    */
   template<class D, class R, int k, int d>
-  class QkDGLocalFiniteElement
+  class QkDGLagrangeLocalFiniteElement
   {
     typedef QkStuff::QkLocalBasis<D,R,k,d> LocalBasis;
     typedef QkStuff::QkDGLocalCoefficients<k,d> LocalCoefficients;
@@ -304,7 +304,7 @@ namespace Dune
 
     /** \todo Please doc me !
      */
-    QkDGLocalFiniteElement ()
+    QkDGLagrangeLocalFiniteElement ()
     {
       gt.makeCube(d);
     }
@@ -337,9 +337,9 @@ namespace Dune
       return gt;
     }
 
-    QkDGLocalFiniteElement* clone () const
+    QkDGLagrangeLocalFiniteElement* clone () const
     {
-      return new QkDGLocalFiniteElement(*this);
+      return new QkDGLagrangeLocalFiniteElement(*this);
     }
 
   private:
@@ -358,13 +358,13 @@ namespace Dune
   template<class Geometry, class RF, int k>
   class QkDGFiniteElementFactory :
     public ScalarLocalToGlobalFiniteElementAdaptorFactory<
-    QkDGLocalFiniteElement<
+    QkDGLagrangeLocalFiniteElement<
       typename Geometry::ctype, RF, k, Geometry::mydimension
       >,
     Geometry
     >
   {
-    typedef QkDGLocalFiniteElement<
+    typedef QkDGLagrangeLocalFiniteElement<
       typename Geometry::ctype, RF, k, Geometry::mydimension
       > LFE;
     typedef ScalarLocalToGlobalFiniteElementAdaptorFactory<LFE, Geometry> Base;
