@@ -83,10 +83,16 @@ namespace Dune {
        */
       std::size_t size(GeometryType gt) const
       {
-        return asImp().size();
+        return asImp().size(gt);
       }
       /** @} */
-
+      /** \brief return if FiniteElementMap has degrees of freedom for
+       * given codimension
+       */
+      bool hasDOFs(int codim) const
+      {
+        return asImp().hasDOFs(codim);
+      }
       /** \brief compute an upper bound for the local number of DOFs.
        *
        * this upper bound is used to avoid reallocations in
