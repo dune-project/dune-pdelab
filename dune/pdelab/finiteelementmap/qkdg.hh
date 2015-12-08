@@ -162,6 +162,9 @@ namespace Dune {
     /** \brief Qk discontinuous Galerkin FiniteElementMap based on
      * an L2 orthonormal polynomials
      *
+     * If you have gmp the computation field for the l2 orthonormal
+     * basis polynomials is Dune::GMPField<512>.
+     *
      * \tparam D Type used for coordinates
      * \tparam R Type used for shape function values
      * \tparam k Order of polynomial basis
