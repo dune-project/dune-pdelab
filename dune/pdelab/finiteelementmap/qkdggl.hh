@@ -6,45 +6,16 @@
 #ifndef DUNE_PDELAB_FINITEELEMENTMAP_QKDGGL_HH
 #define DUNE_PDELAB_FINITEELEMENTMAP_QKDGGL_HH
 
+#warning This file is deprecated and will be removed after the Dune-PDELab 3.0 release! Switch to the class QkDGLocalFiniteElement map with QkDGBasisPolynomial::lobatto in the header dune/pdelab/finiteelementmap/qkdg.hh.
+
 #include <dune/pdelab/finiteelement/qkdglobatto.hh>
 #include <dune/pdelab/finiteelementmap/finiteelementmap.hh>
 
 namespace Dune {
   namespace PDELab {
 
-    //! wrap up element from local functions
-    //! \ingroup FiniteElementMap
     template<class D, class R, int k, int d>
-    class QkDGGLLocalFiniteElementMap
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGGLLocalFiniteElement<D,R,k,d> >
-    {
-
-    public:
-
-      bool fixedSize() const
-      {
-        return true;
-      }
-
-      bool hasDOFs(int codim) const
-      {
-        return codim == 0;
-      }
-
-      std::size_t size(GeometryType gt) const
-      {
-        if (gt == GeometryType(GeometryType::cube,d))
-          return Dune::QkStuff::QkSize<k,d>::value;
-        else
-          return 0;
-      }
-
-      std::size_t maxLocalSize() const
-      {
-        return Dune::QkStuff::QkSize<k,d>::value;
-      }
-
-    };
+    using QkDGGLLocalFiniteElementMap DUNE_DEPRECATED_MSG("This class is deprecated and will be removed after the Dune-PDELab 3.0 release! Switch to the class QkDGLocalFiniteElement map with QkDGBasisPolynomial::lobatto in the header dune/pdelab/finiteelementmap/qkdg.hh.") = QkDGLocalFiniteElementMap<D,R,k,d,QkDGBasisPolynomial::lobatto>;
 
   }
 }
