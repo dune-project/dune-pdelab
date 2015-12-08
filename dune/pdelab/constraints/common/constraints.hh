@@ -800,8 +800,9 @@ namespace Dune {
                               typename XG::ElementType x,
                               XG& xg)
     {
-      for (const auto& col : cg)
-        xg[col.first] = x;
+      for (const auto& col : cg) {
+        Dune::PDELab::Backend::native(xg)[col.first[col.first.size()-1]] = x;
+      }
     }
 
 
