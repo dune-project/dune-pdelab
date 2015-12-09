@@ -66,6 +66,12 @@ namespace Dune {
       {
         return QkDGBasisPolynomial::lagrange;
       }
+
+      //! return order of polynomial basis
+      static constexpr std::size_t order()
+      {
+        return k;
+      }
     };
 
     /** \brief Qk discontinuous Galerkin FiniteElementMap based on
@@ -110,6 +116,12 @@ namespace Dune {
       static constexpr QkDGBasisPolynomial polynomial()
       {
         return QkDGBasisPolynomial::legendre;
+      }
+
+      //! return order of polynomial basis
+      static constexpr std::size_t order()
+      {
+        return k;
       }
     };
 
@@ -156,6 +168,12 @@ namespace Dune {
       {
         return QkDGBasisPolynomial::lobatto;
       }
+
+      //! return order of polynomial basis
+      static constexpr std::size_t order()
+      {
+        return k;
+      }
     };
 
 
@@ -191,6 +209,13 @@ namespace Dune {
       {
         return QkDGBasisPolynomial::l2orthonormal;
       }
+
+      //! return order of polynomial basis
+      static constexpr std::size_t order()
+      {
+        return k;
+      }
+
     };
 
   }
