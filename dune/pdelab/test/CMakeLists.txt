@@ -82,6 +82,11 @@ endif(EIGEN3_FOUND)
 
 if(dune-alugrid_FOUND)
   dune_add_test(SOURCES testordering.cc)
+
+  dune_add_test(SOURCES testloadbalancing.cc
+                COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
+                MPI_RANKS 2
+                TIMEOUT 20)
 endif(dune-alugrid_FOUND)
 
 if(GMP_FOUND)
