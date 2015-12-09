@@ -3,8 +3,8 @@
 
 // DG tensor product basis with Legendre polynomials
 
-#ifndef DUNE_PDELAB_FINITEELEMENT_DGLEGENDRE_HH
-#define DUNE_PDELAB_FINITEELEMENT_DGLEGENDRE_HH
+#ifndef DUNE_PDELAB_FINITEELEMENT_QKDGLEGENDRE_HH
+#define DUNE_PDELAB_FINITEELEMENT_QKDGLEGENDRE_HH
 
 #include <vector>
 
@@ -406,7 +406,7 @@ namespace Dune
   /** \todo Please doc me !
    */
   template<class D, class R, int k, int d>
-  class DGLegendreLocalFiniteElement
+  class QkDGLegendreLocalFiniteElement
   {
     typedef LegendreStuff::DGLegendreLocalBasis<D,R,k,d> LocalBasis;
     typedef LegendreStuff::DGLegendreLocalCoefficients<k,d> LocalCoefficients;
@@ -422,7 +422,7 @@ namespace Dune
 
     /** \todo Please doc me !
      */
-    DGLegendreLocalFiniteElement ()
+    QkDGLegendreLocalFiniteElement ()
     {
       gt.makeCube(d);
     }
@@ -455,9 +455,9 @@ namespace Dune
       return gt;
     }
 
-    DGLegendreLocalFiniteElement* clone () const
+    QkDGLegendreLocalFiniteElement* clone () const
     {
-      return new DGLegendreLocalFiniteElement(*this);
+      return new QkDGLegendreLocalFiniteElement(*this);
     }
 
   private:
@@ -474,15 +474,15 @@ namespace Dune
    * \tparam RF       Range field type.
    */
   template<class Geometry, class RF, int k>
-  class DGLegendreFiniteElementFactory :
+  class QkDGLegendreFiniteElementFactory :
     public ScalarLocalToGlobalFiniteElementAdaptorFactory<
-    DGLegendreLocalFiniteElement<
+    QkDGLegendreLocalFiniteElement<
       typename Geometry::ctype, RF, k, Geometry::mydimension
       >,
     Geometry
     >
   {
-    typedef DGLegendreLocalFiniteElement<
+    typedef QkDGLegendreLocalFiniteElement<
       typename Geometry::ctype, RF, k, Geometry::mydimension
       > LFE;
     typedef ScalarLocalToGlobalFiniteElementAdaptorFactory<LFE, Geometry> Base;
@@ -491,12 +491,12 @@ namespace Dune
 
   public:
     //! default constructor
-    DGLegendreFiniteElementFactory() : Base(lfe) {}
+    QkDGLegendreFiniteElementFactory() : Base(lfe) {}
   };
 
   template<class Geometry, class RF, int k>
-  const typename DGLegendreFiniteElementFactory<Geometry, RF, k>::LFE
-  DGLegendreFiniteElementFactory<Geometry, RF, k>::lfe;
+  const typename QkDGLegendreFiniteElementFactory<Geometry, RF, k>::LFE
+  QkDGLegendreFiniteElementFactory<Geometry, RF, k>::lfe;
 
 } // End Dune namespace
 
