@@ -90,13 +90,13 @@ namespace Dune {
         , _container(make_shared<Container>(native(rhs)))
       {}
 
-      BlockVectorContainer (const GFS& gfs, Dune::PDELab::tags::attached_container = Dune::PDELab::tags::attached_container())
+      BlockVectorContainer (const GFS& gfs, Dune::PDELab::Backend::attached_container = Dune::PDELab::Backend::attached_container())
         : _gfs(gfs)
         , _container(make_shared<Container>(gfs.ordering().blockCount(),gfs.backend().blockSize()))
       {}
 
       //! Creates an BlockVectorContainer without allocating an underlying ISTL vector.
-      BlockVectorContainer(const GFS& gfs, Dune::PDELab::tags::unattached_container)
+      BlockVectorContainer(const GFS& gfs, Dune::PDELab::Backend::unattached_container)
         : _gfs(gfs)
       {}
 
