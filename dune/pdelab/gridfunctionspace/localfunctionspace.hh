@@ -379,10 +379,10 @@ namespace Dune {
       template<typename>
       friend struct ClearSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct ComputeSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct FillIndicesVisitor;
 
     public:
