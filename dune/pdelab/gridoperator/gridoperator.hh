@@ -108,8 +108,8 @@ namespace Dune{
 
       //! Constructor for empty constraints
       GridOperator(const GFSU & gfsu_, const GFSV & gfsv_, LOP & lop_, const MB& mb_ = MB())
-        : cu()
-        , cv()
+        : cu(*std::make_shared<Dune::PDELab::EmptyTransformation>())
+        , cv(*std::make_shared<Dune::PDELab::EmptyTransformation>())
         , lop(lop_)
         , global_assembler(gfsu_,gfsv_)
         , dof_exchanger(std::make_shared<BorderDOFExchanger>(*this))
