@@ -51,7 +51,7 @@ namespace Dune {
   //! Switch for uniform treatment of local and global basis classes
   template<class Basis>
   struct VectorBasisInterfaceSwitch<
-    Basis, typename enable_if<
+    Basis, typename std::enable_if<
              Std::to_true_type<
                integral_constant<
                  std::size_t,

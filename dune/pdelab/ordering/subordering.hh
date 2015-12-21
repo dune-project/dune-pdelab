@@ -144,7 +144,7 @@ namespace Dune {
 
       // Template recursion for walking up the TreePath to the BaseOrdering
       template<typename TP, typename ItIn, typename ItOut>
-      typename enable_if<
+      typename std::enable_if<
         (TypeTree::TreePathSize<TP>::value > 0)
           >::type
       map_lfs_indices_to_root_space(TP, ItIn begin, ItIn end, ItOut out) const
@@ -156,7 +156,7 @@ namespace Dune {
 
       // End of template recursion for walking up the TreePath to the BaseOrdering
       template<typename TP, typename ItIn, typename ItOut>
-      typename enable_if<
+      typename std::enable_if<
         (TypeTree::TreePathSize<TP>::value == 0)
           >::type
       map_lfs_indices_to_root_space(TP, ItIn begin, ItIn end, ItOut out) const

@@ -84,7 +84,7 @@ namespace Dune {
 
         // leaf BCRSMatrix
         template<typename OrderingV, typename OrderingU, typename Pattern, typename Container, typename StatsVector>
-        typename enable_if<
+        typename std::enable_if<
           std::is_same<typename Pattern::SubPattern,void>::value
           >::type
         allocate_bcrs_matrix(const OrderingV& ordering_v,
@@ -133,7 +133,7 @@ namespace Dune {
 
         // interior BCRSMatrix
         template<typename OrderingV, typename OrderingU, typename Pattern, typename Container, typename StatsVector>
-        typename enable_if<
+        typename std::enable_if<
           !std::is_same<typename Pattern::SubPattern,void>::value &&
            requires_pattern<Container>::value
         >::type

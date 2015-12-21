@@ -159,7 +159,7 @@ namespace Dune {
 
         // standard case - leaf in both trees
         template<typename P, typename LFS, typename TreePath>
-        typename enable_if<P::isLeaf && LFS::isLeaf>::type
+        typename std::enable_if<P::isLeaf && LFS::isLeaf>::type
         leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           // extract constraints type
@@ -171,7 +171,7 @@ namespace Dune {
 
         // reuse constraints parameter information from p for all LFS children
         template<typename P, typename LFS, typename TreePath>
-        typename enable_if<P::isLeaf && (!LFS::isLeaf)>::type
+        typename std::enable_if<P::isLeaf && (!LFS::isLeaf)>::type
         leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           // traverse LFS tree and reuse parameter information
@@ -292,7 +292,7 @@ namespace Dune {
 
         // standard case - leaf in both trees
         template<typename P, typename LFS, typename TreePath>
-        typename enable_if<P::isLeaf && LFS::isLeaf>::type
+        typename std::enable_if<P::isLeaf && LFS::isLeaf>::type
         leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           // allocate local constraints map
@@ -308,7 +308,7 @@ namespace Dune {
 
         // reuse constraints parameter information from p for all LFS children
         template<typename P, typename LFS, typename TreePath>
-        typename enable_if<P::isLeaf && (!LFS::isLeaf)>::type
+        typename std::enable_if<P::isLeaf && (!LFS::isLeaf)>::type
         leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           // traverse LFS tree and reuse parameter information

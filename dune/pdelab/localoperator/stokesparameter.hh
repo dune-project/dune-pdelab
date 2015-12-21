@@ -274,7 +274,7 @@ namespace Dune {
 
       //! Neumann boundary condition (stress) - version for scalar function
       template<typename IG>
-      typename enable_if<
+      typename std::enable_if<
         J::Traits::dimRange == 1 &&
         (GV::dimension > 1) &&
         AlwaysTrue<IG>::value, // required to force lazy evaluation
@@ -293,7 +293,7 @@ namespace Dune {
 
       //! Neumann boundary condition (stress) - version for vector-valued function
       template<typename IG>
-      typename enable_if<
+      typename std::enable_if<
         J::Traits::dimRange == GV::dimension &&
         AlwaysTrue<IG>::value, // required to force lazy evaluation
         typename Traits::VelocityRange
