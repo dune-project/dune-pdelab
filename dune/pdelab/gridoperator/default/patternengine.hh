@@ -127,7 +127,7 @@ namespace Dune{
       //! @}
 
       template<typename LFSVC, typename LFSUC>
-      void add_border_pattern(true_type, const LFSVC& lfsv_cache, const LFSUC& lfsu_cache,
+      void add_border_pattern(std::true_type, const LFSVC& lfsv_cache, const LFSUC& lfsu_cache,
                               const LocalPattern& p)
       {
         if (local_assembler.reconstructBorderEntries() &&
@@ -138,7 +138,7 @@ namespace Dune{
       }
 
       template<typename LFSVC, typename LFSUC>
-      void add_border_pattern(false_type, const LFSVC& lfsv_cache, const LFSUC& lfsu_cache,
+      void add_border_pattern(std::false_type, const LFSVC& lfsv_cache, const LFSUC& lfsu_cache,
                               const LocalPattern& p)
       {}
 
@@ -241,7 +241,7 @@ namespace Dune{
                                      gfsv);
       }
 
-      void post_border_pattern_assembly(true_type, const GFSU& gfsu, const GFSV& gfsv)
+      void post_border_pattern_assembly(std::true_type, const GFSU& gfsu, const GFSV& gfsv)
       {
         if(local_assembler.doPostProcessing &&
            local_assembler.reconstructBorderEntries())
@@ -256,7 +256,7 @@ namespace Dune{
           }
       }
 
-      void post_border_pattern_assembly(false_type, const GFSU& gfsu, const GFSV& gfsv)
+      void post_border_pattern_assembly(std::false_type, const GFSU& gfsu, const GFSV& gfsv)
       {}
 
       //! @}
