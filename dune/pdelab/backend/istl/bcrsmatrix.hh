@@ -128,14 +128,14 @@ namespace Dune {
 
       private:
 
-        const PatternStatistics& patternStatistics(false_type multiple) const
+        const PatternStatistics& patternStatistics(std::false_type multiple) const
         {
           if (_stats.empty())
             DUNE_THROW(InvalidStateException,"no pattern statistics available");
           return _stats[0];
         }
 
-        const std::vector<PatternStatistics>& patternStatistics(true_type multiple) const
+        const std::vector<PatternStatistics>& patternStatistics(std::true_type multiple) const
         {
           if (_stats.empty())
             DUNE_THROW(InvalidStateException,"no pattern statistics available");
