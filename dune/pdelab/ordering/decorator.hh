@@ -67,7 +67,7 @@ namespace Dune {
 
         template<typename D>
         struct decoration_level
-          : public conditional<
+          : public std::conditional<
                      is_base_of<is_decorated, D>::value,
                      lazy_level<D>,
                      lazy_constant<std::size_t,0>

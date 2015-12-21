@@ -67,7 +67,7 @@ namespace Dune {
           using SubOrdering = TypeTree::ChildForTreePath<Ordering,OrderingTP>;
 
           // Only descend in the GFS tree if the current ordering child consumes a tree index entry.
-          typedef typename conditional<
+          typedef typename std::conditional<
             SubOrdering::consume_tree_index,
             typename GFS::template Child<TypeTree::TreePathFront<GFSTP>::value>::type,
             GFS
@@ -80,7 +80,7 @@ namespace Dune {
             >::type SubOrderingTP;
 
           // Keep (synthesized ordering node) or drop (ordering with associated GFS) first entry of GFS TreePath.
-          typedef typename conditional<
+          typedef typename std::conditional<
             SubOrdering::consume_tree_index,
             typename TypeTree::TreePathPopFront<GFSTP>::type,
             GFSTP

@@ -282,12 +282,12 @@ namespace Dune{
       const GFSU& gfsu;
       const GFSV& gfsv;
 
-      typename conditional<
+      typename std::conditional<
         std::is_same<CU,EmptyTransformation>::value,
         const CU,
         const CU&
         >::type cu;
-      typename conditional<
+      typename std::conditional<
         std::is_same<CV,EmptyTransformation>::value,
         const CV,
         const CV&
