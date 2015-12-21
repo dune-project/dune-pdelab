@@ -952,7 +952,7 @@ namespace Dune {
     public:
 
       template<typename CC>
-      LFSIndexCache(const LFS& lfs, const CC& c, bool enable_constraints_caching = !is_same<C,EmptyTransformation>::value)
+      LFSIndexCache(const LFS& lfs, const CC& c, bool enable_constraints_caching = !std::is_same<C,EmptyTransformation>::value)
         : LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag>(lfs,c,enable_constraints_caching)
       {
       }

@@ -290,7 +290,7 @@ namespace Dune {
         using Backend::native;
 
         const bool is_bcrs_matrix =
-          is_same<
+          std::is_same<
             typename istl::tags::container<
               Backend::Native<M>
               >::type::base_tag,
@@ -298,7 +298,7 @@ namespace Dune {
           >::value;
 
         const bool block_type_is_field_matrix =
-          is_same<
+          std::is_same<
             typename istl::tags::container<
               typename Backend::Native<M>::block_type
               >::type::base_tag,

@@ -488,7 +488,7 @@ namespace Dune {
         // don't do anything if GridView types differ
         template<typename LFS, typename TreePath>
         typename enable_if<
-          !is_same<
+          !std::is_same<
             typename LFS::Traits::GridFunctionSpace::Traits::GridView,
             typename vtk_writer_traits<VTKWriter>::GridView
             >::value
@@ -500,7 +500,7 @@ namespace Dune {
         // don't do anything if GridView types differ
         template<typename LFS, typename TreePath>
         typename enable_if<
-          !is_same<
+          !std::is_same<
             typename LFS::Traits::GridFunctionSpace::Traits::GridView,
             typename vtk_writer_traits<VTKWriter>::GridView
             >::value
@@ -512,7 +512,7 @@ namespace Dune {
         //! Handle VectorGridFunctionSpace components in here.
         template<typename LFS, typename TreePath>
         typename enable_if<
-          is_same<
+          std::is_same<
             typename LFS::Traits::GridFunctionSpace::Traits::GridView,
             typename vtk_writer_traits<VTKWriter>::GridView
             >::value
@@ -526,7 +526,7 @@ namespace Dune {
         //! Create a standard leaf function for leaf GridFunctionSpaces.
         template<typename LFS, typename TreePath>
         typename enable_if<
-          is_same<
+          std::is_same<
             typename LFS::Traits::GridFunctionSpace::Traits::GridView,
             typename vtk_writer_traits<VTKWriter>::GridView
             >::value

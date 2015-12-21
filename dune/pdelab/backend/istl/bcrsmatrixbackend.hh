@@ -41,7 +41,7 @@ namespace Dune {
 
           // Leafs -> BCRSPattern, interior nodes -> NestedPattern
           typedef typename conditional<
-            is_same<BlockOrdering,void>::value,
+            std::is_same<BlockOrdering,void>::value,
             BCRSPattern<
               RowOrdering,
               ColOrdering
@@ -85,7 +85,7 @@ namespace Dune {
         // leaf BCRSMatrix
         template<typename OrderingV, typename OrderingU, typename Pattern, typename Container, typename StatsVector>
         typename enable_if<
-          is_same<typename Pattern::SubPattern,void>::value
+          std::is_same<typename Pattern::SubPattern,void>::value
           >::type
         allocate_bcrs_matrix(const OrderingV& ordering_v,
                              const OrderingU& ordering_u,
@@ -134,7 +134,7 @@ namespace Dune {
         // interior BCRSMatrix
         template<typename OrderingV, typename OrderingU, typename Pattern, typename Container, typename StatsVector>
         typename enable_if<
-          !is_same<typename Pattern::SubPattern,void>::value &&
+          !std::is_same<typename Pattern::SubPattern,void>::value &&
            requires_pattern<Container>::value
         >::type
         allocate_bcrs_matrix(const OrderingV& ordering_v,

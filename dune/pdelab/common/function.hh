@@ -300,14 +300,14 @@ namespace Dune {
                                  T::Traits::dimRange,
                                  typename T::Traits::RangeType> Traits;
       static_assert(
-                    (is_same<typename T::Traits::DomainFieldType,
+                    (std::is_same<typename T::Traits::DomainFieldType,
                      typename Traits::DomainFieldType>::value),
                     "GridView's and wrapped Functions DomainFieldType don't match");
       static_assert(
                     T::Traits::dimDomain==Traits::dimDomain,
                     "GridView's and wrapped Functions dimDomain don't match");
       static_assert(
-                    (is_same<typename T::Traits::DomainType,
+                    (std::is_same<typename T::Traits::DomainType,
                      typename Traits::DomainType>::value),
                     "GridView's and wrapped Functions DomainType don't match");
 
