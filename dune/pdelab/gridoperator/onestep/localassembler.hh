@@ -64,19 +64,19 @@ namespace Dune{
       //! @}
 
       void static_checks(){
-        static_assert((is_same<typename LA0::Traits::Jacobian::Pattern,
+        static_assert((std::is_same<typename LA0::Traits::Jacobian::Pattern,
                        typename LA1::Traits::Jacobian::Pattern>::value),
                       "Received two local assemblers which are non-compatible "
                       "due to different matrix pattern types");
-        static_assert((is_same<typename LA0::Traits::Jacobian,
+        static_assert((std::is_same<typename LA0::Traits::Jacobian,
                        typename LA1::Traits::Jacobian>::value),
                       "Received two local assemblers which are non-compatible "
                       "due to different jacobian types");
-        static_assert((is_same<typename LA0::Traits::Solution,
+        static_assert((std::is_same<typename LA0::Traits::Solution,
                        typename LA1::Traits::Solution>::value),
                       "Received two local assemblers which are non-compatible "
                       "due to different solution vector types");
-        static_assert((is_same<typename LA0::Traits::Residual,
+        static_assert((std::is_same<typename LA0::Traits::Residual,
                             typename LA1::Traits::Residual>::value),
                            "Received two local assemblers which are non-compatible "
                            "due to different residual vector types");

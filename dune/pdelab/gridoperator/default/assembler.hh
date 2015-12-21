@@ -40,7 +40,7 @@ namespace Dune{
       typedef typename GFSU::Traits::SizeType SizeType;
 
       //! Static check on whether this is a Galerkin method
-      static const bool isGalerkinMethod = Dune::is_same<GFSU,GFSV>::value;
+      static const bool isGalerkinMethod = std::is_same<GFSU,GFSV>::value;
 
       DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_, const CU& cu_, const CV& cv_)
         : gfsu(gfsu_)
@@ -283,12 +283,12 @@ namespace Dune{
       const GFSV& gfsv;
 
       typename conditional<
-        is_same<CU,EmptyTransformation>::value,
+        std::is_same<CU,EmptyTransformation>::value,
         const CU,
         const CU&
         >::type cu;
       typename conditional<
-        is_same<CV,EmptyTransformation>::value,
+        std::is_same<CV,EmptyTransformation>::value,
         const CV,
         const CV&
         >::type cv;

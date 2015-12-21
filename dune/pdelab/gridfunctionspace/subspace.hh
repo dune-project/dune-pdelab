@@ -431,7 +431,7 @@ namespace Dune {
          *       copy constructor.
          */
         template<typename TP>
-        explicit GridFunctionSubSpace(std::shared_ptr<const GridFunctionSubSpace<GFS,TP> > gfs_storage, typename enable_if<!is_same<TP,TreePath>::value,void*>::type = nullptr)
+        explicit GridFunctionSubSpace(std::shared_ptr<const GridFunctionSubSpace<GFS,TP> > gfs_storage, typename enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
           : NodeT(TypeTree::extract_child_storage(gfs_storage->baseGridFunctionSpace(),TreePath()))
           , FeatureT(gfs_storage->baseGridFunctionSpace())
           , _base_gfs(gfs_storage->baseGridFunctionSpaceStorage())
@@ -451,7 +451,7 @@ namespace Dune {
          *       copy constructor.
          */
         template<typename TP>
-        explicit GridFunctionSubSpace(const GridFunctionSubSpace<GFS,TP>& gfs, typename enable_if<!is_same<TP,TreePath>::value,void*>::type = nullptr)
+        explicit GridFunctionSubSpace(const GridFunctionSubSpace<GFS,TP>& gfs, typename enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
           : NodeT(TypeTree::extract_child_storage(gfs.baseGridFunctionSpace(),TreePath()))
           , FeatureT(gfs.baseGridFunctionSpace())
           , _base_gfs(gfs.baseGridFunctionSpaceStorage())

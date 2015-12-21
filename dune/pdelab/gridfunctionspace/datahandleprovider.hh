@@ -293,7 +293,7 @@ namespace Dune {
       {
         typedef typename GFS::Ordering Ordering;
 
-        static_assert((is_same<ContainerIndex,typename Ordering::Traits::ContainerIndex>::value),
+        static_assert((std::is_same<ContainerIndex,typename Ordering::Traits::ContainerIndex>::value),
                       "dataHandleContainerIndices() called with invalid ContainerIndex type.");
 
         typedef typename Ordering::Traits::DOFIndex::EntityIndex EntityIndex;

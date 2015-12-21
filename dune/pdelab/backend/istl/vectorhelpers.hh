@@ -213,7 +213,7 @@ namespace Dune {
         // on it.
         static const bool support_no_blocking =
           (Sibling::support_no_blocking &&
-          is_same<
+           std::is_same<
             typename Sibling::vector_type,
             typename Child::vector_type
            >::value);

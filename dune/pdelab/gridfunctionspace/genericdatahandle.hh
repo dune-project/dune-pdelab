@@ -822,7 +822,7 @@ namespace Dune {
         EntityDataCommunicationDescriptor<bool>
         > BaseT;
 
-      static_assert((is_same<typename V::ElementType,bool>::value),
+      static_assert((std::is_same<typename V::ElementType,bool>::value),
                     "GhostDataHandle expects a vector of bool values");
 
     public:
@@ -1024,7 +1024,7 @@ namespace Dune {
         EntityDataCommunicationDescriptor<bool>
         > BaseT;
 
-      static_assert((is_same<typename V::ElementType,bool>::value),
+      static_assert((std::is_same<typename V::ElementType,bool>::value),
                     "SharedDOFDataHandle expects a vector of bool values");
 
     public:
