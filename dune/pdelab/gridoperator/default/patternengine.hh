@@ -151,7 +151,7 @@ namespace Dune{
                                     lfsu_cache,p[k].j()
                                     );
 
-        add_border_pattern(integral_constant<bool,LocalAssembler::isNonOverlapping>(),
+        add_border_pattern(std::integral_constant<bool,LocalAssembler::isNonOverlapping>(),
                            lfsv_cache,
                            lfsu_cache,
                            p);
@@ -236,7 +236,7 @@ namespace Dune{
 
 
       void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
-        post_border_pattern_assembly(integral_constant<bool,LocalAssembler::isNonOverlapping>(),
+        post_border_pattern_assembly(std::integral_constant<bool,LocalAssembler::isNonOverlapping>(),
                                      gfsu,
                                      gfsv);
       }

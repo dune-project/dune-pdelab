@@ -121,7 +121,7 @@ namespace Dune {
         //! Returns pattern statistics for all contained BCRSMatrix objects.
         const StatisticsReturnType& patternStatistics() const
         {
-          return patternStatistics(integral_constant<bool,(C::blocklevel > 2)>());
+          return patternStatistics(std::integral_constant<bool,(C::blocklevel > 2)>());
         }
 
 #ifndef DOXYGEN

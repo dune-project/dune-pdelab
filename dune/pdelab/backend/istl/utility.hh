@@ -114,12 +114,12 @@ namespace Dune {
 
         template<typename T, std::size_t depth>
         struct nesting_depth<T,depth,tags::dynamic_vector>
-          : public integral_constant<std::size_t,depth+1>
+          : public std::integral_constant<std::size_t,depth+1>
         {};
 
         template<typename T, std::size_t depth>
         struct nesting_depth<T,depth,tags::field_vector>
-          : public integral_constant<std::size_t,depth+1>
+          : public std::integral_constant<std::size_t,depth+1>
         {};
 
         template<typename T, std::size_t depth>
@@ -129,12 +129,12 @@ namespace Dune {
 
         template<typename T, std::size_t depth>
         struct nesting_depth<T,depth,tags::dynamic_matrix>
-          : public integral_constant<std::size_t,depth+1>
+          : public std::integral_constant<std::size_t,depth+1>
         {};
 
         template<typename T, std::size_t depth>
         struct nesting_depth<T,depth,tags::field_matrix>
-          : public integral_constant<std::size_t,depth+1>
+          : public std::integral_constant<std::size_t,depth+1>
         {};
 
       }

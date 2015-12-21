@@ -53,7 +53,7 @@ namespace Dune {
   struct VectorBasisInterfaceSwitch<
     Basis, typename std::enable_if<
              Std::to_true_type<
-               integral_constant<
+               std::integral_constant<
                  std::size_t,
                  Basis::Traits::dimDomain
                  >

@@ -56,13 +56,13 @@ namespace Dune {
         template<typename T, T v>
         struct lazy_constant
         {
-          typedef integral_constant<T,v> type;
+          typedef std::integral_constant<T,v> type;
         };
 
         template<typename D>
         struct lazy_level
         {
-          typedef integral_constant<std::size_t,D::level> type;
+          typedef std::integral_constant<std::size_t,D::level> type;
         };
 
         template<typename D>

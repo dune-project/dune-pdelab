@@ -98,71 +98,71 @@ namespace Dune {
     private:
       template<typename T1, typename T2>
       struct OrOperation
-        : public integral_constant<bool, T1::value || T2:: value>
+        : public std::integral_constant<bool, T1::value || T2:: value>
       { };
       template<template<int> class Value>
       struct AccFlag : public GenericForLoop<OrOperation, Value, 0, size-1>
       { };
 
       template<int i>
-      struct PatternVolumeValue : public integral_constant
+      struct PatternVolumeValue : public std::integral_constant
       < bool, tuple_element<i, Args>::type::doPatternVolume>
       { };
       template<int i>
-      struct PatternVolumePostSkeletonValue : public integral_constant
+      struct PatternVolumePostSkeletonValue : public std::integral_constant
       < bool, tuple_element<i, Args>::type::doPatternVolumePostSkeleton>
       { };
       template<int i>
-      struct PatternSkeletonValue : public integral_constant
+      struct PatternSkeletonValue : public std::integral_constant
       < bool, tuple_element<i, Args>::type::doPatternSkeleton>
       { };
       template<int i>
-      struct PatternBoundaryValue : public integral_constant
+      struct PatternBoundaryValue : public std::integral_constant
       < bool, tuple_element<i, Args>::type::doPatternBoundary>
       { };
 
       template<int i>
-      struct AlphaVolumeValue : public integral_constant
+      struct AlphaVolumeValue : public std::integral_constant
       < bool, tuple_element<i, Args>::type::doAlphaVolume>
       { };
       template<int i>
-      struct AlphaVolumePostSkeletonValue : public integral_constant
+      struct AlphaVolumePostSkeletonValue : public std::integral_constant
       < bool, tuple_element<i, Args>::type::doAlphaVolumePostSkeleton>
       { };
       template<int i>
-      struct AlphaSkeletonValue : public integral_constant
+      struct AlphaSkeletonValue : public std::integral_constant
       < bool, tuple_element<i, Args>::type::doAlphaSkeleton>
       { };
       template<int i>
-      struct AlphaBoundaryValue : public integral_constant
+      struct AlphaBoundaryValue : public std::integral_constant
       < bool, tuple_element<i, Args>::type::doAlphaBoundary>
       { };
 
       template<int i>
-      struct LambdaVolumeValue : public integral_constant
+      struct LambdaVolumeValue : public std::integral_constant
       < bool, tuple_element<i, Args>::type::doLambdaVolume>
       { };
       template<int i>
-      struct LambdaVolumePostSkeletonValue : public integral_constant
+      struct LambdaVolumePostSkeletonValue : public std::integral_constant
       < bool, tuple_element<i, Args>::type::doLambdaVolumePostSkeleton>
       { };
       template<int i>
-      struct LambdaSkeletonValue : public integral_constant
+      struct LambdaSkeletonValue : public std::integral_constant
       < bool, tuple_element<i, Args>::type::doLambdaSkeleton>
       { };
       template<int i>
-      struct LambdaBoundaryValue : public integral_constant
+      struct LambdaBoundaryValue : public std::integral_constant
       < bool, tuple_element<i, Args>::type::doLambdaBoundary>
       { };
 
       template<int i>
-      struct OneSidedSkeletonRequiredValue : public integral_constant
+      struct OneSidedSkeletonRequiredValue : public std::integral_constant
       < bool, ( ( tuple_element<i, Args>::type::doAlphaSkeleton ||
                   tuple_element<i, Args>::type::doLambdaSkeleton) &&
                 ! tuple_element<i, Args>::type::doSkeletonTwoSided)>
       { };
       template<int i>
-      struct TwoSidedSkeletonRequiredValue : public integral_constant
+      struct TwoSidedSkeletonRequiredValue : public std::integral_constant
       < bool, ( ( tuple_element<i, Args>::type::doAlphaSkeleton ||
                   tuple_element<i, Args>::type::doLambdaSkeleton) &&
                 tuple_element<i, Args>::type::doSkeletonTwoSided)>
