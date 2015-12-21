@@ -40,7 +40,7 @@ namespace Dune {
             >::type BlockOrdering;
 
           // Leafs -> BCRSPattern, interior nodes -> NestedPattern
-          typedef typename conditional<
+          typedef typename std::conditional<
             std::is_same<BlockOrdering,void>::value,
             BCRSPattern<
               RowOrdering,

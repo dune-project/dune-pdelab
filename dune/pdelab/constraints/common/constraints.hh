@@ -539,7 +539,7 @@ namespace Dune {
     };
     // trafos for leaf nodes
     template<typename GridFunction>
-    typename conditional<
+    typename std::conditional<
       (GridFunction::Traits::dimRange == 1),
       // trafo for scalar leaf nodes
       TypeTree::GenericLeafNodeTransformation<GridFunction,gf_to_constraints,OldStyleConstraintsWrapper<GridFunction> >,

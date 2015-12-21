@@ -44,7 +44,7 @@ namespace Dune {
 
         // some trickery to avoid exposing average users to the fact that there might
         // be multiple statistics objects
-        typedef typename conditional<
+        typedef typename std::conditional<
           (C::blocklevel > 2),
           std::vector<PatternStatistics>,
           PatternStatistics
