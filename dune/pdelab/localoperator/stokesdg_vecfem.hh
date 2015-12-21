@@ -50,7 +50,7 @@ namespace Dune {
   //! Switch for uniform treatment of local and global basis classes
   template<class Basis>
   struct VectorBasisInterfaceSwitch<
-    Basis, typename enable_if<Basis::Traits::dimDomain>::type
+    Basis, typename std::enable_if<Basis::Traits::dimDomain>::type
     >
   {
     //! export vector type of the local coordinates

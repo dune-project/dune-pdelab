@@ -153,7 +153,7 @@ namespace Dune {
       IdToIndexMap _id_to_index;
 
       template<int codim>
-      typename enable_if<
+      typename std::enable_if<
         (codim > 0) && Capabilities::hasEntity<Grid,codim>::v
         >::type
       create_for_codim()
@@ -182,7 +182,7 @@ namespace Dune {
       }
 
       template<int codim>
-      typename enable_if<
+      typename std::enable_if<
         (codim > 0) && !Capabilities::hasEntity<Grid,codim>::v
         >::type
       create_for_codim()
@@ -193,7 +193,7 @@ namespace Dune {
       }
 
       template<int codim>
-      typename enable_if<
+      typename std::enable_if<
         (codim == 0)
         >::type
       create_for_codim()

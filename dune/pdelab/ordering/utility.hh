@@ -55,7 +55,7 @@ namespace Dune {
     {
 
       template<typename DOFIndex, typename SizeType, typename IndexType>
-      static typename enable_if<
+      static typename std::enable_if<
         std::is_integral<IndexType>::value
         >::type
       store(DOFIndex& dof_index, const GeometryType& gt, SizeType entity_index, IndexType tree_index)
@@ -67,7 +67,7 @@ namespace Dune {
       }
 
       template<typename DOFIndex, typename SizeType, typename IndexType>
-      static typename enable_if<
+      static typename std::enable_if<
         !std::is_integral<IndexType>::value
         >::type
       store(DOFIndex& dof_index, const GeometryType& gt, SizeType entity_index, IndexType tree_index)
@@ -78,7 +78,7 @@ namespace Dune {
       }
 
       template<typename DOFIndex, typename SizeType, typename IndexType>
-      static typename enable_if<
+      static typename std::enable_if<
         std::is_integral<IndexType>::value
         >::type
       store(DOFIndex& dof_index, SizeType gt_index, SizeType entity_index, IndexType tree_index)
@@ -90,7 +90,7 @@ namespace Dune {
       }
 
       template<typename DOFIndex, typename SizeType, typename IndexType>
-      static typename enable_if<
+      static typename std::enable_if<
         !std::is_integral<IndexType>::value
         >::type
       store(DOFIndex& dof_index, SizeType gt_index, SizeType entity_index, IndexType tree_index)
@@ -253,14 +253,14 @@ namespace Dune {
       }
 
       template<typename Node, typename Child, typename ChildIndex>
-      typename enable_if<Node::has_dynamic_ordering_children>::type
+      typename std::enable_if<Node::has_dynamic_ordering_children>::type
       extract_child(const Node& node, Child& child, ChildIndex child_index)
       {
         _children[child_index] = &child;
       }
 
       template<typename Node, typename Child, typename ChildIndex>
-      typename enable_if<!Node::has_dynamic_ordering_children>::type
+      typename std::enable_if<!Node::has_dynamic_ordering_children>::type
       extract_child(const Node& node, Child& child, ChildIndex child_index)
       {
       }
