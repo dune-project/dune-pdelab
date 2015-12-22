@@ -221,6 +221,7 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
+        global_rl_view.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
           jacobian_apply_volume(lop,eg,lfsu_cache.localFunctionSpace(),global_sl_view,lfsv_cache.localFunctionSpace(),global_rl_view);
       }
@@ -229,6 +230,8 @@ namespace Dune{
       void assembleUVSkeleton(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                               const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
+        global_rl_view.setWeight(local_assembler.weight());
+        global_rn_view.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
           jacobian_apply_skeleton(lop,ig,
                          lfsu_s_cache.localFunctionSpace(),global_sl_view,lfsv_s_cache.localFunctionSpace(),
@@ -239,6 +242,7 @@ namespace Dune{
       template<typename IG, typename LFSUC, typename LFSVC>
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
+        global_rl_view.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
           jacobian_apply_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),global_sl_view,lfsv_s_cache.localFunctionSpace(),global_rl_view);
       }
@@ -253,6 +257,7 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
+        global_rl_view.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
           jacobian_apply_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),global_sl_view,lfsv_cache.localFunctionSpace(),global_rl_view);
       }
