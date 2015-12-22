@@ -1,6 +1,7 @@
-
-#ifndef DUNE_PDELAB_ONESTEP_OPERATOR_HH
-#define DUNE_PDELAB_ONESTEP_OPERATOR_HH
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
+// vi: set et ts=2 sw=2 sts=2:
+#ifndef DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
+#define DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
 
 #include <dune/pdelab/instationary/onestep.hh>
 #include <dune/pdelab/gridoperator/onestep/localassembler.hh>
