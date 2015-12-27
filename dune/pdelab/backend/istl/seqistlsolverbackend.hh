@@ -71,6 +71,100 @@ namespace Dune {
     // interface required to solve linear and nonlinear problems.
     //==============================================================================
 
+    template<template<class> class Solver>
+    class ISTLBackend_SEQ_Richardson
+      : public SequentialNorm, public LinearResultStorage
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_Richardson(unsigned maxiter_=5000, int verbose_=1)
+        : maxiter(maxiter_), verbose(verbose_)
+      {}
+
+
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
+      {
+        using Backend::Native;
+        using Backend::native;
+
+        Dune::MatrixAdapter<Native<M>,
+                            Native<V>,
+                            Native<W>> opa(native(A));
+        Dune::Richardson<Native<V>,Native<W> > prec(0.7);
+        Solver<Native<V> > solver(opa, prec, reduction, maxiter, verbose);
+        Dune::InverseOperatorResult stat;
+        solver.apply(native(z), native(r), stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+        res.conv_rate  = stat.conv_rate;
+      }
+
+    private:
+      unsigned maxiter;
+      int verbose;
+    };
+
+    template<class GO, template<class> class Solver>
+    class ISTLBackend_SEQ_MatrixFree_Richardson
+      : public SequentialNorm, public LinearResultStorage
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_MatrixFree_Richardson(const GO& go_, unsigned maxiter_=5000, int verbose_=1)
+        : go(go_)
+        , maxiter(maxiter_)
+        , verbose(verbose_)
+      {}
+
+
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class V, class W>
+      void apply(V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
+      {
+        MatrixFreeLinearOperatorWrapper<GO> opa(go);
+        Dune::Richardson<V,W> prec(0.7);
+        Solver<V> solver(opa, prec, reduction, maxiter, verbose);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z, r, stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+        res.conv_rate  = stat.conv_rate;
+      }
+
+    private:
+      const GO& go;
+      unsigned maxiter;
+      int verbose;
+    };
+
     template<template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
     class ISTLBackend_SEQ_Base
