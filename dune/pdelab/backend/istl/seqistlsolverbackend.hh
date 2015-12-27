@@ -63,6 +63,66 @@ namespace Dune {
       GOS& gos;
     };
 
+    /** \brief Wrapper to apply linear operator
+     *
+     * Given a grid-operator, build a linear operator which fulfills the
+     * LinearOperator interface.
+     */
+    template <class GO>
+    class MatrixFreeLinearOperatorWrapper :
+     public LinearOperator<typename GO::Traits::Domain,
+                           typename GO::Traits::Range> {
+     public:
+      /** \brief Trial grid function space */
+      typedef typename GO::Traits::Domain domain_type;
+      /** \brief Test grid function space */
+      typedef typename GO::Traits::Range range_type;
+      /** \brief Domain type of ISTL base type */
+      typedef typename domain_type::field_type field_type;
+      /** \brief operator category */
+      enum { category=SolverCategory::sequential };
+
+      /** \brief construct new instance
+       *
+       * \param[in] go_ Matrix-free gridoperator
+       */
+      MatrixFreeLinearOperatorWrapper(const GO& go_) :
+        go(go_) {}
+      /** \brief Apply operator to ISTL vectors
+       *
+       * Implements the operation \f$y=Ax\f$ on an ISTL vector
+       *
+       * \param[in] x Input vector
+       * \param[out] y Output vector \f$y = Ax\f$
+       */
+      virtual void apply(const domain_type& x, range_type& y) const {
+        y = 0.0;
+        // Apply operator
+        go.jacobian_apply(x,y);
+      }
+
+      /** \brief Apply scaled add
+       *
+       * Calculate \f$y = y + \alpha Ax\f$ for the raw ISTL vectors
+       * \f$x\f$ and \f$y\f$.
+       *
+       * \param[in] alpha Scaling factor \f$\alpha\f$
+       * \param[in] x Input vector
+       * \param[out] y Resulting output vector
+       */
+      virtual void applyscaleadd(field_type alpha,
+                                 const domain_type& x,
+                                 range_type& y) const {
+        range_type tmp(y);
+        apply(x,tmp);
+        y.axpy(alpha,tmp);
+      }
+
+     private:
+      /** \brief Wrapped matrix-free operator */
+      const GO& go;
+    };
+
     //==============================================================================
     // Here we add some standard linear solvers conforming to the linear solver
     // interface required to solve linear and nonlinear problems.
