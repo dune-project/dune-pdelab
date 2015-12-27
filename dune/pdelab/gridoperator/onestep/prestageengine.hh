@@ -191,14 +191,14 @@ namespace Dune{
 
           if(do0[s]){
             lae0->setSolution(*((*solutions)[s]));
-            lae0->loadCoefficientsLFSUInside(lfsu);
+            lae0->onBindLFSUV(eg,lfsu,lfsv);
             la.child0().setWeight(b[s]*la.dt_factor0());
             lae0->assembleUVVolume(eg,lfsu,lfsv);
           }
 
           if(do1[s]){
             lae1->setSolution(*((*solutions)[s]));
-            lae1->loadCoefficientsLFSUInside(lfsu);
+            lae1->onBindLFSUV(eg,lfsu,lfsv);
             la.child1().setWeight(a[s]*la.dt_factor1());
             lae1->assembleUVVolume(eg,lfsu,lfsv);
           }
@@ -237,16 +237,16 @@ namespace Dune{
 
           if(do0[s]){
             lae0->setSolution(*((*solutions)[s]));
-            lae0->loadCoefficientsLFSUInside(lfsu_s);
-            lae0->loadCoefficientsLFSUOutside(lfsu_n);
+            lae0->onBindLFSUVInside(ig,lfsu_s,lfsv_s);
+            lae0->onBindLFSUVOutside(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
             la.child0().setWeight(b[s]*la.dt_factor0());
             lae0->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
           }
 
           if(do1[s]){
             lae1->setSolution(*((*solutions)[s]));
-            lae1->loadCoefficientsLFSUInside(lfsu_s);
-            lae1->loadCoefficientsLFSUOutside(lfsu_n);
+            lae1->onBindLFSUVInside(ig,lfsu_s,lfsv_s);
+            lae1->onBindLFSUVOutside(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
             la.child1().setWeight(a[s]*la.dt_factor1());
             lae1->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
           }
@@ -283,14 +283,14 @@ namespace Dune{
 
           if(do0[s]){
             lae0->setSolution(*((*solutions)[s]));
-            lae0->loadCoefficientsLFSUInside(lfsu_s);
+            lae0->onBindLFSUVInside(ig,lfsu_s,lfsv_s);
             la.child0().setWeight(b[s]*la.dt_factor0());
             lae0->assembleUVBoundary(ig,lfsu_s,lfsv_s);
           }
 
           if(do1[s]){
             lae1->setSolution(*((*solutions)[s]));
-            lae1->loadCoefficientsLFSUInside(lfsu_s);
+            lae1->onBindLFSUVInside(ig,lfsu_s,lfsv_s);
             la.child1().setWeight(a[s]*la.dt_factor1());
             lae1->assembleUVBoundary(ig,lfsu_s,lfsv_s);
           }
@@ -327,14 +327,14 @@ namespace Dune{
 
           if(do0[s]){
             lae0->setSolution(*((*solutions)[s]));
-            lae0->loadCoefficientsLFSUInside(lfsu_s);
+            lae0->onBindLFSUVInside(ig,lfsu_s,lfsv_s);
             la.child0().setWeight(b[s]*la.dt_factor0());
             lae0->assembleUVProcessor(ig,lfsu_s,lfsv_s);
           }
 
           if(do1[s]){
             lae1->setSolution(*((*solutions)[s]));
-            lae1->loadCoefficientsLFSUInside(lfsu_s);
+            lae1->onBindLFSUVInside(ig,lfsu_s,lfsv_s);
             la.child1().setWeight(a[s]*la.dt_factor1());
             lae1->assembleUVProcessor(ig,lfsu_s,lfsv_s);
           }
@@ -427,14 +427,14 @@ namespace Dune{
 
           if(do0[s]){
             lae0->setSolution(*((*solutions)[s]));
-            lae0->loadCoefficientsLFSUInside(lfsu);
+            lae0->onBindLFSUV(eg,lfsu,lfsv);
             la.child0().setWeight(b[s]*la.dt_factor0());
             lae0->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
           }
 
           if(do1[s]){
             lae1->setSolution(*((*solutions)[s]));
-            lae1->loadCoefficientsLFSUInside(lfsu);
+            lae1->onBindLFSUV(eg,lfsu,lfsv);
             la.child1().setWeight(a[s]*la.dt_factor1());
             lae1->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
           }
