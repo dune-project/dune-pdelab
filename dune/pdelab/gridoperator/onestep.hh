@@ -196,6 +196,18 @@ namespace Dune{
            local_assembler);
       }
 
+      //! Apply jacobian without explicitly assembling it
+      void jacobian_apply(const Domain& x, Range& r) const
+      {
+        if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
+
+        typedef typename LocalAssembler::LocalJacobianApplyAssemblerEngine JacobianApplyEngine;
+        global_assembler.assemble
+          ([&r,&x](LocalAssembler &la) -> JacobianApplyEngine&
+                { return la.localJacobianApplyAssemblerEngine(r,x); },
+           local_assembler);
+      }
+
       //! Interpolate constrained values from given function f
       template<typename F, typename X>
       void interpolate (unsigned stage, const X& xold, F& f, X& x) const
