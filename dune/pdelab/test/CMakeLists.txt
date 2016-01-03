@@ -1,4 +1,4 @@
-add_subdirectory(fem EXCLUDE_FROM_ALL)
+add_subdirectory(fem)
 
 pdelab_add_test(NAME testanalytic)
 pdelab_add_test(NAME testclock)
