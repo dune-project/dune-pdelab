@@ -125,6 +125,77 @@ namespace Dune {
       Dune::FieldMatrix<R,1,2> B;
     };
 
+
+   /*!
+    * \brief Parameters to turn the OneStepMethod into an
+    * implicit Euler method.
+    *
+    * \tparam R C++ type of the floating point parameters
+    */
+   template<class R>
+   class ImplicitEulerParameter : public TimeSteppingParameterInterface<R>
+   {
+   public:
+
+     ImplicitEulerParameter ()
+     {
+       D[0] = 0.0;  D[1] = 1.0;
+       A[0][0] = -1.0; A[0][1] = 1.0;
+       B[0][0] = 0.0;  B[0][1] = 1.0;
+     }
+
+     /*! \brief Return true if method is implicit
+      */
+     virtual bool implicit () const
+     {
+       return true;
+     }
+
+     /*! \brief Return number of stages s of the method
+      */
+     virtual unsigned s () const
+     {
+       return 1;
+     }
+
+     /*! \brief Return entries of the A matrix
+       \note that r ∈ 1,...,s and i ∈ 0,...,r
+      */
+     virtual R a (int r, int i) const
+     {
+       return A[r-1][i];
+     }
+
+     /*! \brief Return entries of the B matrix
+       \note that r ∈ 1,...,s and i ∈ 0,...,r
+      */
+     virtual R b (int r, int i) const
+     {
+       return B[r-1][i];
+     }
+
+     /*! \brief Return entries of the d Vector
+       \note that i ∈ 0,...,s
+      */
+     virtual R d (int i) const
+     {
+       return D[i];
+     }
+
+     /*! \brief Return name of the scheme
+      */
+     virtual std::string name () const
+     {
+       return std::string("implicit Euler");
+     }
+
+   private:
+     Dune::FieldVector<R,2> D;
+     Dune::FieldMatrix<R,1,2> A;
+     Dune::FieldMatrix<R,1,2> B;
+   };
+
+
     /**
      * \brief Parameters to turn the OneStepMethod into an
      * one step theta method.
