@@ -153,10 +153,7 @@ namespace Dune {
        */
       virtual bool implicit () const
       {
-        if (theta>0.0)
-          return true;
-        else
-          return false;
+        return (theta > 0.0);
       }
 
       /*! \brief Return number of stages s of the method
