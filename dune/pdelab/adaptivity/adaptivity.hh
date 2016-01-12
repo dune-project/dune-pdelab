@@ -684,25 +684,120 @@ namespace Dune {
       grid.postAdapt();
     }
 
+#ifndef DOXYGEN
+    namespace impl{
 
-    // Struct for storing a GridFunctionSpace, corrosponding vectors and integration order
-    template <typename G, typename... X>
-    struct GFSWithVectors
-    {
-      // Export types
-      using GFS = G;
-      using Tuple = std::tuple<X&...>;
+      // Struct for storing a GridFunctionSpace, corrosponding vectors and integration order
+      template <typename G, typename... X>
+      struct GFSWithVectors
+      {
+        // Export types
+        using GFS = G;
+        using Tuple = std::tuple<X&...>;
 
-      GFSWithVectors (GFS& gfs, int integrationOrder, X&... x) :
-        _gfs(gfs),
-        _integrationOrder(integrationOrder),
-        _tuple(x...)
-      {}
+        GFSWithVectors (GFS& gfs, int integrationOrder, X&... x) :
+          _gfs(gfs),
+          _integrationOrder(integrationOrder),
+          _tuple(x...)
+        {}
 
-      GFS _gfs;
-      int _integrationOrder;
-      Tuple _tuple;
-    };
+        GFS _gfs;
+        int _integrationOrder;
+        Tuple _tuple;
+      };
+
+      // This gets called after the last pack.  After this function call we
+      // have visited every vector of every pack and we will go back through
+      // the recursive function calls.
+      template <typename Grid>
+      void iteratePacks(Grid& grid)
+      {
+        // Adapt the grid
+        grid.adapt();
+      }
+
+
+      // Forward declaration needed for the recursion
+      template <typename Grid, typename X, typename... XS>
+      void iteratePacks(Grid& grid, X& x, XS&... xs);
+
+      // This function is called after the last vector of the tuple.  Here
+      // the next pack is called.  On the way back we update the current
+      // function space.
+      template<std::size_t I = 0, typename Grid, typename X, typename... XS>
+      inline typename std::enable_if<I == std::tuple_size<typename X::Tuple>::value, void>::type
+      iterateTuple(Grid& grid, X& x, XS&... xs)
+      {
+        // Iterate next pack
+        iteratePacks(grid,xs...);
+
+        // On our way back we need to update the current function space
+        x._gfs.update(true);
+      }
+
+      /* In this function we store the data of the current vector (indicated
+       * by template parameter I) of the current pack. After recursively
+       * iterating through the other packs and vectors we replay the data.
+       *
+       * @tparam I      std:size_t used for tmp
+       * @tparam Grid   Grid type
+       * @tparam X      Current  pack
+       * @tparam ...XS  Remaining packs
+       */
+      template<std::size_t I = 0, typename Grid, typename X, typename... XS>
+      inline typename std::enable_if<I < std::tuple_size<typename X::Tuple>::value, void>::type
+      iterateTuple(Grid& grid, X& x, XS&... xs)
+      {
+        // Get some basic types
+        using GFS = typename X::GFS;
+        using Tuple = typename X::Tuple;
+        using V  = typename std::decay<typename std::tuple_element<I,Tuple>::type>::type;
+        // // alternative:
+        // auto v = std::get<I>(x._tuple);
+        // using V = decltype(v);
+
+        // Setup classes for data restoring
+        typedef Dune::PDELab::L2Projection <GFS,V> Projection;
+        Projection projection(x._gfs,x._integrationOrder);
+        GridAdaptor<Grid,GFS,V,Projection> gridAdaptor(x._gfs);
+
+        // Store vector data
+        typename GridAdaptor<Grid,GFS,V,Projection>::MapType transferMap;
+        gridAdaptor.backupData(grid,x._gfs,projection,std::get<I>(x._tuple),transferMap);
+
+        // Recursively iterate through remaining vectors (and packs). Grid
+        // adaption will be done at the end of recursion.
+        iterateTuple<I + 1, Grid, X, XS...>(grid,x,xs...);
+
+        // Play back data. Note: At this point the function space was
+        // already updatet.
+        std::get<I>(x._tuple) = V(x._gfs,0.0);
+        gridAdaptor.replayData(grid,x._gfs,projection,std::get<I>(x._tuple),transferMap);
+      }
+
+      /* Use template meta programming to iterate over packs at compile time
+       *
+       * In order to adapt our grid and all vectors of all packs we need to
+       * do the following:
+       * - Iterate over all vectors of all packs.
+       * - Store the data from the vectors where things could change.
+       * - Adapt our grid.
+       * - Update function spaces and restore data.
+       *
+       * The key point is that we need the object that stores the data to
+       * replay it.  Because of that we can not just iterate over the packs
+       * and within each pack iterate over the vectors but we have to make
+       * one big recursion.  Therefore we iterate over the vectors of the
+       * current pack.
+       */
+       template <typename Grid, typename X, typename... XS>
+       void iteratePacks(Grid& grid, X& x, XS&... xs)
+       {
+         iterateTuple(grid,x,xs...);
+       }
+
+    } // namespace impl
+#endif // DOXYGEN
 
     /*! \brief Pack function space and vectors for grid adaption
      *
@@ -716,102 +811,11 @@ namespace Dune {
      * @tparam ...X  Arbitrary number of corresponding vectors
      */
     template <typename GFS, typename... X>
-    GFSWithVectors<GFS,X...> transferSolutions(GFS& gfs, int integrationOrder, X&... x)
+    impl::GFSWithVectors<GFS,X...> transferSolutions(GFS& gfs, int integrationOrder, X&... x)
     {
-      GFSWithVectors<GFS,X...> gfsWithVectors(gfs, integrationOrder, x...);
+      impl::GFSWithVectors<GFS,X...> gfsWithVectors(gfs, integrationOrder, x...);
       return gfsWithVectors;
     }
-
-    // This gets called after the last pack.  After this function call we
-    // have visited every vector of every pack and we will go back through
-    // the recursive function calls.
-    template <typename Grid>
-    void iteratePacks(Grid& grid)
-    {
-      // Adapt the grid
-      grid.adapt();
-    }
-
-
-    // Forward declaration needed for the recursion
-    template <typename Grid, typename X, typename... XS>
-    void iteratePacks(Grid& grid, X& x, XS&... xs);
-
-    // This function is called after the last vector of the tuple.  Here
-    // the next pack is called.  On the way back we update the current
-    // function space.
-    template<std::size_t I = 0, typename Grid, typename X, typename... XS>
-    inline typename std::enable_if<I == std::tuple_size<typename X::Tuple>::value, void>::type
-    iterateTuple(Grid& grid, X& x, XS&... xs)
-    {
-      // Iterate next pack
-      iteratePacks(grid,xs...);
-
-      // On our way back we need to update the current function space
-      x._gfs.update(true);
-    }
-
-    /* In this function we store the data of the current vector (indicated
-     * by template parameter I) of the current pack. After recursively
-     * iterating through the other packs and vectors we replay the data.
-     *
-     * @tparam I      std:size_t used for tmp
-     * @tparam Grid   Grid type
-     * @tparam X      Current  pack
-     * @tparam ...XS  Remaining packs
-     */
-    template<std::size_t I = 0, typename Grid, typename X, typename... XS>
-    inline typename std::enable_if<I < std::tuple_size<typename X::Tuple>::value, void>::type
-    iterateTuple(Grid& grid, X& x, XS&... xs)
-    {
-      // Get some basic types
-      using GFS = typename X::GFS;
-      using Tuple = typename X::Tuple;
-      using V  = typename std::decay<typename std::tuple_element<I,Tuple>::type>::type;
-      // // alternative:
-      // auto v = std::get<I>(x._tuple);
-      // using V = decltype(v);
-
-      // Setup classes for data restoring
-      typedef Dune::PDELab::L2Projection <GFS,V> Projection;
-      Projection projection(x._gfs,x._integrationOrder);
-      GridAdaptor<Grid,GFS,V,Projection> gridAdaptor(x._gfs);
-
-      // Store vector data
-      typename GridAdaptor<Grid,GFS,V,Projection>::MapType transferMap;
-      gridAdaptor.backupData(grid,x._gfs,projection,std::get<I>(x._tuple),transferMap);
-
-      // Recursively iterate through remaining vectors (and packs). Grid
-      // adaption will be done at the end of recursion.
-      iterateTuple<I + 1, Grid, X, XS...>(grid,x,xs...);
-
-      // Play back data. Note: At this point the function space was
-      // already updatet.
-      std::get<I>(x._tuple) = V(x._gfs,0.0);
-      gridAdaptor.replayData(grid,x._gfs,projection,std::get<I>(x._tuple),transferMap);
-    }
-
-    /* Use template meta programming to iterate over packs at compile time
-     *
-     * In order to adapt our grid and all vectors of all packs we need to
-     * do the following:
-     * - Iterate over all vectors of all packs.
-     * - Store the data from the vectors where things could change.
-     * - Adapt our grid.
-     * - Update function spaces and restore data.
-     *
-     * The key point is that we need the object that stores the data to
-     * replay it.  Because of that we can not just iterate over the packs
-     * and within each pack iterate over the vectors but we have to make
-     * one big recursion.  Therefore we iterate over the vectors of the
-     * current pack.
-     */
-    template <typename Grid, typename X, typename... XS>
-    void iteratePacks(Grid& grid, X& x, XS&... xs)
-    {
-      iterateTuple(grid,x,xs...);
-    }
-
 
     /*! \brief Adapt grid and multiple function spaces with corresponding vectors
      *
@@ -830,7 +834,7 @@ namespace Dune {
       grid.preAdapt();
 
       // Iterate over packs
-      iteratePacks(grid,x...);
+      impl::iteratePacks(grid,x...);
 
       // Clean up
       grid.postAdapt();
