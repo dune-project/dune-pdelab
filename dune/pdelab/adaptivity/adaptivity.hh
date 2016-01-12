@@ -706,18 +706,9 @@ namespace Dune {
         Tuple _tuple;
       };
 
-      // This gets called after the last pack.  After this function call we
-      // have visited every vector of every pack and we will go back through
-      // the recursive function calls.
+      // Forward declarations needed for the recursion
       template <typename Grid>
-      void iteratePacks(Grid& grid)
-      {
-        // Adapt the grid
-        grid.adapt();
-      }
-
-
-      // Forward declaration needed for the recursion
+      void iteratePacks(Grid& grid);
       template <typename Grid, typename X, typename... XS>
       void iteratePacks(Grid& grid, X& x, XS&... xs);
 
@@ -773,6 +764,16 @@ namespace Dune {
         // already updatet.
         std::get<I>(x._tuple) = V(x._gfs,0.0);
         gridAdaptor.replayData(grid,x._gfs,projection,std::get<I>(x._tuple),transferMap);
+      }
+
+      // This gets called after the last pack.  After this function call we
+      // have visited every vector of every pack and we will go back through
+      // the recursive function calls.
+      template <typename Grid>
+      void iteratePacks(Grid& grid)
+      {
+        // Adapt the grid
+        grid.adapt();
       }
 
       /* Use template meta programming to iterate over packs at compile time
