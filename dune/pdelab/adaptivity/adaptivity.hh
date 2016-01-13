@@ -701,7 +701,7 @@ namespace Dune {
           _tuple(x...)
         {}
 
-        GFS _gfs;
+        GFS& _gfs;
         int _integrationOrder;
         Tuple _tuple;
       };
