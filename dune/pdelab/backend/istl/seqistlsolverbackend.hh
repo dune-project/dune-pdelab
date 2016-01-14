@@ -443,7 +443,7 @@ namespace Dune {
     };
 #endif // HAVE_SUPERLU || DOXYGEN
 
-#if HAVE_UMFPACK || DOXYGEN
+#if HAVE_SUITESPARSE_UMFPACK || DOXYGEN
     /**
      * @brief Solver backend using UMFPack as a direct solver.
      */
@@ -494,7 +494,7 @@ namespace Dune {
     private:
       int verbose;
     };
-#endif // HAVE_UMFPACK || DOXYGEN
+#endif // HAVE_SUITESPARSE_UMFPACK || DOXYGEN
 
     //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
     class ISTLBackend_SEQ_ExplicitDiagonal
