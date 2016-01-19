@@ -8,7 +8,6 @@
 
 #include <dune/common/typetraits.hh>
 #include <dune/common/reservedvector.hh>
-#include <dune/common/std/constexpr.hh>
 #include <dune/typetree/visitor.hh>
 
 #include <dune/pdelab/ordering/utility.hh>
@@ -223,7 +222,7 @@ namespace Dune {
        * true, the underlying DataHandleIF of the grid will always use the data type char to be able
        * to send different types of data, which will automatically be marshalled to / from a byte stream.
        */
-      DUNE_CONSTEXPR bool sendLeafSizes() const
+      constexpr bool sendLeafSizes() const
       {
         return false;
       }
