@@ -10,6 +10,7 @@
 #include<dune/geometry/referenceelements.hh>
 #include<dune/geometry/quadraturerules.hh>
 
+#include<dune/pdelab/common/singletonaccess.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
 #include<dune/pdelab/localoperator/flags.hh>
 #include<dune/pdelab/localoperator/idefault.hh>
@@ -64,13 +65,7 @@ namespace Dune {
       {
         // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSU::Traits::SizeType size_type;
 
@@ -78,22 +73,21 @@ namespace Dune {
         const int dim = EG::Entity::dimension;
 
         // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
-        const int intorder = intorderadd+2*lfsu.finiteElement().localBasis().order();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
+        auto geo = eg.geometry();
+        auto intorder = intorderadd+2*lfsu.finiteElement().localBasis().order();
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
-        typename T::Traits::PermTensorType tensor;
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
-        tensor = param.A(eg.entity(),localcenter);
+        auto ref_el = referenceElement(geo);
+        auto localcenter = ref_el.position(0,0);
+        auto tensor = param.A(eg.entity(),localcenter);
 
         // loop over quadrature points
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,intorder))
           {
             // evaluate basis functions
             // std::vector<RangeType> phi(lfsu.size());
             // lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
-            const std::vector<RangeType>& phi = cache.evaluateFunction(ip.position(),lfsu.finiteElement().localBasis());
+            auto& phi = cache.evaluateFunction(ip.position(),lfsu.finiteElement().localBasis());
 
             // evaluate u
             RF u=0.0;
@@ -103,11 +97,11 @@ namespace Dune {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             // std::vector<JacobianType> js(lfsu.size());
             // lfsu.finiteElement().localBasis().evaluateJacobian(ip.position(),js);
-            const std::vector<JacobianType>& js = cache.evaluateJacobian(ip.position(),lfsu.finiteElement().localBasis());
+            auto& js = cache.evaluateJacobian(ip.position(),lfsu.finiteElement().localBasis());
 
             // transform gradients of shape functions to real element
-            const typename EG::Geometry::JacobianInverseTransposed jac =
-              eg.geometry().jacobianInverseTransposed(ip.position());
+            auto jac = geo.jacobianInverseTransposed(ip.position());
+
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               jac.mv(js[i][0],gradphi[i]);
@@ -122,12 +116,12 @@ namespace Dune {
             tensor.umv(gradu,Agradu);
 
             // evaluate velocity field, sink term and source term
-            typename T::Traits::RangeType b = param.b(eg.entity(),ip.position());
-            typename T::Traits::RangeFieldType c = param.c(eg.entity(),ip.position());
-            typename T::Traits::RangeFieldType f = param.f(eg.entity(),ip.position());
+            auto b = param.b(eg.entity(),ip.position());
+            auto c = param.c(eg.entity(),ip.position());
+            auto f = param.f(eg.entity(),ip.position());
 
             // integrate (A grad u)*grad phi_i - u b*grad phi_i + c*u*phi_i
-            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
+            RF factor = ip.weight() * geo.integrationElement(ip.position());
             for (size_type i=0; i<lfsu.size(); i++)
               r.accumulate(lfsu,i,( Agradu*gradphi[i] - u*(b*gradphi[i]) + (c*u-f)*phi[i] )*factor);
           }
