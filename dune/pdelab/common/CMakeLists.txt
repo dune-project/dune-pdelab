@@ -20,6 +20,7 @@ install(FILES benchmarkhelper.hh
               polymorphicbufferwrapper.hh
               range.hh
               simpledofindex.hh
+              singletonaccess.hh
               topologyutility.hh
               typetraits.hh
               utility.hh

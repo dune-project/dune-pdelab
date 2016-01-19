@@ -22,6 +22,7 @@ common_HEADERS =				\
 	polymorphicbufferwrapper.hh		\
 	range.hh				\
 	simpledofindex.hh			\
+	singletonaccess.hh			\
 	topologyutility.hh			\
 	typetraits.hh				\
 	utility.hh				\
