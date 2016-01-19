@@ -4,13 +4,8 @@
 
 #include<vector>
 
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include<dune/geometry/type.hh>
-#include<dune/geometry/referenceelements.hh>
-#include<dune/geometry/quadraturerules.hh>
-
-#include<dune/pdelab/common/singletonaccess.hh>
+#include<dune/pdelab/common/quadraturerules.hh>
+#include<dune/pdelab/common/referenceelements.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
 #include<dune/pdelab/localoperator/flags.hh>
 #include<dune/pdelab/localoperator/idefault.hh>
