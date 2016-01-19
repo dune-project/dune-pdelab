@@ -177,17 +177,21 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
   Dune::InverseOperatorResult stat;
   Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
 
+#if HAVE_SUITESPARSE_UMFPACK
   // <<<4.1>>> UMFPack
   std::cout << "=== Using UMFPack as a direct solver" << std::endl;
   Dune::UMFPack<ISTLM> umfpack(native(m), 1);
   umfpack.apply(native(u),native(b),stat);
+#endif
 
+#if HAVE_SUPERLU
   // <<<4.2>> SuperLU
   std::cout << "=== Using SuperLU as a direct solver" << std::endl;
   Dune::SuperLU<ISTLM> superlu(native(m), 1);
   u = 0;
   b = r;
   superlu.apply(native(u),native(b),stat);
+#endif
 
   // <<<4.3>>> GMRes ILU0
   std::cout << "=== Using GMRes ILU0" << std::endl;
