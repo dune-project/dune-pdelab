@@ -20,7 +20,9 @@ common_HEADERS =				\
 	multiindex.hh				\
 	partitionviewentityset.hh               \
 	polymorphicbufferwrapper.hh		\
+	quadraturerules.hh			\
 	range.hh				\
+	referenceelements.hh			\
 	simpledofindex.hh			\
 	topologyutility.hh			\
 	typetraits.hh				\
