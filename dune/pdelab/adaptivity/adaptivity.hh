@@ -383,13 +383,10 @@ namespace Dune {
       typedef std::size_t size_type;
       using DF = typename EntitySet::Traits::CoordinateField;
 
-      using FiniteElement = typename GFS::Traits::FiniteElementMap::Traits::FiniteElement;
-
-      using Range = typename FiniteElement::Traits::LocalBasisType::Traits::RangeType;
-
       template<typename FiniteElement>
       struct coarse_function
       {
+        using Range = typename FiniteElement::Traits::LocalBasisType::Traits::RangeType;
 
         template<typename X, typename Y>
         void evaluate(const X& x, Y& y) const
@@ -422,6 +419,7 @@ namespace Dune {
       template<typename LeafLFS, typename TreePath>
       void leaf(const LeafLFS& leaf_lfs, TreePath treePath)
       {
+        using FiniteElement = typename LeafLFS::Traits::FiniteElementType;
 
         auto& fem = leaf_lfs.gridFunctionSpace().finiteElementMap();
         auto element_offset = _leaf_offset_cache[_element.type()][_leaf_index];
