@@ -238,6 +238,13 @@ PDELab 2.4
     significantly speed up the solver in many cases. If this setting is problematic for your program, it can be overridden
     using either a method on the `Newton` class and the `ParameterTree` interface.
 
+-   There are new functions `quadratureRule()` and `referenceElement()` to obtain the corresponding objects for a geometry.
+    They should be called without namespace qualification and will be found via ADL. Instead of the original objects, they
+    return wrappers with value semantics, allowing the result to be captured using `auto` and thus avoiding tedious
+    `typedef`ing, e.g. `auto ref_el = referenceElement(geo)`.
+    The existing local operators have been ported to make use of the new functions, so you can take a look at those
+    implementations for further example of how to use them.
+
 -   (Hopefully) all of the APIs deprecated in PDELab 2.0 have been removed.
 
 -   The `PermutationOrderingTag` and its implementation have been deprecated. If you need to permute an ordering, apply
