@@ -7,6 +7,8 @@
 #include<dune/common/typetraits.hh>
 #include<dune/geometry/referenceelements.hh>
 
+#include<dune/pdelab/common/quadraturerules.hh>
+#include<dune/pdelab/common/referenceelements.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
 #include<dune/pdelab/localoperator/flags.hh>
@@ -65,22 +67,16 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        // domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-
-        // dimensions
-        const int dim = EG::Geometry::mydimension;
-
         // cell center
-        const Dune::FieldVector<DF,dim>
-          inside_local(Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0));
+        auto geo = eg.geometry();
+        auto ref_el = referenceElement(geo);
+        auto inside_local = ref_el.position(0,0);
 
         // evaluate reaction term
-        typename TP::Traits::RangeFieldType c = param.c(eg.entity(),inside_local);
+        auto c = param.c(eg.entity(),inside_local);
 
         // and accumulate
-        r.accumulate(lfsu,0,(c*x(lfsu,0))*eg.geometry().volume());
+        r.accumulate(lfsu,0,(c*x(lfsu,0))*geo.volume());
       }
 
       // jacobian of volume term
@@ -88,22 +84,16 @@ namespace Dune {
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
       {
-        // domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-
-        // dimensions
-        const int dim = EG::Geometry::mydimension;
-
         // cell center
-        const Dune::FieldVector<DF,dim>
-          inside_local(Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0));
+        auto geo = eg.geometry();
+        auto ref_el = referenceElement(geo);
+        auto inside_local = ref_el.position(0,0);
 
         // evaluate reaction term
-        typename TP::Traits::RangeFieldType c = param.c(eg.entity(),inside_local);
+        auto c = param.c(eg.entity(),inside_local);
 
         // and accumulate
-        mat.accumulate(lfsu,0,lfsu,0,c*eg.geometry().volume());
+        mat.accumulate(lfsu,0,lfsu,0,c*geo.volume());
       }
 
       // skeleton integral depending on test and ansatz functions
@@ -114,59 +104,60 @@ namespace Dune {
                            const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
       {
-        // domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        // define types
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        const int dim = IG::dimension;
 
-        // center in face's reference element
-        const Dune::FieldVector<DF,dim-1>
-          face_local = Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+        // dimensions
+        const auto dim = IG::dimension;
 
-        // face volume for integration
-        RF face_volume = ig.geometry().integrationElement(face_local)
-          *Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).volume();
-
+        // get cell entities from both sides of the intersection
         auto cell_inside = ig.inside();
         auto cell_outside = ig.outside();
 
+        // get geometries
+        auto geo = ig.geometry();
+        auto geo_inside = cell_inside.geometry();
+        auto geo_outside = cell_outside.geometry();
+
+        // center in face's reference element
+        auto ref_el = referenceElement(geo);
+        auto face_local = ref_el.position(0,0);
+
+        // face volume for integration
+        auto face_volume = geo.integrationElement(face_local) * ref_el.volume();
+
         // cell centers in references elements
-        const Dune::FieldVector<DF,dim>
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_inside.type()).position(0,0);
-        const Dune::FieldVector<DF,dim>
-          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_outside.type()).position(0,0);
+        auto ref_el_inside = referenceElement(geo_inside);
+        auto ref_el_outside = referenceElement(geo_outside);
+        auto inside_local = ref_el_inside.position(0,0);
+        auto outside_local = ref_el_outside.position(0,0);
 
         // evaluate diffusion coefficient from either side and take harmonic average
-        typename TP::Traits::PermTensorType tensor_inside;
-        tensor_inside = param.A(cell_inside,inside_local);
-        typename TP::Traits::PermTensorType tensor_outside;
-        tensor_outside = param.A(cell_outside,outside_local);
-        const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
+        auto tensor_inside = param.A(cell_inside,inside_local);
+        auto tensor_outside = param.A(cell_outside,outside_local);
+        auto n_F = ig.centerUnitOuterNormal();
         Dune::FieldVector<RF,dim> An_F;
         tensor_inside.mv(n_F,An_F);
-        RF k_inside = n_F*An_F;
+        auto k_inside = n_F*An_F;
         tensor_outside.mv(n_F,An_F);
-        RF k_outside = n_F*An_F;
-        RF k_avg = 2.0/(1.0/(k_inside+1E-30) + 1.0/(k_outside+1E-30));
+        auto k_outside = n_F*An_F;
+        auto k_avg = 2.0/(1.0/(k_inside+1E-30) + 1.0/(k_outside+1E-30));
 
         // evaluate convective term
-        Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-        typename TP::Traits::RangeType b = param.b(cell_inside,iplocal_s);
-        RF vn = b*n_F;
-        RF u_upwind=0;
+        auto iplocal_s = ig.geometryInInside().global(face_local);
+        auto b = param.b(cell_inside,iplocal_s);
+        auto vn = b*n_F;
+        auto u_upwind=0;
         if (vn>=0) u_upwind = x_s(lfsu_s,0); else u_upwind = x_n(lfsu_n,0);
 
         // cell centers in global coordinates
-        Dune::FieldVector<DF,IG::dimension>
-          inside_global = cell_inside.geometry().global(inside_local);
-        Dune::FieldVector<DF,IG::dimension>
-          outside_global = cell_outside.geometry().global(outside_local);
+        auto inside_global = geo_inside.global(inside_local);
+        auto outside_global = geo_outside.global(outside_local);
 
         // distance between the two cell centers
         inside_global -= outside_global;
-        RF distance = inside_global.two_norm();
+        auto distance = inside_global.two_norm();
 
         // contribution to residual on inside element, other residual is computed by symmetric call
         r_s.accumulate(lfsu_s,0,(u_upwind*vn)*face_volume+k_avg*(x_s(lfsu_s,0)-x_n(lfsu_n,0))*face_volume/distance);
@@ -180,57 +171,58 @@ namespace Dune {
                               M& mat_ss, M& mat_sn,
                               M& mat_ns, M& mat_nn) const
       {
-        // domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        // define types
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        const int dim = IG::dimension;
 
-        // center in face's reference element
-        const Dune::FieldVector<DF,dim-1>
-          face_local = Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+        // dimensions
+        const auto dim = IG::dimension;
 
-        // face volume for integration
-        RF face_volume = ig.geometry().integrationElement(face_local)
-          *Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).volume();
-
+        // get cell entities from both sides of the intersection
         auto cell_inside = ig.inside();
         auto cell_outside = ig.outside();
 
+        // get geometries
+        auto geo = ig.geometry();
+        auto geo_inside = cell_inside.geometry();
+        auto geo_outside = cell_outside.geometry();
+
+        // center in face's reference element
+        auto ref_el = referenceElement(geo);
+        auto face_local = ref_el.position(0,0);
+
+        // face volume for integration
+        auto face_volume = geo.integrationElement(face_local) * ref_el.volume();
+
         // cell centers in references elements
-        const Dune::FieldVector<DF,dim>
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_inside.type()).position(0,0);
-        const Dune::FieldVector<DF,dim>
-          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_outside.type()).position(0,0);
+        auto ref_el_inside = referenceElement(geo_inside);
+        auto ref_el_outside = referenceElement(geo_outside);
+        auto inside_local = ref_el_inside.position(0,0);
+        auto outside_local = ref_el_outside.position(0,0);
 
         // evaluate diffusion coefficient from either side and take harmonic average
-        typename TP::Traits::PermTensorType tensor_inside;
-        tensor_inside = param.A(cell_inside,inside_local);
-        typename TP::Traits::PermTensorType tensor_outside;
-        tensor_outside = param.A(cell_outside,outside_local);
-        const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
+        auto tensor_inside = param.A(cell_inside,inside_local);
+        auto tensor_outside = param.A(cell_outside,outside_local);
+        auto n_F = ig.centerUnitOuterNormal();
         Dune::FieldVector<RF,dim> An_F;
         tensor_inside.mv(n_F,An_F);
-        RF k_inside = n_F*An_F;
+        auto k_inside = n_F*An_F;
         tensor_outside.mv(n_F,An_F);
-        RF k_outside = n_F*An_F;
-        RF k_avg = 2.0/(1.0/(k_inside+1E-30) + 1.0/(k_outside+1E-30));
+        auto k_outside = n_F*An_F;
+        auto k_avg = 2.0/(1.0/(k_inside+1E-30) + 1.0/(k_outside+1E-30));
 
         // evaluate convective term
-        Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-        typename TP::Traits::RangeType b = param.b(cell_inside,iplocal_s);
-        RF vn = b*n_F;
+        auto iplocal_s = ig.geometryInInside().global(face_local);
+        auto b = param.b(cell_inside,iplocal_s);
+        auto vn = b*n_F;
 
         // cell centers in global coordinates
-        Dune::FieldVector<DF,IG::dimension>
-          inside_global = cell_inside.geometry().global(inside_local);
-        Dune::FieldVector<DF,IG::dimension>
-          outside_global = cell_outside.geometry().global(outside_local);
+        auto inside_global = geo_inside.global(inside_local);
+        auto outside_global = geo_outside.global(outside_local);
 
         // distance between the two cell centers
         inside_global -= outside_global;
-        RF distance = inside_global.two_norm();
+        auto distance = inside_global.two_norm();
 
         // contribution to residual on inside element, other residual is computed by symmetric call
         mat_ss.accumulate(lfsu_s,0,lfsu_s,0,   k_avg*face_volume/distance );
@@ -250,30 +242,23 @@ namespace Dune {
       }
 
 
-
-
       // post skeleton: compute time step allowable for cell; to be done later
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume_post_skeleton(const EG& eg, const LFSU& lfsu, const X& x,
                                       const LFSV& lfsv, R& r) const
       {
-        // domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        const int dim = EG::Geometry::mydimension;
-
         if (!first_stage) return; // time step calculation is only done in first stage
 
         // cell center
-        const Dune::FieldVector<DF,dim>&
-          inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+        auto geo = eg.geometry();
+        auto ref_el = referenceElement(geo);
+        auto inside_local = ref_el.position(0,0);
 
         // compute optimal dt for this cell
-        typename TP::Traits::RangeFieldType cellcapacity = param.d(eg.entity(),inside_local)*eg.geometry().volume();
-        typename TP::Traits::RangeFieldType celldt = cellcapacity/(cellinflux+1E-30);
+        auto cellcapacity = param.d(eg.entity(),inside_local)*geo.volume();
+        auto celldt = cellcapacity/(cellinflux+1E-30);
         dtmin = std::min(dtmin,celldt);
       }
-
 
 
       // skeleton integral depending on test and ansatz functions
@@ -283,55 +268,57 @@ namespace Dune {
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                            R& r_s) const
       {
-        // domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        // define types
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        const int dim = IG::dimension;
 
-        // center in face's reference element
-        const Dune::FieldVector<DF,dim-1>
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).position(0,0);
+        // dimensions
+        const auto dim = IG::dimension;
 
-        // face volume for integration
-        RF face_volume = ig.geometry().integrationElement(face_local)
-          *Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).volume();
-
+        // get cell entities from both sides of the intersection
         auto cell_inside = ig.inside();
 
-        // cell center in reference element
-        const Dune::FieldVector<DF,dim>
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_inside.type()).position(0,0);
+        // get geometries
+        auto geo = ig.geometry();
+        auto geo_inside = cell_inside.geometry();
+
+        // center in face's reference element
+        auto ref_el = referenceElement(geo);
+        auto face_local = ref_el.position(0,0);
+
+        // face volume for integration
+        auto face_volume = geo.integrationElement(face_local) * ref_el.volume();
+
+        // cell centers in references elements
+        auto ref_el_inside = referenceElement(geo_inside);
+        auto inside_local = ref_el_inside.position(0,0);
 
         // evaluate boundary condition type
-        BCType bctype;
-        bctype = param.bctype(ig.intersection(),face_local);
+        auto bctype = param.bctype(ig.intersection(),face_local);
 
         if (bctype==ConvectionDiffusionBoundaryConditions::Dirichlet)
           {
             // Dirichlet boundary
             // distance between cell center and face center
-            Dune::FieldVector<DF,dim> inside_global = cell_inside.geometry().global(inside_local);
-            Dune::FieldVector<DF,dim> outside_global = ig.geometry().global(face_local);
+            auto inside_global = geo_inside.global(inside_local);
+            auto outside_global = geo.global(face_local);
             inside_global -= outside_global;
-            RF distance = inside_global.two_norm();
+            auto distance = inside_global.two_norm();
 
             // evaluate diffusion coefficient
-            typename TP::Traits::PermTensorType tensor_inside;
-            tensor_inside = param.A(cell_inside,inside_local);
-            const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
+            auto tensor_inside = param.A(cell_inside,inside_local);
+            auto n_F = ig.centerUnitOuterNormal();
             Dune::FieldVector<RF,dim> An_F;
             tensor_inside.mv(n_F,An_F);
-            RF k_inside = n_F*An_F;
+            auto k_inside = n_F*An_F;
 
             // evaluate boundary condition function
-            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-            RF g = param.g(cell_inside,iplocal_s);
+            auto iplocal_s = ig.geometryInInside().global(face_local);
+            auto g = param.g(cell_inside,iplocal_s);
 
             // velocity needed for convection term
-            typename TP::Traits::RangeType b = param.b(cell_inside,iplocal_s);
-            const Dune::FieldVector<DF,dim> n = ig.centerUnitOuterNormal();
+            auto b = param.b(cell_inside,iplocal_s);
+            auto n = ig.centerUnitOuterNormal();
 
             // contribution to residual on inside element, assumes that Dirichlet boundary is inflow
             r_s.accumulate(lfsu_s,0,(b*n)*g*face_volume + k_inside*(x_s(lfsu_s,0)-g)*face_volume/distance);
@@ -345,7 +332,7 @@ namespace Dune {
             // evaluate flux boundary condition
 
             //evaluate boundary function
-            typename TP::Traits::RangeFieldType j = param.j(ig.intersection(),face_local);
+            auto j = param.j(ig.intersection(),face_local);
 
             // contribution to residual on inside element
             r_s.accumulate(lfsu_s,0,j*face_volume);
@@ -356,12 +343,12 @@ namespace Dune {
         if (bctype==ConvectionDiffusionBoundaryConditions::Outflow)
           {
             // evaluate velocity field and outer unit normal
-            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-            typename TP::Traits::RangeType b = param.b(cell_inside,iplocal_s);
-            const Dune::FieldVector<DF,dim> n = ig.centerUnitOuterNormal();
+            auto iplocal_s = ig.geometryInInside().global(face_local);
+            auto b = param.b(cell_inside,iplocal_s);
+            auto n = ig.centerUnitOuterNormal();
 
             // evaluate outflow boundary condition
-            typename TP::Traits::RangeFieldType o = param.o(ig.intersection(),face_local);
+            auto o = param.o(ig.intersection(),face_local);
 
             // integrate o
             r_s.accumulate(lfsu_s,0,((b*n)*x_s(lfsu_s,0) + o)*face_volume);
@@ -375,48 +362,49 @@ namespace Dune {
                               const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                               M& mat_ss) const
       {
-        // domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        // define types
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        const int dim = IG::dimension;
 
-        // center in face's reference element
-        const Dune::FieldVector<DF,dim-1>
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).position(0,0);
+        // dimensions
+        const auto dim = IG::dimension;
 
-        // face volume for integration
-        RF face_volume = ig.geometry().integrationElement(face_local)
-          *Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).volume();
-
+        // get cell entities from both sides of the intersection
         auto cell_inside = ig.inside();
 
-        // cell center in reference element
-        const Dune::FieldVector<DF,dim>
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_inside.type()).position(0,0);
+        // get geometries
+        auto geo = ig.geometry();
+        auto geo_inside = cell_inside.geometry();
+
+        // center in face's reference element
+        auto ref_el = referenceElement(geo);
+        auto face_local = ref_el.position(0,0);
+
+        // face volume for integration
+        auto face_volume = geo.integrationElement(face_local) * ref_el.volume();
+
+        // cell centers in references elements
+        auto ref_el_inside = referenceElement(geo_inside);
+        auto inside_local = ref_el_inside.position(0,0);
 
         // evaluate boundary condition type
-        BCType bctype;
-        bctype = param.bctype(ig.intersection(),face_local);
-
+        auto bctype = param.bctype(ig.intersection(),face_local);
 
         if (bctype==ConvectionDiffusionBoundaryConditions::Dirichlet)
           {
             // Dirichlet boundary
             // distance between cell center and face center
-            Dune::FieldVector<DF,dim> inside_global = cell_inside.geometry().global(inside_local);
-            Dune::FieldVector<DF,dim> outside_global = ig.geometry().global(face_local);
+            auto inside_global = geo_inside.global(inside_local);
+            auto outside_global = geo.global(face_local);
             inside_global -= outside_global;
-            RF distance = inside_global.two_norm();
+            auto distance = inside_global.two_norm();
 
             // evaluate diffusion coefficient
-            typename TP::Traits::PermTensorType tensor_inside;
-            tensor_inside = param.A(cell_inside,inside_local);
-            const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
+            auto tensor_inside = param.A(cell_inside,inside_local);
+            auto n_F = ig.centerUnitOuterNormal();
             Dune::FieldVector<RF,dim> An_F;
             tensor_inside.mv(n_F,An_F);
-            RF k_inside = n_F*An_F;
+            auto k_inside = n_F*An_F;
 
             // contribution to residual on inside element
             mat_ss.accumulate(lfsu_s,0,lfsv_s,0, k_inside*face_volume/distance );
@@ -427,9 +415,9 @@ namespace Dune {
         if (bctype==ConvectionDiffusionBoundaryConditions::Outflow)
           {
             // evaluate velocity field and outer unit normal
-            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-            typename TP::Traits::RangeType b = param.b(cell_inside,iplocal_s);
-            const Dune::FieldVector<DF,dim> n = ig.centerUnitOuterNormal();
+            auto iplocal_s = ig.geometryInInside().global(face_local);
+            auto b = param.b(cell_inside,iplocal_s);
+            auto n = ig.centerUnitOuterNormal();
 
             // integrate o
             mat_ss.accumulate(lfsu_s,0,lfsv_s,0, (b*n)*face_volume );
@@ -442,19 +430,15 @@ namespace Dune {
       template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
-        // domain and range field type
-        typedef typename LFSV::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        const int dim = EG::Geometry::mydimension;
-
         // cell center
-        const Dune::FieldVector<DF,dim>&
-          inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+        auto geo = eg.geometry();
+        auto ref_el = referenceElement(geo);
+        auto inside_local = ref_el.position(0,0);
 
         // evaluate source and sink term
-        typename TP::Traits::RangeFieldType f = param.f(eg.entity(),inside_local);
+        auto f = param.f(eg.entity(),inside_local);
 
-        r.accumulate(lfsv,0,-f*eg.geometry().volume());
+        r.accumulate(lfsv,0,-f*geo.volume());
       }
 
       //! set time in parameter class
@@ -531,21 +515,16 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        // domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-
-        // dimensions
-        const int dim = EG::Geometry::mydimension;
-
         // cell center
-        const Dune::FieldVector<DF,dim>&
-          inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+        auto geo = eg.geometry();
+        auto ref_el = referenceElement(geo);
+        auto inside_local = ref_el.position(0,0);
+
         // capacity term
-        typename TP::Traits::RangeFieldType capacity = param.d(eg.entity(),inside_local);
+        auto capacity = param.d(eg.entity(),inside_local);
 
         // residual contribution
-        r.accumulate(lfsu,0,capacity*x(lfsu,0)*eg.geometry().volume());
+        r.accumulate(lfsu,0,capacity*x(lfsu,0)*geo.volume());
       }
 
       // jacobian of volume term
@@ -553,22 +532,16 @@ namespace Dune {
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
       {
-        // domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-
-        // dimensions
-        const int dim = EG::Geometry::mydimension;
-
         // cell center
-        const Dune::FieldVector<DF,dim>&
-          inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+        auto geo = eg.geometry();
+        auto ref_el = referenceElement(geo);
+        auto inside_local = ref_el.position(0,0);
 
         // capacity term
-        typename TP::Traits::RangeFieldType capacity = param.d(eg.entity(),inside_local);
+        auto capacity = param.d(eg.entity(),inside_local);
 
         // residual contribution
-        mat.accumulate(lfsu,0,lfsu,0,capacity*eg.geometry().volume());
+        mat.accumulate(lfsu,0,lfsu,0,capacity*geo.volume());
       }
 
     private:
