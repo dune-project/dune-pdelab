@@ -74,6 +74,11 @@ namespace Dune {
         auto localcenter = ref_el.position(0,0);
         auto tensor = param.A(eg.entity(),localcenter);
 
+        // Initialize vectors outside for loop
+        std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
+        Dune::FieldVector<RF,dim> gradu(0.0);
+        Dune::FieldVector<RF,dim> Agradu(0.0);
+
         // loop over quadrature points
         auto intorder = intorderadd+2*lfsu.finiteElement().localBasis().order();
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -91,19 +96,16 @@ namespace Dune {
 
             // transform gradients of shape functions to real element
             auto jac = geo.jacobianInverseTransposed(ip.position());
-
-            std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               jac.mv(js[i][0],gradphi[i]);
 
             // compute gradient of u
-            Dune::FieldVector<RF,dim> gradu(0.0);
+            gradu = 0.0;
             for (size_type i=0; i<lfsu.size(); i++)
               gradu.axpy(x(lfsu,i),gradphi[i]);
 
             // compute A * gradient of u
-            Dune::FieldVector<RF,dim> Agradu(0.0);
-            tensor.umv(gradu,Agradu);
+            tensor.mv(gradu,Agradu);
 
             // evaluate velocity field, sink term and source term
             auto b = param.b(eg.entity(),ip.position());
@@ -138,6 +140,10 @@ namespace Dune {
         auto localcenter = ref_el.position(0,0);
         auto tensor = param.A(eg.entity(),localcenter);
 
+        // Initialize vectors outside for loop
+        std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
+        std::vector<Dune::FieldVector<RF,dim> > Agradphi(lfsu.size());
+
         // loop over quadrature points
         auto intorder = intorderadd+2*lfsu.finiteElement().localBasis().order();
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -147,8 +153,6 @@ namespace Dune {
 
             // transform gradient to real element
             auto jac = geo.jacobianInverseTransposed(ip.position());
-            std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
-            std::vector<Dune::FieldVector<RF,dim> > Agradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               {
                 jac.mv(js[i][0],gradphi[i]);
@@ -368,12 +372,14 @@ namespace Dune {
         // get geometry
         auto geo = eg.geometry();
 
+        // Initialize vectors outside for loop
+        std::vector<RangeType> phi(lfsu.size());
+
         // loop over quadrature points
         RF sum(0.0);
         for (const auto& ip : quadratureRule(geo,intorder))
           {
             // evaluate basis functions
-            std::vector<RangeType> phi(lfsu.size());
             lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
 
             // evaluate u
@@ -447,6 +453,14 @@ namespace Dune {
         // transformation
         typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
+        // Initialize vectors outside for loop
+        std::vector<JacobianType> gradphi_s(lfsu_s.size());
+        std::vector<JacobianType> gradphi_n(lfsu_n.size());
+        std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
+        std::vector<Dune::FieldVector<RF,dim> > tgradphi_n(lfsu_n.size());
+        Dune::FieldVector<RF,dim> gradu_s(0.0);
+        Dune::FieldVector<RF,dim> gradu_n(0.0);
+
         // loop over quadrature points and integrate normal flux
         RF sum(0.0);
         auto intorder = 2*lfsu_s.finiteElement().localBasis().order();
@@ -457,24 +471,20 @@ namespace Dune {
             auto iplocal_n = geo_in_outside.global(ip.position());
 
             // evaluate gradient of basis functions
-            std::vector<JacobianType> gradphi_s(lfsu_s.size());
             lfsu_s.finiteElement().localBasis().evaluateJacobian(iplocal_s,gradphi_s);
-            std::vector<JacobianType> gradphi_n(lfsu_n.size());
             lfsu_n.finiteElement().localBasis().evaluateJacobian(iplocal_n,gradphi_n);
 
             // transform gradients of shape functions to real element
             jac = geo_inside.jacobianInverseTransposed(iplocal_s);
-            std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
             for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
             jac = geo_outside.jacobianInverseTransposed(iplocal_n);
-            std::vector<Dune::FieldVector<RF,dim> > tgradphi_n(lfsu_n.size());
             for (size_type i=0; i<lfsu_n.size(); i++) jac.mv(gradphi_n[i][0],tgradphi_n[i]);
 
             // compute gradient of u
-            Dune::FieldVector<RF,dim> gradu_s(0.0);
+            gradu_s = 0.0;
             for (size_type i=0; i<lfsu_s.size(); i++)
               gradu_s.axpy(x_s(lfsu_s,i),tgradphi_s[i]);
-            Dune::FieldVector<RF,dim> gradu_n(0.0);
+            gradu_n = 0.0;
             for (size_type i=0; i<lfsu_n.size(); i++)
               gradu_n.axpy(x_n(lfsu_n,i),tgradphi_n[i]);
 
@@ -539,6 +549,11 @@ namespace Dune {
         if (bctype != ConvectionDiffusionBoundaryConditions::Neumann)
           return;
 
+        // Initialize vectors outside for loop
+        std::vector<JacobianType> gradphi_s(lfsu_s.size());
+        std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
+        Dune::FieldVector<RF,dim> gradu_s(0.0);
+
         // loop over quadrature points and integrate normal flux
         RF sum(0.0);
         auto intorder = 2*lfsu_s.finiteElement().localBasis().order();
@@ -548,16 +563,14 @@ namespace Dune {
             auto iplocal_s = geo_in_inside.global(ip.position());
 
             // evaluate gradient of basis functions
-            std::vector<JacobianType> gradphi_s(lfsu_s.size());
             lfsu_s.finiteElement().localBasis().evaluateJacobian(iplocal_s,gradphi_s);
 
             // transform gradients of shape functions to real element
             jac = geo_inside.jacobianInverseTransposed(iplocal_s);
-            std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
             for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
 
             // compute gradient of u
-            Dune::FieldVector<RF,dim> gradu_s(0.0);
+            gradu_s = 0.0;
             for (size_type i=0; i<lfsu_s.size(); i++)
               gradu_s.axpy(x_s(lfsu_s,i),tgradphi_s[i]);
 
@@ -657,6 +670,9 @@ namespace Dune {
         // get geometry
         auto geo = eg.geometry();
 
+        // Initialize vectors outside for loop
+        std::vector<RangeType> phi(lfsu.size());
+
         // loop over quadrature points
         RF sum(0.0);
         RF fsum_up(0.0);
@@ -666,7 +682,6 @@ namespace Dune {
         for (const auto& ip : quadratureRule(geo,intorder))
           {
             // evaluate basis functions
-            std::vector<RangeType> phi(lfsu.size());
             lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
 
             // evaluate u
@@ -824,6 +839,15 @@ namespace Dune {
         param.setTime(time+dt);
         lfsu.finiteElement().localInterpolation().interpolate(f_adapter,f_up);
 
+        // Initialize vectors outside for loop
+        std::vector<JacobianType> js(lfsu.size());
+        std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
+        Dune::FieldVector<RF,dim> gradu(0.0);
+        Dune::FieldVector<RF,dim> gradf_down(0.0);
+        Dune::FieldVector<RF,dim> gradf_mid(0.0);
+        Dune::FieldVector<RF,dim> gradf_up(0.0);
+        Dune::FieldVector<RF,dim> gradf_average(0.0);
+
         // loop over quadrature points
         RF sum(0.0);
         RF sum_grad(0.0);
@@ -847,17 +871,15 @@ namespace Dune {
             sum += u*u*factor;
 
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
-            std::vector<JacobianType> js(lfsu.size());
             lfsu.finiteElement().localBasis().evaluateJacobian(ip.position(),js);
 
             // transform gradients of shape functions to real element
             auto jac = geo.jacobianInverseTransposed(ip.position());
-            std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               jac.mv(js[i][0],gradphi[i]);
 
             // compute gradient of u
-            Dune::FieldVector<RF,dim> gradu(0.0);
+            gradu = 0.0;
             for (size_type i=0; i<lfsu.size(); i++)
               gradu.axpy(x(lfsu,i),gradphi[i]);
 
@@ -865,13 +887,13 @@ namespace Dune {
             sum_grad += (gradu*gradu)*factor;
 
             // compute gradients of f
-            Dune::FieldVector<RF,dim> gradf_down(0.0);
+            gradf_down = 0.0;
             for (size_type i=0; i<lfsu.size(); i++) gradf_down.axpy(f_down[i],gradphi[i]);
-            Dune::FieldVector<RF,dim> gradf_mid(0.0);
+            gradf_mid = 0.0;
             for (size_type i=0; i<lfsu.size(); i++) gradf_mid.axpy(f_mid[i],gradphi[i]);
-            Dune::FieldVector<RF,dim> gradf_up(0.0);
+            gradf_up = 0.0;
             for (size_type i=0; i<lfsu.size(); i++) gradf_up.axpy(f_up[i],gradphi[i]);
-            Dune::FieldVector<RF,dim> gradf_average(0.0);
+            gradf_average = 0.0;
             for (size_type i=0; i<lfsu.size(); i++)
               gradf_average.axpy((1.0/6.0)*f_down[i]+(2.0/3.0)*f_mid[i]+(1.0/6.0)*f_up[i],gradphi[i]);
 
