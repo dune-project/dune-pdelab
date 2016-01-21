@@ -5,6 +5,7 @@ set(modules
   FindCXXUnorderedContainers.cmake
   FindPackageMultipass.cmake
   FindPETSc.cmake
+  PdelabCheckCXX14.cmake
   ResolveCompilerPaths.cmake
   UseEigen.cmake
   UsePETSc.cmake)
