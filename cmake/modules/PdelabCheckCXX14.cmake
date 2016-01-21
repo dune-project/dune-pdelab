@@ -10,16 +10,16 @@
 #    This module internally sets the following variables, which are then
 #    exported into the config.h of the current dune module.
 #
+#    :code:`PDELAB_HAVE_CXX14`
+#       The module sets this variable to TRUE if your compiler supports C++14.
+#       You can use this variable in your CMakeLists.txt files to guard targets
+#       that should only be built in C++14 mode.
+#
+#
 # .. cmake_variable:: PDELAB_DISABLE_CXX_VERSION_CHECK
 #
 #    You may set this variable to TRUE to disable checking for
 #    std=c++14.
-#
-# .. cmake_variable:: PDELAB_HAVE_CXX14
-#
-#    The module sets this variable to TRUE if your compiler supports C++14.
-#    You can use this variable in your CMakeLists.txt files to guard targets
-#    that should only be built in C++14 mode.
 #
 # .. cmake_function:: pdelab_require_cxx14
 #
@@ -63,6 +63,6 @@ cmake_pop_check_state()
 
 function(pdelab_require_cxx14)
   if(NOT PDELAB_HAVE_CXX14)
-    message(FATAL_ERROR "This modules requires a compiler with support for C++14, which you compiler does not have.")
+    message(FATAL_ERROR "This module requires a compiler with support for C++14, which you compiler does not have.")
   endif()
 endfunction()
