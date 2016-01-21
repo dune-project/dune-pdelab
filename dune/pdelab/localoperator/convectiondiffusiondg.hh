@@ -120,6 +120,12 @@ namespace Dune {
         // transformation
         typename EG::Geometry::JacobianInverseTransposed jac;
 
+        // Initialize vectors outside for loop
+        std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
+        std::vector<Dune::FieldVector<RF,dim> > gradpsi(lfsv.size());
+        Dune::FieldVector<RF,dim> gradu(0.0);
+        Dune::FieldVector<RF,dim> Agradu(0.0);
+
         // loop over quadrature points
         auto intorder = intorderadd + quadrature_factor * order;
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -139,22 +145,19 @@ namespace Dune {
 
             // transform gradients of shape functions to real element
             jac = geo.jacobianInverseTransposed(ip.position());
-            std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               jac.mv(js[i][0],gradphi[i]);
 
-            std::vector<Dune::FieldVector<RF,dim> > gradpsi(lfsv.size());
             for (size_type i=0; i<lfsv.size(); i++)
               jac.mv(js_v[i][0],gradpsi[i]);
 
             // compute gradient of u
-            Dune::FieldVector<RF,dim> gradu(0.0);
+            gradu = 0.0;
             for (size_type i=0; i<lfsu.size(); i++)
               gradu.axpy(x(lfsu,i),gradphi[i]);
 
             // compute A * gradient of u
-            Dune::FieldVector<RF,dim> Agradu(0.0);
-            A.umv(gradu,Agradu);
+            A.mv(gradu,Agradu);
 
             // evaluate velocity field
             auto b = param.b(eg.entity(),ip.position());
@@ -195,6 +198,10 @@ namespace Dune {
         // transformation
         typename EG::Geometry::JacobianInverseTransposed jac;
 
+        // Initialize vectors outside for loop
+        std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
+        std::vector<Dune::FieldVector<RF,dim> > Agradphi(lfsu.size());
+
         // loop over quadrature points
         auto intorder = intorderadd + quadrature_factor * order;
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -207,8 +214,6 @@ namespace Dune {
 
             // transform gradients of shape functions to real element
             jac = geo.jacobianInverseTransposed(ip.position());
-            std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
-            std::vector<Dune::FieldVector<RF,dim> > Agradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               {
                 jac.mv(js[i][0],gradphi[i]);
@@ -311,6 +316,14 @@ namespace Dune {
         // penalty factor
         auto penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
 
+        // Initialize vectors outside for loop
+        std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
+        std::vector<Dune::FieldVector<RF,dim> > tgradpsi_s(lfsv_s.size());
+        std::vector<Dune::FieldVector<RF,dim> > tgradphi_n(lfsu_n.size());
+        std::vector<Dune::FieldVector<RF,dim> > tgradpsi_n(lfsv_n.size());
+        Dune::FieldVector<RF,dim> gradu_s(0.0);
+        Dune::FieldVector<RF,dim> gradu_n(0.0);
+
         // loop over quadrature points
         auto intorder = intorderadd+quadrature_factor*order;
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -344,21 +357,17 @@ namespace Dune {
 
             // transform gradients of shape functions to real element
             jac = geo_inside.jacobianInverseTransposed(iplocal_s);
-            std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
             for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
-            std::vector<Dune::FieldVector<RF,dim> > tgradpsi_s(lfsv_s.size());
             for (size_type i=0; i<lfsv_s.size(); i++) jac.mv(gradpsi_s[i][0],tgradpsi_s[i]);
             jac = geo_outside.jacobianInverseTransposed(iplocal_n);
-            std::vector<Dune::FieldVector<RF,dim> > tgradphi_n(lfsu_n.size());
             for (size_type i=0; i<lfsu_n.size(); i++) jac.mv(gradphi_n[i][0],tgradphi_n[i]);
-            std::vector<Dune::FieldVector<RF,dim> > tgradpsi_n(lfsv_n.size());
             for (size_type i=0; i<lfsv_n.size(); i++) jac.mv(gradpsi_n[i][0],tgradpsi_n[i]);
 
             // compute gradient of u
-            Dune::FieldVector<RF,dim> gradu_s(0.0);
+            gradu_s = 0.0;
             for (size_type i=0; i<lfsu_s.size(); i++)
               gradu_s.axpy(x_s(lfsu_s,i),tgradphi_s[i]);
-            Dune::FieldVector<RF,dim> gradu_n(0.0);
+            gradu_n = 0.0;
             for (size_type i=0; i<lfsu_n.size(); i++)
               gradu_n.axpy(x_n(lfsu_n,i),tgradphi_n[i]);
 
@@ -491,6 +500,10 @@ namespace Dune {
         // penalty factor
         auto penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
 
+        // Initialize vectors outside for loop
+        std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
+        std::vector<Dune::FieldVector<RF,dim> > tgradphi_n(lfsu_n.size());
+
         // loop over quadrature points
         const int intorder = intorderadd+quadrature_factor*order;
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -512,10 +525,8 @@ namespace Dune {
 
             // transform gradients of shape functions to real element
             jac = geo_inside.jacobianInverseTransposed(iplocal_s);
-            std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
             for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
             jac = geo_outside.jacobianInverseTransposed(iplocal_n);
-            std::vector<Dune::FieldVector<RF,dim> > tgradphi_n(lfsu_n.size());
             for (size_type i=0; i<lfsu_n.size(); i++) jac.mv(gradphi_n[i][0],tgradphi_n[i]);
 
             // evaluate velocity field and upwinding, assume H(div) velocity field => may choose any side
@@ -634,6 +645,11 @@ namespace Dune {
         // penalty factor
         auto penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
 
+        // Initialize vectors outside for loop
+        std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
+        std::vector<Dune::FieldVector<RF,dim> > tgradpsi_s(lfsv_s.size());
+        Dune::FieldVector<RF,dim> gradu_s(0.0);
+
         // loop over quadrature points
         auto intorder = intorderadd+quadrature_factor*order;
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -707,13 +723,11 @@ namespace Dune {
 
             // transform gradients of shape functions to real element
             jac = geo_inside.jacobianInverseTransposed(iplocal_s);
-            std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
             for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
-            std::vector<Dune::FieldVector<RF,dim> > tgradpsi_s(lfsv_s.size());
             for (size_type i=0; i<lfsv_s.size(); i++) jac.mv(gradpsi_s[i][0],tgradpsi_s[i]);
 
             // compute gradient of u
-            Dune::FieldVector<RF,dim> gradu_s(0.0);
+            gradu_s = 0.0;
             for (size_type i=0; i<lfsu_s.size(); i++)
               gradu_s.axpy(x_s(lfsu_s,i),tgradphi_s[i]);
 
@@ -810,6 +824,9 @@ namespace Dune {
         // penalty factor
         auto penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
 
+        // Initialize vectors outside for loop
+        std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
+
         // loop over quadrature points
         auto intorder = intorderadd+quadrature_factor*order;
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -857,7 +874,6 @@ namespace Dune {
 
             // transform gradients of shape functions to real element
             jac = geo_inside.jacobianInverseTransposed(iplocal_s);
-            std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
             for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
 
             // upwind
