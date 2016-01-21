@@ -146,7 +146,7 @@ namespace Dune {
 
       //! \brief pack data from user to message buffer - version with support for sending leaf ordering sizes
       template<typename MessageBuffer, typename Entity>
-      typename enable_if<
+      typename std::enable_if<
         CommunicationDescriptor::wrap_buffer && AlwaysTrue<Entity>::value // we can only support this if the buffer is wrapped
         >::type
       gather(MessageBuffer& buff, const Entity& e) const
@@ -173,7 +173,7 @@ namespace Dune {
 
       //! \brief pack data from user to message buffer - version without support for sending leaf ordering sizes
       template<typename MessageBuffer, typename Entity>
-      typename enable_if<
+      typename std::enable_if<
         !CommunicationDescriptor::wrap_buffer && AlwaysTrue<Entity>::value
         >::type
       gather(MessageBuffer& buff, const Entity& e) const
@@ -192,7 +192,7 @@ namespace Dune {
         This is the version with support for receiving leaf ordering sizes
       */
       template<typename MessageBuffer, typename Entity>
-      typename enable_if<
+      typename std::enable_if<
         CommunicationDescriptor::wrap_buffer && AlwaysTrue<Entity>::value // we require the buffer to be wrapped
         >::type
       scatter(MessageBuffer& buff, const Entity& e, size_type n)
@@ -236,7 +236,7 @@ namespace Dune {
         This is the version without support for receiving leaf ordering sizes
       */
       template<typename MessageBuffer, typename Entity>
-      typename enable_if<
+      typename std::enable_if<
         !CommunicationDescriptor::wrap_buffer && AlwaysTrue<Entity>::value
         >::type
       scatter(MessageBuffer& buff, const Entity& e, size_type n)
@@ -822,7 +822,7 @@ namespace Dune {
         EntityDataCommunicationDescriptor<bool>
         > BaseT;
 
-      static_assert((is_same<typename V::ElementType,bool>::value),
+      static_assert((std::is_same<typename V::ElementType,bool>::value),
                     "GhostDataHandle expects a vector of bool values");
 
     public:
@@ -1024,7 +1024,7 @@ namespace Dune {
         EntityDataCommunicationDescriptor<bool>
         > BaseT;
 
-      static_assert((is_same<typename V::ElementType,bool>::value),
+      static_assert((std::is_same<typename V::ElementType,bool>::value),
                     "SharedDOFDataHandle expects a vector of bool values");
 
     public:

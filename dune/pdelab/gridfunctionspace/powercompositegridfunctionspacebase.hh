@@ -104,8 +104,8 @@ namespace Dune {
       template<typename E>
       struct ConstraintsContainer
       {
-        typedef typename conditional<
-          is_same<
+        typedef typename std::conditional<
+          std::is_same<
             typename GridFunctionSpace::template Child<0>::type::template ConstraintsContainer<E>::Type,
             EmptyTransformation
             >::value,

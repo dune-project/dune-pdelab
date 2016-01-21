@@ -123,7 +123,7 @@ namespace Dune {
       // ********************************************************************************
 
       // tag dispatch switch on GFS tag for per-node functor - general version
-      template<typename E,typename Node, typename Tag, bool isLeafTag = IsBaseOf<LeafGridFunctionSpaceTag,Tag>::value >
+      template<typename E,typename Node, typename Tag, bool isLeafTag = std::is_base_of<LeafGridFunctionSpaceTag,Tag>::value >
       struct vector_descriptor_helper
       {
         // export backend type, as the actual TMP is in the parent reduction functor
@@ -213,7 +213,7 @@ namespace Dune {
         // on it.
         static const bool support_no_blocking =
           (Sibling::support_no_blocking &&
-          is_same<
+           std::is_same<
             typename Sibling::vector_type,
             typename Child::vector_type
            >::value);

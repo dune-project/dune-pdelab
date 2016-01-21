@@ -111,7 +111,7 @@ namespace Dune {
       {
 
         template<typename F, typename LFS, typename TreePath>
-        typename enable_if<F::isLeaf && LFS::isLeaf>::type
+        typename std::enable_if<F::isLeaf && LFS::isLeaf>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
           std::vector<typename XG::ElementType> xl(lfs.size());
@@ -126,7 +126,7 @@ namespace Dune {
 
         // interpolate PowerLFS from vector-valued function
         template<typename F, typename LFS, typename TreePath>
-        typename enable_if<F::isLeaf && F::Traits::dimRange == 1
+        typename std::enable_if<F::isLeaf && F::Traits::dimRange == 1
                            && (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
@@ -143,7 +143,7 @@ namespace Dune {
 
         // interpolate PowerLFS from vector-valued function
         template<typename F, typename LFS, typename TreePath>
-        typename enable_if<F::isLeaf && (F::Traits::dimRange > 1) &&
+        typename std::enable_if<F::isLeaf && (F::Traits::dimRange > 1) &&
                            (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {

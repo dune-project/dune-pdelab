@@ -336,8 +336,8 @@ namespace Dune {
 
 
       template<typename OrderingV, typename OrderingU, typename Pattern, typename Container>
-      typename enable_if<
-        !is_same<typename Pattern::SubPattern,void>::value &&
+      typename std::enable_if<
+        !std::is_same<typename Pattern::SubPattern,void>::value &&
       requires_pattern<Container>::value
       >::type
       allocate_matrix(const OrderingV& ordering_v,
@@ -368,8 +368,8 @@ namespace Dune {
       }
 
       template<typename OrderingV, typename OrderingU, typename Pattern, typename Container>
-      typename enable_if<
-        !is_same<typename Pattern::SubPattern,void>::value &&
+      typename std::enable_if<
+        !std::is_same<typename Pattern::SubPattern,void>::value &&
       !requires_pattern<Container>::value
       >::type
       allocate_matrix(const OrderingV& ordering_v,
@@ -388,8 +388,8 @@ namespace Dune {
       }
 
       template<typename OrderingV, typename OrderingU, typename Pattern, typename Container>
-      typename enable_if<
-        is_same<typename Pattern::SubPattern,void>::value
+      typename std::enable_if<
+        std::is_same<typename Pattern::SubPattern,void>::value
         >::type
       allocate_matrix(const OrderingV& ordering_v,
                       const OrderingU& ordering_u,

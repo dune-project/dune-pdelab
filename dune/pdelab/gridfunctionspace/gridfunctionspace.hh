@@ -202,8 +202,8 @@ namespace Dune {
       {
 
         //! \brief define Type as the Type of a container of E's
-        typedef typename conditional<
-          is_same<
+        typedef typename std::conditional<
+          std::is_same<
             CE,
             NoConstraints
             >::value,

@@ -67,7 +67,7 @@ namespace Dune {
           using SubOrdering = TypeTree::ChildForTreePath<Ordering,OrderingTP>;
 
           // Only descend in the GFS tree if the current ordering child consumes a tree index entry.
-          typedef typename conditional<
+          typedef typename std::conditional<
             SubOrdering::consume_tree_index,
             typename GFS::template Child<TypeTree::TreePathFront<GFSTP>::value>::type,
             GFS
@@ -80,7 +80,7 @@ namespace Dune {
             >::type SubOrderingTP;
 
           // Keep (synthesized ordering node) or drop (ordering with associated GFS) first entry of GFS TreePath.
-          typedef typename conditional<
+          typedef typename std::conditional<
             SubOrdering::consume_tree_index,
             typename TypeTree::TreePathPopFront<GFSTP>::type,
             GFSTP
@@ -431,7 +431,7 @@ namespace Dune {
          *       copy constructor.
          */
         template<typename TP>
-        explicit GridFunctionSubSpace(std::shared_ptr<const GridFunctionSubSpace<GFS,TP> > gfs_storage, typename enable_if<!is_same<TP,TreePath>::value,void*>::type = nullptr)
+        explicit GridFunctionSubSpace(std::shared_ptr<const GridFunctionSubSpace<GFS,TP> > gfs_storage, typename std::enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
           : NodeT(TypeTree::extract_child_storage(gfs_storage->baseGridFunctionSpace(),TreePath()))
           , FeatureT(gfs_storage->baseGridFunctionSpace())
           , _base_gfs(gfs_storage->baseGridFunctionSpaceStorage())
@@ -451,7 +451,7 @@ namespace Dune {
          *       copy constructor.
          */
         template<typename TP>
-        explicit GridFunctionSubSpace(const GridFunctionSubSpace<GFS,TP>& gfs, typename enable_if<!is_same<TP,TreePath>::value,void*>::type = nullptr)
+        explicit GridFunctionSubSpace(const GridFunctionSubSpace<GFS,TP>& gfs, typename std::enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
           : NodeT(TypeTree::extract_child_storage(gfs.baseGridFunctionSpace(),TreePath()))
           , FeatureT(gfs.baseGridFunctionSpace())
           , _base_gfs(gfs.baseGridFunctionSpaceStorage())

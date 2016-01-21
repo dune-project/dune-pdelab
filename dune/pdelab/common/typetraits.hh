@@ -28,9 +28,9 @@ namespace Dune {
     struct IsGridFunction<T, typename AlwaysVoid<typename T::ImplementationTag>::type >
     {
       typedef typename T::ImplementationTag A;
-      static const bool value = is_same<A, GridFunctionTag>::value ||
-        is_same<A, PowerGridFunctionTag>::value ||
-        is_same<A, CompositeGridFunctionTag>::value;
+      static const bool value = std::is_same<A, GridFunctionTag>::value ||
+        std::is_same<A, PowerGridFunctionTag>::value ||
+        std::is_same<A, CompositeGridFunctionTag>::value;
     };
 
   } // end namespace PDELab

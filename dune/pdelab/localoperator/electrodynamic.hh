@@ -81,7 +81,7 @@ namespace Dune {
         static_assert(dimR == 3 || dimR == 2,
                       "Works only in 2D or 3D");
         static_assert
-          ((Dune::is_same<typename EG::Geometry::ctype, DF>::value),
+          ((std::is_same<typename EG::Geometry::ctype, DF>::value),
            "Grids ctype and Finite Elements DomainFieldType must match");
 
         // select quadrature rule
@@ -201,7 +201,7 @@ namespace Dune {
         static_assert(dimR == 3 || dimR == 2,
                            "Works only in 2D or 3D");
         static_assert
-          ((Dune::is_same<typename EG::Geometry::ctype, DF>::value),
+          ((std::is_same<typename EG::Geometry::ctype, DF>::value),
            "Grids ctype and Finite Elements DomainFieldType must match");
 
         // select quadrature rule

@@ -213,8 +213,8 @@ namespace Dune{
           \boldsymbol{S}_{\boldsymbol{\tilde V}}\f$ is applied
           instead of the full transformation.  */
       template<typename X>
-      typename enable_if<
-        AlwaysTrue<X>::value && !is_same<
+      typename std::enable_if<
+        AlwaysTrue<X>::value && !std::is_same<
           CV,
           EmptyTransformation
           >::value
@@ -249,8 +249,8 @@ namespace Dune{
 
       // Disable forwardtransform for EmptyTransformation
       template<typename X>
-      typename enable_if<
-        AlwaysTrue<X>::value && is_same<
+      typename std::enable_if<
+        AlwaysTrue<X>::value && std::is_same<
           CV,
           EmptyTransformation
           >::value
@@ -264,8 +264,8 @@ namespace Dune{
           \f$\boldsymbol{S}^T_{\boldsymbol{\tilde U}}\f$ is applied
           instead of the full transformation.  */
       template<typename X>
-      typename enable_if<
-        AlwaysTrue<X>::value && !is_same<
+      typename std::enable_if<
+        AlwaysTrue<X>::value && !std::is_same<
           CV,
           EmptyTransformation
           >::value
@@ -298,8 +298,8 @@ namespace Dune{
 
       // disable backtransform for empty transformation
       template<typename X>
-      typename enable_if<
-        AlwaysTrue<X>::value && is_same<
+      typename std::enable_if<
+        AlwaysTrue<X>::value && std::is_same<
           CV,
           EmptyTransformation
           >::value
@@ -339,8 +339,8 @@ namespace Dune{
 
       //! Scatter local jacobian to global container.
       template<typename M, typename GCView>
-      typename enable_if<
-        AlwaysTrue<M>::value && !is_same<
+      typename std::enable_if<
+        AlwaysTrue<M>::value && !std::is_same<
           CV,
           EmptyTransformation
           >::value
@@ -405,8 +405,8 @@ namespace Dune{
 
       // specialization for empty constraints container
       template<typename M, typename GCView>
-      typename enable_if<
-        AlwaysTrue<M>::value && is_same<
+      typename std::enable_if<
+        AlwaysTrue<M>::value && std::is_same<
           CV,
           EmptyTransformation
           >::value
@@ -552,8 +552,8 @@ namespace Dune{
 
 
       template<typename Pattern, typename RI, typename CI>
-      typename enable_if<
-        is_same<RI,CI>::value
+      typename std::enable_if<
+        std::is_same<RI,CI>::value
         >::type
       add_diagonal_entry(Pattern& pattern, const RI& ri, const CI& ci) const
       {
@@ -562,8 +562,8 @@ namespace Dune{
       }
 
       template<typename Pattern, typename RI, typename CI>
-      typename enable_if<
-        !is_same<RI,CI>::value
+      typename std::enable_if<
+        !std::is_same<RI,CI>::value
         >::type
       add_diagonal_entry(Pattern& pattern, const RI& ri, const CI& ci) const
       {}
