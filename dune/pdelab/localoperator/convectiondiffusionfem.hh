@@ -185,9 +185,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSV::Traits::SizeType size_type;
 
-        // dimensions
-        const int dim = IG::dimension;
-
         // get cell entity
         auto inside_cell = ig.inside();
 
@@ -255,9 +252,6 @@ namespace Dune {
       {
         // size type
         typedef typename LFSV::Traits::SizeType size_type;
-
-        // dimensions
-        const int dim = IG::dimension;
 
         // get cell entity
         auto inside_cell = ig.inside();
@@ -365,10 +359,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType RangeType;
         typedef typename LFSU::Traits::SizeType size_type;
 
-        // dimensions
-        const int dim = EG::Geometry::mydimension;
-        auto intorder = 2*lfsu.finiteElement().localBasis().order();
-
         // get geometry
         auto geo = eg.geometry();
 
@@ -377,6 +367,7 @@ namespace Dune {
 
         // loop over quadrature points
         RF sum(0.0);
+        auto intorder = 2*lfsu.finiteElement().localBasis().order();
         for (const auto& ip : quadratureRule(geo,intorder))
           {
             // evaluate basis functions
@@ -664,9 +655,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType RangeType;
         typedef typename LFSU::Traits::SizeType size_type;
 
-        // dimensions
-        const int dim = EG::Geometry::mydimension;
-
         // get geometry
         auto geo = eg.geometry();
 
@@ -922,9 +910,6 @@ namespace Dune {
         // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-
-        // dimensions
-        const int dim = IG::dimension;
 
         // get inside cell entity
         auto inside_cell = ig.inside();
