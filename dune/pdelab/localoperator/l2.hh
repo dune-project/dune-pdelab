@@ -11,7 +11,10 @@
 #include<dune/geometry/referenceelements.hh>
 #include<dune/geometry/quadraturerules.hh>
 
-#include <dune/localfunctions/common/interfaceswitch.hh>
+#include<dune/localfunctions/common/interfaceswitch.hh>
+
+#include<dune/pdelab/common/quadraturerules.hh>
+#include<dune/pdelab/common/referenceelements.hh>
 
 #include"defaultimp.hh"
 #include"pattern.hh"
@@ -60,22 +63,15 @@ namespace Dune {
           > BasisSwitch;
 
         // domain and range field type
-        typedef typename BasisSwitch::DomainField DF;
         typedef typename BasisSwitch::RangeField RF;
         typedef typename BasisSwitch::Range RangeType;
-
         typedef typename LFSU::Traits::SizeType size_type;
 
-        // dimensions
-        const int dim = EG::Geometry::mydimension;
-
         // select quadrature rule
-        const auto& geometry = eg.geometry();
-        Dune::GeometryType gt = geometry.type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
+        auto geo = eg.geometry();
 
         // loop over quadrature points
-        for (const auto& qp : rule)
+        for (const auto& qp : quadratureRule(geo,intorder))
           {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
@@ -87,7 +83,7 @@ namespace Dune {
               u += RF(x(lfsu,i)*phi[i]);
 
             // u*phi_i
-            RF factor = _scaling * qp.weight() * geometry.integrationElement(qp.position());
+            auto factor = _scaling * qp.weight() * geo.integrationElement(qp.position());
             for (size_type i=0; i<lfsu.size(); i++)
               r.accumulate(lfsv,i, u*phi[i]*factor);
           }
@@ -107,28 +103,21 @@ namespace Dune {
           > BasisSwitch;
 
         // domain and range field type
-        typedef typename BasisSwitch::DomainField DF;
-        typedef typename BasisSwitch::RangeField RF;
         typedef typename BasisSwitch::Range RangeType;
         typedef typename LFSU::Traits::SizeType size_type;
 
-        // dimensions
-        const int dim = EG::Geometry::mydimension;
-
         // select quadrature rule
-        const auto& geometry = eg.geometry();
-        Dune::GeometryType gt = geometry.type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
+        auto geo = eg.geometry();
 
         // loop over quadrature points
-        for (const auto& qp : rule)
+        for (const auto& qp : quadratureRule(geo,intorder))
           {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
             FESwitch::basis(lfsu.finiteElement()).evaluateFunction(qp.position(),phi);
 
             // integrate phi_j*phi_i
-            RF factor = _scaling * qp.weight() * geometry.integrationElement(qp.position());
+            auto factor = _scaling * qp.weight() * geo.integrationElement(qp.position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
                 mat.accumulate(lfsv,i,lfsu,j, phi[j]*phi[i]*factor);
