@@ -107,10 +107,12 @@ namespace Dune {
         // pOrder is constant on all grid elements (h-adaptive scheme).
         const int pOrder = lfsu.finiteElement().localBasis().order();
 
-        RF sum(0.0);
+        // Initialize vectors outside for loop
         std::vector<RangeType> phi(lfsu.size());
+        Dune::FieldVector<RF,dim> gradu(0.0);
 
         // loop over quadrature points
+        RF sum(0.0);
         const int intorder = 2 * pOrder;
         for (const auto &qp : quadratureRule(geo,intorder))
           {
@@ -135,8 +137,7 @@ namespace Dune {
             /**********************/
             /* Evaluate Gradients */
             /**********************/
-
-            Dune::FieldVector<RF,dim> gradu(0.0);
+            gradu = 0.0;
             evalGradient( qp.position(), cell, lfsu, x, gradu );
 
 
@@ -215,6 +216,12 @@ namespace Dune {
         RF flux_jump_L2normSquare(0.0);
         RF uh_jump_L2normSquare(0.0);
 
+        // Declare vectors outside for loop
+        Dune::FieldVector<RF,dim> An_F_s;
+        Dune::FieldVector<RF,dim> An_F_n;
+        Dune::FieldVector<RF,dim> gradu_s;
+        Dune::FieldVector<RF,dim> gradu_n;
+
         // loop over quadrature points and integrate normal flux
         const int intorder = 2*pOrder_s;
         for (const auto &qp : quadratureRule(geo,intorder))
@@ -227,9 +234,7 @@ namespace Dune {
             A_s = param.A( cell_inside,  iplocal_s );
             A_n = param.A( cell_outside, iplocal_n );
 
-            Dune::FieldVector<RF,dim> An_F_s;
             A_s.mv(n_F,An_F_s);
-            Dune::FieldVector<RF,dim> An_F_n;
             A_n.mv(n_F,An_F_n);
 
             /**********************/
@@ -247,11 +252,9 @@ namespace Dune {
             /**********************/
             /* Evaluate Gradients */
             /**********************/
-
-            Dune::FieldVector<RF,dim> gradu_s(0.0);
+            gradu_s = 0.0;
             evalGradient( iplocal_s, cell_inside, lfsu_s, x_s, gradu_s );
-
-            Dune::FieldVector<RF,dim> gradu_n(0.0);
+            gradu_n = 0.0;
             evalGradient( iplocal_n, cell_outside, lfsu_n, x_n, gradu_n );
 
 
