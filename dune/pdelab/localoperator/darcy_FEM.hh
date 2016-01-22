@@ -5,6 +5,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/geometry/referenceelements.hh>
 
+#include <dune/pdelab/common/referenceelements.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
@@ -86,9 +87,12 @@ public:
     lview.read(xl);
     lview.unbind();
 
+    // get geometry
+    auto geo = e.geometry();
+
     // get Jacobian of geometry
     const typename Traits::ElementType::Geometry::JacobianInverseTransposed
-      JgeoIT(e.geometry().jacobianInverseTransposed(x));
+      JgeoIT(geo.jacobianInverseTransposed(x));
 
     // get local Jacobians/gradients of the shape functions
     std::vector<typename LBTraits::JacobianType> J(lfs.size());
@@ -106,11 +110,7 @@ public:
     }
 
     // multiply with permeability tensor
-    typedef typename Traits::DomainFieldType DF;
-    const int dim = LBTraits::dimDomain;
-    const Dune::FieldVector<DF,dim>
-      inside_cell_center_local = Dune::ReferenceElements<DF,dim>::
-      general(e.type()).position(0,0);
+    auto  inside_cell_center_local = referenceElement(geo).position(0,0);
     typename P::Traits::PermTensorType A(pp->A(e,inside_cell_center_local));
     A.mv(minusgrad,y);
   }
