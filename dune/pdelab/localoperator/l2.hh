@@ -70,11 +70,13 @@ namespace Dune {
         // select quadrature rule
         auto geo = eg.geometry();
 
+        // Initialize outside for loop
+        std::vector<RangeType> phi(lfsu.size());
+
         // loop over quadrature points
         for (const auto& qp : quadratureRule(geo,intorder))
           {
             // evaluate basis functions
-            std::vector<RangeType> phi(lfsu.size());
             FESwitch::basis(lfsu.finiteElement()).evaluateFunction(qp.position(),phi);
 
             // evaluate u
@@ -109,11 +111,13 @@ namespace Dune {
         // select quadrature rule
         auto geo = eg.geometry();
 
+        // Inititialize outside for loop
+        std::vector<RangeType> phi(lfsu.size());
+
         // loop over quadrature points
         for (const auto& qp : quadratureRule(geo,intorder))
           {
             // evaluate basis functions
-            std::vector<RangeType> phi(lfsu.size());
             FESwitch::basis(lfsu.finiteElement()).evaluateFunction(qp.position(),phi);
 
             // integrate phi_j*phi_i
