@@ -296,10 +296,16 @@ namespace Dune {
 
 
       template<typename RI, typename Block>
-      void clear_matrix_row_block(tags::field_matrix_1_any, Block& b, const RI& ri, int i)
+      void clear_matrix_row_block(tags::field_matrix_1_1, Block& b, const RI& ri, int i)
       {
         assert(i == -1);
         b = 0;
+      }
+
+      template<typename RI, typename Block>
+      void clear_matrix_row_block(tags::field_matrix_1_any, Block& b, const RI& ri, int i)
+      {
+        DUNE_THROW(Dune::Exception,"Should never get here!");
       }
 
       template<typename RI, typename Block>
