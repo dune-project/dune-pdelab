@@ -367,8 +367,7 @@ namespace Dune {
       {
         assert(i == -1);
         assert(j == -1);
-        for (std::size_t i = 0; i < b.rows; ++i)
-          b[i][i] = v;
+        b[0][0] = v;
       }
 
       template<typename T, typename RI, typename CI, typename Block>
@@ -383,19 +382,13 @@ namespace Dune {
       template<typename T, typename RI, typename CI, typename Block>
       void write_matrix_element_if_exists_to_block(const T& v, tags::field_matrix_1_m, Block& b, const RI& ri, const CI& ci, int i, int j)
       {
-        assert(i == -1);
-        assert(j == 0);
-        for (std::size_t i = 0; i < b.rows; ++i)
-          b[i][i] = v;
+        DUNE_THROW(Dune::Exception,"Should never get here!");
       }
 
       template<typename T, typename RI, typename CI, typename Block>
       void write_matrix_element_if_exists_to_block(const T& v, tags::field_matrix_n_1, Block& b, const RI& ri, const CI& ci, int i, int j)
       {
-        assert(i == 0);
-        assert(j == -1);
-        for (std::size_t i = 0; i < b.rows; ++i)
-          b[i][i] = v;
+        DUNE_THROW(Dune::Exception,"Should never get here!");
       }
 
       template<typename T, typename RI, typename CI, typename Block>
