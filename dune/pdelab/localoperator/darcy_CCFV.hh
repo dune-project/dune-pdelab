@@ -8,6 +8,7 @@
 #include<dune/geometry/referenceelements.hh>
 #include<dune/localfunctions/raviartthomas/raviartthomascube.hh>
 
+#include<dune/pdelab/common/referenceelements.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
@@ -131,127 +132,114 @@ public:
     : t(t_), pl(pl_), cachedindex(-1), time(0), gv(pl_.getGridView()), is(gv.indexSet()), storedcoeffs(is.size(0)),
       rt0vectors(rt0fe.localBasis().size())
   {
-    // iterate over grid and store values
-    typedef typename GV::Traits::template Codim<0>::template Partition<Dune::Interior_Partition>::Iterator ElementIterator;
-    //std::cout << "Allocated std::vector with size " << storedcoeffs.size() << std::endl;
-
     // compute RT0 coefficients for all interior cells
-    for (ElementIterator it = gv.template begin<0,Dune::Interior_Partition>();
-         it!=gv.template end<0,Dune::Interior_Partition>(); ++it)
+    for (const auto& element : elements(gv,Dune::Partitions::interior))
       {
         // get local cell number
-        int index = is.index(*it);
+        int index = is.index(element);
+
+        // get geometry
+        auto geo = element.geometry();
 
         // cell geometry
-        const Dune::FieldVector<DF,dim>
-          inside_cell_center_local = Dune::ReferenceElements<DF,dim>::
-          general(it->type()).position(0,0);
-        Dune::FieldVector<DF,dim>
-          inside_cell_center_global = it->geometry().global(inside_cell_center_local);
+        auto ref_el = referenceElement(geo);
+        auto inside_cell_center_local = ref_el.position(0,0);
+        auto inside_cell_center_global = geo.global(inside_cell_center_local);
 
         // absolute permeability in primary cell
-        typename T::Traits::PermTensorType tensor_inside;
-        tensor_inside = t.A(*it,inside_cell_center_local);
+        auto tensor_inside = t.A(element,inside_cell_center_local);
 
         // pressure evaluation
         typename PL::Traits::RangeType pl_inside;
-        pl.evaluate(*it,inside_cell_center_local,pl_inside);
+        pl.evaluate(element,inside_cell_center_local,pl_inside);
 
         // for coefficient computation
         RF vn[2*dim];    // normal velocities
-        Dune::FieldMatrix<typename Traits::DomainFieldType,dim,dim>
-          B = it->geometry().jacobianInverseTransposed(inside_cell_center_local); // the transformation. Assume it is linear
-        RF determinant = B.determinant();
+        auto B = geo.jacobianInverseTransposed(inside_cell_center_local); // the transformation. Assume it is linear
+        auto determinant = B.determinant();
 
         // loop over cell neighbors
-        IntersectionIterator endit = pl.getGridView().iend(*it);
-        for (IntersectionIterator iit = pl.getGridView().ibegin(*it); iit!=endit; ++iit)
+        for (const auto& intersection : intersections(pl.getGridView(),element))
           {
             // set to zero for processor boundary
-            vn[iit->indexInInside()] = 0.0;
+            vn[intersection.indexInInside()] = 0.0;
 
             // face geometry
-            const Dune::FieldVector<DF,dim-1>&
-              face_local = Dune::ReferenceElements<DF,dim-1>::general(iit->geometry().type()).position(0,0);
+            auto face_local = referenceElement(intersection.geometry()).position(0,0);
 
             // interior face
-            if (iit->neighbor())
+            if (intersection.neighbor())
               {
-                auto outside_cell = iit->outside();
-                const Dune::FieldVector<DF,dim>
-                  outside_cell_center_local = Dune::ReferenceElements<DF,dim>::
-                  general(outside_cell.type()).position(0,0);
-                Dune::FieldVector<DF,dim>
-                  outside_cell_center_global = outside_cell.geometry().global(outside_cell_center_local);
+                auto outside_cell = intersection.outside();
+                auto outside_cell_center_local = referenceElement(outside_cell.geometry()).position(0,0);
+                auto outside_cell_center_global = outside_cell.geometry().global(outside_cell_center_local);
 
                 // distance of cell centers
-                Dune::FieldVector<DF,dim> d(outside_cell_center_global);
+                auto d(outside_cell_center_global);
                 d -= inside_cell_center_global;
-                RF distance = d.two_norm();
+                auto distance = d.two_norm();
 
                 // absolute permeability
-                typename T::Traits::PermTensorType tensor_outside;
-                tensor_outside = t.A(outside_cell,outside_cell_center_local);
-                const Dune::FieldVector<DF,dim> n_F = iit->centerUnitOuterNormal();
+                auto tensor_outside = t.A(outside_cell,outside_cell_center_local);
+                auto n_F = intersection.centerUnitOuterNormal();
                 Dune::FieldVector<RF,dim> An_F;
                 tensor_inside.mv(n_F,An_F);
-                RF k_inside = n_F*An_F;
+                auto k_inside = n_F*An_F;
                 tensor_outside.mv(n_F,An_F);
-                RF k_outside = n_F*An_F;
-                RF k_avg = 2.0/(1.0/(k_inside+1E-30) + 1.0/(k_outside+1E-30));
+                auto k_outside = n_F*An_F;
+                auto k_avg = 2.0/(1.0/(k_inside+1E-30) + 1.0/(k_outside+1E-30));
 
                 // pressure evaluation
                 typename PL::Traits::RangeType pl_outside;
                 pl.evaluate(outside_cell,outside_cell_center_local,pl_outside);
 
                 // set coefficient
-                vn[iit->indexInInside()] = k_avg*(pl_inside-pl_outside)/distance;
+                vn[intersection.indexInInside()] = k_avg*(pl_inside-pl_outside)/distance;
               }
 
             // boundary face
-            if (iit->boundary())
+            if (intersection.boundary())
               {
                 // distance of cell center to boundary
-                Dune::FieldVector<DF,dim> d = iit->geometry().global(face_local);
+                auto d = intersection.geometry().global(face_local);
                 d -= inside_cell_center_global;
-                RF distance = d.two_norm();
+                auto distance = d.two_norm();
 
                 // evaluate boundary condition type
-                BCType bctype;
-                bctype = t.bctype(*iit,face_local);
+                auto bctype = t.bctype(intersection,face_local);
 
                 // liquid phase Dirichlet boundary
                 if (bctype==Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet)
                   {
-                    Dune::FieldVector<DF,dim> iplocal_s = iit->geometryInInside().global(face_local);
-                    RF g_l = t.g(iit->inside(),iplocal_s);
-                    const Dune::FieldVector<DF,dim> n_F = iit->centerUnitOuterNormal();
+                    auto iplocal_s = intersection.geometryInInside().global(face_local);
+                    auto g_l = t.g(intersection.inside(),iplocal_s);
+                    auto n_F = intersection.centerUnitOuterNormal();
                     Dune::FieldVector<RF,dim> An_F;
                     tensor_inside.mv(n_F,An_F);
-                    RF k_inside = n_F*An_F;
-                    vn[iit->indexInInside()] = k_inside * (pl_inside-g_l)/distance;
+                    auto k_inside = n_F*An_F;
+                    vn[intersection.indexInInside()] = k_inside * (pl_inside-g_l)/distance;
                   }
 
                 // liquid phase Neumann boundary
                 if (bctype==Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann)
                   {
-                    typename T::Traits::RangeFieldType j = t.j(*iit,face_local);
-                    vn[iit->indexInInside()] = j;
+                    auto j = t.j(intersection,face_local);
+                    vn[intersection.indexInInside()] = j;
                   }
               }
 
             // compute coefficient
-            Dune::FieldVector<DF,dim> vstar=iit->centerUnitOuterNormal(); // normal on tranformef element
-            vstar *= vn[iit->indexInInside()];
+            auto vstar=intersection.centerUnitOuterNormal(); // normal on tranformef element
+            vstar *= vn[intersection.indexInInside()];
             Dune::FieldVector<RF,dim> normalhat(0); // normal on reference element
-            if (iit->indexInInside()%2==0)
-              normalhat[iit->indexInInside()/2] = -1.0;
+            if (intersection.indexInInside()%2==0)
+              normalhat[intersection.indexInInside()/2] = -1.0;
             else
-              normalhat[iit->indexInInside()/2] =  1.0;
+              normalhat[intersection.indexInInside()/2] =  1.0;
             Dune::FieldVector<DF,dim> vstarhat(0);
             B.umtv(vstar,vstarhat); // Piola backward transformation
             vstarhat *= determinant;
-            storedcoeffs[index][iit->indexInInside()] = vstarhat*normalhat;
+            storedcoeffs[index][intersection.indexInInside()] = vstarhat*normalhat;
           }
       }
 
