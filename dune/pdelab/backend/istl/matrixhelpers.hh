@@ -296,6 +296,13 @@ namespace Dune {
 
 
       template<typename RI, typename Block>
+      void clear_matrix_row_block(tags::field_matrix_1_1, Block& b, const RI& ri, int i)
+      {
+        assert(i == -1);
+        b = 0;
+      }
+
+      template<typename RI, typename Block>
       void clear_matrix_row_block(tags::field_matrix_1_any, Block& b, const RI& ri, int i)
       {
         DUNE_THROW(Dune::Exception,"Should never get here!");
@@ -364,7 +371,9 @@ namespace Dune {
       template<typename T, typename RI, typename CI, typename Block>
       void write_matrix_element_if_exists_to_block(const T& v, tags::field_matrix_1_1, Block& b, const RI& ri, const CI& ci, int i, int j)
       {
-        DUNE_THROW(Dune::Exception,"Should never get here!");
+        assert(i == -1);
+        assert(j == -1);
+        b[0][0] = v;
       }
 
       template<typename T, typename RI, typename CI, typename Block>
