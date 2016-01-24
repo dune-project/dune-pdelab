@@ -50,12 +50,12 @@ namespace Dune{
       //! The type of the jacobian matrix
       typedef typename LA::Traits::Jacobian Jacobian;
       typedef typename Jacobian::ElementType JacobianElement;
-      typedef typename Jacobian::template AliasedLocalView<LFSVCache,LFSUCache> JacobianView;
+      typedef typename Jacobian::template LocalView<LFSVCache,LFSUCache> JacobianView;
 
       //! The type of the solution vector
       typedef typename LA::Traits::Solution Solution;
       typedef typename Solution::ElementType SolutionElement;
-      typedef typename Solution::template ConstAliasedLocalView<LFSUCache> SolutionView;
+      typedef typename Solution::template ConstLocalView<LFSUCache> SolutionView;
 
       /**
          \brief Constructor
@@ -65,7 +65,11 @@ namespace Dune{
       */
       DefaultLocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
         : local_assembler(local_assembler_),
-          lop(local_assembler_.localOperator())
+          lop(local_assembler_.localOperator()),
+          al_view(al,1.0),
+          al_sn_view(al_sn,1.0),
+          al_ns_view(al_ns,1.0),
+          al_nn_view(al_nn,1.0)
       {}
 
       //! copy contructor
@@ -90,7 +94,11 @@ namespace Dune{
         global_a_ss_view(other.global_a_ss_view),
         global_a_sn_view(other.global_a_sn_view),
         global_a_ns_view(other.global_a_ns_view),
-        global_a_nn_view(other.global_a_nn_view)
+        global_a_nn_view(other.global_a_nn_view),
+        al_view(al,1.0),
+        al_sn_view(al_sn,1.0),
+        al_ns_view(al_ns,1.0),
+        al_nn_view(al_nn,1.0)
       { }
 
       //! Query methods for the global grid assembler
@@ -146,7 +154,9 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void onBindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache){
         global_s_s_view.bind(lfsu_cache);
+        xl.resize(lfsu_cache.size());
         global_a_ss_view.bind(lfsv_cache,lfsu_cache);
+        al.assign(lfsv_cache.size(),lfsu_cache.size(),0.0);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -155,9 +165,13 @@ namespace Dune{
                               const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
         global_s_n_view.bind(lfsu_n_cache);
+        xn.resize(lfsu_n_cache.size());
         global_a_sn_view.bind(lfsv_s_cache,lfsu_n_cache);
+        al_sn.assign(lfsv_s_cache.size(),lfsu_n_cache.size(),0.0);
         global_a_ns_view.bind(lfsv_n_cache,lfsu_s_cache);
+        al_ns.assign(lfsv_n_cache.size(),lfsu_s_cache.size(),0.0);
         global_a_nn_view.bind(lfsv_n_cache,lfsu_n_cache);
+        al_nn.assign(lfsv_n_cache.size(),lfsu_n_cache.size(),0.0);
       }
 
       //! @}
@@ -167,7 +181,7 @@ namespace Dune{
       //! @{
       template<typename EG, typename LFSUC, typename LFSVC>
       void onUnbindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache){
-        global_a_ss_view.unbind();
+        local_assembler.scatter_jacobian(al,global_a_ss_view,false);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -175,9 +189,9 @@ namespace Dune{
                                 const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                                 const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
-        global_a_sn_view.unbind();
-        global_a_ns_view.unbind();
-        global_a_nn_view.unbind();
+        local_assembler.scatter_jacobian(al_sn,global_a_sn_view,false);
+        local_assembler.scatter_jacobian(al_ns,global_a_ns_view,false);
+        local_assembler.scatter_jacobian(al_nn,global_a_nn_view,false);
       }
 
       //! @}
@@ -186,9 +200,11 @@ namespace Dune{
       //! @{
       template<typename LFSUC>
       void loadCoefficientsLFSUInside(const LFSUC & lfsu_cache){
+        global_s_s_view.read(xl);
       }
       template<typename LFSUC>
       void loadCoefficientsLFSUOutside(const LFSUC & lfsu_n_cache){
+        global_s_n_view.read(xn);
       }
       template<typename LFSUC>
       void loadCoefficientsLFSUCoupling(const LFSUC & lfsu_c_cache)
@@ -230,10 +246,10 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
-        global_a_ss_view.setWeight(local_assembler.weight());
+        al_view.setWeight(local_assembler.weight());
         HP_TIMER_START(jacobian_volume);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
-          jacobian_volume(lop,eg,lfsu_cache.localFunctionSpace(),global_s_s_view,lfsv_cache.localFunctionSpace(),global_a_ss_view);
+          jacobian_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),al_view);
         HP_TIMER_STOP(jacobian_volume);
       }
 
@@ -241,27 +257,24 @@ namespace Dune{
       void assembleUVSkeleton(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                               const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
-        global_a_ss_view.setWeight(local_assembler.weight());
-        global_a_sn_view.setWeight(local_assembler.weight());
-        global_a_ns_view.setWeight(local_assembler.weight());
-        global_a_nn_view.setWeight(local_assembler.weight());
+        al_view.setWeight(local_assembler.weight());
+        al_sn_view.setWeight(local_assembler.weight());
+        al_ns_view.setWeight(local_assembler.weight());
+        al_nn_view.setWeight(local_assembler.weight());
+
         HP_TIMER_START(jacobian_skeleton);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
-          jacobian_skeleton(lop,ig,
-                            lfsu_s_cache.localFunctionSpace(),global_s_s_view,lfsv_s_cache.localFunctionSpace(),
-                            lfsu_n_cache.localFunctionSpace(),global_s_n_view,lfsv_n_cache.localFunctionSpace(),
-                            global_a_ss_view, global_a_sn_view,
-                            global_a_ns_view, global_a_nn_view);
+          jacobian_skeleton(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),lfsu_n_cache.localFunctionSpace(),xn,lfsv_n_cache.localFunctionSpace(),al_view,al_sn_view,al_ns_view,al_nn_view);
         HP_TIMER_STOP(jacobian_skeleton);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
-        global_a_ss_view.setWeight(local_assembler.weight());
+        al_view.setWeight(local_assembler.weight());
         HP_TIMER_START(jacobian_boundary);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
-          jacobian_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),global_s_s_view,lfsv_s_cache.localFunctionSpace(),global_a_ss_view);
+          jacobian_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),al_view);
         HP_TIMER_STOP(jacobian_boundary);
       }
 
@@ -282,9 +295,9 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
-        global_a_ss_view.setWeight(local_assembler.weight());
+        al_view.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
-          jacobian_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),global_s_s_view,lfsv_cache.localFunctionSpace(),global_a_ss_view);
+          jacobian_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),al_view);
       }
 
       //! @}
@@ -321,6 +334,19 @@ namespace Dune{
         Dune::PDELab::DiagonalLocalMatrix<JacobianElement>,
         Dune::PDELab::LocalMatrix<JacobianElement>
         >::type JacobianMatrix;
+
+      SolutionVector xl;
+      SolutionVector xn;
+
+      JacobianMatrix al;
+      JacobianMatrix al_sn;
+      JacobianMatrix al_ns;
+      JacobianMatrix al_nn;
+
+      typename JacobianMatrix::WeightedAccumulationView al_view;
+      typename JacobianMatrix::WeightedAccumulationView al_sn_view;
+      typename JacobianMatrix::WeightedAccumulationView al_ns_view;
+      typename JacobianMatrix::WeightedAccumulationView al_nn_view;
 
       //! @}
 

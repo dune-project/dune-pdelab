@@ -98,9 +98,10 @@ namespace Dune{
       template<class LocalAssemblerEngine>
       void assemble(LocalAssemblerEngine & assembler_engine) const
       {
-        typedef LFSIndexCache<LFSU,CU> LFSUCache;
+        const bool fast = false;
+        typedef LFSIndexCache<LFSU,CU,fast> LFSUCache;
 
-        typedef LFSIndexCache<LFSV,CV> LFSVCache;
+        typedef LFSIndexCache<LFSV,CV,fast> LFSVCache;
 
         const bool needs_constraints_caching = assembler_engine.needsConstraintsCaching(cu,cv);
 
@@ -138,7 +139,7 @@ namespace Dune{
               continue;
 
             // Bind local test function space to element
-            lfsv.bind( element );
+            lfsv.bind(element,std::integral_constant<bool,fast>{});
             lfsv_cache.update();
 
             // Notify assembler engine about bind
@@ -148,7 +149,7 @@ namespace Dune{
             assembler_engine.assembleVVolume(eg,lfsv_cache);
 
             // Bind local trial function space to element
-            lfsu.bind( element );
+            lfsu.bind(element,std::integral_constant<bool,fast>{});
             lfsu_cache.update();
 
             // Notify assembler engine about bind
@@ -195,7 +196,7 @@ namespace Dune{
                             if (visit_face)
                               {
                                 // Bind local test space to neighbor element
-                                lfsvn.bind(outside_element);
+                                lfsvn.bind(outside_element,std::integral_constant<bool,fast>{});
                                 lfsvn_cache.update();
 
                                 // Notify assembler engine about binds
@@ -207,7 +208,7 @@ namespace Dune{
                                 if(require_uv_skeleton){
 
                                   // Bind local trial space to neighbor element
-                                  lfsun.bind(outside_element);
+                                  lfsun.bind(outside_element,std::integral_constant<bool,fast>{});
                                   lfsun_cache.update();
 
                                   // Notify assembler engine about binds
