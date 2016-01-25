@@ -77,16 +77,18 @@ namespace Dune {
         // get geometry
         auto geo = eg.geometry();
 
+        // Initialize vectors outside for loop
+        std::vector<JacobianType> js(lfsu.child(0).size());
+        std::vector<FieldVector<RF,dim> > gradphi(lfsu.child(0).size());
+
         // loop over quadrature points
         for (const auto& qp : quadratureRule(geo,intorder_))
         {
           // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
-          std::vector<JacobianType> js(lfsu.child(0).size());
           lfsu.child(0).finiteElement().localBasis().evaluateJacobian(qp.position(),js);
 
           // transform gradient to real element
           auto jac = geo.jacobianInverseTransposed(qp.position());
-          std::vector<FieldVector<RF,dim> > gradphi(lfsu.child(0).size());
           for (size_type i=0; i<lfsu.child(0).size(); i++)
           {
             gradphi[i] = 0.0;
@@ -149,16 +151,19 @@ namespace Dune {
         // get geometry
         auto geo = eg.geometry();
 
+        // Initialize vectors outside for loop
+        std::vector<JacobianType> js(lfsu_hat.child(0).size());
+        std::vector<FieldVector<RF,dim> > gradphi(lfsu_hat.child(0).size());
+        Dune::FieldVector<RF,dim> gradu(0.0);
+
         // loop over quadrature points
         for (const auto& qp : quadratureRule(geo,intorder_))
         {
           // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
-          std::vector<JacobianType> js(lfsu_hat.child(0).size());
           lfsu_hat.child(0).finiteElement().localBasis().evaluateJacobian(qp.position(),js);
 
           // transform gradient to real element
           auto jac = geo.jacobianInverseTransposed(qp.position());
-          std::vector<FieldVector<RF,dim> > gradphi(lfsu_hat.child(0).size());
           for (size_type i=0; i<lfsu_hat.child(0).size(); i++)
           {
             gradphi[i] = 0.0;
@@ -177,7 +182,7 @@ namespace Dune {
             const LFSU & lfsu = lfsu_hat.child(d);
 
             // compute gradient of u
-            Dune::FieldVector<RF,dim> gradu(0.0);
+            gradu = 0.0;
             for (size_t i=0; i<lfsu.size(); i++)
             {
               gradu.axpy(x(lfsu,i),gradphi[i]);
@@ -225,15 +230,18 @@ namespace Dune {
         // select quadrature rule
         auto geo = eg.geometry();
 
+        // Initialize vectors outside for loop
+        std::vector<RangeType> phi(lfsv_hat.child(0).size());
+        FieldVector<RF,dim> y(0.0);
+
         // loop over quadrature points
         for (const auto& qp : quadratureRule(geo,intorder_))
         {
           // evaluate shape functions
-          std::vector<RangeType> phi(lfsv_hat.child(0).size());
           lfsv_hat.child(0).finiteElement().localBasis().evaluateFunction(qp.position(),phi);
 
           // evaluate right hand side parameter function
-          FieldVector<RF,dim> y(0.0);
+          y = 0.0;
           param_.f(eg.entity(),qp.position(),y);
 
           // weight
@@ -270,6 +278,10 @@ namespace Dune {
         auto geo = ig.geometry();
         auto geo_in_inside = ig.geometryInInside();
 
+        // Initialize vectors outside for loop
+        std::vector<RangeType> phi(lfsv_hat.child(0).size());
+        FieldVector<RF,dim> y(0.0);
+
         // loop over quadrature points
         for (const auto& qp : quadratureRule(geo,intorder_))
         {
@@ -282,11 +294,10 @@ namespace Dune {
             continue;
 
           // evaluate shape functions
-          std::vector<RangeType> phi(lfsv_hat.child(0).size());
           lfsv_hat.child(0).finiteElement().localBasis().evaluateFunction(local,phi);
 
           // evaluate surface force
-          FieldVector<RF,dim> y(0.0);
+          y = 0.0;
           // currently we only implement homogeneous Neumann (e.g. Stress) BC
           // param_.g(eg.entity(),qp.position(),y);
 
