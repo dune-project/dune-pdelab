@@ -63,13 +63,9 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        // select the two components
+        // define types
         typedef typename LFSU::template Child<0>::Type VelocitySpace;
-        const VelocitySpace& velocityspace = lfsu.template child<0>();
         typedef typename LFSU::template Child<1>::Type PressureSpace;
-        const PressureSpace& pressurespace = lfsu.template child<1>();
-
-        // domain and range field type
         typedef typename VelocitySpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename VelocitySpace::Traits::FiniteElementType::
@@ -80,6 +76,11 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType VelocityRangeType;
         typedef typename PressureSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType PressureRangeType;
+
+        // select the two components
+        using namespace TypeTree::Indices;
+        const auto& velocityspace = child(lfsu,_0);
+        const auto& pressurespace = lfsu.template child<1>();
 
         // dimensions
         const int dim = EG::Geometry::mydimension;
@@ -183,7 +184,8 @@ namespace Dune {
       {
         // select the two components
         typedef typename LFSV::template Child<1>::Type PressureSpace;
-        const PressureSpace& pressurespace = lfsv.template child<1>();
+        using namespace TypeTree::Indices;
+        const auto& pressurespace = child(lfsv,_1);
 
         // domain and range field type
         typedef typename PressureSpace::Traits::FiniteElementType::
@@ -222,7 +224,8 @@ namespace Dune {
       {
         // select the two components
         typedef typename LFSV::template Child<0>::Type VelocitySpace;
-        const VelocitySpace& velocityspace = lfsv.template child<0>();
+        using namespace TypeTree::Indices;
+        const auto& velocityspace = child(lfsv,_0);
 
         // domain and range field type
         typedef typename VelocitySpace::Traits::FiniteElementType::
