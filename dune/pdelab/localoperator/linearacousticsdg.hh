@@ -7,6 +7,9 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/geometry/referenceelements.hh>
+
+#include<dune/pdelab/common/quadraturerules.hh>
+#include<dune/pdelab/common/referenceelements.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
@@ -195,13 +198,7 @@ namespace Dune {
         // get types
         typedef typename LFSV::template Child<0>::Type DGSpace;
         typedef typename DGSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename DGSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
-        typedef typename DGSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType JacobianType;
         typedef typename DGSpace::Traits::SizeType size_type;
 
         // paranoia check number of number of components
@@ -212,28 +209,25 @@ namespace Dune {
         using namespace TypeTree::Indices;
         const auto& dgspace = child(lfsv,_0);
 
-        auto geometry = eg.geometry();
+        // get geometry
+        auto geo = eg.geometry();
 
-        // select quadrature rule
-        const int order = dgspace.finiteElement().localBasis().order();
-        const int intorder = overintegration+2*order;
-        Dune::GeometryType gt = geometry.type();
+        // evaluate speed of sound (assumed constant per element)
+        auto ref_el = referenceElement(geo);
+        auto localcenter = ref_el.position(0,0);
+        auto c2 = param.c(eg.entity(),localcenter);
+        c2 = c2*c2; // square it
 
         // transformation
         typename EG::Geometry::JacobianInverseTransposed jac;
 
-        // evaluate speed of sound (assumed constant per element)
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
-        RF c2 = param.c(eg.entity(),localcenter);
-        c2 = c2*c2; // square it
-
-        // std::cout << "alpha_volume center=" << geometry.center() << std::endl;
-
         // loop over quadrature points
-        for (const auto& ip : Dune::QuadratureRules<DF,dim>::rule(gt,intorder))
+        const int order = dgspace.finiteElement().localBasis().order();
+        const int intorder = overintegration+2*order;
+        for (const auto& ip : quadratureRule(geo,intorder))
           {
             // evaluate basis functions
-            const std::vector<RangeType>& phi = cache[order].evaluateFunction(ip.position(),dgspace.finiteElement().localBasis());
+            auto& phi = cache[order].evaluateFunction(ip.position(),dgspace.finiteElement().localBasis());
 
             // evaluate u
             Dune::FieldVector<RF,dim+1> u(0.0);
@@ -243,16 +237,16 @@ namespace Dune {
             // std::cout << "  u at " << ip.position() << " : " << u << std::endl;
 
             // evaluate gradient of basis functions (we assume Galerkin method lfsu=lfsv)
-            const std::vector<JacobianType>& js = cache[order].evaluateJacobian(ip.position(),dgspace.finiteElement().localBasis());
+            auto& js = cache[order].evaluateJacobian(ip.position(),dgspace.finiteElement().localBasis());
 
             // compute global gradients
-            jac = geometry.jacobianInverseTransposed(ip.position());
+            jac = geo.jacobianInverseTransposed(ip.position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(dgspace.size());
             for (size_type i=0; i<dgspace.size(); i++)
               jac.mv(js[i][0],gradphi[i]);
 
             // integrate
-            RF factor = ip.weight() * geometry.integrationElement(ip.position());
+            auto factor = ip.weight() * geo.integrationElement(ip.position());
             for (size_type k=0; k<dgspace.size(); k++) // loop over all vector-valued (!) basis functions (with identical components)
               {
                 // component i=0
@@ -282,8 +276,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename DGSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
         typedef typename DGSpace::Traits::SizeType size_type;
 
         // get local function space that is identical for all components
@@ -298,13 +290,22 @@ namespace Dune {
         auto inside_cell = ig.inside();
         auto outside_cell = ig.outside();
 
+        // get geometries
+        auto geo = ig.geometry();
+        auto geo_inside = inside_cell.geometry();
+        auto geo_outside = outside_cell.geometry();
+
+        // get geometry of intersection in local coordinates of inside_cell and outside_cell
+        auto geo_in_inside = ig.geometryInInside();
+        auto geo_in_outside = ig.geometryInOutside();
+
         // evaluate speed of sound (assumed constant per element)
-        const Dune::FieldVector<DF,dim>&
-          inside_local = Dune::ReferenceElements<DF,dim>::general(inside_cell.type()).position(0,0);
-        const Dune::FieldVector<DF,dim>&
-          outside_local = Dune::ReferenceElements<DF,dim>::general(outside_cell.type()).position(0,0);
-        RF c_s = param.c(inside_cell,inside_local);
-        RF c_n = param.c(outside_cell,outside_local);
+        auto ref_el_inside = referenceElement(geo_inside);
+        auto ref_el_outside = referenceElement(geo_outside);
+        auto inside_local = ref_el_inside.position(0,0);
+        auto outside_local = ref_el_outside.position(0,0);
+        auto c_s = param.c(inside_cell,inside_local);
+        auto c_n = param.c(outside_cell,outside_local);
 
         // compute A+ (outgoing waves)
         Dune::FieldMatrix<DF,dim+1,dim+1> RT;
@@ -331,26 +332,22 @@ namespace Dune {
           for (int j=0; j<=dim; j++)
             A_minus_n[i][j] = -c_n*alpha[i]*beta[j];
 
-        auto geometry = ig.geometry();
-
-        // select quadrature rule
-        const int order_s = dgspace_s.finiteElement().localBasis().order();
-        const int order_n = dgspace_n.finiteElement().localBasis().order();
-        const int intorder = overintegration+1+2*std::max(order_s,order_n);
-        Dune::GeometryType gtface = geometry.type();
 
         // std::cout << "alpha_skeleton center=" << geometry.center() << std::endl;
 
         // loop over quadrature points
-        for (const auto& ip : Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder))
+        const int order_s = dgspace_s.finiteElement().localBasis().order();
+        const int order_n = dgspace_n.finiteElement().localBasis().order();
+        const int intorder = overintegration+1+2*std::max(order_s,order_n);
+        for (const auto& ip : quadratureRule(geo,intorder))
           {
             // position of quadrature point in local coordinates of elements
-            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(ip.position());
-            Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(ip.position());
+            auto iplocal_s = geo_in_inside.global(ip.position());
+            auto iplocal_n = geo_in_outside.global(ip.position());
 
             // evaluate basis functions
-            const std::vector<RangeType>& phi_s = cache[order_s].evaluateFunction(iplocal_s,dgspace_s.finiteElement().localBasis());
-            const std::vector<RangeType>& phi_n = cache[order_n].evaluateFunction(iplocal_n,dgspace_n.finiteElement().localBasis());
+            auto& phi_s = cache[order_s].evaluateFunction(iplocal_s,dgspace_s.finiteElement().localBasis());
+            auto& phi_n = cache[order_n].evaluateFunction(iplocal_n,dgspace_n.finiteElement().localBasis());
 
             // evaluate u from inside and outside
             Dune::FieldVector<RF,dim+1> u_s(0.0);
@@ -370,7 +367,7 @@ namespace Dune {
             // std::cout << "  after A_minus*u_n " << f << std::endl;
 
             // integrate
-            RF factor = ip.weight() * geometry.integrationElement(ip.position());
+            auto factor = ip.weight() * geo.integrationElement(ip.position());
             for (size_type k=0; k<dgspace_s.size(); k++) // loop over all vector-valued (!) basis functions (with identical components)
               for (size_type i=0; i<=dim; i++) // loop over all components
             r_s.accumulate(lfsv_s.child(i),k, f[i]*phi_s[k]*factor);
@@ -400,8 +397,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename DGSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
         typedef typename DGSpace::Traits::SizeType size_type;
 
         // get local function space that is identical for all components
@@ -411,12 +406,20 @@ namespace Dune {
         // normal: assume faces are planar
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
 
-        auto cell = ig.inside();
+        // inside cell
+        auto cell_inside = ig.inside();
+
+       // get geometries
+        auto geo = ig.geometry();
+        auto geo_inside = cell_inside.geometry();
+
+        // get geometry of intersection in local coordinates of inside_cell
+        auto geo_in_inside = ig.geometryInInside();
 
         // evaluate speed of sound (assumed constant per element)
-        const Dune::FieldVector<DF,dim>&
-            inside_local = Dune::ReferenceElements<DF,dim>::general(cell.type()).position(0,0);
-        RF c_s = param.c(cell,inside_local);
+        auto ref_el_inside = referenceElement(geo_inside);
+        auto inside_local = ref_el_inside.position(0,0);
+        auto c_s = param.c(cell_inside,inside_local);
 
         // compute A+ (outgoing waves)
         Dune::FieldMatrix<DF,dim+1,dim+1> RT;
@@ -443,23 +446,16 @@ namespace Dune {
           for (int j=0; j<=dim; j++)
             A_minus_n[i][j] = -c_s*alpha[i]*beta[j];
 
-        auto geometry = ig.geometry();
-
-        // select quadrature rule
+        // loop over quadrature points
         const int order_s = dgspace_s.finiteElement().localBasis().order();
         const int intorder = overintegration+1+2*order_s;
-        Dune::GeometryType gtface = geometry.type();
-
-        // std::cout << "alpha_boundary center=" << geometry.center() << std::endl;
-
-        // loop over quadrature points
-        for (const auto& ip : Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder))
+        for (const auto& ip : quadratureRule(geo,intorder))
           {
             // position of quadrature point in local coordinates of elements
-            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(ip.position());
+            auto iplocal_s = geo_in_inside.global(ip.position());
 
             // evaluate basis functions
-            const std::vector<RangeType>& phi_s = cache[order_s].evaluateFunction(iplocal_s,dgspace_s.finiteElement().localBasis());
+            auto& phi_s = cache[order_s].evaluateFunction(iplocal_s,dgspace_s.finiteElement().localBasis());
 
             // evaluate u from inside and outside
             Dune::FieldVector<RF,dim+1> u_s(0.0);
@@ -480,7 +476,7 @@ namespace Dune {
             // std::cout << "  after A_minus*u_n " << f << std::endl;
 
             // integrate
-            RF factor = ip.weight() * geometry.integrationElement(ip.position());
+            auto factor = ip.weight() * geo.integrationElement(ip.position());
             for (size_type k=0; k<dgspace_s.size(); k++) // loop over all vector-valued (!) basis functions (with identical components)
               for (size_type i=0; i<=dim; i++) // loop over all components
             r_s.accumulate(lfsv_s.child(i),k, f[i]*phi_s[k]*factor);
@@ -497,36 +493,28 @@ namespace Dune {
       {
         // get types
         typedef typename LFSV::template Child<0>::Type DGSpace;
-        typedef typename DGSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename DGSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename DGSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
         typedef typename DGSpace::Traits::SizeType size_type;
 
         // get local function space that is identical for all components
         using namespace TypeTree::Indices;
         const DGSpace& dgspace = child(lfsv,_0);
 
-        auto geometry = eg.geometry();
-
-        // select quadrature rule
-        const int order_s = dgspace.finiteElement().localBasis().order();
-        const int intorder = overintegration+2*order_s;
-        Dune::GeometryType gt = geometry.type();
+        // get geometries
+        auto geo = eg.geometry();
 
         // loop over quadrature points
-        for (const auto& ip : Dune::QuadratureRules<DF,dim>::rule(gt,intorder))
+        const int order_s = dgspace.finiteElement().localBasis().order();
+        const int intorder = overintegration+2*order_s;
+        for (const auto& ip : quadratureRule(geo,intorder))
           {
             // evaluate right hand side
-            Dune::FieldVector<RF,dim+1> q(param.q(eg.entity(),ip.position()));
+            auto q(param.q(eg.entity(),ip.position()));
 
             // evaluate basis functions
-            const std::vector<RangeType>& phi = cache[order_s].evaluateFunction(ip.position(),dgspace.finiteElement().localBasis());
+            auto& phi = cache[order_s].evaluateFunction(ip.position(),dgspace.finiteElement().localBasis());
 
             // integrate
-            RF factor = ip.weight() * geometry.integrationElement(ip.position());
+            auto factor = ip.weight() * geo.integrationElement(ip.position());
             for (size_type k=0; k<=dim; k++) // for all components
               for (size_type i=0; i<dgspace.size(); i++) // for all test functions of this component
             r.accumulate(lfsv.child(k),i, - q[k]*phi[i]*factor);
@@ -618,29 +606,23 @@ namespace Dune {
         // get types
         typedef typename LFSV::template Child<0>::Type DGSpace;
         typedef typename DGSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename DGSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
         typedef typename DGSpace::Traits::SizeType size_type;
 
         // get local function space that is identical for all components
         using namespace TypeTree::Indices;
         const DGSpace& dgspace = child(lfsv,_0);
 
-        auto geometry = eg.geometry();
-
-        // select quadrature rule
-        const int order = dgspace.finiteElement().localBasis().order();
-        const int intorder = overintegration+2*order;
-        Dune::GeometryType gt = geometry.type();
+        // get geometry
+        auto geo = eg.geometry();
 
         // loop over quadrature points
-        for (const auto& ip : Dune::QuadratureRules<DF,dim>::rule(gt,intorder))
+        const int order = dgspace.finiteElement().localBasis().order();
+        const int intorder = overintegration+2*order;
+        for (const auto& ip : quadratureRule(geo,intorder))
           {
             // evaluate basis functions
-            const std::vector<RangeType>& phi = cache[order].evaluateFunction(ip.position(),dgspace.finiteElement().localBasis());
+            auto& phi = cache[order].evaluateFunction(ip.position(),dgspace.finiteElement().localBasis());
 
             // evaluate u
             Dune::FieldVector<RF,dim+1> u(0.0);
@@ -649,7 +631,7 @@ namespace Dune {
             u[k] += x(lfsv.child(k),j)*phi[j];
 
             // integrate
-            RF factor = ip.weight() * geometry.integrationElement(ip.position());
+            RF factor = ip.weight() * geo.integrationElement(ip.position());
             for (size_type k=0; k<=dim; k++) // for all components
               for (size_type i=0; i<dgspace.size(); i++) // for all test functions of this component
             r.accumulate(lfsv.child(k),i, u[k]*phi[i]*factor);
@@ -663,33 +645,25 @@ namespace Dune {
       {
         // get types
         typedef typename LFSV::template Child<0>::Type DGSpace;
-        typedef typename DGSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename DGSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename DGSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
         typedef typename DGSpace::Traits::SizeType size_type;
 
         // get local function space that is identical for all components
         using namespace TypeTree::Indices;
         const DGSpace& dgspace = child(lfsv,_0);
 
-        auto geometry = eg.geometry();
-
-        // select quadrature rule
-        const int order = dgspace.finiteElement().localBasis().order();
-        const int intorder = overintegration+2*order;
-        Dune::GeometryType gt = geometry.type();
+        // get geometry
+        auto geo = eg.geometry();
 
         // loop over quadrature points
-        for (const auto& ip : Dune::QuadratureRules<DF,dim>::rule(gt,intorder))
+        const int order = dgspace.finiteElement().localBasis().order();
+        const int intorder = overintegration+2*order;
+        for (const auto& ip : quadratureRule(geo,intorder))
           {
             // evaluate basis functions
-            const std::vector<RangeType>& phi = cache[order].evaluateFunction(ip.position(),dgspace.finiteElement().localBasis());
+            auto& phi = cache[order].evaluateFunction(ip.position(),dgspace.finiteElement().localBasis());
 
             // integrate
-            RF factor = ip.weight() * geometry.integrationElement(ip.position());
+            auto factor = ip.weight() * geo.integrationElement(ip.position());
             for (size_type k=0; k<=dim; k++) // for all components
               for (size_type i=0; i<dgspace.size(); i++) // for all test functions of this component
                 for (size_type j=0; j<dgspace.size(); j++) // for all ansatz functions of this component
