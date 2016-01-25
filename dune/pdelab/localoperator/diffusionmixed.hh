@@ -104,16 +104,24 @@ namespace Dune {
         auto tensor = param.A(eg.entity(),localcenter);
         tensor.invert(); // need iverse for mixed method
 
+        // Declare vectors outside for loop
+        std::vector<VelocityRangeType> vbasis(velocityspace.size());
+        std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
+        VelocityRangeType sigma;
+        VelocityRangeType Kinvsigma;
+        std::vector<VelocityJacobianType> vjacbasis(velocityspace.size());
+        std::vector<PressureRangeType> pbasis(pressurespace.size());
+        std::vector<RF> divergence(velocityspace.size(),0.0);
+
+
         // \sigma\cdot v term
         // loop over quadrature points
         for (const auto& ip : quadratureRule(geo,qorder_v))
           {
             // evaluate shape functions at ip (this is a Galerkin method)
-            std::vector<VelocityRangeType> vbasis(velocityspace.size());
             velocityspace.finiteElement().localBasis().evaluateFunction(ip.position(),vbasis);
 
             // transform basis vectors
-            std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
             for (std::size_t i=0; i<velocityspace.size(); i++)
               {
                 vtransformedbasis[i] = 0.0;
@@ -121,13 +129,11 @@ namespace Dune {
               }
 
             // compute sigma
-            VelocityRangeType sigma;
             sigma=0.0;
             for (std::size_t i=0; i<velocityspace.size(); i++)
               sigma.axpy(x(velocityspace,i),vtransformedbasis[i]);
 
             // K^{-1} * sigma
-            VelocityRangeType Kinvsigma;
             tensor.mv(sigma,Kinvsigma);
 
             // integrate  (K^{-1}*sigma) * phi_i
@@ -141,9 +147,7 @@ namespace Dune {
         for (const auto& ip : quadratureRule(geo,qorder_p))
           {
             // evaluate shape functions at ip (this is a Galerkin method)
-            std::vector<VelocityJacobianType> vbasis(velocityspace.size());
-            velocityspace.finiteElement().localBasis().evaluateJacobian(ip.position(),vbasis);
-            std::vector<PressureRangeType> pbasis(pressurespace.size());
+            velocityspace.finiteElement().localBasis().evaluateJacobian(ip.position(),vjacbasis);
             pressurespace.finiteElement().localBasis().evaluateFunction(ip.position(),pbasis);
 
             // compute u
@@ -161,10 +165,11 @@ namespace Dune {
               r.accumulate(pressurespace,i,-a0value*u*pbasis[i]*factor);
 
             // compute divergence of velocity basis functions on reference element
-            std::vector<RF> divergence(velocityspace.size(),0.0);
-            for (std::size_t i=0; i<velocityspace.size(); i++)
+            for (std::size_t i=0; i<velocityspace.size(); i++){
+              divergence[i] = 0;
               for (int j=0; j<dim; j++)
-                divergence[i] += vbasis[i][j][j];
+                divergence[i] += vjacbasis[i][j][j];
+            }
 
             // integrate sigma * phi_i
             for (std::size_t i=0; i<velocityspace.size(); i++)
@@ -197,11 +202,13 @@ namespace Dune {
         // get geometry
         auto geo = eg.geometry();
 
+        // Declare vector outside for loop
+        std::vector<PressureRangeType> pbasis(pressurespace.size());
+
         // loop over quadrature points
         for (const auto& ip : quadratureRule(geo,qorder_p))
           {
             // evaluate shape functions
-            std::vector<PressureRangeType> pbasis(pressurespace.size());
             pressurespace.finiteElement().localBasis().evaluateFunction(ip.position(),pbasis);
 
             // evaluate right hand side parameter function
@@ -248,6 +255,11 @@ namespace Dune {
         jac.invert();
         auto det = geo_inside.integrationElement(pos);
 
+        // Declare vectors outside for loop
+        std::vector<VelocityRangeType> vbasis(velocityspace.size());
+        std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
+
+
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : quadratureRule(geo,qorder_v))
           {
@@ -262,11 +274,9 @@ namespace Dune {
             auto local = geo_in_inside.global(ip.position());
 
             // evaluate test shape functions
-            std::vector<VelocityRangeType> vbasis(velocityspace.size());
             velocityspace.finiteElement().localBasis().evaluateFunction(local,vbasis);
 
             // transform basis vectors
-            std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
             for (std::size_t i=0; i<velocityspace.size(); i++)
               {
                 vtransformedbasis[i] = 0.0;
