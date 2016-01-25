@@ -11,6 +11,9 @@
 #include <dune/geometry/referenceelements.hh>
 #include <dune/geometry/quadraturerules.hh>
 
+#include<dune/pdelab/common/quadraturerules.hh>
+#include<dune/pdelab/common/referenceelements.hh>
+
 #include "defaultimp.hh"
 #include "pattern.hh"
 #include "flags.hh"
@@ -60,13 +63,10 @@ namespace Dune {
         // extract local function spaces
         typedef typename LFSU::template Child<0>::Type LFSU_SUB;
 
-        // domain and range field type
-        typedef typename LFSU_SUB::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        // define types
         typedef typename M::value_type RF;
         typedef typename LFSU_SUB::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
-
         typedef typename LFSU_SUB::Traits::SizeType size_type;
 
         // dimensions
@@ -74,21 +74,18 @@ namespace Dune {
         const int dimw = EG::Geometry::coorddimension;
         static_assert(dim == dimw, "doesn't work on manifolds");
 
-        // select quadrature rule
-        const auto& geometry = eg.geometry();
-        GeometryType gt = geometry.type();
-        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(gt,intorder_);
+        // get geometry
+        auto geo = eg.geometry();
 
         // loop over quadrature points
-        for (const auto& qp : rule)
+        for (const auto& qp : quadratureRule(geo,intorder_))
         {
           // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
           std::vector<JacobianType> js(lfsu.child(0).size());
           lfsu.child(0).finiteElement().localBasis().evaluateJacobian(qp.position(),js);
 
           // transform gradient to real element
-          const typename EG::Geometry::JacobianInverseTransposed jac
-            = geometry.jacobianInverseTransposed(qp.position());
+          auto jac = geo.jacobianInverseTransposed(qp.position());
           std::vector<FieldVector<RF,dim> > gradphi(lfsu.child(0).size());
           for (size_type i=0; i<lfsu.child(0).size(); i++)
           {
@@ -97,11 +94,11 @@ namespace Dune {
           }
 
           // material parameters
-          RF mu = param_.mu(eg.entity(),qp.position());
-          RF lambda = param_.lambda(eg.entity(),qp.position());
+          auto mu = param_.mu(eg.entity(),qp.position());
+          auto lambda = param_.lambda(eg.entity(),qp.position());
 
           // geometric weight
-          RF factor = qp.weight() * geometry.integrationElement(qp.position());
+          auto factor = qp.weight() * geo.integrationElement(qp.position());
 
           for(int d=0; d<dim; ++d)
           {
@@ -138,13 +135,10 @@ namespace Dune {
         // extract local function spaces
         typedef typename LFSU_HAT::template Child<0>::Type LFSU;
 
-        // domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        // define types
         typedef typename R::value_type RF;
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
-
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
@@ -152,21 +146,18 @@ namespace Dune {
         const int dimw = EG::Geometry::coorddimension;
         static_assert(dim == dimw, "doesn't work on manifolds");
 
-        // select quadrature rule
-        const auto& geometry = eg.geometry();
-        GeometryType gt = geometry.type();
-        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(gt,intorder_);
+        // get geometry
+        auto geo = eg.geometry();
 
         // loop over quadrature points
-        for (const auto& qp : rule)
+        for (const auto& qp : quadratureRule(geo,intorder_))
         {
           // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
           std::vector<JacobianType> js(lfsu_hat.child(0).size());
           lfsu_hat.child(0).finiteElement().localBasis().evaluateJacobian(qp.position(),js);
 
           // transform gradient to real element
-          const typename EG::Geometry::JacobianInverseTransposed jac
-            = geometry.jacobianInverseTransposed(qp.position());
+          auto jac = geo.jacobianInverseTransposed(qp.position());
           std::vector<FieldVector<RF,dim> > gradphi(lfsu_hat.child(0).size());
           for (size_type i=0; i<lfsu_hat.child(0).size(); i++)
           {
@@ -175,11 +166,11 @@ namespace Dune {
           }
 
           // material parameters
-          RF mu = param_.mu(eg.entity(),qp.position());
-          RF lambda = param_.lambda(eg.entity(),qp.position());
+          auto mu = param_.mu(eg.entity(),qp.position());
+          auto lambda = param_.lambda(eg.entity(),qp.position());
 
           // geometric weight
-          RF factor = qp.weight() * geometry.integrationElement(qp.position());
+          auto factor = qp.weight() * geo.integrationElement(qp.position());
 
           for(int d=0; d<dim; ++d)
           {
@@ -222,25 +213,20 @@ namespace Dune {
         // extract local function spaces
         typedef typename LFSV_HAT::template Child<0>::Type LFSV;
 
-        // domain and range field type
-        typedef typename LFSV::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        // define types
         typedef typename R::value_type RF;
         typedef typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RangeType;
-
         typedef typename LFSV::Traits::SizeType size_type;
 
         // dimensions
         const int dim = EG::Entity::dimension;
 
         // select quadrature rule
-        const auto& geometry = eg.geometry();
-        GeometryType gt = geometry.type();
-        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(gt,intorder_);
+        auto geo = eg.geometry();
 
         // loop over quadrature points
-        for (const auto& qp : rule)
+        for (const auto& qp : quadratureRule(geo,intorder_))
         {
           // evaluate shape functions
           std::vector<RangeType> phi(lfsv_hat.child(0).size());
@@ -251,11 +237,11 @@ namespace Dune {
           param_.f(eg.entity(),qp.position(),y);
 
           // weight
-          RF factor = qp.weight() * geometry.integrationElement(qp.position());
+          auto factor = qp.weight() * geo.integrationElement(qp.position());
 
           for(int d=0; d<dim; ++d)
           {
-            const LFSV & lfsv = lfsv_hat.child(d);
+            const auto& lfsv = lfsv_hat.child(d);
 
             // integrate f
             for (size_type i=0; i<lfsv.size(); i++)
@@ -271,29 +257,24 @@ namespace Dune {
         // extract local function spaces
         typedef typename LFSV_HAT::template Child<0>::Type LFSV;
 
-        // domain and range field type
-        typedef typename LFSV::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        // define types
         typedef typename R::value_type RF;
         typedef typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RangeType;
-
         typedef typename LFSV::Traits::SizeType size_type;
 
         // dimensions
         const int dim = IG::Entity::dimension;
 
-        // select quadrature rule
-        const auto& geometryInInside = ig.geometryInInside();
-        const auto& geometry = ig.geometry();
-        GeometryType gt = ig.geometry().type();
-        const QuadratureRule<DF,dim-1>& rule = QuadratureRules<DF,dim-1>::rule(gt,intorder_);
+        // get geometry
+        auto geo = ig.geometry();
+        auto geo_in_inside = ig.geometryInInside();
 
         // loop over quadrature points
-        for (const auto& qp : rule)
+        for (const auto& qp : quadratureRule(geo,intorder_))
         {
           // position of quadrature point in local coordinates of element
-          Dune::FieldVector<DF,dim> local = geometryInInside.global(qp.position());
+          auto local = geo_in_inside.global(qp.position());
 
           // evaluate boundary condition type
           // skip rest if we are on Dirichlet boundary
@@ -310,11 +291,11 @@ namespace Dune {
           // param_.g(eg.entity(),qp.position(),y);
 
           // weight
-          RF factor = qp.weight() * geometry.integrationElement(qp.position());
+          auto factor = qp.weight() * geo.integrationElement(qp.position());
 
           for(int d=0; d<dim; ++d)
           {
-            const LFSV & lfsv = lfsv_hat.child(d);
+            const auto& lfsv = lfsv_hat.child(d);
 
             // integrate f
             for (size_type i=0; i<lfsv.size(); i++)
