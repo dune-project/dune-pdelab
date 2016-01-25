@@ -273,11 +273,17 @@ namespace Dune {
         for (size_type i=0; i<lfsu.size(); i++)
           w[i] = param.w(eg.entity(),localcenter,x(lfsu,i));
 
+        // Initialize vectors outside for loop
+        std::vector<RangeType> phi(lfsu.size());
+        std::vector<JacobianType> js(lfsu.size());
+        std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
+        Dune::FieldVector<RF,dim> vgradu(0.0);
+        Dune::FieldVector<RF,dim> Dvgradu(0.0);
+
         // loop over quadrature points
         for (const auto& ip : quadratureRule(geo,intorder))
           {
             // evaluate basis functions
-            std::vector<RangeType> phi(lfsu.size());
             lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
 
             // evaluate u
@@ -292,12 +298,10 @@ namespace Dune {
             auto q = param.q(eg.entity(),ip.position(),u);
 
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
-            std::vector<JacobianType> js(lfsu.size());
             lfsu.finiteElement().localBasis().evaluateJacobian(ip.position(),js);
 
             // transform gradients of shape functions to real element
             auto jac = geo.jacobianInverseTransposed(ip.position());
-            std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               {
                 gradphi[i] = 0.0;
@@ -305,13 +309,13 @@ namespace Dune {
               }
 
             // v(u) compute gradient of u
-            Dune::FieldVector<RF,dim> vgradu(0.0);
+            vgradu = 0.0;
             for (size_type i=0; i<lfsu.size(); i++)
               vgradu.axpy(w[i],gradphi[i]);
             vgradu *= param.v(eg.entity(),ip.position(),u);
 
             // compute D * v(u) * gradient of u
-            Dune::FieldVector<RF,dim> Dvgradu(0.0);
+            Dvgradu = 0.0;
             tensor.umv(vgradu,Dvgradu);
 
             // integrate (K grad u)*grad phi_i + a_0*u*phi_i
@@ -349,9 +353,11 @@ namespace Dune {
         auto local_face_center = ref_el_in_inside.position(0,0);
         auto face_center_in_element = geo_in_inside.global(local_face_center);
         std::vector<typename T::Traits::RangeFieldType> w(lfsu_s.size());
-
         for (size_type i=0; i<lfsu_s.size(); i++)
           w[i] = param.w(cell_inside,face_center_in_element,x_s(lfsu_s,i));
+
+        // Initialize vectors outside for loop
+        std::vector<RangeType> phi(lfsv_s.size());
 
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -365,7 +371,6 @@ namespace Dune {
             auto local = geo_in_inside.global(ip.position());
 
             // evaluate test shape functions
-            std::vector<RangeType> phi(lfsv_s.size());
             lfsv_s.finiteElement().localBasis().evaluateFunction(local,phi);
 
             // evaluate u
