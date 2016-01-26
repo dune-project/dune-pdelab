@@ -2,6 +2,7 @@ install(FILES const.hh
               division.hh
               inverse.hh
               memberadaptor.hh
+              lambdaadapter.hh
               minus.hh
               product.hh
               scalarscaled.hh
