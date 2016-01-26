@@ -14,24 +14,10 @@
 namespace Dune {
   namespace PDELab {
 
-    namespace impl {
-
-      template<int i>
-      struct warn_on_deprecated_nonoverlapping_mode_parameter
-      {
-
-        warn_on_deprecated_nonoverlapping_mode_parameter() DUNE_DEPRECATED_MSG(
-"the nonoverlapping_mode parameter on the GridOperator has been deprecated and will be removed after PDELab 2.4."
-"The correct mode is now automatically deduced from the EntitySet of the function space.")
-        {}
-
-      };
-
-      template<>
-      struct warn_on_deprecated_nonoverlapping_mode_parameter<-1>
-      {};
-
-    }
+    //==================================================================//
+    // TODO What about the struct: warn_on_deprecated_nonoverlapping_mode_parameter ?
+    //      See file 'gridoperator.hh' for instance.
+    //==================================================================//
 
     /** Fast D(iscontinuous) G(alerkin) grid operator implementation.
 
@@ -51,7 +37,6 @@ namespace Dune {
              typename CV=Dune::PDELab::EmptyTransformation,
              int nonoverlapping_mode = -1>
     class FastDGGridOperator
-      : public impl::warn_on_deprecated_nonoverlapping_mode_parameter<nonoverlapping_mode>
     {
     public:
 
