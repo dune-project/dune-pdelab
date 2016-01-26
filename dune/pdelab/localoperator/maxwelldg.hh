@@ -364,7 +364,8 @@ namespace Dune {
 
         //std::cout << "alpha_volume center=" << eg.geometry().center() << std::endl;
 
-        // intermediate results
+        // Initialize vectors outside for loop
+        Dune::FieldVector<RF,dim*2> u(0.0);
         std::vector<Dune::FieldVector<RF,dim> > gradphi(dgspace.size());
 
         // loop over quadrature points
@@ -377,10 +378,11 @@ namespace Dune {
               (qp.position(), dgspace.finiteElement().localBasis());
 
             // evaluate state vector u
-            Dune::FieldVector<RF,dim*2> u(0.0);
-            for (size_type k=0; k<dim*2; k++) // for all components
+            for (size_type k=0; k<dim*2; k++){ // for all components
+              u[k] = 0.0;
               for (size_type j=0; j<dgspace.size(); j++) // for all basis functions
                 u[k] += x(lfsv.child(k),j)*phi[j];
+            }
             //std::cout << "  u at " << qp.position() << " : " << u << std::endl;
 
             // evaluate gradient of basis functions (we assume Galerkin method lfsu=lfsv)
@@ -501,6 +503,10 @@ namespace Dune {
         R_n.invert();
         Aminus_n.rightmultiply(R_n);
 
+        // Initialize vectors outside for loop
+        Dune::FieldVector<RF,dim*2> u_s(0.0);
+        Dune::FieldVector<RF,dim*2> u_n(0.0);
+        Dune::FieldVector<RF,dim*2> f(0.0);
 
         // std::cout << "alpha_skeleton center=" << ig.geometry().center() << std::endl;
 
@@ -519,17 +525,19 @@ namespace Dune {
             const auto& phi_n = cache[order_n].evaluateFunction(iplocal_n,dgspace_n.finiteElement().localBasis());
 
             // evaluate u from inside and outside
-            Dune::FieldVector<RF,dim*2> u_s(0.0);
-            for (size_type i=0; i<dim*2; i++) // for all components
+            for (size_type i=0; i<dim*2; i++){ // for all components
+              u_s[i] = 0.0;
               for (size_type k=0; k<dgspace_s.size(); k++) // for all basis functions
                 u_s[i] += x_s(lfsv_s.child(i),k)*phi_s[k];
-            Dune::FieldVector<RF,dim*2> u_n(0.0);
-            for (size_type i=0; i<dim*2; i++) // for all components
+            }
+            for (size_type i=0; i<dim*2; i++){ // for all components
+              u_n[i] = 0.0;
               for (size_type k=0; k<dgspace_n.size(); k++) // for all basis functions
                 u_n[i] += x_n(lfsv_n.child(i),k)*phi_n[k];
+            }
 
             // compute numerical flux at integration point
-            Dune::FieldVector<RF,dim*2> f(0.0);
+            f = 0.0;
             Aplus_s.umv(u_s,f);
             // std::cout << "  after A_plus*u_s  " << f << std::endl;
             Aminus_n.umv(u_n,f);
@@ -615,6 +623,11 @@ namespace Dune {
         R_n.invert();
         Aminus_n.rightmultiply(R_n);
 
+        // Initialize vectors outside for loop
+        Dune::FieldVector<RF,dim*2> u_s(0.0);
+        Dune::FieldVector<RF,dim*2> u_n;
+        Dune::FieldVector<RF,dim*2> f(0.0);
+
         // std::cout << "alpha_boundary center=" << ig.geometry().center() << std::endl;
 
         // loop over quadrature points
@@ -630,18 +643,19 @@ namespace Dune {
               (iplocal_s,dgspace_s.finiteElement().localBasis());
 
             // evaluate u from inside and outside
-            Dune::FieldVector<RF,dim*2> u_s(0.0);
-            for (size_type i=0; i<dim*2; i++) // for all components
+            for (size_type i=0; i<dim*2; i++){ // for all components
+              u_s[i] = 0.0;
               for (size_type k=0; k<dgspace_s.size(); k++) // for all basis functions
                 u_s[i] += x_s(lfsv_s.child(i),k)*phi_s[k];
+            }
             // std::cout << "  u_s " << u_s << std::endl;
 
             // evaluate boundary condition
-            Dune::FieldVector<RF,dim*2> u_n(param.g(ig.intersection(),qp.position(),u_s));
+            u_n = (param.g(ig.intersection(),qp.position(),u_s));
             // std::cout << "  u_n " << u_n << " bc: " << param.g(ig.intersection(),qp.position(),u_s) << std::endl;
 
             // compute numerical flux at integration point
-            Dune::FieldVector<RF,dim*2> f(0.0);
+            f = 0.0;
             Aplus_s.umv(u_s,f);
             // std::cout << "  after A_plus*u_s  " << f << std::endl;
             Aminus_n.umv(u_n,f);
@@ -791,6 +805,9 @@ namespace Dune {
         // get geometry
         auto geo = eg.geometry();
 
+        // Initialize vectors outside for loop
+        Dune::FieldVector<RF,dim*2> u(0.0);
+
         // loop over quadrature points
         const int order = dgspace.finiteElement().localBasis().order();
         const int intorder = overintegration+2*order;
@@ -800,10 +817,11 @@ namespace Dune {
             const auto& phi = cache[order].evaluateFunction(qp.position(),dgspace.finiteElement().localBasis());
 
             // evaluate u
-            Dune::FieldVector<RF,dim*2> u(0.0);
-            for (size_type k=0; k<dim*2; k++) // for all components
+            for (size_type k=0; k<dim*2; k++){ // for all components
+              u[k] = 0.0;
               for (size_type j=0; j<dgspace.size(); j++) // for all basis functions
                 u[k] += x(lfsv.child(k),j)*phi[j];
+            }
 
             // integrate
             auto factor = qp.weight() * geo.integrationElement(qp.position());
