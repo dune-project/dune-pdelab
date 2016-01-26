@@ -264,6 +264,27 @@ namespace Dune{
         doPostProcessing_ = v;
       }
 
+      template<typename GFSV, typename GC, typename C>
+      void set_trivial_rows(const GFSV& gfsv, GC& globalcontainer, const C& c) const
+      {
+        typedef typename C::const_iterator global_row_iterator;
+        for (global_row_iterator cit = c.begin(); cit != c.end(); ++cit)
+          globalcontainer.clear_row_block(cit->first,1);
+      }
+
+      template<typename GFSV, typename GC>
+      void set_trivial_rows(const GFSV& gfsv, GC& globalcontainer, const EmptyTransformation& c) const
+      {
+      }
+
+      template<typename GFSV, typename GC>
+      void handle_dirichlet_constraints(const GFSV& gfsv, GC& globalcontainer) const
+      {
+        globalcontainer.flush();
+        set_trivial_rows(gfsv,globalcontainer,*this->pconstraintsv);
+        globalcontainer.finalize();
+      }
+
     private:
 
       //! The local operator
