@@ -347,7 +347,8 @@ namespace Dune {
                       "need exactly dim*2 components!");
 
         // get local function space that is identical for all components
-        const auto& dgspace = lfsv.template child<0>();
+        using namespace TypeTree::Indices;
+        const auto& dgspace = child(lfsv,_0);
 
         // select quadrature rule
         const int order = dgspace.finiteElement().localBasis().order();
@@ -444,8 +445,9 @@ namespace Dune {
         using size_type = typename DGSpace::Traits::SizeType;
 
         // get local function space that is identical for all components
-        const auto& dgspace_s = lfsv_s.template child<0>();
-        const auto& dgspace_n = lfsv_n.template child<0>();
+        using namespace TypeTree::Indices;
+        const auto& dgspace_s = child(lfsv_s,_0);
+        const auto& dgspace_n = child(lfsv_n,_0);
 
         // normal: assume faces are planar
         const auto& n_F = ig.centerUnitOuterNormal();
@@ -560,7 +562,8 @@ namespace Dune {
         using size_type = typename DGSpace::Traits::SizeType;
 
         // get local function space that is identical for all components
-        const auto& dgspace_s = lfsv_s.template child<0>();
+        using namespace TypeTree::Indices;
+        const auto& dgspace_s = child(lfsv_s,_0);
 
         // normal: assume faces are planar
         const auto& n_F = ig.centerUnitOuterNormal();
@@ -653,7 +656,8 @@ namespace Dune {
         using size_type = typename DGSpace::Traits::SizeType;
 
         // get local function space that is identical for all components
-        const auto& dgspace = lfsv.template child<0>();
+        using namespace TypeTree::Indices;
+        const auto& dgspace = child(lfsv,_0);
 
         // select quadrature rule
         const int order_s = dgspace.finiteElement().localBasis().order();
@@ -771,7 +775,8 @@ namespace Dune {
         using size_type = typename DGSpace::Traits::SizeType;
 
         // get local function space that is identical for all components
-        const auto& dgspace = lfsv.template child<0>();
+        using namespace TypeTree::Indices;
+        const auto& dgspace = child(lfsv,_0);
 
         // select quadrature rule
         const int order = dgspace.finiteElement().localBasis().order();
@@ -812,7 +817,8 @@ namespace Dune {
         using size_type = typename DGSpace::Traits::SizeType;
 
         // get local function space that is identical for all components
-        const auto& dgspace = lfsv.template child<0>();
+        using namespace TypeTree::Indices;
+        const auto& dgspace = child(lfsv,_0);
 
         // select quadrature rule
         const int order = dgspace.finiteElement().localBasis().order();
