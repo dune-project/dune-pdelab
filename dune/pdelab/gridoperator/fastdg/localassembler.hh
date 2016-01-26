@@ -131,7 +131,7 @@ namespace Dune{
       {}
 
       //! join state from other local assembler
-      void join(DefaultLocalAssembler &other)
+      void join(FastDGLocalAssembler &other)
       {
         lop->join(*other.lop);
       }

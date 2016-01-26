@@ -75,7 +75,7 @@ namespace Dune {
 
       //! The local assembler type
       typedef FastDGLocalAssembler<
-        GridOperator,
+        FastDGGridOperator,
         LOP,
         GFSU::Traits::EntitySet::Partitions::partitionIterator() == InteriorBorder_Partition
         > LocalAssembler;
@@ -83,8 +83,8 @@ namespace Dune {
       // Fix this as soon as the default Partitions are constexpr
       typedef typename conditional<
         GFSU::Traits::EntitySet::Partitions::partitionIterator() == InteriorBorder_Partition,
-        NonOverlappingBorderDOFExchanger<GridOperator>,
-        OverlappingBorderDOFExchanger<GridOperator>
+        NonOverlappingBorderDOFExchanger<FastDGGridOperator>,
+        OverlappingBorderDOFExchanger<FastDGGridOperator>
         >::type BorderDOFExchanger;
 
       //! The grid operator traits
