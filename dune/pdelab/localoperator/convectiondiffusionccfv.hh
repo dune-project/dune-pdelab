@@ -45,7 +45,7 @@ namespace Dune {
       public LocalOperatorDefaultFlags,
       public InstationaryLocalOperatorDefaultMethods<typename TP::Traits::RangeFieldType>
     {
-      typedef typename ConvectionDiffusionBoundaryConditions::Type BCType;
+      using BCType = typename ConvectionDiffusionBoundaryConditions::Type;
 
     public:
       // pattern assembly flags
@@ -105,8 +105,8 @@ namespace Dune {
                            R& r_s, R& r_n) const
       {
         // define types
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
 
         // dimensions
         const auto dim = IG::dimension;
@@ -175,8 +175,8 @@ namespace Dune {
                               M& mat_ns, M& mat_nn) const
       {
         // define types
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
 
         // dimensions
         const auto dim = IG::dimension;
@@ -275,8 +275,8 @@ namespace Dune {
                            R& r_s) const
       {
         // define types
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
 
         // dimensions
         const auto dim = IG::dimension;
@@ -372,8 +372,8 @@ namespace Dune {
                               M& mat_ss) const
       {
         // define types
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
 
         // dimensions
         const auto dim = IG::dimension;
