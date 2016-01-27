@@ -109,22 +109,25 @@ namespace Dune {
         const int order = std::max(lfsu.finiteElement().localBasis().order(),
             lfsv.finiteElement().localBasis().order());
 
-        // get geometry
+        // Get cell
+        auto cell = eg.entity();
+
+        // Get geometry
         auto geo = eg.geometry();
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         auto ref_el = referenceElement(geo);
         auto localcenter = ref_el.position(0,0);
-        auto A = param.A(eg.entity(),localcenter);
-
-        // transformation
-        typename EG::Geometry::JacobianInverseTransposed jac;
+        auto A = param.A(cell,localcenter);
 
         // Initialize vectors outside for loop
         std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
         std::vector<Dune::FieldVector<RF,dim> > gradpsi(lfsv.size());
         Dune::FieldVector<RF,dim> gradu(0.0);
         Dune::FieldVector<RF,dim> Agradu(0.0);
+
+        // Transformation matrix
+        typename EG::Geometry::JacobianInverseTransposed jac;
 
         // loop over quadrature points
         auto intorder = intorderadd + quadrature_factor * order;
@@ -160,10 +163,10 @@ namespace Dune {
             A.mv(gradu,Agradu);
 
             // evaluate velocity field
-            auto b = param.b(eg.entity(),ip.position());
+            auto b = param.b(cell,ip.position());
 
             // evaluate reaction term
-            auto c = param.c(eg.entity(),ip.position());
+            auto c = param.c(cell,ip.position());
 
             // integrate (A grad u - bu)*grad phi_i + a*u*phi_i
             RF factor = ip.weight() * geo.integrationElement(ip.position());
@@ -187,20 +190,23 @@ namespace Dune {
         const int order = std::max(lfsu.finiteElement().localBasis().order(),
             lfsv.finiteElement().localBasis().order());
 
-        // get geometry
+        // Get cell
+        auto cell = eg.entity();
+
+        // Get geometry
         auto geo = eg.geometry();
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         auto ref_el = referenceElement(geo);
         auto localcenter = ref_el.position(0,0);
-        auto A = param.A(eg.entity(),localcenter);
-
-        // transformation
-        typename EG::Geometry::JacobianInverseTransposed jac;
+        auto A = param.A(cell,localcenter);
 
         // Initialize vectors outside for loop
         std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
         std::vector<Dune::FieldVector<RF,dim> > Agradphi(lfsu.size());
+
+        // Transformation matrix
+        typename EG::Geometry::JacobianInverseTransposed jac;
 
         // loop over quadrature points
         auto intorder = intorderadd + quadrature_factor * order;
@@ -221,10 +227,10 @@ namespace Dune {
               }
 
             // evaluate velocity field
-            auto b = param.b(eg.entity(),ip.position());
+            auto b = param.b(cell,ip.position());
 
             // evaluate reaction term
-            auto c = param.c(eg.entity(),ip.position());
+            auto c = param.c(cell,ip.position());
 
             // integrate (A grad u - bu)*grad phi_i + a*u*phi_i
             auto factor = ip.weight() * geo.integrationElement(ip.position());
@@ -257,31 +263,28 @@ namespace Dune {
             );
 
         // make copy of inside and outside cell w.r.t. the intersection
-        auto inside_cell = ig.inside();
-        auto outside_cell = ig.outside();
+        auto cell_inside = ig.inside();
+        auto cell_outside = ig.outside();
 
-        // get geometries
+        // Get geometries
         auto geo = ig.geometry();
-        auto geo_inside = inside_cell.geometry();
-        auto geo_outside = outside_cell.geometry();
+        auto geo_inside = cell_inside.geometry();
+        auto geo_outside = cell_outside.geometry();
 
-        // get geometry of intersection in local coordinates of inside_cell and outside_cell
+        // Get geometry of intersection in local coordinates of cell_inside and cell_outside
         auto geo_in_inside = ig.geometryInInside();
         auto geo_in_outside = ig.geometryInOutside();
 
         // evaluate permeability tensors
         auto ref_el_inside = referenceElement(geo_inside);
         auto ref_el_outside = referenceElement(geo_outside);
-        auto inside_local = ref_el_inside.position(0,0);
-        auto outside_local = ref_el_outside.position(0,0);
-        auto A_s = param.A(inside_cell,inside_local);
-        auto A_n = param.A(outside_cell,outside_local);
+        auto local_inside = ref_el_inside.position(0,0);
+        auto local_outside = ref_el_outside.position(0,0);
+        auto A_s = param.A(cell_inside,local_inside);
+        auto A_n = param.A(cell_outside,local_outside);
 
         // face diameter; this should be revised for anisotropic meshes?
         auto h_F = std::min(geo_inside.volume(),geo_outside.volume())/geo.volume(); // Houston!
-
-        // transformation
-        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
         // tensor times normal
         auto n_F = ig.centerUnitOuterNormal();
@@ -323,6 +326,9 @@ namespace Dune {
         std::vector<Dune::FieldVector<RF,dim> > tgradpsi_n(lfsv_n.size());
         Dune::FieldVector<RF,dim> gradu_s(0.0);
         Dune::FieldVector<RF,dim> gradu_n(0.0);
+
+        // Transformation matrix
+        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
         // loop over quadrature points
         auto intorder = intorderadd+quadrature_factor*order;
@@ -372,7 +378,7 @@ namespace Dune {
               gradu_n.axpy(x_n(lfsu_n,i),tgradphi_n[i]);
 
             // evaluate velocity field and upwinding, assume H(div) velocity field => may choose any side
-            auto b = param.b(inside_cell,iplocal_s);
+            auto b = param.b(cell_inside,iplocal_s);
             auto normalflux = b*n_F_local;
             RF omegaup_s, omegaup_n;
             if (normalflux>=0.0)
@@ -441,31 +447,28 @@ namespace Dune {
             );
 
         // make copy of inside and outside cell w.r.t. the intersection
-        auto inside_cell = ig.inside();
-        auto outside_cell = ig.outside();
+        auto cell_inside = ig.inside();
+        auto cell_outside = ig.outside();
 
-        // get geometries
+        // Get geometries
         auto geo = ig.geometry();
-        auto geo_inside = inside_cell.geometry();
-        auto geo_outside = outside_cell.geometry();
+        auto geo_inside = cell_inside.geometry();
+        auto geo_outside = cell_outside.geometry();
 
-        // get geometry of intersection in local coordinates of inside_cell and outside_cell
+        // Get geometry of intersection in local coordinates of cell_inside and cell_outside
         auto geo_in_inside = ig.geometryInInside();
         auto geo_in_outside = ig.geometryInOutside();
 
         // evaluate permeability tensors
         auto ref_el_inside = referenceElement(geo_inside);
         auto ref_el_outside = referenceElement(geo_outside);
-        auto inside_local = ref_el_inside.position(0,0);
-        auto outside_local = ref_el_outside.position(0,0);
-        auto A_s = param.A(inside_cell,inside_local);
-        auto A_n = param.A(outside_cell,outside_local);
+        auto local_inside = ref_el_inside.position(0,0);
+        auto local_outside = ref_el_outside.position(0,0);
+        auto A_s = param.A(cell_inside,local_inside);
+        auto A_n = param.A(cell_outside,local_outside);
 
         // face diameter; this should be revised for anisotropic meshes?
         auto h_F = std::min(geo_inside.volume(),geo_outside.volume())/geo.volume(); // Houston!
-
-        // transformation
-        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
         // tensor times normal
         auto n_F = ig.centerUnitOuterNormal();
@@ -504,6 +507,9 @@ namespace Dune {
         std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
         std::vector<Dune::FieldVector<RF,dim> > tgradphi_n(lfsu_n.size());
 
+        // Transformation matrix
+        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
+
         // loop over quadrature points
         const int intorder = intorderadd+quadrature_factor*order;
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -530,7 +536,7 @@ namespace Dune {
             for (size_type i=0; i<lfsu_n.size(); i++) jac.mv(gradphi_n[i][0],tgradphi_n[i]);
 
             // evaluate velocity field and upwinding, assume H(div) velocity field => may choose any side
-            auto b = param.b(inside_cell,iplocal_s);
+            auto b = param.b(cell_inside,iplocal_s);
             auto normalflux = b*n_F_local;
             RF omegaup_s, omegaup_n;
             if (normalflux>=0.0)
@@ -608,25 +614,22 @@ namespace Dune {
             );
 
         // make copy of inside cell w.r.t. the boundary
-        auto inside_cell = ig.inside();
+        auto cell_inside = ig.inside();
 
-        // get geometries
+        // Get geometries
         auto geo = ig.geometry();
-        auto geo_inside = inside_cell.geometry();
+        auto geo_inside = cell_inside.geometry();
 
-        // get geometry of intersection in local coordinates of inside_cell
+        // Get geometry of intersection in local coordinates of cell_inside
         auto geo_in_inside = ig.geometryInInside();
 
         // evaluate permeability tensors
         auto ref_el_inside = referenceElement(geo_inside);
-        auto inside_local = ref_el_inside.position(0,0);
-        auto A_s = param.A(inside_cell,inside_local);
+        auto local_inside = ref_el_inside.position(0,0);
+        auto A_s = param.A(cell_inside,local_inside);
 
         // face diameter
         auto h_F = geo_inside.volume()/geo.volume(); // Houston!
-
-        // transformation
-        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
         // compute weights
         auto n_F = ig.centerUnitOuterNormal();
@@ -649,6 +652,9 @@ namespace Dune {
         std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
         std::vector<Dune::FieldVector<RF,dim> > tgradpsi_s(lfsv_s.size());
         Dune::FieldVector<RF,dim> gradu_s(0.0);
+
+        // Transformation matrix
+        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
         // loop over quadrature points
         auto intorder = intorderadd+quadrature_factor*order;
@@ -690,7 +696,7 @@ namespace Dune {
               u_s += x_s(lfsu_s,i)*phi_s[i];
 
             // evaluate velocity field and upwinding, assume H(div) velocity field => choose any side
-            auto b = param.b(inside_cell,iplocal_s);
+            auto b = param.b(cell_inside,iplocal_s);
             auto normalflux = b*n_F_local;
 
             if (bctype == ConvectionDiffusionBoundaryConditions::Outflow)
@@ -732,7 +738,7 @@ namespace Dune {
               gradu_s.axpy(x_s(lfsu_s,i),tgradphi_s[i]);
 
             // evaluate Dirichlet boundary condition
-            auto g = param.g(inside_cell,iplocal_s);
+            auto g = param.g(cell_inside,iplocal_s);
 
             // upwind
             RF omegaup_s, omegaup_n;
@@ -787,25 +793,22 @@ namespace Dune {
             );
 
         // make copy of inside cell w.r.t. the boundary
-        auto inside_cell = ig.inside();
+        auto cell_inside = ig.inside();
 
-        // get geometries
+        // Get geometries
         auto geo = ig.geometry();
-        auto geo_inside = inside_cell.geometry();
+        auto geo_inside = cell_inside.geometry();
 
-        // get geometry of intersection in local coordinates of inside_cell
+        // Get geometry of intersection in local coordinates of cell_inside
         auto geo_in_inside = ig.geometryInInside();
 
         // evaluate permeability tensors
         auto ref_el_inside = referenceElement(geo_inside);
-        auto inside_local = ref_el_inside.position(0,0);
-        auto A_s = param.A(inside_cell,inside_local);
+        auto local_inside = ref_el_inside.position(0,0);
+        auto A_s = param.A(cell_inside,local_inside);
 
         // face diameter
         auto h_F = geo_inside.volume()/geo.volume(); // Houston!
-
-        // transformation
-        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
         // compute weights
         auto n_F = ig.centerUnitOuterNormal();
@@ -826,6 +829,9 @@ namespace Dune {
 
         // Initialize vectors outside for loop
         std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
+
+        // Transformation matrix
+        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
         // loop over quadrature points
         auto intorder = intorderadd+quadrature_factor*order;
@@ -850,7 +856,7 @@ namespace Dune {
             auto factor = ip.weight() * geo.integrationElement(ip.position());
 
             // evaluate velocity field and upwinding, assume H(div) velocity field => choose any side
-            auto b = param.b(inside_cell,iplocal_s);
+            auto b = param.b(cell_inside,iplocal_s);
             auto normalflux = b*n_F_local;
 
             if (bctype == ConvectionDiffusionBoundaryConditions::Outflow)
@@ -918,6 +924,9 @@ namespace Dune {
         // define types
         typedef typename LFSV::Traits::SizeType size_type;
 
+        // Get cell
+        auto cell = eg.entity();
+
         // get geometries
         auto geo = eg.geometry();
 
@@ -930,7 +939,7 @@ namespace Dune {
             auto& phi = cache[order].evaluateFunction(ip.position(),lfsv.finiteElement().localBasis());
 
             // evaluate right hand side parameter function
-            auto f = param.f(eg.entity(),ip.position());
+            auto f = param.f(cell,ip.position());
 
             // integrate f
             auto factor = ip.weight() * geo.integrationElement(ip.position());
