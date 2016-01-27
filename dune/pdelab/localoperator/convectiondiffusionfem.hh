@@ -59,9 +59,9 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // range field and size type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::SizeType size_type;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using size_type = typename LFSU::Traits::SizeType;
 
         // dimensions
         const int dim = EG::Entity::dimension;
@@ -125,9 +125,9 @@ namespace Dune {
                             M& mat) const
       {
         // range field and size type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::SizeType size_type;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using size_type = typename LFSU::Traits::SizeType;
 
         // dimensions
         const int dim = EG::Entity::dimension;
@@ -181,9 +181,9 @@ namespace Dune {
                            R& r_s) const
       {
         // range field and size type
-        typedef typename LFSV::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using RF = typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // get cell entity
         auto inside_cell = ig.inside();
@@ -251,7 +251,7 @@ namespace Dune {
                               M& mat_s) const
       {
         // size type
-        typedef typename LFSV::Traits::SizeType size_type;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // get cell entity
         auto inside_cell = ig.inside();
@@ -302,7 +302,7 @@ namespace Dune {
     private:
       T& param;
       int intorderadd;
-      typedef typename FiniteElementMap::Traits::FiniteElementType::Traits::LocalBasisType LocalBasisType;
+      using LocalBasisType = typename FiniteElementMap::Traits::FiniteElementType::Traits::LocalBasisType;
       Dune::PDELab::LocalBasisCache<LocalBasisType> cache;
     };
 
@@ -329,8 +329,8 @@ namespace Dune {
     {
       enum { dim = T::Traits::GridViewType::dimension };
 
-      typedef typename T::Traits::RangeFieldType Real;
-      typedef typename ConvectionDiffusionBoundaryConditions::Type BCType;
+      using Real = typename T::Traits::RangeFieldType;
+      using BCType = typename ConvectionDiffusionBoundaryConditions::Type;
 
     public:
       // pattern assembly flags
@@ -353,11 +353,11 @@ namespace Dune {
       {
 
         // define types
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
-        typedef typename LFSU::Traits::SizeType size_type;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using RangeType = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
+        using size_type = typename LFSU::Traits::SizeType;
 
         // get geometry
         auto geo = eg.geometry();
@@ -404,11 +404,11 @@ namespace Dune {
                            R& r_s, R& r_n) const
       {
         // define types
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU::Traits::SizeType size_type;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using JacobianType = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::JacobianType;
+        using size_type = typename LFSU::Traits::SizeType;
 
         // dimensions
         const int dim = IG::dimension;
@@ -501,11 +501,11 @@ namespace Dune {
                            R& r_s) const
       {
         // define types
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU::Traits::SizeType size_type;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using JacobianType = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::JacobianType;
+        using size_type = typename LFSU::Traits::SizeType;
 
         // dimensions
         const int dim = IG::dimension;
@@ -586,7 +586,7 @@ namespace Dune {
       template<class GEO>
       typename GEO::ctype diameter (const GEO& geo) const
       {
-        typedef typename GEO::ctype DF;
+        using DF = typename GEO::ctype;
         DF hmax = -1.0E00;
         const int dim = GEO::coorddimension;
         for (int i=0; i<geo.corners(); i++)
@@ -627,8 +627,8 @@ namespace Dune {
     {
       enum { dim = T::Traits::GridViewType::dimension };
 
-      typedef typename T::Traits::RangeFieldType Real;
-      typedef typename ConvectionDiffusionBoundaryConditions::Type BCType;
+      using Real = typename T::Traits::RangeFieldType;
+      using BCType = typename ConvectionDiffusionBoundaryConditions::Type;
 
     public:
       // pattern assembly flags
@@ -649,11 +649,11 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // define types
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
-        typedef typename LFSU::Traits::SizeType size_type;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using RangeType = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
+        using size_type = typename LFSU::Traits::SizeType;
 
         // get geometry
         auto geo = eg.geometry();
@@ -721,7 +721,7 @@ namespace Dune {
       template<class GEO>
       typename GEO::ctype diameter (const GEO& geo) const
       {
-        typedef typename GEO::ctype DF;
+        using DF = typename GEO::ctype;
         DF hmax = -1.0E00;
         const int dim = GEO::coorddimension;
         for (int i=0; i<geo.corners(); i++)
@@ -780,8 +780,8 @@ namespace Dune {
     {
       enum { dim = T::Traits::GridViewType::dimension };
 
-      typedef typename T::Traits::RangeFieldType Real;
-      typedef typename ConvectionDiffusionBoundaryConditions::Type BCType;
+      using Real = typename T::Traits::RangeFieldType;
+      using BCType = typename ConvectionDiffusionBoundaryConditions::Type;
 
     public:
       // pattern assembly flags
@@ -803,13 +803,13 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
-        typedef typename LFSU::Traits::SizeType size_type;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType JacobianType;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using RangeType = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
+        using size_type = typename LFSU::Traits::SizeType;
+        using JacobianType = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::JacobianType;
 
         // dimensions
         const int dim = EG::Geometry::mydimension;
@@ -908,8 +908,8 @@ namespace Dune {
                            R& r_s) const
       {
         // domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
 
         // get inside cell entity
         auto inside_cell = ig.inside();
@@ -962,7 +962,7 @@ namespace Dune {
       template<class GEO>
       typename GEO::ctype diameter (const GEO& geo) const
       {
-        typedef typename GEO::ctype DF;
+        using DF = typename GEO::ctype;
         DF hmax = -1.0E00;
         const int dim = GEO::coorddimension;
         for (int i=0; i<geo.corners(); i++)
