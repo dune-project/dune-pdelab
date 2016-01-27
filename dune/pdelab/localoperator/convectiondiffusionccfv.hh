@@ -70,10 +70,10 @@ namespace Dune {
         // cell center
         auto geo = eg.geometry();
         auto ref_el = referenceElement(geo);
-        auto inside_local = ref_el.position(0,0);
+        auto local_inside = ref_el.position(0,0);
 
         // evaluate reaction term
-        auto c = param.c(eg.entity(),inside_local);
+        auto c = param.c(eg.entity(),local_inside);
 
         // and accumulate
         r.accumulate(lfsu,0,(c*x(lfsu,0))*geo.volume());
@@ -87,10 +87,10 @@ namespace Dune {
         // cell center
         auto geo = eg.geometry();
         auto ref_el = referenceElement(geo);
-        auto inside_local = ref_el.position(0,0);
+        auto local_inside = ref_el.position(0,0);
 
         // evaluate reaction term
-        auto c = param.c(eg.entity(),inside_local);
+        auto c = param.c(eg.entity(),local_inside);
 
         // and accumulate
         mat.accumulate(lfsu,0,lfsu,0,c*geo.volume());
@@ -120,6 +120,9 @@ namespace Dune {
         auto geo_inside = cell_inside.geometry();
         auto geo_outside = cell_outside.geometry();
 
+        // get geometry of intersection in local coordinates of neighbor cells
+        auto geo_in_inside = ig.geometryInInside();
+
         // center in face's reference element
         auto ref_el = referenceElement(geo);
         auto face_local = ref_el.position(0,0);
@@ -130,12 +133,12 @@ namespace Dune {
         // cell centers in references elements
         auto ref_el_inside = referenceElement(geo_inside);
         auto ref_el_outside = referenceElement(geo_outside);
-        auto inside_local = ref_el_inside.position(0,0);
-        auto outside_local = ref_el_outside.position(0,0);
+        auto local_inside = ref_el_inside.position(0,0);
+        auto local_outside = ref_el_outside.position(0,0);
 
         // evaluate diffusion coefficient from either side and take harmonic average
-        auto tensor_inside = param.A(cell_inside,inside_local);
-        auto tensor_outside = param.A(cell_outside,outside_local);
+        auto tensor_inside = param.A(cell_inside,local_inside);
+        auto tensor_outside = param.A(cell_outside,local_outside);
         auto n_F = ig.centerUnitOuterNormal();
         Dune::FieldVector<RF,dim> An_F;
         tensor_inside.mv(n_F,An_F);
@@ -145,19 +148,19 @@ namespace Dune {
         auto k_avg = 2.0/(1.0/(k_inside+1E-30) + 1.0/(k_outside+1E-30));
 
         // evaluate convective term
-        auto iplocal_s = ig.geometryInInside().global(face_local);
+        auto iplocal_s = geo_in_inside.global(face_local);
         auto b = param.b(cell_inside,iplocal_s);
         auto vn = b*n_F;
         auto u_upwind=0;
         if (vn>=0) u_upwind = x_s(lfsu_s,0); else u_upwind = x_n(lfsu_n,0);
 
         // cell centers in global coordinates
-        auto inside_global = geo_inside.global(inside_local);
-        auto outside_global = geo_outside.global(outside_local);
+        auto global_inside = geo_inside.global(local_inside);
+        auto global_outside = geo_outside.global(local_outside);
 
         // distance between the two cell centers
-        inside_global -= outside_global;
-        auto distance = inside_global.two_norm();
+        global_inside -= global_outside;
+        auto distance = global_inside.two_norm();
 
         // contribution to residual on inside element, other residual is computed by symmetric call
         r_s.accumulate(lfsu_s,0,(u_upwind*vn)*face_volume+k_avg*(x_s(lfsu_s,0)-x_n(lfsu_n,0))*face_volume/distance);
@@ -187,6 +190,9 @@ namespace Dune {
         auto geo_inside = cell_inside.geometry();
         auto geo_outside = cell_outside.geometry();
 
+        // get geometry of intersection in local coordinates of neighbor cells
+        auto geo_in_inside = ig.geometryInInside();
+
         // center in face's reference element
         auto ref_el = referenceElement(geo);
         auto face_local = ref_el.position(0,0);
@@ -197,12 +203,12 @@ namespace Dune {
         // cell centers in references elements
         auto ref_el_inside = referenceElement(geo_inside);
         auto ref_el_outside = referenceElement(geo_outside);
-        auto inside_local = ref_el_inside.position(0,0);
-        auto outside_local = ref_el_outside.position(0,0);
+        auto local_inside = ref_el_inside.position(0,0);
+        auto local_outside = ref_el_outside.position(0,0);
 
         // evaluate diffusion coefficient from either side and take harmonic average
-        auto tensor_inside = param.A(cell_inside,inside_local);
-        auto tensor_outside = param.A(cell_outside,outside_local);
+        auto tensor_inside = param.A(cell_inside,local_inside);
+        auto tensor_outside = param.A(cell_outside,local_outside);
         auto n_F = ig.centerUnitOuterNormal();
         Dune::FieldVector<RF,dim> An_F;
         tensor_inside.mv(n_F,An_F);
@@ -212,17 +218,17 @@ namespace Dune {
         auto k_avg = 2.0/(1.0/(k_inside+1E-30) + 1.0/(k_outside+1E-30));
 
         // evaluate convective term
-        auto iplocal_s = ig.geometryInInside().global(face_local);
+        auto iplocal_s = geo_in_inside.global(face_local);
         auto b = param.b(cell_inside,iplocal_s);
         auto vn = b*n_F;
 
         // cell centers in global coordinates
-        auto inside_global = geo_inside.global(inside_local);
-        auto outside_global = geo_outside.global(outside_local);
+        auto global_inside = geo_inside.global(local_inside);
+        auto global_outside = geo_outside.global(local_outside);
 
         // distance between the two cell centers
-        inside_global -= outside_global;
-        auto distance = inside_global.two_norm();
+        global_inside -= global_outside;
+        auto distance = global_inside.two_norm();
 
         // contribution to residual on inside element, other residual is computed by symmetric call
         mat_ss.accumulate(lfsu_s,0,lfsu_s,0,   k_avg*face_volume/distance );
@@ -252,10 +258,10 @@ namespace Dune {
         // cell center
         auto geo = eg.geometry();
         auto ref_el = referenceElement(geo);
-        auto inside_local = ref_el.position(0,0);
+        auto local_inside = ref_el.position(0,0);
 
         // compute optimal dt for this cell
-        auto cellcapacity = param.d(eg.entity(),inside_local)*geo.volume();
+        auto cellcapacity = param.d(eg.entity(),local_inside)*geo.volume();
         auto celldt = cellcapacity/(cellinflux+1E-30);
         dtmin = std::min(dtmin,celldt);
       }
@@ -282,6 +288,9 @@ namespace Dune {
         auto geo = ig.geometry();
         auto geo_inside = cell_inside.geometry();
 
+        // get geometry of intersection in local coordinates of neighbor cells
+        auto geo_in_inside = ig.geometryInInside();
+
         // center in face's reference element
         auto ref_el = referenceElement(geo);
         auto face_local = ref_el.position(0,0);
@@ -291,7 +300,7 @@ namespace Dune {
 
         // cell centers in references elements
         auto ref_el_inside = referenceElement(geo_inside);
-        auto inside_local = ref_el_inside.position(0,0);
+        auto local_inside = ref_el_inside.position(0,0);
 
         // evaluate boundary condition type
         auto bctype = param.bctype(ig.intersection(),face_local);
@@ -300,20 +309,20 @@ namespace Dune {
           {
             // Dirichlet boundary
             // distance between cell center and face center
-            auto inside_global = geo_inside.global(inside_local);
-            auto outside_global = geo.global(face_local);
-            inside_global -= outside_global;
-            auto distance = inside_global.two_norm();
+            auto global_inside = geo_inside.global(local_inside);
+            auto global_outside = geo.global(face_local);
+            global_inside -= global_outside;
+            auto distance = global_inside.two_norm();
 
             // evaluate diffusion coefficient
-            auto tensor_inside = param.A(cell_inside,inside_local);
+            auto tensor_inside = param.A(cell_inside,local_inside);
             auto n_F = ig.centerUnitOuterNormal();
             Dune::FieldVector<RF,dim> An_F;
             tensor_inside.mv(n_F,An_F);
             auto k_inside = n_F*An_F;
 
             // evaluate boundary condition function
-            auto iplocal_s = ig.geometryInInside().global(face_local);
+            auto iplocal_s = geo_in_inside.global(face_local);
             auto g = param.g(cell_inside,iplocal_s);
 
             // velocity needed for convection term
@@ -343,7 +352,7 @@ namespace Dune {
         if (bctype==ConvectionDiffusionBoundaryConditions::Outflow)
           {
             // evaluate velocity field and outer unit normal
-            auto iplocal_s = ig.geometryInInside().global(face_local);
+            auto iplocal_s = geo_in_inside.global(face_local);
             auto b = param.b(cell_inside,iplocal_s);
             auto n = ig.centerUnitOuterNormal();
 
@@ -376,6 +385,9 @@ namespace Dune {
         auto geo = ig.geometry();
         auto geo_inside = cell_inside.geometry();
 
+        // get geometry of intersection in local coordinates of neighbor cells
+        auto geo_in_inside = ig.geometryInInside();
+
         // center in face's reference element
         auto ref_el = referenceElement(geo);
         auto face_local = ref_el.position(0,0);
@@ -385,7 +397,7 @@ namespace Dune {
 
         // cell centers in references elements
         auto ref_el_inside = referenceElement(geo_inside);
-        auto inside_local = ref_el_inside.position(0,0);
+        auto local_inside = ref_el_inside.position(0,0);
 
         // evaluate boundary condition type
         auto bctype = param.bctype(ig.intersection(),face_local);
@@ -394,13 +406,13 @@ namespace Dune {
           {
             // Dirichlet boundary
             // distance between cell center and face center
-            auto inside_global = geo_inside.global(inside_local);
-            auto outside_global = geo.global(face_local);
-            inside_global -= outside_global;
-            auto distance = inside_global.two_norm();
+            auto global_inside = geo_inside.global(local_inside);
+            auto global_outside = geo.global(face_local);
+            global_inside -= global_outside;
+            auto distance = global_inside.two_norm();
 
             // evaluate diffusion coefficient
-            auto tensor_inside = param.A(cell_inside,inside_local);
+            auto tensor_inside = param.A(cell_inside,local_inside);
             auto n_F = ig.centerUnitOuterNormal();
             Dune::FieldVector<RF,dim> An_F;
             tensor_inside.mv(n_F,An_F);
@@ -415,7 +427,7 @@ namespace Dune {
         if (bctype==ConvectionDiffusionBoundaryConditions::Outflow)
           {
             // evaluate velocity field and outer unit normal
-            auto iplocal_s = ig.geometryInInside().global(face_local);
+            auto iplocal_s = geo_in_inside.global(face_local);
             auto b = param.b(cell_inside,iplocal_s);
             auto n = ig.centerUnitOuterNormal();
 
@@ -433,10 +445,10 @@ namespace Dune {
         // cell center
         auto geo = eg.geometry();
         auto ref_el = referenceElement(geo);
-        auto inside_local = ref_el.position(0,0);
+        auto local_inside = ref_el.position(0,0);
 
         // evaluate source and sink term
-        auto f = param.f(eg.entity(),inside_local);
+        auto f = param.f(eg.entity(),local_inside);
 
         r.accumulate(lfsv,0,-f*geo.volume());
       }
@@ -518,10 +530,10 @@ namespace Dune {
         // cell center
         auto geo = eg.geometry();
         auto ref_el = referenceElement(geo);
-        auto inside_local = ref_el.position(0,0);
+        auto local_inside = ref_el.position(0,0);
 
         // capacity term
-        auto capacity = param.d(eg.entity(),inside_local);
+        auto capacity = param.d(eg.entity(),local_inside);
 
         // residual contribution
         r.accumulate(lfsu,0,capacity*x(lfsu,0)*geo.volume());
@@ -535,10 +547,10 @@ namespace Dune {
         // cell center
         auto geo = eg.geometry();
         auto ref_el = referenceElement(geo);
-        auto inside_local = ref_el.position(0,0);
+        auto local_inside = ref_el.position(0,0);
 
         // capacity term
-        auto capacity = param.d(eg.entity(),inside_local);
+        auto capacity = param.d(eg.entity(),local_inside);
 
         // residual contribution
         mat.accumulate(lfsu,0,lfsu,0,capacity*geo.volume());
