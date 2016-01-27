@@ -42,7 +42,7 @@ namespace Dune {
                            public LocalOperatorDefaultFlags
     {
 
-      typedef typename ConvectionDiffusionBoundaryConditions::Type BCType;
+      using BCType = typename ConvectionDiffusionBoundaryConditions::Type;
 
     public:
       // pattern assembly flags
@@ -66,19 +66,19 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        // define types
-        typedef typename LFSU::template Child<0>::Type VelocitySpace;
-        typedef typename LFSU::template Child<1>::Type PressureSpace;
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType VelocityJacobianType;
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType VelocityRangeType;
-        typedef typename PressureSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType PressureRangeType;
+        // Define types
+        using VelocitySpace = typename LFSU::template Child<0>::Type;
+        using PressureSpace = typename LFSU::template Child<1>::Type;
+        using DF = typename VelocitySpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::DomainFieldType;
+        using RF = typename VelocitySpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using VelocityJacobianType = typename VelocitySpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::JacobianType;
+        using VelocityRangeType = typename VelocitySpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
+        using PressureRangeType = typename PressureSpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
 
         // select the two components
         using namespace TypeTree::Indices;
@@ -190,16 +190,19 @@ namespace Dune {
       template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
-        // define types
-        typedef typename LFSV::template Child<1>::Type PressureSpace;
-        typedef typename PressureSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType PressureRangeType;
+        // Define types
+        using PressureSpace = typename LFSV::template Child<1>::Type;
+        using PressureRangeType = typename PressureSpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
 
         // select the pressure component
         using namespace TypeTree::Indices;
         const auto& pressurespace = child(lfsv,_1);
 
-        // get geometry
+        // Get cell
+        auto cell = eg.entity();
+
+        // Get geometry
         auto geo = eg.geometry();
 
         // Declare vector outside for loop
@@ -225,14 +228,12 @@ namespace Dune {
       template<typename IG, typename LFSV, typename R>
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
       {
-        // define types
-        typedef typename LFSV::template Child<0>::Type VelocitySpace;
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType VelocityRangeType;
+        // Define types
+        using VelocitySpace = typename LFSV::template Child<0>::Type;
+        using DF = typename VelocitySpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::DomainFieldType;
+        using VelocityRangeType = typename VelocitySpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
 
         // select the two velocity component
         using namespace TypeTree::Indices;
