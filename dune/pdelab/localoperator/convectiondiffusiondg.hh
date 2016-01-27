@@ -63,8 +63,8 @@ namespace Dune {
     {
       enum { dim = T::Traits::GridViewType::dimension };
 
-      typedef typename T::Traits::RangeFieldType Real;
-      typedef typename ConvectionDiffusionBoundaryConditions::Type BCType;
+      using Real = typename T::Traits::RangeFieldType;
+      using BCType = typename ConvectionDiffusionBoundaryConditions::Type;
 
     public:
       // pattern assembly flags
@@ -100,9 +100,9 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // define types
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::SizeType size_type;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using size_type = typename LFSU::Traits::SizeType;
 
         // dimensions
         const int dim = EG::Entity::dimension;
@@ -181,9 +181,9 @@ namespace Dune {
                             M& mat) const
       {
         // define types
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::SizeType size_type;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using size_type = typename LFSU::Traits::SizeType;
 
         // dimensions
         const int dim = EG::Entity::dimension;
@@ -249,9 +249,9 @@ namespace Dune {
                            R& r_s, R& r_n) const
       {
         // define types
-        typedef typename LFSV::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using RF = typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
         const int dim = IG::dimension;
@@ -433,9 +433,9 @@ namespace Dune {
                               M& mat_ns, M& mat_nn) const
       {
         // define types
-        typedef typename LFSV::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using RF = typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
         const int dim = IG::dimension;
@@ -602,9 +602,9 @@ namespace Dune {
                            R& r_s) const
       {
         // define types
-        typedef typename LFSV::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using RF = typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
         const int dim = IG::dimension;
@@ -781,9 +781,9 @@ namespace Dune {
                               M& mat_ss) const
       {
         // define types
-        typedef typename LFSV::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using RF = typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
         const int dim = IG::dimension;
@@ -922,7 +922,7 @@ namespace Dune {
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
         // define types
-        typedef typename LFSV::Traits::SizeType size_type;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // Get cell
         auto cell = eg.entity();
@@ -963,9 +963,9 @@ namespace Dune {
       int intorderadd;
       int quadrature_factor;
       Real theta;
-      typedef typename FiniteElementMap::Traits::FiniteElementType::Traits::LocalBasisType LocalBasisType;
 
-      typedef Dune::PDELab::LocalBasisCache<LocalBasisType> Cache;
+      using LocalBasisType = typename FiniteElementMap::Traits::FiniteElementType::Traits::LocalBasisType;
+      using Cache = Dune::PDELab::LocalBasisCache<LocalBasisType>;
 
       // In theory it is possible that one and the same local operator is
       // called first with a finite element of one type and later with a
@@ -981,7 +981,7 @@ namespace Dune {
       template<class GEO>
       void element_size (const GEO& geo, typename GEO::ctype& hmin, typename GEO::ctype hmax) const
       {
-        typedef typename GEO::ctype DF;
+        using DF = typename GEO::ctype;
         hmin = 1.0E100;
         hmax = -1.0E00;
         const int dim = GEO::coorddimension;
