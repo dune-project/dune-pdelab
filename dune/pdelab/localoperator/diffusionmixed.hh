@@ -88,7 +88,10 @@ namespace Dune {
         // dimensions
         const int dim = EG::Geometry::mydimension;
 
-        // get geometry
+        // Get cell
+        auto cell = eg.entity();
+
+        // Get geometry
         auto geo = eg.geometry();
 
         // evaluate transformation which must be linear
@@ -101,7 +104,7 @@ namespace Dune {
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         auto ref_el = referenceElement(geo);
         auto localcenter = ref_el.position(0,0);
-        auto tensor = param.A(eg.entity(),localcenter);
+        auto tensor = param.A(cell,localcenter);
         tensor.invert(); // need iverse for mixed method
 
         // Declare vectors outside for loop
@@ -157,7 +160,7 @@ namespace Dune {
               u.axpy(x(pressurespace,i),pbasis[i]);
 
             // evaluate Helmholtz term (reaction term)
-            auto a0value = param.c(eg.entity(),ip.position());
+            auto a0value = param.c(cell,ip.position());
 
             // integrate a0 * u * q
             RF factor = ip.weight();
@@ -215,7 +218,7 @@ namespace Dune {
             pressurespace.finiteElement().localBasis().evaluateFunction(ip.position(),pbasis);
 
             // evaluate right hand side parameter function
-            auto y = param.f(eg.entity(),ip.position());
+            auto y = param.f(cell,ip.position());
 
             // integrate f
             auto factor = ip.weight() * geo.integrationElement(ip.position());
@@ -242,10 +245,14 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
-        // get geometry
-        auto inside_cell = ig.inside();
+        // Get cell
+        auto cell_inside = ig.inside();
+
+        // Get geometry
         auto geo = ig.geometry();
-        auto geo_inside = inside_cell.geometry();
+        auto geo_inside = cell_inside.geometry();
+
+        // Get geometry of intersection in local coordinates of cell_inside
         auto geo_in_inside = ig.geometryInInside();
 
         // evaluate transformation which must be linear
@@ -259,7 +266,6 @@ namespace Dune {
         // Declare vectors outside for loop
         std::vector<VelocityRangeType> vbasis(velocityspace.size());
         std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
-
 
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : quadratureRule(geo,qorder_v))
@@ -285,7 +291,7 @@ namespace Dune {
               }
 
             // evaluate Dirichlet boundary condition
-            auto y = param.g(inside_cell,local);
+            auto y = param.g(cell_inside,local);
 
             // integrate g v*normal
             auto factor = ip.weight()*geo.integrationElement(ip.position())/det;
