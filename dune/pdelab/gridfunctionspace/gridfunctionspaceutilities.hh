@@ -133,7 +133,7 @@ namespace Dune {
         typedef FiniteElementInterfaceSwitch<
           typename Dune::PDELab::LocalFunctionSpace<GFS>::Traits::FiniteElementType
           > FESwitch;
-        lfs.bind(e,std::false_type());
+        lfs.bind(e);
         lfs_cache.update();
         x_view.bind(lfs_cache);
         x_view.read(xl);
@@ -155,7 +155,7 @@ namespace Dune {
     private:
 
       typedef LocalFunctionSpace<GFS> LFS;
-      typedef LFSIndexCache<LFS,EmptyTransformation,false> LFSCache;
+      typedef LFSIndexCache<LFS> LFSCache;
       typedef typename X::template ConstLocalView<LFSCache> XView;
 
       std::shared_ptr<GFS const> pgfs;

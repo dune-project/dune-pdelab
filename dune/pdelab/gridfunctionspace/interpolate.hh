@@ -201,7 +201,7 @@ namespace Dune {
       // make local function space
       typedef LocalFunctionSpace<GFS> LFS;
       LFS lfs(gfs);
-      typedef LFSIndexCache<LFS,EmptyTransformation,false> LFSCache;
+      typedef LFSIndexCache<LFS> LFSCache;
       LFSCache lfs_cache(lfs);
       typedef typename XG::template LocalView<LFSCache> XView;
 
@@ -211,7 +211,7 @@ namespace Dune {
       for (const auto& element : elements(entity_set))
         {
           // bind local function space to element
-          lfs.bind(element,std::false_type{});
+          lfs.bind(element);
           lfs_cache.update();
           x_view.bind(lfs_cache);
 

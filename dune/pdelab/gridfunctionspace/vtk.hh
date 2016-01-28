@@ -94,7 +94,7 @@ namespace Dune {
         friend struct OutputCollector;
 
         typedef LocalFunctionSpace<GFS> LFS;
-        typedef LFSIndexCache<LFS,EmptyTransformation,false> LFSCache;
+        typedef LFSIndexCache<LFS> LFSCache;
         typedef typename X::template ConstLocalView<LFSCache> XView;
         typedef LocalVector<typename X::ElementType> XLocalVector;
         using EntitySet = typename GFS::Traits::EntitySet;
@@ -127,7 +127,7 @@ namespace Dune {
           if (_current_cell_index == cell_index)
             return;
 
-          _lfs.bind(cell,std::false_type{});
+          _lfs.bind(cell);
           _lfs_cache.update();
           _x_view.bind(_lfs_cache);
           _x_view.read(_x_local);
