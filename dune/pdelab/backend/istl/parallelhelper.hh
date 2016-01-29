@@ -235,7 +235,7 @@ namespace Dune {
           >::PromotedType
         disjointDot(istl::tags::vector, const X& x, const Y& y, const Mask& mask) const
         {
-          typedef typename raw_type<X>::type XC;
+          using XC = Backend::Native<X>;
           assert(x.blockSize() == y.blockSize());
           assert(x.blockSize() == mask.blockSize());
           typedef typename PromotionTraits<
