@@ -9,6 +9,9 @@
 
 #include<dune/geometry/type.hh>
 #include<dune/geometry/quadraturerules.hh>
+
+#include<dune/pdelab/common/quadraturerules.hh>
+#include<dune/pdelab/common/referenceelements.hh>
 #include<dune/pdelab/gridfunctionspace/localvector.hh>
 
 #include"defaultimp.hh"
@@ -84,45 +87,40 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        // dimensions
-        const int dim = EG::Geometry::mydimension;
-
-        // extract local function spaces
+        // define types
         typedef typename LFSU::template Child<0>::Type LFSU_V_PFS;
-        using namespace TypeTree::Indices;
-        const auto& lfsu_v_pfs = child(lfsu,_0);
-
         typedef typename LFSU_V_PFS::template Child<0>::Type LFSU_V;
-        const unsigned int vsize = lfsu_v_pfs.child(0).size();
-
-        // domain and range field type
+        typedef typename LFSU::template Child<1>::Type LFSU_P;
         typedef typename LFSU_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RT_V;
         typedef typename LFSU_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
-
-
-        typedef typename LFSU::template Child<1>::Type LFSU_P;
-        const auto& lfsu_p = child(lfsu,_1);
-        const unsigned int psize = lfsu_p.size();
-
-        typedef typename LFSU_P::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSU_P::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RT_P;
 
-        // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
+        // extract local function spaces
+        using namespace TypeTree::Indices;
+        const auto& lfsu_v_pfs = child(lfsu,_0);
+        const unsigned int vsize = lfsu_v_pfs.child(0).size();
+        const auto& lfsu_p = child(lfsu,_1);
+        const unsigned int psize = lfsu_p.size();
+
+        // dimensions
+        const int dim = EG::Geometry::mydimension;
+
+        // get geometry
+        auto geo = eg.geometry();
+
+        // determine quadrature order
         const int v_order = lfsu_v_pfs.child(0).finiteElement().localBasis().order();
-        const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
-        const int jac_order = gt.isSimplex() ? 0 : 1;
+        const int det_jac_order = geo.type().isSimplex() ? 0 : (dim-1);
+        const int jac_order = geo.type().isSimplex() ? 0 : 1;
         const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // loop over quadrature points
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,qorder))
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType_V> js(vsize);
@@ -130,7 +128,7 @@ namespace Dune {
 
             // transform gradient to real element
             const typename EG::Geometry::JacobianInverseTransposed jac =
-              eg.geometry().jacobianInverseTransposed(ip.position());
+              geo.jacobianInverseTransposed(ip.position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(vsize);
             for (size_t i=0; i<vsize; i++)
               {
@@ -152,7 +150,7 @@ namespace Dune {
 
                 for(int d=0; d<dim; ++d)
                   {
-                    const LFSU_V & lfsu_v = lfsu_v_pfs.child(d);
+                    const auto& lfsu_v = lfsu_v_pfs.child(d);
                     for (size_t i=0; i<lfsu_v.size(); i++)
                       vu[d] += x(lfsu_v,i) * phi[i];
                   }
@@ -161,7 +159,7 @@ namespace Dune {
             // Compute velocity jacobian
             Dune::FieldMatrix<RF,dim,dim> jacu(0.0);
             for(int d=0; d<dim; ++d){
-              const LFSU_V & lfsu_v = lfsu_v_pfs.child(d);
+              const auto& lfsu_v = lfsu_v_pfs.child(d);
               for (size_t i=0; i<lfsu_v.size(); i++)
                 jacu[d].axpy(x(lfsu_v,i),gradphi[i]);
             }
@@ -172,18 +170,18 @@ namespace Dune {
               func_p += x(lfsu_p,i) * psi[i];
 
             // Viscosity and density
-            const RF mu = _p.mu(eg,ip.position());
-            const RF rho = _p.rho(eg,ip.position());
+            const auto mu = _p.mu(eg,ip.position());
+            const auto rho = _p.rho(eg,ip.position());
 
             // geometric weight
-            const RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
+            const auto factor = ip.weight() * geo.integrationElement(ip.position());
 
             for(int d=0; d<dim; ++d){
 
-              const LFSU_V & lfsu_v = lfsu_v_pfs.child(d);
+              const auto& lfsu_v = lfsu_v_pfs.child(d);
 
               //compute u * grad u_d
-              const RF u_nabla_u = vu * jacu[d];
+              const auto u_nabla_u = vu * jacu[d];
 
               for (size_t i=0; i<vsize; i++){
 
@@ -219,41 +217,35 @@ namespace Dune {
       template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
-        // dimensions
-        const int dim = EG::Geometry::mydimension;
-
-        // extract local function spaces
+        // define types
         typedef typename LFSV::template Child<0>::Type LFSV_V_PFS;
-        using namespace TypeTree::Indices;
-        const auto& lfsv_v_pfs = child(lfsv,_0);
-
         typedef typename LFSV_V_PFS::template Child<0>::Type LFSV_V;
-        const unsigned int vsize = lfsv_v_pfs.child(0).size();
-
-        // domain and range field type
-        typedef typename LFSV_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        typedef typename LFSV::template Child<1>::Type LFSV_P;
         typedef typename LFSV_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RT_V;
-
-        typedef typename LFSV::template Child<1>::Type LFSV_P;
-        const auto& lfsv_p = child(lfsv,_1);
-        const unsigned int psize = lfsv_p.size();
-
-        typedef typename LFSV_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSV_P::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RT_P;
 
-        // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
+        // extract local function spaces
+        using namespace TypeTree::Indices;
+        const auto& lfsv_v_pfs = child(lfsv,_0);
+        const unsigned int vsize = lfsv_v_pfs.child(0).size();
+        const auto& lfsv_p = child(lfsv,_1);
+        const unsigned int psize = lfsv_p.size();
+
+        // dimensions
+        const int dim = EG::Geometry::mydimension;
+
+        // get geometry
+        auto geo = eg.geometry();
+
+        // determine quadrature order
         const int v_order = lfsv_v_pfs.child(0).finiteElement().localBasis().order();
-        const int det_jac_order = gt.isSimplex() ?  0 : (dim-1);
+        const int det_jac_order = geo.type().isSimplex() ?  0 : (dim-1);
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // loop over quadrature points
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,qorder))
           {
             std::vector<RT_V> phi(vsize);
             lfsv_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(ip.position(),phi);
@@ -262,14 +254,14 @@ namespace Dune {
             lfsv_p.finiteElement().localBasis().evaluateFunction(ip.position(),psi);
 
             // forcing term
-            const Dune::FieldVector<RF,dim> f1 = _p.f(eg,ip.position());
+            const auto f1 = _p.f(eg,ip.position());
 
             // geometric weight
-            const RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
+            const auto factor = ip.weight() * geo.integrationElement(ip.position());
 
             for(int d=0; d<dim; ++d){
 
-              const LFSV_V & lfsv_v = lfsv_v_pfs.child(d);
+              const auto& lfsv_v = lfsv_v_pfs.child(d);
 
               for (size_t i=0; i<vsize; i++)
                 {
@@ -279,7 +271,7 @@ namespace Dune {
 
             }
 
-            const RF g2 = _p.g2(eg,ip.position());
+            const auto g2 = _p.g2(eg,ip.position());
 
             // integrate div u * psi_i
             for (size_t i=0; i<psize; i++)
@@ -295,64 +287,59 @@ namespace Dune {
       template<typename IG, typename LFSV, typename R>
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
       {
-        // dimensions
-        static const unsigned int dim = IG::dimension;
-        static const unsigned int dimw = IG::coorddimension;
-
-        // extract local velocity function spaces
+        // define types
         typedef typename LFSV::template Child<0>::Type LFSV_V_PFS;
-        using namespace TypeTree::Indices;
-        const auto& lfsv_v_pfs = child(lfsv,_0);
-
         typedef typename LFSV_V_PFS::template Child<0>::Type LFSV_V;
-        const unsigned int vsize = lfsv_v_pfs.child(0).size();
-
         typedef typename LFSV_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RT_V;
 
-        // the range field type (equal for velocity and pressure)
-        typedef typename LFSV_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        // extract local velocity function spaces
+        using namespace TypeTree::Indices;
+        const auto& lfsv_v_pfs = child(lfsv,_0);
+        const unsigned int vsize = lfsv_v_pfs.child(0).size();
 
-        // the domain field type (equal for velocity and pressure)
-        typedef typename LFSV_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        // dimensions
+        static const unsigned int dim = IG::dimension;
 
-        // select quadrature rule
-        Dune::GeometryType gtface = ig.geometryInInside().type();
+        // get geometry
+        auto geo = ig.geometry();
+
+        // Get geometry of intersection in local coordinates of inside cell
+        auto geo_in_inside = ig.geometryInInside();
+
+        // determine quadrature order
         const int v_order = lfsv_v_pfs.child(0).finiteElement().localBasis().order();
-        const int det_jac_order = gtface.isSimplex() ? 0 : (dim-2);
-        const int jac_order = gtface.isSimplex() ? 0 : 1;
+        const int det_jac_order = geo_in_inside.type().isSimplex() ? 0 : (dim-2);
+        const int jac_order = geo_in_inside.type().isSimplex() ? 0 : 1;
         const int qorder = 2*v_order + det_jac_order + jac_order + superintegration_order;
-        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // loop over quadrature points and integrate normal flux
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,qorder))
           {
             // evaluate boundary condition type
-            typename BC::Type bctype = _p.bctype(ig,ip.position());
+            auto bctype = _p.bctype(ig,ip.position());
 
             // skip rest if we are on Dirichlet boundary
             if (bctype != BC::StressNeumann)
               continue;
 
             // position of quadrature point in local coordinates of element
-            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(ip.position());
+            auto local = geo_in_inside.global(ip.position());
 
             // evaluate basis functions
             std::vector<RT_V> phi(vsize);
             lfsv_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(local,phi);
 
-            const RF factor = ip.weight() * ig.geometry().integrationElement(ip.position());
-            const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(ip.position());
+            const auto factor = ip.weight() * geo.integrationElement(ip.position());
+            const auto normal = ig.unitOuterNormal(ip.position());
 
             // evaluate flux boundary condition
-            const Dune::FieldVector<DF,dimw> neumann_stress = _p.j(ig,ip.position(),normal);
+            const auto neumann_stress = _p.j(ig,ip.position(),normal);
 
             for(unsigned int d=0; d<dim; ++d)
               {
 
-                const LFSV_V & lfsv_v = lfsv_v_pfs.child(d);
+                const auto& lfsv_v = lfsv_v_pfs.child(d);
 
                 for (size_t i=0; i<vsize; i++)
                   {
@@ -368,47 +355,40 @@ namespace Dune {
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
       {
-        // dimensions
-        const int dim = EG::Geometry::mydimension;
-
-
-        // extract local function spaces
+        // define types
         typedef typename LFSU::template Child<0>::Type LFSU_V_PFS;
-        using namespace TypeTree::Indices;
-        const auto& lfsu_v_pfs = child(lfsu,_0);
-        const unsigned int vsize = lfsu_v_pfs.child(0).size();
-
         typedef typename LFSU_V_PFS::template Child<0>::Type LFSU_V;
-
-        // domain and range field type
+        typedef typename LFSU::template Child<1>::Type LFSU_P;
         typedef typename LFSU_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RT_V;
         typedef typename LFSU_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
-
-
-        typedef typename LFSU::template Child<1>::Type LFSU_P;
-        const auto& lfsu_p = child(lfsu,_1);
-        const unsigned int psize = lfsu_p.size();
-
-        typedef typename LFSU_P::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-
         typedef typename LFSU_P::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RT_P;
 
-        // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
+        // extract local function spaces
+        using namespace TypeTree::Indices;
+        const auto& lfsu_v_pfs = child(lfsu,_0);
+        const unsigned int vsize = lfsu_v_pfs.child(0).size();
+        const auto& lfsu_p = child(lfsu,_1);
+        const unsigned int psize = lfsu_p.size();
+
+        // dimensions
+        const int dim = EG::Geometry::mydimension;
+
+        // get geometry
+        auto geo = eg.geometry();
+
+        // determine quadrature order
         const int v_order = lfsu_v_pfs.child(0).finiteElement().localBasis().order();
-        const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
-        const int jac_order = gt.isSimplex() ? 0 : 1;
+        const int det_jac_order = geo.type().isSimplex() ? 0 : (dim-1);
+        const int jac_order = geo.type().isSimplex() ? 0 : 1;
         const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // loop over quadrature points
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,qorder))
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType_V> js(vsize);
@@ -416,7 +396,7 @@ namespace Dune {
 
             // transform gradient to real element
             const typename EG::Geometry::JacobianInverseTransposed jac =
-              eg.geometry().jacobianInverseTransposed(ip.position());
+              geo.jacobianInverseTransposed(ip.position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(vsize);
             for (size_t i=0; i<vsize; i++)
               {
@@ -435,22 +415,22 @@ namespace Dune {
               lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(ip.position(),phi);
 
               for(int d = 0; d < dim; ++d){
-                const LFSU_V & lfsv_v = lfsu_v_pfs.child(d);
+                const auto& lfsv_v = lfsu_v_pfs.child(d);
                 for(size_t l = 0; l < vsize; ++l)
                   vu[d] += x(lfsv_v,l) * phi[l];
               }
             }
 
             // Viscosity and density
-            const RF mu = _p.mu(eg,ip.position());
-            const RF rho = _p.rho(eg,ip.position());
+            const auto mu = _p.mu(eg,ip.position());
+            const auto rho = _p.rho(eg,ip.position());
 
-            const RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
+            const auto factor = ip.weight() * geo.integrationElement(ip.position());
 
             for(int d=0; d<dim; ++d){
 
-              const LFSU_V & lfsv_v = lfsu_v_pfs.child(d);
-              const LFSU_V & lfsu_v = lfsv_v;
+              const auto& lfsv_v = lfsu_v_pfs.child(d);
+              const auto& lfsu_v = lfsv_v;
 
               // Derivatives of d-th velocity component
               Dune::FieldVector<RF,dim> gradu_d(0.0);
@@ -467,7 +447,7 @@ namespace Dune {
                   // integrate (grad phi_u_i)^T * grad phi_v_i (viscous force)
                   if(full_tensor)
                     for(int dd=0; dd<dim; ++dd){
-                      const LFSU_V & lfsu_v = lfsu_v_pfs.child(dd);
+                      const auto& lfsu_v = lfsu_v_pfs.child(dd);
                       mat.accumulate(lfsv_v,i,lfsu_v,j, mu * (gradphi[j][d] * gradphi[i][dd]) * factor);
                     }
 
@@ -479,9 +459,9 @@ namespace Dune {
 
                 if(navier){
                   for(int k =0; k < dim; ++k){
-                    const LFSU_V & lfsu_v = lfsu_v_pfs.child(k);
+                    const auto& lfsu_v = lfsu_v_pfs.child(k);
 
-                    const RF pre_factor = factor * rho * gradu_d[k] * phi[i];
+                    const auto pre_factor = factor * rho * gradu_d[k] * phi[i];
 
                     for(size_t j=0; j< lfsu_v.size(); ++j)
                       mat.accumulate(lfsv_v,i,lfsu_v,j, pre_factor * phi[j]);
@@ -489,7 +469,7 @@ namespace Dune {
                 }
 
                 if(navier){
-                  const RF pre_factor = factor * rho *  phi[i];
+                  const auto pre_factor = factor * rho *  phi[i];
                   for(size_t j=0; j< lfsu_v.size(); ++j)
                     mat.accumulate(lfsv_v,i,lfsu_v,j,  pre_factor * (vu * gradphi[j]));
                 }
@@ -500,9 +480,7 @@ namespace Dune {
                 for (size_t j=0; j<lfsu_v.size(); j++)
                   mat.accumulate(lfsu_p,i,lfsu_v,j, - (gradphi[j][d] * psi[i]) * factor);
               }
-
             } // d
-
           } // it
       }
 
