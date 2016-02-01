@@ -35,27 +35,27 @@ class DarcyVelocityFromHeadFEM
       ::dimDomain> >,
   DarcyVelocityFromHeadFEM<P,T,X> >
 {
-  typedef T GFS;
-  typedef typename GFS::Traits::FiniteElementType::Traits::
-  LocalBasisType::Traits LBTraits;
+  using GFS = T;
+  using LBTraits = typename GFS::Traits::FiniteElementType::
+    Traits::LocalBasisType::Traits;
 
-  typedef Dune::PDELab::LocalFunctionSpace<GFS> LFS;
-  typedef Dune::PDELab::LFSIndexCache<LFS> LFSCache;
-  typedef typename X::template LocalView<LFSCache> LView;
+  using LFS = Dune::PDELab::LocalFunctionSpace<GFS>;
+  using LFSCache = Dune::PDELab::LFSIndexCache<LFS>;
+  using LView = typename X::template LocalView<LFSCache>;
 
 public:
-  typedef Dune::PDELab::GridFunctionTraits<
-  typename GFS::Traits::GridViewType,
-  typename LBTraits::RangeFieldType,
-  LBTraits::dimDomain,
-  Dune::FieldVector<
+  using Traits = Dune::PDELab::GridFunctionTraits<
+    typename GFS::Traits::GridViewType,
     typename LBTraits::RangeFieldType,
-    LBTraits::dimDomain> > Traits;
+    LBTraits::dimDomain,
+    Dune::FieldVector<
+      typename LBTraits::RangeFieldType,
+    LBTraits::dimDomain> >;
 
 private:
-  typedef Dune::PDELab::GridFunctionInterface<
-  Traits,
-  DarcyVelocityFromHeadFEM<P,T,X> > BaseT;
+  using BaseT = Dune::PDELab::GridFunctionInterface<
+    Traits,
+    DarcyVelocityFromHeadFEM<P,T,X> >;
 
 public:
   /** \brief Construct a DarcyVelocityFromHeadFEM
