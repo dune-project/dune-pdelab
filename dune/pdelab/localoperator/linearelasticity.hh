@@ -43,7 +43,7 @@ namespace Dune {
     {
     public:
 
-      typedef T ParameterType;
+      using ParameterType = T;
 
       // pattern assembly flags
       enum { doPatternVolume = true };
@@ -60,22 +60,27 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat) const
       {
-        // extract local function spaces
-        typedef typename LFSU::template Child<0>::Type LFSU_SUB;
-
-        // define types
-        typedef typename M::value_type RF;
-        typedef typename LFSU_SUB::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU_SUB::Traits::SizeType size_type;
+        // Define types
+        using namespace TypeTree::Indices;
+        using LFSU_SUB = TypeTree::Child<LFSU,_0>;
+        using RF = typename M::value_type;
+        using JacobianType = typename LFSU_SUB::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::JacobianType;
+        using size_type = typename LFSU_SUB::Traits::SizeType;
 
         // dimensions
         const int dim = EG::Entity::dimension;
         const int dimw = EG::Geometry::coorddimension;
         static_assert(dim == dimw, "doesn't work on manifolds");
 
+        // Reference to cell
+        const auto& cell = eg.entity();
+
         // get geometry
         auto geo = eg.geometry();
+
+        // Transformation
+        typename EG::Geometry::JacobianInverseTransposed jac;
 
         // Initialize vectors outside for loop
         std::vector<JacobianType> js(lfsu.child(0).size());
@@ -88,7 +93,7 @@ namespace Dune {
           lfsu.child(0).finiteElement().localBasis().evaluateJacobian(qp.position(),js);
 
           // transform gradient to real element
-          auto jac = geo.jacobianInverseTransposed(qp.position());
+          jac = geo.jacobianInverseTransposed(qp.position());
           for (size_type i=0; i<lfsu.child(0).size(); i++)
           {
             gradphi[i] = 0.0;
@@ -96,8 +101,8 @@ namespace Dune {
           }
 
           // material parameters
-          auto mu = param_.mu(eg.entity(),qp.position());
-          auto lambda = param_.lambda(eg.entity(),qp.position());
+          auto mu = param_.mu(cell,qp.position());
+          auto lambda = param_.lambda(cell,qp.position());
 
           // geometric weight
           auto factor = qp.weight() * geo.integrationElement(qp.position());
@@ -134,22 +139,27 @@ namespace Dune {
       template<typename EG, typename LFSU_HAT, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU_HAT& lfsu_hat, const X& x, const LFSV& lfsv, R& r) const
       {
-        // extract local function spaces
-        typedef typename LFSU_HAT::template Child<0>::Type LFSU;
-
-        // define types
-        typedef typename R::value_type RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU::Traits::SizeType size_type;
+        // Define types
+        using namespace TypeTree::Indices;
+        using LFSU = TypeTree::Child<LFSU_HAT,_0>;
+        using RF = typename R::value_type;
+        using JacobianType = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::JacobianType;
+        using size_type = typename LFSU::Traits::SizeType;
 
         // dimensions
         const int dim = EG::Entity::dimension;
         const int dimw = EG::Geometry::coorddimension;
         static_assert(dim == dimw, "doesn't work on manifolds");
 
-        // get geometry
+        // Reference to cell
+        const auto& cell = eg.entity();
+
+        // Get geometry
         auto geo = eg.geometry();
+
+        // Transformation
+        typename EG::Geometry::JacobianInverseTransposed jac;
 
         // Initialize vectors outside for loop
         std::vector<JacobianType> js(lfsu_hat.child(0).size());
@@ -163,7 +173,7 @@ namespace Dune {
           lfsu_hat.child(0).finiteElement().localBasis().evaluateJacobian(qp.position(),js);
 
           // transform gradient to real element
-          auto jac = geo.jacobianInverseTransposed(qp.position());
+          jac = geo.jacobianInverseTransposed(qp.position());
           for (size_type i=0; i<lfsu_hat.child(0).size(); i++)
           {
             gradphi[i] = 0.0;
@@ -171,8 +181,8 @@ namespace Dune {
           }
 
           // material parameters
-          auto mu = param_.mu(eg.entity(),qp.position());
-          auto lambda = param_.lambda(eg.entity(),qp.position());
+          auto mu = param_.mu(cell,qp.position());
+          auto lambda = param_.lambda(cell,qp.position());
 
           // geometric weight
           auto factor = qp.weight() * geo.integrationElement(qp.position());
@@ -215,19 +225,21 @@ namespace Dune {
       template<typename EG, typename LFSV_HAT, typename R>
       void lambda_volume (const EG& eg, const LFSV_HAT& lfsv_hat, R& r) const
       {
-        // extract local function spaces
-        typedef typename LFSV_HAT::template Child<0>::Type LFSV;
-
-        // define types
-        typedef typename R::value_type RF;
-        typedef typename LFSV::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
-        typedef typename LFSV::Traits::SizeType size_type;
+        // Define types
+        using namespace TypeTree::Indices;
+        using LFSV = TypeTree::Child<LFSV_HAT,_0>;
+        using RF = typename R::value_type;
+        using RangeType = typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
         const int dim = EG::Entity::dimension;
 
-        // select quadrature rule
+        // Reference to cell
+        const auto& cell = eg.entity();
+
+        // Get geometry
         auto geo = eg.geometry();
 
         // Initialize vectors outside for loop
@@ -242,7 +254,7 @@ namespace Dune {
 
           // evaluate right hand side parameter function
           y = 0.0;
-          param_.f(eg.entity(),qp.position(),y);
+          param_.f(cell,qp.position(),y);
 
           // weight
           auto factor = qp.weight() * geo.integrationElement(qp.position());
@@ -262,20 +274,21 @@ namespace Dune {
       template<typename IG, typename LFSV_HAT, typename R>
       void lambda_boundary (const IG& ig, const LFSV_HAT& lfsv_hat, R& r) const
       {
-        // extract local function spaces
-        typedef typename LFSV_HAT::template Child<0>::Type LFSV;
-
-        // define types
-        typedef typename R::value_type RF;
-        typedef typename LFSV::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
-        typedef typename LFSV::Traits::SizeType size_type;
+        // Define types
+        using namespace TypeTree::Indices;
+        using LFSV = TypeTree::Child<LFSV_HAT,0>;
+        using RF = typename R::value_type;
+        using RangeType = typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
         const int dim = IG::Entity::dimension;
 
         // get geometry
         auto geo = ig.geometry();
+
+        // Get geometry of intersection in local coordinates of inside cell
         auto geo_in_inside = ig.geometryInInside();
 
         // Initialize vectors outside for loop
