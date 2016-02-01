@@ -336,8 +336,9 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        // get types
-        using DGSpace = typename LFSV::template Child<0>::Type;
+        // Define types
+        using namespace TypeTree::Indices;
+        using DGSpace = TypeTree::Child<LFSV,_0>;
         using RF = typename DGSpace::Traits::FiniteElementType::Traits
           ::LocalBasisType::Traits::RangeFieldType;
         using size_type = typename DGSpace::Traits::SizeType;
@@ -350,19 +351,25 @@ namespace Dune {
         using namespace TypeTree::Indices;
         const auto& dgspace = child(lfsv,_0);
 
-        // get geometry
+        // Reference to cell
+        const auto& cell = eg.entity();
+
+        // Get geometry
         auto geo = eg.geometry();
 
         // evaluate parameters (assumed constant per element)
         auto ref_el = referenceElement(geo);
         auto localcenter = ref_el.position(0,0);
-        auto mu = param.mu(eg.entity(),localcenter);
-        auto eps = param.eps(eg.entity(),localcenter);
-        auto sigma = param.sigma(eg.entity(),localcenter);
+        auto mu = param.mu(cell,localcenter);
+        auto eps = param.eps(cell,localcenter);
+        auto sigma = param.sigma(cell,localcenter);
         auto muinv = 1.0/mu;
         auto epsinv = 1.0/eps;
 
         //std::cout << "alpha_volume center=" << eg.geometry().center() << std::endl;
+
+        // Transformation
+        typename EG::Geometry::JacobianInverseTransposed jac;
 
         // Initialize vectors outside for loop
         Dune::FieldVector<RF,dim*2> u(0.0);
@@ -390,7 +397,7 @@ namespace Dune {
               (qp.position(), dgspace.finiteElement().localBasis());
 
             // compute global gradients
-            const auto& jac = geo.jacobianInverseTransposed(qp.position());
+            jac = geo.jacobianInverseTransposed(qp.position());
             for (size_type i=0; i<dgspace.size(); i++)
               jac.mv(js[i][0],gradphi[i]);
 
@@ -436,8 +443,9 @@ namespace Dune {
         using std::max;
         using std::sqrt;
 
-        // get types
-        using DGSpace = typename LFSV::template Child<0>::Type;
+        // Define types
+        using namespace TypeTree::Indices;
+        using DGSpace = TypeTree::Child<LFSV,_0>;
         using DF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType;
         using RF = typename DGSpace::Traits::FiniteElementType::
@@ -449,34 +457,34 @@ namespace Dune {
         const auto& dgspace_s = child(lfsv_s,_0);
         const auto& dgspace_n = child(lfsv_n,_0);
 
-        // make copy of inside and outside cell w.r.t. the intersection
-        auto cell_inside = ig.inside();
-        auto cell_outside = ig.outside();
+        // References to inside and outside cells
+        const auto& cell_inside = ig.inside();
+        const auto& cell_outside = ig.outside();
 
-        // get geometries
+        // Get geometries
         auto geo = ig.geometry();
         auto geo_inside = cell_inside.geometry();
         auto geo_outside = cell_outside.geometry();
 
-       // get geometry of intersection in local coordinates of inside_cell and outside_cell
+       // Geometry of intersection in local coordinates of inside_cell and outside_cell
         auto geo_in_inside = ig.geometryInInside();
         auto geo_in_outside = ig.geometryInOutside();
 
         // evaluate speed of sound (assumed constant per element)
         auto ref_el_inside = referenceElement(geo_inside);
         auto ref_el_outside = referenceElement(geo_outside);
-        auto inside_local = ref_el_inside.position(0,0);
-        auto outside_local = ref_el_outside.position(0,0);
+        auto local_inside = ref_el_inside.position(0,0);
+        auto local_outside = ref_el_outside.position(0,0);
         // This is wrong -- this approach (with A- and A+) does not allow
         // position-dependent eps and mu, so we should not allow the parameter
         // class to specify them in a position-dependent manner.  See my
         // (Jorrit Fahlke) dissertation on how to do it right.
-        auto mu_s = param.mu(cell_inside,inside_local);
-        auto mu_n = param.mu(cell_outside,outside_local);
-        auto eps_s = param.eps(cell_inside,inside_local);
-        auto eps_n = param.eps(cell_outside,outside_local);
-        //auto sigma_s = param.sigma(ig.inside(),inside_local);
-        //auto sigma_n = param.sigma(ig.outside(),outside_local);
+        auto mu_s = param.mu(cell_inside,local_inside);
+        auto mu_n = param.mu(cell_outside,local_outside);
+        auto eps_s = param.eps(cell_inside,local_inside);
+        auto eps_n = param.eps(cell_outside,local_outside);
+        //auto sigma_s = param.sigma(ig.inside(),local_inside);
+        //auto sigma_n = param.sigma(ig.outside(),local_outside);
 
         // normal: assume faces are planar
         const auto& n_F = ig.centerUnitOuterNormal();
@@ -569,8 +577,9 @@ namespace Dune {
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                            R& r_s) const
       {
-        // get types
-        using DGSpace = typename LFSV::template Child<0>::Type;
+        // Define types
+        using namespace TypeTree::Indices;
+        using DGSpace = TypeTree::Child<LFSV,_0>;
         using DF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType;
         using RF = typename DGSpace::Traits::FiniteElementType::
@@ -581,22 +590,22 @@ namespace Dune {
         using namespace TypeTree::Indices;
         const auto& dgspace_s = child(lfsv_s,_0);
 
-        // make copy of inside cell w.r.t. the boundary
-        auto cell_inside = ig.inside();
+        // References to inside cell
+        const auto& cell_inside = ig.inside();
 
-        // get geometries
+        // Get geometries
         auto geo = ig.geometry();
         auto geo_inside = cell_inside.geometry();
 
-        // get geometry of intersection in local coordinates of inside_cell
+        // Geometry of intersection in local coordinates of inside_cell
         auto geo_in_inside = ig.geometryInInside();
 
         // evaluate speed of sound (assumed constant per element)
         auto ref_el_inside = referenceElement(geo_inside);
-        auto inside_local = ref_el_inside.position(0,0);
-        auto mu_s = param.mu(cell_inside,inside_local);
-        auto eps_s = param.eps(cell_inside,inside_local);
-        //auto sigma_s = param.sigma(ig.inside(),inside_local);
+        auto local_inside = ref_el_inside.position(0,0);
+        auto mu_s = param.mu(cell_inside,local_inside);
+        auto eps_s = param.eps(cell_inside,local_inside);
+        //auto sigma_s = param.sigma(ig.inside(),local_inside );
 
         // normal: assume faces are planar
         const auto& n_F = ig.centerUnitOuterNormal();
@@ -677,15 +686,19 @@ namespace Dune {
       template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
-        // get types
-        using DGSpace = typename LFSV::template Child<0>::Type;
+        // Define types
+        using namespace TypeTree::Indices;
+        using DGSpace = TypeTree::Child<LFSV,_0>;
         using size_type = typename DGSpace::Traits::SizeType;
 
-        // get local function space that is identical for all components
+        // Get local function space that is identical for all components
         using namespace TypeTree::Indices;
         const auto& dgspace = child(lfsv,_0);
 
-        // get geometry
+        // Reference to cell
+        const auto& cell = eg.entity();
+
+        // Get geometry
         auto geo = eg.geometry();
 
         // loop over quadrature points
@@ -694,7 +707,7 @@ namespace Dune {
         for (const auto &qp : quadratureRule(geo,intorder))
           {
             // evaluate right hand side
-            auto j = param.j(eg.entity(),qp.position());
+            auto j = param.j(cell,qp.position());
 
             // evaluate basis functions
             const auto& phi = cache[order_s].evaluateFunction(qp.position(),dgspace.finiteElement().localBasis());
@@ -792,8 +805,9 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        // get types
-        using DGSpace = typename LFSV::template Child<0>::Type;
+        // Define types
+        using namespace TypeTree::Indices;
+        using DGSpace = TypeTree::Child<LFSV,_0>;
         using RF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType;
         using size_type = typename DGSpace::Traits::SizeType;
@@ -802,7 +816,7 @@ namespace Dune {
         using namespace TypeTree::Indices;
         const auto& dgspace = child(lfsv,_0);
 
-        // get geometry
+        // Get geometry
         auto geo = eg.geometry();
 
         // Initialize vectors outside for loop
@@ -836,26 +850,27 @@ namespace Dune {
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
       {
-        // get types
-        using DGSpace = typename LFSV::template Child<0>::Type;
+        // Define types
+        using namespace TypeTree::Indices;
+        using DGSpace = TypeTree::Child<LFSV,_0>;
         using size_type = typename DGSpace::Traits::SizeType;
 
-        // get local function space that is identical for all components
+        // Get local function space that is identical for all components
         using namespace TypeTree::Indices;
         const auto& dgspace = child(lfsv,_0);
 
-        // get geometry
+        // Get geometry
         auto geo = eg.geometry();
 
-        // loop over quadrature points
+        // Loop over quadrature points
         const int order = dgspace.finiteElement().localBasis().order();
         const int intorder = overintegration+2*order;
         for (const auto& qp : quadratureRule(geo,intorder))
           {
-            // evaluate basis functions
+            // Evaluate basis functions
             const auto& phi = cache[order].evaluateFunction(qp.position(),dgspace.finiteElement().localBasis());
 
-            // integrate
+            // Integrate
             auto factor = qp.weight() * geo.integrationElement(qp.position());
             for (size_type k=0; k<dim*2; k++) // for all components
               for (size_type i=0; i<dgspace.size(); i++) // for all test functions of this component
