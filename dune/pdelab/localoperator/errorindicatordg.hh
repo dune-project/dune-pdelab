@@ -86,8 +86,10 @@ namespace Dune {
         // dimensions
         const int dim = EG::Geometry::mydimension;
 
-        // extract objects
-        auto cell = eg.entity();
+        // Reference to cell
+        const auto& cell = eg.entity();
+
+        // Get geometry
         auto geo  = eg.geometry();
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
@@ -168,34 +170,34 @@ namespace Dune {
                            const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
       {
-        // define types
+        // Define types
         using RF = typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType;
 
-        // dimensions
+        // Dimension
         const int dim = IG::dimension;
 
-        // extract objects
-        auto cell_inside = ig.inside();
-        auto cell_outside = ig.outside();
+        // Refererences to inside and outside cells
+        const auto& cell_inside = ig.inside();
+        const auto& cell_outside = ig.outside();
 
-        // get geometries
+        // Get geometries
         auto geo = ig.geometry();
         auto geo_inside = cell_inside.geometry();
         auto geo_outside = cell_outside.geometry();
 
-        // get geometry of intersection in local coordinates of inside_cell and outside_cell
+        // Get geometry of intersection in local coordinates of inside_cell and outside_cell
         auto geo_in_inside = ig.geometryInInside();
         auto geo_in_outside = ig.geometryInOutside();
 
 
-        // evaluate permeability tensors
+        // Evaluate permeability tensors
         auto ref_el_inside = referenceElement(geo_inside);
         auto ref_el_outside = referenceElement(geo_outside);
-        auto inside_local = ref_el_inside.position(0,0);
-        auto outside_local = ref_el_outside.position(0,0);
-        auto A_s = param.A(cell_inside,inside_local);
-        auto A_n = param.A(cell_outside,outside_local);
+        auto local_inside = ref_el_inside.position(0,0);
+        auto local_outside = ref_el_outside.position(0,0);
+        auto A_s = param.A(cell_inside,local_inside);
+        auto A_n = param.A(cell_outside,local_outside);
 
         static_assert(dim == 2 || dim == 3,
                       "The computation of epsilon_s and epsilon_n looks very "
@@ -301,12 +303,14 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
-        // extract objects
-        auto cell_inside = ig.inside();
+        // Reference to inside cell
+        const auto& cell_inside = ig.inside();
 
-        // get geometries
+        // Get geometries
         auto geo = ig.geometry();
         auto geo_inside = cell_inside.geometry();
+
+        // Get geometry of intersection in local coordinates of inside_cell
         auto geo_in_inside = ig.geometryInInside();
 
         // reference elements
@@ -314,8 +318,8 @@ namespace Dune {
         auto ref_el_inside = referenceElement(geo_inside);
 
         // evaluate permeability tensors
-        auto inside_local = ref_el_inside.position(0,0);
-        auto A_s = param.A(cell_inside,inside_local);
+        auto local_inside = ref_el_inside.position(0,0);
+        auto A_s = param.A(cell_inside,local_inside);
 
         static_assert(dim == 2 || dim == 3,
                       "The computation of epsilon_s looks very "
