@@ -47,8 +47,8 @@ namespace Dune {
     {
       enum { dim = T::Traits::GridViewType::dimension };
 
-      typedef typename T::Traits::RangeFieldType Real;
-      typedef typename ConvectionDiffusionBoundaryConditions::Type BCType;
+      using Real = typename T::Traits::RangeFieldType;
+      using BCType = typename ConvectionDiffusionBoundaryConditions::Type;
 
     public:
       // pattern assembly flags
@@ -77,11 +77,11 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // define types
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
-        typedef typename LFSU::Traits::SizeType size_type;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using RangeType = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
+        using size_type = typename LFSU::Traits::SizeType;
 
         // dimensions
         const int dim = EG::Geometry::mydimension;
@@ -169,8 +169,8 @@ namespace Dune {
                            R& r_s, R& r_n) const
       {
         // define types
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
 
         // dimensions
         const int dim = IG::dimension;
@@ -295,8 +295,8 @@ namespace Dune {
                            R& r_s) const
       {
         // define types
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        using RF = typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
 
         // dimensions
         const int dim = IG::dimension;
@@ -382,7 +382,7 @@ namespace Dune {
       template<class GEO>
       typename GEO::ctype diameter (const GEO& geo) const
       {
-        typedef typename GEO::ctype DF;
+        using DF = typename GEO::ctype;
         DF hmax = -1.0E00;
         const int dim = GEO::coorddimension;
         for (int i=0; i<geo.corners(); i++)
