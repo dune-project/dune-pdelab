@@ -406,7 +406,7 @@ namespace Dune {
 
         // get local function space that is identical for all components
         using namespace TypeTree::Indices;
-        const DGSpace& dgspace_s = child(lfsv_s,_0);
+        const auto& dgspace_s = child(lfsv_s,_0);
 
         // normal: assume faces are planar
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
@@ -620,7 +620,7 @@ namespace Dune {
 
         // get local function space that is identical for all components
         using namespace TypeTree::Indices;
-        const DGSpace& dgspace = child(lfsv,_0);
+        const auto& dgspace = child(lfsv,_0);
 
         // get geometry
         auto geo = eg.geometry();
@@ -661,7 +661,7 @@ namespace Dune {
 
         // get local function space that is identical for all components
         using namespace TypeTree::Indices;
-        const DGSpace& dgspace = child(lfsv,_0);
+        const auto& dgspace = child(lfsv,_0);
 
         // get geometry
         auto geo = eg.geometry();
