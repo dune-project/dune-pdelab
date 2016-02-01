@@ -119,6 +119,14 @@ namespace Dune {
         const int jac_order = geo.type().isSimplex() ? 0 : 1;
         const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
 
+        // Initialize vectors outside for loop
+        typename EG::Geometry::JacobianInverseTransposed jac;
+        std::vector<Dune::FieldVector<RF,dim> > gradphi(vsize);
+        std::vector<RT_P> psi(psize);
+        Dune::FieldVector<RF,dim> vu(0.0);
+        std::vector<RT_V> phi(vsize);
+        Dune::FieldMatrix<RF,dim,dim> jacu(0.0);
+
         // loop over quadrature points
         for (const auto& ip : quadratureRule(geo,qorder))
           {
@@ -127,9 +135,7 @@ namespace Dune {
             lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateJacobian(ip.position(),js);
 
             // transform gradient to real element
-            const typename EG::Geometry::JacobianInverseTransposed jac =
-              geo.jacobianInverseTransposed(ip.position());
-            std::vector<Dune::FieldVector<RF,dim> > gradphi(vsize);
+            jac = geo.jacobianInverseTransposed(ip.position());
             for (size_t i=0; i<vsize; i++)
               {
                 gradphi[i] = 0.0;
@@ -137,19 +143,16 @@ namespace Dune {
               }
 
             // evaluate basis functions
-            std::vector<RT_P> psi(psize);
             lfsu_p.finiteElement().localBasis().evaluateFunction(ip.position(),psi);
 
             // compute u (if Navier term enabled)
-            Dune::FieldVector<RF,dim> vu(0.0);
-
-            std::vector<RT_V> phi(vsize);
             if(navier)
               {
                 lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(ip.position(),phi);
 
                 for(int d=0; d<dim; ++d)
                   {
+                    vu[d] = 0.0;
                     const auto& lfsu_v = lfsu_v_pfs.child(d);
                     for (size_t i=0; i<lfsu_v.size(); i++)
                       vu[d] += x(lfsu_v,i) * phi[i];
@@ -157,8 +160,8 @@ namespace Dune {
               }
 
             // Compute velocity jacobian
-            Dune::FieldMatrix<RF,dim,dim> jacu(0.0);
             for(int d=0; d<dim; ++d){
+              jacu[d] = 0.0;
               const auto& lfsu_v = lfsu_v_pfs.child(d);
               for (size_t i=0; i<lfsu_v.size(); i++)
                 jacu[d].axpy(x(lfsu_v,i),gradphi[i]);
@@ -244,13 +247,15 @@ namespace Dune {
         const int det_jac_order = geo.type().isSimplex() ?  0 : (dim-1);
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
 
+        // Initialize vectors outside for loop
+        std::vector<RT_V> phi(vsize);
+        std::vector<RT_P> psi(psize);
+
         // loop over quadrature points
         for (const auto& ip : quadratureRule(geo,qorder))
           {
-            std::vector<RT_V> phi(vsize);
             lfsv_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(ip.position(),phi);
 
-            std::vector<RT_P> psi(psize);
             lfsv_p.finiteElement().localBasis().evaluateFunction(ip.position(),psi);
 
             // forcing term
@@ -313,6 +318,9 @@ namespace Dune {
         const int jac_order = geo_in_inside.type().isSimplex() ? 0 : 1;
         const int qorder = 2*v_order + det_jac_order + jac_order + superintegration_order;
 
+        // Initialize vectors outside for loop
+        std::vector<RT_V> phi(vsize);
+
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : quadratureRule(geo,qorder))
           {
@@ -327,7 +335,6 @@ namespace Dune {
             auto local = geo_in_inside.global(ip.position());
 
             // evaluate basis functions
-            std::vector<RT_V> phi(vsize);
             lfsv_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(local,phi);
 
             const auto factor = ip.weight() * geo.integrationElement(ip.position());
@@ -387,17 +394,23 @@ namespace Dune {
         const int jac_order = geo.type().isSimplex() ? 0 : 1;
         const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
 
+        // Initialize vectors outside for loop
+        typename EG::Geometry::JacobianInverseTransposed jac;
+        std::vector<JacobianType_V> js(vsize);
+        std::vector<Dune::FieldVector<RF,dim> > gradphi(vsize);
+        std::vector<RT_P> psi(psize);
+        std::vector<RT_V> phi(vsize);
+        Dune::FieldVector<RF,dim> vu(0.0);
+        Dune::FieldVector<RF,dim> gradu_d(0.0);
+
         // loop over quadrature points
         for (const auto& ip : quadratureRule(geo,qorder))
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
-            std::vector<JacobianType_V> js(vsize);
             lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateJacobian(ip.position(),js);
 
             // transform gradient to real element
-            const typename EG::Geometry::JacobianInverseTransposed jac =
-              geo.jacobianInverseTransposed(ip.position());
-            std::vector<Dune::FieldVector<RF,dim> > gradphi(vsize);
+            jac = geo.jacobianInverseTransposed(ip.position());
             for (size_t i=0; i<vsize; i++)
               {
                 gradphi[i] = 0.0;
@@ -405,16 +418,14 @@ namespace Dune {
               }
 
             // evaluate basis functions
-            std::vector<RT_P> psi(psize);
             lfsu_p.finiteElement().localBasis().evaluateFunction(ip.position(),psi);
 
             // compute u (if Navier term enabled)
-            std::vector<RT_V> phi(vsize);
-            Dune::FieldVector<RF,dim> vu(0.0);
             if(navier){
               lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(ip.position(),phi);
 
               for(int d = 0; d < dim; ++d){
+                vu[d] = 0.0;
                 const auto& lfsv_v = lfsu_v_pfs.child(d);
                 for(size_t l = 0; l < vsize; ++l)
                   vu[d] += x(lfsv_v,l) * phi[l];
@@ -433,7 +444,7 @@ namespace Dune {
               const auto& lfsu_v = lfsv_v;
 
               // Derivatives of d-th velocity component
-              Dune::FieldVector<RF,dim> gradu_d(0.0);
+              gradu_d = 0.0;
               if(navier)
                 for(size_t l =0; l < vsize; ++l)
                   gradu_d.axpy(x(lfsv_v,l), gradphi[l]);
