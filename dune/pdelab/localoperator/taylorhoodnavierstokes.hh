@@ -89,7 +89,8 @@ namespace Dune {
 
         // extract local function spaces
         typedef typename LFSU::template Child<0>::Type LFSU_V_PFS;
-        const LFSU_V_PFS& lfsu_v_pfs = lfsu.template child<0>();
+        using namespace TypeTree::Indices;
+        const auto& lfsu_v_pfs = child(lfsu,_0);
 
         typedef typename LFSU_V_PFS::template Child<0>::Type LFSU_V;
         const unsigned int vsize = lfsu_v_pfs.child(0).size();
@@ -104,7 +105,7 @@ namespace Dune {
 
 
         typedef typename LFSU::template Child<1>::Type LFSU_P;
-        const LFSU_P& lfsu_p = lfsu.template child<1>();
+        const auto& lfsu_p = child(lfsu,_1);
         const unsigned int psize = lfsu_p.size();
 
         typedef typename LFSU_P::Traits::FiniteElementType::
@@ -223,7 +224,8 @@ namespace Dune {
 
         // extract local function spaces
         typedef typename LFSV::template Child<0>::Type LFSV_V_PFS;
-        const LFSV_V_PFS& lfsv_v_pfs = lfsv.template child<0>();
+        using namespace TypeTree::Indices;
+        const auto& lfsv_v_pfs = child(lfsv,_0);
 
         typedef typename LFSV_V_PFS::template Child<0>::Type LFSV_V;
         const unsigned int vsize = lfsv_v_pfs.child(0).size();
@@ -235,7 +237,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType RT_V;
 
         typedef typename LFSV::template Child<1>::Type LFSV_P;
-        const LFSV_P& lfsv_p = lfsv.template child<1>();
+        const auto& lfsv_p = child(lfsv,_1);
         const unsigned int psize = lfsv_p.size();
 
         typedef typename LFSV_V::Traits::FiniteElementType::
@@ -299,7 +301,8 @@ namespace Dune {
 
         // extract local velocity function spaces
         typedef typename LFSV::template Child<0>::Type LFSV_V_PFS;
-        const LFSV_V_PFS& lfsv_v_pfs = lfsv.template child<0>();
+        using namespace TypeTree::Indices;
+        const auto& lfsv_v_pfs = child(lfsv,_0);
 
         typedef typename LFSV_V_PFS::template Child<0>::Type LFSV_V;
         const unsigned int vsize = lfsv_v_pfs.child(0).size();
@@ -371,7 +374,8 @@ namespace Dune {
 
         // extract local function spaces
         typedef typename LFSU::template Child<0>::Type LFSU_V_PFS;
-        const LFSU_V_PFS& lfsu_v_pfs = lfsu.template child<0>();
+        using namespace TypeTree::Indices;
+        const auto& lfsu_v_pfs = child(lfsu,_0);
         const unsigned int vsize = lfsu_v_pfs.child(0).size();
 
         typedef typename LFSU_V_PFS::template Child<0>::Type LFSU_V;
@@ -386,7 +390,7 @@ namespace Dune {
 
 
         typedef typename LFSU::template Child<1>::Type LFSU_P;
-        const LFSU_P& lfsu_p = lfsu.template child<1>();
+        const auto& lfsu_p = child(lfsu,_1);
         const unsigned int psize = lfsu_p.size();
 
         typedef typename LFSU_P::Traits::FiniteElementType::
