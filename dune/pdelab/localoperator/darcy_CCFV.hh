@@ -23,8 +23,8 @@ class VectorExchange
   : public Dune::CommDataHandleIF<VectorExchange<GV,V>,
                                   typename V::value_type>
 {
-  typedef typename GV::IndexSet IndexSet;
-  typedef typename IndexSet::IndexType IndexType;
+  using IndexSet = typename GV::IndexSet;
+  using IndexType = typename IndexSet::IndexType;
 
   GV gv;
   V& c;
@@ -32,7 +32,7 @@ class VectorExchange
 
 public:
   //! export type of data for message buffer
-  typedef typename V::value_type DataType;
+  using DataType = typename V::value_type;
 
   //! constructor
   VectorExchange (const GV& gv_, V& c_)
@@ -97,17 +97,17 @@ class DarcyVelocityFromHeadCCFV
                                           DarcyVelocityFromHeadCCFV<T,PL> >
 {
   // extract useful types
-  typedef typename PL::Traits::GridViewType GV;
-  typedef typename GV::IndexSet IndexSet;
-  typedef typename GV::Grid::ctype DF;
-  typedef typename PL::Traits::RangeFieldType RF;
-  typedef typename PL::Traits::RangeType RangeType;
+  using GV = typename PL::Traits::GridViewType;
+  using IndexSet = typename GV::IndexSet;
+  using DF = typename GV::Grid::ctype;
+  using RF = typename PL::Traits::RangeFieldType;
+  using RangeType = typename PL::Traits::RangeType;
   enum { dim = PL::Traits::GridViewType::dimension };
-  typedef typename GV::Traits::template Codim<0>::Entity Element;
-  typedef typename GV::IntersectionIterator IntersectionIterator;
-  typedef typename IntersectionIterator::Intersection Intersection;
-  typedef typename Dune::RaviartThomasCubeLocalFiniteElement<DF,RF,dim,0>::Traits::LocalBasisType::Traits::RangeType RT0RangeType;
-  typedef typename Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
+  using Element = typename GV::Traits::template Codim<0>::Entity;
+  using IntersectionIterator = typename GV::IntersectionIterator;
+  using Intersection = typename IntersectionIterator::Intersection;
+  using RT0RangeType = typename Dune::RaviartThomasCubeLocalFiniteElement<DF,RF,dim,0>::Traits::LocalBasisType::Traits::RangeType;
+  using BCType = typename Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type;
 
   const T& t;
   const PL& pl;
@@ -118,15 +118,15 @@ class DarcyVelocityFromHeadCCFV
   mutable int cachedindex;
   typename T::Traits::RangeFieldType time;
 
-  typedef Dune::FieldVector<RF,2*dim> RT0Coeffs;
+  using RT0Coeffs = Dune::FieldVector<RF,2*dim>;
   GV gv;
   const IndexSet& is;
   std::vector<RT0Coeffs> storedcoeffs;
   mutable std::vector<RT0RangeType> rt0vectors;
 
 public:
-  typedef Dune::PDELab::GridFunctionTraits<GV,RF,dim,Dune::FieldVector<RF,dim> > Traits;
-  typedef Dune::PDELab::GridFunctionBase<Traits,DarcyVelocityFromHeadCCFV<T,PL> > BaseT;
+  using Traits = Dune::PDELab::GridFunctionTraits<GV,RF,dim,Dune::FieldVector<RF,dim> >;
+  using BaseT = Dune::PDELab::GridFunctionBase<Traits,DarcyVelocityFromHeadCCFV<T,PL> >;
 
   DarcyVelocityFromHeadCCFV (const T& t_, const PL& pl_)
     : t(t_), pl(pl_), cachedindex(-1), time(0), gv(pl_.getGridView()), is(gv.indexSet()), storedcoeffs(is.size(0)),
