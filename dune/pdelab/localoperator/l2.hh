@@ -27,7 +27,7 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-    /** a local operator for the mass operator (L_2 integral)
+    /** A local operator for the mass operator (L_2 integral)
      *
      * \f{align*}{
      \int_\Omega uv dx
@@ -39,10 +39,10 @@ namespace Dune {
                public InstationaryLocalOperatorDefaultMethods<double>
     {
     public:
-      // pattern assembly flags
+      // Pattern assembly flags
       enum { doPatternVolume = true };
 
-      // residual assembly flags
+      // Residual assembly flags
       enum { doAlphaVolume = true };
 
       L2 (int intorder_=2,double scaling=1.0)
@@ -50,36 +50,34 @@ namespace Dune {
         , _scaling(scaling)
       {}
 
-      // volume integral depending on test and ansatz functions
+      // Volume integral depending on test and ansatz functions
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // Switches between local and global interface
-        typedef FiniteElementInterfaceSwitch<
-          typename LFSU::Traits::FiniteElementType
-          > FESwitch;
-        typedef BasisInterfaceSwitch<
-          typename FESwitch::Basis
-          > BasisSwitch;
+        using FESwitch = FiniteElementInterfaceSwitch<
+          typename LFSU::Traits::FiniteElementType>;
+        using BasisSwitch = BasisInterfaceSwitch<
+          typename FESwitch::Basis>;
 
-        // domain and range field type
-        typedef typename BasisSwitch::RangeField RF;
-        typedef typename BasisSwitch::Range RangeType;
-        typedef typename LFSU::Traits::SizeType size_type;
+        // Define types
+        using RF = typename BasisSwitch::RangeField;
+        using RangeType = typename BasisSwitch::Range;
+        using size_type = typename LFSU::Traits::SizeType;
 
-        // select quadrature rule
+        // Get geometry
         auto geo = eg.geometry();
 
-        // Initialize outside for loop
+        // Initialize vectors outside for loop
         std::vector<RangeType> phi(lfsu.size());
 
-        // loop over quadrature points
+        // Loop over quadrature points
         for (const auto& qp : quadratureRule(geo,intorder))
           {
-            // evaluate basis functions
+            // Evaluate basis functions
             FESwitch::basis(lfsu.finiteElement()).evaluateFunction(qp.position(),phi);
 
-            // evaluate u
+            // Evaluate u
             RF u=0.0;
             for (size_type i=0; i<lfsu.size(); i++)
               u += RF(x(lfsu,i)*phi[i]);
@@ -91,36 +89,34 @@ namespace Dune {
           }
       }
 
-      // jacobian of volume term
+      // Jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M & mat) const
       {
         // Switches between local and global interface
-        typedef FiniteElementInterfaceSwitch<
-          typename LFSU::Traits::FiniteElementType
-          > FESwitch;
-        typedef BasisInterfaceSwitch<
-          typename FESwitch::Basis
-          > BasisSwitch;
+        using FESwitch = FiniteElementInterfaceSwitch<
+          typename LFSU::Traits::FiniteElementType>;
+        using BasisSwitch = BasisInterfaceSwitch<
+          typename FESwitch::Basis>;
 
-        // domain and range field type
-        typedef typename BasisSwitch::Range RangeType;
-        typedef typename LFSU::Traits::SizeType size_type;
+        // Define types
+        using RangeType = typename BasisSwitch::Range;
+        using size_type = typename LFSU::Traits::SizeType;
 
-        // select quadrature rule
+        // Get geometry
         auto geo = eg.geometry();
 
-        // Inititialize outside for loop
+        // Inititialize vectors outside for loop
         std::vector<RangeType> phi(lfsu.size());
 
-        // loop over quadrature points
+        // Loop over quadrature points
         for (const auto& qp : quadratureRule(geo,intorder))
           {
-            // evaluate basis functions
+            // Evaluate basis functions
             FESwitch::basis(lfsu.finiteElement()).evaluateFunction(qp.position(),phi);
 
-            // integrate phi_j*phi_i
+            // Integrate phi_j*phi_i
             auto factor = _scaling * qp.weight() * geo.integrationElement(qp.position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
@@ -133,7 +129,7 @@ namespace Dune {
       const double _scaling;
     };
 
-    /** a local operator for the mass operator of a vector valued lfs (L_2 integral)
+    /** A local operator for the mass operator of a vector valued lfs (L_2 integral)
      *
      * \f{align*}{
      \int_\Omega uv dx
@@ -145,17 +141,17 @@ namespace Dune {
                     public InstationaryLocalOperatorDefaultMethods<double>
     {
     public:
-      // pattern assembly flags
+      // Pattern assembly flags
       enum { doPatternVolume = true };
 
-      // residual assembly flags
+      // Residual assembly flags
       enum { doAlphaVolume = true };
 
       PowerL2 (int intorder_=2)
         : scalar_operator(intorder_)
       {}
 
-      // volume integral depending on test and ansatz functions
+      // Volume integral depending on test and ansatz functions
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
@@ -163,7 +159,7 @@ namespace Dune {
           scalar_operator.alpha_volume(eg,lfsu.child(i),x,lfsv.child(i),r);
       }
 
-      // jacobian of volume term
+      // Jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
