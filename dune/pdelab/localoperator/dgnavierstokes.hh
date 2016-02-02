@@ -392,9 +392,9 @@ namespace Dune {
         using RF = typename BasisSwitch_V::RangeField;
         using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
 
-        // make copy of inside and outside cell w.r.t. the intersection
-        auto cell_inside = ig.inside();
-        auto cell_outside = ig.outside();
+        // References to inside and outside cells
+        const auto& cell_inside = ig.inside();
+        const auto& cell_outside = ig.outside();
 
         // Get geometries
         auto geo = ig.geometry();
@@ -591,9 +591,9 @@ namespace Dune {
         using RF = typename BasisSwitch_V::RangeField;
         using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
 
-        // make copy of inside and outside cell w.r.t. the intersection
-        auto cell_inside = ig.inside();
-        auto cell_outside = ig.outside();
+        // References to inside and outside cells
+        auto const& cell_inside = ig.inside();
+        auto const& cell_outside = ig.outside();
 
         // Get geometries
         auto geo = ig.geometry();
@@ -795,8 +795,8 @@ namespace Dune {
         using RF = typename BasisSwitch_V::RangeField;
         using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
 
-        // make copy of inside cell w.r.t. the boundary
-        auto cell_inside = ig.inside();
+        // References to inside cell
+        const auto& cell_inside = ig.inside();
 
         // Get geometries
         auto geo = ig.geometry();
@@ -980,10 +980,10 @@ namespace Dune {
         using RF = typename BasisSwitch_V::RangeField;
         using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
 
-        // make copy of inside cell w.r.t. the boundary
-        auto cell_inside = ig.inside();
+        // References to inside cell
+        const auto& cell_inside = ig.inside();
 
-         // Get geometries
+        // Get geometries
         auto geo = ig.geometry();
         auto geo_inside = cell_inside.geometry();
 
@@ -1252,8 +1252,8 @@ namespace Dune {
         using RF = typename BasisSwitch_V::RangeField;
         using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
 
-        // make copy of inside cell w.r.t. the boundary
-        auto cell_inside = ig.inside();
+        // References to inside cell
+        const auto& cell_inside = ig.inside();
 
         // Get geometries
         auto geo = ig.geometry();
