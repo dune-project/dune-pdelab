@@ -72,19 +72,16 @@ namespace Dune {
       {
 
         // Switches between local and global interface
-        typedef FiniteElementInterfaceSwitch<
-          typename LFSU::Traits::FiniteElementType
-          > FESwitch;
-        typedef BasisInterfaceSwitch<
-          typename FESwitch::Basis
-          > BasisSwitch;
+        using FESwitch = FiniteElementInterfaceSwitch<
+          typename LFSU::Traits::FiniteElementType>;
+        using BasisSwitch = BasisInterfaceSwitch<
+          typename FESwitch::Basis>;
 
         // domain and range field type
-        typedef typename BasisSwitch::DomainField DF;
-        typedef typename BasisSwitch::RangeField RF;
-        typedef typename BasisSwitch::Range RangeType;
-
-        typedef typename LFSU::Traits::SizeType size_type;
+        using DF = typename BasisSwitch::DomainField;
+        using RF = typename BasisSwitch::RangeField;
+        using RangeType = typename BasisSwitch::Range;
+        using size_type = typename LFSU::Traits::SizeType;
 
         // dimensions
         const int dim = EG::Geometry::mydimension;
@@ -123,18 +120,16 @@ namespace Dune {
       {
 
         // Switches between local and global interface
-        typedef FiniteElementInterfaceSwitch<
-          typename LFSU::Traits::FiniteElementType
-          > FESwitch;
-        typedef BasisInterfaceSwitch<
-          typename FESwitch::Basis
-          > BasisSwitch;
+        using FESwitch = FiniteElementInterfaceSwitch<
+          typename LFSU::Traits::FiniteElementType>;
+        using BasisSwitch = BasisInterfaceSwitch<
+          typename FESwitch::Basis>;
 
         // domain and range field type
-        typedef typename BasisSwitch::DomainField DF;
-        typedef typename BasisSwitch::RangeField RF;
-        typedef typename BasisSwitch::Range RangeType;
-        typedef typename LFSU::Traits::SizeType size_type;
+        using DF = typename BasisSwitch::DomainField;
+        using RF = typename BasisSwitch::RangeField;
+        using RangeType = typename BasisSwitch::Range;
+        using size_type = typename LFSU::Traits::SizeType;
 
         // dimensions
         const int dim = EG::Geometry::mydimension;
@@ -205,12 +200,12 @@ namespace Dune {
         const auto& lfsu_v = child(lfsu,_0);
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef typename BasisSwitch_V::Range Range_V;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RF = typename BasisSwitch_V::RangeField;
+        using Range_V = typename BasisSwitch_V::Range;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -257,12 +252,12 @@ namespace Dune {
         const auto& lfsu_v = child(lfsu,_0);
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef typename BasisSwitch_V::Range Range_V;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RF = typename BasisSwitch_V::RangeField;
+        using Range_V = typename BasisSwitch_V::Range;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
