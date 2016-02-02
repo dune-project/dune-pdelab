@@ -42,9 +42,9 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        typedef typename LFSV::template Child<0>::Type LFSV_PFS_V;
-        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<0>();
-
+        using namespace TypeTree::Indices;
+        using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_pfs_v = child(lfsv,_0);
         for(unsigned int i=0; i<LFSV_PFS_V::CHILDREN; ++i)
           {
             scalar_alpha_volume(eg,lfsv_pfs_v.child(i),x,lfsv_pfs_v.child(i),r);
@@ -56,9 +56,9 @@ namespace Dune {
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
       {
-        typedef typename LFSV::template Child<0>::Type LFSV_PFS_V;
-        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<0>();
-
+        using namespace TypeTree::Indices;
+        using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_pfs_v = child(lfsv,_0);
         for(unsigned int i=0; i<LFSV_PFS_V::CHILDREN; ++i)
           {
             scalar_jacobian_volume(eg,lfsv_pfs_v.child(i),x,lfsv_pfs_v.child(i),mat);
@@ -199,9 +199,10 @@ namespace Dune {
         const int dim = EG::Geometry::mydimension;
 
         // subspaces
-        typedef typename LFSV::template Child<0>::Type LFSV_V;
-        const LFSV_V& lfsv_v = lfsv.template child<0>();
-        const LFSV_V& lfsu_v = lfsu.template child<0>();
+        using namespace TypeTree::Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v = child(lfsv,_0);
+        const auto& lfsu_v = child(lfsu,_0);
 
         // domain and range field type
         typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
@@ -250,9 +251,10 @@ namespace Dune {
         const int dim = EG::Geometry::mydimension;
 
         // subspaces
-        typedef typename LFSV::template Child<0>::Type LFSV_V;
-        const LFSV_V& lfsv_v = lfsv.template child<0>();
-        const LFSV_V& lfsu_v = lfsu.template child<0>();
+        using namespace TypeTree::Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v = child(lfsv,_0);
+        const auto& lfsu_v = child(lfsu,_0);
 
         // domain and range field type
         typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
