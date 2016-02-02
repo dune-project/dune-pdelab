@@ -110,7 +110,7 @@ namespace Dune {
             lfsv.finiteElement().localBasis().order());
 
         // Get cell
-        auto cell = eg.entity();
+        const auto& cell = eg.entity();
 
         // Get geometry
         auto geo = eg.geometry();
@@ -191,7 +191,7 @@ namespace Dune {
             lfsv.finiteElement().localBasis().order());
 
         // Get cell
-        auto cell = eg.entity();
+        const auto& cell = eg.entity();
 
         // Get geometry
         auto geo = eg.geometry();
@@ -262,9 +262,9 @@ namespace Dune {
                 lfsv_n.finiteElement().localBasis().order())
             );
 
-        // make copy of inside and outside cell w.r.t. the intersection
-        auto cell_inside = ig.inside();
-        auto cell_outside = ig.outside();
+        // References to inside and outside cells
+        const auto& cell_inside = ig.inside();
+        const auto& cell_outside = ig.outside();
 
         // Get geometries
         auto geo = ig.geometry();
@@ -446,9 +446,9 @@ namespace Dune {
                 lfsv_n.finiteElement().localBasis().order())
             );
 
-        // make copy of inside and outside cell w.r.t. the intersection
-        auto cell_inside = ig.inside();
-        auto cell_outside = ig.outside();
+        // References to inside and outside cells
+        const auto& cell_inside = ig.inside();
+        const auto& cell_outside = ig.outside();
 
         // Get geometries
         auto geo = ig.geometry();
@@ -613,8 +613,8 @@ namespace Dune {
             lfsv_s.finiteElement().localBasis().order()
             );
 
-        // make copy of inside cell w.r.t. the boundary
-        auto cell_inside = ig.inside();
+        // References to the inside cell
+        const auto& cell_inside = ig.inside();
 
         // Get geometries
         auto geo = ig.geometry();
@@ -792,8 +792,8 @@ namespace Dune {
             lfsv_s.finiteElement().localBasis().order()
             );
 
-        // make copy of inside cell w.r.t. the boundary
-        auto cell_inside = ig.inside();
+        // References to the inside cell
+        const auto& cell_inside = ig.inside();
 
         // Get geometries
         auto geo = ig.geometry();
@@ -925,7 +925,7 @@ namespace Dune {
         using size_type = typename LFSV::Traits::SizeType;
 
         // Get cell
-        auto cell = eg.entity();
+        const auto& cell = eg.entity();
 
         // get geometries
         auto geo = eg.geometry();
