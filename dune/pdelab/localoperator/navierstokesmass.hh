@@ -11,8 +11,8 @@
 #include <dune/pdelab/localoperator/flags.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
 
-#include<dune/pdelab/common/quadraturerules.hh>
-#include<dune/pdelab/common/referenceelements.hh>
+#include <dune/pdelab/common/quadraturerules.hh>
+#include <dune/pdelab/common/referenceelements.hh>
 
 namespace Dune {
   namespace PDELab {
