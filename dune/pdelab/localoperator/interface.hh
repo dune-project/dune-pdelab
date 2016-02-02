@@ -46,7 +46,7 @@ namespace Dune {
      * \li \c *_boundary(): methods called on the bounary intersections,
      *     controlled by the \c do*Boundary flags.
      *
-     * Not all combinations of categories and methods to actually exits.
+     * Not all combinations of categories and methods do actually exist.
      *
      * To assemble the global sparsity pattern, residual or jacobian, the
      * GridOperatorSpace iterates over the elements of the grid.  For each
