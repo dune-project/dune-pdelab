@@ -230,8 +230,6 @@ namespace Dune {
        *       This is the difference to
        *       jacobian_apply_volume_post_skeleton().
        *
-       * \note \c x and \c r are of type std::vector.
-       *
        * \note The method should not clear \c r; it should just add its
        *       entries to it.
        *
@@ -269,8 +267,6 @@ namespace Dune {
        *       be omitted from lambda_skeleton() in that case, of course).
        *       This is the difference to jacobian_apply_skeleton().
        *
-       * \note \c x_s, \c x_n, \c r_s and \c r_n are of type std::vector.
-       *
        * \note The method should not clear \c r_s and \c r_n; it should just
        *       add its entries to them.
        *
@@ -303,8 +299,6 @@ namespace Dune {
        *       from lambda_boundary() in that case, of course).  This is the
        *       difference to jacobian_apply_boundary().
        *
-       * \note \c x_s and \c r_s are of type std::vector.
-       *
        * \note The method should not clear \c r_s; it should just add its
        *       entries to it.
        *
@@ -334,8 +328,6 @@ namespace Dune {
        * \param lfsv LocalFunctionSpace of the test GridFunctionSpace.
        * \param r    Local part of the residual.
        *
-       * \note \c r is of type std::vector.
-       *
        * \note The method should not clear \c r; it should just add its
        *       entries to it.
        *
@@ -353,8 +345,6 @@ namespace Dune {
        * \param eg   ElementGeometry describing the entity.
        * \param lfsv LocalFunctionSpace of the test GridFunctionSpace.
        * \param r    Local part of the residual.
-       *
-       * \note \c r is of type std::vector.
        *
        * \note The method should not clear \c r; it should just add its
        *       entries to it.
@@ -378,8 +368,6 @@ namespace Dune {
        * \param r_s    Local part of the residual in the inside entity.
        * \param r_n    Local part of the residual in the outside entity.
        *
-       * \note \c r_s and \c r_n are of type std::vector.
-       *
        * \note The method should not clear \c r_s and \c r_n; it should just
        *       add its entries to them.
        *
@@ -400,8 +388,6 @@ namespace Dune {
        * \param lfsv_s LocalFunctionSpace of the test GridFunctionSpace in the
        *               inside entity.
        * \param r_s    Local part of the residual in the inside entity.
-       *
-       * \note \c r_s is of type std::vector.
        *
        * \note The method should not clear \c r_s; it should just add its
        *       entries to it.
@@ -433,8 +419,6 @@ namespace Dune {
        * \note This is different from alpha_volume(), since the result will be
        *       linear in \c x, whereas alpha_volume() may include
        *       contributions to the the residual which are constant in \c x.
-       *
-       * \note \c x and \c y are of type std::vector.
        *
        * \note The method should not clear \c y; it should just add its
        *       entries to it.
@@ -468,8 +452,6 @@ namespace Dune {
        *       result will be linear in \c x, whereas
        *       alpha_volume_post_skeleton() may include contributions to the
        *       the residual which are constant in \c x.
-       *
-       * \note \c x and \c y are of type std::vector.
        *
        * \note The method should not clear \c y; it should just add its
        *       entries to it.
@@ -513,8 +495,6 @@ namespace Dune {
        *       include contributions to the the residual which are constant in
        *       \c x_s and \c x_n.
        *
-       * \note \c x_s, \c x_n, \c y_s and \c y_n are of type std::vector.
-       *
        * \note The method should not clear \c y_s and \c y_n; it should just
        *       add its entries to them.
        *
@@ -550,8 +530,6 @@ namespace Dune {
        * \note This is different from alpha_boundary(), since the result will
        *       be linear in \c x, whereas alpha_boundary() may include
        *       contributions to the the residual which are constant in \c x.
-       *
-       * \note \c x_s and \c y_s are of type std::vector.
        *
        * \note The method should not clear \c y_s; it should just add its
        *       entries to it.
@@ -589,8 +567,6 @@ namespace Dune {
        * \param lfsv LocalFunctionSpace of the test GridFunctionSpace.
        * \param mat  Where to store the contribution to the jacobian.
        *
-       * \note \c x is of type std::vector.
-       *
        * \note The method should not clear \c mat; it should just add its
        *       entries to it.
        *
@@ -612,8 +588,6 @@ namespace Dune {
        * \param x    Local position in the trial GridFunctionSpace.
        * \param lfsv LocalFunctionSpace of the test GridFunctionSpace.
        * \param mat  Where to store the contribution to the jacobian.
-       *
-       * \note \c x is of type std::vector.
        *
        * \note The method should not clear \c mat; it should just add its
        *       entries to it.
@@ -655,8 +629,6 @@ namespace Dune {
        * \param mat_nn Where to store the contribution to the outside entity's
        *               jacobian.
        *
-       * \note \c x_s and \c x_n are of type std::vector.
-       *
        * \note The method should not clear \c mat_ss, \c mat_sn, \c mat_ns, \c
        *       mat_nn; it should just add its entries to them.
        *
@@ -684,8 +656,6 @@ namespace Dune {
        *               inside entity.
        * \param mat_ss Where to store the contribution to the inside entity's
        *               jacobian.
-       *
-       * \note \c x_s is of type std::vector.
        *
        * \note The method should not clear \c mat_ss; it should just add its
        *       entries to it.
