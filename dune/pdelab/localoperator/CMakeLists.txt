@@ -32,6 +32,9 @@ install(FILES callswitch.hh
               maxwelldg.hh
               maxwellparameter.hh
               navierstokesmass.hh
+              numericaljacobian.hh
+              numericaljacobianapply.hh
+              numericalresidual.hh
               pattern.hh
               poisson.hh
               scaled.hh
