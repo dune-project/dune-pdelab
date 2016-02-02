@@ -96,11 +96,13 @@ namespace Dune {
         const int det_jac_order = geo.type().isSimplex() ? 0 : (dim-1);
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
 
+        // Initialize vectors outside for loop
+        std::vector<RangeType> phi(lfsu.size());
+
         // Loop over quadrature points
         for (const auto& ip : quadratureRule(geo,qorder))
           {
             // evaluate basis functions
-            std::vector<RangeType> phi(lfsu.size());
             FESwitch::basis(lfsu.finiteElement()).evaluateFunction(ip.position(),phi);
 
             auto rho = p.rho(eg,ip.position());
@@ -129,7 +131,6 @@ namespace Dune {
           typename FESwitch::Basis>;
 
         // Define types
-        using RF = typename BasisSwitch::RangeField;
         using RangeType = typename BasisSwitch::Range;
         using size_type = typename LFSU::Traits::SizeType;
 
@@ -144,11 +145,13 @@ namespace Dune {
         const int det_jac_order = geo.type().isSimplex() ? 0 : (dim-1);
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
 
+        // Initialize vectors outside for loop
+        std::vector<RangeType> phi(lfsu.size());
+
         // Loop over quadrature points
         for (const auto& ip : quadratureRule(geo,qorder))
           {
             // evaluate basis functions
-            std::vector<RangeType> phi(lfsu.size());
             FESwitch::basis(lfsu.finiteElement()).evaluateFunction(ip.position(),phi);
 
             // integrate phi_j*phi_i
@@ -202,7 +205,6 @@ namespace Dune {
         // Define types
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
         using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
-        using DF = typename BasisSwitch_V::DomainField;
         using Range_V = typename BasisSwitch_V::Range;
         using size_type = typename LFSV::Traits::SizeType;
 
@@ -217,6 +219,10 @@ namespace Dune {
         const int det_jac_order = geo.type().isSimplex() ? 0 : (dim-1);
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
 
+        // Initialize vectors outside for loop
+        std::vector<Range_V> phi_v(lfsv_v.size());
+        Range_V u(0.0);
+
         // loop over quadrature points
         for (const auto& ip : quadratureRule(geo,qorder))
           {
@@ -224,11 +230,10 @@ namespace Dune {
             auto rho = p.rho(eg,local);
 
             // compute basis functions
-            std::vector<Range_V> phi_v(lfsv_v.size());
             FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
 
             // compute u
-            Range_V u(0.0);
+            u = 0.0;
             for(size_type i=0; i<lfsu_v.size(); i++)
               u.axpy(x(lfsu_v,i),phi_v[i]);
 
@@ -254,7 +259,6 @@ namespace Dune {
         // Define types
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
         using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
-        using RF = typename BasisSwitch_V::RangeField;
         using Range_V = typename BasisSwitch_V::Range;
         using size_type = typename LFSV::Traits::SizeType;
 
@@ -269,6 +273,9 @@ namespace Dune {
         const int det_jac_order = geo.type().isSimplex() ? 0 : (dim-1);
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
 
+        // Initialize vectors outside for loop
+        std::vector<Range_V> phi_v(lfsv_v.size());
+
         // Loop over quadrature points
         for (const auto& ip : quadratureRule(geo,qorder))
           {
@@ -276,7 +283,6 @@ namespace Dune {
             auto rho = p.rho(eg,local);
 
             // compute basis functions
-            std::vector<Range_V> phi_v(lfsv_v.size());
             FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
 
             auto factor = ip.weight() * rho * geo.integrationElement(ip.position());
