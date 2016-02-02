@@ -88,8 +88,8 @@ namespace Dune {
         // dimensions
         const int dim = EG::Geometry::mydimension;
 
-        // Get cell
-        auto cell = eg.entity();
+        // References to the cell
+        const auto& cell = eg.entity();
 
         // Get geometry
         auto geo = eg.geometry();
@@ -107,7 +107,7 @@ namespace Dune {
         auto tensor = param.A(cell,localcenter);
         tensor.invert(); // need iverse for mixed method
 
-        // Declare vectors outside for loop
+        // Initialize vectors outside for loop
         std::vector<VelocityRangeType> vbasis(velocityspace.size());
         std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
         VelocityRangeType sigma;
@@ -202,13 +202,13 @@ namespace Dune {
         using namespace TypeTree::Indices;
         const auto& pressurespace = child(lfsv,_1);
 
-        // Get cell
-        auto cell = eg.entity();
+        // References to the cell
+        const auto& cell = eg.entity();
 
         // Get geometry
         auto geo = eg.geometry();
 
-        // Declare vector outside for loop
+        // Initialize vectors outside for loop
         std::vector<PressureRangeType> pbasis(pressurespace.size());
 
         // loop over quadrature points
@@ -245,8 +245,8 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
-        // Get cell
-        auto cell_inside = ig.inside();
+        // References to the inside cell
+        const auto& cell_inside = ig.inside();
 
         // Get geometry
         auto geo = ig.geometry();
