@@ -21,11 +21,6 @@
 #include <dune/pdelab/localoperator/dgnavierstokesparameter.hh>
 #include <dune/pdelab/localoperator/navierstokesmass.hh>
 
-#ifndef VBLOCK
-#define VBLOCK 0
-#endif
-#define PBLOCK (- VBLOCK + 1)
-
 namespace Dune {
   namespace PDELab {
 
@@ -103,19 +98,16 @@ namespace Dune {
         const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
-        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
-        static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
+        using namespace TypeTree::Indices;
+        using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_pfs_v = child(lfsv,_0);
 
         // ... we assume all velocity components are the same
-        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
-        const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
+        using LFSV_V = TypeTree::Child<LFSV_PFS_V,_0>;
+        const auto& lfsv_v = child(lfsv_pfs_v,_0);
         const unsigned int vsize = lfsv_v.size();
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
         const unsigned int psize = lfsv_p.size();
 
         // domain and range field type
@@ -239,19 +231,16 @@ namespace Dune {
         const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
-        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
-        static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
+        using namespace TypeTree::Indices;
+        using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_pfs_v = child(lfsv,_0);
 
         // ... we assume all velocity components are the same
-        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
-        const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
+        using LFSV_V = TypeTree::Child<LFSV_PFS_V,_0>;
+        const auto& lfsv_v = child(lfsv_pfs_v,_0);
         const unsigned int vsize = lfsv_v.size();
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
         const unsigned int psize = lfsv_p.size();
 
         // domain and range field type
@@ -379,24 +368,20 @@ namespace Dune {
         const unsigned int dim = IG::dimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
-
-        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_PFS_V& lfsv_s_pfs_v = lfsv_s.template child<VBLOCK>();
-        const LFSV_PFS_V& lfsv_n_pfs_v = lfsv_n.template child<VBLOCK>();
-        static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
+        using namespace TypeTree::Indices;
+        using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_s_pfs_v = child(lfsv_s,_0);
+        const auto& lfsv_n_pfs_v = child(lfsv_n,_0);
 
         // ... we assume all velocity components are the same
-        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
-        const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.template child<0>();
-        const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.template child<0>();
+        using LFSV_V = TypeTree::Child<LFSV_PFS_V,_0>;
+        const auto& lfsv_s_v = child(lfsv_s_pfs_v,_0);
+        const auto& lfsv_n_v = child(lfsv_n_pfs_v,_0);
         const unsigned int vsize_s = lfsv_s_v.size();
         const unsigned int vsize_n = lfsv_n_v.size();
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_s_p = lfsv_s.template child<PBLOCK>();
-        const LFSV_P& lfsv_n_p = lfsv_n.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_s_p = child(lfsv_s,_1);
+        const auto& lfsv_n_p = child(lfsv_n,_1);
         const unsigned int psize_s = lfsv_s_p.size();
         const unsigned int psize_n = lfsv_n_p.size();
 
@@ -582,24 +567,20 @@ namespace Dune {
         const unsigned int dim = IG::dimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
-
-        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_PFS_V& lfsv_s_pfs_v = lfsv_s.template child<VBLOCK>();
-        const LFSV_PFS_V& lfsv_n_pfs_v = lfsv_n.template child<VBLOCK>();
-        static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
+        using namespace TypeTree::Indices;
+        using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_s_pfs_v = child(lfsv_s,_0);
+        const auto& lfsv_n_pfs_v = child(lfsv_n,_0);
 
         // ... we assume all velocity components are the same
-        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
-        const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.template child<0>();
-        const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.template child<0>();
+        using LFSV_V = TypeTree::Child<LFSV_PFS_V,_0>;
+        const auto& lfsv_s_v = child(lfsv_s_pfs_v,_0);
+        const auto& lfsv_n_v = child(lfsv_n_pfs_v,_0);
         const unsigned int vsize_s = lfsv_s_v.size();
         const unsigned int vsize_n = lfsv_n_v.size();
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_s_p = lfsv_s.template child<PBLOCK>();
-        const LFSV_P& lfsv_n_p = lfsv_n.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_s_p = child(lfsv_s,_1);
+        const auto& lfsv_n_p = child(lfsv_n,_1);
         const unsigned int psize_s = lfsv_s_p.size();
         const unsigned int psize_n = lfsv_n_p.size();
 
@@ -795,20 +776,16 @@ namespace Dune {
         const unsigned int dim = IG::dimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
-
-        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
-        static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
+        using namespace TypeTree::Indices;
+        using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_pfs_v = child(lfsv,_0);
 
         // ... we assume all velocity components are the same
-        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
-        const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
+        using LFSV_V = TypeTree::Child<LFSV_PFS_V,_0>;
+        const auto& lfsv_v = child(lfsv_pfs_v,_0);
         const unsigned int vsize = lfsv_v.size();
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
         const unsigned int psize = lfsv_p.size();
 
         // domain and range field type
@@ -984,20 +961,16 @@ namespace Dune {
         const unsigned int dim = IG::dimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
-
-        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
-        static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
+        using namespace TypeTree::Indices;
+        using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_pfs_v = child(lfsv,_0);
 
         // ... we assume all velocity components are the same
-        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
-        const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
+        using LFSV_V = TypeTree::Child<LFSV_PFS_V,_0>;
+        const auto& lfsv_v = child(lfsv_pfs_v,_0);
         const unsigned int vsize = lfsv_v.size();
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
         const unsigned int psize = lfsv_p.size();
 
         // domain and range field type
@@ -1178,21 +1151,16 @@ namespace Dune {
         static const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
-
-        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
-
-        static_assert
-          ((LFSV_PFS_V::CHILDREN == dim),"You seem to use the wrong function space for DGNavierStokes");
+        using namespace TypeTree::Indices;
+        using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_pfs_v = child(lfsv,_0);
 
         // we assume all velocity components are the same type
-        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
-        const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
+        using LFSV_V = TypeTree::Child<LFSV_PFS_V,_0>;
+        const auto& lfsv_v = child(lfsv_pfs_v,_0);
         const unsigned int vsize = lfsv_v.size();
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
         const unsigned int psize = lfsv_p.size();
 
         // domain and range field type
@@ -1264,21 +1232,16 @@ namespace Dune {
         static const unsigned int dim = IG::dimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
-
-        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
-
-        static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
+        using namespace TypeTree::Indices;
+        using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_pfs_v = child(lfsv,_0);
 
         // ... we assume all velocity components are the same
-        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
-        const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
+        using LFSV_V = TypeTree::Child<LFSV_PFS_V,_0>;
+        const auto& lfsv_v = child(lfsv_pfs_v,_0);
         const unsigned int vsize = lfsv_v.size();
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
         const unsigned int psize = lfsv_p.size();
 
         // domain and range field type
