@@ -66,8 +66,8 @@ namespace Dune {
         // dimensions
         const int dim = EG::Entity::dimension;
 
-        // Get cell
-        auto cell = eg.entity();
+        // Reference to cell
+        const auto& cell = eg.entity();
 
         // Get geometry
         auto geo = eg.geometry();
@@ -138,8 +138,8 @@ namespace Dune {
         // dimensions
         const int dim = EG::Entity::dimension;
 
-        // Get cell
-        auto cell = eg.entity();
+        // Reference to cell
+        const auto& cell = eg.entity();
 
         // Get geometry
         auto geo = eg.geometry();
@@ -197,15 +197,17 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType;
         using size_type = typename LFSV::Traits::SizeType;
 
-        // Get cell entity
-        auto cell_inside = ig.inside();
+        // Reference to the inside cell
+        const auto& cell_inside = ig.inside();
 
         // Get geometry
         auto geo = ig.geometry();
 
+        // Get geometry of intersection in local coordinates of cell_inside
+        auto geo_in_inside = ig.geometryInInside();
+
         // evaluate boundary condition type
-        auto geo_inside = ig.geometryInInside();
-        auto ref_el = referenceElement(geo_inside);
+        auto ref_el = referenceElement(geo_in_inside);
         auto local_face_center = ref_el.position(0,0);
         auto intersection = ig.intersection();
         auto bctype = param.bctype(intersection,local_face_center);
@@ -218,7 +220,7 @@ namespace Dune {
         for (const auto& ip : quadratureRule(geo,intorder))
           {
             // position of quadrature point in local coordinates of element
-            auto local = geo_inside.global(ip.position());
+            auto local = geo_in_inside.global(ip.position());
 
             // evaluate shape functions (assume Galerkin method)
             auto& phi = cache.evaluateFunction(local,lfsu_s.finiteElement().localBasis());
@@ -265,15 +267,17 @@ namespace Dune {
         // Define types
         using size_type = typename LFSV::Traits::SizeType;
 
-        // Get cell entity
-        auto cell_inside = ig.inside();
+        // Reference to the inside cell
+        const auto& cell_inside = ig.inside();
 
         // Get geometry
         auto geo = ig.geometry();
 
+        // Get geometry of intersection in local coordinates of cell_inside
+        auto geo_in_inside = ig.geometryInInside();
+
         // evaluate boundary condition type
-        auto geo_inside = ig.geometryInInside();
-        auto ref_el = referenceElement(geo_inside);
+        auto ref_el = referenceElement(geo_in_inside);
         auto local_face_center = ref_el.position(0,0);
         auto intersection = ig.intersection();
         auto bctype = param.bctype(intersection,local_face_center);
@@ -287,7 +291,7 @@ namespace Dune {
         for (const auto& ip : quadratureRule(geo,intorder))
           {
             // position of quadrature point in local coordinates of element
-            auto local = geo_inside.global(ip.position());
+            auto local = geo_in_inside.global(ip.position());
 
             // evaluate shape functions (assume Galerkin method)
             auto& phi = cache.evaluateFunction(local,lfsu_s.finiteElement().localBasis());
@@ -370,8 +374,8 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType;
         using size_type = typename LFSU::Traits::SizeType;
 
-        // Get cell
-        auto cell = eg.entity();
+        // Reference to cell
+        const auto& cell = eg.entity();
 
         // Get geometry
         auto geo = eg.geometry();
@@ -427,9 +431,9 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
-        // Get cell entities from both sides of the intersection
-        auto cell_inside = ig.inside();
-        auto cell_outside = ig.outside();
+        // References to inside and outside cells
+        const auto& cell_inside = ig.inside();
+        const auto& cell_outside = ig.outside();
 
         // Get geometries
         auto geo = ig.geometry();
@@ -524,8 +528,8 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
-        // Get inside cell entity
-        auto cell_inside = ig.inside();
+        // References to the inside cell
+        const auto& cell_inside = ig.inside();
 
         // Get geometries
         auto geo = ig.geometry();
@@ -556,7 +560,7 @@ namespace Dune {
         std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
         Dune::FieldVector<RF,dim> gradu_s(0.0);
 
-        // transformation
+        // Transformation matrix
         typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
         // loop over quadrature points and integrate normal flux
@@ -669,8 +673,8 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType;
         using size_type = typename LFSU::Traits::SizeType;
 
-        // Get cell
-        auto cell = eg.entity();
+        // Reference to the cell
+        const auto& cell = eg.entity();
 
         // Get geometry
         auto geo = eg.geometry();
@@ -931,8 +935,8 @@ namespace Dune {
         using RF = typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType;
 
-        // Get inside cell entity
-        auto cell_inside = ig.inside();
+        // Reference to the inside cell
+        const auto& cell_inside = ig.inside();
 
         // Get geometry
         auto geo = ig.geometry();
