@@ -38,11 +38,11 @@ namespace Dune {
       public FullSkeletonPattern, public FullVolumePattern,
       public InstationaryLocalOperatorDefaultMethods<double>
     {
-      typedef StokesBoundaryCondition BC;
-      typedef typename PRM::Traits::RangeField RF;
+      using BC = StokesBoundaryCondition;
+      using RF = typename PRM::Traits::RangeField;
 
-      typedef InstationaryLocalOperatorDefaultMethods<double> InstatBase;
-      typedef typename InstatBase::RealType Real;
+      using InstatBase = InstationaryLocalOperatorDefaultMethods<double>;
+      using Real = typename InstatBase::RealType;
 
       static const bool navier = PRM::assemble_navier;
       static const bool full_tensor = PRM::assemble_full_tensor;
@@ -103,27 +103,27 @@ namespace Dune {
         // subspaces
         static_assert
           ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
         const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
         static_assert
           ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
-        typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
         const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
         const unsigned int vsize = lfsv_v.size();
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
         const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
         const unsigned int psize = lfsv_p.size();
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::Range RT;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RT = typename BasisSwitch_V::Range;
+        using RF = typename BasisSwitch_V::RangeField;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -235,27 +235,27 @@ namespace Dune {
         // subspaces
         static_assert
           ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
         const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
         static_assert
           ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
-        typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
         const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
         const unsigned int vsize = lfsv_v.size();
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
         const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
         const unsigned int psize = lfsv_p.size();
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::Range RT;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RT = typename BasisSwitch_V::Range;
+        using RF = typename BasisSwitch_V::RangeField;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -373,31 +373,31 @@ namespace Dune {
         static_assert
           ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
 
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
         const LFSV_PFS_V& lfsv_s_pfs_v = lfsv_s.template child<VBLOCK>();
         const LFSV_PFS_V& lfsv_n_pfs_v = lfsv_n.template child<VBLOCK>();
         static_assert
           ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
-        typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
         const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.template child<0>();
         const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.template child<0>();
         const unsigned int vsize_s = lfsv_s_v.size();
         const unsigned int vsize_n = lfsv_n_v.size();
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
         const LFSV_P& lfsv_s_p = lfsv_s.template child<PBLOCK>();
         const LFSV_P& lfsv_n_p = lfsv_n.template child<PBLOCK>();
         const unsigned int psize_s = lfsv_s_p.size();
         const unsigned int psize_n = lfsv_n_p.size();
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::Range RT;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RT = typename BasisSwitch_V::Range;
+        using RF = typename BasisSwitch_V::RangeField;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
 
         // make copy of inside and outside cell w.r.t. the intersection
         auto inside_cell = ig.inside();
@@ -565,31 +565,31 @@ namespace Dune {
         static_assert
           ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
 
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
         const LFSV_PFS_V& lfsv_s_pfs_v = lfsv_s.template child<VBLOCK>();
         const LFSV_PFS_V& lfsv_n_pfs_v = lfsv_n.template child<VBLOCK>();
         static_assert
           ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
-        typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
         const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.template child<0>();
         const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.template child<0>();
         const unsigned int vsize_s = lfsv_s_v.size();
         const unsigned int vsize_n = lfsv_n_v.size();
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
         const LFSV_P& lfsv_s_p = lfsv_s.template child<PBLOCK>();
         const LFSV_P& lfsv_n_p = lfsv_n.template child<PBLOCK>();
         const unsigned int psize_s = lfsv_s_p.size();
         const unsigned int psize_n = lfsv_n_p.size();
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::Range RT;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RT = typename BasisSwitch_V::Range;
+        using RF = typename BasisSwitch_V::RangeField;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
 
         // make copy of inside and outside cell w.r.t. the intersection
         auto inside_cell = ig.inside();
@@ -771,26 +771,26 @@ namespace Dune {
         static_assert
           ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
 
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
         const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
         static_assert
           ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
-        typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
         const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
         const unsigned int vsize = lfsv_v.size();
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
         const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
         const unsigned int psize = lfsv_p.size();
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::Range RT;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RT = typename BasisSwitch_V::Range;
+        using RF = typename BasisSwitch_V::RangeField;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
 
         // make copy of inside cell w.r.t. the boundary
         auto inside_cell = ig.inside();
@@ -856,7 +856,7 @@ namespace Dune {
 
             // Slip factor smoothly switching between slip and no slip conditions.
             RF slip_factor = 0.0;
-            typedef NavierStokesDGImp::VariableBoundarySlipSwitch<PRM> BoundarySlipSwitch;
+            using BoundarySlipSwitch = NavierStokesDGImp::VariableBoundarySlipSwitch<PRM>;
             if (bctype == BC::SlipVelocity)
               // Calls boundarySlip(..) function of parameter
               // class if available, i.e. if
@@ -953,26 +953,26 @@ namespace Dune {
         static_assert
           ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
 
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
         const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
         static_assert
           ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
-        typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
         const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
         const unsigned int vsize = lfsv_v.size();
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
         const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
         const unsigned int psize = lfsv_p.size();
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::Range RT;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RT = typename BasisSwitch_V::Range;
+        using RF = typename BasisSwitch_V::RangeField;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
 
         // make copy of inside cell w.r.t. the boundary
         auto inside_cell = ig.inside();
@@ -1015,7 +1015,7 @@ namespace Dune {
 
             // Slip factor smoothly switching between slip and no slip conditions.
             RF slip_factor = 0.0;
-            typedef NavierStokesDGImp::VariableBoundarySlipSwitch<PRM> BoundarySlipSwitch;
+            using BoundarySlipSwitch = NavierStokesDGImp::VariableBoundarySlipSwitch<PRM>;
             if (bctype == BC::SlipVelocity)
               // Calls boundarySlip(..) function of parameter
               // class if available, i.e. if
@@ -1141,28 +1141,28 @@ namespace Dune {
         static_assert
           ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
 
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
         const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
 
         static_assert
           ((LFSV_PFS_V::CHILDREN == dim),"You seem to use the wrong function space for DGNavierStokes");
 
         // we assume all velocity components are the same type
-        typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
         const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
         const unsigned int vsize = lfsv_v.size();
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
         const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
         const unsigned int psize = lfsv_p.size();
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::Range RT;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RT = typename BasisSwitch_V::Range;
+        using RF = typename BasisSwitch_V::RangeField;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
+        using size_type = typename LFSV::Traits::SizeType;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -1227,27 +1227,27 @@ namespace Dune {
         static_assert
           ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
 
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+        using LFSV_PFS_V = typename LFSV::template Child<VBLOCK>::Type;
         const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
 
         static_assert
           ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
-        typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+        using LFSV_V = typename LFSV_PFS_V::template Child<0>::Type;
         const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
         const unsigned int vsize = lfsv_v.size();
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
         const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
         const unsigned int psize = lfsv_p.size();
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::Range RT;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RT = typename BasisSwitch_V::Range;
+        using RF = typename BasisSwitch_V::RangeField;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
 
         // make copy of inside cell w.r.t. the boundary
         auto inside_cell = ig.inside();
