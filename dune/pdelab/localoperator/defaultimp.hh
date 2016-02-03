@@ -5,6 +5,7 @@
 
 #include <dune/pdelab/localoperator/numericaljacobian.hh>
 #include <dune/pdelab/localoperator/numericaljacobianapply.hh>
+#include <dune/pdelab/localoperator/numericalnonlinearjacobianapply.hh>
 #include <dune/pdelab/localoperator/numericalresidual.hh>
 
 #endif // DUNE_PDELAB_LOCALOPERATOR_DEFAULTIMP_HH

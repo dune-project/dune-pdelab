@@ -3,10 +3,7 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_NUMERICALJACOBIANAPPLY_HH
 #define DUNE_PDELAB_LOCALOPERATOR_NUMERICALJACOBIANAPPLY_HH
 
-#include <cmath>
-
-#include <dune/pdelab/gridfunctionspace/localvector.hh>
-#include <dune/pdelab/gridoperator/common/localmatrix.hh>
+#include <dune/pdelab/localoperator/numericalnonlinearjacobianapply.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -20,23 +17,30 @@ namespace Dune {
     //  Numerical implementation of jacobian_apply_*() in terms of alpha_*()
     //
 
-    //! Implement jacobian_apply_volume() based on alpha_volume()
+    //! Implements linear and nonlinear versions of jacobian_apply_volume() based on alpha_volume()
     /**
      * Derive from this class to add numerical jacobian application for
      * volume.  The derived class needs to implement alpha_volume().
+     *
+     * \note This mixin is designed for linear problems and provides both the
+     *       linear and the nonlinear methods by inheriting from the nonlinear
+     *       mixin.
      *
      * \tparam Imp Type of the derived class (CRTP-trick).
      */
     template<typename Imp>
     class NumericalJacobianApplyVolume
+      : public NumericalNonlinearJacobianApplyVolume<Imp>
     {
     public:
       NumericalJacobianApplyVolume ()
-        : epsilon(1e-7)
+        : NumericalNonlinearJacobianApplyVolume<Imp>(1e-7)
+        , epsilon(1e-7)
       {}
 
       NumericalJacobianApplyVolume (double epsilon_)
-        : epsilon(epsilon_)
+        : NumericalNonlinearJacobianApplyVolume<Imp>(epsilon_)
+        , epsilon(epsilon_)
       {}
 
       //! apply local jacobian of the volume term
@@ -81,25 +85,32 @@ namespace Dune {
       const Imp& asImp () const { return static_cast<const Imp &>(*this); }
     };
 
-    //! Implement jacobian_apply_volume_post_skeleton() based on
+    //! Implements linear and nonlinear versions jacobian_apply_volume_post_skeleton() based on
     //! alpha_volume_post_skeleton()
     /**
      * Derive from this class to add numerical jacobian application for volume
      * (post skeleton part).  The derived class needs to implement
      * alpha_volume().
      *
+     * \note This mixin is designed for linear problems and provides both the
+     *       linear and the nonlinear methods by inheriting from the nonlinear
+     *       mixin.
+     *
      * \tparam Imp Type of the derived class (CRTP-trick).
      */
     template<typename Imp>
     class NumericalJacobianApplyVolumePostSkeleton
+      : public NumericalNonlinearJacobianApplyVolumePostSkeleton<Imp>
     {
     public:
       NumericalJacobianApplyVolumePostSkeleton ()
-        : epsilon(1e-7)
+        : NumericalNonlinearJacobianApplyVolumePostSkeleton<Imp>(1e-7)
+        , epsilon(1e-7)
       {}
 
       NumericalJacobianApplyVolumePostSkeleton (double epsilon_)
-        : epsilon(epsilon_)
+        : NumericalNonlinearJacobianApplyVolumePostSkeleton<Imp>(epsilon_)
+        , epsilon(epsilon_)
       {}
 
       //! apply local jacobian of the volume term (post skeleton part)
@@ -144,23 +155,30 @@ namespace Dune {
       const Imp& asImp () const {return static_cast<const Imp &>(*this);}
     };
 
-    //! Implement jacobian_apply_skeleton() based on alpha_skeleton()
+    //! Implements linear and nonlinear versions of jacobian_apply_skeleton() based on alpha_skeleton()
     /**
      * Derive from this class to add numerical jacobian application for
      * skeleton.  The derived class needs to implement alpha_skeleton().
+     *
+     * \note This mixin is designed for linear problems and provides both the
+     *       linear and the nonlinear methods by inheriting from the nonlinear
+     *       mixin.
      *
      * \tparam Imp Type of the derived class (CRTP-trick).
      */
     template<typename Imp>
     class NumericalJacobianApplySkeleton
+      : public NumericalNonlinearJacobianApplySkeleton<Imp>
     {
     public:
       NumericalJacobianApplySkeleton ()
-        : epsilon(1e-7)
+        : NumericalNonlinearJacobianApplySkeleton<Imp>(1e-7)
+        , epsilon(1e-7)
       {}
 
       NumericalJacobianApplySkeleton (double epsilon_)
-        : epsilon(epsilon_)
+        : NumericalNonlinearJacobianApplySkeleton<Imp>(epsilon_)
+        , epsilon(epsilon_)
       {}
 
       //! apply local jacobian of the skeleton term
@@ -237,23 +255,30 @@ namespace Dune {
       const Imp& asImp () const { return static_cast<const Imp &>(*this); }
     };
 
-    //! Implement jacobian_apply_boundary() based on alpha_boundary()
+    //! Implements linear and nonlinear versions of jacobian_apply_boundary() based on alpha_boundary()
     /**
      * Derive from this class to add numerical jacobian application for
      * boundary.  The derived class needs to implement alpha_boundary().
+     *
+     * \note This mixin is designed for linear problems and provides both the
+     *       linear and the nonlinear methods by inheriting from the nonlinear
+     *       mixin.
      *
      * \tparam Imp Type of the derived class (CRTP-trick).
      */
     template<typename Imp>
     class NumericalJacobianApplyBoundary
+      : public NumericalNonlinearJacobianApplyBoundary<Imp>
     {
     public:
       NumericalJacobianApplyBoundary ()
-        : epsilon(1e-7)
+        : NumericalNonlinearJacobianApplyBoundary<Imp>(1e-7)
+        , epsilon(1e-7)
       {}
 
       NumericalJacobianApplyBoundary (double epsilon_)
-        : epsilon(epsilon_)
+        : NumericalNonlinearJacobianApplyBoundary<Imp>(epsilon_)
+        , epsilon(epsilon_)
       {}
 
       //! apply local jacobian of the boundaryterm

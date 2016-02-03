@@ -36,6 +36,7 @@ common_HEADERS =				\
 	navierstokesmass.hh			\
 	numericaljacobian.hh			\
 	numericaljacobianapply.hh		\
+	numericalnonlinearjacobianapply.hh	\
 	numericalresidual.hh			\
 	pattern.hh				\
 	poisson.hh				\
