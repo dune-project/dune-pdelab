@@ -62,7 +62,7 @@ namespace Dune {
     {
     public:
       //! Boundary condition indicator type
-      typedef StokesBoundaryCondition BC;
+      using BC = StokesBoundaryCondition;
 
       static const bool navier = P::assemble_navier;
       static const bool full_tensor = P::assemble_full_tensor;
@@ -75,7 +75,7 @@ namespace Dune {
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
 
-      typedef P PhysicalParameters;
+      using PhysicalParameters = P;
 
       TaylorHoodNavierStokes (const PhysicalParameters & p, int superintegration_order_ = 0)
 
@@ -88,20 +88,20 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // define types
-        typedef typename LFSU::template Child<0>::Type LFSU_V_PFS;
-        typedef typename LFSU_V_PFS::template Child<0>::Type LFSU_V;
-        typedef typename LFSU::template Child<1>::Type LFSU_P;
-        typedef typename LFSU_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RT_V;
-        typedef typename LFSU_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
-        typedef typename LFSU_P::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RT_P;
+        using namespace TypeTree::Indices;
+        using LFSU_V_PFS = TypeTree::Child<LFSU,_0>;
+        using LFSU_V = TypeTree::Child<LFSU_V_PFS,_0>;
+        using LFSU_P = TypeTree::Child<LFSU,_1>;
+        using RF = typename LFSU_V::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using RT_V = typename LFSU_V::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
+        using JacobianType_V = typename LFSU_V::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::JacobianType;
+        using RT_P = typename LFSU_P::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
 
         // extract local function spaces
-        using namespace TypeTree::Indices;
         const auto& lfsu_v_pfs = child(lfsu,_0);
         const unsigned int vsize = lfsu_v_pfs.child(0).size();
         const auto& lfsu_p = child(lfsu,_1);
@@ -221,16 +221,16 @@ namespace Dune {
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
         // define types
-        typedef typename LFSV::template Child<0>::Type LFSV_V_PFS;
-        typedef typename LFSV_V_PFS::template Child<0>::Type LFSV_V;
-        typedef typename LFSV::template Child<1>::Type LFSV_P;
-        typedef typename LFSV_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RT_V;
-        typedef typename LFSV_P::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RT_P;
+        using namespace TypeTree::Indices;
+        using LFSV_V_PFS = TypeTree::Child<LFSV,_0>;
+        using LFSV_V = TypeTree::Child<LFSV_V_PFS,_0>;
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        using RT_V = typename LFSV_V::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
+        using RT_P = typename LFSV_P::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
 
         // extract local function spaces
-        using namespace TypeTree::Indices;
         const auto& lfsv_v_pfs = child(lfsv,_0);
         const unsigned int vsize = lfsv_v_pfs.child(0).size();
         const auto& lfsv_p = child(lfsv,_1);
@@ -293,13 +293,13 @@ namespace Dune {
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
       {
         // define types
-        typedef typename LFSV::template Child<0>::Type LFSV_V_PFS;
-        typedef typename LFSV_V_PFS::template Child<0>::Type LFSV_V;
-        typedef typename LFSV_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RT_V;
+        using namespace TypeTree::Indices;
+        using LFSV_V_PFS = TypeTree::Child<LFSV,_0>;
+        using LFSV_V = TypeTree::Child<LFSV_V_PFS,_0>;
+        using RT_V = typename LFSV_V::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
 
         // extract local velocity function spaces
-        using namespace TypeTree::Indices;
         const auto& lfsv_v_pfs = child(lfsv,_0);
         const unsigned int vsize = lfsv_v_pfs.child(0).size();
 
@@ -363,20 +363,20 @@ namespace Dune {
                             M& mat) const
       {
         // define types
-        typedef typename LFSU::template Child<0>::Type LFSU_V_PFS;
-        typedef typename LFSU_V_PFS::template Child<0>::Type LFSU_V;
-        typedef typename LFSU::template Child<1>::Type LFSU_P;
-        typedef typename LFSU_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RT_V;
-        typedef typename LFSU_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
-        typedef typename LFSU_P::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RT_P;
+        using namespace TypeTree::Indices;
+        using LFSU_V_PFS = TypeTree::Child<LFSU,_0>;
+        using LFSU_V = TypeTree::Child<LFSU_V_PFS,_0>;
+        using LFSU_P = TypeTree::Child<LFSU,_1>;
+        using RF = typename LFSU_V::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using RT_V = typename LFSU_V::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
+        using JacobianType_V = typename LFSU_V::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::JacobianType;
+        using RT_P = typename LFSU_P::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
 
         // extract local function spaces
-        using namespace TypeTree::Indices;
         const auto& lfsu_v_pfs = child(lfsu,_0);
         const unsigned int vsize = lfsu_v_pfs.child(0).size();
         const auto& lfsu_p = child(lfsu,_1);
