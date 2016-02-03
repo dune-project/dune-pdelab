@@ -3,7 +3,7 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_CALLSWITCH_HH
 #define DUNE_PDELAB_LOCALOPERATOR_CALLSWITCH_HH
 
-#include <dune/common/concept.hh>
+#include <dune/pdelab/common/concept.hh>
 
 namespace Dune {
   namespace PDELab {
