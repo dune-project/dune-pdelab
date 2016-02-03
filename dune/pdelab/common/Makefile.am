@@ -3,6 +3,7 @@ common_HEADERS =				\
 	benchmarkhelper.hh                      \
 	borderindexidcache.hh			\
 	clock.hh				\
+	concept.hh				\
 	crossproduct.hh				\
 	dofindex.hh				\
 	elementmapper.hh			\
@@ -24,7 +25,9 @@ common_HEADERS =				\
 	referenceelements.hh			\
 	simpledofindex.hh			\
 	topologyutility.hh			\
+	typelist.hh				\
 	typetraits.hh				\
+	typeutilities.hh			\
 	utility.hh				\
 	vtkexport.hh
 

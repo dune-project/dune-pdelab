@@ -1,6 +1,7 @@
 install(FILES benchmarkhelper.hh
               borderindexidcache.hh
               clock.hh
+              concept.hh
               crossproduct.hh
               dofindex.hh
               elementmapper.hh
@@ -23,7 +24,9 @@ install(FILES benchmarkhelper.hh
               referenceelements.hh
               simpledofindex.hh
               topologyutility.hh
+              typelist.hh
               typetraits.hh
+              typeutilities.hh
               utility.hh
               vtkexport.hh
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/common)
