@@ -34,6 +34,10 @@ common_HEADERS =				\
 	maxwelldg.hh				\
 	maxwellparameter.hh			\
 	navierstokesmass.hh			\
+	numericaljacobian.hh			\
+	numericaljacobianapply.hh		\
+	numericalnonlinearjacobianapply.hh	\
+	numericalresidual.hh			\
 	pattern.hh				\
 	poisson.hh				\
 	scaled.hh				\
