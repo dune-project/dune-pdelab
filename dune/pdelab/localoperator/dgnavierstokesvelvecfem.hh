@@ -164,16 +164,14 @@ namespace Dune {
         const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
+        using namespace TypeTree::Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v = child(lfsv,_0);
+        const auto& lfsu_v = child(lfsu,_0);
 
-        using LFSV_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_V& lfsv_v = lfsv.template child<VBLOCK>();
-        const LFSV_V& lfsu_v = lfsu.template child<VBLOCK>();
-
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
-        const LFSV_P& lfsu_p = lfsu.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
+        const auto& lfsu_p = child(lfsu,_1);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
@@ -288,16 +286,14 @@ namespace Dune {
         const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
+        using namespace TypeTree::Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v = child(lfsv,_0);
+        const auto& lfsu_v = child(lfsu,_0);
 
-        using LFSV_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_V& lfsv_v = lfsv.template child<VBLOCK>();
-        const LFSV_V& lfsu_v = lfsu.template child<VBLOCK>();
-
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
-        const LFSV_P& lfsu_p = lfsu.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
+        const auto& lfsu_p = child(lfsu,_1);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
@@ -414,20 +410,18 @@ namespace Dune {
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
+        using namespace TypeTree::Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v_s = child(lfsv_s,_0);
+        const auto& lfsu_v_s = child(lfsu_s,_0);
+        const auto& lfsv_v_n = child(lfsv_n,_0);
+        const auto& lfsu_v_n = child(lfsu_n,_0);
 
-        using LFSV_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_V& lfsv_v_s = lfsv_s.template child<VBLOCK>();
-        const LFSV_V& lfsu_v_s = lfsu_s.template child<VBLOCK>();
-        const LFSV_V& lfsv_v_n = lfsv_n.template child<VBLOCK>();
-        const LFSV_V& lfsu_v_n = lfsu_n.template child<VBLOCK>();
-
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_p_s = lfsv_s.template child<PBLOCK>();
-        const LFSV_P& lfsu_p_s = lfsu_s.template child<PBLOCK>();
-        const LFSV_P& lfsv_p_n = lfsv_n.template child<PBLOCK>();
-        const LFSV_P& lfsu_p_n = lfsu_n.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p_s = child(lfsv_s,_1);
+        const auto& lfsu_p_s = child(lfsu_s,_1);
+        const auto& lfsv_p_n = child(lfsv_n,_1);
+        const auto& lfsu_p_n = child(lfsu_n,_1);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
@@ -607,20 +601,18 @@ namespace Dune {
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
+        using namespace TypeTree::Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v_s = child(lfsv_s,_0);
+        const auto& lfsu_v_s = child(lfsu_s,_0);
+        const auto& lfsv_v_n = child(lfsv_n,_0);
+        const auto& lfsu_v_n = child(lfsu_n,_0);
 
-        using LFSV_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_V& lfsv_v_s = lfsv_s.template child<VBLOCK>();
-        const LFSV_V& lfsu_v_s = lfsu_s.template child<VBLOCK>();
-        const LFSV_V& lfsv_v_n = lfsv_n.template child<VBLOCK>();
-        const LFSV_V& lfsu_v_n = lfsu_n.template child<VBLOCK>();
-
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_p_s = lfsv_s.template child<PBLOCK>();
-        const LFSV_P& lfsu_p_s = lfsu_s.template child<PBLOCK>();
-        const LFSV_P& lfsv_p_n = lfsv_n.template child<PBLOCK>();
-        const LFSV_P& lfsu_p_n = lfsu_n.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p_s = child(lfsv_s,_1);
+        const auto& lfsu_p_s = child(lfsu_s,_1);
+        const auto& lfsv_p_n = child(lfsv_n,_1);
+        const auto& lfsu_p_n = child(lfsu_n,_1);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
@@ -812,16 +804,14 @@ namespace Dune {
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
+        using namespace TypeTree::Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v = child(lfsv,_0);
+        const auto& lfsu_v = child(lfsu,_0);
 
-        using LFSV_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_V& lfsv_v = lfsv.template child<VBLOCK>();
-        const LFSV_V& lfsu_v = lfsu.template child<VBLOCK>();
-
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
-        const LFSV_P& lfsu_p = lfsu.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
+        const auto& lfsu_p = child(lfsu,_1);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
@@ -958,16 +948,14 @@ namespace Dune {
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
+        using namespace TypeTree::Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v = child(lfsv,_0);
+        const auto& lfsu_v = child(lfsu,_0);
 
-        using LFSV_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_V& lfsv_v = lfsv.template child<VBLOCK>();
-        const LFSV_V& lfsu_v = lfsu.template child<VBLOCK>();
-
-        using LFSV_P = typename LFSV::template Child<PBLOCK>::Type;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
-        const LFSV_P& lfsu_p = lfsu.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
+        const auto& lfsu_p = child(lfsu,_1);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
@@ -1081,11 +1069,9 @@ namespace Dune {
         const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
-
-        using LFSV_V = typename LFSV::template Child<VBLOCK>::Type;
-        const LFSV_V& lfsv_v = lfsv.template child<VBLOCK>();
+        using namespace TypeTree::Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v = child(lfsv,_0);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
