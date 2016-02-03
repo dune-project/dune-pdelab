@@ -204,7 +204,7 @@ namespace Dune{
       }
 
       //! Apply jacobian matrix without explicitly assembling it
-      void jacobian_apply(const Domain & x, Range & r) const {
+      void jacobian_apply(const Domain & z, Range & r) const {
         typedef typename LocalAssembler::LocalJacobianApplyAssemblerEngine JacobianApplyEngine;
         JacobianApplyEngine & jacobian_apply_engine = local_assembler.localJacobianApplyAssemblerEngine(r,x);
         global_assembler.assemble(jacobian_apply_engine);
