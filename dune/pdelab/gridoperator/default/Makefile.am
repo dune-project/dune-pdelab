@@ -5,6 +5,7 @@ gridoperatordefault_HEADERS =				\
 	jacobianengine.hh				\
 	jacobianapplyengine.hh				\
 	localassembler.hh				\
+	nonlinearjacobianapplyengine.hh			\
 	patternengine.hh				\
 	residualengine.hh
 
