@@ -43,7 +43,7 @@ namespace Dune {
      *   \nabla\cdot(-A(x) \nabla u + b(x) u) + c(x)u &=& f \mbox{ in } \Omega,  \\
      *                                              u &=& g \mbox{ on } \partial\Omega_D \\
      *                (b(x) u - A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_N \\
-     *                        -(A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_O
+     *                        -(A(x)\nabla u) \cdot n &=& o \mbox{ on } \partial\Omega_O
      * \f}
      * Note:
      *  - This formulation is valid for velocity fields which are non-divergence free.
