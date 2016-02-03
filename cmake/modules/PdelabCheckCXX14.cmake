@@ -24,8 +24,6 @@ else()
   set(PDELAB_HAVE_CXX14 FALSE)
 endif()
 
-cmake_pop_check_state()
-
 function(pdelab_require_cxx14)
   if(NOT PDELAB_HAVE_CXX14)
     message(FATAL_ERROR "This module requires a compiler with support for C++14, which you compiler does not have.")
