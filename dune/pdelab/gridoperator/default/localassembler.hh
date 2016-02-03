@@ -7,6 +7,7 @@
 #include <dune/pdelab/gridoperator/default/patternengine.hh>
 #include <dune/pdelab/gridoperator/default/jacobianengine.hh>
 #include <dune/pdelab/gridoperator/default/jacobianapplyengine.hh>
+#include <dune/pdelab/gridoperator/default/nonlinearjacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
@@ -79,17 +80,21 @@ namespace Dune{
       typedef DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler> LocalResidualAssemblerEngine;
       typedef DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler> LocalJacobianAssemblerEngine;
       typedef DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalJacobianApplyAssemblerEngine;
+      typedef DefaultLocalNonlinearJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalNonlinearJacobianApplyAssemblerEngine;
 
       friend class DefaultLocalPatternAssemblerEngine<DefaultLocalAssembler>;
       friend class DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler>;
       friend class DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler>;
       friend class DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler>;
+      friend class DefaultLocalNonlinearJacobianApplyAssemblerEngine<DefaultLocalAssembler>;
       //! @}
 
       //! Constructor with empty constraints
       DefaultLocalAssembler (LOP & lop_, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
-          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
+          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
+        , jacobian_apply_engine(*this)
+        , nonlinear_jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
 
@@ -98,7 +103,9 @@ namespace Dune{
                              shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : Base(cu_, cv_),
           lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
-          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
+          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
+        , jacobian_apply_engine(*this)
+        , nonlinear_jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
 
@@ -170,6 +177,17 @@ namespace Dune{
         return jacobian_apply_engine;
       }
 
+      //! Returns a reference to the requested engine. This engine is
+      //! completely configured and ready to use.
+      LocalNonlinearJacobianApplyAssemblerEngine & localNonlinearJacobianApplyAssemblerEngine
+      (typename Traits::Residual & r, const typename Traits::Solution & x, const typename Traits::Solution & z)
+      {
+        nonlinear_jacobian_apply_engine.setResidual(r);
+        nonlinear_jacobian_apply_engine.setSolution(x);
+        nonlinear_jacobian_apply_engine.setUpdate(z);
+        return nonlinear_jacobian_apply_engine;
+      }
+
       //! @}
 
       //! \brief Query methods for the assembler engines. Theses methods
@@ -231,6 +249,7 @@ namespace Dune{
       LocalResidualAssemblerEngine residual_engine;
       LocalJacobianAssemblerEngine jacobian_engine;
       LocalJacobianApplyAssemblerEngine jacobian_apply_engine;
+      LocalNonlinearJacobianApplyAssemblerEngine nonlinear_jacobian_apply_engine;
       //! @}
 
       bool _reconstruct_border_entries;
