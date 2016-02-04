@@ -102,7 +102,7 @@ namespace Dune {
         using IndexSet = typename EntitySet::Traits::IndexSet;
         typedef typename GFS::Traits::SizeType size_type;
 
-        static const auto dim = EntitySet::dimension;
+        static const decltype(EntitySet::dimension) dim = EntitySet::dimension;
 
       public:
 
