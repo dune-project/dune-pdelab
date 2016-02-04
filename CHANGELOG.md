@@ -222,6 +222,33 @@ PDELab 2.4
         implementations must support this method, which has to return `true` if it is possible that DOFs might be attached
         to the given codimension.
 
+-   The support for matrix-free operator applications has been reworked to properly support matrix-free operator application
+    for nonlinear problems. The existing infrastructure only supplied the implementation with a single input parameter `z`
+    and operated on the assumption that the Jacobian of the residual was constant, i.e. it implemented the update
+    `y = y + J * z`, where J is the (constant) Jacobian. This does not work for nonlinear problems!
+
+    In order to remedy this problem, the `GridOperator` now has an additional method `nonlinear_apply_jacobian(x,z,r)`, where
+    `x` denotes the position at which to evaluate the jacobian. In other words, the new method implements the update
+    `y = y + J(x) * z`.
+
+    In order to support this new method, the interface of the local operator has been extended by new versions of the
+    `jacobian_apply_*()` methods, which take **two** input variables, one for `x` and one for `z`, e.g.
+
+    ```c++
+    template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+    void jacobian_apply_volume(const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y) const;
+    ```
+
+    Note the additional parameter `x`.
+
+    PDELab also provides a numerical implementation of those new methods. The existing mixin classes like
+    `NumericalJacobianApplyVolume` now provide both the linear and the nonlinear versions of the corresponding local operator
+    methods. In addition, there are new mixins like `NumericalNonlinearJacobianApplyVolume` that **only** provide the
+    **nonlinear** versions. Use those methods for nonlinear local operators to avoid accidentally using the linear version of
+    `jacobian_apply()`, which will yield incorrect results for nonlinear problems. Also, don't inherit from both mixins, as
+    that will cause compiler errors due to an ambiguous name lookup. If you want your local operator to support both the
+    linear and the nonlinear numerical implementation, just inherit from the existing mixins without `Nonlinear` in their name.
+
 -   The `StationaryMatrixLinearSolver` has been deprecated. Please use the `StationaryLinearProblemSolver` instead.
 
 -   The `PermutationOrdering` has been deprecated. Please use `PermutedOrdering` instead.

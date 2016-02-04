@@ -3,9 +3,60 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_CALLSWITCH_HH
 #define DUNE_PDELAB_LOCALOPERATOR_CALLSWITCH_HH
 
+#include <dune/pdelab/common/concept.hh>
+
 namespace Dune {
   namespace PDELab {
 
+#ifndef DOXYGEN
+
+    namespace impl {
+
+      // ********************************************************************************
+      // concept checks that test whether a local operator provides a given apply method
+      // these are used to emit better error messages for the two variants of
+      // apply methods
+      // ********************************************************************************
+
+      template<typename... Args>
+      struct HasJacobianApplyVolume
+      {
+        template<typename LO>
+        auto require(LO&& lo) -> decltype(
+          lo.jacobian_apply_volume(std::declval<Args>()...)
+          );
+      };
+
+      template<typename... Args>
+      struct HasJacobianApplyVolumePostSkeleton
+      {
+        template<typename LO>
+        auto require(LO&& lo) -> decltype(
+          lo.jacobian_apply_volume_post_skeleton(std::declval<Args>()...)
+          );
+      };
+
+      template<typename... Args>
+      struct HasJacobianApplyBoundary
+      {
+        template<typename LO>
+        auto require(LO&& lo) -> decltype(
+          lo.jacobian_apply_boundary(std::declval<Args>()...)
+          );
+      };
+
+      template<typename... Args>
+      struct HasJacobianApplySkeleton
+      {
+        template<typename LO>
+        auto require(LO&& lo) -> decltype(
+          lo.jacobian_apply_skeleton(std::declval<Args>()...)
+          );
+      };
+
+    } // namespace impl
+
+#endif // DOXYGEN
 
     // compile time switching of function call
     template<typename LA, bool doIt>
@@ -97,6 +148,31 @@ namespace Dune {
         Y& y_s)
       {
       }
+
+
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void nonlinear_jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
+      {
+      }
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void nonlinear_jacobian_apply_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
+      {
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void nonlinear_jacobian_apply_skeleton (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
+        Y& y_s, Y& y_n)
+      {
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void nonlinear_jacobian_apply_boundary (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+        Y& y_s)
+      {
+      }
+
+
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
       {
@@ -202,22 +278,37 @@ namespace Dune {
         la.lambda_boundary(ig,lfsv,r);
       }
 
+
       template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
       static void jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
       {
+        static_assert(
+          models<impl::HasJacobianApplyVolume<EG,LFSU,X,LFSV,Y&>,LA>(),
+          "Your local operator does not implement jacobian_apply_volume() for linear problems (without explicit Jacobian evaluation point)"
+          );
         la.jacobian_apply_volume(eg,lfsu,x,lfsv,y);
       }
+
       template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
       static void jacobian_apply_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
       {
+        static_assert(
+          models<impl::HasJacobianApplyVolumePostSkeleton<EG,LFSU,X,LFSV,Y&>,LA>(),
+          "Your local operator does not implement jacobian_apply_volume_post_skeleton() for linear problems (without explicit Jacobian evaluation point)"
+          );
         la.jacobian_apply_volume_post_skeleton(eg,lfsu,x,lfsv,y);
       }
+
       template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
       static void jacobian_apply_skeleton (const LA& la, const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
         Y& y_s, Y& y_n)
       {
+        static_assert(
+          models<impl::HasJacobianApplySkeleton<IG,LFSU,X,LFSV,LFSU,X,LFSV,Y&,Y&>,LA>(),
+          "Your local operator does not implement jacobian_apply_skeleton() for linear problems (without explicit Jacobian evaluation point)"
+          );
         la.jacobian_apply_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,y_s,y_n);
       }
       template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
@@ -225,8 +316,49 @@ namespace Dune {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         Y& y_s)
       {
+        static_assert(
+          models<impl::HasJacobianApplyBoundary<IG,LFSU,X,LFSV,Y&>,LA>(),
+          "Your local operator does not implement jacobian_apply_boundary() for linear problems (without explicit Jacobian evaluation point)"
+          );
         la.jacobian_apply_boundary(ig,lfsu_s,x_s,lfsv_s,y_s);
       }
+
+
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      static auto nonlinear_jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
+        -> typename std::enable_if<models<impl::HasJacobianApplyVolume<EG,LFSU,X,X,LFSV,Y&>,LA>()>::type
+      {
+        la.jacobian_apply_volume(eg,lfsu,x,z,lfsv,y);
+      }
+
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      static auto nonlinear_jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
+        -> typename std::enable_if<not models<impl::HasJacobianApplyVolume<EG,LFSU,X,X,LFSV,Y&>,LA>()>::type
+      {
+        static_assert(AlwaysFalse<EG>::value,"Your local operator does not implement jacobian_apply_volume() for nonlinear problems (Jacobian evaluation point given as argument)");
+      }
+
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void nonlinear_jacobian_apply_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
+      {
+        la.jacobian_apply_volume_post_skeleton(eg,lfsu,x,z,lfsv,y);
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void nonlinear_jacobian_apply_skeleton (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
+        Y& y_s, Y& y_n)
+      {
+        la.jacobian_apply_skeleton(ig,lfsu_s,x_s,z_s,lfsv_s,lfsu_n,x_n,z_n,lfsv_n,y_s,y_n);
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void nonlinear_jacobian_apply_boundary (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+        Y& y_s)
+      {
+        la.jacobian_apply_boundary(ig,lfsu_s,x_s,z_s,lfsv_s,y_s);
+      }
+
 
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
