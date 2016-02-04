@@ -33,6 +33,11 @@ namespace Dune {
       : public NumericalNonlinearJacobianApplyVolume<Imp>
     {
     public:
+
+      // We need to reimport the name from the base class; otherwise clang plays stupid and refuses to
+      // find the overload in the base class
+      using NumericalNonlinearJacobianApplyVolume<Imp>::jacobian_apply_volume;
+
       NumericalJacobianApplyVolume ()
         : NumericalNonlinearJacobianApplyVolume<Imp>(1e-7)
         , epsilon(1e-7)
@@ -103,6 +108,11 @@ namespace Dune {
       : public NumericalNonlinearJacobianApplyVolumePostSkeleton<Imp>
     {
     public:
+
+      // We need to reimport the name from the base class; otherwise clang plays stupid and refuses to
+      // find the overload in the base class
+      using NumericalNonlinearJacobianApplyVolumePostSkeleton<Imp>::jacobian_apply_volume_post_skeleton;
+
       NumericalJacobianApplyVolumePostSkeleton ()
         : NumericalNonlinearJacobianApplyVolumePostSkeleton<Imp>(1e-7)
         , epsilon(1e-7)
@@ -171,6 +181,11 @@ namespace Dune {
       : public NumericalNonlinearJacobianApplySkeleton<Imp>
     {
     public:
+
+      // We need to reimport the name from the base class; otherwise clang plays stupid and refuses to
+      // find the overload in the base class
+      using NumericalNonlinearJacobianApplySkeleton<Imp>::jacobian_apply_skeleton;
+
       NumericalJacobianApplySkeleton ()
         : NumericalNonlinearJacobianApplySkeleton<Imp>(1e-7)
         , epsilon(1e-7)
@@ -271,6 +286,11 @@ namespace Dune {
       : public NumericalNonlinearJacobianApplyBoundary<Imp>
     {
     public:
+
+      // We need to reimport the name from the base class; otherwise clang plays stupid and refuses to
+      // find the overload in the base class
+      using NumericalNonlinearJacobianApplyBoundary<Imp>::jacobian_apply_boundary;
+
       NumericalJacobianApplyBoundary ()
         : NumericalNonlinearJacobianApplyBoundary<Imp>(1e-7)
         , epsilon(1e-7)
