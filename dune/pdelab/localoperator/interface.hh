@@ -86,6 +86,20 @@ namespace Dune {
       : public LocalOperatorDefaultFlags
     {
     public:
+
+      static const bool doPatternVolume = true;
+      static const bool doPatternVolumePostSkeleton = true;
+      static const bool doPatternSkeleton = true;
+      static const bool doPatternBoundary = true;
+      static const bool doAlphaVolume = true;
+      static const bool doAlphaVolumePostSkeleton = true;
+      static const bool doAlphaSkeleton = true;
+      static const bool doAlphaBoundary = true;
+      static const bool doLambdaVolume = true;
+      static const bool doLambdaVolumePostSkeleton = true;
+      static const bool doLambdaSkeleton = true;
+      static const bool doLambdaBoundary = true;
+
       //////////////////////////////////////////////////////////////////////
       //
       //! \name Methods for the sparsity pattern
@@ -108,7 +122,8 @@ namespace Dune {
       template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume
       ( const LFSU& lfsu, const LFSV& lfsv,
-        LocalPattern& pattern);
+        LocalPattern& pattern) const
+      {}
 
       //! \brief get an element's contribution to the sparsity pattern after
       //!        the intersections have been handled
@@ -127,7 +142,8 @@ namespace Dune {
       template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume_post_skeleton
       ( const LFSU& lfsu, const LFSV& lfsv,
-        LocalPattern& pattern);
+        LocalPattern& pattern) const
+      {}
 
       //! get an internal intersection's contribution to the sparsity pattern
       /**
@@ -155,7 +171,8 @@ namespace Dune {
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const LFSV& lfsv_n,
         LocalPattern& pattern_sn,
-        LocalPattern& pattern_ns);
+        LocalPattern& pattern_ns) const
+      {}
 
       //! get a boundary intersection's contribution to the sparsity pattern
       /**
@@ -176,7 +193,8 @@ namespace Dune {
       template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_boundary
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
-        LocalPattern& pattern_ss);
+        LocalPattern& pattern_ss) const
+      {}
 
       //! \} Methods for the sparsity pattern
 
@@ -213,7 +231,8 @@ namespace Dune {
       void alpha_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        R& r);
+        R& r) const
+      {}
 
       //! \brief get an element's contribution to alpha after the
       //!        intersections have been handled
@@ -242,7 +261,8 @@ namespace Dune {
       void alpha_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        R& r);
+        R& r) const
+      {}
 
       //! get an internal intersections's contribution to alpha
       /**
@@ -281,7 +301,8 @@ namespace Dune {
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        R& r_s, R& r_n);
+        R& r_s, R& r_n) const
+      {}
 
       //! get a boundary intersections's contribution to alpha
       /**
@@ -312,7 +333,8 @@ namespace Dune {
       void alpha_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        R& r_s);
+        R& r_s) const
+      {}
 
       //! \} Methods for the residual -- non-constant parts
 
@@ -336,7 +358,8 @@ namespace Dune {
        * lambda_boundary() methods are called (if they are called at all).
        */
       template<typename EG, typename LFSV, typename R>
-      void lambda_volume(const EG& eg, const LFSV& lfsv, R& r);
+      void lambda_volume(const EG& eg, const LFSV& lfsv, R& r) const
+      {}
 
       //! \brief get an element's contribution to lambda after the
       //!        intersections have been handled
@@ -355,7 +378,8 @@ namespace Dune {
        * called (if they are called at all).
        */
       template<typename EG, typename LFSV, typename R>
-      void lambda_volume_post_skeleton(const EG& eg, const LFSV& lfsv, R& r);
+      void lambda_volume_post_skeleton(const EG& eg, const LFSV& lfsv, R& r) const
+      {}
 
       //! get an internal intersections's contribution to lambda
       /**
@@ -379,7 +403,8 @@ namespace Dune {
       template<typename IG, typename LFSV, typename R>
       void lambda_skeleton(const IG& ig,
                            const LFSV& lfsv_s, const LFSV& lfsv_n,
-                           R& r_s, R& r_n);
+                           R& r_s, R& r_n) const
+      {}
 
       //! get a boundary intersections's contribution to lambda
       /**
@@ -398,7 +423,8 @@ namespace Dune {
        * the call to lambda_volume_post_skeleton().
        */
       template<typename IG, typename LFSV, typename R>
-      void lambda_boundary(const IG& ig, const LFSV& lfsv_s, R& r_s);
+      void lambda_boundary(const IG& ig, const LFSV& lfsv_s, R& r_s) const
+      {}
 
       //! \} Methods for the residual -- constant parts
 
@@ -444,7 +470,8 @@ namespace Dune {
       void jacobian_apply_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& z, const LFSV& lfsv,
-        Y& y);
+        Y& y) const
+      {}
 
       //! Applies an element's jacobian to a vector for a linear problem after the
       //! intersections have been handled.
@@ -483,7 +510,8 @@ namespace Dune {
       void jacobian_apply_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& z, const LFSV& lfsv,
-        Y& y);
+        Y& y) const
+      {}
 
       //! Applies an internal intersections's jacobians to the appropriate vectors
       //! for a linear problem.
@@ -536,7 +564,8 @@ namespace Dune {
       ( const IG& ig,
         const LFSU& lfsu_s, const X& z_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& z_n, const LFSV& lfsv_n,
-        Y& y_s, Y& y_n);
+        Y& y_s, Y& y_n) const
+      {}
 
       //! apply a boundary intersections's jacobian for a linear problem.
       /**
@@ -578,7 +607,8 @@ namespace Dune {
       void jacobian_apply_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& z_s, const LFSV& lfsv_s,
-        Y& y_s);
+        Y& y_s) const
+      {}
 
       //! \} Methods for the application of the jacobian for linear problems
 
@@ -625,7 +655,8 @@ namespace Dune {
       void jacobian_apply_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv,
-        Y& y);
+        Y& y) const
+      {}
 
       //! Applies an element's jacobian to a vector for a nonlinear problem after the
       //! intersections have been handled.
@@ -664,7 +695,8 @@ namespace Dune {
       void jacobian_apply_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv,
-        Y& y);
+        Y& y) const
+      {}
 
       //! Applies an internal intersections's jacobians to the appropriate vectors
       //! for a nonlinear problem.
@@ -722,8 +754,9 @@ namespace Dune {
       void jacobian_apply_skeleton
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
-        const LFSU& lfsu_n, const X& x_n, const X& z_s, const LFSV& lfsv_n,
-        Y& y_s, Y& y_n);
+        const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
+        Y& y_s, Y& y_n) const
+      {}
 
       //! apply a boundary intersections's jacobian for a nonlinear problem.
       /**
@@ -766,7 +799,8 @@ namespace Dune {
       void jacobian_apply_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
-        Y& y_s);
+        Y& y_s) const
+      {}
 
       //! \} Methods for the application of the jacobian
 
@@ -798,7 +832,8 @@ namespace Dune {
       void jacobian_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix& mat);
+        LocalMatrix& mat) const
+      {}
 
       //! get an element's jacobian after the intersections have been handled
       /**
@@ -821,7 +856,8 @@ namespace Dune {
       void jacobian_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix& mat);
+        LocalMatrix& mat) const
+      {}
 
       //! apply an internal intersections's jacobians
       /**
@@ -863,7 +899,9 @@ namespace Dune {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
         LocalMatrix& mat_ss, LocalMatrix& mat_sn,
-        LocalMatrix& mat_ns, LocalMatrix& mat_nn);
+        LocalMatrix& mat_ns, LocalMatrix& mat_nn) const
+      {}
+
       //! get a boundary intersections's jacobian
       /**
        * \param ig     IntersectionGeometry describing the intersection.
@@ -889,7 +927,8 @@ namespace Dune {
       void jacobian_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        LocalMatrix& mat_ss);
+        LocalMatrix& mat_ss) const
+      {}
 
       //! \} Methods to extract the jacobian
     };
