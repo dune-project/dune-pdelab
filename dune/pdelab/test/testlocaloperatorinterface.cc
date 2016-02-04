@@ -1,6 +1,22 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
+/* Test Localoperator Interface
+
+   This test does the following:
+
+   - Create LOP from localoperator/interface.hh that does nothing but
+     calls implements all localoperator methods.
+   - Create jacobian matrix -> tests pattern calls
+   - Call residual, jacobian, jacobian_apply and
+     nonlinear_jacobian_apply methods from the gridoperator
+
+   The test has two purposes:
+   - See if everything compiles when we call all these methods
+   - Use the interface localoperator in order to find bugs if
+     interfaces change
+ */
+
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
