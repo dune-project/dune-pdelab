@@ -32,6 +32,8 @@ dune_add_test(SOURCES testdglegendre.cc)
 
 dune_add_test(SOURCES testlocalfunctionspace.cc)
 
+dune_add_test(SOURCES testlocaloperatorinterface.cc)
+
 dune_add_test(SOURCES testpk2dinterpolation.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
               SKIP_ON_77)
