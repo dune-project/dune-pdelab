@@ -7,6 +7,8 @@
 #include<dune/geometry/referenceelements.hh>
 #include<dune/localfunctions/raviartthomas/raviartthomascube.hh>
 
+#include<dune/pdelab/common/quadraturerules.hh>
+#include<dune/pdelab/common/referenceelements.hh>
 #include <dune/pdelab/localoperator/defaultimp.hh>
 
 #include"../common/function.hh"
@@ -22,7 +24,7 @@ namespace Dune {
     struct TwoPhaseParameterTraits
     {
       //! \brief the grid view
-      typedef GV GridViewType;
+      using GridViewType = GV;
 
       //! \brief Enum for domain dimension
       enum {
@@ -31,36 +33,36 @@ namespace Dune {
       };
 
       //! \brief Export type for domain field
-      typedef typename GV::Grid::ctype DomainFieldType;
+      using DomainFieldType = typename GV::Grid::ctype;
 
       //! \brief domain type
-      typedef Dune::FieldVector<DomainFieldType,dimDomain> DomainType;
+      using DomainType = Dune::FieldVector<DomainFieldType,dimDomain>;
 
       //! \brief domain type
-      typedef Dune::FieldVector<DomainFieldType,dimDomain-1> IntersectionDomainType;
+      using IntersectionDomainType = Dune::FieldVector<DomainFieldType,dimDomain-1>;
 
       //! \brief Export type for range field
-      typedef RF RangeFieldType;
+      using RangeFieldType = RF;
 
       //! \brief range type
-      typedef Dune::FieldVector<RF,GV::dimensionworld> RangeType;
+      using RangeType = Dune::FieldVector<RF,GV::dimensionworld>;
 
       //! \brief permeability tensor type
-      typedef RangeFieldType PermTensorType;
+      using PermTensorType = RangeFieldType;
 
       //! grid types
-      typedef typename GV::Traits::template Codim<0>::Entity ElementType;
-      typedef typename GV::Intersection IntersectionType;
+      using ElementType = typename GV::Traits::template Codim<0>::Entity;
+      using IntersectionType = typename GV::Intersection;
     };
 
     template<typename GV, typename RF>
     struct TwoPhaseFullTensorParameterTraits : TwoPhaseParameterTraits<GV, RF>
     {
-      typedef TwoPhaseParameterTraits<GV, RF> Base;
-      typedef typename Base::RangeFieldType RangeFieldType;
+      using Base = TwoPhaseParameterTraits<GV, RF>;
+      using RangeFieldType = typename Base::RangeFieldType;
 
       //! \brief permeability tensor type
-      typedef Dune::FieldMatrix<RangeFieldType,Base::dimDomain,Base::dimDomain> PermTensorType;
+      using PermTensorType = Dune::FieldMatrix<RangeFieldType,Base::dimDomain,Base::dimDomain>;
     };
 
     //! base class for parameter class
@@ -68,7 +70,7 @@ namespace Dune {
     class TwoPhaseParameterInterface
     {
     public:
-      typedef T Traits;
+      using Traits = T;
 
       //! porosity
       typename Traits::RangeFieldType
@@ -257,7 +259,7 @@ namespace Dune {
       enum { liquid = 0 };
       enum { gas = 1 };
 
-      typedef typename TP::Traits::RangeFieldType Real;
+      using Real = typename TP::Traits::RangeFieldType;
     public:
       // pattern assembly flags
       enum { doPatternVolume = true };
@@ -278,23 +280,20 @@ namespace Dune {
       template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
-        // select the two components
-        typedef typename LFSV::template Child<liquid>::Type PLSpace;
+        // Reference to cell
+        const auto& cell = eg.entity();
 
-        // domain and range field type
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        // get geometry
+        auto geo = eg.geometry();
 
         // cell geometry
-        const Dune::FieldVector<DF,dim>&
-          cell_center_local = Dune::ReferenceElements<DF,dim>::general(eg.geometry().type()).position(0,0);
-        RF cell_volume = eg.geometry().volume();
+        auto ref_el = referenceElement(geo);
+        auto cell_center_local = ref_el.position(0,0);
+        auto cell_volume = geo.volume();
 
         // contribution from source term
-        r.accumulate(lfsv, liquid, -scale_l * tp.q_l(eg.entity(),cell_center_local,time) * cell_volume);
-        r.accumulate(lfsv, gas, -scale_g * tp.q_g(eg.entity(),cell_center_local,time) * cell_volume);
+        r.accumulate(lfsv, liquid, -scale_l * tp.q_l(cell,cell_center_local,time) * cell_volume);
+        r.accumulate(lfsv, gas, -scale_g * tp.q_g(cell,cell_center_local,time) * cell_volume);
       }
 
       // skeleton integral depending on test and ansatz functions
@@ -305,94 +304,98 @@ namespace Dune {
                            const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
       {
-        // select the two components
-        typedef typename LFSV::template Child<0>::Type PLSpace;
+        // Define types
+        using namespace TypeTree::Indices;
+        using PLSpace = TypeTree::Child<LFSV,_0>;
+        using RF = typename PLSpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
 
-        // domain and range field type
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        // References to inside and outside cells
+        const auto& cell_inside = ig.inside();
+        const auto& cell_outside = ig.outside();
+
+        // get geometries
+        auto geo = ig.geometry();
+        auto geo_inside = cell_inside.geometry();
+        auto geo_outside = cell_outside.geometry();
 
         // cell geometries
-        const Dune::FieldVector<DF,dim>&
-          inside_cell_center_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
-        const Dune::FieldVector<DF,dim>&
-          outside_cell_center_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
-        Dune::FieldVector<DF,IG::dimension>
-          inside_cell_center_global = ig.inside()->geometry().center();
-        Dune::FieldVector<DF,IG::dimension>
-          outside_cell_center_global = ig.outside()->geometry().center();
+        auto ref_el_inside = referenceElement(geo_inside);
+        auto ref_el_outside = referenceElement(geo_outside);
+        auto inside_cell_center_local = ref_el_inside.position(0,0);
+        auto outside_cell_center_local = ref_el_outside.position(0,0);
+        auto inside_cell_center_global = geo_inside.center();
+        auto outside_cell_center_global = geo_outside.center();
 
         // distance of cell centers
-        Dune::FieldVector<DF,dim> d(outside_cell_center_global);
+        auto d = outside_cell_center_global;
         d -= inside_cell_center_global;
-        RF distance = d.two_norm();
+        auto distance = d.two_norm();
 
         // face geometry
-        const Dune::FieldVector<DF,IG::dimension-1>&
-          face_local = Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
-        RF face_volume = ig.geometry().volume();
+        auto ref_el = referenceElement(geo);
+        auto face_local = ref_el.position(0,0);
+        auto face_volume = geo.volume();
 
         // absolute permeability
-        RF k_abs_inside = tp.k_abs(*(ig.inside()),inside_cell_center_local);
-        RF k_abs_outside = tp.k_abs(*(ig.outside()),outside_cell_center_local);
+        auto k_abs_inside = tp.k_abs(cell_inside,inside_cell_center_local);
+        auto k_abs_outside = tp.k_abs(cell_outside,outside_cell_center_local);
 
         // gravity times normal
-        RF gn = tp.gravity()*ig.unitOuterNormal(face_local);
+        auto gn = tp.gravity()*ig.unitOuterNormal(face_local);
 
         // liquid phase calculation
-        RF rho_l_inside = tp.rho_l(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,liquid));
-        RF rho_l_outside = tp.rho_l(*(ig.outside()),outside_cell_center_local,x_n(lfsu_n,liquid));
-        RF w_l = (x_s(lfsu_s,liquid)-x_n(lfsu_n,liquid))/distance + aavg(rho_l_inside,rho_l_outside)*gn; // determines direction
+        auto rho_l_inside = tp.rho_l(cell_inside,inside_cell_center_local,x_s(lfsu_s,liquid));
+        auto rho_l_outside = tp.rho_l(cell_outside,outside_cell_center_local,x_n(lfsu_n,liquid));
+        auto w_l = (x_s(lfsu_s,liquid)-x_n(lfsu_n,liquid))/distance + aavg(rho_l_inside,rho_l_outside)*gn; // determines direction
         RF pc_upwind, s_l_upwind, s_g_upwind;
-        RF nu_l = aavg(tp.nu_l(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,liquid)),
-                       tp.nu_l(*(ig.outside()),outside_cell_center_local,x_n(lfsu_n,liquid)));
+        auto nu_l = aavg(tp.nu_l(cell_inside,inside_cell_center_local,x_s(lfsu_s,liquid)),
+                         tp.nu_l(cell_outside,outside_cell_center_local,x_n(lfsu_n,liquid)));
         if (w_l>=0) // upwind capillary pressure on face
           {
             pc_upwind = x_s(lfsu_s,gas)-x_s(lfsu_s,liquid);
-            s_l_upwind = tp.s_l(*(ig.inside()),inside_cell_center_local,pc_upwind);
+            s_l_upwind = tp.s_l(cell_inside,inside_cell_center_local,pc_upwind);
           }
         else
           {
             pc_upwind = x_n(lfsu_n,gas)-x_n(lfsu_n,liquid);
-            s_l_upwind = tp.s_l(*(ig.outside()),outside_cell_center_local,pc_upwind);
+            s_l_upwind = tp.s_l(cell_outside,outside_cell_center_local,pc_upwind);
           }
         s_g_upwind = 1-s_l_upwind;
-        RF lambda_l_inside = tp.kr_l(*(ig.inside()),inside_cell_center_local,s_l_upwind)/
-          tp.mu_l(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,liquid));
-        RF lambda_l_outside = tp.kr_l(*(ig.outside()),outside_cell_center_local,s_l_upwind)/
-          tp.mu_l(*(ig.outside()),outside_cell_center_local,x_n(lfsu_n,liquid));
-        RF sigma_l = havg(lambda_l_inside*k_abs_inside,lambda_l_outside*k_abs_outside);
+        auto lambda_l_inside = tp.kr_l(cell_inside,inside_cell_center_local,s_l_upwind)/
+          tp.mu_l(cell_inside,inside_cell_center_local,x_s(lfsu_s,liquid));
+        auto lambda_l_outside = tp.kr_l(cell_outside,outside_cell_center_local,s_l_upwind)/
+          tp.mu_l(cell_outside,outside_cell_center_local,x_n(lfsu_n,liquid));
+        auto sigma_l = havg(lambda_l_inside*k_abs_inside,lambda_l_outside*k_abs_outside);
 
         r_s.accumulate(lfsv_s,liquid, scale_l * nu_l * sigma_l * w_l * face_volume);
         r_n.accumulate(lfsv_n,liquid, -scale_l * nu_l * sigma_l * w_l * face_volume);
 
         // gas phase calculation
-        RF rho_g_inside = tp.rho_g(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,gas));
-        RF rho_g_outside = tp.rho_g(*(ig.outside()),outside_cell_center_local,x_n(lfsu_n,gas));
-        RF w_g = (x_s(lfsu_s,gas)-x_n(lfsu_n,gas))/distance + aavg(rho_g_inside,rho_g_outside)*gn; // determines direction
-        RF nu_g = aavg(tp.nu_g(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,gas)),
-                       tp.nu_g(*(ig.outside()),outside_cell_center_local,x_n(lfsu_n,gas)));
+        auto rho_g_inside = tp.rho_g(cell_inside,inside_cell_center_local,x_s(lfsu_s,gas));
+        auto rho_g_outside = tp.rho_g(cell_outside,outside_cell_center_local,x_n(lfsu_n,gas));
+        auto w_g = (x_s(lfsu_s,gas)-x_n(lfsu_n,gas))/distance + aavg(rho_g_inside,rho_g_outside)*gn; // determines direction
+        auto nu_g = aavg(tp.nu_g(cell_inside,inside_cell_center_local,x_s(lfsu_s,gas)),
+                         tp.nu_g(cell_outside,outside_cell_center_local,x_n(lfsu_n,gas)));
         if (w_l*w_g<=0) // new evaluation necessary only if signs differ
           {
             if (w_g>=0) // upwind capillary pressure on face
               {
                 pc_upwind = x_s(lfsu_s,gas)-x_s(lfsu_s,liquid);
-                s_l_upwind = tp.s_l(*(ig.inside()),inside_cell_center_local,pc_upwind);
+                s_l_upwind = tp.s_l(cell_inside,inside_cell_center_local,pc_upwind);
               }
             else
               {
                 pc_upwind = x_n(lfsu_n,gas)-x_n(lfsu_n,liquid);
-                s_l_upwind = tp.s_l(*(ig.outside()),outside_cell_center_local,pc_upwind);
+                s_l_upwind = tp.s_l(cell_outside,outside_cell_center_local,pc_upwind);
               }
             s_g_upwind = 1-s_l_upwind;
           }
-        RF lambda_g_inside = tp.kr_g(*(ig.inside()),inside_cell_center_local,s_g_upwind)/
-          tp.mu_g(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,gas));
-        RF lambda_g_outside = tp.kr_g(*(ig.outside()),outside_cell_center_local,s_g_upwind)/
-          tp.mu_g(*(ig.outside()),outside_cell_center_local,x_n(lfsu_n,gas));
-        RF sigma_g = havg(lambda_g_inside*k_abs_inside,lambda_g_outside*k_abs_outside);
+        auto lambda_g_inside = tp.kr_g(cell_inside,inside_cell_center_local,s_g_upwind)/
+          tp.mu_g(cell_inside,inside_cell_center_local,x_s(lfsu_s,gas));
+        auto lambda_g_outside = tp.kr_g(cell_outside,outside_cell_center_local,s_g_upwind)/
+          tp.mu_g(cell_outside,outside_cell_center_local,x_n(lfsu_n,gas));
+        auto sigma_g = havg(lambda_g_inside*k_abs_inside,lambda_g_outside*k_abs_outside);
 
         r_s.accumulate(lfsv_s, gas, scale_g * nu_g * sigma_g * w_g * face_volume);
         r_n.accumulate(lfsv_n, gas, -scale_g * nu_g * sigma_g * w_g * face_volume);
@@ -405,68 +408,65 @@ namespace Dune {
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                            R& r_s) const
       {
-        // select the two components
-        typedef typename LFSV::template Child<0>::Type PLSpace;
+        // References to inside cell
+        const auto& cell_inside = ig.inside();
 
-        // domain and range field type
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        // get geometries
+        auto geo = ig.geometry();
+        auto geo_inside = cell_inside.geometry();
 
         // face geometry
-        const Dune::FieldVector<DF,dim-1>&
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).position(0,0);
-        RF face_volume = ig.geometry().volume();
+        auto ref_el = referenceElement(geo);
+        auto face_local = ref_el.position(0,0);
+        auto face_volume = geo.volume();
 
         // evaluate boundary condition type
-        int bc_l = tp.bc_l(ig.intersection(),face_local,time);
-        int bc_g = tp.bc_g(ig.intersection(),face_local,time);
+        auto bc_l = tp.bc_l(ig.intersection(),face_local,time);
+        auto bc_g = tp.bc_g(ig.intersection(),face_local,time);
         if (bc_l!=1 && bc_g!=1) return; // no Dirichlet boundary conditions
 
         // cell geometry
-        const Dune::FieldVector<DF,dim>&
-          inside_cell_center_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
-        Dune::FieldVector<DF,dim>
-          inside_cell_center_global = ig.inside()->geometry().global(inside_cell_center_local);
+        auto ref_el_inside = referenceElement(geo_inside);
+        auto inside_cell_center_local = ref_el_inside.position(0,0);
+        auto inside_cell_center_global = geo_inside.center();
 
         // distance of cell center to boundary
-        Dune::FieldVector<DF,dim> d = ig.geometry().global(face_local);
+        auto d = geo.global(face_local);
         d -= inside_cell_center_global;
-        RF distance = d.two_norm();
+        auto distance = d.two_norm();
 
         // absolute permeability
-        RF k_abs_inside = tp.k_abs(*(ig.inside()),inside_cell_center_local);
+        auto k_abs_inside = tp.k_abs(cell_inside,inside_cell_center_local);
 
         // gravity times normal
-        RF gn = tp.gravity()*ig.unitOuterNormal(face_local);
+        auto gn = tp.gravity()*ig.unitOuterNormal(face_local);
 
         // liquid phase Dirichlet boundary
         if (bc_l==1)
           {
-            RF rho_l_inside = tp.rho_l(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,liquid));
-            RF g_l = tp.g_l(ig.intersection(),face_local,time);
-            RF w_l = (x_s(lfsu_s,liquid)-g_l)/distance + rho_l_inside*gn;
-            RF s_l = tp.s_l(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,gas)-x_s(lfsu_s,liquid));
-            RF lambda_l_inside = tp.kr_l(*(ig.inside()),inside_cell_center_local,s_l)/
-              tp.mu_l(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,liquid));
-            RF sigma_l = lambda_l_inside*k_abs_inside;
-            RF nu_l = tp.nu_l(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,liquid));
+            auto rho_l_inside = tp.rho_l(cell_inside,inside_cell_center_local,x_s(lfsu_s,liquid));
+            auto g_l = tp.g_l(ig.intersection(),face_local,time);
+            auto w_l = (x_s(lfsu_s,liquid)-g_l)/distance + rho_l_inside*gn;
+            auto s_l = tp.s_l(cell_inside,inside_cell_center_local,x_s(lfsu_s,gas)-x_s(lfsu_s,liquid));
+            auto lambda_l_inside = tp.kr_l(cell_inside,inside_cell_center_local,s_l)/
+              tp.mu_l(cell_inside,inside_cell_center_local,x_s(lfsu_s,liquid));
+            auto sigma_l = lambda_l_inside*k_abs_inside;
+            auto nu_l = tp.nu_l(cell_inside,inside_cell_center_local,x_s(lfsu_s,liquid));
             r_s.accumulate(lfsv_s, liquid, scale_l * nu_l * sigma_l * w_l * face_volume);
           }
 
         // gas phase Dirichlet boundary
         if (bc_g==1)
           {
-            RF rho_g_inside = tp.rho_g(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,gas));
-            RF g_g = tp.g_g(ig.intersection(),face_local,time);
-            RF w_g = (x_s(lfsu_s,gas)-g_g)/distance + rho_g_inside*gn;
-            RF s_l = tp.s_l(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,gas)-x_s(lfsu_s,liquid));
-            RF s_g = 1-s_l;
-            RF lambda_g_inside = tp.kr_g(*(ig.inside()),inside_cell_center_local,s_g)/
-              tp.mu_g(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,gas));
-            RF sigma_g = lambda_g_inside*k_abs_inside;
-            RF nu_g = tp.nu_g(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,gas));
+            auto rho_g_inside = tp.rho_g(cell_inside,inside_cell_center_local,x_s(lfsu_s,gas));
+            auto g_g = tp.g_g(ig.intersection(),face_local,time);
+            auto w_g = (x_s(lfsu_s,gas)-g_g)/distance + rho_g_inside*gn;
+            auto s_l = tp.s_l(cell_inside,inside_cell_center_local,x_s(lfsu_s,gas)-x_s(lfsu_s,liquid));
+            auto s_g = 1-s_l;
+            auto lambda_g_inside = tp.kr_g(cell_inside,inside_cell_center_local,s_g)/
+              tp.mu_g(cell_inside,inside_cell_center_local,x_s(lfsu_s,gas));
+            auto sigma_g = lambda_g_inside*k_abs_inside;
+            auto nu_g = tp.nu_g(cell_inside,inside_cell_center_local,x_s(lfsu_s,gas));
             r_s.accumulate(lfsv_s, gas, scale_l * nu_g * sigma_g * w_g * face_volume);
           }
       }
@@ -475,37 +475,30 @@ namespace Dune {
       template<typename IG, typename LFSV, typename R>
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r_s) const
       {
-        // select the two components
-        typedef typename LFSV::template Child<0>::Type PLSpace;
-
-        // domain and range field type
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        // get geometries
+        auto geo = ig.geometry();
 
         // face geometry
-        const Dune::FieldVector<DF,dim-1>&
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).position(0,0);
-        RF face_volume = ig.geometry().integrationElement(face_local)*
-          Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).volume();
+        auto ref_el = referenceElement(geo);
+        auto face_local = ref_el.position(0,0);
+        auto face_volume = geo.volume();
 
         // evaluate boundary condition type
-        int bc_l = tp.bc_l(ig.intersection(),face_local,time);
-        int bc_g = tp.bc_g(ig.intersection(),face_local,time);
+        auto bc_l = tp.bc_l(ig.intersection(),face_local,time);
+        auto bc_g = tp.bc_g(ig.intersection(),face_local,time);
         if (bc_l!=0 && bc_g!=0) return; // no Neumann boundary conditions
 
         // liquid phase Neumann boundary
         if (bc_l==0)
           {
-            RF j_l = tp.j_l(ig.intersection(),face_local,time);
+            auto j_l = tp.j_l(ig.intersection(),face_local,time);
             r_s.accumulate(lfsv, liquid, scale_l * j_l * face_volume);
           }
 
         // gas phase Neumann boundary
         if (bc_g==0)
           {
-            RF j_g = tp.j_g(ig.intersection(),face_local,time);
+            auto j_g = tp.j_g(ig.intersection(),face_local,time);
             r_s.accumulate(lfsv, gas, scale_g * j_g * face_volume);
           }
       }
@@ -554,7 +547,7 @@ namespace Dune {
       enum { liquid = 0 };
       enum { gas = 1 };
 
-      typedef typename TP::Traits::RangeFieldType Real;
+      using Real = typename TP::Traits::RangeFieldType;
 
     public:
       // pattern assembly flags
@@ -578,25 +571,22 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        // select the two components
-        typedef typename LFSV::template Child<0>::Type PLSpace;
+        // Reference to cell
+        const auto& cell = eg.entity();
 
-        // domain and range field type
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        // get geometry
+        auto geo = eg.geometry();
 
         // cell geometry
-        const Dune::FieldVector<DF,dim>&
-          cell_center_local = Dune::ReferenceElements<DF,dim>::general(eg.geometry().type()).position(0,0);
-        RF cell_volume = eg.geometry().volume();
+        auto ref_el = referenceElement(geo);
+        auto cell_center_local = ref_el.position(0,0);
+        auto cell_volume = geo.volume();
 
-        RF phi = tp.phi(eg.entity(),cell_center_local);
-        RF s_l = tp.s_l(eg.entity(),cell_center_local,x(lfsu,gas)-x(lfsu,liquid));
+        auto phi = tp.phi(cell,cell_center_local);
+        auto s_l = tp.s_l(cell,cell_center_local,x(lfsu,gas)-x(lfsu,liquid));
 
-        r.accumulate(lfsv, liquid, scale_l * phi * s_l * tp.nu_l(eg.entity(),cell_center_local,x(lfsu,liquid)) * cell_volume);
-        r.accumulate(lfsv, gas, scale_g * phi * (1-s_l) * tp.nu_g(eg.entity(),cell_center_local,x(lfsu,gas)) * cell_volume);
+        r.accumulate(lfsv, liquid, scale_l * phi * s_l * tp.nu_l(cell,cell_center_local,x(lfsu,liquid)) * cell_volume);
+        r.accumulate(lfsv, gas, scale_g * phi * (1-s_l) * tp.nu_g(cell,cell_center_local,x(lfsu,gas)) * cell_volume);
       }
 
     private:
@@ -623,14 +613,14 @@ namespace Dune {
                                               V_l<TP,PL,PG> >
     {
       // extract useful types
-      typedef typename PL::Traits::GridViewType GV;
-      typedef typename GV::Grid::ctype DF;
-      typedef typename PL::Traits::RangeFieldType RF;
-      typedef typename PL::Traits::RangeType RangeType;
+      using GV = typename PL::Traits::GridViewType;
+      using DF = typename GV::Grid::ctype;
+      using RF = typename PL::Traits::RangeFieldType;
+      using RangeType = typename PL::Traits::RangeType;
       enum { dim = PL::Traits::GridViewType::dimension };
-      typedef typename GV::Traits::template Codim<0>::Entity Element;
-      typedef typename GV::IntersectionIterator IntersectionIterator;
-      typedef typename IntersectionIterator::Intersection Intersection;
+      using Element = typename GV::Traits::template Codim<0>::Entity;
+      using IntersectionIterator = typename GV::IntersectionIterator;
+      using Intersection = typename IntersectionIterator::Intersection;
 
       const TP& tp;
       const PL& pl;
@@ -639,12 +629,12 @@ namespace Dune {
       typename TP::Traits::RangeFieldType time;
 
 
-      typedef typename Dune::RaviartThomasCubeLocalFiniteElement<DF,RF,dim,0>::Traits::LocalBasisType::Traits::RangeType RT0RangeType;
+      using RT0RangeType = typename Dune::RaviartThomasCubeLocalFiniteElement<DF,RF,dim,0>::Traits::LocalBasisType::Traits::RangeType;
 
     public:
-      typedef Dune::PDELab::GridFunctionTraits<GV,RF,dim,Dune::FieldVector<RF,dim> > Traits;
+      using Traits = Dune::PDELab::GridFunctionTraits<GV,RF,dim,Dune::FieldVector<RF,dim> >;
 
-      typedef Dune::PDELab::GridFunctionBase<Traits,V_l<TP,PL,PG> > BaseT;
+      using BaseT = Dune::PDELab::GridFunctionBase<Traits,V_l<TP,PL,PG> >;
 
       V_l (const TP& tp_, const PL& pl_, const PG& pg_) : tp(tp_), pl(pl_), pg(pg_), time(0) {}
 
@@ -658,15 +648,20 @@ namespace Dune {
                             const typename Traits::DomainType& x,
                             typename Traits::RangeType& y) const
       {
+       // get geometries
+        auto geo = e.geometry();
+
+        // face geometry
+        auto ref_el = referenceElement(geo);
+        auto face_local = ref_el.position(0,0);
+        auto face_volume = geo.volume();
+
         // cell geometry
-        const Dune::FieldVector<DF,dim>&
-          inside_cell_center_local = Dune::ReferenceElements<DF,dim>::
-          general(e.type()).position(0,0);
-        Dune::FieldVector<DF,dim>
-          inside_cell_center_global = e.geometry().global(inside_cell_center_local);
+        auto inside_cell_center_local = ref_el.position(0,0);
+        auto inside_cell_center_global = geo.global(inside_cell_center_local);
 
         // absolute permeability
-        RF k_abs_inside = tp.k_abs(e,inside_cell_center_local);
+        auto k_abs_inside = tp.k_abs(e,inside_cell_center_local);
 
         // pressure evaluation
         typename PL::Traits::RangeType pl_inside, pg_inside;
@@ -674,59 +669,58 @@ namespace Dune {
         pg.evaluate(e,inside_cell_center_local,pg_inside);
 
         // density
-        RF nu_l_inside = tp.nu_l(e,inside_cell_center_local,pl_inside);
+        auto nu_l_inside = tp.nu_l(e,inside_cell_center_local,pl_inside);
 
         // for coefficient computation
         RF vn[2*dim];    // normal velocities
         RF coeff[2*dim]; // RT0 coefficient
-        typename Traits::ElementType::Geometry::JacobianInverseTransposed
-          B = e.geometry().jacobianInverseTransposed(x); // the transformation. Assume it is linear
-        RF determinant = B.determinant();
+        auto B = geo.jacobianInverseTransposed(x); // the transformation. Assume it is linear
+        auto determinant = B.determinant();
 
         // loop over cell neighbors
-        IntersectionIterator endit = pl.getGridView().iend(e);
-        for (IntersectionIterator iit = pl.getGridView().ibegin(e); iit!=endit; ++iit)
+        for (const auto& intersection : intersections(pl.getGridView(),e))
           {
             // set to zero for processor boundary
-            vn[iit->indexInInside()] = 0.0;
+            vn[intersection.indexInInside()] = 0.0;
+
+            // get geometry
+            auto geo_intersection = intersection.geometry();
 
             // face geometry
-            const Dune::FieldVector<DF,dim-1>&
-              face_local = Dune::ReferenceElements<DF,dim-1>::general(iit->geometry().type()).position(0,0);
-
+            const auto& face_local = referenceElement(geo_intersection).position(0,0);
 
             // interior face
-            if (iit->neighbor())
+            if (intersection.neighbor())
               {
-                const Dune::FieldVector<DF,dim>&
-                  outside_cell_center_local = Dune::ReferenceElements<DF,dim>::
-                  general(iit->outside()->type()).position(0,0);
-                Dune::FieldVector<DF,dim>
-                  outside_cell_center_global = iit->outside()->geometry().global(outside_cell_center_local);
+                // get geometry
+                auto geo_outside = intersection.outside().geometry();
+                auto ref_el_outside = referenceElement(geo_outside);
+                auto outside_cell_center_local = ref_el_outside.position(0,0);
+                auto outside_cell_center_global = geo_outside.global(outside_cell_center_local);
 
                 // distance of cell centers
-                Dune::FieldVector<DF,dim> d(outside_cell_center_global);
+                auto d = outside_cell_center_global;
                 d -= inside_cell_center_global;
-                RF distance = d.two_norm();
+                auto distance = d.two_norm();
 
                 // absolute permeability
-                RF k_abs_outside = tp.k_abs(*(iit->outside()),outside_cell_center_local);
+                auto k_abs_outside = tp.k_abs(*(intersection.outside()),outside_cell_center_local);
 
                 // gravity times normal
-                RF gn = tp.gravity()*iit->unitOuterNormal(face_local);
+                auto gn = tp.gravity()*intersection.unitOuterNormal(face_local);
 
                 // pressure evaluation
                 typename PL::Traits::RangeType pl_outside, pg_outside;
-                pl.evaluate(*(iit->outside()),outside_cell_center_local,pl_outside);
-                pg.evaluate(*(iit->outside()),outside_cell_center_local,pg_outside);
+                pl.evaluate(*(intersection.outside()),outside_cell_center_local,pl_outside);
+                pg.evaluate(*(intersection.outside()),outside_cell_center_local,pg_outside);
 
                 // density
-                RF nu_l_outside = tp.nu_l(*(iit->outside()),outside_cell_center_local,pg_outside);
+                auto nu_l_outside = tp.nu_l(*(intersection.outside()),outside_cell_center_local,pg_outside);
 
                 // liquid phase calculation
-                RF rho_l_inside = tp.rho_l(e,inside_cell_center_local,pl_inside);
-                RF rho_l_outside = tp.rho_l(*(iit->outside()),outside_cell_center_local,pl_outside);
-                RF w_l = (pl_inside-pl_outside)/distance + aavg(rho_l_inside,rho_l_outside)*gn; // determines direction
+                auto rho_l_inside = tp.rho_l(e,inside_cell_center_local,pl_inside);
+                auto rho_l_outside = tp.rho_l(*(intersection.outside()),outside_cell_center_local,pl_outside);
+                auto w_l = (pl_inside-pl_outside)/distance + aavg(rho_l_inside,rho_l_outside)*gn; // determines direction
                 RF pc_upwind, s_l_upwind, s_g_upwind;
                 if (w_l>=0) // upwind capillary pressure on face
                   {
@@ -736,65 +730,65 @@ namespace Dune {
                 else
                   {
                     pc_upwind = pg_outside-pl_outside;
-                    s_l_upwind = tp.s_l(*(iit->outside()),outside_cell_center_local,pc_upwind);
+                    s_l_upwind = tp.s_l(*(intersection.outside()),outside_cell_center_local,pc_upwind);
                   }
                 s_g_upwind = 1-s_l_upwind;
-                RF lambda_l_inside = tp.kr_l(e,inside_cell_center_local,s_l_upwind)/
+                auto lambda_l_inside = tp.kr_l(e,inside_cell_center_local,s_l_upwind)/
                   tp.mu_l(e,inside_cell_center_local,pl_inside);
-                RF lambda_l_outside = tp.kr_l(*(iit->outside()),outside_cell_center_local,s_l_upwind)/
-                  tp.mu_l(*(iit->outside()),outside_cell_center_local,pl_outside);
-                RF sigma_l = havg(lambda_l_inside*k_abs_inside,lambda_l_outside*k_abs_outside);
-                RF nu_l = aavg(nu_l_inside,nu_l_outside);
+                auto lambda_l_outside = tp.kr_l(*(intersection.outside()),outside_cell_center_local,s_l_upwind)/
+                  tp.mu_l(*(intersection.outside()),outside_cell_center_local,pl_outside);
+                auto sigma_l = havg(lambda_l_inside*k_abs_inside,lambda_l_outside*k_abs_outside);
+                auto nu_l = aavg(nu_l_inside,nu_l_outside);
 
                 // set coefficient
-                vn[iit->indexInInside()] = nu_l * sigma_l * w_l;
+                vn[intersection.indexInInside()] = nu_l * sigma_l * w_l;
               }
 
             // boundary face
-            if (iit->boundary())
+            if (intersection.boundary())
               {
                 // distance of cell center to boundary
-                Dune::FieldVector<DF,dim> d = iit->geometry().global(face_local);
+                auto d = geo_intersection.global(face_local);
                 d -= inside_cell_center_global;
-                RF distance = d.two_norm();
+                auto distance = d.two_norm();
 
                 // evaluate boundary condition type
-                int bc_l = tp.bc_l(*iit,face_local,time);
+                auto bc_l = tp.bc_l(intersection,face_local,time);
 
                 // liquid phase Dirichlet boundary
                 if (bc_l==1)
                   {
-                    RF rho_l_inside = tp.rho_l(e,inside_cell_center_local,pl_inside);
-                    RF g_l = tp.g_l(*iit,face_local,time);
-                    RF gn = tp.gravity()*iit->unitOuterNormal(face_local);
-                    RF w_l = (pl_inside-g_l)/distance + rho_l_inside*gn;
-                    RF s_l = tp.s_l(e,inside_cell_center_local,pg_inside-pl_inside);
-                    RF lambda_l_inside = tp.kr_l(e,inside_cell_center_local,s_l)/
+                    auto rho_l_inside = tp.rho_l(e,inside_cell_center_local,pl_inside);
+                    auto g_l = tp.g_l(intersection,face_local,time);
+                    auto gn = tp.gravity()*intersection.unitOuterNormal(face_local);
+                    auto w_l = (pl_inside-g_l)/distance + rho_l_inside*gn;
+                    auto s_l = tp.s_l(e,inside_cell_center_local,pg_inside-pl_inside);
+                    auto lambda_l_inside = tp.kr_l(e,inside_cell_center_local,s_l)/
                       tp.mu_l(e,inside_cell_center_local,pl_inside);
-                    RF sigma_l = lambda_l_inside*k_abs_inside;
-                    vn[iit->indexInInside()] = nu_l_inside * sigma_l * w_l;
+                    auto sigma_l = lambda_l_inside*k_abs_inside;
+                    vn[intersection.indexInInside()] = nu_l_inside * sigma_l * w_l;
                   }
 
                 // liquid phase Neumann boundary
                 if (bc_l==0)
                   {
-                    RF j_l = tp.j_l(*iit,face_local,time);
-                    vn[iit->indexInInside()] = j_l;
+                    auto j_l = tp.j_l(intersection,face_local,time);
+                    vn[intersection.indexInInside()] = j_l;
                   }
               }
 
             // compute coefficient
-            Dune::FieldVector<DF,dim> vstar=iit->unitOuterNormal(face_local); // normal on tranformef element
-            vstar *= vn[iit->indexInInside()];
+            auto vstar = intersection.unitOuterNormal(face_local); // normal on tranformef element
+            vstar *= vn[intersection.indexInInside()];
             Dune::FieldVector<RF,dim> normalhat(0); // normal on reference element
-            if (iit->indexInInside()%2==0)
-              normalhat[iit->indexInInside()/2] = -1.0;
+            if (intersection.indexInInside()%2==0)
+              normalhat[intersection.indexInInside()/2] = -1.0;
             else
-              normalhat[iit->indexInInside()/2] =  1.0;
+              normalhat[intersection.indexInInside()/2] =  1.0;
             Dune::FieldVector<DF,dim> vstarhat(0);
             B.umtv(vstar,vstarhat); // Piola backward transformation
             vstarhat *= determinant;
-            coeff[iit->indexInInside()] = vstarhat*normalhat;
+            coeff[intersection.indexInInside()] = vstarhat*normalhat;
           }
 
         // compute velocity on reference element
@@ -854,14 +848,14 @@ namespace Dune {
                                               V_g<TP,PL,PG> >
     {
       // extract useful types
-      typedef typename PL::Traits::GridViewType GV;
-      typedef typename GV::Grid::ctype DF;
-      typedef typename PL::Traits::RangeFieldType RF;
-      typedef typename PL::Traits::RangeType RangeType;
+      using GV = typename PL::Traits::GridViewType;
+      using DF = typename GV::Grid::ctype;
+      using RF = typename PL::Traits::RangeFieldType;
+      using RangeType = typename PL::Traits::RangeType;
       enum { dim = PL::Traits::GridViewType::dimension };
-      typedef typename GV::Traits::template Codim<0>::Entity Element;
-      typedef typename GV::IntersectionIterator IntersectionIterator;
-      typedef typename IntersectionIterator::Intersection Intersection;
+      using Element = typename GV::Traits::template Codim<0>::Entity;
+      using IntersectionIterator = typename GV::IntersectionIterator;
+      using Intersection = typename IntersectionIterator::Intersection;
 
       const TP& tp;
       const PL& pl;
@@ -870,12 +864,12 @@ namespace Dune {
       typename TP::Traits::RangeFieldType time;
 
 
-      typedef typename Dune::RaviartThomasCubeLocalFiniteElement<DF,RF,dim,0>::Traits::LocalBasisType::Traits::RangeType RT0RangeType;
+      using RT0RangeType = typename Dune::RaviartThomasCubeLocalFiniteElement<DF,RF,dim,0>::Traits::LocalBasisType::Traits::RangeType;
 
     public:
-      typedef Dune::PDELab::GridFunctionTraits<GV,RF,dim,Dune::FieldVector<RF,dim> > Traits;
+      using Traits = Dune::PDELab::GridFunctionTraits<GV,RF,dim,Dune::FieldVector<RF,dim> >;
 
-      typedef Dune::PDELab::GridFunctionBase<Traits,V_g<TP,PL,PG> > BaseT;
+      using BaseT = Dune::PDELab::GridFunctionBase<Traits,V_g<TP,PL,PG> >;
 
       V_g (const TP& tp_, const PL& pl_, const PG& pg_) : tp(tp_), pl(pl_), pg(pg_), time(0) {}
 
@@ -889,15 +883,20 @@ namespace Dune {
                             const typename Traits::DomainType& x,
                             typename Traits::RangeType& y) const
       {
+      // get geometries
+        auto geo = e.geometry();
+
+        // face geometry
+        auto ref_el = referenceElement(geo);
+        auto face_local = ref_el.position(0,0);
+        auto face_volume = geo.volume();
+
         // cell geometry
-        const Dune::FieldVector<DF,dim>&
-          inside_cell_center_local = Dune::ReferenceElements<DF,dim>::
-          general(e.type()).position(0,0);
-        Dune::FieldVector<DF,dim>
-          inside_cell_center_global = e.geometry().global(inside_cell_center_local);
+        auto inside_cell_center_local = ref_el.position(0,0);
+        auto inside_cell_center_global = geo.global(inside_cell_center_local);
 
         // absolute permeability
-        RF k_abs_inside = tp.k_abs(e,inside_cell_center_local);
+        auto k_abs_inside = tp.k_abs(e,inside_cell_center_local);
 
         // pressure evaluation
         typename PL::Traits::RangeType pl_inside, pg_inside;
@@ -905,58 +904,58 @@ namespace Dune {
         pg.evaluate(e,inside_cell_center_local,pg_inside);
 
         // density evaluation
-        RF nu_g_inside = tp.nu_g(e,inside_cell_center_local,pg_inside);
+        auto nu_g_inside = tp.nu_g(e,inside_cell_center_local,pg_inside);
 
         // for coefficient computation
         RF vn[2*dim];    // normal velocities
         RF coeff[2*dim]; // RT0 coefficient
-        typename Traits::ElementType::Geometry::JacobianInverseTransposed
-          B = e.geometry().jacobianInverseTransposed(x); // the transformation. Assume it is linear
-        RF determinant = B.determinant();
+        auto B = geo.jacobianInverseTransposed(x); // the transformation. Assume it is linear
+        auto determinant = B.determinant();
 
         // loop over cell neighbors
-        IntersectionIterator endit = pl.getGridView().iend(e);
-        for (IntersectionIterator iit = pl.getGridView().ibegin(e); iit!=endit; ++iit)
+        for (const auto& intersection : intersections(pl.getGridView(),e))
           {
             // set to zero for processor boundary
-            vn[iit->indexInInside()] = 0.0;
+            vn[intersection.indexInInside()] = 0.0;
+
+            // get geometry
+            auto geo_intersection = intersection.geometry();
 
             // face geometry
-            const Dune::FieldVector<DF,dim-1>&
-              face_local = Dune::ReferenceElements<DF,dim-1>::general(iit->geometry().type()).position(0,0);
+            const auto& face_local = referenceElement(geo_intersection).position(0,0);
 
             // interior face
-            if (iit->neighbor())
+            if (intersection.neighbor())
               {
-                const Dune::FieldVector<DF,dim>&
-                  outside_cell_center_local = Dune::ReferenceElements<DF,dim>::
-                  general(iit->outside()->type()).position(0,0);
-                Dune::FieldVector<DF,dim>
-                  outside_cell_center_global = iit->outside()->geometry().global(outside_cell_center_local);
+                // get geometry
+                auto geo_outside = intersection.outside().geometry();
+                auto ref_el_outside = referenceElement(geo_outside);
+                auto outside_cell_center_local = ref_el_outside.position(0,0);
+                auto outside_cell_center_global = geo_outside.global(outside_cell_center_local);
 
                 // distance of cell centers
-                Dune::FieldVector<DF,dim> d(outside_cell_center_global);
+                auto d = outside_cell_center_global;
                 d -= inside_cell_center_global;
-                RF distance = d.two_norm();
+                auto distance = d.two_norm();
 
                 // absolute permeability
-                RF k_abs_outside = tp.k_abs(*(iit->outside()),outside_cell_center_local);
+                auto k_abs_outside = tp.k_abs(*(intersection.outside()),outside_cell_center_local);
 
                 // gravity times normal
-                RF gn = tp.gravity()*iit->unitOuterNormal(face_local);
+                auto gn = tp.gravity()*intersection.unitOuterNormal(face_local);
 
                 // pressure evaluation
                 typename PL::Traits::RangeType pl_outside, pg_outside;
-                pl.evaluate(*(iit->outside()),outside_cell_center_local,pl_outside);
-                pg.evaluate(*(iit->outside()),outside_cell_center_local,pg_outside);
+                pl.evaluate(*(intersection.outside()),outside_cell_center_local,pl_outside);
+                pg.evaluate(*(intersection.outside()),outside_cell_center_local,pg_outside);
 
                 // needed for both phases
                 RF pc_upwind, s_l_upwind, s_g_upwind;
 
                 // gas phase calculation
-                RF rho_g_inside = tp.rho_g(e,inside_cell_center_local,pg_inside);
-                RF rho_g_outside = tp.rho_g(e,outside_cell_center_local,pg_outside);
-                RF w_g = (pg_inside-pg_outside)/distance + aavg(rho_g_inside,rho_g_outside)*gn; // determines direction
+                auto rho_g_inside = tp.rho_g(e,inside_cell_center_local,pg_inside);
+                auto rho_g_outside = tp.rho_g(e,outside_cell_center_local,pg_outside);
+                auto w_g = (pg_inside-pg_outside)/distance + aavg(rho_g_inside,rho_g_outside)*gn; // determines direction
                 if (w_g>=0) // upwind capillary pressure on face
                   {
                     pc_upwind = pg_inside-pl_inside;
@@ -965,68 +964,68 @@ namespace Dune {
                 else
                   {
                     pc_upwind = pg_outside-pl_outside;
-                    s_l_upwind = tp.s_l(*(iit->outside()),outside_cell_center_local,pc_upwind);
+                    s_l_upwind = tp.s_l(*(intersection.outside()),outside_cell_center_local,pc_upwind);
                   }
                 s_g_upwind = 1-s_l_upwind;
-                RF lambda_g_inside = tp.kr_g(e,inside_cell_center_local,s_g_upwind)/
+                auto lambda_g_inside = tp.kr_g(e,inside_cell_center_local,s_g_upwind)/
                   tp.mu_g(e,inside_cell_center_local,pg_inside);
-                RF lambda_g_outside = tp.kr_g(*(iit->outside()),outside_cell_center_local,s_g_upwind)/
-                  tp.mu_g(*(iit->outside()),outside_cell_center_local,pg_outside);
-                RF sigma_g = havg(lambda_g_inside*k_abs_inside,lambda_g_outside*k_abs_outside);
+                auto lambda_g_outside = tp.kr_g(*(intersection.outside()),outside_cell_center_local,s_g_upwind)/
+                  tp.mu_g(*(intersection.outside()),outside_cell_center_local,pg_outside);
+                auto sigma_g = havg(lambda_g_inside*k_abs_inside,lambda_g_outside*k_abs_outside);
 
-                RF nu_g_outside = tp.nu_g(*(iit->outside()),outside_cell_center_local,pg_outside);
+                auto nu_g_outside = tp.nu_g(*(intersection.outside()),outside_cell_center_local,pg_outside);
 
                 // set coefficient
-                vn[iit->indexInInside()] = aavg(nu_g_inside,nu_g_outside) * sigma_g * w_g;
+                vn[intersection.indexInInside()] = aavg(nu_g_inside,nu_g_outside) * sigma_g * w_g;
               }
 
             // boundary face
-            if (iit->boundary())
+            if (intersection.boundary())
               {
                 // distance of cell center to boundary
-                Dune::FieldVector<DF,dim> d = iit->geometry().global(face_local);
+                auto d = geo_intersection.global(face_local);
                 d -= inside_cell_center_global;
-                RF distance = d.two_norm();
+                auto distance = d.two_norm();
 
                 // evaluate boundary condition type
-                int bc_g = tp.bc_g(*iit,face_local,time);
+                auto bc_g = tp.bc_g(intersection,face_local,time);
 
                 // gas phase Dirichlet boundary
                 if (bc_g==1)
                   {
-                    RF rho_g_inside = tp.rho_g(e,inside_cell_center_local,pg_inside);
-                    RF g_g = tp.g_g(*iit,face_local,time);
-                    RF gn = tp.gravity()*iit->unitOuterNormal(face_local);
-                    RF w_g = (pg_inside-g_g)/distance + rho_g_inside*gn;
-                    RF s_l = tp.s_l(e,inside_cell_center_local,pg_inside-pl_inside);
-                    RF s_g = 1-s_l;
-                    RF lambda_g_inside = tp.kr_g(e,inside_cell_center_local,s_g)/
+                    auto rho_g_inside = tp.rho_g(e,inside_cell_center_local,pg_inside);
+                    auto g_g = tp.g_g(intersection,face_local,time);
+                    auto gn = tp.gravity()*intersection.unitOuterNormal(face_local);
+                    auto w_g = (pg_inside-g_g)/distance + rho_g_inside*gn;
+                    auto s_l = tp.s_l(e,inside_cell_center_local,pg_inside-pl_inside);
+                    auto s_g = 1-s_l;
+                    auto lambda_g_inside = tp.kr_g(e,inside_cell_center_local,s_g)/
                       tp.mu_g(e,inside_cell_center_local,pg_inside);
-                    RF sigma_g = lambda_g_inside*k_abs_inside;
+                    auto sigma_g = lambda_g_inside*k_abs_inside;
 
-                    vn[iit->indexInInside()] = nu_g_inside * sigma_g * w_g;
+                    vn[intersection.indexInInside()] = nu_g_inside * sigma_g * w_g;
                   }
 
                 // gas phase Neumann boundary
                 if (bc_g==0)
                   {
-                    RF j_g = tp.j_g(*iit,face_local,time);
-                    vn[iit->indexInInside()] = j_g; /* /nu_g_inside*/;
+                    auto j_g = tp.j_g(intersection,face_local,time);
+                    vn[intersection.indexInInside()] = j_g; /* /nu_g_inside*/;
                   }
               }
 
             // compute coefficient
-            Dune::FieldVector<DF,dim> vstar=iit->unitOuterNormal(face_local); // normal on tranformef element
-            vstar *= vn[iit->indexInInside()];
+            auto vstar = intersection.unitOuterNormal(face_local); // normal on tranformef element
+            vstar *= vn[intersection.indexInInside()];
             Dune::FieldVector<RF,dim> normalhat(0); // normal on reference element
-            if (iit->indexInInside()%2==0)
-              normalhat[iit->indexInInside()/2] = -1.0;
+            if (intersection.indexInInside()%2==0)
+              normalhat[intersection.indexInInside()/2] = -1.0;
             else
-              normalhat[iit->indexInInside()/2] =  1.0;
+              normalhat[intersection.indexInInside()/2] =  1.0;
             Dune::FieldVector<DF,dim> vstarhat(0);
             B.umtv(vstar,vstarhat); // Piola backward transformation
             vstarhat *= determinant;
-            coeff[iit->indexInInside()] = vstarhat*normalhat;
+            coeff[intersection.indexInInside()] = vstarhat*normalhat;
           }
 
         // compute velocity on reference element

@@ -78,6 +78,9 @@ PDELab 2.4
         step methods and the parameter classes with the Butcher tableaus. The implementation of the class `FilenameHelper`
         has been moved to [common/instationaryfilenamehelper.hh][].
 
+    -   The possibility to swap velocity and pressure subtree in dgstokes using the VBLOCK preprocessing variable was
+        removed without a deprecation period.
+
 -   The linear algebra backends have also seen a large cleanup:
 
     -   The code for the different backends has been moved into separate subdirectories like [backend/istl][],
