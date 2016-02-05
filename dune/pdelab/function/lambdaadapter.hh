@@ -119,6 +119,55 @@ namespace Dune {
       return TheType(gridview,lambda);
     }
 
+    /** \brief return a PDELab GridFunction defined by a parameter class and a lambda  */
+    template<typename GV, typename RF, int n, typename F, typename P>
+    class LocalLambdaToInstationaryGridFunctionAdapter
+      : public Dune::PDELab::GridFunctionBase<Dune::PDELab::
+                                              GridFunctionTraits<GV,RF,n,Dune::FieldVector<RF,n> >,
+                                              LocalLambdaToInstationaryGridFunctionAdapter<GV,RF,n,F,P> >
+    {
+      GV gv;
+      F f;
+      P& p;
+    public:
+      typedef Dune::PDELab::
+      GridFunctionTraits<GV,RF,n,Dune::FieldVector<RF,n> > Traits;
+
+      //! construct from grid view
+      LocalLambdaToInstationaryGridFunctionAdapter (const GV& gv_, F f_, P& p_) : gv(gv_), f(f_), p(p_) {}
+
+      //! get a reference to the grid view
+      inline const GV& getGridView () {return gv;}
+
+      //! evaluate extended function on element
+      inline void evaluate (const typename Traits::ElementType& e,
+                            const typename Traits::DomainType& xl,
+                            typename Traits::RangeType& y) const
+      {
+        y = f(e,xl);
+        return;
+      }
+
+      // pass time to parameter object
+      void setTime (RF t) {
+        p.setTime(t);
+      }
+    };
+
+    /** \brief return a PDELab GridFunction defined by a parameter class and a lambda  */
+    template<typename GRIDVIEW, typename LAMBDA, typename PROBLEM>
+    auto makeInstationaryGridFunctionFromLocalLambda (const GRIDVIEW& gridview, LAMBDA lambda, PROBLEM& problem)
+    {
+      typedef typename GRIDVIEW::template Codim<0>::Entity E;
+      E e;
+      typedef typename E::Geometry::LocalCoordinate X;
+      X x;
+      typedef decltype(lambda(e,x)) ReturnType;
+      typedef typename LambdaAdapterGetRangeFieldType<ReturnType>::Type RF;
+      const int dim = LambdaAdapterGetDim<ReturnType>::dim;
+      typedef LocalLambdaToInstationaryGridFunctionAdapter<GRIDVIEW,RF,dim,LAMBDA,PROBLEM> TheType;
+      return TheType(gridview,lambda,problem);
+    }
 
     /******************************************************/
     /** \brief Adapter for globally defined boundary cond.*/
