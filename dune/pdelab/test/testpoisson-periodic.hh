@@ -87,7 +87,9 @@ public:
 template<typename GridType, typename NumberType, int dim>
 void poisson (GridType& grid)
 {
+#if DG == 0
     const Dune::PDELab::MeshType meshtype = Dune::PDELab::MeshType::conforming;
+#endif
     const Dune::SolverCategory::Category solvertype = Dune::SolverCategory::overlapping;
     const Dune::GeometryType::BasicType elemtype = Dune::GeometryType::cube;
 

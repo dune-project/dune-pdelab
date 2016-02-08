@@ -210,7 +210,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
 int main(int argc, char **argv)
 {
   // initialize MPI, finalize is done automatically on exit
-  Dune::MPIHelper& mpihelper = Dune::MPIHelper::instance(argc,argv);
+  Dune::MPIHelper::instance(argc,argv);
 
   double T = 0.075;
   double dt = 0.0075;
