@@ -185,6 +185,11 @@ namespace oc {
       counters.multiplication_count += n;
     }
 
+    static void divisions(std::size_t n)
+    {
+      counters.division_count += n;
+    }
+
     static void reset()
     {
       counters.reset();
