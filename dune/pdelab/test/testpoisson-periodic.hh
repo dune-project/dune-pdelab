@@ -125,12 +125,12 @@ void poisson (GridType& grid)
     typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,typename FS::FEM> LOP;
     LOP lop(problem);
     typedef Dune::PDELab::GalerkinGlobalAssembler<FS,LOP,solvertype> ASSEMBLER;
-    ASSEMBLER assembler(fs,lop);
+    ASSEMBLER assembler(fs,lop,27);
 #else
     typedef Dune::PDELab::ConvectionDiffusionDG<Problem,typename FS::FEM> LOP;
     LOP lop(problem,Dune::PDELab::ConvectionDiffusionDGMethod::SIPG,Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn,2.0);
     typedef Dune::PDELab::GalerkinGlobalAssembler<FS,LOP,solvertype> ASSEMBLER;
-    ASSEMBLER assembler(fs,lop);
+    ASSEMBLER assembler(fs,lop,27);
 #endif
 
     // make linear solver and solve problem
@@ -140,6 +140,10 @@ void poisson (GridType& grid)
     typedef Dune::PDELab::StationaryLinearProblemSolver<typename ASSEMBLER::GO,typename SBE::LS,V> SLP;
     SLP slp(*assembler,*sbe,x,1e-6);
     slp.apply();
+
+    // // print statistics about nonzero values per row
+    // typename ASSEMBLER::MAT m(assembler.getGO());
+    // std::cout << m.patternStatistics() << std::endl;
 
     // output grid to VTK file
     Dune::SubsamplingVTKWriter<typename GridType::LeafGridView> vtkwriter(grid.leafGridView(),DEGREE-1);
