@@ -8,9 +8,9 @@
 
 int main(int argc, char **argv)
 {
-  // initialize MPI, finalize is done automatically on exit
-  Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc,argv);
   try {
+    // initialize MPI, finalize is done automatically on exit
+    Dune::MPIHelper::instance(argc,argv);
 
     // define parameters
     const unsigned int dim = 3;
