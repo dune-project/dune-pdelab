@@ -5,7 +5,6 @@ install(FILES callswitch.hh
               convectiondiffusionfem.hh
               convectiondiffusionparameter.hh
               defaultimp.hh
-              typehelper.hh
               dgnavierstokes.hh
               dgnavierstokesparameter.hh
               dgnavierstokesvelvecfem.hh
@@ -48,6 +47,7 @@ install(FILES callswitch.hh
               taylorhoodnavierstokes.hh
               transportccfv.hh
               twophaseccfv.hh
+              variable_factories.hh
               weightedsum.hh
               zero.hh
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/localoperator)
