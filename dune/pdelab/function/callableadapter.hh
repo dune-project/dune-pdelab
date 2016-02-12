@@ -9,6 +9,10 @@
 namespace Dune {
   namespace PDELab {
 
+    /************************
+     * Grid function adapters
+     ************************/
+
     /** \brief Adapter for callables f(x) expecting a global coordinate x */
     template<typename GV, typename RF, int n, typename F>
     class GlobalCallableToGridFunctionAdapter
@@ -100,15 +104,17 @@ namespace Dune {
      *          2. f(e,x) taking an Entity e
      *          coordinate x  or of the form f(e,x) taking an Entity e and a local
      *          coordinate x of type Entity::Geometry::LocalCoordinate.
+     * \return A GlobalCallableToGridFunctionAdapter or a LocalCallableToGridFunctionAdapter.
      */
-    WrapperConformingToGridFunctionInterface makeGridFunctionFromCallable (const GV& gv, F f)
+    template <typename GV, typename F>
+    WrapperConformingToGridFunctionInterface makeGridFunctionFromCallable (const GV& gv, const F& f)
     {}
 #endif
 
 #ifndef DOXYGEN
     /** \brief Create PDELab GridFunction from a callable f(x) that expects a global coordinate x */
     template <typename GV, typename F>
-    auto makeGridFunctionFromCallable (const GV& gv, F f)
+    auto makeGridFunctionFromCallable (const GV& gv, const F& f)
       -> typename std::enable_if<
         AlwaysTrue <
           decltype(f(std::declval<typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate>()))
@@ -133,9 +139,10 @@ namespace Dune {
       return TheType(gv,f);
     }
 
-    /** \brief Create PDELab GridFunction from a callable f(e,x) that expects an entity e and a local coordinate x */
+    /** \brief Create PDELab GridFunction from a callable f(e,x) that expects
+        an entity e and a local coordinate x */
     template <typename GV, typename F>
-    auto makeGridFunctionFromCallable (const GV& gv, F f)
+    auto makeGridFunctionFromCallable (const GV& gv, const F& f)
       -> typename std::enable_if<
         AlwaysTrue <
           decltype(f(
@@ -171,6 +178,11 @@ namespace Dune {
       return TheType(gv,f);
     }
 #endif // DOXYGEN
+
+
+    /*************************************
+     * Instationary grid function adapters
+     *************************************/
 
     /** \brief return a PDELab GridFunction defined by a parameter class and a lambda  */
     template<typename GV, typename RF, int n, typename F, typename P>
@@ -222,14 +234,18 @@ namespace Dune {
       return TheType(gridview,lambda,problem);
     }
 
-    /******************************************************/
-    /** \brief Adapter for globally defined boundary cond.*/
-    /******************************************************/
+
+    /*****************************
+     * Boundary condition adapters
+     *****************************/
+
+    /** \brief Adapter for boundary cond from a callable taking global coordinates*/
     template<typename F>
     class GlobalCallableToBoundaryConditionAdapter
       : public Dune::PDELab::DirichletConstraintsParameters
     {
       F f;
+
     public:
       //! construct from functor
       GlobalCallableToBoundaryConditionAdapter (F f_) : f(f_) {}
@@ -254,31 +270,25 @@ namespace Dune {
 
     };
 
-    /** \brief get boundary condition from a lambda function */
-    template<typename LAMBDA>
-    auto makeBoundaryConditionFromGlobalCallable (LAMBDA lambda)
-    {
-      return GlobalCallableToBoundaryConditionAdapter<LAMBDA>(lambda);
-    }
-
-    template<typename T>
+    /** \brief Adapter for boundary cond from a callable taking an entity and local coordinates*/
+    template<typename F>
     class LocalCallableToBoundaryConditionAdapter :
       public Dune::PDELab::FluxConstraintsParameters,
       public Dune::PDELab::DirichletConstraintsParameters
     {
-      const T t;
+      const F f;
 
     public:
 
-      LocalCallableToBoundaryConditionAdapter(const T& t_ )
-        : t( t_ )
+      LocalCallableToBoundaryConditionAdapter(const F& f_ )
+        : f( f_ )
       {}
 
       template<typename I>
       bool isDirichlet(const I & ig, const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
                        ) const
       {
-        return(t(ig.intersection(),coord));
+        return(f(ig.intersection(),coord));
       }
 
       template<typename I>
@@ -290,14 +300,56 @@ namespace Dune {
       }
     };
 
-    /** \brief get boundary condition from a lambda function */
-    template<typename LAMBDA>
-    auto makeBoundaryConditionFromLocalCallable (LAMBDA lambda)
+#ifdef DOXYGEN
+    //! \brief Create a BoundaryConditionAdapter from a callable
+    /**
+     * \param gv A GridView
+     * \param f A callable of one of the two forms:
+     *          1. f(x) taking a global coordinate x of type
+     *          typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate.
+     *          2. f(e,x) taking an Entity e
+     *          coordinate x  or of the form f(e,x) taking an Entity e and a local
+     *          coordinate x of type Entity::Geometry::LocalCoordinate.
+     * \return A GlobalCallableToBoundaryConditionAdapter or a
+     *         LocalCallableToBoundaryConditionAdapter.
+     */
+    template <typename GV, typename F>
+    BoundaryConditionAdapter makebBoundaryConditionFromCallable (const GV& gv, const F& f)
+#endif
+
+#ifndef DOXYGEN
+    /** \brief Create BoundaryConditionAdapter from a callable f(x) that expects a global coordinate x */
+    template<typename GV, typename F>
+    auto makeBoundaryConditionFromCallable (const GV& gv, const F& f)
+      -> typename std::enable_if<
+        AlwaysTrue <
+          decltype(f(std::declval<typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate>()))
+          >::value,
+        GlobalCallableToBoundaryConditionAdapter<F>
+        >::type
     {
-      return LocalCallableToBoundaryConditionAdapter<LAMBDA>(lambda);
+      return GlobalCallableToBoundaryConditionAdapter<F>(f);
     }
+
+    /** \brief Create BoundaryConditionAdapter from a callable f(e,x) that expects
+        an entity e and a global coordinate x */
+    template<typename GV, typename F>
+    auto makeBoundaryConditionFromCallable (const GV& gv, const F& f)
+      -> typename std::enable_if<
+        AlwaysTrue <
+          decltype(f(
+                     std::declval<typename GV::template Codim<0>::Entity>(),
+                     std::declval<typename GV::template Codim<0>::Entity::Geometry::LocalCoordinate>()
+                     ))
+      >::value,
+        LocalCallableToBoundaryConditionAdapter<F>
+        >::type
+    {
+      return LocalCallableToBoundaryConditionAdapter<F>(f);
+    }
+#endif
+
 
   }
 }
-
 #endif
