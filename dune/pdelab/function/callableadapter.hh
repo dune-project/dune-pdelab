@@ -9,14 +9,12 @@
 namespace Dune {
   namespace PDELab {
 
-    /******************************************************/
-    /** \brief Adapter for globally defined functions     */
-    /******************************************************/
+    /** \brief Adapter for callables f(x) expecting a global coordinate x */
     template<typename GV, typename RF, int n, typename F>
-    class GlobalLambdaToGridFunctionAdapter
+    class GlobalCallableToGridFunctionAdapter
       : public Dune::PDELab::GridFunctionBase<Dune::PDELab::
                                               GridFunctionTraits<GV,RF,n,Dune::FieldVector<RF,n> >,
-                                              GlobalLambdaToGridFunctionAdapter<GV,RF,n,F> >
+                                              GlobalCallableToGridFunctionAdapter<GV,RF,n,F> >
     {
       GV gv;
       F f;
@@ -25,7 +23,7 @@ namespace Dune {
       GridFunctionTraits<GV,RF,n,Dune::FieldVector<RF,n> > Traits;
 
       //! construct from grid view
-      GlobalLambdaToGridFunctionAdapter (const GV& gv_, F f_) : gv(gv_), f(f_) {}
+      GlobalCallableToGridFunctionAdapter (const GV& gv_, F f_) : gv(gv_), f(f_) {}
 
       //! get a reference to the grid view
       inline const GV& getGridView () {return gv;}
@@ -43,44 +41,32 @@ namespace Dune {
     };
 
     template<typename T>
-    struct LambdaAdapterGetDim {
+    struct CallableAdapterGetDim {
       enum {dim=1};
     };
 
     template<typename T, int n>
-    struct LambdaAdapterGetDim< FieldVector<T,n> > {
+    struct CallableAdapterGetDim< FieldVector<T,n> > {
       enum {dim=n};
     };
 
     template<typename T>
-    struct LambdaAdapterGetRangeFieldType {
+    struct CallableAdapterGetRangeFieldType {
       typedef T Type;
     };
 
     template<typename T, int n>
-    struct LambdaAdapterGetRangeFieldType< FieldVector<T,n> > {
+    struct CallableAdapterGetRangeFieldType< FieldVector<T,n> > {
       typedef T Type;
     };
 
-    /** \brief return a PDELab GridFunction defined by a lambda  */
-    template<typename GV, typename LAMBDA>
-    auto makeGridFunctionFromGlobalLambda (const GV& gv, LAMBDA lambda)
-    {
-      typedef typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate X;
-      X x;
-      typedef decltype(lambda(x)) ReturnType;
-      typedef typename LambdaAdapterGetRangeFieldType<ReturnType>::Type RF;
-      const int dim = LambdaAdapterGetDim<ReturnType>::dim;
-      typedef GlobalLambdaToGridFunctionAdapter<GV,RF,dim,LAMBDA> TheType;
-      return TheType(gv,lambda);
-    }
 
-    /** \brief return a PDELab GridFunction defined by a parameter class and a lambda  */
+    /** \brief Adapter for callables f(e,x) expecting an entity e and a global coordinate x */
     template<typename GV, typename RF, int n, typename F>
-    class LocalLambdaToGridFunctionAdapter
+    class LocalCallableToGridFunctionAdapter
       : public Dune::PDELab::GridFunctionBase<Dune::PDELab::
                                               GridFunctionTraits<GV,RF,n,Dune::FieldVector<RF,n> >,
-                                              LocalLambdaToGridFunctionAdapter<GV,RF,n,F> >
+                                              LocalCallableToGridFunctionAdapter<GV,RF,n,F> >
     {
       GV gv;
       F f;
@@ -89,7 +75,7 @@ namespace Dune {
       GridFunctionTraits<GV,RF,n,Dune::FieldVector<RF,n> > Traits;
 
       //! construct from grid view
-      LocalLambdaToGridFunctionAdapter (const GV& gv_, F f_) : gv(gv_), f(f_) {}
+      LocalCallableToGridFunctionAdapter (const GV& gv_, F f_) : gv(gv_), f(f_) {}
 
       //! get a reference to the grid view
       inline const GV& getGridView () {return gv;}
@@ -104,27 +90,94 @@ namespace Dune {
       }
     };
 
-    /** \brief return a PDELab GridFunction defined by a parameter class and a lambda  */
-    template<typename GRIDVIEW, typename LAMBDA>
-    auto makeGridFunctionFromLocalLambda (const GRIDVIEW& gridview, LAMBDA lambda)
+#ifdef DOXYGEN
+    //! \brief Create a GridFunction adapter from a callable
+    /**
+     * \param gv A GridView
+     * \param f A callable of one of the two forms:
+     *          1. f(x) taking a global coordinate x of type
+     *          typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate.
+     *          2. f(e,x) taking an Entity e
+     *          coordinate x  or of the form f(e,x) taking an Entity e and a local
+     *          coordinate x of type Entity::Geometry::LocalCoordinate.
+     */
+    WrapperConformingToGridFunctionInterface makeGridFunctionFromCallable (const GV& gv, F f)
+    {}
+#endif
+
+#ifndef DOXYGEN
+    /** \brief Create PDELab GridFunction from a callable f(x) that expects a global coordinate x */
+    template <typename GV, typename F>
+    auto makeGridFunctionFromCallable (const GV& gv, F f)
+      -> typename std::enable_if<
+        AlwaysTrue <
+          decltype(f(std::declval<typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate>()))
+          >::value,
+        GlobalCallableToGridFunctionAdapter<
+          GV,
+          typename CallableAdapterGetRangeFieldType<
+            decltype(f(std::declval<typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate>()))
+            >::Type,
+          CallableAdapterGetDim<
+            decltype(f(std::declval<typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate>()))
+            >::dim,
+          F>
+        >::type
     {
-      typedef typename GRIDVIEW::template Codim<0>::Entity E;
+      typedef typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate X;
+      X x;
+      typedef decltype(f(x)) ReturnType;
+      typedef typename CallableAdapterGetRangeFieldType<ReturnType>::Type RF;
+      const int dim = CallableAdapterGetDim<ReturnType>::dim;
+      typedef GlobalCallableToGridFunctionAdapter<GV,RF,dim,F> TheType;
+      return TheType(gv,f);
+    }
+
+    /** \brief Create PDELab GridFunction from a callable f(e,x) that expects an entity e and a local coordinate x */
+    template <typename GV, typename F>
+    auto makeGridFunctionFromCallable (const GV& gv, F f)
+      -> typename std::enable_if<
+        AlwaysTrue <
+          decltype(f(
+                     std::declval<typename GV::template Codim<0>::Entity>(),
+                     std::declval<typename GV::template Codim<0>::Entity::Geometry::LocalCoordinate>()
+                     ))
+          >::value,
+        LocalCallableToGridFunctionAdapter<
+          GV,
+          typename CallableAdapterGetRangeFieldType<
+            decltype(f(
+                       std::declval<typename GV::template Codim<0>::Entity>(),
+                       std::declval<typename GV::template Codim<0>::Entity::Geometry::LocalCoordinate>()
+                       ))
+            >::Type,
+          CallableAdapterGetDim<
+            decltype(f(
+                       std::declval<typename GV::template Codim<0>::Entity>(),
+                       std::declval<typename GV::template Codim<0>::Entity::Geometry::LocalCoordinate>()
+                       ))
+            >::dim,
+          F>
+        >::type
+    {
+      typedef typename GV::template Codim<0>::Entity E;
       E e;
       typedef typename E::Geometry::LocalCoordinate X;
       X x;
-      typedef decltype(lambda(e,x)) ReturnType;
-      typedef typename LambdaAdapterGetRangeFieldType<ReturnType>::Type RF;
-      const int dim = LambdaAdapterGetDim<ReturnType>::dim;
-      typedef LocalLambdaToGridFunctionAdapter<GRIDVIEW,RF,dim,LAMBDA> TheType;
-      return TheType(gridview,lambda);
+      typedef decltype(f(e,x)) ReturnType;
+      typedef typename CallableAdapterGetRangeFieldType<ReturnType>::Type RF;
+      const int dim = CallableAdapterGetDim<ReturnType>::dim;
+      typedef LocalCallableToGridFunctionAdapter<GV,RF,dim,F> TheType;
+      return TheType(gv,f);
     }
+#endif // DOXYGEN
 
     /** \brief return a PDELab GridFunction defined by a parameter class and a lambda  */
     template<typename GV, typename RF, int n, typename F, typename P>
-    class LocalLambdaToInstationaryGridFunctionAdapter
+    class LocalCallableToInstationaryGridFunctionAdapter
       : public Dune::PDELab::GridFunctionBase<Dune::PDELab::
                                               GridFunctionTraits<GV,RF,n,Dune::FieldVector<RF,n> >,
-                                              LocalLambdaToInstationaryGridFunctionAdapter<GV,RF,n,F,P> >
+                                              LocalCallableToInstationaryGridFunctionAdapter<GV,RF,n,F,P> >
     {
       GV gv;
       F f;
@@ -134,7 +187,7 @@ namespace Dune {
       GridFunctionTraits<GV,RF,n,Dune::FieldVector<RF,n> > Traits;
 
       //! construct from grid view
-      LocalLambdaToInstationaryGridFunctionAdapter (const GV& gv_, F f_, P& p_) : gv(gv_), f(f_), p(p_) {}
+      LocalCallableToInstationaryGridFunctionAdapter (const GV& gv_, F f_, P& p_) : gv(gv_), f(f_), p(p_) {}
 
       //! get a reference to the grid view
       inline const GV& getGridView () {return gv;}
@@ -156,16 +209,16 @@ namespace Dune {
 
     /** \brief return a PDELab GridFunction defined by a parameter class and a lambda  */
     template<typename GRIDVIEW, typename LAMBDA, typename PROBLEM>
-    auto makeInstationaryGridFunctionFromLocalLambda (const GRIDVIEW& gridview, LAMBDA lambda, PROBLEM& problem)
+    auto makeInstationaryGridFunctionFromLocalCallable (const GRIDVIEW& gridview, LAMBDA lambda, PROBLEM& problem)
     {
       typedef typename GRIDVIEW::template Codim<0>::Entity E;
       E e;
       typedef typename E::Geometry::LocalCoordinate X;
       X x;
       typedef decltype(lambda(e,x)) ReturnType;
-      typedef typename LambdaAdapterGetRangeFieldType<ReturnType>::Type RF;
-      const int dim = LambdaAdapterGetDim<ReturnType>::dim;
-      typedef LocalLambdaToInstationaryGridFunctionAdapter<GRIDVIEW,RF,dim,LAMBDA,PROBLEM> TheType;
+      typedef typename CallableAdapterGetRangeFieldType<ReturnType>::Type RF;
+      const int dim = CallableAdapterGetDim<ReturnType>::dim;
+      typedef LocalCallableToInstationaryGridFunctionAdapter<GRIDVIEW,RF,dim,LAMBDA,PROBLEM> TheType;
       return TheType(gridview,lambda,problem);
     }
 
@@ -173,13 +226,13 @@ namespace Dune {
     /** \brief Adapter for globally defined boundary cond.*/
     /******************************************************/
     template<typename F>
-    class GlobalLambdaToBoundaryConditionAdapter
+    class GlobalCallableToBoundaryConditionAdapter
       : public Dune::PDELab::DirichletConstraintsParameters
     {
       F f;
     public:
       //! construct from functor
-      GlobalLambdaToBoundaryConditionAdapter (F f_) : f(f_) {}
+      GlobalCallableToBoundaryConditionAdapter (F f_) : f(f_) {}
 
       //! Test whether boundary is Dirichlet-constrained
       template<typename I>
@@ -203,13 +256,13 @@ namespace Dune {
 
     /** \brief get boundary condition from a lambda function */
     template<typename LAMBDA>
-    auto makeBoundaryConditionFromGlobalLambda (LAMBDA lambda)
+    auto makeBoundaryConditionFromGlobalCallable (LAMBDA lambda)
     {
-      return GlobalLambdaToBoundaryConditionAdapter<LAMBDA>(lambda);
+      return GlobalCallableToBoundaryConditionAdapter<LAMBDA>(lambda);
     }
 
     template<typename T>
-    class LocalLambdaToBoundaryConditionAdapter :
+    class LocalCallableToBoundaryConditionAdapter :
       public Dune::PDELab::FluxConstraintsParameters,
       public Dune::PDELab::DirichletConstraintsParameters
     {
@@ -217,7 +270,7 @@ namespace Dune {
 
     public:
 
-      LocalLambdaToBoundaryConditionAdapter(const T& t_ )
+      LocalCallableToBoundaryConditionAdapter(const T& t_ )
         : t( t_ )
       {}
 
@@ -239,9 +292,9 @@ namespace Dune {
 
     /** \brief get boundary condition from a lambda function */
     template<typename LAMBDA>
-    auto makeBoundaryConditionFromLocalLambda (LAMBDA lambda)
+    auto makeBoundaryConditionFromLocalCallable (LAMBDA lambda)
     {
-      return LocalLambdaToBoundaryConditionAdapter<LAMBDA>(lambda);
+      return LocalCallableToBoundaryConditionAdapter<LAMBDA>(lambda);
     }
 
   }
