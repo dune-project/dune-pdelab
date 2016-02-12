@@ -27,7 +27,7 @@ namespace Dune {
       GridFunctionTraits<GV,RF,n,Dune::FieldVector<RF,n> > Traits;
 
       //! construct from grid view
-      GlobalCallableToGridFunctionAdapter (const GV& gv_, F f_) : gv(gv_), f(f_) {}
+      GlobalCallableToGridFunctionAdapter (const GV& gv_, const F& f_) : gv(gv_), f(f_) {}
 
       //! get a reference to the grid view
       inline const GV& getGridView () {return gv;}
@@ -79,7 +79,7 @@ namespace Dune {
       GridFunctionTraits<GV,RF,n,Dune::FieldVector<RF,n> > Traits;
 
       //! construct from grid view
-      LocalCallableToGridFunctionAdapter (const GV& gv_, F f_) : gv(gv_), f(f_) {}
+      LocalCallableToGridFunctionAdapter (const GV& gv_, const F& f_) : gv(gv_), f(f_) {}
 
       //! get a reference to the grid view
       inline const GV& getGridView () {return gv;}
@@ -184,7 +184,49 @@ namespace Dune {
      * Instationary grid function adapters
      *************************************/
 
-    /** \brief return a PDELab GridFunction defined by a parameter class and a lambda  */
+
+    /** \brief return a PDELab GridFunction (with setTime method) defined by a parameter class and a callable f(x)
+        global coordinates x */
+    template<typename GV, typename RF, int n, typename F, typename P>
+    class GlobalCallableToInstationaryGridFunctionAdapter
+      : public Dune::PDELab::GridFunctionBase<Dune::PDELab::
+                                              GridFunctionTraits<GV,RF,n,Dune::FieldVector<RF,n> >,
+                                              GlobalCallableToInstationaryGridFunctionAdapter<GV,RF,n,F,P> >
+    {
+      GV gv;
+      F f;
+      P& p;
+    public:
+      typedef Dune::PDELab::
+      GridFunctionTraits<GV,RF,n,Dune::FieldVector<RF,n> > Traits;
+
+      //! construct from grid view
+      GlobalCallableToInstationaryGridFunctionAdapter (const GV& gv_, const F& f_, P& p_)
+        : gv(gv_), f(f_), p(p_)
+      {}
+
+      //! get a reference to the grid view
+      inline const GV& getGridView () {return gv;}
+
+      //! evaluate extended function on element
+      inline void evaluate (const typename Traits::ElementType& e,
+                            const typename Traits::DomainType& xl,
+                            typename Traits::RangeType& y) const
+      {
+        const int dim = Traits::GridViewType::Grid::dimension;
+        typename Traits::DomainType xg = e.geometry().global(xl);
+        y = f(xg);
+        return;
+      }
+
+      // pass time to parameter object
+      void setTime (RF t) {
+        p.setTime(t);
+      }
+    };
+
+    /** \brief return a PDELab GridFunction (with setTime method) defined by a parameter class and a callable f(e,x)
+        that expects an entity e and local coordinates x */
     template<typename GV, typename RF, int n, typename F, typename P>
     class LocalCallableToInstationaryGridFunctionAdapter
       : public Dune::PDELab::GridFunctionBase<Dune::PDELab::
@@ -199,7 +241,7 @@ namespace Dune {
       GridFunctionTraits<GV,RF,n,Dune::FieldVector<RF,n> > Traits;
 
       //! construct from grid view
-      LocalCallableToInstationaryGridFunctionAdapter (const GV& gv_, F f_, P& p_) : gv(gv_), f(f_), p(p_) {}
+      LocalCallableToInstationaryGridFunctionAdapter (const GV& gv_, const F& f_, P& p_) : gv(gv_), f(f_), p(p_) {}
 
       //! get a reference to the grid view
       inline const GV& getGridView () {return gv;}
@@ -219,20 +261,95 @@ namespace Dune {
       }
     };
 
-    /** \brief return a PDELab GridFunction defined by a parameter class and a lambda  */
-    template<typename GRIDVIEW, typename LAMBDA, typename PROBLEM>
-    auto makeInstationaryGridFunctionFromLocalCallable (const GRIDVIEW& gridview, LAMBDA lambda, PROBLEM& problem)
+#ifdef DOXYGEN
+    //! \brief Create a GridFunction from callable and parameter class with setTime method
+    /**
+     * \param gv A GridView.
+     * \param f A callable of one of the two forms:
+     *          1. f(x) taking a global coordinate x of type
+     *          typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate.
+     *          2. f(e,x) taking an Entity e
+     *          coordinate x  or of the form f(e,x) taking an Entity e and a local
+     *          coordinate x of type Entity::Geometry::LocalCoordinate.
+     * \param parameter Parameter class.
+     * \return A GlobalCallableToInstationaryGridFunctionAdapter or a
+     *         LocalCallableToInstationaryGridFunctionAdapter
+     */
+    template <typename GV, typename F>
+    WrapperConformingToGridFunctionInterface makeInstationaryGridFunctionFromCallable (const GV& gv, const F& f)
+    {}
+#endif
+
+#ifndef DOXYGEN
+    /** \brief Create PDELab GridFunction with setTime method from a callable f(e,x)
+        that expects an global coordinate x */
+    template <typename GV, typename F, typename PARAM>
+    auto makeInstationaryGridFunctionFromCallable (const GV& gv, const F& f, PARAM& param)
+      -> typename std::enable_if<
+        AlwaysTrue <
+          decltype(f(std::declval<typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate>()))
+          >::value,
+        GlobalCallableToInstationaryGridFunctionAdapter<
+          GV,
+          typename CallableAdapterGetRangeFieldType<
+            decltype(f(std::declval<typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate>()))
+            >::Type,
+          CallableAdapterGetDim<
+            decltype(f(std::declval<typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate>()))
+            >::dim,
+          F,
+          PARAM>
+        >::type
     {
-      typedef typename GRIDVIEW::template Codim<0>::Entity E;
+      typedef typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate X;
+      X x;
+      typedef decltype(f(x)) ReturnType;
+      typedef typename CallableAdapterGetRangeFieldType<ReturnType>::Type RF;
+      const int dim = CallableAdapterGetDim<ReturnType>::dim;
+      typedef GlobalCallableToInstationaryGridFunctionAdapter<GV,RF,dim,F,PARAM> TheType;
+      return TheType(gv,f,param);
+    }
+
+    /** \brief Create PDELab GridFunction with setTime method from a callable f(e,x)
+        that expects an entity e and a local coordinate x */
+    template <typename GV, typename F, typename PARAM>
+    auto makeInstationaryGridFunctionFromCallable (const GV& gv, const F& f, PARAM& param)
+      -> typename std::enable_if<
+        AlwaysTrue <
+          decltype(f(
+                     std::declval<typename GV::template Codim<0>::Entity>(),
+                     std::declval<typename GV::template Codim<0>::Entity::Geometry::LocalCoordinate>()
+                     ))
+          >::value,
+        LocalCallableToInstationaryGridFunctionAdapter<
+          GV,
+          typename CallableAdapterGetRangeFieldType<
+            decltype(f(
+                       std::declval<typename GV::template Codim<0>::Entity>(),
+                       std::declval<typename GV::template Codim<0>::Entity::Geometry::LocalCoordinate>()
+                       ))
+            >::Type,
+          CallableAdapterGetDim<
+            decltype(f(
+                       std::declval<typename GV::template Codim<0>::Entity>(),
+                       std::declval<typename GV::template Codim<0>::Entity::Geometry::LocalCoordinate>()
+                       ))
+            >::dim,
+          F,
+          PARAM>
+        >::type
+    {
+      typedef typename GV::template Codim<0>::Entity E;
       E e;
       typedef typename E::Geometry::LocalCoordinate X;
       X x;
-      typedef decltype(lambda(e,x)) ReturnType;
+      typedef decltype(f(e,x)) ReturnType;
       typedef typename CallableAdapterGetRangeFieldType<ReturnType>::Type RF;
       const int dim = CallableAdapterGetDim<ReturnType>::dim;
-      typedef LocalCallableToInstationaryGridFunctionAdapter<GRIDVIEW,RF,dim,LAMBDA,PROBLEM> TheType;
-      return TheType(gridview,lambda,problem);
+      typedef LocalCallableToInstationaryGridFunctionAdapter<GV,RF,dim,F,PARAM> TheType;
+      return TheType(gv,f,param);
     }
+#endif // DOXYGEN
 
 
     /*****************************
