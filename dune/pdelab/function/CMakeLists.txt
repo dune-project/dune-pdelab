@@ -1,8 +1,8 @@
-install(FILES const.hh
+install(FILES callableadapter.hh
+              const.hh
               division.hh
               inverse.hh
               memberadaptor.hh
-              lambdaadapter.hh
               minus.hh
               product.hh
               scalarscaled.hh
