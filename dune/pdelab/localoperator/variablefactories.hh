@@ -1,8 +1,8 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_LOCALOPERATOR_VARIABLE_FACTORIES_HH
-#define DUNE_PDELAB_LOCALOPERATOR_VARIABLE_FACTORIES_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_VARIABLEFACTORIES_HH
+#define DUNE_PDELAB_LOCALOPERATOR_VARIABLEFACTORIES_HH
 
 namespace Dune {
   namespace PDELab {
