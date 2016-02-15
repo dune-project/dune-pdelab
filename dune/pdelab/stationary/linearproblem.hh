@@ -168,10 +168,11 @@ namespace Dune {
 
       void apply (bool reuse_matrix = false)
       {
-        Dune::Timer watch;
-        double timing,assembler_time=0;
+        Dune::Timer watch,total_watch;
+        double total_timing,timing,assembler_time=0;
 
         // assemble matrix; optional: assemble only on demand!
+        total_watch.reset();
         watch.reset();
 
         if (!_jacobian)
@@ -234,9 +235,14 @@ namespace Dune {
         _ls.apply(*_jacobian,z,r,red); // solver makes right hand side consistent
         _linear_solver_result = _ls.result();
         timing = watch.elapsed();
+        total_timing=total_watch.elapsed();
         // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
-        if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
+        if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1) {
           std::cout << timing << " s" << std::endl;
+          std::cout << "Total solve time " << total_timing << " s" << std::endl;
+          std::cout << "(includes matrix- and residual assembly)" << std::endl;
+          std::cout << std::endl;
+        }
         _res.linear_solver_time = timing;
 
         _res.converged = _linear_solver_result.converged;
