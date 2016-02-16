@@ -1,6 +1,7 @@
 myincdir = $(includedir)/dune/pdelab/function
 
 myinc_HEADERS =					\
+	callableadapter.hh			\
 	const.hh				\
 	division.hh				\
 	inverse.hh				\

@@ -49,6 +49,7 @@ common_HEADERS =				\
 	taylorhoodnavierstokes.hh  		\
 	transportccfv.hh			\
 	twophaseccfv.hh				\
+	variablefactories.hh			\
 	weightedsum.hh				\
 	zero.hh
 
