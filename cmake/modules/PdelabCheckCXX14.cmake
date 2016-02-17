@@ -33,8 +33,8 @@ cmake_push_check_state()
 # test for C++14 flag
 if(NOT PDELAB_DISABLE_CXX_VERSION_CHECK)
   # try to use compiler flag -std=c++14
-  include(CheckCXXCompilerFlag)
-  check_cxx_compiler_flag("-std=c++14" PDELAB_CXX_FLAG_CXX14)
+  include(TestCXXAcceptsFlag)
+  check_cxx_accepts_flag("-std=c++14" PDELAB_CXX_FLAG_CXX14)
 
   include(CheckCXXSourceCompiles)
   cmake_push_check_state()
