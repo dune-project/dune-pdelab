@@ -1,7 +1,6 @@
 include(DunePdelabTestMacros)
 include(UsePETSc)
 include(UseEigen)
-include(PdelabCheckCXX14)
 
 function(add_dune_petsc_flags)
   if(PETSC_FOUND)
