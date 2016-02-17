@@ -1,8 +1,6 @@
 include(UsePETSc)
 include(UseEigen)
 
-include(PdelabCheckCXX14)
-
 function(add_dune_petsc_flags)
   if(PETSC_FOUND)
     cmake_parse_arguments(ADD_PETSC "SOURCE_ONLY;OBJECT" "" "" ${ARGN})
