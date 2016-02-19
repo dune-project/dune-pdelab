@@ -102,21 +102,6 @@ MOSTLYCLEANFILES += multi.vtu single.vtu
 NORMALTESTS += testgridfunctionspace
 testgridfunctionspace_SOURCES = testgridfunctionspace.cc
 
-NORMALTESTS += testlaplacedirichletccfv
-testlaplacedirichletccfv_SOURCES = testlaplacedirichletccfv.cc
-testlaplacedirichletccfv_CPPFLAGS = $(AM_CPPFLAGS)	\
-	$(ALBERTA_CPPFLAGS)				\
-	$(SUPERLU_CPPFLAGS)
-testlaplacedirichletccfv_LDFLAGS = $(AM_LDFLAGS)	\
-	$(ALBERTA_LDFLAGS)				\
-	$(SUPERLU_LDFLAGS)
-testlaplacedirichletccfv_LDADD =		\
-	$(LDADD)                                \
-	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
-	$(ALBERTA_LIBS)
-MOSTLYCLEANFILES += testlaplacedirichletccfv-2d.vtu \
-	testlaplacedirichletccfv-3d.vtu
-
 
 # This test is broken right now
 # NORMALTESTS += testlaplacedirichletccfv-simplified
