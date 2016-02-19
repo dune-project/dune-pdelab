@@ -185,7 +185,7 @@ void solveProblem(const Grid& grid, FS& fs, typename FS::DOF x, Problem& problem
   typedef typename Dune::PDELab::ConvectionDiffusionDG<Problem,typename FS::FEM> LOP;
   LOP lop(problem,Dune::PDELab::ConvectionDiffusionDGMethod::SIPG,Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn,2.0);
   typedef typename Dune::PDELab::GalerkinGlobalAssembler<FS,LOP,solvertype> ASSEMBLER;
-  ASSEMBLER assembler(fs,lop);
+  ASSEMBLER assembler(fs,lop,20);
 
   // make linear solver and solve problem
   typedef typename Dune::PDELab::ISTLSolverBackend_IterativeDefault<FS,ASSEMBLER,solvertype> SBE;
@@ -193,6 +193,10 @@ void solveProblem(const Grid& grid, FS& fs, typename FS::DOF x, Problem& problem
   typedef typename Dune::PDELab::StationaryLinearProblemSolver<typename ASSEMBLER::GO,typename SBE::LS,typename FS::DOF> SLP;
   SLP slp(*assembler,*sbe,x,1e-6);
   slp.apply();
+
+  // // print statistics about nonzero values per row
+  // typename ASSEMBLER::MAT m(assembler.getGO());
+  // std::cout << m.patternStatistics() << std::endl;
 
   // output grid to VTK file
   Dune::SubsamplingVTKWriter<typename GM::LeafGridView> vtkwriter(grid->leafGridView(),degree-1);

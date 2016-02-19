@@ -23,9 +23,6 @@ dune_add_test(SOURCES testgridfunctionspace.cc)
 
 dune_add_test(SOURCES testheat-instationary-periodic.cc)
 
-dune_add_test(SOURCES testlaplacedirichletccfv.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-
 dune_add_test(SOURCES testelasticity.cc)
 
 dune_add_test(SOURCES testdglegendre.cc)
@@ -78,6 +75,7 @@ dune_add_test(SOURCES testsimplebackend.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 
 dune_add_test(SOURCES test-transport-ccfv.cc)
+
 
 if(EIGEN3_FOUND)
   dune_add_test(SOURCES testeigenbackend.cc

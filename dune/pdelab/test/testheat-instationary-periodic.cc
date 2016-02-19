@@ -128,7 +128,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,NumberType,degree> FEM;
   FEM fem(grid.leafGridView());
   typedef Dune::PDELab::OverlappingConformingDirichletConstraints CON; // ovlp
-  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::istl::VectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> FS;
   FS fs(grid.leafGridView(),fem);
 
@@ -210,7 +210,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
 int main(int argc, char **argv)
 {
   // initialize MPI, finalize is done automatically on exit
-  Dune::MPIHelper& mpihelper = Dune::MPIHelper::instance(argc,argv);
+  Dune::MPIHelper::instance(argc,argv);
 
   double T = 0.075;
   double dt = 0.0075;
