@@ -237,7 +237,7 @@ namespace Dune {
         : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
       {
         // create all variants
-        for (int i = 0; i < Variants; i++)
+        for (std::size_t i = 0; i < Variants; i++)
         {
           variant[i] = FiniteElement(i);
         }

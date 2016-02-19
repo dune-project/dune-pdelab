@@ -39,7 +39,7 @@ int main(int argc, char** argv)
       // need a grid in order to test grid functions
       // typedef Dune::YaspGrid<2> Grid;
       Dune::FieldVector<double,2> L(1.0);
-      std::array<int,2> N{2,2};
+      std::array<int,2> N{{2,2}};
       typedef Dune::YaspGrid<2> Grid;
       Grid grid(L,N);
 

@@ -219,12 +219,12 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc,argv);
 
     typedef Dune::PDELab::NoConstraints Constraints;
-    Constraints constraints;
+    Constraints constraints DUNE_UNUSED;
 
     typedef Dune::PDELab::istl::VectorBackend<> VBE;
-    VBE vbe;
+    VBE vbe DUNE_UNUSED;
 
-    typedef double RF;
+    typedef double RF DUNE_UNUSED;
 
 #if FEM_DIM == 1
 

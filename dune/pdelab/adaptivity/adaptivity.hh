@@ -951,7 +951,7 @@ namespace Dune {
     /** Compute error distribution
      */
     template<typename T>
-    void error_distribution(const T& x, int bins)
+    void error_distribution(const T& x, unsigned int bins)
     {
       const int steps=30; // max number of bisection steps
       typedef typename T::ElementType NumberType;
