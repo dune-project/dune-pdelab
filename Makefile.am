@@ -10,7 +10,7 @@ EXTRA_DIST = 					\
 	GPL-3                                   \
 	LGPL-3                                  \
 	LICENSE.md				\
-	REAMDE.md
+	README.md
 
 # don't follow the full GNU-standard
 # we need automake 1.5
