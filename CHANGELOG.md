@@ -275,6 +275,55 @@ PDELab 2.4
     The existing local operators have been ported to make use of the new functions, so you can take a look at those
     implementations for further example of how to use them.
 
+-   There are new factory functions for base function containers and range values in the file [localoperator/variablefactories.hh][].
+    In many cases, using these functions makes it possible to eliminate a lot of the repetitive `typedefs` at the beginning
+    of local operators. For example, to create a container for basis function values and a variable for the solution,
+    you can write:
+
+    ```c++
+    auto phi = Dune::PDELab::makeValueContainer(lfsu);
+    auto u = Dune::PDELab::makeZeroBasisValue(lfsu);
+    ```
+
+    Take a look at the header for further information.
+
+-   There are new adapters that turn arbitrary callables into `GridFunction`s, avoiding a lot of boilerplate that you
+    normally have to write to conform to the `GridFunction` interface. These adapters can be found in
+    [function/callableadapter.hh][].
+    They are especially useful if your compiler supports C++14 and generic lambdas (GCC 4.9+ and Clang 3.4+), as that
+    allows you to define a grid function in a single statement:
+
+    ```c++
+    // create an analytic grid function that operates on global coordinates
+    auto f = Dune::PDELab::makeGridFunctionFromCallable(
+      grid_view,
+      [](auto global_coord)
+      {
+        return global_coord[0] * global_coord[1];
+      });
+    // create grid function that requires entity information
+    auto f = Dune::PDELab::makeGridFunctionFromCallable(
+      grid_view,
+      [&](auto& cell, auto local_coord)
+      {
+        return grid_view.indexSet().index(cell);
+      });
+    ```
+
+    Note that the type of callable is deduced from the number of arguments (one argument means global-valued function,
+    two arguments mean local-valued function that gets passed a reference to the current cell). Moreover, the adapter
+    will auto-detect the correct return type. The wrappers will, however, also work with other callables like plain
+    functions or classic C++ functors that provide an `operator()`.
+
+    If you use these functions together with generic lambdas in your own module, you should probably add a call to
+
+    ```
+    dune_require_cxx_standard(MODULE "<your module name>" VERSION 14)
+    ```
+
+    to you main `CMakeLists.txt` file to avoid generating confusing error messages for your users. With this call,
+    CMake will abort the build process during configuration if the C++ compiler is too old.
+
 -   (Hopefully) all of the APIs deprecated in PDELab 2.0 have been removed.
 
 -   The `PermutationOrderingTag` and its implementation have been deprecated. If you need to permute an ordering, apply
@@ -543,3 +592,5 @@ Links
 [dune/pdelab/constraints]: dune/pdelab/constraints
 [dune/pdelab/finiteelementmap]: dune/pdelab/finiteelementmap
 [dune/pdelab/constraints/common]: dune/pdelab/constraints/common
+[localoperator/variablefactories.hh]: dune/pdelab/localoperator/variablefactories.hh
+[function/callableadapter.hh]: dune/pdelab/function/callableadapter.hh
