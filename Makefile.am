@@ -1,12 +1,16 @@
 # $Id: duneproject 5370 2008-11-15 17:43:24Z christi $
 
 # we need the module file to be able to build via dunecontrol
-EXTRA_DIST = CMakeLists.txt                     \
+EXTRA_DIST = 					\
+	CHANGELOG.md				\
+	CMakeLists.txt				\
+	COPYING					\
 	dune.module                             \
 	GPL-2                                   \
 	GPL-3                                   \
 	LGPL-3                                  \
-	RELEASE_NOTES
+	LICENSE.md				\
+	REAMDE.md
 
 # don't follow the full GNU-standard
 # we need automake 1.5
