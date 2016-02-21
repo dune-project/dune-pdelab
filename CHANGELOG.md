@@ -1,9 +1,12 @@
 PDELab
 ======
 
-This is the 2.4.0-rc1 version of PDELab, a PDE discretization toolkit built
+This is the 2.4.1-rc1 version of PDELab, a PDE discretization toolkit built
 on top of the [DUNE][] framework. License information can be found in the file
 [LICENSE.md][].
+
+**There is no PDELab 2.4.0!** The first release in the 2.4 series is PDELab 2.4.1, which
+requires the 2.4.1 bugfix release of the DUNE core modules.
 
 PDELab 2.4 is a major release with many changes. For details and an overview of the bug fixes in
 this release, see the changelog below.
@@ -23,7 +26,7 @@ PDELab 2.4
 -   The PDELab build system now uses the dune_enable_all_packages() feature and thus requires
     at least CMake 2.8.12 to build.
 
--   PDELab 2.4.0 requires at least version 2.4.0 of the core modules.
+-   PDELab 2.4.1 requires at least version 2.4.1 of the core modules.
 
 -   In stride with the changes to the core modules, a lot of backwards compatibility code for
     older compilers was removed.
