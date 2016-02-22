@@ -3,9 +3,12 @@ common_HEADERS =				\
 	callswitch.hh				\
 	cg_stokes.hh				\
 	convectiondiffusion.hh			\
+	convectiondiffusionccfv.hh		\
 	convectiondiffusiondg.hh		\
 	convectiondiffusionfem.hh		\
 	convectiondiffusionparameter.hh		\
+	darcy_CCFV.hh				\
+	darcy_FEM.hh				\
 	defaultimp.hh				\
 	dgnavierstokes.hh			\
 	dgnavierstokesparameter.hh		\
@@ -27,25 +30,27 @@ common_HEADERS =				\
 	laplace.hh				\
 	laplacedirichletccfv.hh			\
 	laplacedirichletp12d.hh			\
-        linearelasticity.hh                     \
-	linearelasticityparameter.hh		\
 	linearacousticsdg.hh			\
 	linearacousticsparameter.hh		\
+	linearelasticity.hh                     \
+	linearelasticityparameter.hh		\
 	maxwelldg.hh				\
 	maxwellparameter.hh			\
 	navierstokesmass.hh			\
+	nonlinearconvectiondiffusionfem.hh	\
 	numericaljacobian.hh			\
 	numericaljacobianapply.hh		\
 	numericalnonlinearjacobianapply.hh	\
 	numericalresidual.hh			\
 	pattern.hh				\
+	permeability_adapter.hh			\
 	poisson.hh				\
 	scaled.hh				\
 	stokesdg.hh				\
+	stokesdg_vecfem.hh                      \
+	stokesdgparameter.hh                    \
+	stokesparameter.hh                      \
 	sum.hh					\
-        stokesdgparameter.hh                    \
-        stokesparameter.hh                      \
-        stokesdg_vecfem.hh                      \
 	taylorhoodnavierstokes.hh  		\
 	transportccfv.hh			\
 	twophaseccfv.hh				\
