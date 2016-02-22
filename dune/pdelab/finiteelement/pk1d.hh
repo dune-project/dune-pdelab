@@ -6,6 +6,11 @@
 #ifndef DUNE_PDELAB_FINITEELEMENT_PK1D_HH
 #define DUNE_PDELAB_FINITEELEMENT_PK1D_HH
 
+#include <vector>
+
+#include <dune/common/fmatrix.hh>
+#include <dune/geometry/type.hh>
+
 #include<dune/localfunctions/common/localbasis.hh>
 #include<dune/localfunctions/common/localkey.hh>
 #include<dune/localfunctions/common/localfiniteelementtraits.hh>

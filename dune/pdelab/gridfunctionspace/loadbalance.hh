@@ -3,6 +3,10 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_LOADBALANCE_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_LOADBALANCE_HH
 
+#include <dune/geometry/dimension.hh>
+#include <dune/grid/common/datahandleif.hh>
+#include <dune/grid/common/partitionset.hh>
+
 #include<dune/pdelab/common/polymorphicbufferwrapper.hh>
 #include <dune/pdelab/gridfunctionspace/entityindexcache.hh>
 

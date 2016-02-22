@@ -4,7 +4,13 @@
 #ifndef DUNE_PDELAB_FUNCTION_CALLABLEADAPTER_HH
 #define DUNE_PDELAB_FUNCTION_CALLABLEADAPTER_HH
 
-#include<utility>
+#include <utility>
+#include <type_traits>
+#include <dune/common/fvector.hh>
+#include <dune/common/typetraits.hh>
+
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/constraints/common/constraintsparameters.hh>
 
 namespace Dune {
   namespace PDELab {

@@ -4,6 +4,7 @@
 #define DUNE_PDELAB_LOCALOPERATOR_CALLSWITCH_HH
 
 #include <dune/common/concept.hh>
+#include <dune/common/typetraits.hh>
 
 namespace Dune {
   namespace PDELab {
