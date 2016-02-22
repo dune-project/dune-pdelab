@@ -8,6 +8,7 @@ pdelab_add_test(NAME testconstraints COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CUR
 pdelab_add_test(NAME testdglegendre)
 pdelab_add_test(NAME testfunction)
 pdelab_add_test(NAME testgridfunctionspace)
+pdelab_add_test(NAME testgridfunctionspace_fixedsize)
 pdelab_add_test(NAME testheat-instationary-periodic)
 pdelab_add_test(NAME testelasticity)
 pdelab_add_test(NAME testlocalfunctionspace)
