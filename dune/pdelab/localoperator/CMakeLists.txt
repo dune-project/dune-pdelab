@@ -1,9 +1,12 @@
 install(FILES callswitch.hh
               cg_stokes.hh
               convectiondiffusion.hh
+              convectiondiffusionccfv.hh
               convectiondiffusiondg.hh
               convectiondiffusionfem.hh
               convectiondiffusionparameter.hh
+              darcy_CCFV.hh
+              darcy_FEM.hh
               defaultimp.hh
               dgnavierstokes.hh
               dgnavierstokesparameter.hh
@@ -25,10 +28,10 @@ install(FILES callswitch.hh
               laplace.hh
               laplacedirichletccfv.hh
               laplacedirichletp12d.hh
-              linearelasticity.hh
-              linearelasticityparameter.hh
               linearacousticsdg.hh
               linearacousticsparameter.hh
+              linearelasticity.hh
+              linearelasticityparameter.hh
               maxwelldg.hh
               maxwellparameter.hh
               navierstokesmass.hh
@@ -37,13 +40,14 @@ install(FILES callswitch.hh
               numericalnonlinearjacobianapply.hh
               numericalresidual.hh
               pattern.hh
+              permeability_adapter.hh
               poisson.hh
               scaled.hh
               stokesdg.hh
-              sum.hh
+              stokesdg_vecfem.hh
               stokesdgparameter.hh
               stokesparameter.hh
-              stokesdg_vecfem.hh
+              sum.hh
               taylorhoodnavierstokes.hh
               transportccfv.hh
               twophaseccfv.hh
