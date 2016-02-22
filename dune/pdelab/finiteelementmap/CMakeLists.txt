@@ -5,7 +5,6 @@ install(FILES bdm1cube2dfem.hh
               edges0.5fem.hh
               finiteelementmap.hh
               global.hh
-              l2orthonormal.hh
               mimeticfem.hh
               monomfem.hh
               opbfem.hh

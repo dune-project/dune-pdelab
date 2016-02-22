@@ -9,7 +9,7 @@
 #include <dune/localfunctions/common/virtualwrappers.hh>
 #include <dune/common/array.hh>
 #include <dune/pdelab/finiteelementmap/finiteelementmap.hh>
-#include <dune/pdelab/finiteelementmap/l2orthonormal.hh>
+#include <dune/pdelab/finiteelement/l2orthonormal.hh>
 #include <dune/pdelab/finiteelementmap/monomfem.hh>
 
 namespace Dune {
