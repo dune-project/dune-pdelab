@@ -19,6 +19,7 @@ common_HEADERS =				\
 	jacobiantocurl.hh			\
 	logtag.hh				\
 	multiindex.hh				\
+	partitionviewentityset.hh		\
 	polymorphicbufferwrapper.hh		\
 	quadraturerules.hh			\
 	range.hh				\
