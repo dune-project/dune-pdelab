@@ -51,7 +51,7 @@ PDELab 2.4
         to a hard **compile error** in order to avoid a deprecation warning whenever [convectiondiffusionparameter.hh][]
         is being included.
 
-    -   New Darcy velocity adapters in [darcy_CCFV.hh][] and [darcy_FEM.hh][] as well as a permeability adapter in
+    -   New Darcy velocity adapters in [darcyccfv.hh][] and [darcyfem.hh][] as well as a permeability adapter in
         [permeability_adapter.hh][].
 
     -   There has been a massive reorganization of the (Navier-)Stokes code. All implementations now use a common
@@ -573,8 +573,8 @@ Links
 [convectiondiffusion.hh]: dune/pdelab/localoperator/convectiondiffusion.hh
 [nonlinearconvectiondiffusionfem.hh]: dune/pdelab/localoperator/nonlinearconvectiondiffusionfem.hh
 [diffusionmixed.hh]: dune/pdelab/localoperator/diffusionmixed.hh
-[darcy_CCFV.hh]: dune/pdelab/localoperator/darcy_CCFV.hh
-[darcy_FEM.hh]: dune/pdelab/localoperator/darcy_FEM.hh
+[darcyccfv.hh]: dune/pdelab/localoperator/darcyccfv.hh
+[darcyfem.hh]: dune/pdelab/localoperator/darcyfem.hh
 [permeability_adapter.hh]: dune/pdelab/localoperator/permeability_adapter.hh
 [taylorhoodnavierstokes.hh]: dune/pdelab/localoperator/taylorhoodnavierstokes.hh
 [cg_stokes.hh]: dune/pdelab/localoperator/cg_stokes.hh
