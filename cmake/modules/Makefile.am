@@ -1,8 +1,11 @@
 MODULES = 				\
+	CorrectWindowsPaths.cmake	\
 	DunePdelabMacros.cmake		\
+	DunePdelabTestMacros.cmake	\
 	FindPackageMultipass.cmake	\
 	FindPETSc.cmake			\
 	ResolveCompilerPaths.cmake	\
+	UseEigen.cmake			\
 	UsePETSc.cmake
 
 modulesdir = $(datadir)/dune/cmake/modules
