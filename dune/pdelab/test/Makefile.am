@@ -55,8 +55,64 @@ GRIDDIM = 2
 
 # scripts are not distributed automatically
 # but since this is need for make all:
-EXTRA_DIST = CMakeLists.txt make_pvd.sh \
-             grids grids/*
+EXTRA_DIST =								\
+	CMakeLists.txt							\
+	fmt.hh								\
+	gnuplotgraph.hh							\
+	gridexamples.hh							\
+	grids								\
+	grids/*								\
+	helmholtzoperator.hh						\
+	l2difference.hh							\
+	l2norm.hh							\
+	make_pvd.sh							\
+	modes.pl							\
+	testadaptivity-adaptivity.hh					\
+	testadaptivity-bcextension.hh					\
+	testadaptivity-bctype.hh					\
+	testadaptivity.cc						\
+	testadaptivity-error-indicator.hh				\
+	testadaptivity-operator.hh					\
+	testanalytic.cc							\
+	testbdmfem.cc							\
+	testchunkedblockordering.cc					\
+	testclock.cc							\
+	testcomplexnumbers.cc						\
+	testcomplexnumbers-problem.hh					\
+	testconstraints.cc						\
+	testdatahandle.cc						\
+	test-dg-amg.cc							\
+	testdglegendre.cc						\
+	testeigenbackend.cc						\
+	testelasticity.cc						\
+	testfunction.cc							\
+	testgridfunctionspace.cc					\
+	testheat-instationary-periodic.cc				\
+	testinterpolate.cc						\
+	testlaplacedirichletp12d.cc					\
+	testlocalfunctionspace.cc					\
+	testlocaloperatorinterface.cc					\
+	testnonoverlapping.cc						\
+	testnonoverlappingsinglephaseflow-boilerplate.cc		\
+	testnonoverlappingsinglephaseflow-boilerplate-problem.hh	\
+	testnonoverlappingsinglephaseflow.cc				\
+	testnonoverlappingsinglephaseflow-problem.hh			\
+	testopbfem.cc							\
+	testordering.cc							\
+	testpermutedordering.cc						\
+	testpk2dinterpolation.cc					\
+	testpk.cc							\
+	testpoisson.cc							\
+	testpoisson-periodic-2d.cc					\
+	testpoisson-periodic-3d.cc					\
+	testpoisson-periodic.hh						\
+	testrt02dgridfunctionspace.cc					\
+	testrt0.cc							\
+	testrtfem.cc							\
+	testsimplebackend.cc						\
+	test-transport-ccfv.cc						\
+	testutilities.cc						\
+	testvectoriterator.cc
 
 NORMALTESTS += testanalytic
 testanalytic_SOURCES = testanalytic.cc
