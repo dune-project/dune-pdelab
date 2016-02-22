@@ -1,6 +1,6 @@
 // -*- tab-width: 2; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_LOCALOPERATOR_DARCY_FEM_HH
-#define DUNE_PDELAB_LOCALOPERATOR_DARCY_FEM_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_DARCYFEM_HH
+#define DUNE_PDELAB_LOCALOPERATOR_DARCYFEM_HH
 
 #include <dune/common/fvector.hh>
 #include <dune/geometry/referenceelements.hh>

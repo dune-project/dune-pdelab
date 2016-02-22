@@ -5,8 +5,8 @@ install(FILES callswitch.hh
               convectiondiffusiondg.hh
               convectiondiffusionfem.hh
               convectiondiffusionparameter.hh
-              darcy_CCFV.hh
-              darcy_FEM.hh
+              darcyccfv.hh
+              darcyfem.hh
               defaultimp.hh
               dgnavierstokes.hh
               dgnavierstokesparameter.hh
