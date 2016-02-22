@@ -2,7 +2,6 @@ set(modules
   CorrectWindowsPaths.cmake
   DunePdelabMacros.cmake
   DunePdelabTestMacros.cmake
-  FindCXXUnorderedContainers.cmake
   FindPackageMultipass.cmake
   FindPETSc.cmake
   ResolveCompilerPaths.cmake
