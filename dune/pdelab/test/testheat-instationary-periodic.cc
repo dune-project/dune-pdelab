@@ -244,6 +244,7 @@ int main(int argc, char **argv)
     do_simulation<GM,degree,elemtype,meshtype,solvertype>(T,dt,grid,basename.str());
   }
   catch (std::exception & e) {
+    std::cout << "Exception: " << e.what() << std::endl;
     throw;
   }
   catch (...) {
