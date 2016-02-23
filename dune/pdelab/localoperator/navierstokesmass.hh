@@ -7,6 +7,9 @@
 #include <dune/geometry/quadraturerules.hh>
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
+#include <dune/typetree/compositenode.hh>
+#include <dune/typetree/utility.hh>
+
 #include <dune/pdelab/localoperator/pattern.hh>
 #include <dune/pdelab/localoperator/flags.hh>
 #include <dune/pdelab/localoperator/idefault.hh>

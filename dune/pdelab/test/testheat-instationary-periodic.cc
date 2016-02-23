@@ -244,12 +244,8 @@ int main(int argc, char **argv)
     do_simulation<GM,degree,elemtype,meshtype,solvertype>(T,dt,grid,basename.str());
   }
   catch (std::exception & e) {
-    std::cout << "STL ERROR: " << e.what() << std::endl;
-    return 1;
-  }
-  catch (Dune::Exception & e) {
-    std::cout << "DUNE ERROR: " << e.what() << std::endl;
-    return 1;
+    std::cout << "Exception: " << e.what() << std::endl;
+    throw;
   }
   catch (...) {
     std::cout << "Unknown ERROR" << std::endl;

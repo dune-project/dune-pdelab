@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_VARIABLEFACTORIES_HH
 #define DUNE_PDELAB_LOCALOPERATOR_VARIABLEFACTORIES_HH
 
+#include <vector>
+
 namespace Dune {
   namespace PDELab {
 

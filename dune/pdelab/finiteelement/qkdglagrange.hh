@@ -103,7 +103,7 @@ namespace Dune
                 if (l!=i && l!=j) prod *= (k*x-l)/(i-l);
               result += prod;
             }
-          return result;
+        return result;
       }
 
       // get ith Lagrange point
