@@ -87,6 +87,7 @@ EXTRA_DIST =								\
 	testelasticity.cc						\
 	testfunction.cc							\
 	testgridfunctionspace.cc					\
+	testgridfunctionspace-fixedsize.cc				\
 	testheat-instationary-periodic.cc				\
 	testinterpolate.cc						\
 	testlaplacedirichletp12d.cc					\
