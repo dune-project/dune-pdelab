@@ -21,7 +21,7 @@ dune_add_test(SOURCES testfunction.cc)
 
 dune_add_test(SOURCES testgridfunctionspace.cc)
 
-dune_add_test(SOURCES testgridfunctionspace_fixedsize.cc)
+dune_add_test(SOURCES testgridfunctionspace-fixedsize.cc)
 
 dune_add_test(SOURCES testheat-instationary-periodic.cc)
 
