@@ -57,7 +57,6 @@ namespace Dune {
         // Define types
         using FESwitch = FiniteElementInterfaceSwitch<typename LFSV::Traits::FiniteElementType>;
         using BasisSwitch = BasisInterfaceSwitch<typename FESwitch::Basis>;
-        using RF = typename BasisSwitch::RangeField;
         using Range = typename BasisSwitch::Range;
 
         // Reference to cell
