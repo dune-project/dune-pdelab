@@ -43,7 +43,6 @@ namespace Dune {
                             const typename Traits::DomainType& xl,
                             typename Traits::RangeType& y) const
       {
-        const int dim = Traits::GridViewType::Grid::dimension;
         typename Traits::DomainType xg = e.geometry().global(xl);
         y = f(xg);
         return;
@@ -219,7 +218,6 @@ namespace Dune {
                             const typename Traits::DomainType& xl,
                             typename Traits::RangeType& y) const
       {
-        const int dim = Traits::GridViewType::Grid::dimension;
         typename Traits::DomainType xg = e.geometry().global(xl);
         y = f(xg);
         return;
