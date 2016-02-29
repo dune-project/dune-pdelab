@@ -303,7 +303,7 @@ int main(int argc, char** argv)
       typedef std::complex<R> C;
 
       Dune::FieldVector<double,2> L(1.);
-      Dune::array<int,2> N(Dune::fill_array<int,2>(128));
+      Dune::array<int,2> N(Dune::fill_array<int,2>(8));
       std::bitset<2> periodic(false);
       int overlap=0;
       Dune::YaspGrid<2> grid(L,N,periodic,overlap);

@@ -224,7 +224,7 @@ int main(int argc, char** argv)
     double mu = 100.0;
     double lambda = 10000.0;
     double g = 1.0;
-    int level=5;
+    int level=2;
 
     if (argc > 1)
         mu = atof(argv[1]);
