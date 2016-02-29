@@ -749,6 +749,7 @@ namespace Dune {
 #if HAVE_MPI
         typedef typename istl::CommSelector<96,Dune::MPIHelper::isFake>::type Comm;
         _grid_operator.make_consistent(A);
+        istl::assertSequentialUG(gfs.gridView().comm());
         Comm oocc(gfs.gridView().comm(),Dune::SolverCategory::nonoverlapping);
         phelper.createIndexSetAndProjectForAMG(mat, oocc);
         typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;

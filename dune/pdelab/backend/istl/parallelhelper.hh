@@ -420,6 +420,17 @@ namespace Dune {
 
 #endif // HAVE_MPI
 
+      template<typename T>
+      void assertSequentialUG(T comm)
+      {}
+
+#if PDELAB_SEQUENTIAL_UG
+      template<int dim>
+      void assertSequentialUG(Dune::CollectiveCommunication<Dune::UGGrid<dim> > comm)
+      {
+        static_assert(false, "Using sequential UG in parallel environment");
+      };
+#endif
       //! \} group Backend
 
     } // namespace istl
