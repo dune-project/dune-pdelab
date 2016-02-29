@@ -214,7 +214,7 @@ int main(int argc, char **argv)
 
   double T = 0.075;
   double dt = 0.0075;
-  int cells = 128;
+  int cells = 8;
 
   // start try/catch block to get error messages from dune
   try {

@@ -465,7 +465,7 @@ int main(int argc, char** argv)
     if (argc==1){
       Tend = 4.8;
       timestep = 0.06;
-      n = 64;           // number of cells at one boundary = 64
+      n = 8;           // number of cells at one boundary = 64
       o = 1;            // overlap = 1
       choice = 2;       // Implicit Euler
     }
