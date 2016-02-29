@@ -39,7 +39,6 @@ namespace Dune {
       {
         typename Traits::DomainType xg = e.geometry().global(xl);
         y = f(xg);
-        return;
       }
     };
 
@@ -89,7 +88,6 @@ namespace Dune {
                             typename Traits::RangeType& y) const
       {
         y = f(e,xl);
-        return;
       }
     };
 
@@ -214,7 +212,6 @@ namespace Dune {
       {
         typename Traits::DomainType xg = e.geometry().global(xl);
         y = f(xg);
-        return;
       }
 
       // pass time to parameter object
@@ -250,7 +247,6 @@ namespace Dune {
                             typename Traits::RangeType& y) const
       {
         y = f(e,xl);
-        return;
       }
 
       // pass time to parameter object
