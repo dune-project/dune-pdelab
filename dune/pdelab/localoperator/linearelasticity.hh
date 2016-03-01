@@ -62,7 +62,7 @@ namespace Dune {
       {
         // Define types
         using namespace TypeTree::Indices;
-        using LFSU_SUB = TypeTree::Child<LFSU,_0>;
+        using LFSU_SUB = TypeTree::Child<LFSU,0>;
         using RF = typename M::value_type;
         using JacobianType = typename LFSU_SUB::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType;
@@ -141,7 +141,7 @@ namespace Dune {
       {
         // Define types
         using namespace TypeTree::Indices;
-        using LFSU = TypeTree::Child<LFSU_HAT,_0>;
+        using LFSU = TypeTree::Child<LFSU_HAT,0>;
         using RF = typename R::value_type;
         using JacobianType = typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType;
@@ -227,7 +227,7 @@ namespace Dune {
       {
         // Define types
         using namespace TypeTree::Indices;
-        using LFSV = TypeTree::Child<LFSV_HAT,_0>;
+        using LFSV = TypeTree::Child<LFSV_HAT,0>;
         using RF = typename R::value_type;
         using RangeType = typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType;
