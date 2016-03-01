@@ -427,12 +427,12 @@ namespace Dune {
 #endif // HAVE_MPI
 
       template<typename T>
-      void assertSequentialUG(T comm)
+      void assertParallelUG(T comm)
       {}
 
 #if HAVE_UG && PDELAB_SEQUENTIAL_UG
       template<int dim>
-      void assertSequentialUG(Dune::CollectiveCommunication<Dune::UGGrid<dim> > comm)
+      void assertParallelUG(Dune::CollectiveCommunication<Dune::UGGrid<dim> > comm)
       {
         static_assert(Dune::AlwaysFalse<Dune::UGGrid<dim> >::value, "Using sequential UG in parallel environment");
       };
