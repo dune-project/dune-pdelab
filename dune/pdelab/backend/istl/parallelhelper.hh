@@ -7,6 +7,12 @@
 
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/stdstreams.hh>
+#include <dune/common/typetraits.hh>
+
+#if HAVE_UG && PDELAB_SEQUENTIAL_UG
+// We need the UGGrid declaration for the assertion
+#include <dune/grid/uggrid.hh>
+#endif
 
 #include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/solvercategory.hh>
@@ -421,14 +427,14 @@ namespace Dune {
 #endif // HAVE_MPI
 
       template<typename T>
-      void assertSequentialUG(T comm)
+      void assertParallelUG(T comm)
       {}
 
-#if PDELAB_SEQUENTIAL_UG
+#if HAVE_UG && PDELAB_SEQUENTIAL_UG
       template<int dim>
-      void assertSequentialUG(Dune::CollectiveCommunication<Dune::UGGrid<dim> > comm)
+      void assertParallelUG(Dune::CollectiveCommunication<Dune::UGGrid<dim> > comm)
       {
-        static_assert(false, "Using sequential UG in parallel environment");
+        static_assert(Dune::AlwaysFalse<Dune::UGGrid<dim> >::value, "Using sequential UG in parallel environment");
       };
 #endif
       //! \} group Backend
