@@ -8,6 +8,11 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/stdstreams.hh>
 
+#if HAVE_UG && PDELAB_SEQUENTIAL_UG
+// We need the UGGrid declaration for the assertion
+#include <dune/grid/uggrid.hh>
+#endif
+
 #include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/solvercategory.hh>
 #include <dune/istl/operators.hh>
@@ -424,7 +429,7 @@ namespace Dune {
       void assertSequentialUG(T comm)
       {}
 
-#if PDELAB_SEQUENTIAL_UG
+#if HAVE_UG && PDELAB_SEQUENTIAL_UG
       template<int dim>
       void assertSequentialUG(Dune::CollectiveCommunication<Dune::UGGrid<dim> > comm)
       {
