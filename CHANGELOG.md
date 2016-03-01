@@ -1,7 +1,7 @@
 PDELab
 ======
 
-This is the 2.4.1-rc1 version of PDELab, a PDE discretization toolkit built
+This is the 2.4.1version of PDELab, a PDE discretization toolkit built
 on top of the [DUNE][] framework. License information can be found in the file
 [LICENSE.md][].
 
@@ -337,13 +337,33 @@ PDELab 2.4
 -   We have added a few additional tests and fixed some of the existing ones by either removing clearly broken tests or
     updating them to work again.
 
--   A lot of existing code has been updated to take advantage of C++11 features like range-based for loops and `auto`.
+-   A lot of existing code (including most local operators) has been updated to take advantage of C++11 features like
+    range-based for loops and `auto`.
+
+-   PDELab will now try to warn you if PDELab has been configured with MPI and you try to use a sequential UG library.
+    This is most likely to happen if you install distribution packages for UG.
 
 -   Lots and lots of bug fixes.
 
 ### Release history
 
-###### PDELab 2.4.0-rc1 ######
+###### PDELab 2.4.1 ######
+
+-   Updated copyright information.
+
+-   Removed more warnings in tests etc.
+
+-   Refactored ALUGrid creation to use `StructuredGridFactory`. Tests now work with the new `dune-alugrid` module.
+
+-   Added failsafe to keep people from using sequential UG with parallel PDELab. The original compiler error was
+    almost incomprehensible.
+
+-   Reduced problem sizes for a few tests to make run times more reasonable.
+
+-   Included a large number of cleanups for the local operators.
+
+
+###### PDELab 2.4.1-rc1 ######
 
 -   Initial release candidate
 
