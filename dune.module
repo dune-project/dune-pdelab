@@ -3,7 +3,7 @@
 
 #Name of the module
 Module: dune-pdelab
-Version: 2.4.1-rc2
+Version: 2.4.1
 Maintainer: dune-pdelab@dune-project.org
 #depending on
 Depends: dune-common (>= 2.4.1) dune-geometry (>= 2.4.1) dune-grid (>= 2.4.1) dune-localfunctions (>= 2.4.1) dune-istl (>= 2.4.1) dune-typetree (>= 2.4.1)
