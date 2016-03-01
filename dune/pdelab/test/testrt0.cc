@@ -8,6 +8,7 @@
 
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
+#include <dune/grid/utility/structuredgridfactory.hh>
 
 #include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
@@ -153,9 +154,10 @@ int main(int argc, char** argv)
 #endif
 
 #if HAVE_DUNE_ALUGRID
- 	ALUUnitSquare alugrid;
-  	alugrid.globalRefine(5);
-    testrt0(alugrid.leafGridView());
+    using ALUType = Dune::ALUGrid<2, 2, Dune::simplex, Dune::nonconforming>;
+    auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::make_array(1u, 1u));
+    alugrid->globalRefine(5);
+    testrt0(alugrid->leafGridView());
 #endif
 
 	// test passed
