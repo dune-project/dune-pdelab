@@ -12,6 +12,7 @@
 
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
+#include <dune/grid/utility/structuredgridfactory.hh>
 
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
 #include <dune/pdelab/finiteelementmap/pkfem.hh>
@@ -410,16 +411,16 @@ int main(int argc, char** argv)
 
 #if HAVE_DUNE_ALUGRID
     {
-      // make grid
-      ALUUnitSquare grid;
-      grid.globalRefine(4);
+      using ALUType = Dune::ALUGrid<2, 2, Dune::simplex, Dune::nonconforming>;
+      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::make_array(1u, 1u));
+      alugrid->globalRefine(4);
 
       // get view
-      typedef ALUUnitSquare::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      using GV = ALUType::LeafGridView;
+      auto gv = alugrid->leafGridView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
+      typedef ALUType::ctype DF;
       const int k=3;
       const int q=2*k;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,k> FEM;

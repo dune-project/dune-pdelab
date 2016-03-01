@@ -12,6 +12,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/typetraits.hh>
 #include <dune/grid/yaspgrid.hh>
+#include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/test/gridexamples.hh>
 
@@ -161,15 +162,13 @@ void test_3d_simplex(const Constraints& constraints, const VBE& vbe)
 #if HAVE_DUNE_ALUGRID
 
     {
-      // make grid
-      typedef Dune::ALUGrid<3,3,Dune::simplex,Dune::nonconforming> Grid;
-      std::shared_ptr<Grid> gridptr = TriangulatedUnitCubeMaker<Grid>::create();
-      Grid& grid = *gridptr;
-      grid.globalRefine(3);
+      using ALUType = Dune::ALUGrid<3, 3, Dune::simplex, Dune::nonconforming>;
+      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 3>(0.0), Dune::FieldVector<ALUType::ctype, 3>(1.0), Dune::make_array(1u, 1u, 1u));
+      alugrid->globalRefine(3);
 
       // get view
-      typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      typedef ALUType::LeafGridView GV;
+      auto gv = alugrid->leafGridView();
 
       typedef GV::Grid::ctype DF;
 
