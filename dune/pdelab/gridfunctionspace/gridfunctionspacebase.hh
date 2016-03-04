@@ -204,7 +204,6 @@ namespace Dune {
        */
       void update(bool force = false)
       {
-        std::cout << "Updating entity set" << std::endl;
         auto entity_set = gfs().entitySet();
         entity_set.update(force);
         // We bypass the normal access using ordering() here to avoid a double
