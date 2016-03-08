@@ -61,8 +61,7 @@ namespace Dune {
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat) const
       {
         // Define types
-        using namespace TypeTree::Indices;
-        using LFSU_SUB = TypeTree::Child<LFSU,_0>;
+        using LFSU_SUB = TypeTree::Child<LFSU,0>;
         using RF = typename M::value_type;
         using JacobianType = typename LFSU_SUB::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType;
@@ -140,8 +139,7 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU_HAT& lfsu_hat, const X& x, const LFSV& lfsv, R& r) const
       {
         // Define types
-        using namespace TypeTree::Indices;
-        using LFSU = TypeTree::Child<LFSU_HAT,_0>;
+        using LFSU = TypeTree::Child<LFSU_HAT,0>;
         using RF = typename R::value_type;
         using JacobianType = typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType;
@@ -226,8 +224,7 @@ namespace Dune {
       void lambda_volume (const EG& eg, const LFSV_HAT& lfsv_hat, R& r) const
       {
         // Define types
-        using namespace TypeTree::Indices;
-        using LFSV = TypeTree::Child<LFSV_HAT,_0>;
+        using LFSV = TypeTree::Child<LFSV_HAT,0>;
         using RF = typename R::value_type;
         using RangeType = typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType;
