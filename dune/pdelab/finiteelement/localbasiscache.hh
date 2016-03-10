@@ -74,4 +74,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENT_LOCALBASISCACHE_HH

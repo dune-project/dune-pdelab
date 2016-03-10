@@ -309,4 +309,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_ORDERING_LEXICOGRAPHICORDERING_HH
+#endif // DUNE_PDELAB_ORDERING_INTERLEAVEDORDERING_HH

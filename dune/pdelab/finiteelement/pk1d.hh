@@ -179,4 +179,4 @@ namespace Dune {
   };
 }
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENT_PK1D_HH

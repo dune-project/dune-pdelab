@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_CONVECTIONDIFFUSION_HH
-#define DUNE_PDELAB_CONVECTIONDIFFUSION_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSION_HH
+#define DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSION_HH
 #warning This file is deprecated and will be removed after the Dune-PDELab 2.4 release! Include the header dune/pdelab/localoperator/nonlinearconvectiondiffusionfem.hh instead!
 
 #include<vector>
@@ -403,4 +403,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSION_HH

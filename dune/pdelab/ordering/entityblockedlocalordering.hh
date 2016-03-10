@@ -216,4 +216,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_ORDERING_ENTITYBLOCKEDORDERING_HH
+#endif // DUNE_PDELAB_ORDERING_ENTITYBLOCKEDLOCALORDERING_HH

@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_GEOMETRYWRAPPER_HH
-#define DUNE_PDELAB_GEOMETRYWRAPPER_HH
+#ifndef DUNE_PDELAB_COMMON_GEOMETRYWRAPPER_HH
+#define DUNE_PDELAB_COMMON_GEOMETRYWRAPPER_HH
 
 #include <dune/common/fvector.hh>
 
@@ -279,4 +279,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_COMMON_GEOMETRYWRAPPER_HH

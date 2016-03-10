@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_PKQKFEM_HH
-#define DUNE_PDELAB_PKQKFEM_HH
+#ifndef DUNE_PDELAB_FINITEELEMENTMAP_PKQKFEM_HH
+#define DUNE_PDELAB_FINITEELEMENTMAP_PKQKFEM_HH
 
 #include <memory>
 
@@ -143,4 +143,4 @@ namespace Dune {
     }
 }
 
-#endif //DUNE_PDELAB_PKQKFEM_HH
+#endif // DUNE_PDELAB_FINITEELEMENTMAP_PKQKFEM_HH

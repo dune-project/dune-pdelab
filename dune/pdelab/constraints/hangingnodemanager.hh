@@ -1,8 +1,8 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
 
-#ifndef HANGINGNODEMANAGER_HH
-#define HANGINGNODEMANAGER_HH
+#ifndef DUNE_PDELAB_CONSTRAINTS_HANGINGNODEMANAGER_HH
+#define DUNE_PDELAB_CONSTRAINTS_HANGINGNODEMANAGER_HH
 
 #include<dune/grid/common/grid.hh>
 #include<dune/grid/common/mcmgmapper.hh>
@@ -518,4 +518,4 @@ namespace Dune {
 
   } // end namespace PDELab
 } // end namespace Dune
-#endif
+#endif // DUNE_PDELAB_CONSTRAINTS_HANGINGNODEMANAGER_HH

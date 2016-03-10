@@ -20,4 +20,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENTMAP_QKDGGL_HH

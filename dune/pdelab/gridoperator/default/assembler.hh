@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_DEFAULT_ASSEMBLER_HH
-#define DUNE_PDELAB_DEFAULT_ASSEMBLER_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_DEFAULT_ASSEMBLER_HH
+#define DUNE_PDELAB_GRIDOPERATOR_DEFAULT_ASSEMBLER_HH
 
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
@@ -307,4 +307,4 @@ namespace Dune{
 
   }
 }
-#endif
+#endif // DUNE_PDELAB_GRIDOPERATOR_DEFAULT_ASSEMBLER_HH

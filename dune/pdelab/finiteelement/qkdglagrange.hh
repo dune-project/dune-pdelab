@@ -383,4 +383,4 @@ namespace Dune
 }
 
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENT_QKDGLAGRANGE_HH

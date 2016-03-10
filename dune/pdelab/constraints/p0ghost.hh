@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_P0GHOSTCONSTRAINTS_HH
-#define DUNE_PDELAB_P0GHOSTCONSTRAINTS_HH
+#ifndef DUNE_PDELAB_CONSTRAINTS_P0GHOST_HH
+#define DUNE_PDELAB_CONSTRAINTS_P0GHOST_HH
 
 #include "../common/geometrywrapper.hh"
 #include<dune/grid/common/gridenums.hh>
@@ -51,4 +51,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_CONSTRAINTS_P0GHOST_HH

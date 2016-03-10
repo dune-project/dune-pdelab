@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_DEFAULT_JACOBIANENGINE_HH
-#define DUNE_PDELAB_DEFAULT_JACOBIANENGINE_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_DEFAULT_JACOBIANENGINE_HH
+#define DUNE_PDELAB_GRIDOPERATOR_DEFAULT_JACOBIANENGINE_HH
 
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
@@ -317,4 +317,4 @@ namespace Dune{
 
   }
 }
-#endif
+#endif // DUNE_PDELAB_GRIDOPERATOR_DEFAULT_JACOBIANENGINE_HH

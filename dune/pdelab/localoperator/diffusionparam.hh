@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_DIFFUSIONPARAM_HH
-#define DUNE_PDELAB_DIFFUSIONPARAM_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_DIFFUSIONPARAM_HH
+#define DUNE_PDELAB_LOCALOPERATOR_DIFFUSIONPARAM_HH
 #warning This file is deprecated and will be removed after the Dune-PDELab 2.4 release, use convectiondiffusionparameter.hh and the implementation therein instead!
 
 #include <iostream>
@@ -138,4 +138,4 @@ namespace Dune {
   }
 }
 
-#endif // DUNE_PDELAB_DIFFUSIONPARAM_HH
+#endif // DUNE_PDELAB_LOCALOPERATOR_DIFFUSIONPARAM_HH

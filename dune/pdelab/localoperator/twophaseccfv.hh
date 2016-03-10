@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_TWOPHASEOP_HH
-#define DUNE_PDELAB_TWOPHASEOP_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_TWOPHASECCFV_HH
+#define DUNE_PDELAB_LOCALOPERATOR_TWOPHASECCFV_HH
 
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
@@ -1067,4 +1067,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_TWOPHASECCFV_HH

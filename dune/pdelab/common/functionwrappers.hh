@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_FUNCTIONWRAPPERS_HH
-#define DUNE_PDELAB_FUNCTIONWRAPPERS_HH
+#ifndef DUNE_PDELAB_COMMON_FUNCTIONWRAPPERS_HH
+#define DUNE_PDELAB_COMMON_FUNCTIONWRAPPERS_HH
 
 #include <vector>
 #include <tuple>
@@ -215,4 +215,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_FUNCTIONWRAPPERS_HH
+#endif // DUNE_PDELAB_COMMON_FUNCTIONWRAPPERS_HH

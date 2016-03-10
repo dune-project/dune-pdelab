@@ -187,4 +187,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_ORDERING_LEAFORDERING_HH
+#endif // DUNE_PDELAB_ORDERING_LEAFGRIDVIEWORDERING_HH

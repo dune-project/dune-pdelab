@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_DEFAULT_RESIDUALENGINE_HH
-#define DUNE_PDELAB_DEFAULT_RESIDUALENGINE_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_DEFAULT_RESIDUALENGINE_HH
+#define DUNE_PDELAB_GRIDOPERATOR_DEFAULT_RESIDUALENGINE_HH
 
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
@@ -361,4 +361,4 @@ namespace Dune{
 
   }
 }
-#endif
+#endif // DUNE_PDELAB_GRIDOPERATOR_DEFAULT_RESIDUALENGINE_HH

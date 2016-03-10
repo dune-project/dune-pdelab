@@ -66,4 +66,4 @@ namespace Dune {
     };
   }
 }
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENTMAP_PK1D_HH

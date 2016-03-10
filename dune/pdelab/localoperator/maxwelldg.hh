@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_MAXWELLDG_HH
-#define DUNE_PDELAB_MAXWELLDG_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_MAXWELLDG_HH
+#define DUNE_PDELAB_LOCALOPERATOR_MAXWELLDG_HH
 
 #include<vector>
 
@@ -890,4 +890,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_MAXWELLDG_HH

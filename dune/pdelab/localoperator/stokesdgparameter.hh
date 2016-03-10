@@ -235,4 +235,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_STOKESDGPARAMETER_HH

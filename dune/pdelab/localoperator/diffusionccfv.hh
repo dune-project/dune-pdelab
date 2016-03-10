@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_DIFFUSIONCCFV_HH
-#define DUNE_PDELAB_DIFFUSIONCCFV_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_DIFFUSIONCCFV_HH
+#define DUNE_PDELAB_LOCALOPERATOR_DIFFUSIONCCFV_HH
 #warning "The file dune/pdelab/localoperator/diffusionccfv.hh is deprecated. Please use the ConvectionDiffusionCCFV local operator from dune/pdelab/localoperator/convectiondiffusionccfv.hh instead."
 
 #include<dune/common/deprecated.hh>
@@ -221,4 +221,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_DIFFUSIONCCFV_HH

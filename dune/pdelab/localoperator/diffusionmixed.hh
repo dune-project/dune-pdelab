@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_DIFFUSIONMIXED_HH
-#define DUNE_PDELAB_DIFFUSIONMIXED_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_DIFFUSIONMIXED_HH
+#define DUNE_PDELAB_LOCALOPERATOR_DIFFUSIONMIXED_HH
 
 #include <cstddef>
 #include<vector>
@@ -310,4 +310,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_DIFFUSIONMIXED_HH

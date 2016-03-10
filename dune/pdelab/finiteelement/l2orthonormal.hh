@@ -920,4 +920,4 @@ namespace Dune {
 
 /** @} end documentation */
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENT_L2ORTHONORMAL_HH

@@ -1,3 +1,6 @@
+#ifndef DUNE_PDELAB_TEST_TESTADAPTIVITY_ADAPTIVITY_HH
+#define DUNE_PDELAB_TEST_TESTADAPTIVITY_ADAPTIVITY_HH
+
 template<class Grid, class GV>
 void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
 {
@@ -106,3 +109,5 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
     Dune::PDELab::interpolate(g,gfs,u); // this will overwrite the solution !
   }
 }
+
+#endif // DUNE_PDELAB_TEST_TESTADAPTIVITY_ADAPTIVITY_HH

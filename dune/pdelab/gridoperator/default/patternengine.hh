@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_DEFAULT_PATTERNENGINE_HH
-#define DUNE_PDELAB_DEFAULT_PATTERNENGINE_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_DEFAULT_PATTERNENGINE_HH
+#define DUNE_PDELAB_GRIDOPERATOR_DEFAULT_PATTERNENGINE_HH
 
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 #include <dune/pdelab/gridoperator/common/localmatrix.hh>
@@ -297,4 +297,4 @@ namespace Dune{
 
   }
 }
-#endif
+#endif // DUNE_PDELAB_GRIDOPERATOR_DEFAULT_PATTERNENGINE_HH

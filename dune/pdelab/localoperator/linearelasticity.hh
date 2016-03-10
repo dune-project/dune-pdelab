@@ -1,6 +1,6 @@
 // -*- tab-width: 4; c-basic-offset: 2; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_LINEARELASTICITY_HH
-#define DUNE_PDELAB_LINEARELASTICITY_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_LINEARELASTICITY_HH
+#define DUNE_PDELAB_LOCALOPERATOR_LINEARELASTICITY_HH
 
 #include <vector>
 
@@ -337,4 +337,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_LINEARELASTICITY_HH

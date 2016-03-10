@@ -508,4 +508,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_LOADBALANCE_HH

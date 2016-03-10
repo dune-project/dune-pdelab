@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_P0CONSTRAINTS_HH
-#define DUNE_PDELAB_P0CONSTRAINTS_HH
+#ifndef DUNE_PDELAB_CONSTRAINTS_P0_HH
+#define DUNE_PDELAB_CONSTRAINTS_P0_HH
 
 #include "../common/geometrywrapper.hh"
 
@@ -42,4 +42,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_CONSTRAINTS_P0_HH

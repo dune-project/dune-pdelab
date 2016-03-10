@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_TRANSPORTCCFV_HH
-#define DUNE_PDELAB_TRANSPORTCCFV_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_TRANSPORTCCFV_HH
+#define DUNE_PDELAB_LOCALOPERATOR_TRANSPORTCCFV_HH
 #warning This file is deprecated and will be removed after the Dune-PDELab 2.4 release! Use the local operators from dune/pdelab/localoperator/convectiondiffusionccfv.hh instead!
 
 #include<dune/common/fvector.hh>
@@ -543,4 +543,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_TRANSPORTCCFV_HH
