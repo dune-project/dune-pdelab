@@ -1,7 +1,7 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
-#ifndef DUNE_OVLPISTLSOLVERBACKEND_HH
-#define DUNE_OVLPISTLSOLVERBACKEND_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_OVLPISTLSOLVERBACKEND_HH
+#define DUNE_PDELAB_BACKEND_ISTL_OVLPISTLSOLVERBACKEND_HH
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/parallel/mpihelper.hh>
@@ -1198,4 +1198,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_BACKEND_ISTL_OVLPISTLSOLVERBACKEND_HH

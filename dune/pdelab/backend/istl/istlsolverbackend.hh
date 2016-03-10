@@ -1,7 +1,7 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
-#ifndef DUNE_ISTLSOLVERBACKEND_HH
-#define DUNE_ISTLSOLVERBACKEND_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_ISTLSOLVERBACKEND_HH
+#define DUNE_PDELAB_BACKEND_ISTL_ISTLSOLVERBACKEND_HH
 
 #include "seqistlsolverbackend.hh"
 #include "ovlpistlsolverbackend.hh"
@@ -15,4 +15,4 @@
    * novlpistlsolverbackend.hh with nonoverlapping solvers,operators,...
    */
 
-#endif
+#endif // DUNE_PDELAB_BACKEND_ISTL_ISTLSOLVERBACKEND_HH

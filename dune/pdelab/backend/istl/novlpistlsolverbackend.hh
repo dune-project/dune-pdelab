@@ -1,7 +1,7 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
-#ifndef DUNE_NOVLPISTLSOLVERBACKEND_HH
-#define DUNE_NOVLPISTLSOLVERBACKEND_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_NOVLPISTLSOLVERBACKEND_HH
+#define DUNE_PDELAB_BACKEND_ISTL_NOVLPISTLSOLVERBACKEND_HH
 
 #include <cstddef>
 
@@ -1111,4 +1111,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_BACKEND_ISTL_NOVLPISTLSOLVERBACKEND_HH
