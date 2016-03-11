@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_OVLP_AMG_DG_BACKEND_HH
-#define DUNE_PDELAB_OVLP_AMG_DG_BACKEND_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_OVLP_AMG_DG_BACKEND_HH
+#define DUNE_PDELAB_BACKEND_ISTL_OVLP_AMG_DG_BACKEND_HH
 
 #include <dune/common/parametertree.hh>
 #include <dune/common/power.hh>
@@ -772,4 +772,4 @@ public:
 };
 }
 }
-#endif
+#endif // DUNE_PDELAB_BACKEND_ISTL_OVLP_AMG_DG_BACKEND_HH
