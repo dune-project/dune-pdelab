@@ -52,10 +52,8 @@ namespace Dune {
           type must be polymorphic.
       */
       template<class EntityType>
-      const typename Traits::FiniteElementType& find (const EntityType& e) const
-      {
-        return asImp().find(e);
-      }
+      const typename Traits::FiniteElementType&
+      find (const EntityType& e) const = delete;
 
       /** @name Size calculation
        *  The FiniteElementMap provides different methods to compute
@@ -74,38 +72,22 @@ namespace Dune {
       /** \brief a FiniteElementMap is fixedSize iif the size of the local
        * functions space for each GeometryType is fixed.
        */
-      bool fixedSize() const
-      {
-        return asImp().fixedSize();
-      }
+      bool fixedSize() const = delete;
       /** \brief if the FiniteElementMap is fixedSize, the size
        * methods computes the number of DOFs for given GeometryType.
        */
-      std::size_t size(GeometryType gt) const
-      {
-        return asImp().size(gt);
-      }
+      std::size_t size(GeometryType gt) const = delete;
       /** @} */
       /** \brief return if FiniteElementMap has degrees of freedom for
        * given codimension
        */
-      bool hasDOFs(int codim) const
-      {
-        return asImp().hasDOFs(codim);
-      }
+      bool hasDOFs(int codim) const = delete;
       /** \brief compute an upper bound for the local number of DOFs.
        *
        * this upper bound is used to avoid reallocations in
        * std::vectors used during the assembly.
        */
-      std::size_t maxLocalSize() const
-      {
-        return asImp().maxLocalSize();
-      }
-
-    private:
-      Imp& asImp () {return static_cast<Imp &> (*this);}
-      const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+      std::size_t maxLocalSize() const = delete;
     };
 
     //! simple implementation where all entities have the same finite element
