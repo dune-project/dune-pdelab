@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_STOKESDG_HH
-#define DUNE_PDELAB_STOKESDG_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_STOKESDG_HH
+#define DUNE_PDELAB_LOCALOPERATOR_STOKESDG_HH
 
 #warning This file is deprecated, include the header dune/pdelab/localoperator/dgnavierstokes.hh instead!
 
@@ -1288,4 +1288,4 @@ namespace Dune {
     } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_STOKESDG_HH

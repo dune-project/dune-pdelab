@@ -130,4 +130,4 @@ private:
   mutable LView lview;
 };
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_DARCYFEM_HH

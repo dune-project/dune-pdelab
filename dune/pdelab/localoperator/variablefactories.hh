@@ -54,4 +54,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_VARIABLEFACTORIES_HH

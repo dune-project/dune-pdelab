@@ -221,4 +221,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENTMAP_QKDG_HH

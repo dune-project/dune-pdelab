@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=8 sw=2 sts=2:
-#ifndef DUNE_VTK_PVDWRITER_HH
-#define DUNE_VTK_PVDWRITER_HH
+#ifndef DUNE_PDELAB_INSTATIONARY_PVDWRITER_HH
+#define DUNE_PDELAB_INSTATIONARY_PVDWRITER_HH
 
 #warning dune/pdelab/instationary/pvdwriter.hh and the class PVDWriter are deprecated, please use VTKSequenceWriter or SubsamplingVTKSequenceWriter from dune-grid instead
 
@@ -75,4 +75,4 @@ namespace Dune
 
 } // end namespace Dune
 
-#endif // DUNE_VTK_PVDWRITER_HH
+#endif // DUNE_PDELAB_INSTATIONARY_PVDWRITER_HH

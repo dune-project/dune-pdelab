@@ -1,6 +1,6 @@
 //-*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_FUNCTION_HH
-#define DUNE_PDELAB_FUNCTION_HH
+#ifndef DUNE_PDELAB_COMMON_FUNCTION_HH
+#define DUNE_PDELAB_COMMON_FUNCTION_HH
 
 #include <iostream>
 #include <sstream>
@@ -1135,4 +1135,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_COMMON_FUNCTION_HH

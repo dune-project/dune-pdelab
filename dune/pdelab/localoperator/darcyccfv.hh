@@ -286,4 +286,4 @@ public:
   }
 };
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_DARCYCCFV_HH

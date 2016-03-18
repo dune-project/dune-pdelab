@@ -1,8 +1,8 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_VTKEXPORT_HH
-#define DUNE_PDELAB_VTKEXPORT_HH
+#ifndef DUNE_PDELAB_COMMON_VTKEXPORT_HH
+#define DUNE_PDELAB_COMMON_VTKEXPORT_HH
 
 #include<cstddef>
 #include<string>
@@ -207,4 +207,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_COMMON_VTKEXPORT_HH

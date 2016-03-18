@@ -469,4 +469,4 @@ namespace Dune {
 
   }
 }
-#endif
+#endif // DUNE_PDELAB_FUNCTION_CALLABLEADAPTER_HH

@@ -1,3 +1,6 @@
+#ifndef DUNE_PDELAB_TEST_TESTADAPTIVITY_BCEXTENSION_HH
+#define DUNE_PDELAB_TEST_TESTADAPTIVITY_BCEXTENSION_HH
+
 /** \brief A function that defines Dirichlet boundary conditions AND
     its extension to the interior */
 template<typename GV, typename RF>
@@ -26,3 +29,5 @@ public:
   //! get a reference to the grid view
   inline const GV& getGridView () {return gv;}
 };
+
+#endif // DUNE_PDELAB_TEST_TESTADAPTIVITY_BCEXTENSION_HH

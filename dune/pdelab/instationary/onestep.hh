@@ -10,4 +10,4 @@
 // TODO: Remove include after PDELab 2.4
 #include <dune/pdelab/common/instationaryfilenamehelper.hh>
 
-#endif
+#endif // DUNE_PDELAB_INSTATIONARY_ONESTEP_HH

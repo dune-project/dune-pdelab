@@ -502,4 +502,4 @@ BoundaryDirichletFunction df;
 } // end namespace PDELab
 } // end namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_STOKESPARAMETER_HH

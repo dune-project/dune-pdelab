@@ -500,4 +500,4 @@ namespace Dune
 
 } // End Dune namespace
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENT_QKDGLEGENDRE_HH

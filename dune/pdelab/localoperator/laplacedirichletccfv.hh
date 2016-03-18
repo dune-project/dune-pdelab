@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_LAPLACEDIRICHLETCCFV_HH
-#define DUNE_PDELAB_LAPLACEDIRICHLETCCFV_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_LAPLACEDIRICHLETCCFV_HH
+#define DUNE_PDELAB_LOCALOPERATOR_LAPLACEDIRICHLETCCFV_HH
 #warning This file is deprecated and will be removed after the Dune-PDELab 2.4 release! Use the ConvectionDiffusionCCFV local operator from dune/pdelab/localoperator/convectiondiffusionccfv.hh instead!
 
 #include<dune/common/exceptions.hh>
@@ -133,4 +133,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_LAPLACEDIRICHLETCCFV_HH

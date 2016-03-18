@@ -1,5 +1,5 @@
-#ifndef DUNE_ONE_STEP_JACOBIANENGINE_HH
-#define DUNE_ONE_STEP_JACOBIANENGINE_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_ONESTEP_JACOBIANENGINE_HH
+#define DUNE_PDELAB_GRIDOPERATOR_ONESTEP_JACOBIANENGINE_HH
 
 #include <dune/pdelab/gridoperator/onestep/enginebase.hh>
 #include <cmath>
@@ -143,4 +143,4 @@ namespace Dune{
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_GRIDOPERATOR_ONESTEP_JACOBIANENGINE_HH

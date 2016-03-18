@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_GRIDOPERATOR_HH
-#define DUNE_PDELAB_GRIDOPERATOR_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_GRIDOPERATOR_HH
+#define DUNE_PDELAB_GRIDOPERATOR_GRIDOPERATOR_HH
 
 #include <dune/common/tupleutility.hh>
 
@@ -243,4 +243,4 @@ namespace Dune{
 
   }
 }
-#endif
+#endif // DUNE_PDELAB_GRIDOPERATOR_GRIDOPERATOR_HH

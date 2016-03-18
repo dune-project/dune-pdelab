@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
-#ifndef DUNE_PDELAB_HH
-#define DUNE_PDELAB_HH
+#ifndef DUNE_PDELAB_BOILERPLATE_PDELAB_HH
+#define DUNE_PDELAB_BOILERPLATE_PDELAB_HH
 
 /** \file
     \brief Provide some classes to reduce boiler plate code in pdelab applications
@@ -2027,4 +2027,4 @@ namespace Dune {
 } // end namespace PDELab
     } // end namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_BOILERPLATE_PDELAB_HH

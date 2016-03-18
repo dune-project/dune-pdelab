@@ -1,6 +1,6 @@
 
-#ifndef DUNE_PDELAB_ONESTEP_OPERATOR_HH
-#define DUNE_PDELAB_ONESTEP_OPERATOR_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
+#define DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
 
 #include <dune/pdelab/instationary/onestep.hh>
 #include <dune/pdelab/gridoperator/onestep/localassembler.hh>
@@ -258,4 +258,4 @@ namespace Dune{
 
   }
 }
-#endif
+#endif // DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
