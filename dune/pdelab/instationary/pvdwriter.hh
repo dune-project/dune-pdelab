@@ -3,7 +3,7 @@
 #ifndef DUNE_PDELAB_INSTATIONARY_PVDWRITER_HH
 #define DUNE_PDELAB_INSTATIONARY_PVDWRITER_HH
 
-#warning dune/pdelab/instationary/pvdwriter.hh and the class PVDWriter are deprecated, please use VTKSequenceWriter or SubsamplingVTKSequenceWriter from dune-grid instead
+#warning dune/pdelab/instationary/pvdwriter.hh and the class PVDWriter are deprecated, please use VTKSequenceWriter from dune-grid instead
 
 
 #include <vector>

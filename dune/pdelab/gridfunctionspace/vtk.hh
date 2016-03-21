@@ -31,9 +31,6 @@ namespace Dune {
   template<typename GV>
   class VTKSequenceWriter;
 
-  template<typename GV>
-  class SubsamplingVTKSequenceWriter;
-
   namespace PDELab {
 
     namespace vtk {
@@ -57,12 +54,6 @@ namespace Dune {
 
         template<typename GV>
         struct vtk_writer_traits<Dune::VTKSequenceWriter<GV> >
-        {
-          typedef GV GridView;
-        };
-
-        template<typename GV>
-        struct vtk_writer_traits<Dune::SubsamplingVTKSequenceWriter<GV> >
         {
           typedef GV GridView;
         };
