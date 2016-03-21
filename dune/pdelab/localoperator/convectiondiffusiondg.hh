@@ -77,7 +77,14 @@ namespace Dune {
       enum { doAlphaBoundary  = true };
       enum { doLambdaVolume  = true };
 
-      //! constructor: pass parameter object
+      /** \brief constructor: pass parameter object and define DG-method
+       * \param[in] param_   Reference to parameter object.
+       * \param[in] method_  Interior penalty Galerkin method. Default is skew-symmetric.
+       * \param[in] weights_ Weighted averages for diffusion tensor. Default is no weighting.
+       * \param[in] alpha_   Penalization constant. Default is zero.
+       *
+       * Collecting the input parameters above, the default is the OBB-method.
+       */
       ConvectionDiffusionDG (T& param_,
                              ConvectionDiffusionDGMethod::Type method_=ConvectionDiffusionDGMethod::NIPG,
                              ConvectionDiffusionDGWeights::Type weights_=ConvectionDiffusionDGWeights::weightsOff,
