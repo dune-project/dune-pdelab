@@ -29,7 +29,7 @@ namespace Dune {
 
     struct ConvectionDiffusionDGMethod
     {
-      enum Type { NIPG, SIPG };
+      enum Type { NIPG, SIPG, IIPG };
     };
 
     struct ConvectionDiffusionDGWeights
@@ -93,6 +93,7 @@ namespace Dune {
       {
         theta = 1.0;
         if (method==ConvectionDiffusionDGMethod::SIPG) theta = -1.0;
+        if (method==ConvectionDiffusionDGMethod::IIPG) theta = 0.0;
       }
 
       // volume integral depending on test and ansatz functions
