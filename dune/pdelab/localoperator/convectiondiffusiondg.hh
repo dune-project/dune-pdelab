@@ -291,8 +291,9 @@ namespace Dune {
         auto A_s = param.A(cell_inside,local_inside);
         auto A_n = param.A(cell_outside,local_outside);
 
-        // face diameter; this should be revised for anisotropic meshes?
-        auto h_F = std::min(geo_inside.volume(),geo_outside.volume())/geo.volume(); // Houston!
+        // face diameter for anisotropic meshes taken from Paul Houston et al.
+        // this formula ensures coercivity of the bilinear form
+        auto h_F = std::min(geo_inside.volume(),geo_outside.volume())/geo.volume();
 
         // tensor times normal
         auto n_F = ig.centerUnitOuterNormal();
@@ -475,8 +476,9 @@ namespace Dune {
         auto A_s = param.A(cell_inside,local_inside);
         auto A_n = param.A(cell_outside,local_outside);
 
-        // face diameter; this should be revised for anisotropic meshes?
-        auto h_F = std::min(geo_inside.volume(),geo_outside.volume())/geo.volume(); // Houston!
+        // face diameter for anisotropic meshes taken from Paul Houston et al.
+        // this formula ensures coercivity of the bilinear form
+        auto h_F = std::min(geo_inside.volume(),geo_outside.volume())/geo.volume();
 
         // tensor times normal
         auto n_F = ig.centerUnitOuterNormal();
@@ -636,8 +638,9 @@ namespace Dune {
         auto local_inside = ref_el_inside.position(0,0);
         auto A_s = param.A(cell_inside,local_inside);
 
-        // face diameter
-        auto h_F = geo_inside.volume()/geo.volume(); // Houston!
+        // face diameter for anisotropic meshes taken from Paul Houston et al.
+        // this formula ensures coercivity of the bilinear form
+        auto h_F = geo_inside.volume()/geo.volume();
 
         // compute weights
         auto n_F = ig.centerUnitOuterNormal();
@@ -815,8 +818,9 @@ namespace Dune {
         auto local_inside = ref_el_inside.position(0,0);
         auto A_s = param.A(cell_inside,local_inside);
 
-        // face diameter
-        auto h_F = geo_inside.volume()/geo.volume(); // Houston!
+        // face diameter for anisotropic meshes taken from Paul Houston et al.
+        // this formula ensures coercivity of the bilinear form
+        auto h_F = geo_inside.volume()/geo.volume();
 
         // compute weights
         auto n_F = ig.centerUnitOuterNormal();
