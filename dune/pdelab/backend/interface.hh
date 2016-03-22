@@ -80,11 +80,6 @@ namespace Dune {
 
     } // namespace Backend
 
-    template<typename GridFunctionSpace, typename FieldType>
-    using BackendVectorSelector DUNE_DEPRECATED_MSG("Direct usage of BackendVectorSelector is deprecated and will be disabled after PDELab 2.4, use Dune::PDELab::Backend::Vector instead") = Backend::impl::BackendVectorSelector<GridFunctionSpace,FieldType>;
-
-    template<typename Backend_, typename VU, typename VV, typename E>
-    using BackendMatrixSelector DUNE_DEPRECATED_MSG("Direct usage of BackendMatrixSelector is deprecated and will be disabled after PDELab 2.4, use Dune::PDELab::Backend::Matrix instead") = Backend::impl::BackendMatrixSelector<Backend_,VU,VV,E>;
 
     namespace Backend{
 
