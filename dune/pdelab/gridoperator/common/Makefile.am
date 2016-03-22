@@ -9,8 +9,7 @@ gridoperatorcommon_HEADERS =	        \
 	diagonallocalmatrix.hh		\
 	gridoperatorutilities.hh	\
 	localassemblerenginebase.hh	\
-	localmatrix.hh			\
-	timesteppingparameterinterface.hh
+	localmatrix.hh
 
 include $(top_srcdir)/am/global-rules
 
