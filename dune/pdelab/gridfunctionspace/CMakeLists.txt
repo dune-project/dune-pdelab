@@ -15,7 +15,6 @@ install(FILES compositegridfunctionspace.hh
               subspace.hh
               subspacelocalfunctionspace.hh
               tags.hh
-              utility.hh
               vectorgridfunctionspace.hh
               vtk.hh
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/gridfunctionspace)
