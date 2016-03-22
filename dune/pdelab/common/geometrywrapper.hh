@@ -71,8 +71,6 @@ namespace Dune {
       typedef typename Geometry::ctype ctype;
       //! \todo Please doc me!
       enum { dimension=Entity::dimension };
-      //! \todo Please doc me!
-      static const int DUNE_DEPRECATED_MSG("Geometry::dimensionworld is deprecated in dune-grid 2.4") dimensionworld=Geometry::coorddimension;
       /** \brief Dimension of the image space of the geometry */
       enum { coorddimension=Geometry::coorddimension };
 
