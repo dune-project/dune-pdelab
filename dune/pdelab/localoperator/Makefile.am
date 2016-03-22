@@ -1,8 +1,6 @@
 commondir = $(includedir)/dune/pdelab/localoperator
 common_HEADERS =				\
 	callswitch.hh				\
-	cg_stokes.hh				\
-	convectiondiffusion.hh			\
 	convectiondiffusionccfv.hh		\
 	convectiondiffusiondg.hh		\
 	convectiondiffusionfem.hh		\
@@ -14,11 +12,7 @@ common_HEADERS =				\
 	dgnavierstokesparameter.hh		\
 	dgnavierstokesvelvecfem.hh 		\
 	dgparameter.hh				\
-	diffusion.hh				\
-	diffusionccfv.hh			\
-	diffusiondg.hh				\
 	diffusionmixed.hh			\
-	diffusionparam.hh			\
 	electrodynamic.hh			\
 	errorindicatordg.hh			\
 	eval.hh					\
@@ -27,9 +21,6 @@ common_HEADERS =				\
 	interface.hh				\
 	l2.hh					\
 	l2volumefunctional.hh			\
-	laplace.hh				\
-	laplacedirichletccfv.hh			\
-	laplacedirichletp12d.hh			\
 	linearacousticsdg.hh			\
 	linearacousticsparameter.hh		\
 	linearelasticity.hh                     \
@@ -44,15 +35,10 @@ common_HEADERS =				\
 	numericalresidual.hh			\
 	pattern.hh				\
 	permeability_adapter.hh			\
-	poisson.hh				\
 	scaled.hh				\
-	stokesdg.hh				\
-	stokesdg_vecfem.hh                      \
-	stokesdgparameter.hh                    \
 	stokesparameter.hh                      \
 	sum.hh					\
 	taylorhoodnavierstokes.hh  		\
-	transportccfv.hh			\
 	twophaseccfv.hh				\
 	weightedsum.hh				\
 	zero.hh
