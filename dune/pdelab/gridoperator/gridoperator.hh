@@ -1,6 +1,9 @@
 #ifndef DUNE_PDELAB_GRIDOPERATOR_GRIDOPERATOR_HH
 #define DUNE_PDELAB_GRIDOPERATOR_GRIDOPERATOR_HH
 
+// TODO: Remove deprecated nonoverlapping parameter. This will break
+// boilerplate code and needs to be done with care.
+
 #include <dune/common/tupleutility.hh>
 
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
