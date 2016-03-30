@@ -82,6 +82,12 @@ namespace oc {
       return os;
     }
 
+    friend std::istringstream& operator>>(std::istringstream& iss, OpCounter& f)
+    {
+      iss >> f._v;
+      return iss;
+    }
+
     F* data()
     {
       return &_v;
