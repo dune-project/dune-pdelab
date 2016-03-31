@@ -126,7 +126,6 @@ namespace Dune {
       BCType
       bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
       {
-        typename Traits::DomainType xglobal = is.geometry().global(x);
         return ConvectionDiffusionBoundaryConditions::Dirichlet;
       }
 
