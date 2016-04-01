@@ -305,7 +305,7 @@ namespace Dune {
                            R& r_s, R& r_n) const
       {
         // Define types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using PLSpace = TypeTree::Child<LFSV,_0>;
         using RF = typename PLSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType;

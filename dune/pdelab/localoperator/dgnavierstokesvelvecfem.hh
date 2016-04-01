@@ -164,7 +164,7 @@ namespace Dune {
         const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_v = child(lfsv,_0);
         const auto& lfsu_v = child(lfsu,_0);
@@ -286,7 +286,7 @@ namespace Dune {
         const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_v = child(lfsv,_0);
         const auto& lfsu_v = child(lfsu,_0);
@@ -410,7 +410,7 @@ namespace Dune {
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_v_s = child(lfsv_s,_0);
         const auto& lfsu_v_s = child(lfsu_s,_0);
@@ -601,7 +601,7 @@ namespace Dune {
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_v_s = child(lfsv_s,_0);
         const auto& lfsu_v_s = child(lfsu_s,_0);
@@ -804,7 +804,7 @@ namespace Dune {
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_v = child(lfsv,_0);
         const auto& lfsu_v = child(lfsu,_0);
@@ -948,7 +948,7 @@ namespace Dune {
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_v = child(lfsv,_0);
         const auto& lfsu_v = child(lfsu,_0);
@@ -1069,7 +1069,7 @@ namespace Dune {
         const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_v = child(lfsv,_0);
 
