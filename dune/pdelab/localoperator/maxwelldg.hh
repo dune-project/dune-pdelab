@@ -337,7 +337,7 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // Define types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using DGSpace = TypeTree::Child<LFSV,_0>;
         using RF = typename DGSpace::Traits::FiniteElementType::Traits
           ::LocalBasisType::Traits::RangeFieldType;
@@ -348,7 +348,6 @@ namespace Dune {
                       "need exactly dim*2 components!");
 
         // get local function space that is identical for all components
-        using namespace TypeTree::Indices;
         const auto& dgspace = child(lfsv,_0);
 
         // Reference to cell
@@ -444,7 +443,7 @@ namespace Dune {
         using std::sqrt;
 
         // Define types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using DGSpace = TypeTree::Child<LFSV,_0>;
         using DF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType;
@@ -453,7 +452,6 @@ namespace Dune {
         using size_type = typename DGSpace::Traits::SizeType;
 
         // get local function space that is identical for all components
-        using namespace TypeTree::Indices;
         const auto& dgspace_s = child(lfsv_s,_0);
         const auto& dgspace_n = child(lfsv_n,_0);
 
@@ -578,7 +576,7 @@ namespace Dune {
                            R& r_s) const
       {
         // Define types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using DGSpace = TypeTree::Child<LFSV,_0>;
         using DF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType;
@@ -587,7 +585,6 @@ namespace Dune {
         using size_type = typename DGSpace::Traits::SizeType;
 
         // get local function space that is identical for all components
-        using namespace TypeTree::Indices;
         const auto& dgspace_s = child(lfsv_s,_0);
 
         // References to inside cell
@@ -687,12 +684,11 @@ namespace Dune {
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
         // Define types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using DGSpace = TypeTree::Child<LFSV,_0>;
         using size_type = typename DGSpace::Traits::SizeType;
 
         // Get local function space that is identical for all components
-        using namespace TypeTree::Indices;
         const auto& dgspace = child(lfsv,_0);
 
         // Reference to cell
@@ -806,14 +802,13 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // Define types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using DGSpace = TypeTree::Child<LFSV,_0>;
         using RF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType;
         using size_type = typename DGSpace::Traits::SizeType;
 
         // get local function space that is identical for all components
-        using namespace TypeTree::Indices;
         const auto& dgspace = child(lfsv,_0);
 
         // Get geometry
@@ -851,12 +846,11 @@ namespace Dune {
                             M& mat) const
       {
         // Define types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using DGSpace = TypeTree::Child<LFSV,_0>;
         using size_type = typename DGSpace::Traits::SizeType;
 
         // Get local function space that is identical for all components
-        using namespace TypeTree::Indices;
         const auto& dgspace = child(lfsv,_0);
 
         // Get geometry

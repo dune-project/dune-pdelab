@@ -88,7 +88,7 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // define types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSU_V_PFS = TypeTree::Child<LFSU,_0>;
         using LFSU_V = TypeTree::Child<LFSU_V_PFS,_0>;
         using LFSU_P = TypeTree::Child<LFSU,_1>;
@@ -221,7 +221,7 @@ namespace Dune {
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
         // define types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_V_PFS = TypeTree::Child<LFSV,_0>;
         using LFSV_V = TypeTree::Child<LFSV_V_PFS,_0>;
         using LFSV_P = TypeTree::Child<LFSV,_1>;
@@ -293,7 +293,7 @@ namespace Dune {
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
       {
         // define types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_V_PFS = TypeTree::Child<LFSV,_0>;
         using LFSV_V = TypeTree::Child<LFSV_V_PFS,_0>;
         using RT_V = typename LFSV_V::Traits::FiniteElementType::
@@ -363,7 +363,7 @@ namespace Dune {
                             M& mat) const
       {
         // define types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSU_V_PFS = TypeTree::Child<LFSU,_0>;
         using LFSU_V = TypeTree::Child<LFSU_V_PFS,_0>;
         using LFSU_P = TypeTree::Child<LFSU,_1>;

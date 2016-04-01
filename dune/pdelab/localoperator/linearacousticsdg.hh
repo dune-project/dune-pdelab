@@ -196,7 +196,7 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // Get types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using DGSpace = TypeTree::Child<LFSV,_0>;
         using RF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType;
@@ -277,7 +277,7 @@ namespace Dune {
                            R& r_s, R& r_n) const
       {
         // Get types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using DGSpace = TypeTree::Child<LFSV,_0>;
         using DF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType;
@@ -400,7 +400,7 @@ namespace Dune {
                            R& r_s) const
       {
         // Get types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using DGSpace = TypeTree::Child<LFSV,_0>;
         using DF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType;
@@ -504,7 +504,7 @@ namespace Dune {
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
         // Get types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using DGSpace = TypeTree::Child<LFSV,_0>;
         using size_type = typename DGSpace::Traits::SizeType;
 
@@ -619,7 +619,7 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // get types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using DGSpace = TypeTree::Child<LFSV,_0>;
         using RF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType;
@@ -662,7 +662,7 @@ namespace Dune {
                             M & mat) const
       {
         // get types
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using DGSpace = TypeTree::Child<LFSV,_0>;
         using size_type = typename DGSpace::Traits::SizeType;
 

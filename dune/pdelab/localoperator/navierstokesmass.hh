@@ -48,7 +48,7 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_pfs_v = child(lfsv,_0);
         for(unsigned int i=0; i<LFSV_PFS_V::CHILDREN; ++i)
@@ -62,7 +62,7 @@ namespace Dune {
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
       {
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_pfs_v = child(lfsv,_0);
         for(unsigned int i=0; i<LFSV_PFS_V::CHILDREN; ++i)
@@ -200,7 +200,7 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_v = child(lfsv,_0);
         const auto& lfsu_v = child(lfsu,_0);
@@ -254,7 +254,7 @@ namespace Dune {
                             M& mat) const
       {
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_v = child(lfsv,_0);
         const auto& lfsu_v = child(lfsu,_0);

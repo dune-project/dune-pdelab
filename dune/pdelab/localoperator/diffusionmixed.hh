@@ -81,7 +81,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType;
 
         // select the two components
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         const auto& velocityspace = child(lfsu,_0);
         const auto& pressurespace = lfsu.template child<1>();
 
@@ -199,7 +199,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType;
 
         // select the pressure component
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         const auto& pressurespace = child(lfsv,_1);
 
         // References to the cell
@@ -239,7 +239,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType;
 
         // select the two velocity component
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         const auto& velocityspace = child(lfsv,_0);
 
         // dimensions

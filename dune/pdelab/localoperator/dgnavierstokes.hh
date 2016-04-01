@@ -98,7 +98,7 @@ namespace Dune {
         const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_pfs_v = child(lfsv,_0);
 
@@ -231,7 +231,7 @@ namespace Dune {
         const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_pfs_v = child(lfsv,_0);
 
@@ -368,7 +368,7 @@ namespace Dune {
         const unsigned int dim = IG::dimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_s_pfs_v = child(lfsv_s,_0);
         const auto& lfsv_n_pfs_v = child(lfsv_n,_0);
@@ -567,7 +567,7 @@ namespace Dune {
         const unsigned int dim = IG::dimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_s_pfs_v = child(lfsv_s,_0);
         const auto& lfsv_n_pfs_v = child(lfsv_n,_0);
@@ -776,7 +776,7 @@ namespace Dune {
         const unsigned int dim = IG::dimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_pfs_v = child(lfsv,_0);
 
@@ -961,7 +961,7 @@ namespace Dune {
         const unsigned int dim = IG::dimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_pfs_v = child(lfsv,_0);
 
@@ -1151,7 +1151,7 @@ namespace Dune {
         static const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_pfs_v = child(lfsv,_0);
 
@@ -1232,7 +1232,7 @@ namespace Dune {
         static const unsigned int dim = IG::dimension;
 
         // subspaces
-        using namespace TypeTree::Indices;
+        using namespace Indices;
         using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_pfs_v = child(lfsv,_0);
 
