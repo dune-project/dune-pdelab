@@ -456,6 +456,8 @@ namespace Dune {
         const int epsilon = prm.epsilonIPSymmetryFactor();
         const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
 
+        auto penalty_factor = prm.getFaceIP(geo,geo_inside,geo_outside);
+
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : quadratureRule(geo,qorder))
           {
@@ -463,8 +465,6 @@ namespace Dune {
             // position of quadrature point in local coordinates of element
             auto local_s = geo_in_inside.global(ip.position());
             auto local_n = geo_in_outside.global(ip.position());
-
-            auto penalty_factor = prm.getFaceIP(ig,ip.position());
 
             // values of velocity shape functions
             std::vector<Range_V> phi_v_s(lfsv_v_s.size());
@@ -543,7 +543,7 @@ namespace Dune {
               //================================================//
               // standard IP term integral
               //================================================//
-              r_s.accumulate(lfsv_v_s,i, penalty_factor * (jump*phi_v_s[i]) * weight);
+              r_s.accumulate(lfsv_v_s,i, penalty_factor * (jump*phi_v_s[i]) * factor);
 
               //================================================//
               // pressure-velocity-coupling in momentum equation
@@ -568,7 +568,7 @@ namespace Dune {
               //================================================//
               // standard IP term integral
               //================================================//
-              r_n.accumulate(lfsv_v_n,i, -penalty_factor * (jump*phi_v_n[i]) * weight);
+              r_n.accumulate(lfsv_v_n,i, -penalty_factor * (jump*phi_v_n[i]) * factor);
 
               //================================================//
               // pressure-velocity-coupling in momentum equation
@@ -647,6 +647,8 @@ namespace Dune {
         auto epsilon = prm.epsilonIPSymmetryFactor();
         auto incomp_scaling = prm.incompressibilityScaling(current_dt);
 
+        auto penalty_factor = prm.getFaceIP(geo,geo_inside,geo_outside);
+
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : quadratureRule(geo,qorder))
           {
@@ -654,8 +656,6 @@ namespace Dune {
             // position of quadrature point in local coordinates of element
             auto local_s = geo_in_inside.global(ip.position());
             auto local_n = geo_in_outside.global(ip.position());
-
-            auto penalty_factor = prm.getFaceIP(ig,ip.position());
 
             // values of velocity shape functions
             std::vector<Range_V> phi_v_s(lfsv_v_s.size());
@@ -703,7 +703,7 @@ namespace Dune {
 
                 mat_ss.accumulate(lfsv_v_s,i,lfsu_v_s,j, -0.5 * (flux_jac_phi_j*phi_v_s[i]) * factor);
                 mat_ss.accumulate(lfsv_v_s,i,lfsu_v_s,j, epsilon * 0.5 * (flux_jac_phi_i*phi_v_s[j]) * factor);
-                mat_ss.accumulate(lfsv_v_s,i,lfsu_v_s,j, penalty_factor * (phi_v_s[j]*phi_v_s[i]) * weight);
+                mat_ss.accumulate(lfsv_v_s,i,lfsu_v_s,j, penalty_factor * (phi_v_s[j]*phi_v_s[i]) * factor);
               }
 
               for(size_type j=0; j<lfsu_v_n.size(); j++) {
@@ -712,7 +712,7 @@ namespace Dune {
 
                 mat_sn.accumulate(lfsv_v_s,i,lfsu_v_n,j, -0.5 * (flux_jac_phi_j*phi_v_s[i]) * factor);
                 mat_sn.accumulate(lfsv_v_s,i,lfsu_v_n,j, -epsilon * 0.5 * (flux_jac_phi_i*phi_v_n[j]) * factor);
-                mat_sn.accumulate(lfsv_v_s,i,lfsu_v_n,j, -penalty_factor * (phi_v_n[j]*phi_v_s[i]) * weight);
+                mat_sn.accumulate(lfsv_v_s,i,lfsu_v_n,j, -penalty_factor * (phi_v_n[j]*phi_v_s[i]) * factor);
               }
 
               //============================================
@@ -747,7 +747,7 @@ namespace Dune {
 
                 mat_ns.accumulate(lfsv_v_n,i,lfsu_v_s,j, 0.5 * (flux_jac_phi_j*phi_v_n[i]) * factor);
                 mat_ns.accumulate(lfsv_v_n,i,lfsu_v_s,j, epsilon * 0.5 * (flux_jac_phi_i*phi_v_s[j]) * factor);
-                mat_ns.accumulate(lfsv_v_n,i,lfsu_v_s,j, -penalty_factor * (phi_v_s[j]*phi_v_n[i]) * weight);
+                mat_ns.accumulate(lfsv_v_n,i,lfsu_v_s,j, -penalty_factor * (phi_v_s[j]*phi_v_n[i]) * factor);
               }
 
               for(size_type j=0; j<lfsu_v_n.size(); j++) {
@@ -756,7 +756,7 @@ namespace Dune {
 
                 mat_nn.accumulate(lfsv_v_n,i,lfsu_v_n,j, 0.5 * (flux_jac_phi_j*phi_v_n[i]) * factor);
                 mat_nn.accumulate(lfsv_v_n,i,lfsu_v_n,j, -epsilon * 0.5 * (flux_jac_phi_i*phi_v_n[j]) * factor);
-                mat_nn.accumulate(lfsv_v_n,i,lfsu_v_n,j, penalty_factor * (phi_v_n[j]*phi_v_n[i]) * weight);
+                mat_nn.accumulate(lfsv_v_n,i,lfsu_v_n,j, penalty_factor * (phi_v_n[j]*phi_v_n[i]) * factor);
               }
 
               //============================================
@@ -843,13 +843,13 @@ namespace Dune {
         auto epsilon = prm.epsilonIPSymmetryFactor();
         auto incomp_scaling = prm.incompressibilityScaling(current_dt);
 
+        auto penalty_factor = prm.getFaceIP(geo,geo_inside);
+
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : quadratureRule(geo,qorder))
           {
             // position of quadrature point in local coordinates of element
             auto local = geo_in_inside.global(ip.position());
-
-            auto penalty_factor = prm.getFaceIP(ig,ip.position() );
 
             // values of velocity shape functions
             std::vector<Range_V> phi_v(lfsv_v.size());
@@ -909,7 +909,7 @@ namespace Dune {
                 //================================================//
                 // standard IP term integral
                 //================================================//
-                r.accumulate(lfsv_v,i, (jump*phi_v[i]) * penalty_factor * weight);
+                r.accumulate(lfsv_v,i, mu * (jump*phi_v[i]) * penalty_factor * weight);
 
                 //================================================//
                 // pressure-velocity-coupling in momentum equation
@@ -987,13 +987,13 @@ namespace Dune {
         auto epsilon = prm.epsilonIPSymmetryFactor();
         auto incomp_scaling = prm.incompressibilityScaling(current_dt);
 
+        auto penalty_factor = prm.getFaceIP(geo,geo_inside);
+
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : quadratureRule(geo,qorder))
           {
             // position of quadrature point in local coordinates of element
             auto local = geo_in_inside.global(ip.position());
-
-            auto penalty_factor = prm.getFaceIP(ig,ip.position() );
 
             // values of velocity shape functions
             std::vector<Range_V> phi_v(lfsv_v.size());
@@ -1036,7 +1036,7 @@ namespace Dune {
                   //================================================//
                   // standard IP term integral
                   //================================================//
-                  mat.accumulate(lfsv_v,i,lfsu_v,j, (phi_v[j]*phi_v[i]) * penalty_factor * weight);
+                  mat.accumulate(lfsv_v,i,lfsu_v,j, mu * (phi_v[j]*phi_v[i]) * penalty_factor * weight);
                 }
 
                 //================================================//
