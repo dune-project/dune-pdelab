@@ -156,8 +156,8 @@ namespace Dune {
                                     B& b,
                                     V& v,
                                     J& j)
-        : _rho(config.get<double>("rho"))
-        , _mu(config.get<double>("mu"))
+        : _rho(config.get<RF>("rho"))
+        , _mu(config.get<RF>("mu"))
         , _f(f)
         , _b(b)
         , _v(v)
