@@ -961,7 +961,7 @@ namespace Dune {
       }
 
       //! set time in parameter class
-      void setTime (double t)
+      void setTime (Real t)
       {
         Dune::PDELab::InstationaryLocalOperatorDefaultMethods<typename T::Traits::RangeFieldType>::setTime(t);
         param.setTime(t);
