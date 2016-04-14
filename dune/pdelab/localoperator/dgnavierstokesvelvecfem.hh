@@ -1079,6 +1079,9 @@ namespace Dune {
         using Range_V = typename BasisSwitch_V::Range;
         using size_type = typename LFSV::Traits::SizeType;
 
+        // Get cell
+        const auto& cell = eg.entity();
+
         // Get geometries
         auto geo = eg.geometry();
 
@@ -1100,7 +1103,7 @@ namespace Dune {
             auto weight = ip.weight() * geo.integrationElement(ip.position());
 
             // evaluate source term
-            auto fval(prm.f(eg,local));
+            auto fval(prm.f(cell,local));
 
             //================================================//
             // \int (f*v)

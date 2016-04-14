@@ -185,7 +185,7 @@ namespace Dune {
       f(const EG& e, const typename Traits::Domain& x) const
       {
         typename F::Traits::RangeType fvalue;
-        return evaluateVelocityGridFunction(_f,e.entity(),x);
+        return evaluateVelocityGridFunction(_f,e,x);
       }
 
       //! boundary condition type from local intersection coordinate
