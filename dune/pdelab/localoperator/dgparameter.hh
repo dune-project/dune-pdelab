@@ -1,12 +1,14 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_DGPARAMETER_HH
 #define DUNE_PDELAB_LOCALOPERATOR_DGPARAMETER_HH
 
+#warning This file is deprecated and will be removed. Use dune/pdelab/localoperator/dginteriorpenaltyparameter.hh instead!
+
 #include <dune/common/parametertreeparser.hh>
 
 namespace Dune {
     namespace PDELab {
 
-        /** 
+        /**
             \brief This is the default implementation for the interior
             penalty factor.
 
@@ -17,7 +19,7 @@ namespace Dune {
             ig.geometry().volume().
         */
         template <typename RF>
-        class DefaultInteriorPenalty
+        class DUNE_DEPRECATED_MSG("DefaultInteriorPenalty is deprecated. Please use the implementation from dune/pdelab/localoperator/dginteriorpenaltyparameter.hh instead!") DefaultInteriorPenalty
         {
         private:
             RF beta;
@@ -47,7 +49,7 @@ namespace Dune {
                         sigma = 3.9;
                     return;
                 }
-                // obb sigma = 0, epsilon = 
+                // obb sigma = 0, epsilon =
                 if (s == "obb")
                 {
                     beta = 1;
