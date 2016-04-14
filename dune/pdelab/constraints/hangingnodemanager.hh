@@ -81,10 +81,8 @@ namespace Dune {
 
       typedef typename Grid::LeafGridView GridView;
       enum {dim = GridView::dimension};
-      typedef typename GridView::template Codim<0>::EntityPointer CellEntityPointer;
       typedef typename GridView::template Codim<0>::Entity Cell;
 
-      typedef typename GridView::template Codim<dim>::EntityPointer VertexEntityPointer;
       typedef typename GridView::template Codim<0>::Iterator Iterator;
       typedef typename GridView::IntersectionIterator IntersectionIterator;
       typedef typename GridView::Grid::ctype ctype;

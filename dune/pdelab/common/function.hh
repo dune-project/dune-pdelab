@@ -380,9 +380,8 @@ namespace Dune {
       inline void evaluate (const typename Traits::DomainType& x,
                             typename Traits::RangeType& y) const
       {
-        typename GF::Traits::GridViewType::Grid::Traits::template Codim<0>::EntityPointer
-          ep = hsearch.findEntity(x);
-        gf.evaluate(*ep, ep->geometry().local(x), y);
+        auto e = hsearch.findEntity(x);
+        gf.evaluate(e,e.geometry().local(x),y);
       }
 
     private:
