@@ -208,16 +208,16 @@ namespace Dune {
         return i.centerUnitOuterNormal();
       }
 
-      /*! @brief return Entity on the inside of this
-        intersection. That is the Entity where we started this.
+      /*! @brief return Entity on the inside of this intersection.
+          That is the Entity where we started this.
       */
       Entity inside() const
       {
         return i.inside();
       }
 
-      /*! @brief return Entity on the inside of this
-        intersection. That is the Entity where we started this.
+      /*! @brief return Entity on the inside of this intersection.
+          That is the Entity where we started this.
       */
       Entity insideHostEntity() const
       {
@@ -225,8 +225,8 @@ namespace Dune {
         return i.inside();
       }
 
-      /*! @brief return Entity on the outside of this
-        intersection. That is the neighboring Entity.
+      /*! @brief return Entity on the outside of this intersection.
+          That is the neighboring Entity.
 
         @warning Don't call this method if there is no neighboring Entity
         (neighbor() returns false). In this case the result is undefined.
