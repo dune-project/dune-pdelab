@@ -85,7 +85,26 @@ namespace Dune {
         initFromString(method);
       }
 
-      //! Constructor
+      /** \brief Constructor that parses values from parameter tree.
+
+          In order to parse the values correctly
+          the ini-file should have the following structure:
+
+          \code
+          [parameters]
+          rho = 1.0
+          mu = 1.0
+          [parameters.dg]
+          epsilon = -1
+          sigma = 6.0
+          beta = 1.0
+          \endcode
+
+          And invocation in the code:
+          \code
+          navierstokes_parameters(configuration.sub("parameters"), ... );
+          \endcode
+       */
       DGNavierStokesParameters(const Dune::ParameterTree& configuration,
                                F& f, B& b, V& v, J& j)
         : Base(configuration,f,b,v,j)
