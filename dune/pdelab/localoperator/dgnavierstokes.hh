@@ -33,7 +33,7 @@ namespace Dune {
     class DGNavierStokes :
       public LocalOperatorDefaultFlags,
       public FullSkeletonPattern, public FullVolumePattern,
-      public InstationaryLocalOperatorDefaultMethods<double>
+      public InstationaryLocalOperatorDefaultMethods<typename PRM::Traits::RangeField>
     {
       using BC = StokesBoundaryCondition;
       using RF = typename PRM::Traits::RangeField;
@@ -78,7 +78,7 @@ namespace Dune {
       {}
 
       // Store current dt
-      void preStep (RealType , RealType dt, int )
+      void preStep (Real , Real dt, int )
       {
         current_dt = dt;
       }

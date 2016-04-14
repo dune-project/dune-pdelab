@@ -90,8 +90,8 @@ namespace Dune {
     }
   };
 
-    /** \brief A local operator for solving the stokes equation using
-        a DG discretization and a vector-valued finite element map
+    /** \brief A local operator for solving the Navier-Stokes equations
+        using a DG discretization and a vector-valued finite element map
         for the velocity grid function space.
 
         \tparam PRM Parameter class for this local operator.
@@ -101,7 +101,7 @@ namespace Dune {
     class DGNavierStokesVelVecFEM :
       public LocalOperatorDefaultFlags,
       public FullSkeletonPattern, public FullVolumePattern,
-      public InstationaryLocalOperatorDefaultMethods<double>
+      public InstationaryLocalOperatorDefaultMethods<typename PRM::Traits::RangeField>
     {
       using BC = StokesBoundaryCondition;
       using RF = typename PRM::Traits::RangeField;
@@ -145,7 +145,7 @@ namespace Dune {
       {}
 
       // Store current dt
-      void preStep (RealType , RealType dt, int )
+      void preStep (Real , Real dt, int )
       {
         current_dt = dt;
       }
