@@ -256,7 +256,7 @@ namespace Dune {
     template<class GFS, class M, class X, class Y>
     class RestrictedSuperLUSubdomainSolver : public Dune::Preconditioner<X,Y>
     {
-      typedef typename M::BaseT ISTLM;
+      typedef typename M::Container ISTLM;
 
     public:
       //! \brief The domain type of the preconditioner.
@@ -378,12 +378,12 @@ namespace Dune {
         : implementation(implementation_)
       {}
 
-      virtual typename X::BaseT::field_type dot(const X& x, const X& y)
+      virtual typename X::Container::field_type dot(const X& x, const X& y)
       {
         return implementation.dot(x,y);
       }
 
-      virtual typename X::BaseT::field_type norm (const X& x)
+      virtual typename X::Container::field_type norm (const X& x)
       {
         using namespace std;
         return sqrt(static_cast<double>(this->dot(x,x)));
@@ -983,11 +983,6 @@ namespace Dune {
         \param[in] params_ a parameter object of Type Dune::Amg::Parameters
       */
       void setParameters(const Parameters& params_)
-      {
-        params = params_;
-      }
-
-      void setparams(Parameters params_) DUNE_DEPRECATED_MSG("setparams() is deprecated, use setParameters() instead")
       {
         params = params_;
       }

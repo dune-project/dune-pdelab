@@ -235,11 +235,11 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   gridoperator.residual(x0,r);
 
   // make ISTL solver
-  Dune::MatrixAdapter<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> opa(native(m));
+  Dune::MatrixAdapter<typename M::Container,typename DV::Container,typename RV::Container> opa(native(m));
   //ISTLOnTheFlyOperator opb(gridoperator);
-  Dune::SeqSSOR<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ssor(native(m),1,1.0);
-  Dune::SeqILU0<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ilu0(native(m),1.0);
-  Dune::Richardson<typename DV::BaseT,typename RV::BaseT> richardson(1.0);
+  Dune::SeqSSOR<typename M::Container,typename DV::Container,typename RV::Container> ssor(native(m),1,1.0);
+  Dune::SeqILU0<typename M::Container,typename DV::Container,typename RV::Container> ilu0(native(m),1.0);
+  Dune::Richardson<typename DV::Container,typename RV::Container> richardson(1.0);
 
 //   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
 //     Dune::Amg::FirstDiagonal> > Criterion;
@@ -253,9 +253,9 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 //   typedef Dune::Amg::AMG<Dune::MatrixAdapter<M,V,V>,V,Smoother> AMG;
 //   AMG amg(opa,criterion,smootherArgs,1,1);
 
-  Dune::CGSolver<typename DV::BaseT> solvera(opa,ilu0,1E-10,5000,2);
+  Dune::CGSolver<typename DV::Container> solvera(opa,ilu0,1E-10,5000,2);
   // FIXME: Use ISTLOnTheFlyOperator in the second solver again
-  Dune::CGSolver<typename DV::BaseT> solverb(opa,richardson,1E-10,5000,2);
+  Dune::CGSolver<typename DV::Container> solverb(opa,richardson,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
   // solve the jacobian system

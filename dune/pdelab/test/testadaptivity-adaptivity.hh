@@ -15,7 +15,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Coord,Real,1> FEM;
   FEM fem(gv);
   typedef Dune::PDELab::ConformingDirichletConstraints CON;     // constraints class
-  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::istl::VectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
   gfs.name("solution");
@@ -27,7 +27,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   Dune::PDELab::constraints( bctype, gfs, cc );               // assemble constraints
 
   // <<<4>>> make DOF vector
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,Real>::Type U;
+  typedef typename Dune::PDELab::Backend::Vector<GFS,Real> U;
   U u(gfs,0.0);
   typedef BCExtension<GV,Real> G;                        // boundary value + extension
   G g(gv);
@@ -65,7 +65,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
     typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,Dune::PDELab::NoConstraints,VBE> P0GFS;
     typedef Dune::PDELab::ExampleErrorEstimator ESTLOP;
     typedef Dune::PDELab::EmptyTransformation NoTrafo;
-    typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,Real>::Type U0;
+    typedef typename Dune::PDELab::Backend::Vector<P0GFS,Real> U0;
 
     // <<<8>>> Solve linear problem.
     slp.apply();

@@ -11,7 +11,6 @@ SUBDIRS =					\
 	gridfunctionspace		\
 	gridoperator			\
 	instationary				\
-	linearsolver			\
 	localoperator			\
 	newton					\
 	ordering				\

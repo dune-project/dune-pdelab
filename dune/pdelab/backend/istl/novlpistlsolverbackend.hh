@@ -920,11 +920,6 @@ namespace Dune {
         params = params_;
       }
 
-      void setparams(Parameters params_) DUNE_DEPRECATED_MSG("setparams() is deprecated, use setParameters() instead")
-      {
-        params = params_;
-      }
-
       /**
        * @brief Get the parameters describing the behaviuour of AMG.
        *
