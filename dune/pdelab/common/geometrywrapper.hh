@@ -66,8 +66,6 @@ namespace Dune {
       //! \todo Please doc me!
       typedef typename I::Entity Entity;
       //! \todo Please doc me!
-      typedef typename I::EntityPointer EntityPointer;
-      //! \todo Please doc me!
       typedef typename Geometry::ctype ctype;
       //! \todo Please doc me!
       enum { dimension=Entity::dimension };
@@ -210,54 +208,30 @@ namespace Dune {
         return i.centerUnitOuterNormal();
       }
 
-      /*! @brief return EntityPointer to the Entity on the inside of this
-        intersection. That is the Entity where we started this .
+      /*! @brief return Entity on the inside of this
+        intersection. That is the Entity where we started this.
       */
-#ifdef DOXYGEN
-      Entity
-#else
-      typename std::conditional<
-        std::is_same<
-          decltype(i.inside()),
-          Entity
-          >::value,
-        Entity,
-        EntityPointer
-        >::type
-#endif
-      inside() const
+      Entity inside() const
       {
         return i.inside();
       }
 
-      /*! @brief return EntityPointer to the Entity on the inside of this
-        intersection. That is the Entity where we started this .
+      /*! @brief return Entity on the inside of this
+        intersection. That is the Entity where we started this.
       */
-      EntityPointer insideHostEntity() const
+      Entity insideHostEntity() const
       {
         DUNE_THROW(Dune::Exception,"This should never be called.");
         return i.inside();
       }
 
-      /*! @brief return EntityPointer to the Entity on the outside of this
+      /*! @brief return Entity on the outside of this
         intersection. That is the neighboring Entity.
 
         @warning Don't call this method if there is no neighboring Entity
         (neighbor() returns false). In this case the result is undefined.
       */
-#ifdef DOXYGEN
-      Entity
-#else
-      typename std::conditional<
-        std::is_same<
-          decltype(i.inside()),
-          Entity
-          >::value,
-        Entity,
-        EntityPointer
-        >::type
-#endif
-      outside() const
+      Entity outside() const
       {
         return i.outside();
       }
