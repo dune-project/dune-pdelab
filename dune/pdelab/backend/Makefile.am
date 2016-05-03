@@ -6,7 +6,7 @@ common_HEADERS = eigen.hh			\
                  interface.hh                   \
                  istl.hh                        \
                  simple.hh                      \
-                 solver.hh                      \
+                 solver.hh
 
 include $(top_srcdir)/am/global-rules
 
