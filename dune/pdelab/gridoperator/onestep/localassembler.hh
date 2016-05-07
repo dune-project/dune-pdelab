@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_ONESTEP_LOCAL_ASSEMBLER_HH
-#define DUNE_PDELAB_ONESTEP_LOCAL_ASSEMBLER_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_ONESTEP_LOCALASSEMBLER_HH
+#define DUNE_PDELAB_GRIDOPERATOR_ONESTEP_LOCALASSEMBLER_HH
 
 #include <memory>
 
@@ -16,6 +16,7 @@
 #include <dune/pdelab/gridoperator/onestep/jacobianengine.hh>
 #include <dune/pdelab/gridoperator/onestep/prestageengine.hh>
 #include <dune/pdelab/gridoperator/onestep/jacobianresidualengine.hh>
+#include <dune/pdelab/gridoperator/onestep/jacobianapplyengine.hh>
 
 #include <dune/pdelab/instationary/onestepparameter.hh>
 
@@ -63,6 +64,8 @@ namespace Dune{
       typedef typename LA1::LocalPatternAssemblerEngine LocalExplicitPatternAssemblerEngine;
       typedef OneStepExplicitLocalJacobianResidualAssemblerEngine<OneStepLocalAssembler>
       LocalExplicitJacobianResidualAssemblerEngine;
+
+      typedef OneStepLocalJacobianApplyAssemblerEngine<OneStepLocalAssembler> LocalJacobianApplyAssemblerEngine;
       //! @}
 
       void static_checks(){
@@ -98,7 +101,8 @@ namespace Dune{
           const_residual(const_residual_),
           time(0.0), dt_mode(MultiplyOperator0ByDT), stage_(0),
           pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this),
-          explicit_jacobian_residual_engine(*this)
+          explicit_jacobian_residual_engine(*this),
+          jacobian_apply_engine(*this)
       { static_checks(); }
 
 #if HAVE_TBB
@@ -116,7 +120,8 @@ namespace Dune{
           dt_mode(other.dt_mode),
           stage_(other.stage_),
           pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this),
-          explicit_jacobian_residual_engine(*this)
+          explicit_jacobian_residual_engine(*this),
+          jacobian_apply_engine(*this)
       {}
 
       //! join state from other local assembler
@@ -266,6 +271,16 @@ namespace Dune{
         return explicit_jacobian_residual_engine;
       }
 
+      //! Returns a reference to the requested engine. This engine is
+      //! completely configured and ready to use.
+      LocalJacobianApplyAssemblerEngine & localJacobianApplyAssemblerEngine
+      (typename Traits::Residual & r, const typename Traits::Solution & x)
+      {
+        jacobian_apply_engine.setSolution(x);
+        jacobian_apply_engine.setResidual(r);
+        return jacobian_apply_engine;
+      }
+
       //! @}
 
       LA0 &child0() { return *la0; }
@@ -326,6 +341,7 @@ namespace Dune{
       LocalResidualAssemblerEngine residual_engine;
       LocalJacobianAssemblerEngine jacobian_engine;
       LocalExplicitJacobianResidualAssemblerEngine explicit_jacobian_residual_engine;
+      LocalJacobianApplyAssemblerEngine jacobian_apply_engine;
       //! @}
     };
 

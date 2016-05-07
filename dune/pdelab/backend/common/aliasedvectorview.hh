@@ -123,6 +123,7 @@ namespace Dune {
       typedef typename LFSCache::ContainerIndex ContainerIndex;
 
       using value_type = ElementType;
+      using weight_type = ElementType;
 
       using ConstAliasedVectorView<V,LFSC>::cache;
       using ConstAliasedVectorView<V,LFSC>::size;
@@ -131,10 +132,13 @@ namespace Dune {
       // with clang not finding the const overloads of the operator from the base class.
       using ConstAliasedVectorView<V,LFSC>::operator[];
 
-      AliasedVectorView() = default;
+      AliasedVectorView()
+        : weight_(1.0)
+      {}
 
       AliasedVectorView(Container& container)
         : ConstAliasedVectorView<V,LFSC>(container)
+        , weight_(1.0)
       {}
 
       void commit()
@@ -172,6 +176,18 @@ namespace Dune {
         return *(this->_container);
       }
 
+      void setWeight(weight_type weight)
+      {
+        weight_ = weight;
+      }
+
+      weight_type weight()
+      {
+        return weight_;
+      }
+
+    private :
+      weight_type weight_;
     };
 
   } // namespace PDELab

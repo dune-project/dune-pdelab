@@ -1,6 +1,7 @@
-
-#ifndef DUNE_PDELAB_ONESTEP_OPERATOR_HH
-#define DUNE_PDELAB_ONESTEP_OPERATOR_HH
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
+// vi: set et ts=2 sw=2 sts=2:
+#ifndef DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
+#define DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
 
 #include <dune/pdelab/instationary/onestep.hh>
 #include <dune/pdelab/gridoperator/onestep/localassembler.hh>
@@ -192,6 +193,18 @@ namespace Dune{
            {
              return la.localExplicitJacobianResidualAssemblerEngine(a,r0,r1,x);
            },
+           local_assembler);
+      }
+
+      //! Apply jacobian without explicitly assembling it
+      void jacobian_apply(const Domain& x, Range& r) const
+      {
+        if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
+
+        typedef typename LocalAssembler::LocalJacobianApplyAssemblerEngine JacobianApplyEngine;
+        global_assembler.assemble
+          ([&r,&x](LocalAssembler &la) -> JacobianApplyEngine&
+                { return la.localJacobianApplyAssemblerEngine(r,x); },
            local_assembler);
       }
 

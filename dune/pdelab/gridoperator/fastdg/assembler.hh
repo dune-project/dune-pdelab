@@ -1,5 +1,7 @@
-#ifndef DUNE_PDELAB_DEFAULT_ASSEMBLER_HH
-#define DUNE_PDELAB_DEFAULT_ASSEMBLER_HH
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
+// vi: set et ts=2 sw=2 sts=2:
+#ifndef DUNE_PDELAB_GRIDOPERATOR_FASTDG_ASSEMBLER_HH
+#define DUNE_PDELAB_GRIDOPERATOR_FASTDG_ASSEMBLER_HH
 
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
@@ -12,7 +14,7 @@ namespace Dune{
   namespace PDELab{
 
     /**
-       \brief The assembler for standard DUNE grid
+       \brief The fast DG assembler for standard DUNE grid.
 
        * \tparam GFSU GridFunctionSpace for ansatz functions
        * \tparam GFSV GridFunctionSpace for test functions
@@ -20,7 +22,7 @@ namespace Dune{
        */
 
     template<typename GFSU, typename GFSV, typename CU, typename CV, bool nonoverlapping_mode=false>
-    class DefaultAssembler {
+    class FastDGAssembler {
     public:
 
       //! Types related to current grid view
@@ -42,7 +44,7 @@ namespace Dune{
       //! Static check on whether this is a Galerkin method
       static const bool isGalerkinMethod = Dune::is_same<GFSU,GFSV>::value;
 
-      DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_, const CU& cu_, const CV& cv_)
+      FastDGAssembler (const GFSU& gfsu_, const GFSV& gfsv_, const CU& cu_, const CV& cv_)
         : gfsu(gfsu_)
         , gfsv(gfsv_)
         , cu(cu_)
@@ -53,7 +55,7 @@ namespace Dune{
         , lfsvn(gfsv_)
       { }
 
-      DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_)
+      FastDGAssembler (const GFSU& gfsu_, const GFSV& gfsv_)
         : gfsu(gfsu_)
         , gfsv(gfsv_)
         , cu()
@@ -98,7 +100,7 @@ namespace Dune{
       template<class LocalAssemblerEngine>
       void assemble(LocalAssemblerEngine & assembler_engine) const
       {
-        const bool fast = false;
+        const bool fast = true;
         typedef LFSIndexCache<LFSU,CU,fast> LFSUCache;
 
         typedef LFSIndexCache<LFSV,CV,fast> LFSVCache;
@@ -315,8 +317,7 @@ namespace Dune{
       mutable LFSU lfsun;
       mutable LFSV lfsvn;
 
-    };
-
-  }
-}
+    }; // end class FastDGAssembler
+  } // end namespace PDELab
+} // end namespace Dune
 #endif

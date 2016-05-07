@@ -52,6 +52,7 @@ namespace Dune {
       typedef typename LFSU::Traits::GridFunctionSpace::Ordering::Traits::ContainerIndex ColContainerIndex;
 
       using value_type = ElementType;
+      using weight_type = ElementType;
 
       ConstAliasedMatrixView()
         : _container(nullptr)
@@ -192,16 +193,19 @@ namespace Dune {
       using BaseT::M;
 
       using typename BaseT::value_type;
+      using typename BaseT::weight_type;
 
       // Explicitly pull in operator() from the base class to work around a problem
       // with clang not finding the const overloads of the operator from the base class.
       using BaseT::operator();
 
       AliasedMatrixView()
+        : weight_(1.0)
       {}
 
       AliasedMatrixView(Container& container)
         : BaseT(container)
+        , weight_(1.0)
       {}
 
       void commit()
@@ -300,6 +304,18 @@ namespace Dune {
         return *(this->_container);
       }
 
+      void setWeight(weight_type weight)
+      {
+        weight_ = weight;
+      }
+
+      weight_type weight()
+      {
+        return weight_;
+      }
+
+    private :
+      weight_type weight_;
     };
 
 

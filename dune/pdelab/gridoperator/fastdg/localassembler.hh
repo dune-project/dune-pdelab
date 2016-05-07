@@ -1,5 +1,7 @@
-#ifndef DUNE_PDELAB_DEFAULT_LOCAL_ASSEMBLER_HH
-#define DUNE_PDELAB_DEFAULT_LOCAL_ASSEMBLER_HH
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
+// vi: set et ts=2 sw=2 sts=2:
+#ifndef DUNE_PDELAB_GRIDOPERATOR_FASTDG_LOCALASSEMBLER_HH
+#define DUNE_PDELAB_GRIDOPERATOR_FASTDG_LOCALASSEMBLER_HH
 
 #include <memory>
 
@@ -11,10 +13,10 @@
 
 #include <dune/typetree/typetree.hh>
 
-#include <dune/pdelab/gridoperator/default/residualengine.hh>
-#include <dune/pdelab/gridoperator/default/patternengine.hh>
-#include <dune/pdelab/gridoperator/default/jacobianengine.hh>
-#include <dune/pdelab/gridoperator/default/jacobianapplyengine.hh>
+#include <dune/pdelab/gridoperator/fastdg/residualengine.hh>
+#include <dune/pdelab/gridoperator/fastdg/patternengine.hh>
+#include <dune/pdelab/gridoperator/fastdg/jacobianengine.hh>
+#include <dune/pdelab/gridoperator/fastdg/jacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
@@ -36,7 +38,7 @@ namespace Dune{
 
     */
     template<typename GO, typename LOP, bool nonoverlapping_mode = false>
-    class DefaultLocalAssembler :
+    class FastDGLocalAssembler :
       public Dune::PDELab::LocalAssemblerBase<typename GO::Traits::MatrixBackend,
                                               typename GO::Traits::TrialGridFunctionSpaceConstraints,
                                               typename GO::Traits::TestGridFunctionSpaceConstraints>
@@ -76,21 +78,21 @@ namespace Dune{
       // Types of local function spaces
       typedef Dune::PDELab::LocalFunctionSpace<GFSU, Dune::PDELab::TrialSpaceTag> LFSU;
       typedef Dune::PDELab::LocalFunctionSpace<GFSV, Dune::PDELab::TestSpaceTag> LFSV;
-      typedef LFSIndexCache<LFSU,CU,false> LFSUCache;
-      typedef LFSIndexCache<LFSV,CV,false> LFSVCache;
+      typedef LFSIndexCache<LFSU,CU,true> LFSUCache;
+      typedef LFSIndexCache<LFSV,CV,true> LFSVCache;
 
       //! @}
 
       //! The local assembler engines
       //! @{
-      typedef DefaultLocalPatternAssemblerEngine<DefaultLocalAssembler> LocalPatternAssemblerEngine;
-      typedef DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler> LocalResidualAssemblerEngine;
-      typedef DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler> LocalJacobianAssemblerEngine;
-      typedef DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalJacobianApplyAssemblerEngine;
+      typedef FastDGLocalPatternAssemblerEngine<FastDGLocalAssembler> LocalPatternAssemblerEngine;
+      typedef FastDGLocalResidualAssemblerEngine<FastDGLocalAssembler> LocalResidualAssemblerEngine;
+      typedef FastDGLocalJacobianAssemblerEngine<FastDGLocalAssembler> LocalJacobianAssemblerEngine;
+      typedef FastDGLocalJacobianApplyAssemblerEngine<FastDGLocalAssembler> LocalJacobianApplyAssemblerEngine;
       //! @}
 
       //! Constructor with empty constraints
-      DefaultLocalAssembler (LOP & lop_, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
+      FastDGLocalAssembler (LOP & lop_, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : lop(stackobject_to_shared_ptr(lop_)),
           weight_(1.0),
           doPreProcessing_(true),
@@ -100,7 +102,7 @@ namespace Dune{
       {}
 
       //! Constructor for non trivial constraints
-      DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_,
+      FastDGLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_,
                              shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : Base(cu_, cv_),
           lop(stackobject_to_shared_ptr(lop_)),
@@ -113,7 +115,7 @@ namespace Dune{
 
 #if HAVE_TBB
       //! Splitting constructor
-      DefaultLocalAssembler(DefaultLocalAssembler &other, tbb::split)
+      FastDGLocalAssembler(FastDGLocalAssembler &other, tbb::split)
         : Base(other),
           lop(std::make_shared<LOP>(*other.lop, tbb::split())),
           weight_(other.weight_),
@@ -129,7 +131,7 @@ namespace Dune{
       {}
 
       //! join state from other local assembler
-      void join(DefaultLocalAssembler &other)
+      void join(FastDGLocalAssembler &other)
       {
         lop->join(*other.lop);
       }
@@ -262,6 +264,27 @@ namespace Dune{
         doPostProcessing_ = v;
       }
 
+      template<typename GFSV, typename GC, typename C>
+      void set_trivial_rows(const GFSV& gfsv, GC& globalcontainer, const C& c) const
+      {
+        typedef typename C::const_iterator global_row_iterator;
+        for (global_row_iterator cit = c.begin(); cit != c.end(); ++cit)
+          globalcontainer.clear_row_block(cit->first,1);
+      }
+
+      template<typename GFSV, typename GC>
+      void set_trivial_rows(const GFSV& gfsv, GC& globalcontainer, const EmptyTransformation& c) const
+      {
+      }
+
+      template<typename GFSV, typename GC>
+      void handle_dirichlet_constraints(const GFSV& gfsv, GC& globalcontainer) const
+      {
+        globalcontainer.flush();
+        set_trivial_rows(gfsv,globalcontainer,*this->pconstraintsv);
+        globalcontainer.finalize();
+      }
+
     private:
 
       //! The local operator
@@ -288,8 +311,7 @@ namespace Dune{
 
       bool _reconstruct_border_entries;
 
-    };
-
-  }
-}
+    }; // end class FastDGLocalAssembler
+  } // end namespace PDELab
+} // end namespace Dune
 #endif

@@ -82,6 +82,12 @@ namespace oc {
       return os;
     }
 
+    friend std::istringstream& operator>>(std::istringstream& iss, OpCounter& f)
+    {
+      iss >> f._v;
+      return iss;
+    }
+
     F* data()
     {
       return &_v;
@@ -183,6 +189,11 @@ namespace oc {
     static void multiplications(std::size_t n)
     {
       counters.multiplication_count += n;
+    }
+
+    static void divisions(std::size_t n)
+    {
+      counters.division_count += n;
     }
 
     static void reset()

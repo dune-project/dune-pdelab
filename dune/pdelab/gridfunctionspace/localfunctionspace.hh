@@ -330,7 +330,7 @@ namespace Dune {
          \param node reference to the derived node, the address must be the same as this
          \param e entity to bind to
        */
-      template<typename NodeType, bool fast = true>
+      template<typename NodeType, bool fast = false>
       void bind (NodeType& node, const typename Traits::Element& e, std::integral_constant<bool,fast> = std::integral_constant<bool,fast>{});
     };
 
@@ -380,10 +380,10 @@ namespace Dune {
       template<typename>
       friend struct ClearSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct ComputeSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct FillIndicesVisitor;
 
     public:
@@ -409,7 +409,7 @@ namespace Dune {
       {}
 
       //! \brief bind local function space to entity
-      template<bool fast = true>
+      template<bool fast = false>
       void bind (const typename Traits::Element& e, std::integral_constant<bool,fast> fast_ = std::integral_constant<bool,fast>{})
       {
         // call method on base class, this avoid the barton neckman trick
@@ -487,7 +487,7 @@ namespace Dune {
       {}
 
       //! \brief bind local function space to entity
-      template<bool fast = true>
+      template<bool fast = false>
       void bind (const typename Traits::Element& e, std::integral_constant<bool,fast> fast_ = std::integral_constant<bool,fast>{})
       {
         // call method on base class, this avoid the barton neckman trick
@@ -660,7 +660,7 @@ namespace Dune {
       }
 
       //! \brief bind local function space to entity
-      template<bool fast = true>
+      template<bool fast = false>
       void bind (const typename Traits::Element& e, std::integral_constant<bool,fast> fast_ = std::integral_constant<bool,fast>{})
       {
         // call method on base class, this avoid the barton neckman trick

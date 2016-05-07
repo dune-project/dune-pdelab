@@ -951,7 +951,7 @@ namespace Dune {
     };
 
 
-    template<typename LFS, typename C = EmptyTransformation, bool fast = true>
+    template<typename LFS, typename C = EmptyTransformation, bool fast = false>
     class LFSIndexCache
       : public LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag,fast>
     {

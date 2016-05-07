@@ -106,7 +106,7 @@ namespace Dune {
           {
             for (ItIn in = begin; in != end; ++in, ++out)
               {
-                assert(in->size() == 1 && "MultiIndex length must match GridFunctionSpace tree depth");
+                // assert(in->size() == 1 && "MultiIndex length must match GridFunctionSpace tree depth");
                 out->push_back(in->treeIndex().back());
               }
           }
