@@ -15,12 +15,14 @@
 namespace Dune {
   namespace PDELab {
 
-    //===============================================================
-    // A class for solving linear stationary problems with matrix-free.
-    // methods.
-    // It computes the right hand side and solves the problem.
-    // This is only a first vanilla implementation which has to be improved.
-    //===============================================================
+    /** \class MatrixFreeStationaryLinearProblemSolver
+     * \brief Matrix free stationary linear problem solver
+     *
+     * Solves stationary linear problems in residual form, using a
+     * matrix-free implementation for the operator application and a
+     * (partially) matrix-free implementation of the preconditioner.
+     *
+     */
 
     template<typename GO, typename LS, typename V>
     /** \brief Matrix free iterative solver for linear problems in residual
@@ -122,10 +124,11 @@ namespace Dune {
       /** \brief Solve linear problem */
       void apply ()
       {
-        Dune::Timer watch;
-        double timing,assembler_time=0;
+        Dune::Timer watch,total_watch;
+        double total_timing,timing,assembler_time=0;
         int rank=_go.trialGridFunctionSpace().gridView().comm().rank();
         // assemble matrix; optional: assemble only on demand!
+        total_watch.reset();
         watch.reset();
         if (rank==0 && _verbose>=1) {
           std::cout << "=== matrix setup NOT REQUIRED " << std::endl;
@@ -164,9 +167,15 @@ namespace Dune {
         _ls.apply(_go, z,r,red); // solver makes right hand side consistent
         _linear_solver_result = _ls.result();
         timing = watch.elapsed();
+        total_timing=total_watch.elapsed();
         // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
-        if (rank==0 && _verbose>=1)
+
+        if (rank==0 && _verbose>=1) {
           std::cout << timing << " s" << std::endl;
+          std::cout << "Total solve time " << total_timing << " s" << std::endl;
+          std::cout << "(includes matrix- and residual assembly)" << std::endl;
+          std::cout << std::endl;
+        }
         _res.linear_solver_time = timing;
 
         _res.converged = _linear_solver_result.converged;
