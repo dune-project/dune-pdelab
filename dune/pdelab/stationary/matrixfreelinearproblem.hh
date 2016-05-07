@@ -161,7 +161,7 @@ namespace Dune {
         typename V::ElementType red = std::max(_reduction,_min_defect/defect);
         if (rank==0)
           std::cout << "=== solving (reduction: " << red << ") " << std::endl;
-        _ls.apply(z,r,red); // solver makes right hand side consistent
+        _ls.apply(_go, z,r,red); // solver makes right hand side consistent
         _linear_solver_result = _ls.result();
         timing = watch.elapsed();
         // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
