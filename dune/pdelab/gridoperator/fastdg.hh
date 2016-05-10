@@ -87,6 +87,9 @@ namespace Dune {
         , dof_exchanger(std::make_shared<BorderDOFExchanger>(*this))
         , local_assembler(lop_, cu_, cv_,dof_exchanger)
         , backend(mb_)
+        , lop(lop_)
+        , cu(cu_)
+        , cv(cv_)
       {}
 
       //! Constructor for empty constraints
@@ -95,6 +98,9 @@ namespace Dune {
         , dof_exchanger(std::make_shared<BorderDOFExchanger>(*this))
         , local_assembler(lop_,dof_exchanger)
         , backend(mb_)
+        , lop(lop_)
+        , cu(*std::make_shared<Dune::PDELab::EmptyTransformation>())
+        , cv(*std::make_shared<Dune::PDELab::EmptyTransformation>())
       {}
 
       //! Get the trial grid function space
@@ -108,6 +114,16 @@ namespace Dune {
       {
         return global_assembler.testGridFunctionSpace();
       }
+
+      CU & trialGridFunctionSpaceConstraints() { return cu; }
+      const CU & trialGridFunctionSpaceConstraints() const { return cu; }
+
+      CV & testGridFunctionSpaceConstraints() { return cv; }
+      const CV & testGridFunctionSpaceConstraints() const { return cv; }
+
+      LOP & localOperator() { return lop; }
+
+      const LOP & localOperator() const { return lop; }
 
       //! Get dimension of space u
       typename GFSU::Traits::SizeType globalSizeU () const
@@ -226,6 +242,10 @@ namespace Dune {
 
       mutable LocalAssembler local_assembler;
       MB backend;
+
+      const LOP& lop;
+      const CU& cu;
+      const CV& cv;
 
     }; // end class FastDGGridOperator
   } // end namespace PDELab
