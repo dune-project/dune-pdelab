@@ -204,6 +204,15 @@ namespace Dune {
            local_assembler);
       }
 
+      //! Apply jacobian matrix without explicitly assembling it
+      void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r) const {
+        typedef typename LocalAssembler::LocalNonlinearJacobianApplyAssemblerEngine NonlinearJacobianApplyEngine;
+        global_assembler.assemble
+          ([&r,&x,&z](LocalAssembler &la) -> NonlinearJacobianApplyEngine&
+               { return la.localNonlinearJacobianApplyAssemblerEngine(r,x,z); },
+           local_assembler);
+      }
+
       void make_consistent(Jacobian& a) const {
         dof_exchanger->accumulateBorderEntries(*this,a);
       }
