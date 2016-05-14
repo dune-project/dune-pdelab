@@ -82,13 +82,13 @@ namespace Dune{
         // Initialize the engines of the two wrapped local assemblers
         assert(solution != invalid_solution);
         setLocalAssemblerEngineDT0
-          (la.child0().localJacobianApplyAssemblerEngine(*residual,*solution));
+          (la.child0().localNonlinearJacobianApplyAssemblerEngine(*residual,*solution,*update));
         setLocalAssemblerEngineDT1
-          (la.child1().localJacobianApplyAssemblerEngine(*residual,*solution));
+          (la.child1().localNonlinearJacobianApplyAssemblerEngine(*residual,*solution,*update));
       }
 
-      //! Set current update vector. Should be called prior to
-      //! assembling.
+      //! Set current update vector. Must be called before
+      //! setResidual(). Should be called prior to assembling.
       void setUpdate(const Solution& update_)
       {
         update = &update_;

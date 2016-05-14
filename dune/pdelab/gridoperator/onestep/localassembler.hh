@@ -291,8 +291,8 @@ namespace Dune{
       (typename Traits::Residual & r, const typename Traits::Solution & x, const typename Traits::Solution & z)
       {
         nonlinear_jacobian_apply_engine.setSolution(x);
-        nonlinear_jacobian_apply_engine.setResidual(r);
         nonlinear_jacobian_apply_engine.setUpdate(z);
+        nonlinear_jacobian_apply_engine.setResidual(r);
         return nonlinear_jacobian_apply_engine;
       }
 
