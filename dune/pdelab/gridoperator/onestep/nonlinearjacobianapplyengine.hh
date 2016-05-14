@@ -58,7 +58,7 @@ namespace Dune{
 
          \param[in] local_assembler_ The local assembler object which creates this engine.
       */
-      OneStepLocalJacobianApplyAssemblerEngine(LocalAssembler& local_assembler_)
+      OneStepLocalNonlinearJacobianApplyAssemblerEngine(LocalAssembler& local_assembler_)
         : BaseT(local_assembler_)
         , invalid_residual(static_cast<Residual*>(0))
         , invalid_solution(static_cast<Solution*>(0))
@@ -139,7 +139,7 @@ namespace Dune{
        * oppertunity to do any setup that is needed at the begin of a thread.
        * It can also be used to copy or split data from \c *this to \c other.
        */
-      void split(OneStepLocalJacobianApplyAssemblerEngine &other)
+      void split(OneStepLocalNonlinearJacobianApplyAssemblerEngine &other)
       {
         BaseT::split(other);
         b_rr = other.b_rr;
