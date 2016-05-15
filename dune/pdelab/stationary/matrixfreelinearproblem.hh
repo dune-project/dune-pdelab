@@ -237,7 +237,7 @@ namespace Dune {
       /** \brief Verbosity level */
       int _verbose;
       /** \brief Flag controlling hanging node modifications */
-      const bool _hanging_node_modifications;
+      bool _hanging_node_modifications;
     };
 
   } // namespace PDELab
