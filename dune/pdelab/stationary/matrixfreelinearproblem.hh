@@ -82,8 +82,8 @@ namespace Dune {
         , _x()
         , _reduction(reduction)
         , _min_defect(min_defect)
-        , _hanging_node_modifications(false)
         , _verbose(verbose)
+        , _hanging_node_modifications(false)
       {}
 
       /** \brief Set flag that controls hanging node transformations
