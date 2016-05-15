@@ -82,6 +82,100 @@ namespace Dune {
       const M& _A_;
     };
 
+    /** \brief Application of jacobian from linear problems in the overlapping case.
+
+        \tparam CC Constraints container.
+        \tparam X  Trial vector.
+        \tparam Y  Test vector.
+        \tparam GO Grid operator implementing the jacobian application.
+     */
+    template<class CC, class X, class Y, class GO>
+    class OverlappingOnTheFlyOperator
+      : public Dune::LinearOperator<X,Y>
+    {
+    public :
+      //! export types
+      typedef X domain_type;
+      typedef Y range_type;
+      typedef typename X::ElementType field_type;
+
+      enum { category = Dune::SolverCategory::overlapping };
+
+      OverlappingOnTheFlyOperator(const CC& cc, const GO& go)
+        : cc_(cc), go_(go)
+      {}
+
+      virtual void apply(const X& x, Y& y) const
+      {
+        go_.jacobian_apply(x,y);
+        Dune::PDELab::set_constrained_dofs(cc_,0.0,y);
+      }
+
+      virtual void applyscaleadd(field_type alpha, const X& x, Y& y) const
+      {
+        Y temp(y);
+        temp = 0.0;
+        go_.jacobian_apply(x,temp);
+        y.axpy(alpha,temp);
+        Dune::PDELab::set_constrained_dofs(cc_,0.0,y);
+      }
+
+    private :
+      const CC& cc_;
+      const GO& go_;
+    };
+
+    /** \brief Application of jacobian from nonlinear problems in the overlapping case.
+
+        \tparam CC Constraints container.
+        \tparam X  Trial vector.
+        \tparam Y  Test vector.
+        \tparam GO Grid operator implementing the jacobian application.
+     */
+    template<class CC, class X, class Y, class GO>
+    class OverlappingNonlinearOnTheFlyOperator
+      : public Dune::LinearOperator<X,Y>
+    {
+    public :
+      //! export types
+      typedef X domain_type;
+      typedef Y range_type;
+      typedef typename X::ElementType field_type;
+
+      enum { category = Dune::SolverCategory::overlapping };
+
+      OverlappingNonlinearOnTheFlyOperator(const CC& cc, const GO& go)
+        : cc_(cc), go_(go), u_(static_cast<X*>(0))
+      {}
+
+      //! Set position of jacobian. This is different to linear problems.
+      //! Must be called before both apply() and applyscaleadd().
+      void setLinearizationPoint(const X& u)
+      {
+        u_ = &u;
+      }
+
+      virtual void apply(const X& x, Y& y) const
+      {
+        go_.nonlinear_jacobian_apply(*u_,x,y);
+        Dune::PDELab::set_constrained_dofs(cc_,0.0,y);
+      }
+
+      virtual void applyscaleadd(field_type alpha, const X& x, Y& y) const
+      {
+        Y temp(y);
+        temp = 0.0;
+        go_.nonlinear_jacobian_apply(*u_,x,temp);
+        y.axpy(alpha,temp);
+        Dune::PDELab::set_constrained_dofs(cc_,0.0,y);
+      }
+
+    private :
+      const CC& cc_;
+      const GO& go_;
+      X* u_;
+    };
+
     // new scalar product assuming at least overlap 1
     // uses unique partitioning of nodes for parallelization
     template<class GFS, class X>
