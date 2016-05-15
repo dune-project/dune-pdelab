@@ -79,7 +79,8 @@ namespace Dune {
         : gridoperator_(go)
         , u_(&u)
         , solver_(solver)
-        , maxit_(40), force_iteration_(false), min_linear_reduction_(1e-3), fixed_linear_reduction_(false)
+        , verbosity_level_(1), maxit_(40), force_iteration_(false)
+        , min_linear_reduction_(1e-3), fixed_linear_reduction_(false)
         , strategy_(LineSearchStrategy::hackbuschReusken), linesearch_maxit_(10), damping_factor_(0.5)
         , reduction_(1e-8), abs_limit_(1e-12), result_valid_(false)
       {
@@ -90,7 +91,8 @@ namespace Dune {
         : gridoperator_(go)
         , u_(static_cast<TrialVector*>(0))
         , solver_(solver)
-        , maxit_(40), force_iteration_(false), min_linear_reduction_(1e-3), fixed_linear_reduction_(false)
+        , verbosity_level_(1), maxit_(40), force_iteration_(false)
+        , min_linear_reduction_(1e-3), fixed_linear_reduction_(false)
         , strategy_(LineSearchStrategy::hackbuschReusken), linesearch_maxit_(10), damping_factor_(0.5)
         , reduction_(1e-8), abs_limit_(1e-12), result_valid_(false)
       {
