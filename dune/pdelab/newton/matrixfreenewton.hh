@@ -3,6 +3,20 @@
 #ifndef DUNE_PDELAB_NEWTON_MATRIXFREENEWTON_HH
 #define DUNE_PDELAB_NEWTON_MATRIXFREENEWTON_HH
 
+#include <iostream>
+#include <iomanip>
+#include <cmath>
+#include <memory>
+
+#include <math.h>
+
+#include <dune/common/exceptions.hh>
+#include <dune/common/ios_state.hh>
+#include <dune/common/timer.hh>
+#include <dune/common/parametertree.hh>
+
+#include <dune/pdelab/backend/solver.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -29,6 +43,23 @@ namespace Dune {
       {}
     };
 
+    struct LineSearchStrategy
+    {
+      enum Type {
+
+        /** \brief don't do any linesearch or damping */
+        noLineSearch,
+
+        /** \brief perform a linear search for the optimal damping parameter with multiples of damping
+
+         the strategy was described in <a href="http://dx.doi.org/10.1007/BF01406516">[Hackbusch and Reusken, 1989]</a> */
+        hackbuschReusken,
+
+        /** \brief same as hackbuschReusken, but doesn't fail if the best update is still not good enough */
+        hackbuschReuskenAcceptBest
+      };
+    };
+
     template<typename GO, typename S, typename TrlV, typename TstV = TrlV>
     class MatrixFreeNewton
     {
@@ -39,22 +70,8 @@ namespace Dune {
 
       typedef typename TestVector::ElementType RFType;
 
-      const GridOperator& gridoperator_;
-      TrialVector *u_;
-      std::shared_ptr<TrialVector> z_;
-      std::shared_ptr<TestVector> r_;
-      Result res_;
-      unsigned int verbosity_level_;
-      RFType prev_defect_;
-      RFType linear_reduction_;
-      bool reassembled_;
-      RFType reduction_;
-      RFType abs_limit_;
-      Solver& solver_;
-      bool result_valid_;
-
     public :
-      // export result type
+      //! export result type
       using Result = MatrixFreeNewtonResult<RFType>;
 
       MatrixFreeNewton(const GridOperator& go, TrialVector& u, Solver& solver)
@@ -138,6 +155,59 @@ namespace Dune {
           verbosity_level_ = verbosity_level;
       }
 
+      // set maximum of nonlinear iterations
+      void setMaxIterations(unsigned int maxit)
+      {
+        maxit_ = maxit;
+      }
+
+      void setForceIteration(bool force_iteration)
+      {
+        force_iteration_ = force_iteration;
+      }
+
+      //! set fixed reduction in the linear solver
+      void setFixedLinearReduction(bool fixed_linear_reduction)
+      {
+        fixed_linear_reduction_ = fixed_linear_reduction;
+      }
+
+      //! set line search strategy
+      void setLineSearchStrategy(LineSearchStrategy::Type strategy)
+      {
+        strategy_ = strategy;
+      }
+
+      void setLineSearchStrategy(std::string strategy)
+      {
+        // read strategy from string
+        if(strategy == "noLineSearch") {
+          strategy_ = LineSearchStrategy::noLineSearch;
+          return;
+        }
+        if(strategy == "hackbuschReusken") {
+          strategy_ = LineSearchStrategy::hackbuschReusken;
+          return;
+        }
+        if(strategy == "hackbuschReuskenAcceptBest") {
+          strategy_ = LineSearchStrategy::hackbuschReuskenAcceptBest;
+          return;
+        }
+        DUNE_THROW(Exception, "unknown linesearch strategy" << strategy);
+      }
+
+      //! set maximum number of line search iterations
+      void setLineSearchMaxIterations(unsigned int linesearch_maxit)
+      {
+        linesearch_maxit_ = linesearch_maxit;
+      }
+
+      //! set damping factor for line search parameter
+      void setLineSearchDampingFactor(RFType damping_factor)
+      {
+        damping_factor_ = damping_factor;
+      }
+
       //! stopping criteria for Newton
       bool terminate()
       {
@@ -156,7 +226,7 @@ namespace Dune {
       //! line search in Newton
       void lineSearch(TrialVector& z, TrialVector& r)
       {
-        if (strategy_ == noLineSearch)
+        if (strategy_ == LineSearchStrategy::noLineSearch)
           {
             u_->axpy(-1.0, z);
             r = 0.0;
@@ -234,7 +304,7 @@ namespace Dune {
           if(verbosity_level_ >= 4)
             std::cout << "      Solving linear system..." << std::endl;
           // <<<1>>> set linear reduction
-          if(fixed_linear_reduction_ = true)
+          if(fixed_linear_reduction_ == true)
             linear_reduction_ = min_linear_reduction_;
           else {
             // determine maximum defect, where Newton is converged.
@@ -281,15 +351,13 @@ namespace Dune {
           // line search with correction z
           // the undamped version is also covered in here
           //============================================
-          lineSearch(*z,*r);
+          lineSearch(*z_,*r_);
 
           // store statistics and output per nonlinear iteration
           res_.reduction = res_.defect/res_.first_defect;
           res_.iterations++;
           res_.conv_rate = std::pow(res_.reduction, 1.0/res_.iterations);
 
-          // store old ios flags
-          ios_base_all_saver restorer(std::cout);
           if (verbosity_level_ >= 3)
             std::cout << "      linear solver time:               "
                       << std::setw(12) << std::setprecision(4) << std::scientific
@@ -329,6 +397,27 @@ namespace Dune {
                     << std::endl;
       } // end apply
 
+    private :
+      const GridOperator& gridoperator_;
+      TrialVector *u_;
+      std::shared_ptr<TrialVector> z_;
+      std::shared_ptr<TestVector> r_;
+      Result res_;
+      unsigned int verbosity_level_;
+      unsigned int maxit_;
+      bool force_iteration_;
+      RFType min_linear_reduction_;
+      bool fixed_linear_reduction_;
+      LineSearchStrategy::Type strategy_;
+      unsigned int linesearch_maxit_;
+      RFType damping_factor_;
+      RFType prev_defect_;
+      RFType linear_reduction_;
+      bool reassembled_;
+      RFType reduction_;
+      RFType abs_limit_;
+      Solver& solver_;
+      bool result_valid_;
     }; // end class MatrixFreeNewton
   } // end namespace PDELab
 } // end namespace Dune
