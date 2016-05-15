@@ -79,10 +79,9 @@ namespace Dune {
         : gridoperator_(go)
         , u_(&u)
         , solver_(solver)
-        , force_iteration_(false)
-        , min_linear_reduction_(1e-3)
-        , fixed_linear_reduction_(false)
-        , reduction_(1e-8)
+        , maxit_(40), force_iteration_(false), min_linear_reduction_(1e-3), fixed_linear_reduction_(false)
+        , strategy_(LineSearchStrategy::hackbuschReusken), linesearch_maxit_(10), damping_factor_(0.5)
+        , reduction_(1e-8), abs_limit_(1e-12), result_valid_(false)
       {
         if (gridoperator_.trialGridFunctionSpace().gridView().comm().rank()>0)
           verbosity_level_ = 0;
@@ -91,10 +90,9 @@ namespace Dune {
         : gridoperator_(go)
         , u_(static_cast<TrialVector*>(0))
         , solver_(solver)
-        , force_iteration_(false)
-        , min_linear_reduction_(1e-3)
-        , fixed_linear_reduction_(false)
-        , reduction_(1e-8)
+        , maxit_(40), force_iteration_(false), min_linear_reduction_(1e-3), fixed_linear_reduction_(false)
+        , strategy_(LineSearchStrategy::hackbuschReusken), linesearch_maxit_(10), damping_factor_(0.5)
+        , reduction_(1e-8), abs_limit_(1e-12), result_valid_(false)
       {
         if (gridoperator_.trialGridFunctionSpace().gridView().comm().rank()>0)
           verbosity_level_ = 0;
@@ -164,7 +162,13 @@ namespace Dune {
           verbosity_level_ = verbosity_level;
       }
 
-      // set maximum of nonlinear iterations
+      //! set reduction in Newton
+      void setReduction(RFType reduction)
+      {
+        reduction_ = reduction;
+      }
+
+      //! set maximum of nonlinear iterations
       void setMaxIterations(unsigned int maxit)
       {
         maxit_ = maxit;
@@ -175,7 +179,27 @@ namespace Dune {
         force_iteration_ = force_iteration;
       }
 
-      //! set fixed reduction in the linear solver
+      //! set absolute limit to achieve for the norm of the residual
+      void setAbsoluteLimit(RFType abs_limit)
+      {
+        abs_limit_ = abs_limit;
+      }
+
+      /**\brief set the minimal reduction in the linear solver
+
+         \note with min_linear_reduction > 0, the linear reduction will be
+         determined as mininum of the min_linear_reduction and the
+         linear_reduction needed to achieve second order
+         Newton convergence. */
+      void setMinLinearReduction(RFType min_linear_reduction)
+      {
+        min_linear_reduction_ = min_linear_reduction;
+      }
+
+      /**\brief set a fixed reduction in the linear solver (overwrites setMinLinearReduction)
+
+         \note with fixed_linear_reduction > 0, the linear reduction
+         rate will always be fixed to min_linear_reduction. */
       void setFixedLinearReduction(bool fixed_linear_reduction)
       {
         fixed_linear_reduction_ = fixed_linear_reduction;
@@ -428,7 +452,6 @@ namespace Dune {
       RFType damping_factor_;
       RFType prev_defect_;
       RFType linear_reduction_;
-      bool reassembled_;
       RFType reduction_;
       RFType abs_limit_;
       bool result_valid_;
