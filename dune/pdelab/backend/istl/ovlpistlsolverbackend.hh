@@ -173,7 +173,7 @@ namespace Dune {
     private :
       const CC& cc_;
       const GO& go_;
-      X* u_;
+      const X* u_;
     };
 
     // new scalar product assuming at least overlap 1
