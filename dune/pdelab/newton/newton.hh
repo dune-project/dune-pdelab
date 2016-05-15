@@ -417,9 +417,9 @@ namespace Dune
         force_iteration_ = force_iteration;
       }
 
-      void setAbsoluteLimit(RFType abs_limit_)
+      void setAbsoluteLimit(RFType abs_limit)
       {
-        this->abs_limit_ = abs_limit_;
+        this->abs_limit_ = abs_limit;
       }
 
       virtual bool terminate()
@@ -452,14 +452,14 @@ namespace Dune
       NewtonPrepareStep(const GridOperator& go, TrialVector& u_)
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
         , min_linear_reduction_(1e-3)
-        , fixed_linear_reduction_(0.0)
+        , fixed_linear_reduction_(false)
         , reassemble_threshold_(0.0)
       {}
 
       NewtonPrepareStep(const GridOperator& go)
         : NewtonBase<GOS,TrlV,TstV>(go)
         , min_linear_reduction_(1e-3)
-        , fixed_linear_reduction_(0.0)
+        , fixed_linear_reduction_(false)
         , reassemble_threshold_(0.0)
       {}
 
