@@ -119,7 +119,7 @@ namespace Dune {
       int verbose;
     };
 
-    template<class GO, template<class> class Solver>
+    template<class Operator, template<class> class Solver>
     class ISTLBackend_SEQ_MatrixFree_Richardson
       : public SequentialNorm, public LinearResultStorage
     {
@@ -129,10 +129,10 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_MatrixFree_Richardson(const GO& go_, unsigned maxiter_=5000, int verbose_=1)
-        : go(go_)
-        , maxiter(maxiter_)
-        , verbose(verbose_)
+      explicit ISTLBackend_SEQ_MatrixFree_Richardson(Operator& op, unsigned maxiter=5000, int verbose=1)
+        : opa_(op)
+        , maxiter_(maxiter)
+        , verbose_(verbose)
       {}
 
 
@@ -147,9 +147,8 @@ namespace Dune {
       template<class V, class W>
       void apply(V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
       {
-        MatrixFreeLinearOperatorWrapper<GO> opa(go);
         Dune::Richardson<V,W> prec(0.7);
-        Solver<V> solver(opa, prec, reduction, maxiter, verbose);
+        Solver<V> solver(opa_, prec, reduction, maxiter_, verbose_);
         Dune::InverseOperatorResult stat;
         solver.apply(z, r, stat);
         res.converged  = stat.converged;
@@ -160,9 +159,9 @@ namespace Dune {
       }
 
     private:
-      const GO& go;
-      unsigned maxiter;
-      int verbose;
+      Operator& opa_;
+      unsigned maxiter_;
+      int verbose_;
     };
 
     template<template<class,class,class,int> class Preconditioner,
