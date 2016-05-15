@@ -272,9 +272,109 @@ namespace Dune {
                          "Non linear residual is NaN or Inf!");
             return;
           }
-        //============================================
-        // TODO add Hackbusch-Reusken line search
-        //============================================
+        if (verbosity_level_ >= 4)
+          std::cout << "      Performing line search..." << std::endl;
+        RFType lambda = 1.0;
+        RFType best_lambda = 0.0;
+        RFType best_defect = res_.defect;
+        TrialVector prev_u(*u_);
+        unsigned int i = 0;
+        ios_base_all_saver restorer(std::cout); // store old ios flags
+
+        while (1)
+          {
+            if (verbosity_level_ >= 4)
+              std::cout << "          trying line search damping factor:   "
+                        << std::setw(12) << std::setprecision(4) << std::scientific
+                        << lambda
+                        << std::endl;
+
+            u_->axpy(-lambda, z);
+            try {
+              r = 0.0;
+              gridoperator_.residual(*u_,r);
+              res_.defect = solver_.norm(r);
+              if(not std::isfinite(res_.defect))
+                DUNE_THROW(NewtonDefectError,
+                           "Non linear residual is NaN or Inf!");
+            }
+             catch (NewtonDefectError)
+              {
+                if (verbosity_level_ >= 4)
+                  std::cout << "          Nans detected" << std::endl;
+              }       // ignore NaNs and try again with lower lambda
+
+            if (res_.defect <= (1.0 - lambda/4) * prev_defect_)
+              {
+                if (verbosity_level_ >= 4)
+                  std::cout << "          line search converged" << std::endl;
+                break;
+              }
+
+            if (res_.defect < best_defect)
+              {
+                best_defect = res_.defect;
+                best_lambda = lambda;
+              }
+
+            if (++i >= maxit_)
+              {
+                if (verbosity_level_ >= 4)
+                  std::cout << "          max line search iterations exceeded" << std::endl;
+                switch (strategy_)
+                  {
+                  case LineSearchStrategy::hackbuschReusken:
+                    *u_ = prev_u;
+                    r = 0.0;
+                    gridoperator_.residual(*u_,r);
+                    res_.defect = solver_.norm(r);
+                    if(not std::isfinite(res_.defect))
+                      DUNE_THROW(NewtonDefectError,
+                                 "Non linear residual is NaN or Inf!");
+                    DUNE_THROW(NewtonLineSearchError,
+                               "NewtonLineSearch::line_search(): line search failed, "
+                               "max iteration count reached, "
+                               "defect did not improve enough");
+                  case LineSearchStrategy::hackbuschReuskenAcceptBest:
+                    if (best_lambda == 0.0)
+                      {
+                        *u_ = prev_u;
+                        r = 0.0;
+                        gridoperator_.residual(*u_,r);
+                        res_.defect = solver_.norm(r);
+                        if(not std::isfinite(res_.defect))
+                          DUNE_THROW(NewtonDefectError,
+                                     "Non linear residual is NaN or Inf!");
+                        DUNE_THROW(NewtonLineSearchError,
+                                   "NewtonLineSearch::line_search(): line search failed, "
+                                   "max iteration count reached, "
+                                   "defect did not improve in any of the iterations");
+                      }
+                    if (best_lambda != lambda)
+                      {
+                        *u_ = prev_u;
+                        u_->axpy(-best_lambda, z);
+                        r = 0.0;
+                        gridoperator_.residual(*u_,r);
+                        res_.defect = solver_.norm(r);
+                        if(not std::isfinite(res_.defect))
+                          DUNE_THROW(NewtonDefectError,
+                                     "Non linear residual is NaN or Inf!");
+                      }
+                    break;
+                  case LineSearchStrategy::noLineSearch:
+                    break;
+                  }
+                break;
+              }
+
+            lambda *= damping_factor_;
+            *u_ = prev_u;
+          }
+        if (verbosity_level_ >= 4)
+          std::cout << "          line search damping factor:   "
+                    << std::setw(12) << std::setprecision(4) << std::scientific
+                    << lambda << std::endl;
       } // end lineSearch
 
       const Result& result() const
