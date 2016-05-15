@@ -252,7 +252,7 @@ namespace Dune {
       */
       virtual void pre (domain_type& x, range_type& b)
       {
-        prec.pre(x,b);
+        prec.pre(Backend::native(x),Backend::native(b));
       }
 
       /*!
