@@ -32,6 +32,7 @@ namespace Dune {
     {
       RFType first_defect;       // the first defect
       RFType defect;             // the final defect
+      double assembler_time;     // Dummy variable needed for the interface
       double linear_solver_time; // Cumulative time for linear sovler
       int linear_solver_iterations; // Total number of linear iterations
 
@@ -78,6 +79,10 @@ namespace Dune {
         : gridoperator_(go)
         , u_(&u)
         , solver_(solver)
+        , force_iteration_(false)
+        , min_linear_reduction_(1e-3)
+        , fixed_linear_reduction_(false)
+        , reduction_(1e-8)
       {
         if (gridoperator_.trialGridFunctionSpace().gridView().comm().rank()>0)
           verbosity_level_ = 0;
@@ -86,6 +91,10 @@ namespace Dune {
         : gridoperator_(go)
         , u_(static_cast<TrialVector*>(0))
         , solver_(solver)
+        , force_iteration_(false)
+        , min_linear_reduction_(1e-3)
+        , fixed_linear_reduction_(false)
+        , reduction_(1e-8)
       {
         if (gridoperator_.trialGridFunctionSpace().gridView().comm().rank()>0)
           verbosity_level_ = 0;
@@ -241,6 +250,11 @@ namespace Dune {
         // TODO add Hackbusch-Reusken line search
         //============================================
       } // end lineSearch
+
+      const Result& result() const
+      {
+        return res_;
+      }
 
       void apply(TrialVector& u)
       {
@@ -400,6 +414,7 @@ namespace Dune {
     private :
       const GridOperator& gridoperator_;
       TrialVector *u_;
+      Solver& solver_;
       std::shared_ptr<TrialVector> z_;
       std::shared_ptr<TestVector> r_;
       Result res_;
@@ -416,7 +431,6 @@ namespace Dune {
       bool reassembled_;
       RFType reduction_;
       RFType abs_limit_;
-      Solver& solver_;
       bool result_valid_;
     }; // end class MatrixFreeNewton
   } // end namespace PDELab

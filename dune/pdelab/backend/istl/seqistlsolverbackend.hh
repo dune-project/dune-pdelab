@@ -113,7 +113,7 @@ namespace Dune {
 
     private :
       const GO& go_;
-      X* u_;
+      const X* u_;
     };
 
     //==============================================================================
@@ -206,6 +206,18 @@ namespace Dune {
         res.elapsed    = stat.elapsed;
         res.reduction  = stat.reduction;
         res.conv_rate  = stat.conv_rate;
+      }
+
+      //! get matrix-free operator
+      Operator& opa()
+      {
+        return opa_;
+      }
+
+      //! get matrix-free operator, const version
+      const Operator& opa() const
+      {
+        return opa_;
       }
 
     private:
