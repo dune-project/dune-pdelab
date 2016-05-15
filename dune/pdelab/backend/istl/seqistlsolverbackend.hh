@@ -73,6 +73,8 @@ namespace Dune {
      public LinearOperator<typename GO::Traits::Domain,
                            typename GO::Traits::Range> {
      public:
+      /** \brief Local operator type */
+      typedef GO GridOperator;
       /** \brief Trial grid function space */
       typedef typename GO::Traits::Domain domain_type;
       /** \brief Test grid function space */
