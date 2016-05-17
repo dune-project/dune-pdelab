@@ -10,38 +10,16 @@
 
 #include <math.h>
 
-#include <dune/common/exceptions.hh>
 #include <dune/common/ios_state.hh>
 #include <dune/common/timer.hh>
 #include <dune/common/parametertree.hh>
 
-#include <dune/pdelab/backend/solver.hh>
+#include <dune/pdelab/newton/newtonbase.hh>
 
 namespace Dune
 {
   namespace PDELab
   {
-    // Exception classes used in NewtonSolver
-    class NewtonError : public Exception {};
-    class NewtonDefectError : public NewtonError {};
-    class NewtonLinearSolverError : public NewtonError {};
-    class NewtonLineSearchError : public NewtonError {};
-    class NewtonNotConverged : public NewtonError {};
-
-    // Status information of Newton's method
-    template<class RFType>
-    struct NewtonResult : LinearSolverResult<RFType>
-    {
-      RFType first_defect;       // the first defect
-      RFType defect;             // the final defect
-      double assembler_time;     // Cumulative time for matrix assembly
-      double linear_solver_time; // Cumulative time for linear sovler
-      int linear_solver_iterations; // Total number of linear iterations
-
-      NewtonResult() :
-        first_defect(0.0), defect(0.0), assembler_time(0.0), linear_solver_time(0.0),
-        linear_solver_iterations(0) {}
-    };
 
     template<class GOS, class TrlV, class TstV>
     class NewtonBase

@@ -10,56 +10,14 @@
 
 #include <math.h>
 
-#include <dune/common/exceptions.hh>
 #include <dune/common/ios_state.hh>
 #include <dune/common/timer.hh>
 #include <dune/common/parametertree.hh>
 
-#include <dune/pdelab/backend/solver.hh>
+#include <dune/pdelab/newton/newtonbase.hh>
 
 namespace Dune {
   namespace PDELab {
-
-    // Exception classes used in MatrixFreeNewton
-    class NewtonError : public Exception {};
-    class NewtonDefectError : public NewtonError {};
-    class NewtonLineSearchError : public NewtonError {};
-    class NewtonNotConverged : public NewtonError {};
-
-    // Status information of Newton's method
-    template<typename RFType>
-    struct MatrixFreeNewtonResult : LinearSolverResult<RFType>
-    {
-      RFType first_defect;       // the first defect
-      RFType defect;             // the final defect
-      double assembler_time;     // Dummy variable needed for the interface
-      double linear_solver_time; // Cumulative time for linear sovler
-      int linear_solver_iterations; // Total number of linear iterations
-
-      MatrixFreeNewtonResult()
-        : first_defect(0.0)
-        , defect(0.0)
-        , linear_solver_time(0.0)
-        , linear_solver_iterations(0)
-      {}
-    };
-
-    struct LineSearchStrategy
-    {
-      enum Type {
-
-        /** \brief don't do any linesearch or damping */
-        noLineSearch,
-
-        /** \brief perform a linear search for the optimal damping parameter with multiples of damping
-
-         the strategy was described in <a href="http://dx.doi.org/10.1007/BF01406516">[Hackbusch and Reusken, 1989]</a> */
-        hackbuschReusken,
-
-        /** \brief same as hackbuschReusken, but doesn't fail if the best update is still not good enough */
-        hackbuschReuskenAcceptBest
-      };
-    };
 
     template<typename GO, typename S, typename TrlV, typename TstV = TrlV>
     class MatrixFreeNewton
@@ -73,7 +31,7 @@ namespace Dune {
 
     public :
       //! export result type
-      using Result = MatrixFreeNewtonResult<RFType>;
+      using Result = NewtonResult<RFType>;
 
       MatrixFreeNewton(const GridOperator& go, TrialVector& u, Solver& solver)
         : gridoperator_(go)
@@ -208,7 +166,7 @@ namespace Dune {
       }
 
       //! set line search strategy
-      void setLineSearchStrategy(LineSearchStrategy::Type strategy)
+      void setLineSearchStrategy(LineSearchStrategy strategy)
       {
         strategy_ = strategy;
       }
@@ -549,7 +507,7 @@ namespace Dune {
       bool force_iteration_;
       RFType min_linear_reduction_;
       bool fixed_linear_reduction_;
-      LineSearchStrategy::Type strategy_;
+      LineSearchStrategy strategy_;
       unsigned int linesearch_maxit_;
       RFType damping_factor_;
       RFType prev_defect_;
