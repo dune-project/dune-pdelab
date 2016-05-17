@@ -51,6 +51,12 @@ namespace Dune {
         : go_(go)
       {}
 
+      //! Set position of jacobian.
+      //! Does nothing here since jacobian does not depend on position in the linear case.
+      void setLinearizationPoint(const X& u)
+      {
+      }
+
       virtual void apply (const X& x, Y& y) const
       {
         y = 0.0;
@@ -180,7 +186,7 @@ namespace Dune {
         \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_SEQ_MatrixFree_Richardson(Operator& op, unsigned maxiter=5000, int verbose=1)
-        : opa_(op)
+        : opa_(op), u_(static_cast<typename Operator::domain_type*>(0))
         , maxiter_(maxiter)
         , verbose_(verbose)
       {}
@@ -208,20 +214,17 @@ namespace Dune {
         res.conv_rate  = stat.conv_rate;
       }
 
-      //! get matrix-free operator
-      Operator& opa()
+      //! Set position of jacobian.
+      //! Must be called before apply().
+      void setLinearizationPoint(const typename Operator::domain_type& u)
       {
-        return opa_;
-      }
-
-      //! get matrix-free operator, const version
-      const Operator& opa() const
-      {
-        return opa_;
+        u_ = &u;
+        opa_.setLinearizationPoint(u);
       }
 
     private:
       Operator& opa_;
+      const typename Operator::domain_type* u_;
       unsigned maxiter_;
       int verbose_;
     };

@@ -434,7 +434,7 @@ namespace Dune {
                       << linear_reduction_ << std::endl;
 
           // <<<2>>> set position of jacobian for its application
-          solver_.opa().setLinearizationPoint(*u_);
+          solver_.setLinearizationPoint(*u_);
 
           // <<<3>>> call linear solver
           *z_ = 0.0;

@@ -105,6 +105,12 @@ namespace Dune {
         : cc_(cc), go_(go)
       {}
 
+      //! Set position of jacobian.
+      //! Does nothing here since jacobian does not depend on position in the linear case.
+      void setLinearizationPoint(const X& u)
+      {
+      }
+
       virtual void apply(const X& x, Y& y) const
       {
         go_.jacobian_apply(x,y);
