@@ -113,6 +113,7 @@ namespace Dune {
 
       virtual void apply(const X& x, Y& y) const
       {
+        y = 0.0;
         go_.jacobian_apply(x,y);
         Dune::PDELab::set_constrained_dofs(cc_,0.0,y);
       }
@@ -163,6 +164,7 @@ namespace Dune {
 
       virtual void apply(const X& x, Y& y) const
       {
+        y = 0.0;
         go_.nonlinear_jacobian_apply(*u_,x,y);
         Dune::PDELab::set_constrained_dofs(cc_,0.0,y);
       }
@@ -447,7 +449,7 @@ namespace Dune {
       template<typename X>
       typename Dune::template FieldTraits<typename X::ElementType >::real_type norm (const X& x) const
       {
-        using namespace std;
+        using std::sqrt;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
@@ -485,7 +487,7 @@ namespace Dune {
 
       virtual typename X::BaseT::field_type norm (const X& x)
       {
-        using namespace std;
+        using std::sqrt;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
@@ -509,7 +511,7 @@ namespace Dune {
         \param[in] verbose_ print messages if true
       */
       ISTLBackend_OVLP_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000,
-                                            int steps_=5, int verbose_=1)
+                             int steps_=5, int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), steps(steps_), verbose(verbose_)
       {}
 
