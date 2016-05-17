@@ -495,6 +495,58 @@ namespace Dune {
       const OVLPScalarProductImplementation<GFS>& implementation;
     };
 
+    template<class GFS, class CC, class Operator,
+             template<class> class Solver>
+    class ISTLBackend_OVLP_MatrixFree_Richardson
+      : public OVLPScalarProductImplementation<GFS>
+      , public LinearResultStorage
+    {
+    public :
+      ISTLBackend_OVLP_MatrixFree_Richardson (const GFS& gfs, const CC& cc, Operator& op,
+                                              unsigned maxiter=5000, int verbose=1)
+        : OVLPScalarProductImplementation<GFS>(gfs)
+        , gfs_(gfs), cc_(cc), opa_(op), u_(static_cast<typename Operator::domain_type*>(0))
+        , maxiter_(maxiter), verbose_(verbose)
+      {}
+
+      template<class V, class W>
+      void apply(V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType>::real_type reduction)
+      {
+        using Dune::PDELab::Backend::Native;
+        typedef Dune::PDELab::OVLPScalarProduct<GFS,V> PSP;
+        PSP psp(*this);
+        typedef Dune::Richardson<Native<V>, Native<W> > SeqPrec;
+        SeqPrec seqprec(0.7);
+        typedef Dune::PDELab::OverlappingWrappedPreconditioner<CC,GFS,SeqPrec> WPREC;
+        WPREC wprec(gfs_,seqprec,cc_,this->parallelHelper());
+        int verb=0;
+        if (gfs_.gridView().comm().rank()==0) verb=verbose_;
+        Solver<V> solver(opa_,psp,wprec,reduction,maxiter_,verb);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z,r,stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+      }
+
+      //! Set position of jacobian.
+      //! Must be called before apply() in the nonlinear case.
+      void setLinearizationPoint(const typename Operator::domain_type& u)
+      {
+        u_ = &u;
+        opa_.setLinearizationPoint(u);
+      }
+
+    private :
+      const GFS& gfs_;
+      const CC& cc_;
+      Operator& opa_;
+      const typename Operator::domain_type* u_;
+      unsigned maxiter_;
+      int verbose_;
+    }; // end class ISTLBackend_OVLP_MatrixFree_Richardson
+
     template<class GFS, class C,
              template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
