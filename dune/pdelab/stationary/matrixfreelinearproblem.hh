@@ -10,7 +10,7 @@
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/solver.hh>
-#include <dune/pdelab/stationary/linearproblem.hh>
+#include <dune/pdelab/stationary/linearproblembase.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -19,7 +19,6 @@ namespace Dune {
     // A class for solving linear stationary problems with matrix-free.
     // methods.
     // It computes the right hand side and solves the problem.
-    // This is only a first vanilla implementation which has to be improved.
     //===============================================================
 
     template<typename GO, typename LS, typename V>
