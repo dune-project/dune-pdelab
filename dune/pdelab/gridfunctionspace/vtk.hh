@@ -237,14 +237,14 @@ namespace Dune {
                                              typename LFS::ChildType::Traits::FiniteElement
                                              >::Basis
                                            >::RangeField,
-                                         LFS::CHILDREN,
+                                         TypeTree::staticDegree<LFS>,
                                          Dune::FieldVector<
                                            typename BasisInterfaceSwitch<
                                              typename FiniteElementInterfaceSwitch<
                                                typename LFS::ChildType::Traits::FiniteElement
                                                >::Basis
                                              >::RangeField,
-                                           LFS::CHILDREN
+                                           TypeTree::staticDegree<LFS>
                                            >
                                          >,
                                        DGFTreeVectorFunction<LFS,Data>
@@ -264,10 +264,10 @@ namespace Dune {
           GridFunctionTraits<
             typename LFS::Traits::GridView,
             typename BasisSwitch::RangeField,
-            LFS::CHILDREN,
+            TypeTree::staticDegree<LFS>,
             Dune::FieldVector<
               typename BasisSwitch::RangeField,
-              LFS::CHILDREN
+              TypeTree::staticDegree<LFS>
               >
             >,
           DGFTreeVectorFunction<LFS,Data>
@@ -299,7 +299,7 @@ namespace Dune {
 
           y = 0;
 
-          for (std::size_t k = 0; k < LFS::CHILDREN; ++k)
+          for (std::size_t k = 0; k < TypeTree::degree(_lfs); ++k)
             {
               const ChildLFS& child_lfs = _lfs.child(k);
               FESwitch::basis(child_lfs.finiteElement()).evaluateFunction(x,_basis);
@@ -421,7 +421,7 @@ namespace Dune {
           static const bool value =
             // Do not descend into children of VectorGridFunctionSpace
             !std::is_convertible<
-              typename LFS::Traits::GridFunctionSpace::ImplementationTag,
+              TypeTree::ImplementationTag<typename LFS::Traits::GridFunctionSpace>,
               VectorGridFunctionSpaceTag
             >::value;
 
@@ -511,7 +511,7 @@ namespace Dune {
         post(const LFS& lfs, TreePath tp)
         {
           if (predicate(lfs))
-            add_vector_solution(lfs,tp,typename LFS::Traits::GridFunctionSpace::ImplementationTag());
+            add_vector_solution(lfs,tp,TypeTree::ImplementationTag<typename LFS::Traits::GridFunctionSpace>());
         }
 
         //! Create a standard leaf function for leaf GridFunctionSpaces.

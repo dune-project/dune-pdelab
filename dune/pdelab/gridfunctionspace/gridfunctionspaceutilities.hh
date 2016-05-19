@@ -662,7 +662,7 @@ namespace Dune {
      * \tparam dimR Force a different number of components for the resulting
      *              GridFunction than the PowerGridFunctionSpace.
      */
-    template<typename T, typename X, std::size_t dimR = T::CHILDREN>
+    template<typename T, typename X, std::size_t dimR = TypeTree::staticDegree<T>>
     class VectorDiscreteGridFunction
       : public GridFunctionInterface<
           GridFunctionTraits<
@@ -803,10 +803,10 @@ namespace Dune {
                    typename T::Traits::GridViewType,
                    typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
                    //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain,
-                   T::CHILDREN,
+                   TypeTree::staticDegree<T>,
                    Dune::FieldMatrix<
                      typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-                     T::CHILDREN,
+                     TypeTree::staticDegree<T>,
                      T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain
                    >
                  >,
@@ -821,10 +821,10 @@ namespace Dune {
                   typename T::Traits::GridViewType,
                   typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
                   //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain,
-                  T::CHILDREN,
+                  TypeTree::staticDegree<T>,
                   Dune::FieldMatrix<
                     typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-                    T::CHILDREN,
+                    TypeTree::staticDegree<T>,
                     T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain>
                   >,
                   VectorDiscreteGridFunctionGradient<T,X>
@@ -866,7 +866,7 @@ namespace Dune {
         y = 0.0;
 
         // Loop over PowerLFS and calculate gradient for each child separately
-        for(unsigned int k = 0; k != T::CHILDREN; ++k)
+        for(unsigned int k = 0; k != TypeTree::degree(lfs); ++k)
         {
           // get local Jacobians/gradients of the shape functions
           std::vector<typename LBTraits::JacobianType> J(lfs.child(k).size());
@@ -1026,7 +1026,7 @@ namespace Dune {
         , xl(gfs.maxLocalSize())
         , J(gfs.maxLocalSize())
       {
-        static_assert(LBTraits::dimDomain == T::CHILDREN,
+        static_assert(LBTraits::dimDomain == TypeTree::staticDegree<T>,
                            "dimDomain and number of children has to be the same");
       }
 
@@ -1051,7 +1051,7 @@ namespace Dune {
         y = 0.0;
 
         // loop over VectorGFS and calculate k-th derivative of k-th child
-        for(unsigned int k=0; k != T::CHILDREN; ++k) {
+        for(unsigned int k=0; k != TypeTree::degree(lfs); ++k) {
 
           // get local Jacobians/gradients of the shape functions
           std::vector<typename LBTraits::JacobianType> J(lfs.child(k).size());
@@ -1104,7 +1104,7 @@ namespace Dune {
               will be triggered.
 
      */
-    template<typename T, typename X, std::size_t dimR = T::CHILDREN>
+    template<typename T, typename X, std::size_t dimR = TypeTree::staticDegree<T>>
     class VectorDiscreteGridFunctionCurl
     {
       typedef T GFS;
@@ -1133,12 +1133,12 @@ namespace Dune {
         typename T::Traits::GridViewType,
         typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
         //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-        T::CHILDREN,
+        TypeTree::staticDegree<T>,
         Dune::FieldVector<
           typename T::template Child<0>::Type::Traits::FiniteElementType
           ::Traits::LocalBasisType::Traits::RangeFieldType,
           //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange
-          T::CHILDREN
+          TypeTree::staticDegree<T>
           >
         >,
       VectorDiscreteGridFunctionCurl<T,X>
@@ -1152,12 +1152,12 @@ namespace Dune {
           typename T::Traits::GridViewType,
           typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
           //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-          T::CHILDREN,
+          TypeTree::staticDegree<T>,
           Dune::FieldVector<
             typename T::template Child<0>::Type::Traits::FiniteElementType
             ::Traits::LocalBasisType::Traits::RangeFieldType,
             //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange
-            T::CHILDREN
+            TypeTree::staticDegree<T>
             >
           >,
         VectorDiscreteGridFunctionCurl<T,X> > BaseT;
@@ -1178,7 +1178,7 @@ namespace Dune {
         , xl(gfs.maxLocalSize())
         , J(gfs.maxLocalSize())
       {
-        static_assert(LBTraits::dimDomain == T::CHILDREN,
+        static_assert(LBTraits::dimDomain == TypeTree::staticDegree<T>,
                            "dimDomain and number of children has to be the same");
       }
 
@@ -1206,7 +1206,7 @@ namespace Dune {
         int i1, i2;
 
         // loop over childs of VectorGFS
-        for(unsigned int k=0; k != T::CHILDREN; ++k) {
+        for(unsigned int k=0; k != TypeTree::degree(lfs); ++k) {
 
           // get local Jacobians/gradients of the shape functions
           std::vector<typename LBTraits::JacobianType> J(lfs.child(k).size());
@@ -1307,7 +1307,7 @@ namespace Dune {
         , xl(gfs.maxLocalSize())
         , J(gfs.maxLocalSize())
       {
-        static_assert(LBTraits::dimDomain == T::CHILDREN,
+        static_assert(LBTraits::dimDomain == TypeTree::staticDegree<T>,
                            "dimDomain and number of children has to be the same");
       }
 
@@ -1336,7 +1336,7 @@ namespace Dune {
         int i2;
 
         // loop over childs of VectorGFS
-        for(unsigned int k=0; k != T::CHILDREN; ++k) {
+        for(unsigned int k=0; k != TypeTree::degree(lfs); ++k) {
 
           // get local Jacobians/gradients of the shape functions
           std::vector<typename LBTraits::JacobianType> J(lfs.child(k).size());

@@ -203,7 +203,7 @@ namespace Dune {
         using size_type = typename DGSpace::Traits::SizeType;
 
         // paranoia check number of number of components
-        if (LFSV::CHILDREN!=dim+1)
+        if (TypeTree::degree(lfsv)!=dim+1)
           DUNE_THROW(Dune::Exception,"need exactly dim+1 components!");
 
         // get local function space that is identical for all components
@@ -603,12 +603,12 @@ namespace Dune {
                            LocalPattern& pattern) const
       {
         // paranoia check number of number of components
-        if (LFSU::CHILDREN!=LFSV::CHILDREN)
+        if (TypeTree::degree(lfsu)!=TypeTree::degree(lfsv))
           DUNE_THROW(Dune::Exception,"need U=V!");
-        if (LFSV::CHILDREN!=dim+1)
+        if (TypeTree::degree(lfsv)!=dim+1)
           DUNE_THROW(Dune::Exception,"need exactly dim+1 components!");
 
-        for (size_t k=0; k<LFSV::CHILDREN; k++)
+        for (size_t k=0; k<TypeTree::degree(lfsv); k++)
           for (size_t i=0; i<lfsv.child(k).size(); ++i)
             for (size_t j=0; j<lfsu.child(k).size(); ++j)
               pattern.addLink(lfsv.child(k),i,lfsu.child(k),j);
