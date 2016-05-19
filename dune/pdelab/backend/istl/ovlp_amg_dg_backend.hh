@@ -317,8 +317,8 @@ namespace Dune {
   public:
     using V = Dune::PDELab::Backend::Vector<DGGFS,typename DGPrec::domain_type::field_type>;
     using W = Dune::PDELab::Backend::Vector<DGGFS,typename DGPrec::range_type::field_type>;
-    typedef typename V::BaseT X;
-    typedef typename W::BaseT Y;
+    using X = Backend::Native<V>;
+    using Y = Backend::Native<W>;
     using CGV = Dune::PDELab::Backend::Vector<CGGFS,typename CGPrec::domain_type::field_type>;
     using CGW = Dune::PDELab::Backend::Vector<CGGFS,typename CGPrec::range_type::field_type>;
 
