@@ -29,7 +29,7 @@ namespace Dune {
 
     struct ConvectionDiffusionDGMethod
     {
-      enum Type { NIPG, SIPG };
+      enum Type { NIPG, SIPG, IIPG };
     };
 
     struct ConvectionDiffusionDGWeights
@@ -77,7 +77,14 @@ namespace Dune {
       enum { doAlphaBoundary  = true };
       enum { doLambdaVolume  = true };
 
-      //! constructor: pass parameter object
+      /** \brief constructor: pass parameter object and define DG-method
+       * \param[in] param_   Reference to parameter object.
+       * \param[in] method_  Interior penalty Galerkin method. Default is skew-symmetric.
+       * \param[in] weights_ Weighted averages for diffusion tensor. Default is no weighting.
+       * \param[in] alpha_   Penalization constant. Default is zero.
+       *
+       * Collecting the input parameters above, the default is the OBB-method.
+       */
       ConvectionDiffusionDG (T& param_,
                              ConvectionDiffusionDGMethod::Type method_=ConvectionDiffusionDGMethod::NIPG,
                              ConvectionDiffusionDGWeights::Type weights_=ConvectionDiffusionDGWeights::weightsOff,
@@ -93,6 +100,7 @@ namespace Dune {
       {
         theta = 1.0;
         if (method==ConvectionDiffusionDGMethod::SIPG) theta = -1.0;
+        if (method==ConvectionDiffusionDGMethod::IIPG) theta = 0.0;
       }
 
       // volume integral depending on test and ansatz functions
@@ -283,8 +291,9 @@ namespace Dune {
         auto A_s = param.A(cell_inside,local_inside);
         auto A_n = param.A(cell_outside,local_outside);
 
-        // face diameter; this should be revised for anisotropic meshes?
-        auto h_F = std::min(geo_inside.volume(),geo_outside.volume())/geo.volume(); // Houston!
+        // face diameter for anisotropic meshes taken from Paul Houston et al.
+        // this formula ensures coercivity of the bilinear form
+        auto h_F = std::min(geo_inside.volume(),geo_outside.volume())/geo.volume();
 
         // tensor times normal
         auto n_F = ig.centerUnitOuterNormal();
@@ -467,8 +476,9 @@ namespace Dune {
         auto A_s = param.A(cell_inside,local_inside);
         auto A_n = param.A(cell_outside,local_outside);
 
-        // face diameter; this should be revised for anisotropic meshes?
-        auto h_F = std::min(geo_inside.volume(),geo_outside.volume())/geo.volume(); // Houston!
+        // face diameter for anisotropic meshes taken from Paul Houston et al.
+        // this formula ensures coercivity of the bilinear form
+        auto h_F = std::min(geo_inside.volume(),geo_outside.volume())/geo.volume();
 
         // tensor times normal
         auto n_F = ig.centerUnitOuterNormal();
@@ -628,8 +638,9 @@ namespace Dune {
         auto local_inside = ref_el_inside.position(0,0);
         auto A_s = param.A(cell_inside,local_inside);
 
-        // face diameter
-        auto h_F = geo_inside.volume()/geo.volume(); // Houston!
+        // face diameter for anisotropic meshes taken from Paul Houston et al.
+        // this formula ensures coercivity of the bilinear form
+        auto h_F = geo_inside.volume()/geo.volume();
 
         // compute weights
         auto n_F = ig.centerUnitOuterNormal();
@@ -807,8 +818,9 @@ namespace Dune {
         auto local_inside = ref_el_inside.position(0,0);
         auto A_s = param.A(cell_inside,local_inside);
 
-        // face diameter
-        auto h_F = geo_inside.volume()/geo.volume(); // Houston!
+        // face diameter for anisotropic meshes taken from Paul Houston et al.
+        // this formula ensures coercivity of the bilinear form
+        auto h_F = geo_inside.volume()/geo.volume();
 
         // compute weights
         auto n_F = ig.centerUnitOuterNormal();
@@ -949,7 +961,7 @@ namespace Dune {
       }
 
       //! set time in parameter class
-      void setTime (double t)
+      void setTime (Real t)
       {
         Dune::PDELab::InstationaryLocalOperatorDefaultMethods<typename T::Traits::RangeFieldType>::setTime(t);
         param.setTime(t);
