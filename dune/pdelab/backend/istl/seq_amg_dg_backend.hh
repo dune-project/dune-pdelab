@@ -240,6 +240,8 @@ namespace Dune {
         , amg_parameters(15,2000)
         , maxiter(params.get<int>("max_iterations",5000))
         , verbose(params.get<int>("verbose",1))
+        , reuse(params.get<bool>("reuse", false))
+        , firstapply(true)
         , usesuperlu(params.get<bool>("use_superlu",true))
         , low_order_space_entries_per_row(params.get<std::size_t>("low_order_space.entries_per_row",StaticPower<3,GFS::Traits::GridView::dimension>::power))
         , cgtodglop()
