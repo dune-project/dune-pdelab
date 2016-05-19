@@ -237,14 +237,14 @@ namespace Dune {
                                              typename LFS::ChildType::Traits::FiniteElement
                                              >::Basis
                                            >::RangeField,
-                                         LFS::CHILDREN,
+                                         TypeTree::staticDegree<LFS>,
                                          Dune::FieldVector<
                                            typename BasisInterfaceSwitch<
                                              typename FiniteElementInterfaceSwitch<
                                                typename LFS::ChildType::Traits::FiniteElement
                                                >::Basis
                                              >::RangeField,
-                                           LFS::CHILDREN
+                                           TypeTree::staticDegree<LFS>
                                            >
                                          >,
                                        DGFTreeVectorFunction<LFS,Data>
@@ -264,10 +264,10 @@ namespace Dune {
           GridFunctionTraits<
             typename LFS::Traits::GridView,
             typename BasisSwitch::RangeField,
-            LFS::CHILDREN,
+            TypeTree::staticDegree<LFS>,
             Dune::FieldVector<
               typename BasisSwitch::RangeField,
-              LFS::CHILDREN
+              TypeTree::staticDegree<LFS>
               >
             >,
           DGFTreeVectorFunction<LFS,Data>
@@ -299,7 +299,7 @@ namespace Dune {
 
           y = 0;
 
-          for (std::size_t k = 0; k < LFS::CHILDREN; ++k)
+          for (std::size_t k = 0; k < TypeTree::degree(_lfs); ++k)
             {
               const ChildLFS& child_lfs = _lfs.child(k);
               FESwitch::basis(child_lfs.finiteElement()).evaluateFunction(x,_basis);

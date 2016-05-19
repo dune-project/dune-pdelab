@@ -150,7 +150,7 @@ namespace Dune {
           static_assert((TypeTree::TreeInfo<LFS>::depth == 2),
                         "Automatic interpolation of vector-valued function " \
                         "is restricted to trees of depth 1");
-          static_assert(LFS::CHILDREN == F::Traits::dimRange,
+          static_assert(TypeTree::staticDegree<LFS> == F::Traits::dimRange,
                         "Number of children and dimension of range type " \
                         "must match for automatic interpolation of "    \
                         "vector-valued function");

@@ -420,7 +420,7 @@ namespace Dune {
       template<typename TC>
       struct result
       {
-        typedef PowerLocalFunctionSpaceNode<SourceNode,typename Transformation::DOFIndex,TC,SourceNode::CHILDREN> type;
+        typedef PowerLocalFunctionSpaceNode<SourceNode,typename Transformation::DOFIndex,TC,TypeTree::staticDegree<SourceNode>> type;
       };
     };
 

@@ -68,18 +68,18 @@ namespace Dune {
       template<typename TC>
       struct result
       {
-        typedef PowerEntityBlockedLocalOrdering<TC,GFS::CHILDREN> type;
+        typedef PowerEntityBlockedLocalOrdering<TC,TypeTree::staticDegree<GFS>> type;
         typedef std::shared_ptr<type> storage_type;
       };
 
       template<typename TC>
-      static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const std::array<std::shared_ptr<TC>,GFS::CHILDREN>& children)
+      static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const std::array<std::shared_ptr<TC>,TypeTree::staticDegree<GFS>>& children)
       {
         return typename result<TC>::type(children,gfs.backend().blocked(gfs));
       }
 
       template<typename TC>
-      static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t, const std::array<std::shared_ptr<TC>,GFS::CHILDREN>& children)
+      static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t, const std::array<std::shared_ptr<TC>,TypeTree::staticDegree<GFS>>& children)
       {
         return std::make_shared<typename result<TC>::type>(children,gfs->backend().blocked(*gfs));
       }

@@ -49,9 +49,8 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         using namespace Indices;
-        using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_pfs_v = child(lfsv,_0);
-        for(unsigned int i=0; i<LFSV_PFS_V::CHILDREN; ++i)
+        for(unsigned int i=0; i<TypeTree::degree(lfsv_pfs_v); ++i)
           {
             scalar_alpha_volume(eg,lfsv_pfs_v.child(i),x,lfsv_pfs_v.child(i),r);
           }
@@ -63,9 +62,8 @@ namespace Dune {
                             M& mat) const
       {
         using namespace Indices;
-        using LFSV_PFS_V = TypeTree::Child<LFSV,_0>;
         const auto& lfsv_pfs_v = child(lfsv,_0);
-        for(unsigned int i=0; i<LFSV_PFS_V::CHILDREN; ++i)
+        for(unsigned int i=0; i<TypeTree::degree(lfsv_pfs_v); ++i)
           {
             scalar_jacobian_volume(eg,lfsv_pfs_v.child(i),x,lfsv_pfs_v.child(i),mat);
           }
