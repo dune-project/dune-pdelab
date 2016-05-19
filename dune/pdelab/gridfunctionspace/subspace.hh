@@ -399,7 +399,7 @@ namespace Dune {
 
         //! Construct a GridFunctionSubSpace from the storage object of a root space.
         explicit GridFunctionSubSpace(std::shared_ptr<const GFS> gfs_storage)
-          : NodeT(TypeTree::extract_child_storage(*gfs_storage,TreePath()))
+          : NodeT(TypeTree::childStorage(*gfs_storage,TreePath()))
           , FeatureT(*gfs_storage)
           , _base_gfs(gfs_storage)
         {
@@ -412,7 +412,7 @@ namespace Dune {
 
         //! Construct a GridFunctionSubSpace from a root space.
         explicit GridFunctionSubSpace(const GFS& gfs)
-          : NodeT(TypeTree::extract_child_storage(gfs,TreePath()))
+          : NodeT(TypeTree::childStorage(gfs,TreePath()))
           , FeatureT(gfs)
           , _base_gfs(stackobject_to_shared_ptr(gfs))
         {
@@ -432,7 +432,7 @@ namespace Dune {
          */
         template<typename TP>
         explicit GridFunctionSubSpace(std::shared_ptr<const GridFunctionSubSpace<GFS,TP> > gfs_storage, typename std::enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
-          : NodeT(TypeTree::extract_child_storage(gfs_storage->baseGridFunctionSpace(),TreePath()))
+          : NodeT(TypeTree::childStorage(gfs_storage->baseGridFunctionSpace(),TreePath()))
           , FeatureT(gfs_storage->baseGridFunctionSpace())
           , _base_gfs(gfs_storage->baseGridFunctionSpaceStorage())
         {
@@ -452,7 +452,7 @@ namespace Dune {
          */
         template<typename TP>
         explicit GridFunctionSubSpace(const GridFunctionSubSpace<GFS,TP>& gfs, typename std::enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
-          : NodeT(TypeTree::extract_child_storage(gfs.baseGridFunctionSpace(),TreePath()))
+          : NodeT(TypeTree::childStorage(gfs.baseGridFunctionSpace(),TreePath()))
           , FeatureT(gfs.baseGridFunctionSpace())
           , _base_gfs(gfs.baseGridFunctionSpaceStorage())
         {
