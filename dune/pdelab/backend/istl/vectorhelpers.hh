@@ -193,7 +193,7 @@ namespace Dune {
         struct visit
         {
           // forward to actual implementation via tag dispatch
-          typedef typename vector_descriptor_helper<E,Node,typename Node::ImplementationTag>::type type;
+          typedef typename vector_descriptor_helper<E,Node,TypeTree::ImplementationTag<Node>>::type type;
         };
 
       };

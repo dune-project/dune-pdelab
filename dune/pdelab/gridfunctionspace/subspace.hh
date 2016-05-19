@@ -383,7 +383,7 @@ namespace Dune {
       template<typename GFS, typename TreePath>
       class GridFunctionSubSpace
         : public TypeTree::ProxyNode<const TypeTree::ChildForTreePath<GFS,TreePath>>
-        , public SubSpaceFeatureProvider<GFS,TreePath,typename TypeTree::ChildForTreePath<GFS,TreePath>::ImplementationTag>
+        , public SubSpaceFeatureProvider<GFS,TreePath,TypeTree::ImplementationTag<TypeTree::ChildForTreePath<GFS,TreePath>>>
         , public GridFunctionSubSpaceOutputParameters<TypeTree::ChildForTreePath<GFS,TreePath>>
       {
 
@@ -392,7 +392,7 @@ namespace Dune {
         using FeatureT = SubSpaceFeatureProvider<
           GFS,
           TreePath,
-          typename TypeTree::ChildForTreePath<GFS,TreePath>::ImplementationTag
+          TypeTree::ImplementationTag<TypeTree::ChildForTreePath<GFS,TreePath>>
           >;
 
       public:
@@ -472,7 +472,7 @@ namespace Dune {
 
         //! Our ImplementationTag is derived from the tag of the original GridFunctionSpace.
         typedef GridFunctionSubSpaceTag<
-          typename ChildGridFunctionSpace::ImplementationTag
+          TypeTree::ImplementationTag<ChildGridFunctionSpace>
           > ImplementationTag;
 
         //! Returns the root GridFunctionSpace that this subspace view is based on.
