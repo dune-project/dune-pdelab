@@ -1,5 +1,5 @@
-#ifndef DUNE_ONE_STEP_PATTERNENGINE_HH
-#define DUNE_ONE_STEP_PATTERNENGINE_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_ONESTEP_PATTERNENGINE_HH
+#define DUNE_PDELAB_GRIDOPERATOR_ONESTEP_PATTERNENGINE_HH
 
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridoperator/onestep/enginebase.hh>
@@ -100,4 +100,4 @@ namespace Dune{
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_GRIDOPERATOR_ONESTEP_PATTERNENGINE_HH

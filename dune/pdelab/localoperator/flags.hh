@@ -104,4 +104,4 @@ namespace Dune
     }
 }
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_FLAGS_HH

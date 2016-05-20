@@ -1,5 +1,8 @@
-#ifndef DUNE_PDELAB_GRIDOPERATOR_HH
-#define DUNE_PDELAB_GRIDOPERATOR_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_GRIDOPERATOR_HH
+#define DUNE_PDELAB_GRIDOPERATOR_GRIDOPERATOR_HH
+
+// TODO: Remove deprecated nonoverlapping parameter. This will break
+// boilerplate code and needs to be done with care.
 
 #include <dune/common/tupleutility.hh>
 
@@ -80,7 +83,7 @@ namespace Dune{
         > LocalAssembler;
 
       // Fix this as soon as the default Partitions are constexpr
-      typedef typename conditional<
+      typedef typename std::conditional<
         GFSU::Traits::EntitySet::Partitions::partitionIterator() == InteriorBorder_Partition,
         NonOverlappingBorderDOFExchanger<GridOperator>,
         OverlappingBorderDOFExchanger<GridOperator>
@@ -210,13 +213,22 @@ namespace Dune{
       }
 
       //! Apply jacobian matrix without explicitly assembling it
-      void jacobian_apply(const Domain & x, Range & r) const {
+      void jacobian_apply(const Domain & z, Range & r) const {
         typedef typename LocalAssembler::LocalJacobianApplyAssemblerEngine JacobianApplyEngine;
         global_assembler.assemble
           ([&r,&x](LocalAssembler &la) -> JacobianApplyEngine&
-                { return la.localJacobianApplyAssemblerEngine(r,x); },
+                { return la.localJacobianApplyAssemblerEngine(r,z); },
            local_assembler);
       }
+
+      //! Apply jacobian matrix without explicitly assembling it
+      void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r) const {
+        global_assembler.assemble
+          ([&r,&z,&x](LocalAssembler &la) -> JacobianApplyEngine&
+                { return la.localNonlinearJacobianApplyAssemblerEngine(r,x,z); },
+           local_assembler);
+      }
+
 
       void make_consistent(Jacobian& a) const {
         dof_exchanger->accumulateBorderEntries(*this,a);
@@ -245,4 +257,4 @@ namespace Dune{
 
   }
 }
-#endif
+#endif // DUNE_PDELAB_GRIDOPERATOR_GRIDOPERATOR_HH

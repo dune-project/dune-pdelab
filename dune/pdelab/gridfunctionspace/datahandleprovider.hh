@@ -1,14 +1,13 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_DATAHANDLEPROVIDER_HH
-#define DUNE_PDELAB_DATAHANDLEPROVIDER_HH
+#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_DATAHANDLEPROVIDER_HH
+#define DUNE_PDELAB_GRIDFUNCTIONSPACE_DATAHANDLEPROVIDER_HH
 
 #include <vector>
 #include <stack>
 
 #include <dune/common/typetraits.hh>
 #include <dune/common/reservedvector.hh>
-#include <dune/common/std/constexpr.hh>
 #include <dune/typetree/visitor.hh>
 
 #include <dune/pdelab/ordering/utility.hh>
@@ -223,7 +222,7 @@ namespace Dune {
        * true, the underlying DataHandleIF of the grid will always use the data type char to be able
        * to send different types of data, which will automatically be marshalled to / from a byte stream.
        */
-      DUNE_CONSTEXPR bool sendLeafSizes() const
+      constexpr bool sendLeafSizes() const
       {
         return false;
       }
@@ -293,7 +292,7 @@ namespace Dune {
       {
         typedef typename GFS::Ordering Ordering;
 
-        static_assert((is_same<ContainerIndex,typename Ordering::Traits::ContainerIndex>::value),
+        static_assert((std::is_same<ContainerIndex,typename Ordering::Traits::ContainerIndex>::value),
                       "dataHandleContainerIndices() called with invalid ContainerIndex type.");
 
         typedef typename Ordering::Traits::DOFIndex::EntityIndex EntityIndex;
@@ -345,4 +344,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_DATAHANDLEPROVIDER
+#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_DATAHANDLEPROVIDER_HH

@@ -194,8 +194,8 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   gos.residual(x0,r);
 
   // make ISTL solver
-  typedef typename M::BaseT ISTL_M;
-  typedef typename V::BaseT ISTL_V;
+  typedef typename M::Container ISTL_M;
+  typedef typename V::Container ISTL_V;
   Dune::MatrixAdapter<ISTL_M,ISTL_V,ISTL_V> opa(native(m));
   Dune::SeqILU0<ISTL_M,ISTL_V,ISTL_V> ilu0(native(m),1e-2);
 
@@ -224,7 +224,7 @@ int main(int argc, char** argv)
     double mu = 100.0;
     double lambda = 10000.0;
     double g = 1.0;
-    int level=5;
+    int level=2;
 
     if (argc > 1)
         mu = atof(argv[1]);

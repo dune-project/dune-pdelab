@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_POWERCOMPOSITEGRIDFUNCTIONSPACEBASE_HH
-#define DUNE_PDELAB_POWERCOMPOSITEGRIDFUNCTIONSPACEBASE_HH
+#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_POWERCOMPOSITEGRIDFUNCTIONSPACEBASE_HH
+#define DUNE_PDELAB_GRIDFUNCTIONSPACE_POWERCOMPOSITEGRIDFUNCTIONSPACEBASE_HH
 
 #include <algorithm>
 #include <cstddef>
@@ -104,8 +104,8 @@ namespace Dune {
       template<typename E>
       struct ConstraintsContainer
       {
-        typedef typename conditional<
-          is_same<
+        typedef typename std::conditional<
+          std::is_same<
             typename GridFunctionSpace::template Child<0>::type::template ConstraintsContainer<E>::Type,
             EmptyTransformation
             >::value,
@@ -140,4 +140,4 @@ namespace Dune {
 
 }
 //! \}
-#endif // DUNE_PDELAB_POWERCOMPOSITEGRIDFUNCTIONSPACEBASE_HH
+#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_POWERCOMPOSITEGRIDFUNCTIONSPACEBASE_HH

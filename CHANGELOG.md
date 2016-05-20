@@ -48,7 +48,7 @@ PDELab 2.4
         to a hard **compile error** in order to avoid a deprecation warning whenever [convectiondiffusionparameter.hh][]
         is being included.
 
-    -   New Darcy velocity adapters in [darcy_CCFV.hh][] and [darcy_FEM.hh][] as well as a permeability adapter in
+    -   New Darcy velocity adapters in [darcyccfv.hh][] and [darcyfem.hh][] as well as a permeability adapter in
         [permeability_adapter.hh][].
 
     -   There has been a massive reorganization of the (Navier-)Stokes code. All implementations now use a common
@@ -74,6 +74,9 @@ PDELab 2.4
     -   The header [instationary/onestep.hh][] has been split into separate headers for the implicit and explicit one
         step methods and the parameter classes with the Butcher tableaus. The implementation of the class `FilenameHelper`
         has been moved to [common/instationaryfilenamehelper.hh][].
+
+    -   The possibility to swap velocity and pressure subtree in dgstokes using the VBLOCK preprocessing variable was
+        removed without a deprecation period.
 
 -   The linear algebra backends have also seen a large cleanup:
 
@@ -221,6 +224,33 @@ PDELab 2.4
     -   The `FiniteElementMap` API has been extended with a method `bool hasDOFs(int codim)`. All `FiniteElementMap`
         implementations must support this method, which has to return `true` if it is possible that DOFs might be attached
         to the given codimension.
+
+-   The support for matrix-free operator applications has been reworked to properly support matrix-free operator application
+    for nonlinear problems. The existing infrastructure only supplied the implementation with a single input parameter `z`
+    and operated on the assumption that the Jacobian of the residual was constant, i.e. it implemented the update
+    `y = y + J * z`, where J is the (constant) Jacobian. This does not work for nonlinear problems!
+
+    In order to remedy this problem, the `GridOperator` now has an additional method `nonlinear_apply_jacobian(x,z,r)`, where
+    `x` denotes the position at which to evaluate the jacobian. In other words, the new method implements the update
+    `y = y + J(x) * z`.
+
+    In order to support this new method, the interface of the local operator has been extended by new versions of the
+    `jacobian_apply_*()` methods, which take **two** input variables, one for `x` and one for `z`, e.g.
+
+    ```c++
+    template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+    void jacobian_apply_volume(const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y) const;
+    ```
+
+    Note the additional parameter `x`.
+
+    PDELab also provides a numerical implementation of those new methods. The existing mixin classes like
+    `NumericalJacobianApplyVolume` now provide both the linear and the nonlinear versions of the corresponding local operator
+    methods. In addition, there are new mixins like `NumericalNonlinearJacobianApplyVolume` that **only** provide the
+    **nonlinear** versions. Use those methods for nonlinear local operators to avoid accidentally using the linear version of
+    `jacobian_apply()`, which will yield incorrect results for nonlinear problems. Also, don't inherit from both mixins, as
+    that will cause compiler errors due to an ambiguous name lookup. If you want your local operator to support both the
+    linear and the nonlinear numerical implementation, just inherit from the existing mixins without `Nonlinear` in their name.
 
 -   The `StationaryMatrixLinearSolver` has been deprecated. Please use the `StationaryLinearProblemSolver` instead.
 
@@ -487,8 +517,8 @@ Links
 [convectiondiffusion.hh]: dune/pdelab/localoperator/convectiondiffusion.hh
 [nonlinearconvectiondiffusionfem.hh]: dune/pdelab/localoperator/nonlinearconvectiondiffusionfem.hh
 [diffusionmixed.hh]: dune/pdelab/localoperator/diffusionmixed.hh
-[darcy_CCFV.hh]: dune/pdelab/localoperator/darcy_CCFV.hh
-[darcy_FEM.hh]: dune/pdelab/localoperator/darcy_FEM.hh
+[darcyccfv.hh]: dune/pdelab/localoperator/darcyccfv.hh
+[darcyfem.hh]: dune/pdelab/localoperator/darcyfem.hh
 [permeability_adapter.hh]: dune/pdelab/localoperator/permeability_adapter.hh
 [taylorhoodnavierstokes.hh]: dune/pdelab/localoperator/taylorhoodnavierstokes.hh
 [cg_stokes.hh]: dune/pdelab/localoperator/cg_stokes.hh

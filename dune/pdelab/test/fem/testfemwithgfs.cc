@@ -12,6 +12,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/typetraits.hh>
 #include <dune/grid/yaspgrid.hh>
+#include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/test/gridexamples.hh>
 
@@ -56,7 +57,7 @@ void test_2d_cube(const Constraints& constraints, const VBE& vbe)
 
   // get view
   typedef Dune::YaspGrid<2>::LeafGridView GV;
-  const GV& gv=grid.leafGridView();
+  auto gv=grid.leafGridView();
 
   typedef GV::Grid::ctype DF;
 
@@ -104,14 +105,35 @@ void test_2d_simplex(const Constraints& constraints, const VBE& vbe)
 
     {
       // make grid
-      typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
+      using ALUType = Dune::ALUGrid<2, 2, Dune::simplex, Dune::nonconforming>;
+      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::make_array(1u, 1u));
+      alugrid->globalRefine(3);
+
+      // get view
+      typedef ALUType::LeafGridView GV;
+      auto gv = alugrid->leafGridView();
+
+      typedef GV::Grid::ctype DF;
+
+      typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::pointer PFEM;
+
+      PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::simplex>(gv);
+
+      test_fem(*pfem,gv,constraints,vbe);
+    }
+
+#elif HAVE_UG
+
+    {
+      // make grid
+      typedef Dune::UGGrid<2> Grid;
       std::shared_ptr<Grid> gridptr = TriangulatedUnitSquareMaker<Grid>::create();
       Grid& grid = *gridptr;
       grid.globalRefine(3);
 
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      auto gv=grid.leafGridView();
 
       typedef GV::Grid::ctype DF;
 
@@ -161,15 +183,35 @@ void test_3d_simplex(const Constraints& constraints, const VBE& vbe)
 #if HAVE_DUNE_ALUGRID
 
     {
+      using ALUType = Dune::ALUGrid<3, 3, Dune::simplex, Dune::nonconforming>;
+      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 3>(0.0), Dune::FieldVector<ALUType::ctype, 3>(1.0), Dune::make_array(1u, 1u, 1u));
+      alugrid->globalRefine(3);
+
+      // get view
+      typedef ALUType::LeafGridView GV;
+      auto gv = alugrid->leafGridView();
+
+      typedef GV::Grid::ctype DF;
+
+      typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::pointer PFEM;
+
+      PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::simplex>(gv);
+
+      test_fem(*pfem,gv,constraints,vbe);
+    }
+
+#elif HAVE_UG
+
+    {
       // make grid
-      typedef Dune::ALUGrid<3,3,Dune::simplex,Dune::nonconforming> Grid;
+      typedef Dune::UGGrid<3> Grid;
       std::shared_ptr<Grid> gridptr = TriangulatedUnitCubeMaker<Grid>::create();
       Grid& grid = *gridptr;
       grid.globalRefine(3);
 
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      auto gv=grid.leafGridView();
 
       typedef GV::Grid::ctype DF;
 
@@ -219,12 +261,12 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc,argv);
 
     typedef Dune::PDELab::NoConstraints Constraints;
-    Constraints constraints;
+    Constraints constraints DUNE_UNUSED;
 
     typedef Dune::PDELab::istl::VectorBackend<> VBE;
-    VBE vbe;
+    VBE vbe DUNE_UNUSED;
 
-    typedef double RF;
+    typedef double RF DUNE_UNUSED;
 
 #if FEM_DIM == 1
 

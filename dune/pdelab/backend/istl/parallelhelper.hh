@@ -5,9 +5,14 @@
 
 #include <limits>
 
-#include <dune/common/deprecated.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/stdstreams.hh>
+#include <dune/common/typetraits.hh>
+
+#if HAVE_UG && PDELAB_SEQUENTIAL_UG
+// We need the UGGrid declaration for the assertion
+#include <dune/grid/uggrid.hh>
+#endif
 
 #include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/solvercategory.hh>
@@ -345,7 +350,7 @@ namespace Dune {
         using Backend::native;
 
         const bool is_bcrs_matrix =
-          is_same<
+          std::is_same<
             typename istl::tags::container<
               Backend::Native<M>
               >::type::base_tag,
@@ -353,7 +358,7 @@ namespace Dune {
           >::value;
 
         const bool block_type_is_field_matrix =
-          is_same<
+          std::is_same<
             typename istl::tags::container<
               typename Backend::Native<M>::block_type
               >::type::base_tag,
@@ -476,6 +481,17 @@ namespace Dune {
 
 #endif // HAVE_MPI
 
+      template<typename T>
+      void assertParallelUG(T comm)
+      {}
+
+#if HAVE_UG && PDELAB_SEQUENTIAL_UG
+      template<int dim>
+      void assertParallelUG(Dune::CollectiveCommunication<Dune::UGGrid<dim> > comm)
+      {
+        static_assert(Dune::AlwaysFalse<Dune::UGGrid<dim> >::value, "Using sequential UG in parallel environment");
+      };
+#endif
       //! \} group Backend
 
     } // namespace istl

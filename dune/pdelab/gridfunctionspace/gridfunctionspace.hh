@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_HH
-#define DUNE_PDELAB_GRIDFUNCTIONSPACE_HH
+#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_GRIDFUNCTIONSPACE_HH
+#define DUNE_PDELAB_GRIDFUNCTIONSPACE_GRIDFUNCTIONSPACE_HH
 
 #include <cstddef>
 #include <map>
@@ -202,8 +202,8 @@ namespace Dune {
       {
 
         //! \brief define Type as the Type of a container of E's
-        typedef typename conditional<
-          is_same<
+        typedef typename std::conditional<
+          std::is_same<
             CE,
             NoConstraints
             >::value,
@@ -414,4 +414,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_GRIDFUNCTIONSPACE_HH

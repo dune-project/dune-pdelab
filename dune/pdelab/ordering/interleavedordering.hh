@@ -167,7 +167,7 @@ namespace Dune {
 
       void update()
       {
-        for (std::size_t i = 0; i < Node::CHILDREN; ++i)
+        for (std::size_t i = 0; i < k; ++i)
           {
             this->child(i).update();
           }
@@ -192,7 +192,7 @@ namespace Dune {
           typename Transformation::DOFIndex,
           typename Transformation::ContainerIndex,
           TC,
-          GFS::CHILDREN
+          TypeTree::staticDegree<GFS>
           > type;
 
         typedef std::shared_ptr<type> storage_type;
@@ -200,13 +200,13 @@ namespace Dune {
       };
 
       template<typename TC>
-      static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<std::shared_ptr<TC>,GFS::CHILDREN>& children)
+      static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<std::shared_ptr<TC>,TypeTree::staticDegree<GFS>>& children)
       {
         return typename result<TC>::type(gfs.backend().blocked(gfs),gfs.orderingTag(),children,const_cast<GFS*>(&gfs));
       }
 
       template<typename TC>
-      static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t, const array<std::shared_ptr<TC>,GFS::CHILDREN>& children)
+      static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t, const array<std::shared_ptr<TC>,TypeTree::staticDegree<GFS>>& children)
       {
         return std::make_shared<typename result<TC>::type>(gfs->backend().blocked(*gfs),gfs->orderingTag(),children,const_cast<GFS*>(gfs.get()));
       }
@@ -309,4 +309,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_ORDERING_LEXICOGRAPHICORDERING_HH
+#endif // DUNE_PDELAB_ORDERING_INTERLEAVEDORDERING_HH

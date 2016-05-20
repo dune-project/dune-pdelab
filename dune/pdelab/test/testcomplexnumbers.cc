@@ -44,11 +44,6 @@
 #include<dune/common/float_cmp.hh>
 #include<dune/common/typetraits.hh>
 #include<dune/grid/yaspgrid.hh>
-#if HAVE_UG
-#include<dune/grid/uggrid.hh>
-#else
-#error UGERR!
-#endif
 #include<dune/grid/io/file/vtk.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/istl/bvector.hh>
@@ -182,17 +177,21 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
   Dune::InverseOperatorResult stat;
   Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
 
+#if HAVE_SUITESPARSE_UMFPACK
   // <<<4.1>>> UMFPack
   std::cout << "=== Using UMFPack as a direct solver" << std::endl;
   Dune::UMFPack<ISTLM> umfpack(native(m), 1);
   umfpack.apply(native(u),native(b),stat);
+#endif
 
+#if HAVE_SUPERLU
   // <<<4.2>> SuperLU
   std::cout << "=== Using SuperLU as a direct solver" << std::endl;
   Dune::SuperLU<ISTLM> superlu(native(m), 1);
   u = 0;
   b = r;
   superlu.apply(native(u),native(b),stat);
+#endif
 
   // <<<4.3>>> GMRes ILU0
   std::cout << "=== Using GMRes ILU0" << std::endl;
@@ -304,7 +303,7 @@ int main(int argc, char** argv)
       typedef std::complex<R> C;
 
       Dune::FieldVector<double,2> L(1.);
-      Dune::array<int,2> N(Dune::fill_array<int,2>(128));
+      Dune::array<int,2> N(Dune::fill_array<int,2>(8));
       std::bitset<2> periodic(false);
       int overlap=0;
       Dune::YaspGrid<2> grid(L,N,periodic,overlap);

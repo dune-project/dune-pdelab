@@ -20,8 +20,11 @@ common_HEADERS =				\
 	logtag.hh				\
 	multiindex.hh				\
 	nullmutex.hh				\
+	partitionviewentityset.hh               \
 	polymorphicbufferwrapper.hh		\
+	quadraturerules.hh			\
 	range.hh				\
+	referenceelements.hh			\
 	simpledofindex.hh			\
 	topologyutility.hh			\
 	typetraits.hh				\

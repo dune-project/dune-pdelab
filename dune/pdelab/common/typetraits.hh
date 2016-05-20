@@ -18,20 +18,34 @@ namespace Dune {
     struct PowerGridFunctionTag;
     struct CompositeGridFunctionTag;
 
-    template<typename T, typename = void>
-    struct IsGridFunction
-    {
-      static const bool value = false;
-    };
+#ifndef DOXYGEN
+
+    namespace impl {
+
+      template<typename T, typename = void>
+      struct IsGridFunction
+      {
+        static const bool value = false;
+      };
+
+      template<typename T>
+      struct IsGridFunction<T, typename AlwaysVoid<TypeTree::ImplementationTag<T>>::type >
+      {
+        using A = TypeTree::ImplementationTag<T>;
+        static const bool value = std::is_same<A, GridFunctionTag>::value ||
+          std::is_same<A, PowerGridFunctionTag>::value ||
+          std::is_same<A, CompositeGridFunctionTag>::value;
+      };
+
+    } // namespace impl
+
+#endif // DOXYGEN
 
     template<typename T>
-    struct IsGridFunction<T, typename AlwaysVoid<typename T::ImplementationTag>::type >
-    {
-      typedef typename T::ImplementationTag A;
-      static const bool value = is_same<A, GridFunctionTag>::value ||
-        is_same<A, PowerGridFunctionTag>::value ||
-        is_same<A, CompositeGridFunctionTag>::value;
-    };
+    using IsGridFunction = std::integral_constant<bool,impl::IsGridFunction<std::decay_t<T>>::value>;
+
+    template<typename T>
+    constexpr bool isGridFunction = IsGridFunction<T>::value;
 
   } // end namespace PDELab
 } // end namespace Dune

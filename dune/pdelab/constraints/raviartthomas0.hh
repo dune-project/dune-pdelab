@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-#ifndef DUNE_PDELAB_RT0CONSTRAINTS_HH
-#define DUNE_PDELAB_RT0CONSTRAINTS_HH
+#ifndef DUNE_PDELAB_CONSTRAINTS_RAVIARTTHOMAS0_HH
+#define DUNE_PDELAB_CONSTRAINTS_RAVIARTTHOMAS0_HH
 
 #include<dune/typetree/typetree.hh>
 
@@ -45,4 +45,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_CONSTRAINTS_RAVIARTTHOMAS0_HH

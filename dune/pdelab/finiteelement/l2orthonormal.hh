@@ -1,5 +1,8 @@
-#ifndef DUNE_PM_ORTHONORMAL_HH
-#define DUNE_PM_ORTHONORMAL_HH
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
+
+#ifndef DUNE_PDELAB_FINITEELEMENT_L2ORTHONORMAL_HH
+#define DUNE_PDELAB_FINITEELEMENT_L2ORTHONORMAL_HH
 
 #include<iostream>
 #include<algorithm>
@@ -917,4 +920,4 @@ namespace Dune {
 
 /** @} end documentation */
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENT_L2ORTHONORMAL_HH

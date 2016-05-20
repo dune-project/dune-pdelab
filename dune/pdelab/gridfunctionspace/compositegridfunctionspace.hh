@@ -47,7 +47,7 @@ namespace Dune {
           typename TypeTree::Child<TypeTree::CompositeNode<Children...>,0>::Traits::EntitySet,
           Backend,
           OrderingTag,
-          TypeTree::CompositeNode<Children...>::CHILDREN
+          sizeof...(Children)
         >
       , public DataHandleProvider<CompositeGridFunctionSpace<Backend,OrderingTag,Children...> >
     {
@@ -58,14 +58,14 @@ namespace Dune {
         typename TypeTree::Child<NodeT,0>::Traits::EntitySet,
         Backend,
         OrderingTag,
-        NodeT::CHILDREN> ImplementationBase;
+        sizeof...(Children)> ImplementationBase;
 
       friend class PowerCompositeGridFunctionSpaceBase<
         CompositeGridFunctionSpace,
         typename TypeTree::Child<NodeT,0>::Traits::EntitySet,
         Backend,
         OrderingTag,
-        NodeT::CHILDREN>;
+        sizeof...(Children)>;
 
       typedef TypeTree::TransformTree<CompositeGridFunctionSpace,
                                       gfs_to_ordering<CompositeGridFunctionSpace>

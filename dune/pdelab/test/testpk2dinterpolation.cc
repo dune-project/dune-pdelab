@@ -13,6 +13,7 @@
 #include <dune/geometry/quadraturerules.hh>
 
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include <dune/grid/utility/structuredgridfactory.hh>
 #if HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
 #endif
@@ -148,11 +149,12 @@ int main(int argc, char** argv)
 #endif // HAVE_ALBERTA
 
 #if HAVE_DUNE_ALUGRID
-    test(UnitTriangleMaker          <Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >(),
-         result, 250000, "alu-triangle");
-    test(TriangulatedUnitSquareMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >(),
-         result, 250000, "alu-square");
-#endif // HAVE_DUNE_ALUGRID
+    using ALUType = Dune::ALUGrid<2, 2, Dune::simplex, Dune::nonconforming>;
+    auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::make_array(1u, 1u));
+    run_test<1>(alugrid, result, 25000, "alu-triangle");
+    run_test<2>(alugrid, result, 25000, "alu-triangle");
+    run_test<3>(alugrid, result, 25000, "alu-triangle");
+#endif
 
 #if HAVE_UG
     test(UnitTriangleMaker          <Dune::UGGrid<2>            >(),

@@ -1,7 +1,7 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
-#ifndef DUNE_SEQISTLSOLVERBACKEND_HH
-#define DUNE_SEQISTLSOLVERBACKEND_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_SEQISTLSOLVERBACKEND_HH
+#define DUNE_PDELAB_BACKEND_ISTL_SEQISTLSOLVERBACKEND_HH
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/parallel/mpihelper.hh>
@@ -443,7 +443,7 @@ namespace Dune {
     };
 #endif // HAVE_SUPERLU || DOXYGEN
 
-#if HAVE_UMFPACK || DOXYGEN
+#if HAVE_SUITESPARSE_UMFPACK || DOXYGEN
     /**
      * @brief Solver backend using UMFPack as a direct solver.
      */
@@ -494,7 +494,7 @@ namespace Dune {
     private:
       int verbose;
     };
-#endif // HAVE_UMFPACK || DOXYGEN
+#endif // HAVE_SUITESPARSE_UMFPACK || DOXYGEN
 
     //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
     class ISTLBackend_SEQ_ExplicitDiagonal
@@ -865,4 +865,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_BACKEND_ISTL_SEQISTLSOLVERBACKEND_HH

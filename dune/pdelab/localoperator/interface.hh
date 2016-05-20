@@ -46,7 +46,7 @@ namespace Dune {
      * \li \c *_boundary(): methods called on the bounary intersections,
      *     controlled by the \c do*Boundary flags.
      *
-     * Not all combinations of categories and methods to actually exits.
+     * Not all combinations of categories and methods do actually exist.
      *
      * To assemble the global sparsity pattern, residual or jacobian, the
      * GridOperatorSpace iterates over the elements of the grid.  For each
@@ -86,6 +86,20 @@ namespace Dune {
       : public LocalOperatorDefaultFlags
     {
     public:
+
+      static const bool doPatternVolume = true;
+      static const bool doPatternVolumePostSkeleton = true;
+      static const bool doPatternSkeleton = true;
+      static const bool doPatternBoundary = true;
+      static const bool doAlphaVolume = true;
+      static const bool doAlphaVolumePostSkeleton = true;
+      static const bool doAlphaSkeleton = true;
+      static const bool doAlphaBoundary = true;
+      static const bool doLambdaVolume = true;
+      static const bool doLambdaVolumePostSkeleton = true;
+      static const bool doLambdaSkeleton = true;
+      static const bool doLambdaBoundary = true;
+
       //////////////////////////////////////////////////////////////////////
       //
       //! \name Methods for the sparsity pattern
@@ -108,7 +122,8 @@ namespace Dune {
       template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume
       ( const LFSU& lfsu, const LFSV& lfsv,
-        LocalPattern& pattern);
+        LocalPattern& pattern) const
+      {}
 
       //! \brief get an element's contribution to the sparsity pattern after
       //!        the intersections have been handled
@@ -127,7 +142,8 @@ namespace Dune {
       template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume_post_skeleton
       ( const LFSU& lfsu, const LFSV& lfsv,
-        LocalPattern& pattern);
+        LocalPattern& pattern) const
+      {}
 
       //! get an internal intersection's contribution to the sparsity pattern
       /**
@@ -155,7 +171,8 @@ namespace Dune {
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const LFSV& lfsv_n,
         LocalPattern& pattern_sn,
-        LocalPattern& pattern_ns);
+        LocalPattern& pattern_ns) const
+      {}
 
       //! get a boundary intersection's contribution to the sparsity pattern
       /**
@@ -176,7 +193,8 @@ namespace Dune {
       template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_boundary
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
-        LocalPattern& pattern_ss);
+        LocalPattern& pattern_ss) const
+      {}
 
       //! \} Methods for the sparsity pattern
 
@@ -213,7 +231,8 @@ namespace Dune {
       void alpha_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        R& r);
+        R& r) const
+      {}
 
       //! \brief get an element's contribution to alpha after the
       //!        intersections have been handled
@@ -230,8 +249,6 @@ namespace Dune {
        *       This is the difference to
        *       jacobian_apply_volume_post_skeleton().
        *
-       * \note \c x and \c r are of type std::vector.
-       *
        * \note The method should not clear \c r; it should just add its
        *       entries to it.
        *
@@ -244,7 +261,8 @@ namespace Dune {
       void alpha_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        R& r);
+        R& r) const
+      {}
 
       //! get an internal intersections's contribution to alpha
       /**
@@ -269,8 +287,6 @@ namespace Dune {
        *       be omitted from lambda_skeleton() in that case, of course).
        *       This is the difference to jacobian_apply_skeleton().
        *
-       * \note \c x_s, \c x_n, \c r_s and \c r_n are of type std::vector.
-       *
        * \note The method should not clear \c r_s and \c r_n; it should just
        *       add its entries to them.
        *
@@ -285,7 +301,8 @@ namespace Dune {
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        R& r_s, R& r_n);
+        R& r_s, R& r_n) const
+      {}
 
       //! get a boundary intersections's contribution to alpha
       /**
@@ -303,8 +320,6 @@ namespace Dune {
        *       from lambda_boundary() in that case, of course).  This is the
        *       difference to jacobian_apply_boundary().
        *
-       * \note \c x_s and \c r_s are of type std::vector.
-       *
        * \note The method should not clear \c r_s; it should just add its
        *       entries to it.
        *
@@ -318,7 +333,8 @@ namespace Dune {
       void alpha_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        R& r_s);
+        R& r_s) const
+      {}
 
       //! \} Methods for the residual -- non-constant parts
 
@@ -334,8 +350,6 @@ namespace Dune {
        * \param lfsv LocalFunctionSpace of the test GridFunctionSpace.
        * \param r    Local part of the residual.
        *
-       * \note \c r is of type std::vector.
-       *
        * \note The method should not clear \c r; it should just add its
        *       entries to it.
        *
@@ -344,7 +358,8 @@ namespace Dune {
        * lambda_boundary() methods are called (if they are called at all).
        */
       template<typename EG, typename LFSV, typename R>
-      void lambda_volume(const EG& eg, const LFSV& lfsv, R& r);
+      void lambda_volume(const EG& eg, const LFSV& lfsv, R& r) const
+      {}
 
       //! \brief get an element's contribution to lambda after the
       //!        intersections have been handled
@@ -353,8 +368,6 @@ namespace Dune {
        * \param eg   ElementGeometry describing the entity.
        * \param lfsv LocalFunctionSpace of the test GridFunctionSpace.
        * \param r    Local part of the residual.
-       *
-       * \note \c r is of type std::vector.
        *
        * \note The method should not clear \c r; it should just add its
        *       entries to it.
@@ -365,7 +378,8 @@ namespace Dune {
        * called (if they are called at all).
        */
       template<typename EG, typename LFSV, typename R>
-      void lambda_volume_post_skeleton(const EG& eg, const LFSV& lfsv, R& r);
+      void lambda_volume_post_skeleton(const EG& eg, const LFSV& lfsv, R& r) const
+      {}
 
       //! get an internal intersections's contribution to lambda
       /**
@@ -378,8 +392,6 @@ namespace Dune {
        * \param r_s    Local part of the residual in the inside entity.
        * \param r_n    Local part of the residual in the outside entity.
        *
-       * \note \c r_s and \c r_n are of type std::vector.
-       *
        * \note The method should not clear \c r_s and \c r_n; it should just
        *       add its entries to them.
        *
@@ -391,7 +403,8 @@ namespace Dune {
       template<typename IG, typename LFSV, typename R>
       void lambda_skeleton(const IG& ig,
                            const LFSV& lfsv_s, const LFSV& lfsv_n,
-                           R& r_s, R& r_n);
+                           R& r_s, R& r_n) const
+      {}
 
       //! get a boundary intersections's contribution to lambda
       /**
@@ -400,8 +413,6 @@ namespace Dune {
        * \param lfsv_s LocalFunctionSpace of the test GridFunctionSpace in the
        *               inside entity.
        * \param r_s    Local part of the residual in the inside entity.
-       *
-       * \note \c r_s is of type std::vector.
        *
        * \note The method should not clear \c r_s; it should just add its
        *       entries to it.
@@ -412,36 +423,42 @@ namespace Dune {
        * the call to lambda_volume_post_skeleton().
        */
       template<typename IG, typename LFSV, typename R>
-      void lambda_boundary(const IG& ig, const LFSV& lfsv_s, R& r_s);
+      void lambda_boundary(const IG& ig, const LFSV& lfsv_s, R& r_s) const
+      {}
 
       //! \} Methods for the residual -- constant parts
 
       //////////////////////////////////////////////////////////////////////
       //
-      //! \name Methods for the application of the jacobian
+      //! \name Methods for the application of the jacobian for linear problems
       //! \{
       //
 
-      //! apply an element's jacobian
+      //! Applies an element's jacobian to a vector for a linear problem.
       /**
+       * This method performs the following update:
+       *
+       * \f[ y = y + (\nabla_u \alpha_{\text{vol}}) z, \f]
+       *
+       * where \f$u\f$ is the solution and the residual is considered linear in \f$u\f$.
+       *
        * \param eg   ElementGeometry describing the entity.
        * \param lfsu LocalFunctionSpace of the trial GridFunctionSpace.
-       * \param x    Local position in the trial GridFunctionSpace.
+       * \param z    Local position in the trial space to which to apply the Jacobian.
        * \param lfsv LocalFunctionSpace of the test GridFunctionSpace.
        * \param y    Where to store the result.
        *
        * \note This is different from alpha_volume(), since the result will be
-       *       linear in \c x, whereas alpha_volume() may include
-       *       contributions to the the residual which are constant in \c x.
-       *
-       * \note \c x and \c y are of type std::vector.
+       *       linear in \c z, whereas alpha_volume() may include
+       *       contributions to the the residual which are constant in \c z.
        *
        * \note The method should not clear \c y; it should just add its
        *       entries to it.
        *
-       * \note \c x is both the position where the jacobian is evaluated (for
-       *       non-linear problems) as well as the vector the jacobian is
-       *       applied to.
+       * \note This method assumes that the residual is linear and the Jacobian
+       *       is constant; as such, the method isn't passed a linearization point
+       *       at which to evaluate the Jacobian, but only the vector \c z to which
+       *       the Jacobian should be applied.
        *
        * This method is controlled by the flag \ref doAlphaVolume.  For a
        * given element, it is called *before* the jacobian_apply_skeleton()
@@ -452,75 +469,88 @@ namespace Dune {
                typename Y>
       void jacobian_apply_volume
       ( const EG& eg,
-        const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        Y& y);
+        const LFSU& lfsu, const X& z, const LFSV& lfsv,
+        Y& y) const
+      {}
 
-      //! \brief apply an element's jacobian after the intersections have been
-      //!        handled
+      //! Applies an element's jacobian to a vector for a linear problem after the
+      //! intersections have been handled.
       /**
+       * This method performs the following update:
+       *
+       * \f[ y = y + (\nabla_u \alpha_{\text{vol\_post\_skel}}) z, \f]
+       *
+       * where \f$u\f$ is the solution and the residual is considered linear in \f$u\f$.
+       *
        * \param eg   ElementGeometry describing the entity.
        * \param lfsu LocalFunctionSpace of the trial GridFunctionSpace.
-       * \param x    Local position in the trial GridFunctionSpace.
+       * \param z    Local position in the trial space to which to apply the Jacobian.
        * \param lfsv LocalFunctionSpace of the test GridFunctionSpace.
        * \param y    Where to store the result.
        *
-       * \note This is different from alpha_volume_post_skeleton(), since the
-       *       result will be linear in \c x, whereas
-       *       alpha_volume_post_skeleton() may include contributions to the
-       *       the residual which are constant in \c x.
-       *
-       * \note \c x and \c y are of type std::vector.
+       * \note This is different from alpha_volume_post_skeleton(), since the result
+       *       will be linear in \c z, whereas alpha_volume_post_skeleton() may include
+       *       contributions to the the residual which are constant in \c z.
        *
        * \note The method should not clear \c y; it should just add its
        *       entries to it.
        *
-       * \note \c x is both the position where the jacobian is evaluated (for
-       *       non-linear problems) as well as the vector the jacobian is
-       *       applied to.
+       * \note This method assumes that the residual is linear and the Jacobian
+       *       is constant; as such, the method isn't passed a linearization point
+       *       at which to evaluate the Jacobian, but only the vector \c z to which
+       *       the Jacobian should be applied.
        *
-       * This method is controlled by the flag \ref doAlphaVolumePostSkeleton.
-       * For a given element, it is called *after* the
-       * jacobian_apply_skeleton() and/or jacobian_apply_boundary() methods
-       * are called (if they are called at all).
+       * This method is controlled by the flag \ref doAlphaVolumePostSkeleton.  For a
+       * given element, it is called *after* the jacobian_apply_skeleton()
+       * and/or jacobian_apply_boundary() methods are called (if they are
+       * called at all).
        */
       template<typename EG, typename LFSU, typename X, typename LFSV,
                typename Y>
       void jacobian_apply_volume_post_skeleton
       ( const EG& eg,
-        const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        Y& y);
+        const LFSU& lfsu, const X& z, const LFSV& lfsv,
+        Y& y) const
+      {}
 
-      //! apply an internal intersections's jacobians
+      //! Applies an internal intersections's jacobians to the appropriate vectors
+      //! for a linear problem.
       /**
+       * This method performs the following updates:
+       * \f{align*}{
+       *     y_s & = y_s + (\nabla_{u_s} \alpha_{\text{skel},s}) z_s + (\nabla_{u_n} \alpha_{\text{skel},s}) z_n, \\
+       *     y_n & = y_n + (\nabla_{u_s} \alpha_{\text{skel},n}) z_s + (\nabla_{u_n} \alpha_{\text{skel},n}) z_n,
+       * \f}
+       * where \f$u_s\f$ and \f$u_n\f$ are the solution on the inside and outside of the intersection
+       *  and the residual is considered linear in \f$u_{\{s,n\}}\f$.
        * \param ig     IntersectionGeometry describing the intersection.
        * \param lfsu_s LocalFunctionSpace of the trial GridFunctionSpace in
        *               the inside entity.
-       * \param x_s    Local position in the trial GridFunctionSpace in the
-       *               inside entity.
+       * \param z_s    Local position in the trial space for the inside entity
+       *               to which to apply the Jacobian.
        * \param lfsv_s LocalFunctionSpace of the test GridFunctionSpace in the
        *               inside entity.
        * \param lfsu_n LocalFunctionSpace of the trial GridFunctionSpace in
        *               the outside entity.
-       * \param x_n    Local position in the trial GridFunctionSpace in the
-       *               outside entity.
+       * \param z_n    Local position in the trial space for the outside entity
+       *               to which to apply the Jacobian.
        * \param lfsv_n LocalFunctionSpace of the test GridFunctionSpace in the
        *               outside entity.
        * \param y_s    Where to store the inside entity's result.
        * \param y_n    Where to store the outside entity's result.
        *
        * \note This is different from alpha_skeleton(), since the result will
-       *       be linear in \c x_s and \c x_n, whereas alpha_skeleton() may
+       *       be linear in \c z_s and \c z_n, whereas alpha_skeleton() may
        *       include contributions to the the residual which are constant in
-       *       \c x_s and \c x_n.
-       *
-       * \note \c x_s, \c x_n, \c y_s and \c y_n are of type std::vector.
+       *       \c z_s and \c z_n.
        *
        * \note The method should not clear \c y_s and \c y_n; it should just
        *       add its entries to them.
        *
-       * \note \c x_s and \c x_n are both the positions where the jacobian is
-       *       evaluated (for non-linear problems) as well as the vectors the
-       *       jacobian is applied to.
+       * \note This method assumes that the residual is linear and the Jacobian
+       *       is constant; as such, the method isn't passed linearization points
+       *       at which to evaluate the Jacobian, but only the vectors \c z_s and
+       *       \c z_n to which the Jacobian should be applied.
        *
        * This method is controlled by the flag \ref doAlphaSkeleton.  For a
        * given element, it's calls happen intermingled with the calls to
@@ -532,17 +562,24 @@ namespace Dune {
                typename Y>
       void jacobian_apply_skeleton
       ( const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        Y& y_s, Y& y_n);
+        const LFSU& lfsu_s, const X& z_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& z_n, const LFSV& lfsv_n,
+        Y& y_s, Y& y_n) const
+      {}
 
-      //! apply a boundary intersections's jacobian
+      //! apply a boundary intersections's jacobian for a linear problem.
       /**
+       * This method performs the following update:
+       *
+       * \f[ y = y + (\nabla_u \alpha_{\text{bnd}}) z, \f]
+       *
+       * where \f$u\f$ is the solution and the residual is considered linear in \f$u\f$.
+       *
        * \param ig     IntersectionGeometry describing the intersection.
        * \param lfsu_s LocalFunctionSpace of the trial GridFunctionSpace in
        *               the inside entity.
-       * \param x_s    Local position in the trial GridFunctionSpace in the
-       *               inside entity.
+       * \param z_s    Local position in the trial space for the inside entity
+       *               to which to apply the Jacobian.
        * \param lfsv_s LocalFunctionSpace of the test GridFunctionSpace in the
        *               inside entity.
        * \param y_s    Local part of the residual in the inside entity.
@@ -551,14 +588,13 @@ namespace Dune {
        *       be linear in \c x, whereas alpha_boundary() may include
        *       contributions to the the residual which are constant in \c x.
        *
-       * \note \c x_s and \c y_s are of type std::vector.
-       *
        * \note The method should not clear \c y_s; it should just add its
        *       entries to it.
        *
-       * \note \c x_s is both the position where the jacobian is evaluated
-       *       (for non-linear problems) as well as the vector the jacobian is
-       *       applied to.
+       * \note This method assumes that the residual is linear and the Jacobian
+       *       is constant; as such, the method isn't passed a linearization point
+       *       at which to evaluate the Jacobian, but only the vector \c z_s
+       *       to which the Jacobian should be applied.
        *
        * This method is controlled by the flag \ref doAlphaBoundary.  For a
        * given element, it's calls happen intermingled with the calls to
@@ -570,10 +606,205 @@ namespace Dune {
                typename Y>
       void jacobian_apply_boundary
       ( const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        Y& y_s);
+        const LFSU& lfsu_s, const X& z_s, const LFSV& lfsv_s,
+        Y& y_s) const
+      {}
+
+      //! \} Methods for the application of the jacobian for linear problems
+
+
+      //////////////////////////////////////////////////////////////////////
+      //
+      //! \name Methods for the application of the jacobian for nonlinear problems
+      //! \{
+      //
+
+      //! Applies an element's jacobian to a vector for a nonlinear problem.
+      /**
+       * This method performs the following update:
+       *
+       * \f[ y = y + (\nabla_u \alpha_{\text{vol}})\Big|_x z, \f]
+       *
+       * where \f$u\f$ is the solution and the Jacobian is evaluated at \f$u=x\f$.
+       *
+       * \param eg   ElementGeometry describing the entity.
+       * \param lfsu LocalFunctionSpace of the trial GridFunctionSpace.
+       * \param x    Local position in the trial space at which to evaluate the Jacobian.
+       * \param z    Local position in the trial space to which to apply the Jacobian.
+       * \param lfsv LocalFunctionSpace of the test GridFunctionSpace.
+       * \param y    Where to store the result.
+       *
+       * \note This is different from alpha_volume(), since the result will be
+       *       linear in \c z, whereas alpha_volume() may include
+       *       contributions to the the residual which are constant in \c z.
+       *
+       * \note The method should not clear \c y; it should just add its
+       *       entries to it.
+       *
+       * \note This method assumes that the residual is not linear and the Jacobian
+       *       is not constant; the Jacobian should be evaluated for the vector \c x
+       *       and applied to the vector \c z.
+       *
+       * This method is controlled by the flag \ref doAlphaVolume.  For a
+       * given element, it is called *before* the jacobian_apply_skeleton()
+       * and/or jacobian_apply_boundary() methods are called (if they are
+       * called at all).
+       */
+      template<typename EG, typename LFSU, typename X, typename LFSV,
+               typename Y>
+      void jacobian_apply_volume
+      ( const EG& eg,
+        const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv,
+        Y& y) const
+      {}
+
+      //! Applies an element's jacobian to a vector for a nonlinear problem after the
+      //! intersections have been handled.
+      /**
+       * This method performs the following update:
+       *
+       * \f[ y = y + (\nabla_u \alpha_{\text{vol\_post\_skel}})\Big|_x z, \f]
+       *
+       * where \f$u\f$ is the solution and the Jacobian is evaluated at \f$u=x\f$.
+       *
+       * \param eg   ElementGeometry describing the entity.
+       * \param lfsu LocalFunctionSpace of the trial GridFunctionSpace.
+       * \param x    Local position in the trial space at which to evaluate the Jacobian.
+       * \param z    Local position in the trial space to which to apply the Jacobian.
+       * \param lfsv LocalFunctionSpace of the test GridFunctionSpace.
+       * \param y    Where to store the result.
+       *
+       * \note This is different from alpha_volume_post_skeleton(), since the result
+       *       will be linear in \c z, whereas alpha_volume_post_skeleton() may include
+       *       contributions to the the residual which are constant in \c z.
+       *
+       * \note The method should not clear \c y; it should just add its
+       *       entries to it.
+       *
+       * \note This method assumes that the residual is not linear and the Jacobian
+       *       is not constant; the Jacobian should be evaluated for the vector \c x
+       *       and applied to the vector \c z.
+       *
+       * This method is controlled by the flag \ref doAlphaVolumePostSkeleton.  For a
+       * given element, it is called *after* the jacobian_apply_skeleton()
+       * and/or jacobian_apply_boundary() methods are called (if they are
+       * called at all).
+       */
+      template<typename EG, typename LFSU, typename X, typename LFSV,
+               typename Y>
+      void jacobian_apply_volume_post_skeleton
+      ( const EG& eg,
+        const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv,
+        Y& y) const
+      {}
+
+      //! Applies an internal intersections's jacobians to the appropriate vectors
+      //! for a nonlinear problem.
+      /**
+       * This method performs the following updates:
+       * \f{align*}{
+       *     y_s & = y_s + (\nabla_{u_s} \alpha_{\text{skel},s})\Big|_{(x_s,x_n)} z_s
+       *                 + (\nabla_{u_n} \alpha_{\text{skel},s})\Big|_{(x_s,x_n)} z_n, \\
+       *     y_n & = y_n + (\nabla_{u_s} \alpha_{\text{skel},n})\Big|_{(x_s,x_n)} z_s
+       *                 + (\nabla_{u_n} \alpha_{\text{skel},n})\Big|_{(x_s,x_n)} z_n,
+       * \f}
+       * where \f$u_s\f$ and \f$u_n\f$ are the solution on the inside and the outside of
+       * the intersection and the Jacobian is evaluated at \f$u = (x_s,x_n)\f$$.
+       *
+       * \param ig     IntersectionGeometry describing the intersection.
+       * \param lfsu_s LocalFunctionSpace of the trial GridFunctionSpace in
+       *               the inside entity.
+       * \param x_s    Local position in the trial space for the inside entity
+       *               at which to evaluate the Jacobian.
+       * \param z_s    Local position in the trial space for the inside entity
+       *               to which to apply the Jacobian.
+       * \param lfsv_s LocalFunctionSpace of the test GridFunctionSpace in the
+       *               inside entity.
+       * \param lfsu_n LocalFunctionSpace of the trial GridFunctionSpace in
+       *               the outside entity.
+       * \param x_n    Local position in the trial space for the outside entity
+       *               at which to evaluate the Jacobian.
+       * \param z_n    Local position in the trial space for the outside entity
+       *               to which to apply the Jacobian.
+       * \param lfsv_n LocalFunctionSpace of the test GridFunctionSpace in the
+       *               outside entity.
+       * \param y_s    Where to store the inside entity's result.
+       * \param y_n    Where to store the outside entity's result.
+       *
+       * \note This is different from alpha_skeleton(), since the result will
+       *       be linear in \c z_s and \c z_n, whereas alpha_skeleton() may
+       *       include contributions to the the residual which are constant in
+       *       \c z_s and \c z_n.
+       *
+       * \note The method should not clear \c y_s and \c y_n; it should just
+       *       add its entries to them.
+       *
+       * \note This method assumes that the residual is not linear and the Jacobian
+       *       is not constant; the Jacobian should be evaluated for the vector \c x
+       *       and applied to the vector \c z.
+       *
+       * This method is controlled by the flag \ref doAlphaSkeleton.  For a
+       * given element, it's calls happen intermingled with the calls to
+       * jacobian_apply_boundary(), but after the call to
+       * jacobian_apply_volume() and before the call to
+       * jacobian_apply_volume_post_skeleton().
+       */
+      template<typename IG, typename LFSU, typename X, typename LFSV,
+               typename Y>
+      void jacobian_apply_skeleton
+      ( const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
+        Y& y_s, Y& y_n) const
+      {}
+
+      //! apply a boundary intersections's jacobian for a nonlinear problem.
+      /**
+       * This method performs the following update:
+       *
+       * \f[ y = y + (\nabla_u \alpha_{\text{bnd}})\Big|_{x_s} z, \f]
+       *
+       * where \f$u\f$ is the solution and the Jacobian is evaluated at \f$u = x_s\f$.
+       *
+       * \param ig     IntersectionGeometry describing the intersection.
+       * \param lfsu_s LocalFunctionSpace of the trial GridFunctionSpace in
+       *               the inside entity.
+       * \param x_s    Local position in the trial space for the inside entity
+       *               at which to evaluate the Jacobian.
+       * \param z_s    Local position in the trial space for the inside entity
+       *               to which to apply the Jacobian.
+       * \param lfsv_s LocalFunctionSpace of the test GridFunctionSpace in the
+       *               inside entity.
+       * \param y_s    Local part of the residual in the inside entity.
+       *
+       * \note This is different from alpha_boundary(), since the result will
+       *       be linear in \c x, whereas alpha_boundary() may include
+       *       contributions to the the residual which are constant in \c x.
+       *
+       * \note The method should not clear \c y_s; it should just add its
+       *       entries to it.
+       *
+       * \note This method assumes that the residual is not linear and the Jacobian
+       *       is not constant; the Jacobian should be evaluated for the vector \c x
+       *       and applied to the vector \c z.
+       *
+       * This method is controlled by the flag \ref doAlphaBoundary.  For a
+       * given element, it's calls happen intermingled with the calls to
+       * jacobian_apply_skeleton(), but after the call to
+       * jacobian_apply_volume() and before the call to
+       * jacobian_apply_volume_post_skeleton().
+       */
+      template<typename IG, typename LFSU, typename X, typename LFSV,
+               typename Y>
+      void jacobian_apply_boundary
+      ( const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+        Y& y_s) const
+      {}
 
       //! \} Methods for the application of the jacobian
+
+
 
       //////////////////////////////////////////////////////////////////////
       //
@@ -589,8 +820,6 @@ namespace Dune {
        * \param lfsv LocalFunctionSpace of the test GridFunctionSpace.
        * \param mat  Where to store the contribution to the jacobian.
        *
-       * \note \c x is of type std::vector.
-       *
        * \note The method should not clear \c mat; it should just add its
        *       entries to it.
        *
@@ -603,7 +832,8 @@ namespace Dune {
       void jacobian_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix& mat);
+        LocalMatrix& mat) const
+      {}
 
       //! get an element's jacobian after the intersections have been handled
       /**
@@ -612,8 +842,6 @@ namespace Dune {
        * \param x    Local position in the trial GridFunctionSpace.
        * \param lfsv LocalFunctionSpace of the test GridFunctionSpace.
        * \param mat  Where to store the contribution to the jacobian.
-       *
-       * \note \c x is of type std::vector.
        *
        * \note The method should not clear \c mat; it should just add its
        *       entries to it.
@@ -628,7 +856,8 @@ namespace Dune {
       void jacobian_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix& mat);
+        LocalMatrix& mat) const
+      {}
 
       //! apply an internal intersections's jacobians
       /**
@@ -655,8 +884,6 @@ namespace Dune {
        * \param mat_nn Where to store the contribution to the outside entity's
        *               jacobian.
        *
-       * \note \c x_s and \c x_n are of type std::vector.
-       *
        * \note The method should not clear \c mat_ss, \c mat_sn, \c mat_ns, \c
        *       mat_nn; it should just add its entries to them.
        *
@@ -672,7 +899,9 @@ namespace Dune {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
         LocalMatrix& mat_ss, LocalMatrix& mat_sn,
-        LocalMatrix& mat_ns, LocalMatrix& mat_nn);
+        LocalMatrix& mat_ns, LocalMatrix& mat_nn) const
+      {}
+
       //! get a boundary intersections's jacobian
       /**
        * \param ig     IntersectionGeometry describing the intersection.
@@ -684,8 +913,6 @@ namespace Dune {
        *               inside entity.
        * \param mat_ss Where to store the contribution to the inside entity's
        *               jacobian.
-       *
-       * \note \c x_s is of type std::vector.
        *
        * \note The method should not clear \c mat_ss; it should just add its
        *       entries to it.
@@ -700,7 +927,8 @@ namespace Dune {
       void jacobian_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        LocalMatrix& mat_ss);
+        LocalMatrix& mat_ss) const
+      {}
 
       //! \} Methods to extract the jacobian
     };

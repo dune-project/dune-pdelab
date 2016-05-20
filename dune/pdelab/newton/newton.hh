@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_NEWTON_HH
-#define DUNE_PDELAB_NEWTON_HH
+#ifndef DUNE_PDELAB_NEWTON_NEWTON_HH
+#define DUNE_PDELAB_NEWTON_NEWTON_HH
 
 #include <iostream>
 #include <iomanip>
@@ -35,7 +35,7 @@ namespace Dune
       RFType first_defect;       // the first defect
       RFType defect;             // the final defect
       double assembler_time;     // Cumulative time for matrix assembly
-      double linear_solver_time; // Cumulative time for linear sovler
+      double linear_solver_time; // Cumulative time for linear solver
       int linear_solver_iterations; // Total number of linear iterations
 
       NewtonResult() :
@@ -559,7 +559,7 @@ namespace Dune
 
     public:
       enum Strategy {
-        /** \brief don't do any linesearch or damping */
+        /** \brief don't do any line search or damping */
         noLineSearch,
         /** \brief perform a linear search for the optimal damping parameter with multiples of damping
 
@@ -635,7 +635,7 @@ namespace Dune
              catch (NewtonDefectError)
               {
                 if (this->verbosity_level_ >= 4)
-                  std::cout << "          Nans detected" << std::endl;
+                  std::cout << "          NaNs detected" << std::endl;
               }       // ignore NaNs and try again with lower lambda
 
             if (this->res_.defect <= (1.0 - lambda/4) * this->prev_defect_)
@@ -705,7 +705,7 @@ namespace Dune
           return hackbuschReusken;
         if (s == "hackbuschReuskenAcceptBest")
           return hackbuschReuskenAcceptBest;
-        DUNE_THROW(Exception, "unknown linesearch strategy" << s);
+        DUNE_THROW(Exception, "unknown line search strategy" << s);
       }
 
     private:
@@ -805,4 +805,4 @@ namespace Dune
   } // end namespace PDELab
 } // end namespace Dune
 
-#endif // DUNE_PDELAB_NEWTON_HH
+#endif // DUNE_PDELAB_NEWTON_NEWTON_HH

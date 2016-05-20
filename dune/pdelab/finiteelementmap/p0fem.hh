@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_P0FEM_HH
-#define DUNE_PDELAB_P0FEM_HH
+#ifndef DUNE_PDELAB_FINITEELEMENTMAP_P0FEM_HH
+#define DUNE_PDELAB_FINITEELEMENTMAP_P0FEM_HH
 
 #include <dune/geometry/type.hh>
 
@@ -52,4 +52,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENTMAP_P0FEM_HH

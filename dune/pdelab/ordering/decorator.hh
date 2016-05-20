@@ -56,19 +56,19 @@ namespace Dune {
         template<typename T, T v>
         struct lazy_constant
         {
-          typedef integral_constant<T,v> type;
+          typedef std::integral_constant<T,v> type;
         };
 
         template<typename D>
         struct lazy_level
         {
-          typedef integral_constant<std::size_t,D::level> type;
+          typedef std::integral_constant<std::size_t,D::level> type;
         };
 
         template<typename D>
         struct decoration_level
-          : public conditional<
-                     is_base_of<is_decorated, D>::value,
+          : public std::conditional<
+                     std::is_base_of<is_decorated, D>::value,
                      lazy_level<D>,
                      lazy_constant<std::size_t,0>
                    >::type::type
@@ -158,7 +158,7 @@ namespace Dune {
       struct gfs_to_decorator_descriptor
         : public TypeTree::meta_function
       {
-        typedef DUNE_DECLTYPE(
+        typedef decltype(
           register_gfs_to_decorator_descriptor(
             TypeTree::declptr<GFS>(),             // the source GridFunctionSpace
             TypeTree::declptr<Transformation>(),  // the full transformation descriptor
@@ -243,13 +243,13 @@ namespace Dune {
         };
 
         template<typename TC>
-        static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<std::shared_ptr<TC>,GFS::CHILDREN>& children)
+        static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<std::shared_ptr<TC>,TypeTree::staticDegree<GFS>>& children)
         {
           return result<TC>::decorator_descriptor::transform(gfs,t,std::make_shared<typename result<TC>::undecorated_type>(result<TC>::undecorated_descriptor::transform(gfs,t,children)));
         }
 
         template<typename TC>
-        static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs_pointer, const Transformation& t, const array<std::shared_ptr<TC>,GFS::CHILDREN>& children)
+        static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs_pointer, const Transformation& t, const array<std::shared_ptr<TC>,TypeTree::staticDegree<GFS>>& children)
         {
           return result<TC>::decorator_descriptor::transform(gfs_pointer,t,result<TC>::undecorated_descriptor::transform_storage(gfs_pointer,t,children));
         }

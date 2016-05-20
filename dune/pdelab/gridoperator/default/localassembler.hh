@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_DEFAULT_LOCAL_ASSEMBLER_HH
-#define DUNE_PDELAB_DEFAULT_LOCAL_ASSEMBLER_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_DEFAULT_LOCALASSEMBLER_HH
+#define DUNE_PDELAB_GRIDOPERATOR_DEFAULT_LOCALASSEMBLER_HH
 
 #include <memory>
 
@@ -15,6 +15,7 @@
 #include <dune/pdelab/gridoperator/default/patternengine.hh>
 #include <dune/pdelab/gridoperator/default/jacobianengine.hh>
 #include <dune/pdelab/gridoperator/default/jacobianapplyengine.hh>
+#include <dune/pdelab/gridoperator/default/nonlinearjacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
@@ -87,15 +88,21 @@ namespace Dune{
       typedef DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler> LocalResidualAssemblerEngine;
       typedef DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler> LocalJacobianAssemblerEngine;
       typedef DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalJacobianApplyAssemblerEngine;
+      typedef DefaultLocalNonlinearJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalNonlinearJacobianApplyAssemblerEngine;
+
+      friend class DefaultLocalPatternAssemblerEngine<DefaultLocalAssembler>;
+      friend class DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler>;
+      friend class DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler>;
+      friend class DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler>;
+      friend class DefaultLocalNonlinearJacobianApplyAssemblerEngine<DefaultLocalAssembler>;
       //! @}
 
       //! Constructor with empty constraints
       DefaultLocalAssembler (LOP & lop_, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
-        : lop(stackobject_to_shared_ptr(lop_)),
-          weight_(1.0),
-          doPreProcessing_(true),
-          doPostProcessing_(true),
-          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
+        : lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
+          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
+        , jacobian_apply_engine(*this)
+        , nonlinear_jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
 
@@ -103,11 +110,10 @@ namespace Dune{
       DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_,
                              shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : Base(cu_, cv_),
-          lop(stackobject_to_shared_ptr(lop_)),
-          weight_(1.0),
-          doPreProcessing_(true),
-          doPostProcessing_(true),
-          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
+          lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
+          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
+        , jacobian_apply_engine(*this)
+        , nonlinear_jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
 
@@ -125,6 +131,7 @@ namespace Dune{
           residual_engine(*this),
           jacobian_engine(*this),
           jacobian_apply_engine(*this),
+          nonlinear_jacobian_apply_engine(*this),
           _reconstruct_border_entries(other._reconstruct_border_entries)
       {}
 
@@ -211,6 +218,17 @@ namespace Dune{
         return jacobian_apply_engine;
       }
 
+      //! Returns a reference to the requested engine. This engine is
+      //! completely configured and ready to use.
+      LocalNonlinearJacobianApplyAssemblerEngine & localNonlinearJacobianApplyAssemblerEngine
+      (typename Traits::Residual & r, const typename Traits::Solution & x, const typename Traits::Solution & z)
+      {
+        nonlinear_jacobian_apply_engine.setResidual(r);
+        nonlinear_jacobian_apply_engine.setSolution(x);
+        nonlinear_jacobian_apply_engine.setUpdate(z);
+        return nonlinear_jacobian_apply_engine;
+      }
+
       //! @}
 
       //! \brief Query methods for the assembler engines. Theses methods
@@ -284,6 +302,7 @@ namespace Dune{
       LocalResidualAssemblerEngine residual_engine;
       LocalJacobianAssemblerEngine jacobian_engine;
       LocalJacobianApplyAssemblerEngine jacobian_apply_engine;
+      LocalNonlinearJacobianApplyAssemblerEngine nonlinear_jacobian_apply_engine;
       //! @}
 
       bool _reconstruct_border_entries;
@@ -292,4 +311,4 @@ namespace Dune{
 
   }
 }
-#endif
+#endif // DUNE_PDELAB_GRIDOPERATOR_DEFAULT_LOCALASSEMBLER_HH

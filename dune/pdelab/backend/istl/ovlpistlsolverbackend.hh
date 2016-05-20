@@ -1,7 +1,7 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
-#ifndef DUNE_OVLPISTLSOLVERBACKEND_HH
-#define DUNE_OVLPISTLSOLVERBACKEND_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_OVLPISTLSOLVERBACKEND_HH
+#define DUNE_PDELAB_BACKEND_ISTL_OVLPISTLSOLVERBACKEND_HH
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/parallel/mpihelper.hh>
@@ -256,7 +256,7 @@ namespace Dune {
     template<class GFS, class M, class X, class Y>
     class RestrictedSuperLUSubdomainSolver : public Dune::Preconditioner<X,Y>
     {
-      typedef typename M::BaseT ISTLM;
+      typedef typename M::Container ISTLM;
 
     public:
       //! \brief The domain type of the preconditioner.
@@ -378,12 +378,12 @@ namespace Dune {
         : implementation(implementation_)
       {}
 
-      virtual typename X::BaseT::field_type dot(const X& x, const X& y)
+      virtual typename X::Container::field_type dot(const X& x, const X& y)
       {
         return implementation.dot(x,y);
       }
 
-      virtual typename X::BaseT::field_type norm (const X& x)
+      virtual typename X::Container::field_type norm (const X& x)
       {
         using namespace std;
         return sqrt(static_cast<double>(this->dot(x,x)));
@@ -987,11 +987,6 @@ namespace Dune {
         params = params_;
       }
 
-      void setparams(Parameters params_) DUNE_DEPRECATED_MSG("setparams() is deprecated, use setParameters() instead")
-      {
-        params = params_;
-      }
-
       /**
        * @brief Get the parameters describing the behaviuour of AMG.
        *
@@ -1198,4 +1193,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_BACKEND_ISTL_OVLPISTLSOLVERBACKEND_HH

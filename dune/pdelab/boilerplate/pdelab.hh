@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
-#ifndef DUNE_PDELAB_HH
-#define DUNE_PDELAB_HH
+#ifndef DUNE_PDELAB_BOILERPLATE_PDELAB_HH
+#define DUNE_PDELAB_BOILERPLATE_PDELAB_HH
 
 /** \file
     \brief Provide some classes to reduce boiler plate code in pdelab applications
@@ -41,8 +41,7 @@
 #endif
 #if HAVE_DUNE_ALUGRID
 #include<dune/alugrid/grid.hh>
-#include<dune/grid/io/file/dgfparser/dgfalu.hh>
-#include<dune/grid/io/file/dgfparser/dgfparser.hh>
+#include <dune/alugrid/dgf.hh>
 #endif
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/io/file/gmshreader.hh>
@@ -1195,7 +1194,7 @@ namespace Dune {
             static const int dim = T::dimension;
             static const int dimworld = T::dimensionworld;
             typedef N NT;
-            typedef QkDGGLLocalFiniteElementMap<ctype,NT,degree,dim> FEM;
+            typedef QkDGLocalFiniteElementMap<ctype,NT,degree,dim,QkDGBasisPolynomial::lobatto> FEM;
             typedef DGCONBase<st> CONB;
             typedef typename CONB::CON CON;
             typedef VBET VBE;
@@ -1274,6 +1273,101 @@ namespace Dune {
             std::shared_ptr<CC> ccp;
         };
 
+
+        // Discontinuous space using Legendre polynomials (use only for cube elements)
+        template<typename T, typename N, unsigned int degree,
+                 Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
+                 //typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
+                 typename VBET=istl::VectorBackend<> >
+        class DGLegendreSpace
+        {
+        public:
+
+            // export types
+            typedef T Grid;
+            typedef typename T::LeafGridView GV;
+            typedef typename T::ctype ctype;
+            static const int dim = T::dimension;
+            static const int dimworld = T::dimensionworld;
+            typedef N NT;
+            typedef QkDGLocalFiniteElementMap<ctype,NT,degree,dim,QkDGBasisPolynomial::legendre> FEM;
+            typedef DGCONBase<st> CONB;
+            typedef typename CONB::CON CON;
+            typedef VBET VBE;
+            typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
+            using DOF = Backend::Vector<GFS,N>;
+            typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
+            typedef typename GFS::template ConstraintsContainer<N>::Type CC;
+            typedef VTKGridFunctionAdapter<DGF> VTKF;
+
+            // constructor making the grid function space an all that is needed
+            DGLegendreSpace (const GV& gridview) : gv(gridview), conb()
+            {
+                femp = std::shared_ptr<FEM>(new FEM());
+                gfsp = std::shared_ptr<GFS>(new GFS(gv,*femp));
+                // initialize ordering
+                gfsp->update();
+                ccp = std::shared_ptr<CC>(new CC());
+            }
+
+            FEM& getFEM() { return *femp; }
+            const FEM& getFEM() const { return *femp; }
+
+            // return gfs reference
+            GFS& getGFS () { return *gfsp; }
+
+            // return gfs reference const version
+            const GFS& getGFS () const {return *gfsp;}
+
+            // return gfs reference
+            CC& getCC () { return *ccp;}
+
+            // return gfs reference const version
+            const CC& getCC () const { return *ccp;}
+
+            template<class BCTYPE>
+            void assembleConstraints (const BCTYPE& bctype)
+            {
+                ccp->clear();
+                constraints(bctype,*gfsp,*ccp);
+            }
+
+            void clearConstraints ()
+            {
+                ccp->clear();
+            }
+
+            void setConstrainedDOFS (DOF& x, NT nt) const
+            {
+                set_constrained_dofs(*ccp,nt,x);
+                conb.make_consistent(*gfsp,x);
+            }
+
+            void setNonConstrainedDOFS (DOF& x, NT nt) const
+            {
+                set_nonconstrained_dofs(*ccp,nt,x);
+                conb.make_consistent(*gfsp,x);
+            }
+
+            void copyConstrainedDOFS (const DOF& xin, DOF& xout) const
+            {
+                copy_constrained_dofs(*ccp,xin,xout);
+                conb.make_consistent(*gfsp,xout);
+            }
+
+            void copyNonConstrainedDOFS (const DOF& xin, DOF& xout) const
+            {
+                copy_nonconstrained_dofs(*ccp,xin,xout);
+                conb.make_consistent(*gfsp,xout);
+            }
+
+        private:
+            GV gv; // need this object here because FEM and GFS store a const reference !!
+            CONB conb;
+            std::shared_ptr<FEM> femp;
+            std::shared_ptr<GFS> gfsp;
+            std::shared_ptr<CC> ccp;
+        };
 
 
         // Discontinuous P0 space
@@ -1420,12 +1514,6 @@ namespace Dune {
                                                typename FS::NT,typename FS::NT,typename FS::NT,
                                                typename FS::CC,typename FS::CC> GO;
             typedef typename GO::Jacobian MAT;
-
-            DUNE_DEPRECATED_MSG("This constructor is deprecated and will removed after the release of PDELab 2.4. Use GalerkinGlobalAssembler(const FS& fs, LOP& lop, const std::size_t nonzeros) instead! The number of nonzeros can be determined with patternStatistics()!")
-            GalerkinGlobalAssembler (const FS& fs, LOP& lop)
-            {
-                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,MBE(1)));
-            }
 
             GalerkinGlobalAssembler (const FS& fs, LOP& lop, const std::size_t nonzeros)
             {
@@ -1699,12 +1787,6 @@ namespace Dune {
                                                typename FSU::NT,typename FSU::NT,typename FSU::NT,
                                                typename FSU::CC,typename FSV::CC> GO;
             typedef typename GO::Jacobian MAT;
-
-            DUNE_DEPRECATED_MSG("This constructor is deprecated and will removed after the release of PDELab 2.4. Use GalerkinGlobalAssembler(const FSU& fsu, const FSV& fsv, LOP& lop, const std::size_t nonzeros) instead! The number of nonzeros can be determined with patternStatistics()!")
-            GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop)
-            {
-                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop,MBE(1)));
-            }
 
             GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop, const std::size_t nonzeros)
             {
@@ -2158,4 +2240,4 @@ namespace Dune {
 } // end namespace PDELab
     } // end namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_BOILERPLATE_PDELAB_HH

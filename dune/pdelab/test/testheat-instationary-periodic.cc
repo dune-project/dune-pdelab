@@ -128,7 +128,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,NumberType,degree> FEM;
   FEM fem(grid.leafGridView());
   typedef Dune::PDELab::OverlappingConformingDirichletConstraints CON; // ovlp
-  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::istl::VectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> FS;
   FS fs(grid.leafGridView(),fem);
 
@@ -176,7 +176,8 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   Dune::PDELab::OneStepMethod<NumberType,IGO,PDESOLVER,V,V> osm(method,igo,pdesolver);
   osm.setVerbosityLevel(2);
 
-  Dune::SubsamplingVTKSequenceWriter<typename GM::LeafGridView> vtkwriter(grid.leafGridView(),degree-1,basename,"","");
+  auto stationaryVTKWriter = std::make_shared<Dune::SubsamplingVTKWriter<typename GM::LeafGridView> >(grid.leafGridView(),degree-1);
+  Dune::VTKSequenceWriter<typename GM::LeafGridView> vtkwriter(stationaryVTKWriter,basename,"","");
   typedef Dune::PDELab::DiscreteGridFunction<FS,V> DGF;
   DGF xdgf(fs,x);
   vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"x_h"));
@@ -210,11 +211,11 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
 int main(int argc, char **argv)
 {
   // initialize MPI, finalize is done automatically on exit
-  Dune::MPIHelper& mpihelper = Dune::MPIHelper::instance(argc,argv);
+  Dune::MPIHelper::instance(argc,argv);
 
   double T = 0.075;
   double dt = 0.0075;
-  int cells = 128;
+  int cells = 8;
 
   // start try/catch block to get error messages from dune
   try {
@@ -244,12 +245,8 @@ int main(int argc, char **argv)
     do_simulation<GM,degree,elemtype,meshtype,solvertype>(T,dt,grid,basename.str());
   }
   catch (std::exception & e) {
-    std::cout << "STL ERROR: " << e.what() << std::endl;
-    return 1;
-  }
-  catch (Dune::Exception & e) {
-    std::cout << "DUNE ERROR: " << e.what() << std::endl;
-    return 1;
+    std::cout << "Exception: " << e.what() << std::endl;
+    throw;
   }
   catch (...) {
     std::cout << "Unknown ERROR" << std::endl;

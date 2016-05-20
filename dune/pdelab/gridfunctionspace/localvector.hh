@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_LOCALVECTOR_HH
-#define DUNE_PDELAB_LOCALVECTOR_HH
+#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_LOCALVECTOR_HH
+#define DUNE_PDELAB_GRIDFUNCTIONSPACE_LOCALVECTOR_HH
 
 #include <vector>
 #include <algorithm>
@@ -337,4 +337,4 @@ namespace Dune {
   } // end namespace PDELab
 } // end namespace Dune
 
-#endif // DUNE_PDELAB_LOCALVECTOR_HH
+#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_LOCALVECTOR_HH

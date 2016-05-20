@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_STATIONARYLINEARPROBLEM_HH
-#define DUNE_PDELAB_STATIONARYLINEARPROBLEM_HH
+#ifndef DUNE_PDELAB_STATIONARY_LINEARPROBLEM_HH
+#define DUNE_PDELAB_STATIONARY_LINEARPROBLEM_HH
 
 #include <iostream>
 
@@ -27,7 +27,7 @@ namespace Dune {
       RFType first_defect;       // the first defect
       RFType defect;             // the final defect
       double assembler_time;     // Cumulative time for matrix assembly
-      double linear_solver_time; // Cumulative time for linear sovler
+      double linear_solver_time; // Cumulative time for linear solver
       int linear_solver_iterations; // Total number of linear iterations
 
       StationaryLinearProblemSolverResult()
@@ -298,4 +298,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_STATIONARY_LINEARPROBLEM_HH

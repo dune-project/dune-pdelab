@@ -103,13 +103,13 @@ namespace Dune {
        * power grid function.
        */
       template<typename GF, typename Entity, typename Domain>
-      FieldVector<typename GF::template Child<0>::Type::Traits::RangeFieldType,GF::CHILDREN>
+      FieldVector<typename GF::template Child<0>::Type::Traits::RangeFieldType,TypeTree::staticDegree<GF>>
       evaluateVelocityGridFunction(const GF& gf,
                                    const Entity& e,
                                    const Domain& x)
       {
-        static_assert(Domain::dimension == GF::CHILDREN,"dimension of function range does not match grid dimension");
-        FieldVector<typename GF::template Child<0>::Type::Traits::RangeFieldType,GF::CHILDREN> y;
+        static_assert(Domain::dimension == TypeTree::staticDegree<GF>,"dimension of function range does not match grid dimension");
+        FieldVector<typename GF::template Child<0>::Type::Traits::RangeFieldType,TypeTree::staticDegree<GF>> y;
         typename GF::template Child<0>::Type::Traits::RangeType cy;
         for (int d = 0; d < Domain::dimension; ++d)
           {
@@ -241,18 +241,6 @@ namespace Dune {
         return y;
       }
 
-      //! Dirichlet boundary condition value from local intersection coordinate
-      template<typename IG>
-      typename Traits::VelocityRange
-      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use entity-based version instead!")
-      g(const IG& ig, const typename Traits::IntersectionDomain& x) const
-      {
-        auto e = ig.inside();
-        typename V::Traits::RangeType y;
-        _v.evaluate(e,ig.geometryInInside().global(x),y);
-        return y;
-      }
-
       //! pressure source term
       template<typename EG>
       typename Traits::RangeField
@@ -274,7 +262,7 @@ namespace Dune {
 
       //! Neumann boundary condition (stress) - version for scalar function
       template<typename IG>
-      typename enable_if<
+      typename std::enable_if<
         J::Traits::dimRange == 1 &&
         (GV::dimension > 1) &&
         AlwaysTrue<IG>::value, // required to force lazy evaluation
@@ -293,7 +281,7 @@ namespace Dune {
 
       //! Neumann boundary condition (stress) - version for vector-valued function
       template<typename IG>
-      typename enable_if<
+      typename std::enable_if<
         J::Traits::dimRange == GV::dimension &&
         AlwaysTrue<IG>::value, // required to force lazy evaluation
         typename Traits::VelocityRange
@@ -502,4 +490,4 @@ BoundaryDirichletFunction df;
 } // end namespace PDELab
 } // end namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_STOKESPARAMETER_HH

@@ -1,6 +1,8 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_LOCALBASISCACHE_HH
-#define DUNE_PDELAB_LOCALBASISCACHE_HH
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
+
+#ifndef DUNE_PDELAB_FINITEELEMENT_LOCALBASISCACHE_HH
+#define DUNE_PDELAB_FINITEELEMENT_LOCALBASISCACHE_HH
 
 #include<vector>
 #include<map>
@@ -92,4 +94,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENT_LOCALBASISCACHE_HH

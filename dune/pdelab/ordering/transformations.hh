@@ -81,7 +81,7 @@ namespace Dune {
     struct power_gfs_to_ordering_descriptor
       : public TypeTree::meta_function
     {
-      typedef DUNE_DECLTYPE(
+      typedef decltype(
         register_power_gfs_to_ordering_descriptor(
           TypeTree::declptr<GFS>(),
           TypeTree::declptr<Transformation>(),
@@ -105,7 +105,7 @@ namespace Dune {
     struct leaf_gfs_to_ordering_descriptor
       : public TypeTree::meta_function
     {
-      typedef DUNE_DECLTYPE(
+      typedef decltype(
         register_leaf_gfs_to_ordering_descriptor(
           TypeTree::declptr<GFS>(),
           TypeTree::declptr<Transformation>(),
@@ -129,7 +129,7 @@ namespace Dune {
     struct composite_gfs_to_ordering_descriptor
       : public TypeTree::meta_function
     {
-      typedef DUNE_DECLTYPE(
+      typedef decltype(
         register_composite_gfs_to_ordering_descriptor(
           TypeTree::declptr<GFS>(),
           TypeTree::declptr<Transformation>(),
