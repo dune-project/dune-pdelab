@@ -139,6 +139,16 @@ if(UG_FOUND)
                 TIMEOUT 20)
 endif()
 
+#dune_add_test(SOURCES testbatchedtbbgridoperator.cc)
+
+#dune_add_test(SOURCES testcoloredtbbgridoperator.cc)
+
+dune_add_test(SOURCES testflatbackend.cc)
+
+#dune_add_test(SOURCES testlockmanager.cc)
+
+#dune_add_test(SOURCES testtbbgridoperator.cc)
+
 exclude_from_headercheck(
   gridexamples.hh
   helmholtzoperator.hh
