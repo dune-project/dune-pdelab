@@ -52,12 +52,12 @@ namespace Dune {
 
       FlatVectorContainer(const FlatVectorContainer& rhs)
         : _gfs(rhs._gfs)
-        , _container(make_shared<Container>(raw(rhs)))
+        , _container(std::make_shared<Container>(Backend::native(rhs)))
       {}
 
       FlatVectorContainer (const GFS& gfs, Dune::PDELab::Backend::attached_container = Dune::PDELab::Backend::attached_container())
         : _gfs(gfs)
-        , _container(make_shared<Container>(gfs.ordering().blockCount()))
+        , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
       {}
 
       //! Creates an FlatVectorContainer without allocating an underlying ISTL vector.
@@ -77,7 +77,7 @@ namespace Dune {
         _container.reset();
       }
 
-      void attach(shared_ptr<Container> container)
+      void attach(std::shared_ptr<Container> container)
       {
         _container = container;
       }
@@ -87,7 +87,7 @@ namespace Dune {
         return bool(_container);
       }
 
-      const shared_ptr<Container>& storage() const
+      const std::shared_ptr<Container>& storage() const
       {
         return _container;
       }
@@ -103,7 +103,7 @@ namespace Dune {
           return *this;
         if (attached())
           {
-            (*_container) = raw(r);
+            (*_container) = Backend::native(r);
           }
         else
           {
@@ -133,13 +133,13 @@ namespace Dune {
 
       FlatVectorContainer& operator+=(const FlatVectorContainer& e)
       {
-        (*_container) += raw(e);
+        (*_container) += Backend::native(e);
         return *this;
       }
 
       FlatVectorContainer& operator-=(const FlatVectorContainer& e)
       {
-        (*_container) -= raw(e);
+        (*_container) -= Backend::native(e);
         return *this;
       }
 
@@ -182,17 +182,17 @@ namespace Dune {
 
       E operator*(const FlatVectorContainer& y) const
       {
-        return (*_container) * raw(y);
+        return (*_container) * Backend::native(y);
       }
 
       E dot(const FlatVectorContainer& y) const
       {
-        return _container->dot(raw(y));
+        return _container->dot(Backend::native(y));
       }
 
       FlatVectorContainer& axpy(const E& a, const FlatVectorContainer& y)
       {
-        _container->axpy(a, raw(y));
+        _container->axpy(a, Backend::native(y));
         return *this;
       }
 
