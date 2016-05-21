@@ -6,7 +6,7 @@
 
 #include <dune/istl/ellmatrix/host.hh>
 
-#include <dune/pdelab/backend/tags.hh>
+#include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
@@ -95,27 +95,27 @@ namespace Dune {
 
     public:
 
-      template<typename GO, typename Parameters>
-      explicit FlatELLMatrixContainer (const GO& go, Parameters parameters)
+      template<typename GO>
+      explicit FlatELLMatrixContainer (const GO& go)
         : _container(std::make_shared<Container>())
       {
         Pattern pattern(
           go.testGridFunctionSpace().ordering(),
           go.trialGridFunctionSpace().ordering(),
-          parameters.entriesPerRow()
+          go.matrixBackend().entriesPerRow()
           );
         go.fill_pattern(pattern);
         _container->setLayout(buildLayout(pattern));
       }
 
-      template<typename GO, typename Parameters>
-      FlatELLMatrixContainer (const GO& go, Parameters parameters, const E& e)
+      template<typename GO>
+      FlatELLMatrixContainer (const GO& go, const E& e)
         : _container(std::make_shared<Container>())
       {
         Pattern pattern(
           go.testGridFunctionSpace().ordering(),
           go.trialGridFunctionSpace().ordering(),
-          parameters.entriesPerRow()
+          go.matrixBackend().entriesPerRow()
           );
         go.fill_pattern(pattern);
         _container->setLayout(buildLayout(pattern));

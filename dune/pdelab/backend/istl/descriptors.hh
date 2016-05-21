@@ -162,6 +162,19 @@ namespace Dune {
           return std::vector<Statistics>();
         }
 
+        std::size_t entriesPerRow() const
+        {
+          return _entries_per_row;
+        }
+
+        FlatMatrixBackend(std::size_t entries_per_row)
+          : _entries_per_row(entries_per_row)
+        {}
+
+      private:
+
+        std::size_t _entries_per_row;
+
       };
 
 
