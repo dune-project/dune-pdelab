@@ -68,7 +68,7 @@
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/gridoperator/onestep.hh>
-#if HAVE_TBB
+#if HAVE_TBB && ENABLE_TBB_GRIDOPERATOR
 #include <dune/pdelab/gridoperator/tbb.hh>
 #endif
 #include <dune/pdelab/stationary/linearproblem.hh>
@@ -1609,7 +1609,7 @@ namespace Dune {
             std::shared_ptr<GO> gop;
         };
 
-#if HAVE_TBB
+#if HAVE_TBB && ENABLE_TBB_GRIDOPERATOR
         // TBB variant of GalerkinGlobalAssemblerNewBackend
         template<typename Partitioning, typename LockManager, typename FS,
                  typename LOP,
