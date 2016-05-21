@@ -1,5 +1,7 @@
-#ifndef DUNE_PDELAB_GRIDOPERATOR_ONESTEP_JACOBIANENGINE_HH
-#define DUNE_PDELAB_GRIDOPERATOR_ONESTEP_JACOBIANENGINE_HH
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
+// vi: set et ts=2 sw=2 sts=2:
+#ifndef DUNE_PDELAB_GRIDOPERATOR_ONESTEP_JACOBIANAPPLYENGINE_HH
+#define DUNE_PDELAB_GRIDOPERATOR_ONESTEP_JACOBIANAPPLYENGINE_HH
 
 #include <dune/pdelab/gridoperator/onestep/enginebase.hh>
 #include <cmath>
@@ -8,23 +10,22 @@ namespace Dune{
   namespace PDELab{
 
     /**
-       \brief The local assembler engine for one step methods which
-       assembles the residual vector
+       \brief The local assembler engine for one-step methods which
+       applies the jacobian without explicitly assembling it.
 
-       \tparam LA The local one step assembler
+       \tparam OSLA The one-step local assembler.
 
     */
     template<typename OSLA>
-    class OneStepLocalJacobianAssemblerEngine
+    class OneStepLocalJacobianApplyAssemblerEngine
       : public OneStepLocalAssemblerEngineBase<OSLA,
-                                               typename OSLA::LocalAssemblerDT0::LocalJacobianAssemblerEngine,
-                                               typename OSLA::LocalAssemblerDT1::LocalJacobianAssemblerEngine
+                                               typename OSLA::LocalAssemblerDT0::LocalJacobianApplyAssemblerEngine,
+                                               typename OSLA::LocalAssemblerDT1::LocalJacobianApplyAssemblerEngine
                                                >
     {
-
       typedef OneStepLocalAssemblerEngineBase<OSLA,
-                                              typename OSLA::LocalAssemblerDT0::LocalJacobianAssemblerEngine,
-                                              typename OSLA::LocalAssemblerDT1::LocalJacobianAssemblerEngine
+                                              typename OSLA::LocalAssemblerDT0::LocalJacobianApplyAssemblerEngine,
+                                              typename OSLA::LocalAssemblerDT1::LocalJacobianApplyAssemblerEngine
                                               > BaseT;
 
       using BaseT::la;
@@ -40,11 +41,11 @@ namespace Dune{
       typedef typename OSLA::LocalAssemblerDT0 LocalAssemblerDT0;
       typedef typename OSLA::LocalAssemblerDT1 LocalAssemblerDT1;
 
-      typedef typename LocalAssemblerDT0::LocalJacobianAssemblerEngine JacobianEngineDT0;
-      typedef typename LocalAssemblerDT1::LocalJacobianAssemblerEngine JacobianEngineDT1;
+      typedef typename LocalAssemblerDT0::LocalJacobianApplyAssemblerEngine JacobianEngineDT0;
+      typedef typename LocalAssemblerDT1::LocalJacobianApplyAssemblerEngine JacobianEngineDT1;
 
       //! The type of the residual vector
-      typedef typename OSLA::Traits::Jacobian Jacobian;
+      typedef typename OSLA::Traits::Residual Residual;
 
       //! The type of the solution vector
       typedef typename OSLA::Traits::Solution Solution;
@@ -55,35 +56,34 @@ namespace Dune{
       /**
          \brief Constructor
 
-         \param [in] local_assembler_ The local assembler object which
-         creates this engine
+         \param[in] local_assembler_ The local assembler object which creates this engine.
       */
-      OneStepLocalJacobianAssemblerEngine(LocalAssembler & local_assembler_)
-        : BaseT(local_assembler_),
-          invalid_jacobian(static_cast<Jacobian*>(0)),
-          invalid_solution(static_cast<Solution*>(0)),
-          jacobian(invalid_jacobian), solution(invalid_solution)
+      OneStepLocalJacobianApplyAssemblerEngine(LocalAssembler& local_assembler_)
+        : BaseT(local_assembler_)
+        , invalid_residual(static_cast<Residual*>(0))
+        , invalid_solution(static_cast<Solution*>(0))
+        , residual(invalid_residual), solution(invalid_solution)
       {}
-
 
       //! Set current solution vector. Must be called before
       //! setResidual(). Should be called prior to assembling.
-      void setSolution(const Solution & solution_){
+      void setSolution(const Solution& solution_)
+      {
         solution = &solution_;
       }
 
       //! Set current residual vector. Should be called prior to
       //! assembling.
-      void setJacobian(Jacobian & jacobian_){
-        jacobian = &jacobian_;
-
-        assert(solution != invalid_solution);
+      void setResidual(Residual& residual_)
+      {
+        residual = &residual_;
 
         // Initialize the engines of the two wrapped local assemblers
+        assert(solution != invalid_solution);
         setLocalAssemblerEngineDT0
-          (la.child0().localJacobianAssemblerEngine(*jacobian,*solution));
+          (la.child0().localJacobianApplyAssemblerEngine(*residual,*solution));
         setLocalAssemblerEngineDT1
-          (la.child1().localJacobianAssemblerEngine(*jacobian,*solution));
+          (la.child1().localJacobianApplyAssemblerEngine(*residual,*solution));
       }
 
       //! When multiple engines are combined in one assembling
@@ -106,8 +106,7 @@ namespace Dune{
         d_r = la.method().d(la.stage());
 
         // Here we only want to know whether this stage is implicit
-        using std::abs;
-        implicit = abs(b_rr) > 1e-6;
+        implicit = std::abs(b_rr) > 1e-6;
 
         // prepare local operators for stage
         la.child0().setTime(la.timeAtStage());
@@ -132,7 +131,7 @@ namespace Dune{
        * oppertunity to do any setup that is needed at the begin of a thread.
        * It can also be used to copy or split data from \c *this to \c other.
        */
-      void split(OneStepLocalJacobianAssemblerEngine &other)
+      void split(OneStepLocalJacobianApplyAssemblerEngine &other)
       {
         BaseT::split(other);
         b_rr = other.b_rr;
@@ -144,14 +143,14 @@ namespace Dune{
     private:
 
       //! Default value indicating an invalid residual pointer
-      Jacobian * const invalid_jacobian;
+      Residual * const invalid_residual;
 
       //! Default value indicating an invalid solution pointer
       Solution * const invalid_solution;
 
       //! Pointer to the current constant part residual vector in
       //! which to assemble
-      Jacobian * jacobian;
+      Residual * residual;
 
       //! Pointer to the current residual vector in which to assemble
       const Solution * solution;
@@ -159,9 +158,8 @@ namespace Dune{
       //! Coefficients of time stepping scheme
       Real b_rr, d_r;
 
-    }; // End of class OneStepLocalJacobianAssemblerEngine
+    }; // end class OneStepLocalJacobianApplyAssemblerEngine
 
-  }
-}
-
-#endif // DUNE_PDELAB_GRIDOPERATOR_ONESTEP_JACOBIANENGINE_HH
+  } // end namespace PDELab
+} // end Dune
+#endif

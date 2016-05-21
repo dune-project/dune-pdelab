@@ -4,6 +4,7 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
+#include <dune/common/dynmatrix.hh>
 
 #include <dune/geometry/quadraturerules.hh>
 
@@ -26,98 +27,12 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-    namespace CG2DGHelper { // hide some TMP code
-
-      template <typename Imp>
-      struct WrappedLocalShapeFunctionTraits {
-        typedef typename Imp::Traits::FiniteElementType::
-        Traits::LocalBasisType::Traits::RangeType RangeType;
-        typedef typename Imp::Traits::FiniteElementType::
-        Traits::LocalBasisType::Traits::DomainType DomainType;
-      };
-
-      // evaluate a localfunction as a function on a different element
-      template<typename Imp>
-      class WrappedLocalShapeFunction
-      {
-        const Imp & _imp;
-        const int _comp;
-
-        typedef typename Imp::Traits::FiniteElementType FEM;
-        typedef FiniteElementInterfaceSwitch<FEM> FESwitch;
-        typedef BasisInterfaceSwitch<typename FESwitch::Basis > BasisSwitch;
-        typedef typename BasisSwitch::DomainField DF;
-        typedef typename BasisSwitch::Range RT;
-        enum { dim = BasisSwitch::dimDomainLocal };
-      public:
-        typedef WrappedLocalShapeFunction<Imp> Traits;
-        WrappedLocalShapeFunction (const Imp& imp, int comp) :
-          _imp(imp), _comp(comp) {}
-
-        void evaluate(const Dune::FieldVector<DF,dim> & x,
-          Dune::FieldVector<DF,1> & y) const
-        {
-          std::vector<RT> v;
-          _imp.finiteElement().localBasis().evaluateFunction(x,v);
-          y = v[_comp];
-        }
-      };
-
-      template <typename R>
-      class ComputeCG2DGVisitor :
-        public TypeTree::DefaultPairVisitor,
-        public TypeTree::DynamicTraversal,
-        public TypeTree::VisitTree
-      {
-        LocalMatrix<R>& _mat;
-
-      public:
-        ComputeCG2DGVisitor(LocalMatrix<R>& mat) :
-          _mat(mat)
-        {}
-
-        template<typename LFSU, typename LFSV, typename TreePath>
-        void leaf(const LFSU& lfsu, const LFSV& lfsv, TreePath treePath) const
-        {
-          // map from CG (lfsu) 2 DG (lfsv)
-          typedef typename LFSV::Traits::FiniteElementType DG_FEM;
-          typedef FiniteElementInterfaceSwitch<DG_FEM> FESwitch;
-          typedef BasisInterfaceSwitch<typename FESwitch::Basis > BasisSwitch;
-          typedef typename BasisSwitch::DomainField DF;
-          std::vector<DF> v;
-          for (unsigned int i=0; i<lfsu.size(); i++)
-          {
-            // create function f, which wraps a CG shape function
-            WrappedLocalShapeFunction<LFSU> f(lfsu, i);
-            // interpolate f into DG space
-            FESwitch::interpolation(lfsv.finiteElement()).
-              interpolate(f, v);
-            // store coefficients
-            for (unsigned int j=0; j<lfsv.size(); j++)
-            {
-              _mat(lfsv,j,lfsu,i) = v[j];
-            }
-          }
-        }
-      };
-
-    } // end namespace CG2DGHelper
-
     // a local operator to compute DG shift matrix needed for some AMG variants
     class CG2DGProlongation :
       public FullVolumePattern,
       public LocalOperatorDefaultFlags,
       public InstationaryLocalOperatorDefaultMethods<double>
     {
-      template<typename LFSU, typename LFSV, typename R>
-      void computeCG2DG(const LFSU & lfsu, const LFSV & lfsv,
-        LocalMatrix<R>& mat) const
-      {
-        // lfsu: CG
-        // lfsv: DG
-        CG2DGHelper::ComputeCG2DGVisitor<R> cg2dg(mat);
-        TypeTree::applyToTreePair(lfsu, lfsv, cg2dg);
-      }
     public:
       // pattern assembly flags
       enum { doPatternVolume = true };
@@ -125,18 +40,150 @@ namespace Dune {
       // residual assembly flags
       enum { doAlphaVolume  = true };
 
-      CG2DGProlongation  () {}
+      CG2DGProlongation() = default;
 
-      // alpha_volume:
-      // not implemented, as it should never be used. We just miss-use the assembler to
-      // assemble the shift-matrix
+      // volume integral depending on test and ansatz functions
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
+        // Switches between local and global interface
+        typedef FiniteElementInterfaceSwitch<
+          typename LFSU::Traits::FiniteElementType
+          > FESwitchU;
+        typedef FiniteElementInterfaceSwitch<
+          typename LFSV::Traits::FiniteElementType
+          > FESwitchV;
+        typedef BasisInterfaceSwitch<
+          typename FESwitchU::Basis
+          > BasisSwitch;
 
-      // jacobian of skeleton term
+        // domain and range field type
+        typedef typename BasisSwitch::DomainField DF;
+        typedef typename BasisSwitch::RangeField RF;
+        typedef typename BasisSwitch::Range RangeType;
+        typedef typename LFSU::Traits::SizeType size_type;
+
+        // dimensions
+        const int dim = EG::Geometry::mydimension;
+
+        // select quadrature rule
+        Dune::GeometryType gt = eg.geometry().type();
+        int intorder = 2+2*std::max(lfsu.finiteElement().localBasis().order(),lfsv.finiteElement().localBasis().order());
+
+        // matrices
+        //std::cout << "n_DG=" << n_DG << " n_CG=" << n_CG << std::endl;
+        size_type n_DG = lfsv.size();
+        size_type n_CG = lfsu.size();
+        Dune::DynamicMatrix<RF> MDG(n_DG,n_DG,0.0); // DG mass matrix in element
+        Dune::DynamicVector<RF> b(n_DG,0.0); // right hand side vector
+
+        // loop over quadrature points
+        std::vector<RangeType> phi(n_DG); // values of DG basis functions
+        std::vector<RangeType> psi(n_CG); // values of CG basis functions
+
+        for(const auto& ip : Dune::QuadratureRules<DF,dim>::rule(gt,intorder)) {
+          // evaluate basis functions
+          FESwitchU::basis(lfsu.finiteElement()).evaluateFunction(ip.position(),psi); // eval CG basis ("Ansatz functions")
+          FESwitchV::basis(lfsv.finiteElement()).evaluateFunction(ip.position(),phi); // eval DG basis ("Test functions")
+
+          RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
+
+          // accumulate to local mass matrix
+          for (size_type i=0; i<n_DG; i++)
+            for (size_type j=0; j<n_DG; j++)
+              MDG[i][j] += phi[j]*phi[i]*factor;
+
+          RF u = 0.0;
+          for(size_type i=0; i<n_CG; i++)
+            u += x(lfsu,i) * psi[i];
+
+          // accumulate to RHS vector
+          for(size_type i=0; i<n_DG; i++)
+            b[i] += u * phi[i] * factor;
+        }
+
+        // invert mass matrix
+        MDG.invert();
+
+        // compute MDG^-1 b which is the prolongation
+        for(size_type i=0; i<n_DG; i++) {
+          RF res_entry = 0.0;
+          for(size_type j=0; j<n_DG; j++)
+            res_entry += MDG[i][j] * b[j];
+          r.accumulate(lfsv,i, res_entry);
+        }
+      }
+
+      // jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-      void jacobian_volume (const EG&, const LFSU& lfsu, const X&, const LFSV& lfsv,
+      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X&, const LFSV& lfsv,
                             M & mat) const
       {
-        computeCG2DG(lfsu, lfsv, mat.container());
+        // Switches between local and global interface
+        typedef FiniteElementInterfaceSwitch<
+          typename LFSU::Traits::FiniteElementType
+          > FESwitchU;
+        typedef FiniteElementInterfaceSwitch<
+          typename LFSV::Traits::FiniteElementType
+          > FESwitchV;
+        typedef BasisInterfaceSwitch<
+          typename FESwitchU::Basis
+          > BasisSwitch;
+
+        // domain and range field type
+        typedef typename BasisSwitch::DomainField DF;
+        typedef typename BasisSwitch::RangeField RF;
+        typedef typename BasisSwitch::Range RangeType;
+        typedef typename LFSU::Traits::SizeType size_type;
+
+        // dimensions
+        const int dim = EG::Geometry::mydimension;
+
+        // select quadrature rule
+        Dune::GeometryType gt = eg.geometry().type();
+        int intorder = 2+2*std::max(lfsu.finiteElement().localBasis().order(),lfsv.finiteElement().localBasis().order());
+
+        // matrices
+        //std::cout << "n_DG=" << n_DG << " n_CG=" << n_CG << std::endl;
+        size_type n_DG = lfsv.size();
+        size_type n_CG = lfsu.size();
+        typedef Dune::DynamicMatrix<RF> MATRIX;
+        MATRIX MDG(n_DG,n_DG,0.0); // DG mass matrix in element
+        MATRIX B(n_DG,n_CG,0.0); // right hand side matrix
+
+        // loop over quadrature points
+        std::vector<RangeType> phi(n_DG); // values of DG basis functions
+        std::vector<RangeType> psi(n_CG); // values of CG basis functions
+
+        for(const auto& ip : Dune::QuadratureRules<DF,dim>::rule(gt,intorder)) {
+          // evaluate basis functions
+          FESwitchU::basis(lfsu.finiteElement()).evaluateFunction(ip.position(),psi); // eval CG basis ("Ansatz functions")
+          FESwitchV::basis(lfsv.finiteElement()).evaluateFunction(ip.position(),phi); // eval DG basis ("Test functions")
+
+          RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
+
+          // accumulate to local mass matrix
+          for (size_type i=0; i<n_DG; i++)
+            for (size_type j=0; j<n_DG; j++)
+              MDG[i][j] += phi[j]*phi[i]*factor;
+
+          // accumulate to rhs matrix
+          for (size_type i=0; i<n_DG; i++)
+            for (size_type j=0; j<n_CG; j++)
+              B[i][j] += psi[j]*phi[i]*factor;
+        }
+
+        // invert mass matrix
+        MDG.invert();
+
+        // compute MDG^-1 B which is the prolongation matrix
+        for(size_type i=0; i<n_DG; i++)
+          for(size_type j=0; j<n_CG; j++) {
+            RF mat_entry = 0.0;
+            for(size_type k=0; k<n_DG; k++)
+              mat_entry += MDG[i][k] * B[k][j];
+            mat.accumulate(lfsv,i,lfsu,j, mat_entry);
+          }
       }
     };
 

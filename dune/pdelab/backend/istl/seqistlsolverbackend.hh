@@ -63,10 +63,164 @@ namespace Dune {
       GOS& gos;
     };
 
+    /** \brief Wrapper to apply linear operator
+     *
+     * Given a grid-operator, build a linear operator which fulfills the
+     * LinearOperator interface.
+     */
+    template <class GO>
+    class MatrixFreeLinearOperatorWrapper :
+     public LinearOperator<typename GO::Traits::Domain,
+                           typename GO::Traits::Range> {
+     public:
+      /** \brief Trial grid function space */
+      typedef typename GO::Traits::Domain domain_type;
+      /** \brief Test grid function space */
+      typedef typename GO::Traits::Range range_type;
+      /** \brief Domain type of ISTL base type */
+      typedef typename domain_type::field_type field_type;
+      /** \brief operator category */
+      enum { category=SolverCategory::sequential };
+
+      /** \brief construct new instance
+       *
+       * \param[in] go_ Matrix-free gridoperator
+       */
+      MatrixFreeLinearOperatorWrapper(const GO& go_) :
+        go(go_) {}
+      /** \brief Apply operator to ISTL vectors
+       *
+       * Implements the operation \f$y=Ax\f$ on an ISTL vector
+       *
+       * \param[in] x Input vector
+       * \param[out] y Output vector \f$y = Ax\f$
+       */
+      virtual void apply(const domain_type& x, range_type& y) const {
+        y = 0.0;
+        // Apply operator
+        go.jacobian_apply(x,y);
+      }
+
+      /** \brief Apply scaled add
+       *
+       * Calculate \f$y = y + \alpha Ax\f$ for the raw ISTL vectors
+       * \f$x\f$ and \f$y\f$.
+       *
+       * \param[in] alpha Scaling factor \f$\alpha\f$
+       * \param[in] x Input vector
+       * \param[out] y Resulting output vector
+       */
+      virtual void applyscaleadd(field_type alpha,
+                                 const domain_type& x,
+                                 range_type& y) const {
+        range_type tmp(y);
+        apply(x,tmp);
+        y.axpy(alpha,tmp);
+      }
+
+     private:
+      /** \brief Wrapped matrix-free operator */
+      const GO& go;
+    };
+
     //==============================================================================
     // Here we add some standard linear solvers conforming to the linear solver
     // interface required to solve linear and nonlinear problems.
     //==============================================================================
+
+    template<template<class> class Solver>
+    class ISTLBackend_SEQ_Richardson
+      : public SequentialNorm, public LinearResultStorage
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_Richardson(unsigned maxiter_=5000, int verbose_=1)
+        : maxiter(maxiter_), verbose(verbose_)
+      {}
+
+
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
+      {
+        using Backend::Native;
+        using Backend::native;
+
+        Dune::MatrixAdapter<Native<M>,
+                            Native<V>,
+                            Native<W>> opa(native(A));
+        Dune::Richardson<Native<V>,Native<W> > prec(0.7);
+        Solver<Native<V> > solver(opa, prec, reduction, maxiter, verbose);
+        Dune::InverseOperatorResult stat;
+        solver.apply(native(z), native(r), stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+        res.conv_rate  = stat.conv_rate;
+      }
+
+    private:
+      unsigned maxiter;
+      int verbose;
+    };
+
+    template<class GO, template<class> class Solver>
+    class ISTLBackend_SEQ_MatrixFree_Richardson
+      : public SequentialNorm, public LinearResultStorage
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_MatrixFree_Richardson(const GO& go_, unsigned maxiter_=5000, int verbose_=1)
+        : go(go_)
+        , maxiter(maxiter_)
+        , verbose(verbose_)
+      {}
+
+
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class V, class W>
+      void apply(V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
+      {
+        MatrixFreeLinearOperatorWrapper<GO> opa(go);
+        Dune::Richardson<V,W> prec(0.7);
+        Solver<V> solver(opa, prec, reduction, maxiter, verbose);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z, r, stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+        res.conv_rate  = stat.conv_rate;
+      }
+
+    private:
+      const GO& go;
+      unsigned maxiter;
+      int verbose;
+    };
 
     template<template<class,class,class,int> class Preconditioner,
              template<class> class Solver>

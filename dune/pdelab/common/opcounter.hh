@@ -30,6 +30,8 @@ namespace oc {
 
     typedef std::size_t size_type;
 
+    using value_type = F;
+
     OpCounter()
       : _v()
     {}
@@ -78,6 +80,22 @@ namespace oc {
     {
       os << "OC(" << f._v << ")";
       return os;
+    }
+
+    friend std::istringstream& operator>>(std::istringstream& iss, OpCounter& f)
+    {
+      iss >> f._v;
+      return iss;
+    }
+
+    F* data()
+    {
+      return &_v;
+    }
+
+    const F* data() const
+    {
+      return &_v;
     }
 
     F _v;
@@ -162,6 +180,21 @@ namespace oc {
       }
 
     };
+
+    static void additions(std::size_t n)
+    {
+      counters.addition_count += n;
+    }
+
+    static void multiplications(std::size_t n)
+    {
+      counters.multiplication_count += n;
+    }
+
+    static void divisions(std::size_t n)
+    {
+      counters.division_count += n;
+    }
 
     static void reset()
     {
@@ -826,39 +859,5 @@ namespace oc {
   }
 
 }
-
-namespace std {
-
-  using oc::exp;
-  using oc::pow;
-  using oc::sin;
-  using oc::cos;
-  using oc::sqrt;
-
-  template<typename F>
-  inline oc::OpCounter<F> abs(const oc::OpCounter<F>& a)
-  {
-    ++oc::OpCounter<F>::counters.comparison_count;
-    return {std::abs(a._v)};
-  }
-
-  /*
-    template<typename F>
-    inline oc::OpCounter<F> abs(oc::OpCounter<F>& a)
-    {
-    ++oc::OpCounter<F>::comparison_count;
-    return {std::abs(a._v)};
-    }
-
-    template<typename F>
-    inline oc::OpCounter<F> abs(oc::OpCounter<F> a)
-    {
-    ++oc::OpCounter<F>::comparison_count;
-    return {std::abs(a._v)};
-    }
-  */
-
-}
-
 
 #endif // __OPCOUNTER__
