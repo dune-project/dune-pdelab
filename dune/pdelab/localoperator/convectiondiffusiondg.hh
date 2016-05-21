@@ -67,6 +67,10 @@ namespace Dune {
       using BCType = typename ConvectionDiffusionBoundaryConditions::Type;
 
     public:
+
+      using LocalBasisType = typename FiniteElementMap::Traits::FiniteElementType::Traits::LocalBasisType;
+      using Cache = Dune::PDELab::LocalBasisCache<LocalBasisType>;
+
       // pattern assembly flags
       enum { doPatternVolume = true };
       enum { doPatternSkeleton = true };
@@ -1044,9 +1048,6 @@ namespace Dune {
       int intorderadd;
       int quadrature_factor;
       Real theta;
-
-      using LocalBasisType = typename FiniteElementMap::Traits::FiniteElementType::Traits::LocalBasisType;
-      using Cache = Dune::PDELab::LocalBasisCache<LocalBasisType>;
 
       // In theory it is possible that one and the same local operator is
       // called first with a finite element of one type and later with a
