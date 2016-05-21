@@ -43,46 +43,11 @@ namespace Dune {
       typedef typename C::iterator iterator;
       typedef typename C::const_iterator const_iterator;
 
-
-#if HAVE_TEMPLATE_ALIASES
-
       template<typename LFSCache>
       using LocalView = UncachedVectorView<FlatVectorContainer,LFSCache>;
 
       template<typename LFSCache>
       using ConstLocalView = ConstUncachedVectorView<const FlatVectorContainer,LFSCache>;
-
-#else
-
-      template<typename LFSCache>
-      struct LocalView
-        : public UncachedVectorView<FlatVectorContainer,LFSCache>
-      {
-
-      LocalView()
-      {}
-
-      LocalView(FlatVectorContainer& vc)
-        : UncachedVectorView<FlatVectorContainer,LFSCache>(vc)
-      {}
-
-    };
-
-      template<typename LFSCache>
-      struct ConstLocalView
-        : public ConstUncachedVectorView<const FlatVectorContainer,LFSCache>
-      {
-
-      ConstLocalView()
-      {}
-
-      ConstLocalView(const FlatVectorContainer& vc)
-        : FlatVectorView<const FlatVectorContainer,LFSCache>(vc)
-      {}
-
-    };
-
-#endif // HAVE_TEMPLATE_ALIASES
 
 
       FlatVectorContainer(const FlatVectorContainer& rhs)

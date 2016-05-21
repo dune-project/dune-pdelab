@@ -50,45 +50,11 @@ namespace Dune {
 
     public:
 
-#if HAVE_TEMPLATE_ALIASES
-
       template<typename RowCache, typename ColCache>
       using LocalView = UncachedMatrixView<BELLMatrixContainer,RowCache,ColCache>;
 
       template<typename RowCache, typename ColCache>
       using ConstLocalView = ConstUncachedMatrixView<const BELLMatrixContainer,RowCache,ColCache>;
-
-#else
-
-      template<typename RowCache, typename ColCache>
-      struct LocalView
-        : public UncachedMatrixView<FlatELLMatrixContainer,RowCache,ColCache>
-      {
-
-        LocalView()
-        {}
-
-        LocalView(FlatELLMatrixContainer& mc)
-          : UncachedMatrixView<FlatELLMatrixContainer,RowCache,ColCache>(mc)
-        {}
-
-      };
-
-      template<typename RowCache, typename ColCache>
-      struct ConstLocalView
-        : public ConstUncachedMatrixView<const FlatELLMatrixContainer,RowCache,ColCache>
-      {
-
-        ConstLocalView()
-        {}
-
-        ConstLocalView(const FlatELLMatrixContainer& mc)
-          : ConstUncachedMatrixView<const FlatELLMatrixContainer,RowCache,ColCache>(mc)
-        {}
-
-      };
-
-#endif // HAVE_TEMPLATE_ALIASES
 
     private:
 
