@@ -133,7 +133,7 @@ namespace Dune {
 
       template<typename GO, typename Parameters>
       explicit BELLMatrixContainer (const GO& go, Parameters parameters)
-        : _container(make_shared<Container>(go.testGridFunctionSpace().backend().blockSize(),go.trialGridFunctionSpace().backend().blockSize()))
+        : _container(std::make_shared<Container>(go.testGridFunctionSpace().backend().blockSize(),go.trialGridFunctionSpace().backend().blockSize()))
       {
         Pattern pattern(
           go.testGridFunctionSpace().ordering(),
@@ -146,7 +146,7 @@ namespace Dune {
 
       template<typename GO, typename Parameters>
       BELLMatrixContainer (const GO& go, Parameters parameters, const E& e)
-        : _container(make_shared<Container>(go.testGridFunctionSpace().backend().blockSize(),go.trialGridFunctionSpace().backend().blockSize()))
+        : _container(std::make_shared<Container>(go.testGridFunctionSpace().backend().blockSize(),go.trialGridFunctionSpace().backend().blockSize()))
       {
         Pattern pattern(
           go.testGridFunctionSpace().ordering(),
@@ -165,11 +165,11 @@ namespace Dune {
 
       //! Creates an FlatELLMatrixContainer with an empty underlying ISTL matrix.
       explicit BELLMatrixContainer (Dune::PDELab::tags::attached_container)
-        : _container(make_shared<Container>())
+        : _container(std::make_shared<Container>())
       {}
 
       BELLMatrixContainer(const BELLMatrixContainer& rhs)
-        : _container(make_shared<Container>(*(rhs._container)))
+        : _container(std::make_shared<Container>(*(rhs._container)))
       {}
 
       BELLMatrixContainer& operator=(const BELLMatrixContainer& rhs)
@@ -182,7 +182,7 @@ namespace Dune {
           }
         else
           {
-            _container = make_shared<Container>(*(rhs._container));
+            _container = std::make_shared<Container>(*(rhs._container));
           }
         return *this;
       }
@@ -192,7 +192,7 @@ namespace Dune {
         _container.reset();
       }
 
-      void attach(shared_ptr<Container> container)
+      void attach(std::shared_ptr<Container> container)
       {
         _container = container;
       }
@@ -202,7 +202,7 @@ namespace Dune {
         return bool(_container);
       }
 
-      const shared_ptr<Container>& storage() const
+      const std::shared_ptr<Container>& storage() const
       {
         return _container;
       }
@@ -268,7 +268,7 @@ namespace Dune {
         return *_container;
       }
 
-      shared_ptr<Container> _container;
+      std::shared_ptr<Container> _container;
 
     };
 

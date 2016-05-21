@@ -131,7 +131,7 @@ namespace Dune {
 
       template<typename GO, typename Parameters>
       explicit FlatELLMatrixContainer (const GO& go, Parameters parameters)
-        : _container(make_shared<Container>())
+        : _container(std::make_shared<Container>())
       {
         Pattern pattern(
           go.testGridFunctionSpace().ordering(),
@@ -144,7 +144,7 @@ namespace Dune {
 
       template<typename GO, typename Parameters>
       FlatELLMatrixContainer (const GO& go, Parameters parameters, const E& e)
-        : _container(make_shared<Container>())
+        : _container(std::make_shared<Container>())
       {
         Pattern pattern(
           go.testGridFunctionSpace().ordering(),
@@ -163,11 +163,11 @@ namespace Dune {
 
       //! Creates an FlatELLMatrixContainer with an empty underlying ISTL matrix.
       explicit FlatELLMatrixContainer (Dune::PDELab::tags::attached_container)
-        : _container(make_shared<Container>())
+        : _container(std::make_shared<Container>())
       {}
 
       FlatELLMatrixContainer(const FlatELLMatrixContainer& rhs)
-        : _container(make_shared<Container>(*(rhs._container)))
+        : _container(std::make_shared<Container>(*(rhs._container)))
       {}
 
       FlatELLMatrixContainer& operator=(const FlatELLMatrixContainer& rhs)
@@ -180,7 +180,7 @@ namespace Dune {
           }
         else
           {
-            _container = make_shared<Container>(*(rhs._container));
+            _container = std::make_shared<Container>(*(rhs._container));
           }
         return *this;
       }
@@ -190,7 +190,7 @@ namespace Dune {
         _container.reset();
       }
 
-      void attach(shared_ptr<Container> container)
+      void attach(std::shared_ptr<Container> container)
       {
         _container = container;
       }
@@ -200,7 +200,7 @@ namespace Dune {
         return bool(_container);
       }
 
-      const shared_ptr<Container>& storage() const
+      const std::shared_ptr<Container>& storage() const
       {
         return _container;
       }
@@ -266,7 +266,7 @@ namespace Dune {
         return *_container;
       }
 
-      shared_ptr<Container> _container;
+      std::shared_ptr<Container> _container;
 
     };
 

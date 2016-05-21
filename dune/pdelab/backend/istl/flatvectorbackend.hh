@@ -102,7 +102,7 @@ namespace Dune {
 
       FlatVectorContainer(const GFS& gfs, const E& e)
         : _gfs(gfs)
-        , _container(make_shared<Container>(gfs.ordering().blockCount()))
+        , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
       {
         (*_container)=e;
       }
@@ -142,7 +142,7 @@ namespace Dune {
           }
         else
           {
-            _container = make_shared<Container>(raw(r));
+            _container = std::make_shared<Container>(Backend::native(r));
           }
         return *this;
       }
@@ -274,7 +274,7 @@ namespace Dune {
       }
 
       const GFS& _gfs;
-      shared_ptr<Container> _container;
+      std::shared_ptr<Container> _container;
 
     };
 

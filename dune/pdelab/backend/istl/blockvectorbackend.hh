@@ -87,12 +87,12 @@ namespace Dune {
 
       BlockVectorContainer(const BlockVectorContainer& rhs)
         : _gfs(rhs._gfs)
-        , _container(make_shared<Container>(native(rhs)))
+        , _container(std::make_shared<Container>(native(rhs)))
       {}
 
       BlockVectorContainer (const GFS& gfs, Dune::PDELab::tags::attached_container = Dune::PDELab::tags::attached_container())
         : _gfs(gfs)
-        , _container(make_shared<Container>(gfs.ordering().blockCount(),gfs.backend().blockSize()))
+        , _container(std::make_shared<Container>(gfs.ordering().blockCount(),gfs.backend().blockSize()))
       {}
 
       //! Creates an BlockVectorContainer without allocating an underlying ISTL vector.
@@ -102,7 +102,7 @@ namespace Dune {
 
       BlockVectorContainer(const GFS& gfs, const E& e)
         : _gfs(gfs)
-        , _container(make_shared<Container>(gfs.ordering().blockCount(),gfs.backend().blockSize()))
+        , _container(std::make_shared<Container>(gfs.ordering().blockCount(),gfs.backend().blockSize()))
       {
         (*_container)=e;
       }
@@ -112,7 +112,7 @@ namespace Dune {
         _container.reset();
       }
 
-      void attach(shared_ptr<Container> container)
+      void attach(std::shared_ptr<Container> container)
       {
         _container = container;
       }
@@ -122,7 +122,7 @@ namespace Dune {
         return bool(_container);
       }
 
-      const shared_ptr<Container>& storage() const
+      const std::shared_ptr<Container>& storage() const
       {
         return _container;
       }
@@ -142,7 +142,7 @@ namespace Dune {
           }
         else
           {
-            _container = make_shared<Container>(native(r));
+            _container = std::make_shared<Container>(native(r));
           }
         return *this;
       }
@@ -274,7 +274,7 @@ namespace Dune {
       }
 
       const GFS& _gfs;
-      shared_ptr<Container> _container;
+      std::shared_ptr<Container> _container;
     };
 
 
