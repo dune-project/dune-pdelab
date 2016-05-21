@@ -82,7 +82,7 @@ namespace Dune {
                 It row_end = index_streamer.streamRow(col_begin);
                 std::fill(row_end,col_end,(row_end != col_begin ? row_end[-1] : size_type(0)));
               }
-            for (diff_t i = nonpadded_block_size; i < kernel_block_size; ++i)
+            for (diff_t i = nonpadded_block_size; i < diff_t(kernel_block_size); ++i)
               {
                 It col_begin(col_index+i);
                 It col_end(col_begin + block_length);
