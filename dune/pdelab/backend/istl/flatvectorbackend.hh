@@ -7,7 +7,7 @@
 #include <dune/istl/vector/host.hh>
 #include <dune/typetree/typetree.hh>
 
-#include <dune/pdelab/backend/tags.hh>
+#include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/backend/istl/vectorhelpers.hh>
@@ -55,13 +55,13 @@ namespace Dune {
         , _container(make_shared<Container>(raw(rhs)))
       {}
 
-      FlatVectorContainer (const GFS& gfs, Dune::PDELab::tags::attached_container = Dune::PDELab::tags::attached_container())
+      FlatVectorContainer (const GFS& gfs, Dune::PDELab::Backend::attached_container = Dune::PDELab::Backend::attached_container())
         : _gfs(gfs)
         , _container(make_shared<Container>(gfs.ordering().blockCount()))
       {}
 
       //! Creates an FlatVectorContainer without allocating an underlying ISTL vector.
-      FlatVectorContainer(const GFS& gfs, Dune::PDELab::tags::unattached_container)
+      FlatVectorContainer(const GFS& gfs, Dune::PDELab::Backend::unattached_container)
         : _gfs(gfs)
       {}
 

@@ -124,11 +124,11 @@ namespace Dune {
 
 
       //! Creates an FlatELLMatrixContainer without allocating an underlying ISTL matrix.
-      explicit FlatELLMatrixContainer (Dune::PDELab::tags::unattached_container = Dune::PDELab::tags::unattached_container())
+      explicit FlatELLMatrixContainer (Dune::PDELab::Backend::unattached_container = Dune::PDELab::Backend::unattached_container())
       {}
 
       //! Creates an FlatELLMatrixContainer with an empty underlying ISTL matrix.
-      explicit FlatELLMatrixContainer (Dune::PDELab::tags::attached_container)
+      explicit FlatELLMatrixContainer (Dune::PDELab::Backend::attached_container)
         : _container(std::make_shared<Container>())
       {}
 
