@@ -1609,48 +1609,6 @@ namespace Dune {
             std::shared_ptr<GO> gop;
         };
 
-
-            GalerkinGlobalAssemblerNewBackend (const FS& fs, LOP& lop, const MBE& mbe)
-            {
-                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,mbe));
-            }
-
-            // return grid reference
-            GO& getGO ()
-            {
-                return *gop;
-            }
-
-            // return grid reference const version
-            const GO& getGO () const
-            {
-                return *gop;
-            }
-
-            GO& operator*()
-            {
-                return *gop;
-            }
-
-            GO* operator->()
-            {
-                return gop.operator->();
-            }
-
-            const GO& operator*() const
-            {
-                return *gop;
-            }
-
-            const GO* operator->() const
-            {
-                return gop.operator->();
-            }
-
-        private:
-            std::shared_ptr<GO> gop;
-        };
-
 #if HAVE_TBB
         // TBB variant of GalerkinGlobalAssemblerNewBackend
         template<typename Partitioning, typename LockManager, typename FS,
