@@ -862,7 +862,7 @@ namespace Dune {
         class DGCONBase<SolverCategory::overlapping>
         {
         public:
-            typedef P0ParallelConstraints CON;
+            typedef P0ParallelConstraints<> CON;
             DGCONBase ()
             {
                 conp = std::shared_ptr<CON>(new CON());

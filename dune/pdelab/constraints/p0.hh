@@ -12,6 +12,7 @@ namespace Dune {
     //! \{
 
     //! Parallel P0 constraints for overlapping grids
+    template<bool fast = false>
     class P0ParallelConstraints
     {
     public:
@@ -32,8 +33,7 @@ namespace Dune {
       {
         typename T::RowType empty;
         typedef typename LFS::Traits::SizeType size_type;
-        //for (size_type i=0; i<lfs.size(); i++){
-        for (size_type i=0; i<1; i++){
+        for (size_type i=0; i < (fast ? 1 : lfs.size()); i++){
           trafo[lfs.dofIndex(i)] = empty;
         }
       }
