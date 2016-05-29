@@ -162,6 +162,16 @@ namespace Dune
           }
       }
 
+      //! \brief Extract position of nodal point of basis function i
+      inline void node (const size_t i,
+                        Dune::FieldVector<typename Traits::RangeType,d>& out) const
+      {
+        // convert index i to multiindex
+        Dune::FieldVector<int,d> alpha(multiindex<k,d>(i));
+        for (int j=0; j<d; j++)
+          out[j] = poly.x(alpha[j]);
+      }
+
       //! \brief Evaluate Jacobian of all shape functions
       inline void
       evaluateJacobian (const typename Traits::DomainType& in,         // position
