@@ -439,7 +439,7 @@ namespace Dune {
      *         LocalCallableToBoundaryConditionAdapter.
      */
     template <typename GV, typename F>
-    BoundaryConditionAdapter makebBoundaryConditionFromCallable (const GV& gv, const F& f)
+    BoundaryConditionAdapter makeBoundaryConditionFromCallable (const GV& gv, const F& f)
 #endif
 
 #ifndef DOXYGEN
