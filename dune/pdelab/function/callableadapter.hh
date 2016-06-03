@@ -40,6 +40,13 @@ namespace Dune {
         typename Traits::DomainType xg = e.geometry().global(xl);
         y = f(xg);
       }
+
+      //! evaluate extended function on element
+      inline void evaluateGlobal (const typename Traits::DomainType& x,
+                                  typename Traits::RangeType& y) const
+      {
+        y = f(x);
+      }
     };
 
     template<typename T>
@@ -212,6 +219,13 @@ namespace Dune {
       {
         typename Traits::DomainType xg = e.geometry().global(xl);
         y = f(xg);
+      }
+
+      //! evaluate extended function on element
+      inline void evaluateGlobal (const typename Traits::DomainType& x,
+                                  typename Traits::RangeType& y) const
+      {
+        y = f(x);
       }
 
       // pass time to parameter object
