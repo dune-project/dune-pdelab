@@ -11,7 +11,6 @@ install(FILES
   lexicographicordering.hh
   localorderingbase.hh
   orderingbase.hh
-  permutationordering.hh
   permutedordering.hh
   redblackdg.hh
   singlecodimleafordering.hh

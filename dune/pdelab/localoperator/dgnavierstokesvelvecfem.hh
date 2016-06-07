@@ -30,9 +30,9 @@ namespace Dune {
   template<class Basis, class Dummy = void>
   struct VectorBasisInterfaceSwitch {
     //! export vector type of the local coordinates
-    typedef typename Basis::Traits::DomainLocal DomainLocal;
+    using DomainLocal = typename Basis::Traits::DomainLocal;
     //! export field type of the values
-    typedef typename Basis::Traits::RangeField RangeField;
+    using RangeField = typename Basis::Traits::RangeField;
     //! export dimension of the values
     static const std::size_t dimRange = Basis::Traits::dimRange;
 
@@ -51,9 +51,9 @@ namespace Dune {
   //! Switch for uniform treatment of local and global basis classes
   template<class Basis>
   struct VectorBasisInterfaceSwitch<
-    Basis, typename enable_if<
+    Basis, typename std::enable_if<
              Std::to_true_type<
-               integral_constant<
+               std::integral_constant<
                  std::size_t,
                  Basis::Traits::dimDomain
                  >
@@ -62,9 +62,9 @@ namespace Dune {
     >
   {
     //! export vector type of the local coordinates
-    typedef typename Basis::Traits::DomainType DomainLocal;
+    using DomainLocal = typename Basis::Traits::DomainType;
     //! export field type of the values
-    typedef typename Basis::Traits::RangeFieldType RangeField;
+    using RangeField = typename Basis::Traits::RangeFieldType;
     //! export dimension of the values
     static const std::size_t dimRange = Basis::Traits::dimRange;
 
@@ -103,11 +103,11 @@ namespace Dune {
       public FullSkeletonPattern, public FullVolumePattern,
       public InstationaryLocalOperatorDefaultMethods<double>
     {
-      typedef StokesBoundaryCondition BC;
-      typedef typename PRM::Traits::RangeField RF;
+      using BC = StokesBoundaryCondition;
+      using RF = typename PRM::Traits::RangeField;
 
-      typedef InstationaryLocalOperatorDefaultMethods<double> InstatBase;
-      typedef typename InstatBase::RealType Real;
+      using InstatBase = InstationaryLocalOperatorDefaultMethods<double>;
+      using Real = typename InstatBase::RealType;
 
       static const bool navier = PRM::assemble_navier;
       static const bool full_tensor = PRM::assemble_full_tensor;
@@ -164,45 +164,43 @@ namespace Dune {
         const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
+        using namespace Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v = child(lfsv,_0);
+        const auto& lfsu_v = child(lfsu,_0);
 
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_V;
-        const LFSV_V& lfsv_v = lfsv.template child<VBLOCK>();
-        const LFSV_V& lfsu_v = lfsu.template child<VBLOCK>();
-
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
-        const LFSV_P& lfsu_p = lfsu.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
+        const auto& lfsu_p = child(lfsu,_1);
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef VectorBasisInterfaceSwitch<typename FESwitch_V::Basis > VectorBasisSwitch_V;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-        typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef typename BasisSwitch_V::Range Range_V;
-        typedef typename BasisSwitch_P::Range Range_P;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using VectorBasisSwitch_V = VectorBasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
+        using BasisSwitch_P = BasisInterfaceSwitch<typename FESwitch_P::Basis >;
+        using RF = typename BasisSwitch_V::RangeField;
+        using Range_V = typename BasisSwitch_V::Range;
+        using Range_P = typename BasisSwitch_P::Range;
+        using size_type = typename LFSV::Traits::SizeType;
 
-        // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
+        // Get geometry
+        auto geo = eg.geometry();
+
+        // Determine quadrature order
         const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
-        const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
-        const int jac_order = gt.isSimplex() ? 0 : 1;
+        const int det_jac_order = geo.type().isSimplex() ? 0 : (dim-1);
+        const int jac_order = geo.type().isSimplex() ? 0 : 1;
         const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
 
         // loop over quadrature points
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,qorder))
           {
-            const Dune::FieldVector<DF,dim> local = ip.position();
-            const RF mu = prm.mu(eg,local);
-            const RF rho = prm.rho(eg,local);
+            auto local = ip.position();
+            auto mu = prm.mu(eg,local);
+            auto rho = prm.rho(eg,local);
 
             // compute u (if Navier term enabled)
             std::vector<Range_V> phi_v(lfsv_v.size());
@@ -225,7 +223,7 @@ namespace Dune {
             // evaluate jacobian of velocity shape functions on reference element
             std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v(lfsu_v.size());
             VectorBasisSwitch_V::jacobian
-              (FESwitch_V::basis(lfsv_v.finiteElement()), eg.geometry(), local, jac_phi_v);
+              (FESwitch_V::basis(lfsv_v.finiteElement()), geo, local, jac_phi_v);
 
             // compute divergence of test functions
             std::vector<RF> div_phi_v(lfsv_v.size(),0.0);
@@ -241,14 +239,15 @@ namespace Dune {
               div_u += x(lfsu_v,i) * div_phi_v[i];
             }
 
-            const RF detj = eg.geometry().integrationElement(ip.position());
-            const RF weight = ip.weight() * detj;
+            auto detj = geo.integrationElement(ip.position());
+            auto weight = ip.weight() * detj;
 
             for (size_type i=0; i<lfsv_v.size(); i++) {
               //================================================//
               // \int (mu*grad_u*grad_v)
               //================================================//
-              RF dvdu(0); contraction(jac_u,jac_phi_v[i],dvdu);
+              RF dvdu(0);
+              contraction(jac_u,jac_phi_v[i],dvdu);
               r.accumulate(lfsv_v, i, dvdu * mu * weight);
 
               //================================================//
@@ -287,45 +286,43 @@ namespace Dune {
         const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-       static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
+        using namespace Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v = child(lfsv,_0);
+        const auto& lfsu_v = child(lfsu,_0);
 
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_V;
-        const LFSV_V& lfsv_v = lfsv.template child<VBLOCK>();
-        const LFSV_V& lfsu_v = lfsu.template child<VBLOCK>();
-
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
-        const LFSV_P& lfsu_p = lfsu.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
+        const auto& lfsu_p = child(lfsu,_1);
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef VectorBasisInterfaceSwitch<typename FESwitch_V::Basis > VectorBasisSwitch_V;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-        typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef typename BasisSwitch_V::Range Range_V;
-        typedef typename BasisSwitch_P::Range Range_P;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using VectorBasisSwitch_V = VectorBasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
+        using BasisSwitch_P = BasisInterfaceSwitch<typename FESwitch_P::Basis >;
+        using RF = typename BasisSwitch_V::RangeField;
+        using Range_V = typename BasisSwitch_V::Range;
+        using Range_P = typename BasisSwitch_P::Range;
+        using size_type = typename LFSV::Traits::SizeType;
 
-        // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
+        // Get geometry
+        auto geo = eg.geometry();
+
+        // Determine quadrature order
         const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
-        const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
-        const int jac_order = gt.isSimplex() ? 0 : 1;
+        const int det_jac_order = geo.type().isSimplex() ? 0 : (dim-1);
+        const int jac_order = geo.type().isSimplex() ? 0 : 1;
         const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
 
         // loop over quadrature points
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,qorder))
           {
-            const Dune::FieldVector<DF,dim> local = ip.position();
-            const RF mu = prm.mu(eg,local);
-            const RF rho = prm.rho(eg,local);
+            auto local = ip.position();
+            auto mu = prm.mu(eg,local);
+            auto rho = prm.rho(eg,local);
 
             // compute u (if Navier term enabled)
             std::vector<Range_V> phi_v(lfsv_v.size());
@@ -343,7 +340,7 @@ namespace Dune {
             // evaluate jacobian of velocity shape functions on reference element
             std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v(lfsu_v.size());
             VectorBasisSwitch_V::jacobian
-              (FESwitch_V::basis(lfsv_v.finiteElement()), eg.geometry(), local, jac_phi_v);
+              (FESwitch_V::basis(lfsv_v.finiteElement()), geo, local, jac_phi_v);
 
             assert(lfsu_v.size() == lfsv_v.size());
             // compute divergence of velocity shape functions
@@ -360,8 +357,8 @@ namespace Dune {
               }
             }
 
-            const RF detj = eg.geometry().integrationElement(ip.position());
-            const RF weight = ip.weight() * detj;
+            auto detj = geo.integrationElement(ip.position());
+            auto weight = ip.weight() * detj;
 
             for(size_type i=0; i<lfsv_v.size(); i++) {
 
@@ -369,7 +366,8 @@ namespace Dune {
                 //================================================//
                 // \int (mu*grad_u*grad_v)
                 //================================================//
-                RF dvdu(0.0); contraction(jac_phi_v[j],jac_phi_v[i],dvdu);
+                RF dvdu(0.0);
+                contraction(jac_phi_v[j],jac_phi_v[i],dvdu);
                 mat.accumulate(lfsv_v,i,lfsu_v,j, mu * dvdu * weight);
 
                 //================================================//
@@ -412,56 +410,61 @@ namespace Dune {
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
+        using namespace Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v_s = child(lfsv_s,_0);
+        const auto& lfsu_v_s = child(lfsu_s,_0);
+        const auto& lfsv_v_n = child(lfsv_n,_0);
+        const auto& lfsu_v_n = child(lfsu_n,_0);
 
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_V;
-        const LFSV_V& lfsv_v_s = lfsv_s.template child<VBLOCK>();
-        const LFSV_V& lfsu_v_s = lfsu_s.template child<VBLOCK>();
-        const LFSV_V& lfsv_v_n = lfsv_n.template child<VBLOCK>();
-        const LFSV_V& lfsu_v_n = lfsu_n.template child<VBLOCK>();
-
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-        const LFSV_P& lfsv_p_s = lfsv_s.template child<PBLOCK>();
-        const LFSV_P& lfsu_p_s = lfsu_s.template child<PBLOCK>();
-        const LFSV_P& lfsv_p_n = lfsv_n.template child<PBLOCK>();
-        const LFSV_P& lfsu_p_n = lfsu_n.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p_s = child(lfsv_s,_1);
+        const auto& lfsu_p_s = child(lfsu_s,_1);
+        const auto& lfsv_p_n = child(lfsv_n,_1);
+        const auto& lfsu_p_n = child(lfsu_n,_1);
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef VectorBasisInterfaceSwitch<typename FESwitch_V::Basis > VectorBasisSwitch_V;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-        typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef typename BasisSwitch_V::Range Range_V;
-        typedef typename BasisSwitch_P::Range Range_P;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using VectorBasisSwitch_V = VectorBasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
+        using BasisSwitch_P = BasisInterfaceSwitch<typename FESwitch_P::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RF = typename BasisSwitch_V::RangeField;
+        using Range_V = typename BasisSwitch_V::Range;
+        using Range_P = typename BasisSwitch_P::Range;
+        using size_type = typename LFSV::Traits::SizeType;
 
-        // make copy of inside and outside cell w.r.t. the intersection
-        auto inside_cell = ig.inside();
-        auto outside_cell = ig.outside();
+        // References to inside and outside cells
+        const auto& cell_inside = ig.inside();
+        const auto& cell_outside = ig.outside();
 
-        // select quadrature rule
-        Dune::GeometryType gtface = ig.geometry().type();
+        // Get geometries
+        auto geo = ig.geometry();
+        auto geo_inside = cell_inside.geometry();
+        auto geo_outside = cell_outside.geometry();
+
+        // Get geometry of intersection in local coordinates of cell_inside and cell_outside
+        auto geo_in_inside = ig.geometryInInside();
+        auto geo_in_outside = ig.geometryInOutside();
+
+        // Determine quadrature order
         const int v_order = FESwitch_V::basis(lfsv_v_s.finiteElement()).order();
-        const int det_jac_order = gtface.isSimplex() ? 0 : (dim-2);
+        const int det_jac_order = geo.type().isSimplex() ? 0 : (dim-2);
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
-        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         const int epsilon = prm.epsilonIPSymmetryFactor();
         const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
 
         // loop over quadrature points and integrate normal flux
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,qorder))
           {
 
             // position of quadrature point in local coordinates of element
-            Dune::FieldVector<DF,dim> local_s = ig.geometryInInside().global(ip.position());
-            Dune::FieldVector<DF,dim> local_n = ig.geometryInOutside().global(ip.position());
+            auto local_s = geo_in_inside.global(ip.position());
+            auto local_n = geo_in_outside.global(ip.position());
 
-            const RF penalty_factor = prm.getFaceIP(ig,ip.position());
+            auto penalty_factor = prm.getFaceIP(ig,ip.position());
 
             // values of velocity shape functions
             std::vector<Range_V> phi_v_s(lfsv_v_s.size());
@@ -487,9 +490,9 @@ namespace Dune {
             std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v_s(lfsu_v_s.size());
             std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v_n(lfsu_v_n.size());
             VectorBasisSwitch_V::jacobian
-              (FESwitch_V::basis(lfsv_v_s.finiteElement()), inside_cell.geometry(), local_s, jac_phi_v_s);
+              (FESwitch_V::basis(lfsv_v_s.finiteElement()), geo_inside, local_s, jac_phi_v_s);
             VectorBasisSwitch_V::jacobian
-              (FESwitch_V::basis(lfsv_v_n.finiteElement()), outside_cell.geometry(), local_n, jac_phi_v_n);
+              (FESwitch_V::basis(lfsv_v_n.finiteElement()), geo_outside, local_n, jac_phi_v_n);
 
             // compute velocity value, jacobian, and divergence
             Range_V val_u_s(0.0);
@@ -505,17 +508,17 @@ namespace Dune {
               jac_u_n.axpy(x_n(lfsu_v_n,i),jac_phi_v_n[i]);
             }
 
-            const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(ip.position());
-            const RF weight = ip.weight()*ig.geometry().integrationElement(ip.position());
-            const RF mu = prm.mu(ig,ip.position());
+            auto normal = ig.unitOuterNormal(ip.position());
+            auto weight = ip.weight()*geo.integrationElement(ip.position());
+            auto mu = prm.mu(ig,ip.position());
 
-            const RF factor = mu * weight;
+            auto factor = mu * weight;
 
             // compute jump in velocity
-            const Dune::FieldVector<DF,dimw> jump = val_u_s - val_u_n;
+            auto jump = val_u_s - val_u_n;
 
             // compute mean in pressure
-            const RF mean_p = 0.5*(val_p_s + val_p_n);
+            auto mean_p = 0.5*(val_p_s + val_p_n);
 
             // compute flux of velocity jacobian
             Dune::FieldVector<DF,dimw> flux_jac_u(0.0);
@@ -598,56 +601,61 @@ namespace Dune {
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
+        using namespace Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v_s = child(lfsv_s,_0);
+        const auto& lfsu_v_s = child(lfsu_s,_0);
+        const auto& lfsv_v_n = child(lfsv_n,_0);
+        const auto& lfsu_v_n = child(lfsu_n,_0);
 
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_V;
-        const LFSV_V& lfsv_v_s = lfsv_s.template child<VBLOCK>();
-        const LFSV_V& lfsu_v_s = lfsu_s.template child<VBLOCK>();
-        const LFSV_V& lfsv_v_n = lfsv_n.template child<VBLOCK>();
-        const LFSV_V& lfsu_v_n = lfsu_n.template child<VBLOCK>();
-
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-        const LFSV_P& lfsv_p_s = lfsv_s.template child<PBLOCK>();
-        const LFSV_P& lfsu_p_s = lfsu_s.template child<PBLOCK>();
-        const LFSV_P& lfsv_p_n = lfsv_n.template child<PBLOCK>();
-        const LFSV_P& lfsu_p_n = lfsu_n.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p_s = child(lfsv_s,_1);
+        const auto& lfsu_p_s = child(lfsu_s,_1);
+        const auto& lfsv_p_n = child(lfsv_n,_1);
+        const auto& lfsu_p_n = child(lfsu_n,_1);
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef VectorBasisInterfaceSwitch<typename FESwitch_V::Basis > VectorBasisSwitch_V;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-        typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef typename BasisSwitch_V::Range Range_V;
-        typedef typename BasisSwitch_P::Range Range_P;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using VectorBasisSwitch_V = VectorBasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
+        using BasisSwitch_P = BasisInterfaceSwitch<typename FESwitch_P::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RF = typename BasisSwitch_V::RangeField;
+        using Range_V = typename BasisSwitch_V::Range;
+        using Range_P = typename BasisSwitch_P::Range;
+        using size_type = typename LFSV::Traits::SizeType;
 
-        // make copy of inside and outside cell w.r.t. the intersection
-        auto inside_cell = ig.inside();
-        auto outside_cell = ig.outside();
+        // References to inside and outside cells
+        auto const& cell_inside = ig.inside();
+        auto const& cell_outside = ig.outside();
 
-        // select quadrature rule
-        Dune::GeometryType gtface = ig.geometry().type();
+        // Get geometries
+        auto geo = ig.geometry();
+        auto geo_inside = cell_inside.geometry();
+        auto geo_outside = cell_outside.geometry();
+
+        // Get geometry of intersection in local coordinates of cell_inside and cell_outside
+        auto geo_in_inside = ig.geometryInInside();
+        auto geo_in_outside = ig.geometryInOutside();
+
+        // Determine quadrature order
         const int v_order = FESwitch_V::basis(lfsv_v_s.finiteElement()).order();
-        const int det_jac_order = gtface.isSimplex() ? 0 : (dim-2);
+        const int det_jac_order = geo.type().isSimplex() ? 0 : (dim-2);
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
-        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
-        const int epsilon = prm.epsilonIPSymmetryFactor();
-        const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
+        auto epsilon = prm.epsilonIPSymmetryFactor();
+        auto incomp_scaling = prm.incompressibilityScaling(current_dt);
 
         // loop over quadrature points and integrate normal flux
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,qorder))
           {
 
             // position of quadrature point in local coordinates of element
-            Dune::FieldVector<DF,dim> local_s = ig.geometryInInside().global(ip.position());
-            Dune::FieldVector<DF,dim> local_n = ig.geometryInOutside().global(ip.position());
+            auto local_s = geo_in_inside.global(ip.position());
+            auto local_n = geo_in_outside.global(ip.position());
 
-            const RF penalty_factor = prm.getFaceIP(ig,ip.position());
+            auto penalty_factor = prm.getFaceIP(ig,ip.position());
 
             // values of velocity shape functions
             std::vector<Range_V> phi_v_s(lfsv_v_s.size());
@@ -665,15 +673,15 @@ namespace Dune {
             std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v_s(lfsu_v_s.size());
             std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v_n(lfsu_v_n.size());
             VectorBasisSwitch_V::jacobian
-              (FESwitch_V::basis(lfsv_v_s.finiteElement()), inside_cell.geometry(), local_s, jac_phi_v_s);
+              (FESwitch_V::basis(lfsv_v_s.finiteElement()), geo_inside, local_s, jac_phi_v_s);
             VectorBasisSwitch_V::jacobian
-              (FESwitch_V::basis(lfsv_v_n.finiteElement()), outside_cell.geometry(), local_n, jac_phi_v_n);
+              (FESwitch_V::basis(lfsv_v_n.finiteElement()), geo_outside, local_n, jac_phi_v_n);
 
-            const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(ip.position());
-            const RF weight = ip.weight()*ig.geometry().integrationElement(ip.position());
-            const RF mu = prm.mu(ig,ip.position());
+            auto normal = ig.unitOuterNormal(ip.position());
+            auto weight = ip.weight()*geo.integrationElement(ip.position());
+            auto mu = prm.mu(ig,ip.position());
 
-            const RF factor = mu * weight;
+            auto factor = mu * weight;
 
             //============================================
             // loop over test functions, same element
@@ -796,49 +804,52 @@ namespace Dune {
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
+        using namespace Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v = child(lfsv,_0);
+        const auto& lfsu_v = child(lfsu,_0);
 
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_V;
-        const LFSV_V& lfsv_v = lfsv.template child<VBLOCK>();
-        const LFSV_V& lfsu_v = lfsu.template child<VBLOCK>();
-
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
-        const LFSV_P& lfsu_p = lfsu.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
+        const auto& lfsu_p = child(lfsu,_1);
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef VectorBasisInterfaceSwitch<typename FESwitch_V::Basis > VectorBasisSwitch_V;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-        typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef typename BasisSwitch_V::Range Range_V;
-        typedef typename BasisSwitch_P::Range Range_P;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using VectorBasisSwitch_V = VectorBasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
+        using BasisSwitch_P = BasisInterfaceSwitch<typename FESwitch_P::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RF = typename BasisSwitch_V::RangeField;
+        using Range_V = typename BasisSwitch_V::Range;
+        using Range_P = typename BasisSwitch_P::Range;
+        using size_type = typename LFSV::Traits::SizeType;
 
-        // make copy of inside cell w.r.t. the boundary
-        auto inside_cell = ig.inside();
+        // References to inside cell
+        const auto& cell_inside = ig.inside();
 
-        // select quadrature rule
+        // Get geometries
+        auto geo = ig.geometry();
+        auto geo_inside = cell_inside.geometry();
+
+        // Get geometry of intersection in local coordinates of cell_inside
+        auto geo_in_inside = ig.geometryInInside();
+
+        // Determine quadrature order
         const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
-        Dune::GeometryType gtface = ig.geometry().type();
-        const int det_jac_order = gtface.isSimplex() ? 0 : (dim-1);
+        const int det_jac_order = geo.type().isSimplex() ? 0 : (dim-1);
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
-        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
-        const int epsilon = prm.epsilonIPSymmetryFactor();
-        const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
+        auto epsilon = prm.epsilonIPSymmetryFactor();
+        auto incomp_scaling = prm.incompressibilityScaling(current_dt);
 
         // loop over quadrature points and integrate normal flux
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,qorder))
           {
             // position of quadrature point in local coordinates of element
-            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(ip.position());
+            auto local = geo_in_inside.global(ip.position());
 
-            const RF penalty_factor = prm.getFaceIP(ig,ip.position() );
+            auto penalty_factor = prm.getFaceIP(ig,ip.position() );
 
             // values of velocity shape functions
             std::vector<Range_V> phi_v(lfsv_v.size());
@@ -851,7 +862,7 @@ namespace Dune {
             // evaluate jacobian of basis functions on reference element
             std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v(lfsu_v.size());
             VectorBasisSwitch_V::jacobian
-              (FESwitch_V::basis(lfsv_v.finiteElement()), inside_cell.geometry(), local, jac_phi_v);
+              (FESwitch_V::basis(lfsv_v.finiteElement()), geo_inside, local, jac_phi_v);
 
             // compute pressure value
             Range_P val_p(0.0);
@@ -866,17 +877,17 @@ namespace Dune {
               jac_u.axpy(x(lfsu_v,i),jac_phi_v[i]);
             }
 
-            const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(ip.position());
-            const RF weight = ip.weight()*ig.geometry().integrationElement(ip.position());
-            const RF mu = prm.mu(ig,ip.position());
+            auto normal = ig.unitOuterNormal(ip.position());
+            auto weight = ip.weight()*geo.integrationElement(ip.position());
+            auto mu = prm.mu(ig,ip.position());
 
             // evaluate boundary condition type
-            typename PRM::Traits::BoundaryCondition::Type bctype(prm.bctype(ig,ip.position()));
+            auto bctype(prm.bctype(ig,ip.position()));
 
             if (bctype == BC::VelocityDirichlet) {
               // compute jump relative to Dirichlet value
-              typename PRM::Traits::VelocityRange u0(prm.g(inside_cell,local));
-              const Dune::FieldVector<DF,dimw> jump = val_u - u0;
+              auto u0(prm.g(cell_inside,local));
+              auto jump = val_u - u0;
 
               // compute flux of velocity jacobian
               Dune::FieldVector<DF,dimw> flux_jac_u(0.0);
@@ -915,7 +926,7 @@ namespace Dune {
             } // Velocity Dirichlet
 
             if (bctype == BC::StressNeumann) {
-              typename PRM::Traits::VelocityRange stress(prm.j(ig,ip.position(),normal));
+              auto stress(prm.j(ig,ip.position(),normal));
 
               for(size_type i=0; i<lfsv_v.size(); i++) {
                 r.accumulate(lfsv_v,i, (stress*phi_v[i]) * weight);
@@ -937,49 +948,52 @@ namespace Dune {
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
+        using namespace Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v = child(lfsv,_0);
+        const auto& lfsu_v = child(lfsu,_0);
 
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_V;
-        const LFSV_V& lfsv_v = lfsv.template child<VBLOCK>();
-        const LFSV_V& lfsu_v = lfsu.template child<VBLOCK>();
-
-        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
-        const LFSV_P& lfsu_p = lfsu.template child<PBLOCK>();
+        using LFSV_P = TypeTree::Child<LFSV,_1>;
+        const auto& lfsv_p = child(lfsv,_1);
+        const auto& lfsu_p = child(lfsu,_1);
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef VectorBasisInterfaceSwitch<typename FESwitch_V::Basis > VectorBasisSwitch_V;
-        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-        typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef typename BasisSwitch_V::Range Range_V;
-        typedef typename BasisSwitch_P::Range Range_P;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using VectorBasisSwitch_V = VectorBasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
+        using BasisSwitch_P = BasisInterfaceSwitch<typename FESwitch_P::Basis >;
+        using DF = typename BasisSwitch_V::DomainField;
+        using RF = typename BasisSwitch_V::RangeField;
+        using Range_V = typename BasisSwitch_V::Range;
+        using Range_P = typename BasisSwitch_P::Range;
+        using size_type = typename LFSV::Traits::SizeType;
 
-        // make copy of inside cell w.r.t. the boundary
-        auto inside_cell = ig.inside();
+        // References to inside cell
+        const auto& cell_inside = ig.inside();
 
-        // select quadrature rule
+        // Get geometries
+        auto geo = ig.geometry();
+        auto geo_inside = cell_inside.geometry();
+
+        // Get geometry of intersection in local coordinates of cell_inside
+        auto geo_in_inside = ig.geometryInInside();
+
+        // Determine quadrature order
         const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
-        Dune::GeometryType gtface = ig.geometry().type();
-        const int det_jac_order = gtface.isSimplex() ? 0 : (dim-1);
+        const int det_jac_order = geo.type().isSimplex() ? 0 : (dim-1);
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
-        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
-        const int epsilon = prm.epsilonIPSymmetryFactor();
-        const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
+        auto epsilon = prm.epsilonIPSymmetryFactor();
+        auto incomp_scaling = prm.incompressibilityScaling(current_dt);
 
         // loop over quadrature points and integrate normal flux
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,qorder))
           {
             // position of quadrature point in local coordinates of element
-            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(ip.position());
+            auto local = geo_in_inside.global(ip.position());
 
-            const RF penalty_factor = prm.getFaceIP(ig,ip.position() );
+            auto penalty_factor = prm.getFaceIP(ig,ip.position() );
 
             // values of velocity shape functions
             std::vector<Range_V> phi_v(lfsv_v.size());
@@ -992,14 +1006,14 @@ namespace Dune {
             // evaluate jacobian of basis functions on reference element
             std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v(lfsu_v.size());
             VectorBasisSwitch_V::jacobian
-              (FESwitch_V::basis(lfsv_v.finiteElement()), inside_cell.geometry(), local, jac_phi_v);
+              (FESwitch_V::basis(lfsv_v.finiteElement()), geo_inside, local, jac_phi_v);
 
-            const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(ip.position());
-            const RF weight = ip.weight()*ig.geometry().integrationElement(ip.position());
-            const RF mu = prm.mu(ig,ip.position());
+            auto normal = ig.unitOuterNormal(ip.position());
+            auto weight = ip.weight()*geo.integrationElement(ip.position());
+            auto mu = prm.mu(ig,ip.position());
 
             // evaluate boundary condition type
-            typename PRM::Traits::BoundaryCondition::Type bctype(prm.bctype(ig,ip.position()));
+            auto bctype(prm.bctype(ig,ip.position()));
 
             if (bctype == BC::VelocityDirichlet) {
 
@@ -1055,42 +1069,38 @@ namespace Dune {
         const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
-        static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
-
-        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_V;
-        const LFSV_V& lfsv_v = lfsv.template child<VBLOCK>();
+        using namespace Indices;
+        using LFSV_V = TypeTree::Child<LFSV,_0>;
+        const auto& lfsv_v = child(lfsv,_0);
 
         // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef typename BasisSwitch_V::DomainField DF;
-        typedef typename BasisSwitch_V::RangeField RF;
-        typedef typename BasisSwitch_V::Range Range_V;
-        typedef typename LFSV::Traits::SizeType size_type;
+        using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
+        using BasisSwitch_V = BasisInterfaceSwitch<typename FESwitch_V::Basis >;
+        using Range_V = typename BasisSwitch_V::Range;
+        using size_type = typename LFSV::Traits::SizeType;
 
-        // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
+        // Get geometries
+        auto geo = eg.geometry();
+
+        // Determine quadrature order
         const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
-        const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
+        const int det_jac_order = geo.type().isSimplex() ? 0 : (dim-1);
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
 
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
-
         // loop over quadrature points
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,qorder))
           {
-            const Dune::FieldVector<DF,dim> local = ip.position();
+            auto local = ip.position();
             //const Dune::FieldVector<DF,dimw> global = eg.geometry().global(local);
 
             // values of velocity shape functions
             std::vector<Range_V> phi_v(lfsv_v.size());
             FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
 
-            const RF weight = ip.weight() * eg.geometry().integrationElement(ip.position());
+            auto weight = ip.weight() * geo.integrationElement(ip.position());
 
             // evaluate source term
-            typename PRM::Traits::VelocityRange fval(prm.f(eg,local));
+            auto fval(prm.f(eg,local));
 
             //================================================//
             // \int (f*v)
@@ -1131,4 +1141,4 @@ namespace Dune {
 
   } // end namespace PDELab
 } // end namespace Dune
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_DGNAVIERSTOKESVELVECFEM_HH

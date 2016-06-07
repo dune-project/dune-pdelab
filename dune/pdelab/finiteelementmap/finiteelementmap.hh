@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_FINITELEMENTMAP_HH
-#define DUNE_PDELAB_FINITELEMENTMAP_HH
+#ifndef DUNE_PDELAB_FINITEELEMENTMAP_FINITEELEMENTMAP_HH
+#define DUNE_PDELAB_FINITEELEMENTMAP_FINITEELEMENTMAP_HH
 
 #include <dune/common/deprecated.hh>
 #include <dune/pdelab/common/exceptions.hh>
@@ -52,10 +52,8 @@ namespace Dune {
           type must be polymorphic.
       */
       template<class EntityType>
-      const typename Traits::FiniteElementType& find (const EntityType& e) const
-      {
-        return asImp().find(e);
-      }
+      const typename Traits::FiniteElementType&
+      find (const EntityType& e) const = delete;
 
       /** @name Size calculation
        *  The FiniteElementMap provides different methods to compute
@@ -74,32 +72,22 @@ namespace Dune {
       /** \brief a FiniteElementMap is fixedSize iif the size of the local
        * functions space for each GeometryType is fixed.
        */
-      bool fixedSize() const
-      {
-        return asImp().fixedSize();
-      }
+      bool fixedSize() const = delete;
       /** \brief if the FiniteElementMap is fixedSize, the size
        * methods computes the number of DOFs for given GeometryType.
        */
-      std::size_t size(GeometryType gt) const
-      {
-        return asImp().size();
-      }
+      std::size_t size(GeometryType gt) const = delete;
       /** @} */
-
+      /** \brief return if FiniteElementMap has degrees of freedom for
+       * given codimension
+       */
+      bool hasDOFs(int codim) const = delete;
       /** \brief compute an upper bound for the local number of DOFs.
        *
        * this upper bound is used to avoid reallocations in
        * std::vectors used during the assembly.
        */
-      std::size_t maxLocalSize() const
-      {
-        return asImp().maxLocalSize();
-      }
-
-    private:
-      Imp& asImp () {return static_cast<Imp &> (*this);}
-      const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+      std::size_t maxLocalSize() const = delete;
     };
 
     //! simple implementation where all entities have the same finite element
@@ -237,7 +225,7 @@ namespace Dune {
         : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
       {
         // create all variants
-        for (int i = 0; i < Variants; i++)
+        for (std::size_t i = 0; i < Variants; i++)
         {
           variant[i] = FiniteElement(i);
         }
@@ -279,4 +267,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENTMAP_FINITEELEMENTMAP_HH

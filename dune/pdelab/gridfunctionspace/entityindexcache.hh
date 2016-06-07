@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_ENTITYINDEXCACHE_HH
-#define DUNE_PDELAB_ENTITYINDEXCACHE_HH
+#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_ENTITYINDEXCACHE_HH
+#define DUNE_PDELAB_GRIDFUNCTIONSPACE_ENTITYINDEXCACHE_HH
 
 #include <dune/common/array.hh>
 #include <dune/typetree/utility.hh>
@@ -93,4 +93,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_ENTITYINDEXCACHE_HH
+#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_ENTITYINDEXCACHE_HH

@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_LFSINDEXCACHE_HH
-#define DUNE_PDELAB_LFSINDEXCACHE_HH
+#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_LFSINDEXCACHE_HH
+#define DUNE_PDELAB_GRIDFUNCTIONSPACE_LFSINDEXCACHE_HH
 
 #include <vector>
 #include <stack>
@@ -530,8 +530,8 @@ namespace Dune {
       std::vector<std::pair<ConstraintsIterator,ConstraintsIterator> > _constraints_iterators;
       mutable CIMap _container_index_map;
       ConstraintsVector _constraints;
-      mutable std::array<size_type,LFS::CHILDREN> _offsets;
-      mutable std::array<size_type,LFS::CHILDREN> _extended_offsets;
+      mutable std::array<size_type,TypeTree::staticDegree<LFS>> _offsets;
+      mutable std::array<size_type,TypeTree::staticDegree<LFS>> _extended_offsets;
       mutable bool _inverse_cache_built;
       mutable InverseMap _inverse_map;
 
@@ -959,7 +959,7 @@ namespace Dune {
     public:
 
       template<typename CC>
-      LFSIndexCache(const LFS& lfs, const CC& c, bool enable_constraints_caching = !is_same<C,EmptyTransformation>::value)
+      LFSIndexCache(const LFS& lfs, const CC& c, bool enable_constraints_caching = !std::is_same<C,EmptyTransformation>::value)
         : LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag,fast>(lfs,c,enable_constraints_caching)
       {
       }
@@ -975,4 +975,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_LFSINDEXCACHE_HH
+#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_LFSINDEXCACHE_HH

@@ -6,7 +6,7 @@
 
 #include <dune/istl/ellmatrix/host.hh>
 
-#include <dune/pdelab/backend/tags.hh>
+#include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
@@ -50,45 +50,11 @@ namespace Dune {
 
     public:
 
-#if HAVE_TEMPLATE_ALIASES
-
       template<typename RowCache, typename ColCache>
       using LocalView = UncachedMatrixView<FlatELLMatrixContainer,RowCache,ColCache>;
 
       template<typename RowCache, typename ColCache>
       using ConstLocalView = ConstUncachedMatrixView<const FlatELLMatrixContainer,RowCache,ColCache>;
-
-#else
-
-      template<typename RowCache, typename ColCache>
-      struct LocalView
-        : public UncachedMatrixView<FlatELLMatrixContainer,RowCache,ColCache>
-      {
-
-        LocalView()
-        {}
-
-        LocalView(FlatELLMatrixContainer& mc)
-          : UncachedMatrixView<FlatELLMatrixContainer,RowCache,ColCache>(mc)
-        {}
-
-      };
-
-      template<typename RowCache, typename ColCache>
-      struct ConstLocalView
-        : public ConstUncachedMatrixView<const FlatELLMatrixContainer,RowCache,ColCache>
-      {
-
-        ConstLocalView()
-        {}
-
-        ConstLocalView(const FlatELLMatrixContainer& mc)
-          : ConstUncachedMatrixView<const FlatELLMatrixContainer,RowCache,ColCache>(mc)
-        {}
-
-      };
-
-#endif // HAVE_TEMPLATE_ALIASES
 
     private:
 
@@ -116,7 +82,7 @@ namespace Dune {
                 It row_end = index_streamer.streamRow(col_begin);
                 std::fill(row_end,col_end,(row_end != col_begin ? row_end[-1] : size_type(0)));
               }
-            for (diff_t i = nonpadded_block_size; i < kernel_block_size; ++i)
+            for (diff_t i = nonpadded_block_size; i < diff_t(kernel_block_size); ++i)
               {
                 It col_begin(col_index+i);
                 It col_end(col_begin + block_length);
@@ -129,27 +95,27 @@ namespace Dune {
 
     public:
 
-      template<typename GO, typename Parameters>
-      explicit FlatELLMatrixContainer (const GO& go, Parameters parameters)
-        : _container(make_shared<Container>())
+      template<typename GO>
+      explicit FlatELLMatrixContainer (const GO& go)
+        : _container(std::make_shared<Container>())
       {
         Pattern pattern(
           go.testGridFunctionSpace().ordering(),
           go.trialGridFunctionSpace().ordering(),
-          parameters.entriesPerRow()
+          go.matrixBackend().entriesPerRow()
           );
         go.fill_pattern(pattern);
         _container->setLayout(buildLayout(pattern));
       }
 
-      template<typename GO, typename Parameters>
-      FlatELLMatrixContainer (const GO& go, Parameters parameters, const E& e)
-        : _container(make_shared<Container>())
+      template<typename GO>
+      FlatELLMatrixContainer (const GO& go, const E& e)
+        : _container(std::make_shared<Container>())
       {
         Pattern pattern(
           go.testGridFunctionSpace().ordering(),
           go.trialGridFunctionSpace().ordering(),
-          parameters.entriesPerRow()
+          go.matrixBackend().entriesPerRow()
           );
         go.fill_pattern(pattern);
         _container->setLayout(buildLayout(pattern));
@@ -158,16 +124,16 @@ namespace Dune {
 
 
       //! Creates an FlatELLMatrixContainer without allocating an underlying ISTL matrix.
-      explicit FlatELLMatrixContainer (Dune::PDELab::tags::unattached_container = Dune::PDELab::tags::unattached_container())
+      explicit FlatELLMatrixContainer (Dune::PDELab::Backend::unattached_container = Dune::PDELab::Backend::unattached_container())
       {}
 
       //! Creates an FlatELLMatrixContainer with an empty underlying ISTL matrix.
-      explicit FlatELLMatrixContainer (Dune::PDELab::tags::attached_container)
-        : _container(make_shared<Container>())
+      explicit FlatELLMatrixContainer (Dune::PDELab::Backend::attached_container)
+        : _container(std::make_shared<Container>())
       {}
 
       FlatELLMatrixContainer(const FlatELLMatrixContainer& rhs)
-        : _container(make_shared<Container>(*(rhs._container)))
+        : _container(std::make_shared<Container>(*(rhs._container)))
       {}
 
       FlatELLMatrixContainer& operator=(const FlatELLMatrixContainer& rhs)
@@ -180,7 +146,7 @@ namespace Dune {
           }
         else
           {
-            _container = make_shared<Container>(*(rhs._container));
+            _container = std::make_shared<Container>(*(rhs._container));
           }
         return *this;
       }
@@ -190,7 +156,7 @@ namespace Dune {
         _container.reset();
       }
 
-      void attach(shared_ptr<Container> container)
+      void attach(std::shared_ptr<Container> container)
       {
         _container = container;
       }
@@ -200,7 +166,7 @@ namespace Dune {
         return bool(_container);
       }
 
-      const shared_ptr<Container>& storage() const
+      const std::shared_ptr<Container>& storage() const
       {
         return _container;
       }
@@ -266,7 +232,7 @@ namespace Dune {
         return *_container;
       }
 
-      shared_ptr<Container> _container;
+      std::shared_ptr<Container> _container;
 
     };
 

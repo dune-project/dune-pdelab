@@ -38,7 +38,7 @@ namespace Dune {
       /** \brief Trial grid function space */
       typedef typename GO::Traits::TrialGridFunctionSpace TrialGridFunctionSpace;
       /** \brief Vector backend for trial grid function space */
-      typedef typename Dune::PDELab::BackendVectorSelector<TrialGridFunctionSpace,Real>::Type W;
+      using W = Dune::PDELab::Backend::Vector<TrialGridFunctionSpace,Real>;
       /** \brief Grid operator to solve for */
       typedef GO GridOperator;
 

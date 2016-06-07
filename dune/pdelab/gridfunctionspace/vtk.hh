@@ -31,9 +31,6 @@ namespace Dune {
   template<typename GV>
   class VTKSequenceWriter;
 
-  template<typename GV>
-  class SubsamplingVTKSequenceWriter;
-
   namespace PDELab {
 
     namespace vtk {
@@ -57,12 +54,6 @@ namespace Dune {
 
         template<typename GV>
         struct vtk_writer_traits<Dune::VTKSequenceWriter<GV> >
-        {
-          typedef GV GridView;
-        };
-
-        template<typename GV>
-        struct vtk_writer_traits<Dune::SubsamplingVTKSequenceWriter<GV> >
         {
           typedef GV GridView;
         };
@@ -246,14 +237,14 @@ namespace Dune {
                                              typename LFS::ChildType::Traits::FiniteElement
                                              >::Basis
                                            >::RangeField,
-                                         LFS::CHILDREN,
+                                         TypeTree::staticDegree<LFS>,
                                          Dune::FieldVector<
                                            typename BasisInterfaceSwitch<
                                              typename FiniteElementInterfaceSwitch<
                                                typename LFS::ChildType::Traits::FiniteElement
                                                >::Basis
                                              >::RangeField,
-                                           LFS::CHILDREN
+                                           TypeTree::staticDegree<LFS>
                                            >
                                          >,
                                        DGFTreeVectorFunction<LFS,Data>
@@ -273,10 +264,10 @@ namespace Dune {
           GridFunctionTraits<
             typename LFS::Traits::GridView,
             typename BasisSwitch::RangeField,
-            LFS::CHILDREN,
+            TypeTree::staticDegree<LFS>,
             Dune::FieldVector<
               typename BasisSwitch::RangeField,
-              LFS::CHILDREN
+              TypeTree::staticDegree<LFS>
               >
             >,
           DGFTreeVectorFunction<LFS,Data>
@@ -308,7 +299,7 @@ namespace Dune {
 
           y = 0;
 
-          for (std::size_t k = 0; k < LFS::CHILDREN; ++k)
+          for (std::size_t k = 0; k < TypeTree::degree(_lfs); ++k)
             {
               const ChildLFS& child_lfs = _lfs.child(k);
               FESwitch::basis(child_lfs.finiteElement()).evaluateFunction(x,_basis);
@@ -430,7 +421,7 @@ namespace Dune {
           static const bool value =
             // Do not descend into children of VectorGridFunctionSpace
             !std::is_convertible<
-              typename LFS::Traits::GridFunctionSpace::ImplementationTag,
+              TypeTree::ImplementationTag<typename LFS::Traits::GridFunctionSpace>,
               VectorGridFunctionSpaceTag
             >::value;
 
@@ -487,8 +478,8 @@ namespace Dune {
 
         // don't do anything if GridView types differ
         template<typename LFS, typename TreePath>
-        typename enable_if<
-          !is_same<
+        typename std::enable_if<
+          !std::is_same<
             typename LFS::Traits::GridFunctionSpace::Traits::GridView,
             typename vtk_writer_traits<VTKWriter>::GridView
             >::value
@@ -499,8 +490,8 @@ namespace Dune {
 
         // don't do anything if GridView types differ
         template<typename LFS, typename TreePath>
-        typename enable_if<
-          !is_same<
+        typename std::enable_if<
+          !std::is_same<
             typename LFS::Traits::GridFunctionSpace::Traits::GridView,
             typename vtk_writer_traits<VTKWriter>::GridView
             >::value
@@ -511,8 +502,8 @@ namespace Dune {
 
         //! Handle VectorGridFunctionSpace components in here.
         template<typename LFS, typename TreePath>
-        typename enable_if<
-          is_same<
+        typename std::enable_if<
+          std::is_same<
             typename LFS::Traits::GridFunctionSpace::Traits::GridView,
             typename vtk_writer_traits<VTKWriter>::GridView
             >::value
@@ -520,13 +511,13 @@ namespace Dune {
         post(const LFS& lfs, TreePath tp)
         {
           if (predicate(lfs))
-            add_vector_solution(lfs,tp,typename LFS::Traits::GridFunctionSpace::ImplementationTag());
+            add_vector_solution(lfs,tp,TypeTree::ImplementationTag<typename LFS::Traits::GridFunctionSpace>());
         }
 
         //! Create a standard leaf function for leaf GridFunctionSpaces.
         template<typename LFS, typename TreePath>
-        typename enable_if<
-          is_same<
+        typename std::enable_if<
+          std::is_same<
             typename LFS::Traits::GridFunctionSpace::Traits::GridView,
             typename vtk_writer_traits<VTKWriter>::GridView
             >::value

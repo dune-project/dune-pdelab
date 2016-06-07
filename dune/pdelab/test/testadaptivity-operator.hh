@@ -1,3 +1,6 @@
+#ifndef DUNE_PDELAB_TEST_TESTADAPTIVITY_OPERATOR_HH
+#define DUNE_PDELAB_TEST_TESTADAPTIVITY_OPERATOR_HH
+
 #include<dune/geometry/quadraturerules.hh>
 #include<dune/geometry/referenceelements.hh>
 
@@ -176,3 +179,5 @@ private:
   const BCType& bctype;
   unsigned int intorder;
 };
+
+#endif // DUNE_PDELAB_TEST_TESTADAPTIVITY_OPERATOR_HH

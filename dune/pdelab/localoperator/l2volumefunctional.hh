@@ -13,6 +13,7 @@
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
+#include<dune/pdelab/common/quadraturerules.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
 #include <dune/pdelab/localoperator/pattern.hh>
 #include <dune/pdelab/localoperator/flags.hh>
@@ -53,37 +54,33 @@ namespace Dune {
       template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
-        // domain and range field type
-        typedef FiniteElementInterfaceSwitch<typename LFSV::Traits::FiniteElementType> FESwitch;
-        typedef BasisInterfaceSwitch<typename FESwitch::Basis> BasisSwitch;
+        // Define types
+        using FESwitch = FiniteElementInterfaceSwitch<typename LFSV::Traits::FiniteElementType>;
+        using BasisSwitch = BasisInterfaceSwitch<typename FESwitch::Basis>;
+        using Range = typename BasisSwitch::Range;
 
-        typedef typename BasisSwitch::DomainField DF;
-        typedef typename BasisSwitch::RangeField RF;
-        typedef typename BasisSwitch::Range Range;
+        // Reference to cell
+        const auto& cell = eg.entity();
 
-        // dimensions
-        static const int dimLocal = EG::Geometry::mydimension;
+        // get geometry
+        auto geo = eg.geometry();
 
-        // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dimLocal>& rule =
-          Dune::QuadratureRules<DF,dimLocal>::rule(gt,quadOrder_);
+        // Initialize vectors outside for loop
+        std::vector<Range> phi(lfsv.size());
+        typename F::Traits::RangeType y(0.0);
 
         // loop over quadrature points
-        for (typename Dune::QuadratureRule<DF,dimLocal>::const_iterator it =
-               rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : quadratureRule(geo,quadOrder_))
           {
             // evaluate shape functions
-            std::vector<Range> phi(lfsv.size());
             FESwitch::basis(lfsv.finiteElement()).
-              evaluateFunction(it->position(),phi);
+              evaluateFunction(ip.position(),phi);
 
             // evaluate right hand side parameter function
-            typename F::Traits::RangeType y(0.0);
-            f_.evaluate(eg.entity(),it->position(),y);
+            f_.evaluate(cell,ip.position(),y);
 
             // integrate f
-            RF factor = r.weight() * it->weight() * eg.geometry().integrationElement(it->position());
+            auto factor = r.weight() * ip.weight() * geo.integrationElement(ip.position());
             for (size_t i=0; i<lfsv.size(); i++)
               r.rawAccumulate(lfsv,i,y*phi[i]*factor);
           }
@@ -100,4 +97,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_L2VOLUMEFUNCTIONAL_HH

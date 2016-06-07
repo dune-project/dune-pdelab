@@ -1,10 +1,11 @@
 set(modules
+  AddVCLFlags.cmake
   CorrectWindowsPaths.cmake
   DunePdelabMacros.cmake
   DunePdelabTestMacros.cmake
-  FindCXXUnorderedContainers.cmake
   FindPackageMultipass.cmake
   FindPETSc.cmake
+  FindVCL.cmka
   ResolveCompilerPaths.cmake
   UseEigen.cmake
   UsePETSc.cmake)

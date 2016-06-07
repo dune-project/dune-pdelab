@@ -100,4 +100,4 @@ namespace Dune{
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_GRIDOPERATOR_ONESTEP_PATTERNENGINE_HH

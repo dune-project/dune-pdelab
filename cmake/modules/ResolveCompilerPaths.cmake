@@ -1,5 +1,5 @@
 # Downloaded from https://github.com/jedbrown/cmake-modules/blob/master/ResolveCompilerPaths.cmake
-# Last update 2015/06/14
+# Last update 2016/03/09
 # Licenced under CMake's BSD Licence
 #
 #
@@ -47,8 +47,8 @@ include (CorrectWindowsPaths)
 
 macro (RESOLVE_LIBRARIES LIBS LINK_LINE)
   string (REGEX MATCHALL "((-L|-l|-Wl)([^\" ]+|\"[^\"]+\")|[^\" ]+\\.(a|so|dll|lib))" _all_tokens "${LINK_LINE}")
-  set (_libs_found)
-  set (_directory_list)
+  set (_libs_found "")
+  set (_directory_list "")
   foreach (token ${_all_tokens})
     if (token MATCHES "-L([^\" ]+|\"[^\"]+\")")
       # If it's a library path, add it to the list
@@ -63,7 +63,7 @@ macro (RESOLVE_LIBRARIES LIBS LINK_LINE)
       else (WIN32)
         string (REGEX REPLACE "^-l" "" token ${token})
       endif (WIN32)
-      set (_root)
+      set (_root "")
       if (token MATCHES "^/")   # We have an absolute path
         #separate into a path and a library name:
         string (REGEX MATCH "[^/]*\\.(a|so|dll|lib)$" libname ${token})
@@ -75,7 +75,7 @@ macro (RESOLVE_LIBRARIES LIBS LINK_LINE)
       set (_lib "NOTFOUND" CACHE FILEPATH "Cleared" FORCE)
       find_library (_lib ${token} HINTS ${_directory_list} ${_root})
       if (_lib)
-    string (REPLACE "//" "/" _lib ${_lib})
+        string (REPLACE "//" "/" _lib ${_lib})
         list (APPEND _libs_found ${_lib})
       else (_lib)
         message (STATUS "Unable to find library ${token}")

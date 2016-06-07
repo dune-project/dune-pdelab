@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_DEFAULT_ASSEMBLER_HH
-#define DUNE_PDELAB_DEFAULT_ASSEMBLER_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_DEFAULT_ASSEMBLER_HH
+#define DUNE_PDELAB_GRIDOPERATOR_DEFAULT_ASSEMBLER_HH
 
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
@@ -40,7 +40,7 @@ namespace Dune{
       typedef typename GFSU::Traits::SizeType SizeType;
 
       //! Static check on whether this is a Galerkin method
-      static const bool isGalerkinMethod = Dune::is_same<GFSU,GFSV>::value;
+      static const bool isGalerkinMethod = std::is_same<GFSU,GFSV>::value;
 
       DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_, const CU& cu_, const CV& cv_)
         : gfsu(gfsu_)
@@ -294,13 +294,13 @@ namespace Dune{
       const GFSU& gfsu;
       const GFSV& gfsv;
 
-      typename conditional<
-        is_same<CU,EmptyTransformation>::value,
+      typename std::conditional<
+        std::is_same<CU,EmptyTransformation>::value,
         const CU,
         const CU&
         >::type cu;
-      typename conditional<
-        is_same<CV,EmptyTransformation>::value,
+      typename std::conditional<
+        std::is_same<CV,EmptyTransformation>::value,
         const CV,
         const CV&
         >::type cv;
@@ -319,4 +319,4 @@ namespace Dune{
 
   }
 }
-#endif
+#endif // DUNE_PDELAB_GRIDOPERATOR_DEFAULT_ASSEMBLER_HH

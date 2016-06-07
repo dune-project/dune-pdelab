@@ -70,7 +70,7 @@ namespace Dune {
     template<typename GF1, typename GF2>
     class ProductGridFunctionAdapter<
       GF1, GF2,
-      typename enable_if<
+      typename std::enable_if<
         GF1::Traits::dimRange == 1 && GF2::Traits::dimRange != 1
         >::type> :
       public GridFunctionBase<typename GF2::Traits,
@@ -113,7 +113,7 @@ namespace Dune {
     template<typename GF1, typename GF2>
     class ProductGridFunctionAdapter<
       GF1, GF2,
-      typename enable_if<
+      typename std::enable_if<
         GF1::Traits::dimRange != 1 && GF2::Traits::dimRange == 1
         >::type> :
       public ProductGridFunctionAdapter<GF2, GF1>

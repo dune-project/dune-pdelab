@@ -1,19 +1,16 @@
 install(FILES callswitch.hh
-              cg_stokes.hh
-              convectiondiffusion.hh
+              convectiondiffusionccfv.hh
               convectiondiffusiondg.hh
               convectiondiffusionfem.hh
               convectiondiffusionparameter.hh
+              darcyccfv.hh
+              darcyfem.hh
               defaultimp.hh
               dgnavierstokes.hh
               dgnavierstokesparameter.hh
               dgnavierstokesvelvecfem.hh
               dgparameter.hh
-              diffusion.hh
-              diffusionccfv.hh
-              diffusiondg.hh
               diffusionmixed.hh
-              diffusionparam.hh
               electrodynamic.hh
               errorindicatordg.hh
               eval.hh
@@ -22,27 +19,25 @@ install(FILES callswitch.hh
               interface.hh
               l2.hh
               l2volumefunctional.hh
-              laplace.hh
-              laplacedirichletccfv.hh
-              laplacedirichletp12d.hh
-              linearelasticity.hh
-              linearelasticityparameter.hh
               linearacousticsdg.hh
               linearacousticsparameter.hh
+              linearelasticity.hh
+              linearelasticityparameter.hh
               maxwelldg.hh
               maxwellparameter.hh
               navierstokesmass.hh
+              numericaljacobian.hh
+              numericaljacobianapply.hh
+              numericalnonlinearjacobianapply.hh
+              numericalresidual.hh
               pattern.hh
-              poisson.hh
+              permeability_adapter.hh
               scaled.hh
-              stokesdg.hh
-              sum.hh
-              stokesdgparameter.hh
               stokesparameter.hh
-              stokesdg_vecfem.hh
+              sum.hh
               taylorhoodnavierstokes.hh
-              transportccfv.hh
               twophaseccfv.hh
+              variablefactories.hh
               weightedsum.hh
               zero.hh
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/localoperator)

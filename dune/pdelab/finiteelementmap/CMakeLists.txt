@@ -1,10 +1,10 @@
 install(FILES bdm1cube2dfem.hh
               bdm1simplex2dfem.hh
               brezzidouglasmarinifem.hh
+              dglegendre.hh
               edges0.5fem.hh
               finiteelementmap.hh
               global.hh
-              l2orthonormal.hh
               mimeticfem.hh
               monomfem.hh
               opbfem.hh

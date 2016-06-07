@@ -1,6 +1,6 @@
-// -*- tab-width: 2; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_CG_TO_DG_PROLONGATION_HH
-#define DUNE_PDELAB_CG_TO_DG_PROLONGATION_HH
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
+#ifndef DUNE_PDELAB_BACKEND_ISTL_CG_TO_DG_PROLONGATION_HH
+#define DUNE_PDELAB_BACKEND_ISTL_CG_TO_DG_PROLONGATION_HH
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
@@ -64,7 +64,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -137,7 +137,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -191,4 +191,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_BACKEND_ISTL_CG_TO_DG_PROLONGATION_HH

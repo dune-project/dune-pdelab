@@ -170,4 +170,4 @@ private:
   const PARAM& param;
   unsigned int intorder;
 };
-#endif
+#endif // DUNE_PDELAB_TEST_HELMHOLTZOPERATOR_HH

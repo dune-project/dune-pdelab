@@ -1,6 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
+#ifndef DUNE_PDELAB_TEST_FEM_OPBFEM_HH
+#define DUNE_PDELAB_TEST_FEM_OPBFEM_HH
+
 #include <dune/pdelab/finiteelementmap/opbfem.hh>
 
 #ifdef USE_OPB_FEM_FACTORY
@@ -35,3 +38,5 @@ struct OPBFEMFactory
 };
 
 #endif
+
+#endif // DUNE_PDELAB_TEST_FEM_OPBFEM_HH

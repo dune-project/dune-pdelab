@@ -9,6 +9,7 @@
 
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
+#include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/pdelab/finiteelementmap/brezzidouglasmarinifem.hh>
 #include <dune/pdelab/finiteelementmap/bdm1simplex2dfem.hh>
 #include <dune/pdelab/finiteelementmap/bdm1cube2dfem.hh>
@@ -22,7 +23,7 @@ void test(GV gv, const FEM& fem, const BaseFEM& baseFEM)
   typename GV::template Codim<0>::Iterator it = gv.template begin<0>();
   const typename FEM::Traits::FiniteElement& fe = fem.find(*it);
   const typename BaseFEM::Traits::FiniteElement& bfe = baseFEM.find(*it);
-  static_assert((Dune::is_same<typename FEM::Traits::FiniteElement,typename BaseFEM::Traits::FiniteElement>::value),
+  static_assert((std::is_same<typename FEM::Traits::FiniteElement,typename BaseFEM::Traits::FiniteElement>::value),
                 "Implementation error in BrezziDouglasMariniLocalFiniteElementMap: picked wrong base FEM");
   if (fe.localBasis().size() != bfe.localBasis().size())
     DUNE_THROW(Dune::InvalidStateException,"finite elements should be of same size");
@@ -61,15 +62,14 @@ int main(int argc, char** argv)
 #if HAVE_DUNE_ALUGRID
 
     {
-      // 2D simplex tests
-      ALUUnitSquare grid;
-      grid.globalRefine(4);
+      using ALUType = Dune::ALUGrid<2, 2, Dune::simplex, Dune::nonconforming>;
+      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::make_array(1u, 1u));
+      alugrid->globalRefine(4);
 
-      // get view
-      typedef ALUUnitSquare::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      auto gv = alugrid->leafGridView();
 
-      typedef GV::Grid::ctype DF;
+      typedef ALUType::LeafGridView GV;
+      typedef ALUType::ctype DF;
       typedef double RF;
 
       typedef Dune::PDELab::BrezziDouglasMariniLocalFiniteElementMap<GV,DF,RF,1> BDM1FEM;
@@ -78,7 +78,6 @@ int main(int argc, char** argv)
       BDM1FEM bdm1_fem(gv);
       BDM1BASEFEM bdm1_base_fem(gv);
       test(gv,bdm1_fem,bdm1_base_fem);
-
     }
 
 #endif

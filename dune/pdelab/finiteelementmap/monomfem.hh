@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_MONOMFEM_HH
-#define DUNE_PDELAB_MONOMFEM_HH
+#ifndef DUNE_PDELAB_FINITEELEMENTMAP_MONOMFEM_HH
+#define DUNE_PDELAB_FINITEELEMENTMAP_MONOMFEM_HH
 
 #include <cstddef>
 
@@ -84,4 +84,4 @@ namespace Dune {
   }
 }
 
-#endif //DUNE_PDELAB_MONOMFEM_HH
+#endif // DUNE_PDELAB_FINITEELEMENTMAP_MONOMFEM_HH
