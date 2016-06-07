@@ -17,6 +17,7 @@
 #include <dune/pdelab/gridoperator/onestep/prestageengine.hh>
 #include <dune/pdelab/gridoperator/onestep/jacobianresidualengine.hh>
 #include <dune/pdelab/gridoperator/onestep/jacobianapplyengine.hh>
+#include <dune/pdelab/gridoperator/onestep/nonlinearjacobianapplyengine.hh>
 
 #include <dune/pdelab/instationary/onestepparameter.hh>
 
@@ -66,6 +67,7 @@ namespace Dune{
       LocalExplicitJacobianResidualAssemblerEngine;
 
       typedef OneStepLocalJacobianApplyAssemblerEngine<OneStepLocalAssembler> LocalJacobianApplyAssemblerEngine;
+      typedef OneStepLocalNonlinearJacobianApplyAssemblerEngine<OneStepLocalAssembler> LocalNonlinearJacobianApplyAssemblerEngine;
       //! @}
 
       void static_checks(){
@@ -102,7 +104,8 @@ namespace Dune{
           time(0.0), dt_mode(MultiplyOperator0ByDT), stage_(0),
           pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this),
           explicit_jacobian_residual_engine(*this),
-          jacobian_apply_engine(*this)
+          jacobian_apply_engine(*this),
+          nonlinear_jacobian_apply_engine(*this)
       { static_checks(); }
 
 #if HAVE_TBB
@@ -121,7 +124,8 @@ namespace Dune{
           stage_(other.stage_),
           pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this),
           explicit_jacobian_residual_engine(*this),
-          jacobian_apply_engine(*this)
+          jacobian_apply_engine(*this),
+          nonlinear_jacobian_apply_engine(*this)
       {}
 
       //! join state from other local assembler
@@ -281,6 +285,17 @@ namespace Dune{
         return jacobian_apply_engine;
       }
 
+      //! Returns a reference to the requested engine. This engine is
+      //! completely configured and ready to use.
+      LocalNonlinearJacobianApplyAssemblerEngine & localNonlinearJacobianApplyAssemblerEngine
+      (typename Traits::Residual & r, const typename Traits::Solution & x, const typename Traits::Solution & z)
+      {
+        nonlinear_jacobian_apply_engine.setSolution(x);
+        nonlinear_jacobian_apply_engine.setUpdate(z);
+        nonlinear_jacobian_apply_engine.setResidual(r);
+        return nonlinear_jacobian_apply_engine;
+      }
+
       //! @}
 
       LA0 &child0() { return *la0; }
@@ -342,6 +357,7 @@ namespace Dune{
       LocalJacobianAssemblerEngine jacobian_engine;
       LocalExplicitJacobianResidualAssemblerEngine explicit_jacobian_residual_engine;
       LocalJacobianApplyAssemblerEngine jacobian_apply_engine;
+      LocalNonlinearJacobianApplyAssemblerEngine nonlinear_jacobian_apply_engine;
       //! @}
     };
 

@@ -82,6 +82,108 @@ namespace Dune {
       const M& _A_;
     };
 
+    /** \brief Application of jacobian from linear problems in the overlapping case.
+
+        \tparam CC Constraints container.
+        \tparam X  Trial vector.
+        \tparam Y  Test vector.
+        \tparam GO Grid operator implementing the jacobian application.
+     */
+    template<class CC, class X, class Y, class GO>
+    class OverlappingOnTheFlyOperator
+      : public Dune::LinearOperator<X,Y>
+    {
+    public :
+      //! export types
+      typedef X domain_type;
+      typedef Y range_type;
+      typedef typename X::ElementType field_type;
+
+      enum { category = Dune::SolverCategory::overlapping };
+
+      OverlappingOnTheFlyOperator(const CC& cc, const GO& go)
+        : cc_(cc), go_(go)
+      {}
+
+      //! Set position of jacobian.
+      //! Does nothing here since jacobian does not depend on position in the linear case.
+      void setLinearizationPoint(const X& u)
+      {
+      }
+
+      virtual void apply(const X& x, Y& y) const
+      {
+        y = 0.0;
+        go_.jacobian_apply(x,y);
+        Dune::PDELab::set_constrained_dofs(cc_,0.0,y);
+      }
+
+      virtual void applyscaleadd(field_type alpha, const X& x, Y& y) const
+      {
+        Y temp(y);
+        temp = 0.0;
+        go_.jacobian_apply(x,temp);
+        y.axpy(alpha,temp);
+        Dune::PDELab::set_constrained_dofs(cc_,0.0,y);
+      }
+
+    private :
+      const CC& cc_;
+      const GO& go_;
+    };
+
+    /** \brief Application of jacobian from nonlinear problems in the overlapping case.
+
+        \tparam CC Constraints container.
+        \tparam X  Trial vector.
+        \tparam Y  Test vector.
+        \tparam GO Grid operator implementing the jacobian application.
+     */
+    template<class CC, class X, class Y, class GO>
+    class OverlappingNonlinearOnTheFlyOperator
+      : public Dune::LinearOperator<X,Y>
+    {
+    public :
+      //! export types
+      typedef X domain_type;
+      typedef Y range_type;
+      typedef typename X::ElementType field_type;
+
+      enum { category = Dune::SolverCategory::overlapping };
+
+      OverlappingNonlinearOnTheFlyOperator(const CC& cc, const GO& go)
+        : cc_(cc), go_(go), u_(static_cast<X*>(0))
+      {}
+
+      //! Set position of jacobian. This is different to linear problems.
+      //! Must be called before both apply() and applyscaleadd().
+      void setLinearizationPoint(const X& u)
+      {
+        u_ = &u;
+      }
+
+      virtual void apply(const X& x, Y& y) const
+      {
+        y = 0.0;
+        go_.nonlinear_jacobian_apply(*u_,x,y);
+        Dune::PDELab::set_constrained_dofs(cc_,0.0,y);
+      }
+
+      virtual void applyscaleadd(field_type alpha, const X& x, Y& y) const
+      {
+        Y temp(y);
+        temp = 0.0;
+        go_.nonlinear_jacobian_apply(*u_,x,temp);
+        y.axpy(alpha,temp);
+        Dune::PDELab::set_constrained_dofs(cc_,0.0,y);
+      }
+
+    private :
+      const CC& cc_;
+      const GO& go_;
+      const X* u_;
+    };
+
     // new scalar product assuming at least overlap 1
     // uses unique partitioning of nodes for parallelization
     template<class GFS, class X>
@@ -158,7 +260,7 @@ namespace Dune {
       */
       virtual void pre (domain_type& x, range_type& b)
       {
-        prec.pre(x,b);
+        prec.pre(Backend::native(x),Backend::native(b));
       }
 
       /*!
@@ -347,7 +449,7 @@ namespace Dune {
       template<typename X>
       typename Dune::template FieldTraits<typename X::ElementType >::real_type norm (const X& x) const
       {
-        using namespace std;
+        using std::sqrt;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
@@ -385,13 +487,65 @@ namespace Dune {
 
       virtual typename X::Container::field_type norm (const X& x)
       {
-        using namespace std;
+        using std::sqrt;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
     private:
       const OVLPScalarProductImplementation<GFS>& implementation;
     };
+
+    template<class GFS, class CC, class Operator,
+             template<class> class Solver>
+    class ISTLBackend_OVLP_MatrixFree_Richardson
+      : public OVLPScalarProductImplementation<GFS>
+      , public LinearResultStorage
+    {
+    public :
+      ISTLBackend_OVLP_MatrixFree_Richardson (const GFS& gfs, const CC& cc, Operator& op,
+                                              unsigned maxiter=5000, int verbose=1)
+        : OVLPScalarProductImplementation<GFS>(gfs)
+        , gfs_(gfs), cc_(cc), opa_(op), u_(static_cast<typename Operator::domain_type*>(0))
+        , maxiter_(maxiter), verbose_(verbose)
+      {}
+
+      template<class V, class W>
+      void apply(V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType>::real_type reduction)
+      {
+        using Dune::PDELab::Backend::Native;
+        typedef Dune::PDELab::OVLPScalarProduct<GFS,V> PSP;
+        PSP psp(*this);
+        typedef Dune::Richardson<Native<V>, Native<W> > SeqPrec;
+        SeqPrec seqprec(0.7);
+        typedef Dune::PDELab::OverlappingWrappedPreconditioner<CC,GFS,SeqPrec> WPREC;
+        WPREC wprec(gfs_,seqprec,cc_,this->parallelHelper());
+        int verb=0;
+        if (gfs_.gridView().comm().rank()==0) verb=verbose_;
+        Solver<V> solver(opa_,psp,wprec,reduction,maxiter_,verb);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z,r,stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+      }
+
+      //! Set position of jacobian.
+      //! Must be called before apply() in the nonlinear case.
+      void setLinearizationPoint(const typename Operator::domain_type& u)
+      {
+        u_ = &u;
+        opa_.setLinearizationPoint(u);
+      }
+
+    private :
+      const GFS& gfs_;
+      const CC& cc_;
+      Operator& opa_;
+      const typename Operator::domain_type* u_;
+      unsigned maxiter_;
+      int verbose_;
+    }; // end class ISTLBackend_OVLP_MatrixFree_Richardson
 
     template<class GFS, class C,
              template<class,class,class,int> class Preconditioner,
@@ -409,7 +563,7 @@ namespace Dune {
         \param[in] verbose_ print messages if true
       */
       ISTLBackend_OVLP_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000,
-                                            int steps_=5, int verbose_=1)
+                             int steps_=5, int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), steps(steps_), verbose(verbose_)
       {}
 
