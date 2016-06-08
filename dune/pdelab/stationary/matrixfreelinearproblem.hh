@@ -10,7 +10,7 @@
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/solver.hh>
-#include <dune/pdelab/stationary/linearproblem.hh>
+#include <dune/pdelab/stationary/linearproblembase.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -84,8 +84,8 @@ namespace Dune {
         , _x()
         , _reduction(reduction)
         , _min_defect(min_defect)
-        , _hanging_node_modifications(false)
         , _verbose(verbose)
+        , _hanging_node_modifications(false)
       {}
 
       /** \brief Set flag that controls hanging node transformations

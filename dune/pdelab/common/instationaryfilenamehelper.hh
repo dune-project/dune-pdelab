@@ -45,6 +45,11 @@ namespace Dune {
         i++;
       }
 
+      int index() const
+      {
+        return i;
+      }
+
     private:
       char fname[255];
       char basename[255];

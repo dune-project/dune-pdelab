@@ -17,6 +17,7 @@
 #include <dune/pdelab/gridoperator/fastdg/patternengine.hh>
 #include <dune/pdelab/gridoperator/fastdg/jacobianengine.hh>
 #include <dune/pdelab/gridoperator/fastdg/jacobianapplyengine.hh>
+#include <dune/pdelab/gridoperator/fastdg/nonlinearjacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
@@ -89,6 +90,7 @@ namespace Dune{
       typedef FastDGLocalResidualAssemblerEngine<FastDGLocalAssembler> LocalResidualAssemblerEngine;
       typedef FastDGLocalJacobianAssemblerEngine<FastDGLocalAssembler> LocalJacobianAssemblerEngine;
       typedef FastDGLocalJacobianApplyAssemblerEngine<FastDGLocalAssembler> LocalJacobianApplyAssemblerEngine;
+      typedef FastDGLocalNonlinearJacobianApplyAssemblerEngine<FastDGLocalAssembler> LocalNonlinearJacobianApplyAssemblerEngine;
       //! @}
 
       //! Constructor with empty constraints
@@ -97,7 +99,7 @@ namespace Dune{
           weight_(1.0),
           doPreProcessing_(true),
           doPostProcessing_(true),
-          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
+          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this), nonlinear_jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
 
@@ -109,7 +111,7 @@ namespace Dune{
           weight_(1.0),
           doPreProcessing_(true),
           doPostProcessing_(true),
-          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
+          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this), nonlinear_jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
 
@@ -127,6 +129,7 @@ namespace Dune{
           residual_engine(*this),
           jacobian_engine(*this),
           jacobian_apply_engine(*this),
+          nonlinear_jacobian_apply_engine(*this),
           _reconstruct_border_entries(other._reconstruct_border_entries)
       {}
 
@@ -211,6 +214,17 @@ namespace Dune{
         jacobian_apply_engine.setResidual(r);
         jacobian_apply_engine.setSolution(x);
         return jacobian_apply_engine;
+      }
+
+      //! Returns a reference to the requested engine. This engine is
+      //! completely configured and ready to use.
+      LocalNonlinearJacobianApplyAssemblerEngine & localNonlinearJacobianApplyAssemblerEngine
+      (typename Traits::Residual & r, const typename Traits::Solution & x, const typename Traits::Solution & z)
+      {
+        nonlinear_jacobian_apply_engine.setResidual(r);
+        nonlinear_jacobian_apply_engine.setSolution(x);
+        nonlinear_jacobian_apply_engine.setUpdate(z);
+        return nonlinear_jacobian_apply_engine;
       }
 
       //! @}
@@ -307,6 +321,7 @@ namespace Dune{
       LocalResidualAssemblerEngine residual_engine;
       LocalJacobianAssemblerEngine jacobian_engine;
       LocalJacobianApplyAssemblerEngine jacobian_apply_engine;
+      LocalNonlinearJacobianApplyAssemblerEngine nonlinear_jacobian_apply_engine;
       //! @}
 
       bool _reconstruct_border_entries;

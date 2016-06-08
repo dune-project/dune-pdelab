@@ -31,7 +31,13 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-    template<typename X, typename Y, typename GOS>
+    /** \brief Application of jacobian from linear problems.
+
+        \tparam X  Trial vector.
+        \tparam Y  Test vector.
+        \tparam GO Grid operator implementing the operator application.
+     */
+    template<typename X, typename Y, typename GO>
     class OnTheFlyOperator : public Dune::LinearOperator<X,Y>
     {
     public:
@@ -41,88 +47,79 @@ namespace Dune {
 
       enum {category=Dune::SolverCategory::sequential};
 
-      OnTheFlyOperator (const GOS& gos_)
-        : gos(gos_)
+      OnTheFlyOperator (const GO& go)
+        : go_(go)
       {}
+
+      //! Set position of jacobian.
+      //! Does nothing here since jacobian does not depend on position in the linear case.
+      void setLinearizationPoint(const X& u)
+      {
+      }
 
       virtual void apply (const X& x, Y& y) const
       {
         y = 0.0;
-        gos.jacobian_apply(x,y);
+        go_.jacobian_apply(x,y);
       }
 
       virtual void applyscaleadd (field_type alpha, const X& x, Y& y) const
       {
         Y temp(y);
         temp = 0.0;
-        gos.jacobian_apply(x,temp);
+        go_.jacobian_apply(x,temp);
         y.axpy(alpha,temp);
       }
 
     private:
-      const GOS& gos;
+      const GO& go_;
     };
 
-    /** \brief Wrapper to apply linear operator
-     *
-     * Given a grid-operator, build a linear operator which fulfills the
-     * LinearOperator interface.
-     */
-    template <class GO>
-    class MatrixFreeLinearOperatorWrapper :
-     public LinearOperator<typename GO::Traits::Domain,
-                           typename GO::Traits::Range> {
-     public:
-      /** \brief Local operator type */
-      typedef GO GridOperator;
-      /** \brief Trial grid function space */
-      typedef typename GO::Traits::Domain domain_type;
-      /** \brief Test grid function space */
-      typedef typename GO::Traits::Range range_type;
-      /** \brief Domain type of ISTL base type */
-      typedef typename domain_type::field_type field_type;
-      /** \brief operator category */
-      enum { category=SolverCategory::sequential };
+    /** \brief Application of jacobian from nonlinear problems.
 
-      /** \brief construct new instance
-       *
-       * \param[in] go_ Matrix-free gridoperator
-       */
-      MatrixFreeLinearOperatorWrapper(const GO& go_) :
-        go(go_) {}
-      /** \brief Apply operator to ISTL vectors
-       *
-       * Implements the operation \f$y=Ax\f$ on an ISTL vector
-       *
-       * \param[in] x Input vector
-       * \param[out] y Output vector \f$y = Ax\f$
-       */
-      virtual void apply(const domain_type& x, range_type& y) const {
+        \tparam X  Trial vector.
+        \tparam Y  Test vector.
+        \tparam GO Grid operator implementing the operator application.
+    */
+    template<typename X, typename Y, typename GO>
+    class NonlinearOnTheFlyOperator : public Dune::LinearOperator<X,Y>
+    {
+    public :
+      typedef X domain_type;
+      typedef Y range_type;
+      typedef typename X::field_type field_type;
+
+      enum { category = Dune::SolverCategory::sequential };
+
+      NonlinearOnTheFlyOperator(const GO& go)
+        : go_(go)
+        , u_(static_cast<X*>(0))
+      {}
+
+      //! Set position of jacobian. This is different to linear problems.
+      //! Must be called before both apply() and applyscaleadd().
+      void setLinearizationPoint(const X& u)
+      {
+        u_ = &u;
+      }
+
+      virtual void apply(const X& x, Y& y) const
+      {
         y = 0.0;
-        // Apply operator
-        go.jacobian_apply(x,y);
+        go_.nonlinear_jacobian_apply(*u_,x,y);
       }
 
-      /** \brief Apply scaled add
-       *
-       * Calculate \f$y = y + \alpha Ax\f$ for the raw ISTL vectors
-       * \f$x\f$ and \f$y\f$.
-       *
-       * \param[in] alpha Scaling factor \f$\alpha\f$
-       * \param[in] x Input vector
-       * \param[out] y Resulting output vector
-       */
-      virtual void applyscaleadd(field_type alpha,
-                                 const domain_type& x,
-                                 range_type& y) const {
-        range_type tmp(y);
-        apply(x,tmp);
-        y.axpy(alpha,tmp);
+      virtual void applyscaleadd(field_type alpha, const X& x, Y& y) const
+      {
+        Y temp(y);
+        temp = 0.0;
+        go_.nonlinear_jacobian_apply(*u_,x,temp);
+        y.axpy(alpha,temp);
       }
 
-     private:
-      /** \brief Wrapped matrix-free operator */
-      const GO& go;
+    private :
+      const GO& go_;
+      const X* u_;
     };
 
     //==============================================================================
@@ -178,7 +175,7 @@ namespace Dune {
       int verbose;
     };
 
-    template<class GO, template<class> class Solver>
+    template<class Operator, template<class> class Solver>
     class ISTLBackend_SEQ_MatrixFree_Richardson
       : public SequentialNorm, public LinearResultStorage
     {
@@ -188,10 +185,10 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_MatrixFree_Richardson(const GO& go_, unsigned maxiter_=5000, int verbose_=1)
-        : go(go_)
-        , maxiter(maxiter_)
-        , verbose(verbose_)
+      explicit ISTLBackend_SEQ_MatrixFree_Richardson(Operator& op, unsigned maxiter=5000, int verbose=1)
+        : opa_(op), u_(static_cast<typename Operator::domain_type*>(0))
+        , maxiter_(maxiter)
+        , verbose_(verbose)
       {}
 
 
@@ -206,9 +203,8 @@ namespace Dune {
       template<class V, class W>
       void apply(V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
       {
-        MatrixFreeLinearOperatorWrapper<GO> opa(go);
         Dune::Richardson<V,W> prec(0.7);
-        Solver<V> solver(opa, prec, reduction, maxiter, verbose);
+        Solver<V> solver(opa_, prec, reduction, maxiter_, verbose_);
         Dune::InverseOperatorResult stat;
         solver.apply(z, r, stat);
         res.converged  = stat.converged;
@@ -218,10 +214,19 @@ namespace Dune {
         res.conv_rate  = stat.conv_rate;
       }
 
+      //! Set position of jacobian.
+      //! Must be called before apply().
+      void setLinearizationPoint(const typename Operator::domain_type& u)
+      {
+        u_ = &u;
+        opa_.setLinearizationPoint(u);
+      }
+
     private:
-      const GO& go;
-      unsigned maxiter;
-      int verbose;
+      Operator& opa_;
+      const typename Operator::domain_type* u_;
+      unsigned maxiter_;
+      int verbose_;
     };
 
     template<template<class,class,class,int> class Preconditioner,
