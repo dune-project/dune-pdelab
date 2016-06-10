@@ -149,6 +149,11 @@ namespace Dune {
         return _container.base();
       }
 
+      //! Access underlying container
+      auto data() { return _container.data(); }
+      const auto data() const { return _container.data(); }
+
+
     private:
       C& _container;
       weight_type _weight;

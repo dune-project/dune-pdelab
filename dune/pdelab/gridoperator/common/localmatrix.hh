@@ -138,6 +138,15 @@ namespace Dune {
         return _container;
       }
 
+      auto data() {
+        _modified = true;
+        return _container.data();
+      }
+
+      const auto data() const {
+        return _container.data();
+      }
+
       //! Returns the storage container of the underlying LocalMatrix.
       /**
        * \warning This is not a matrix-like container anymore, but a std::vector-like one!
@@ -326,6 +335,15 @@ namespace Dune {
             _rows = r;
             _cols = c;
           }
+
+          auto data() {
+            return _container.data();
+          }
+
+          const auto data() const {
+            return _container.data();
+          }
+
 
           //! Access the value associated with the i-th DOF of lfsv and the j-th DOF of lfsu.
           /**
