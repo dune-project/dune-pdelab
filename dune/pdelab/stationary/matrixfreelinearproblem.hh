@@ -31,11 +31,11 @@ namespace Dune {
     class MatrixFreeStationaryLinearProblemSolver
     {
       /** \brief Field value type */
-      typedef typename V::ElementType Real;
+      typedef typename Dune::template FieldTraits<typename V::ElementType >::real_type Real;
       /** \brief Trial grid function space */
       typedef typename GO::Traits::TrialGridFunctionSpace TrialGridFunctionSpace;
       /** \brief Vector backend for trial grid function space */
-      typedef typename Dune::PDELab::BackendVectorSelector<TrialGridFunctionSpace,Real>::Type W;
+      using W = Dune::PDELab::Backend::Vector<TrialGridFunctionSpace,typename V::ElementType>;
       /** \brief Grid operator to solve for */
       typedef GO GridOperator;
 
@@ -54,7 +54,7 @@ namespace Dune {
        * \param[in] min_defect Minimal absolute residual
        * \param[in] verbose Verbosity level
        */
-      MatrixFreeStationaryLinearProblemSolver(const GO& go, LS& ls, V& x, typename V::ElementType reduction, typename V::ElementType min_defect = 1e-99, int verbose=1)
+      MatrixFreeStationaryLinearProblemSolver(const GO& go, LS& ls, V& x, Real reduction, Real min_defect = 1e-99, int verbose=1)
         : _go(go)
         , _ls(ls)
         , _x(&x)
@@ -75,7 +75,7 @@ namespace Dune {
        * \param[in] min_defect Minimal absolute residual
        * \param[in] verbose Verbosity level
        */
-      MatrixFreeStationaryLinearProblemSolver (const GO& go, LS& ls, typename V::ElementType reduction, typename V::ElementType min_defect = 1e-99, int verbose=1)
+      MatrixFreeStationaryLinearProblemSolver (const GO& go, LS& ls, Real reduction, Real min_defect = 1e-99, int verbose=1)
         : _go(go)
         , _ls(ls)
         , _x()
@@ -152,12 +152,12 @@ namespace Dune {
         assembler_time += timing;
         _res.assembler_time = assembler_time;
 
-        typename V::ElementType defect = _ls.norm(r);
+        auto defect = _ls.norm(r);
 
         // compute correction
         watch.reset();
         V z(_go.trialGridFunctionSpace(),0.0);
-        typename V::ElementType red = std::max(_reduction,_min_defect/defect);
+        auto red = std::max(_reduction,_min_defect/defect);
         if (rank==0)
           std::cout << "=== solving (reduction: " << red << ") " << std::endl;
         _ls.apply(z,r,red); // solver makes right hand side consistent
@@ -191,7 +191,7 @@ namespace Dune {
       }
 
       /** \brief Return tolerance, i.e. target residual reduction */
-      typename V::ElementType reduction() const
+      Real reduction() const
       {
         return _reduction;
       }
@@ -200,7 +200,7 @@ namespace Dune {
        *
        * \param[in] reduction New target residual reduction
        */
-      void setReduction(typename V::ElementType reduction)
+      void setReduction(Real reduction)
       {
         _reduction = reduction;
       }
@@ -214,12 +214,12 @@ namespace Dune {
       /** \brief Solution grid function */
       V* _x;
       /** \brief Tolerance, i.e. target residual reduction */
-      typename V::ElementType _reduction;
+      Real _reduction;
       /** \brief Minimal absolute residual
        *
        * abort solve once this tolerance is achieved
        */
-      typename V::ElementType _min_defect;
+      Real _min_defect;
       /** \brief Linear solver result object */
       Dune::PDELab::LinearSolverResult<double> _linear_solver_result;
       /** \brief Achieved residual */
