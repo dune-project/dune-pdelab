@@ -89,11 +89,12 @@ namespace Dune{
        * \param engineFactory Factory object used to get the engine.
        * \param la            Local assembler to get the engine from.
        */
-      template<class EngineFactory, class LocalAssembler>
+      template<class EngineFactory, class LocalAssembler, typename Direction>
       void assemble(const EngineFactory &engineFactory,
-                    LocalAssembler &la) const
+                    LocalAssembler &la,
+                    Direction dir) const
       {
-        assemble(engineFactory(la));
+        assemble(engineFactory(la),dir);
       }
 
     private:
