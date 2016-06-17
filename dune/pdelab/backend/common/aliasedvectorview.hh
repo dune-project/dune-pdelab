@@ -171,6 +171,11 @@ namespace Dune {
         return this->_data;
       }
 
+      const ElementType* data() const
+      {
+        return this->_data;
+      }
+
       Container& container()
       {
         return *(this->_container);
