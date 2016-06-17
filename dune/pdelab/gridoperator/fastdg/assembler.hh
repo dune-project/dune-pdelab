@@ -97,8 +97,8 @@ namespace Dune{
       }
 
     private:
-      template<class LocalAssemblerEngine>
-      void assemble(LocalAssemblerEngine & assembler_engine) const
+      template<class LocalAssemblerEngine, typename Direction>
+      void assemble(LocalAssemblerEngine & assembler_engine, Direction direction) const
       {
         const bool fast = true;
         typedef LFSIndexCache<LFSU,CU,fast> LFSUCache;
@@ -130,7 +130,7 @@ namespace Dune{
         auto& index_set = entity_set.indexSet();
 
         // Traverse grid view
-        for (const auto& element : elements(entity_set))
+        for (const auto& element : elements(entity_set,direction))
           {
             // Compute unique id
             auto ids = index_set.uniqueIndex(element);
