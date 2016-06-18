@@ -75,7 +75,7 @@ namespace Dune {
         {
           std::vector<std::size_t> r(_row_ordering.blockCount());
           sizes(r);
-          return std::move(r);
+          return r;
         }
 
         struct RowStreamer

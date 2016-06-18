@@ -239,7 +239,7 @@ namespace Dune {
         unsigned int i = 0;
         ios_base_all_saver restorer(std::cout); // store old ios flags
 
-        while (1)
+        while (true)
           {
             if (verbosity_level_ >= 4)
               std::cout << "          trying line search damping factor:   "

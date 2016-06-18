@@ -113,7 +113,7 @@ namespace Dune {
       template<typename LFSU, typename EG>
       void setupCache(const LFSU& lfsu, const EG& eg)
       {
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Entity::dimension;
         const int order = lfsu.finiteElement().localBasis().order();
         const int intorder = intorderadd + quadrature_factor * order;
 
