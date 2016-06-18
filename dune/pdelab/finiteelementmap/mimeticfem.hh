@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_MIMETICFEM_HH
-#define DUNE_PDELAB_MIMETICFEM_HH
+#ifndef DUNE_PDELAB_FINITEELEMENTMAP_MIMETICFEM_HH
+#define DUNE_PDELAB_FINITEELEMENTMAP_MIMETICFEM_HH
 
 #include<vector>
 #include<dune/geometry/type.hh>
@@ -56,4 +56,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENTMAP_MIMETICFEM_HH

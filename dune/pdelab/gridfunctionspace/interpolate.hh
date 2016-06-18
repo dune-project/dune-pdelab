@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_INTERPOLATE_HH
-#define DUNE_PDELAB_INTERPOLATE_HH
+#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_INTERPOLATE_HH
+#define DUNE_PDELAB_GRIDFUNCTIONSPACE_INTERPOLATE_HH
 
 #include<vector>
 
@@ -111,7 +111,7 @@ namespace Dune {
       {
 
         template<typename F, typename LFS, typename TreePath>
-        typename enable_if<F::isLeaf && LFS::isLeaf>::type
+        typename std::enable_if<F::isLeaf && LFS::isLeaf>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
           std::vector<typename XG::ElementType> xl(lfs.size());
@@ -126,7 +126,7 @@ namespace Dune {
 
         // interpolate PowerLFS from vector-valued function
         template<typename F, typename LFS, typename TreePath>
-        typename enable_if<F::isLeaf && F::Traits::dimRange == 1
+        typename std::enable_if<F::isLeaf && F::Traits::dimRange == 1
                            && (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
@@ -143,14 +143,14 @@ namespace Dune {
 
         // interpolate PowerLFS from vector-valued function
         template<typename F, typename LFS, typename TreePath>
-        typename enable_if<F::isLeaf && (F::Traits::dimRange > 1) &&
+        typename std::enable_if<F::isLeaf && (F::Traits::dimRange > 1) &&
                            (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
           static_assert((TypeTree::TreeInfo<LFS>::depth == 2),
                         "Automatic interpolation of vector-valued function " \
                         "is restricted to trees of depth 1");
-          static_assert(LFS::CHILDREN == F::Traits::dimRange,
+          static_assert(TypeTree::staticDegree<LFS> == F::Traits::dimRange,
                         "Number of children and dimension of range type " \
                         "must match for automatic interpolation of "    \
                         "vector-valued function");
@@ -228,4 +228,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_INTERPOLATE_HH

@@ -7,7 +7,6 @@
 #include <vector>
 
 #include <dune/common/deprecated.hh>
-#include <dune/common/nullptr.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/typetraits.hh>
 

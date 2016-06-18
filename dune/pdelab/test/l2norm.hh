@@ -50,4 +50,4 @@ l2norm (const U& u, int qorder=1)
   return std::sqrt(l2norm2(u, qorder));
 }
 
-#endif // DUNE_PDELAB_TEST_L2DIFFERENCE_HH
+#endif // DUNE_PDELAB_TEST_L2NORM_HH

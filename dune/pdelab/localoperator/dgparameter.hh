@@ -80,4 +80,4 @@ namespace Dune {
     } // end namespace PDELab
 } // end namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_DGPARAMETER_HH

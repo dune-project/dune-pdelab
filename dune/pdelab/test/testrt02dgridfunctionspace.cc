@@ -9,6 +9,7 @@
 
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include <dune/grid/utility/structuredgridfactory.hh>
 #if HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/gridfactory.hh>
@@ -101,12 +102,11 @@ int main(int argc, char** argv)
 #if HAVE_DUNE_ALUGRID
     std::cout << "ALU" << std::endl;
     {
-      typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
+      using ALUType = Dune::ALUGrid<2, 2, Dune::simplex, Dune::nonconforming>;
+      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::make_array(1u, 1u));
+      alugrid->globalRefine(4);
 
-      Grid grid(GRIDSDIR "/2dtriangle.alu");
-      //grid->globalRefine(1);
-
-      rt02DGridFunctionSpace(grid.leafGridView(), "alu");
+      rt02DGridFunctionSpace(alugrid->leafGridView(), "alu");
     }
     result = 0;
 #endif // HAVE_DUNE_ALUGRID

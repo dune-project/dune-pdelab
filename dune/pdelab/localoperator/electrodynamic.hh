@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_ELECTRODYNAMIC_HH
-#define DUNE_PDELAB_ELECTRODYNAMIC_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_ELECTRODYNAMIC_HH
+#define DUNE_PDELAB_LOCALOPERATOR_ELECTRODYNAMIC_HH
 
 #include<vector>
 
@@ -81,7 +81,7 @@ namespace Dune {
         static_assert(dimR == 3 || dimR == 2,
                       "Works only in 2D or 3D");
         static_assert
-          ((Dune::is_same<typename EG::Geometry::ctype, DF>::value),
+          ((std::is_same<typename EG::Geometry::ctype, DF>::value),
            "Grids ctype and Finite Elements DomainFieldType must match");
 
         // select quadrature rule
@@ -201,7 +201,7 @@ namespace Dune {
         static_assert(dimR == 3 || dimR == 2,
                            "Works only in 2D or 3D");
         static_assert
-          ((Dune::is_same<typename EG::Geometry::ctype, DF>::value),
+          ((std::is_same<typename EG::Geometry::ctype, DF>::value),
            "Grids ctype and Finite Elements DomainFieldType must match");
 
         // select quadrature rule
@@ -244,4 +244,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_ELECTRODYNAMIC_HH
+#endif // DUNE_PDELAB_LOCALOPERATOR_ELECTRODYNAMIC_HH

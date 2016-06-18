@@ -132,7 +132,7 @@ namespace Dune {
         // the tree-visiting algorithm and work our way up the tree all by ourselves.
         // Don't consume the first entry in the tree path to the parent before it has
         // been used!
-        if (!is_same<TreePath,TP>::value && Ordering::consume_tree_index)
+        if (!std::is_same<TreePath,TP>::value && Ordering::consume_tree_index)
           {
             begin.restore_back();
             end.restore_back();
@@ -144,7 +144,7 @@ namespace Dune {
 
       // Template recursion for walking up the TreePath to the BaseOrdering
       template<typename TP, typename ItIn, typename ItOut>
-      typename enable_if<
+      typename std::enable_if<
         (TypeTree::TreePathSize<TP>::value > 0)
           >::type
       map_lfs_indices_to_root_space(TP, ItIn begin, ItIn end, ItOut out) const
@@ -156,7 +156,7 @@ namespace Dune {
 
       // End of template recursion for walking up the TreePath to the BaseOrdering
       template<typename TP, typename ItIn, typename ItOut>
-      typename enable_if<
+      typename std::enable_if<
         (TypeTree::TreePathSize<TP>::value == 0)
           >::type
       map_lfs_indices_to_root_space(TP, ItIn begin, ItIn end, ItOut out) const

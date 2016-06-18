@@ -1,7 +1,7 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=8 sw=4 sts=4:
-#ifndef DUNE_PDELAB_IDEFAULT_HH
-#define DUNE_PDELAB_IDEFAULT_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_IDEFAULT_HH
+#define DUNE_PDELAB_LOCALOPERATOR_IDEFAULT_HH
 
 namespace Dune
 {
@@ -204,4 +204,4 @@ namespace Dune
     }
 }
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_IDEFAULT_HH

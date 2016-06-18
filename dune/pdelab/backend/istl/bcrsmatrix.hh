@@ -26,7 +26,6 @@ namespace Dune {
         typedef typename C::field_type ElementType;
         typedef ElementType E;
         typedef C Container;
-        typedef C BaseT;
         typedef typename C::field_type field_type;
         typedef typename C::block_type block_type;
         typedef typename C::size_type size_type;
@@ -47,7 +46,7 @@ namespace Dune {
 
         // some trickery to avoid exposing average users to the fact that there might
         // be multiple statistics objects
-        typedef typename conditional<
+        typedef typename std::conditional<
           (C::blocklevel > 2),
           std::vector<PatternStatistics>,
           PatternStatistics
@@ -130,21 +129,21 @@ namespace Dune {
         //! Returns pattern statistics for all contained BCRSMatrix objects.
         const StatisticsReturnType& patternStatistics() const
         {
-          return patternStatistics(integral_constant<bool,(C::blocklevel > 2)>());
+          return patternStatistics(std::integral_constant<bool,(C::blocklevel > 2)>());
         }
 
 #ifndef DOXYGEN
 
       private:
 
-        const PatternStatistics& patternStatistics(false_type multiple) const
+        const PatternStatistics& patternStatistics(std::false_type multiple) const
         {
           if (_stats.empty())
             DUNE_THROW(InvalidStateException,"no pattern statistics available");
           return _stats[0];
         }
 
-        const std::vector<PatternStatistics>& patternStatistics(true_type multiple) const
+        const std::vector<PatternStatistics>& patternStatistics(std::true_type multiple) const
         {
           if (_stats.empty())
             DUNE_THROW(InvalidStateException,"no pattern statistics available");
@@ -206,20 +205,6 @@ namespace Dune {
         const E& operator()(const RowIndex& ri, const ColIndex& ci) const
         {
           return istl::access_matrix_element(istl::container_tag(*_container),*_container,ri,ci,ri.size()-1,ci.size()-1);
-        }
-
-        const Container&
-        DUNE_DEPRECATED_MSG("base() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead.")
-        base() const
-        {
-          return *_container;
-        }
-
-        Container&
-        DUNE_DEPRECATED_MSG("base() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead.")
-        base()
-        {
-          return *_container;
         }
 
       private:

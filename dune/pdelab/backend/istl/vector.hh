@@ -12,6 +12,8 @@
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/common/aliasedvectorview.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
+#include <dune/pdelab/backend/istl/flatvectorbackend.hh>
+#include <dune/pdelab/backend/istl/flatmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/vectorhelpers.hh>
 #include <dune/pdelab/backend/istl/vectoriterator.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -34,7 +36,6 @@ namespace Dune {
         typedef ElementType E;
         typedef C Container;
         typedef GFS GridFunctionSpace;
-        typedef Container BaseT;
         typedef typename Container::field_type field_type;
         typedef typename Container::block_type block_type;
         typedef typename Container::size_type size_type;
@@ -232,21 +233,6 @@ namespace Dune {
         {
           _container->axpy(a, y.native());
           return *this;
-        }
-
-        // for debugging and AMG access
-        Container&
-        DUNE_DEPRECATED_MSG("base() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead.")
-        base ()
-        {
-          return *_container;
-        }
-
-        const Container&
-        DUNE_DEPRECATED_MSG("base() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead.")
-        base () const
-        {
-          return *_container;
         }
 
       private:

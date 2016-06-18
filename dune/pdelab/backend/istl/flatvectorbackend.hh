@@ -7,7 +7,7 @@
 #include <dune/istl/vector/host.hh>
 #include <dune/typetree/typetree.hh>
 
-#include <dune/pdelab/backend/tags.hh>
+#include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/backend/istl/vectorhelpers.hh>
@@ -43,66 +43,31 @@ namespace Dune {
       typedef typename C::iterator iterator;
       typedef typename C::const_iterator const_iterator;
 
-
-#if HAVE_TEMPLATE_ALIASES
-
       template<typename LFSCache>
       using LocalView = UncachedVectorView<FlatVectorContainer,LFSCache>;
 
       template<typename LFSCache>
       using ConstLocalView = ConstUncachedVectorView<const FlatVectorContainer,LFSCache>;
 
-#else
-
-      template<typename LFSCache>
-      struct LocalView
-        : public UncachedVectorView<FlatVectorContainer,LFSCache>
-      {
-
-      LocalView()
-      {}
-
-      LocalView(FlatVectorContainer& vc)
-        : UncachedVectorView<FlatVectorContainer,LFSCache>(vc)
-      {}
-
-    };
-
-      template<typename LFSCache>
-      struct ConstLocalView
-        : public ConstUncachedVectorView<const FlatVectorContainer,LFSCache>
-      {
-
-      ConstLocalView()
-      {}
-
-      ConstLocalView(const FlatVectorContainer& vc)
-        : FlatVectorView<const FlatVectorContainer,LFSCache>(vc)
-      {}
-
-    };
-
-#endif // HAVE_TEMPLATE_ALIASES
-
 
       FlatVectorContainer(const FlatVectorContainer& rhs)
         : _gfs(rhs._gfs)
-        , _container(make_shared<Container>(raw(rhs)))
+        , _container(std::make_shared<Container>(Backend::native(rhs)))
       {}
 
-      FlatVectorContainer (const GFS& gfs, Dune::PDELab::tags::attached_container = Dune::PDELab::tags::attached_container())
+      FlatVectorContainer (const GFS& gfs, Dune::PDELab::Backend::attached_container = Dune::PDELab::Backend::attached_container())
         : _gfs(gfs)
-        , _container(make_shared<Container>(gfs.ordering().blockCount()))
+        , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
       {}
 
       //! Creates an FlatVectorContainer without allocating an underlying ISTL vector.
-      FlatVectorContainer(const GFS& gfs, Dune::PDELab::tags::unattached_container)
+      FlatVectorContainer(const GFS& gfs, Dune::PDELab::Backend::unattached_container)
         : _gfs(gfs)
       {}
 
       FlatVectorContainer(const GFS& gfs, const E& e)
         : _gfs(gfs)
-        , _container(make_shared<Container>(gfs.ordering().blockCount()))
+        , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
       {
         (*_container)=e;
       }
@@ -112,7 +77,7 @@ namespace Dune {
         _container.reset();
       }
 
-      void attach(shared_ptr<Container> container)
+      void attach(std::shared_ptr<Container> container)
       {
         _container = container;
       }
@@ -122,7 +87,7 @@ namespace Dune {
         return bool(_container);
       }
 
-      const shared_ptr<Container>& storage() const
+      const std::shared_ptr<Container>& storage() const
       {
         return _container;
       }
@@ -138,11 +103,11 @@ namespace Dune {
           return *this;
         if (attached())
           {
-            (*_container) = raw(r);
+            (*_container) = Backend::native(r);
           }
         else
           {
-            _container = make_shared<Container>(raw(r));
+            _container = std::make_shared<Container>(Backend::native(r));
           }
         return *this;
       }
@@ -168,13 +133,13 @@ namespace Dune {
 
       FlatVectorContainer& operator+=(const FlatVectorContainer& e)
       {
-        (*_container) += raw(e);
+        (*_container) += Backend::native(e);
         return *this;
       }
 
       FlatVectorContainer& operator-=(const FlatVectorContainer& e)
       {
-        (*_container) -= raw(e);
+        (*_container) -= Backend::native(e);
         return *this;
       }
 
@@ -217,17 +182,17 @@ namespace Dune {
 
       E operator*(const FlatVectorContainer& y) const
       {
-        return (*_container) * raw(y);
+        return (*_container) * Backend::native(y);
       }
 
       E dot(const FlatVectorContainer& y) const
       {
-        return _container->dot(raw(y));
+        return _container->dot(Backend::native(y));
       }
 
       FlatVectorContainer& axpy(const E& a, const FlatVectorContainer& y)
       {
-        _container->axpy(a, raw(y));
+        _container->axpy(a, Backend::native(y));
         return *this;
       }
 
@@ -274,7 +239,7 @@ namespace Dune {
       }
 
       const GFS& _gfs;
-      shared_ptr<Container> _container;
+      std::shared_ptr<Container> _container;
 
     };
 

@@ -277,4 +277,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_STATIONARY_LINEARPROBLEM_HH

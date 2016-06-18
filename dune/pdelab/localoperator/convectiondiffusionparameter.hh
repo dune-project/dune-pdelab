@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_CONVECTIONDIFFUSIONPARAMETER_HH
-#define DUNE_PDELAB_CONVECTIONDIFFUSIONPARAMETER_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONPARAMETER_HH
+#define DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONPARAMETER_HH
 
 #include<vector>
 
@@ -126,7 +126,6 @@ namespace Dune {
       BCType
       bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
       {
-        typename Traits::DomainType xglobal = is.geometry().global(x);
         return ConvectionDiffusionBoundaryConditions::Dirichlet;
       }
 
@@ -342,4 +341,4 @@ private:
 }
 
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONPARAMETER_HH

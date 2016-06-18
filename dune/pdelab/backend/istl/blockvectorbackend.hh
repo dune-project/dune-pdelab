@@ -7,7 +7,7 @@
 #include <dune/istl/blockvector/host.hh>
 #include <dune/typetree/typetree.hh>
 
-#include <dune/pdelab/backend/tags.hh>
+#include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/backend/istl/vectorhelpers.hh>
@@ -44,55 +44,21 @@ namespace Dune {
       typedef typename C::const_iterator const_iterator;
 
 
-#if HAVE_TEMPLATE_ALIASES
-
       template<typename LFSCache>
       using LocalView = UncachedVectorView<BlockVectorContainer,LFSCache>;
 
       template<typename LFSCache>
       using ConstLocalView = ConstUncachedVectorView<const BlockVectorContainer,LFSCache>;
 
-#else
-
-      template<typename LFSCache>
-      struct LocalView
-        : public UncachedVectorView<BlockVectorContainer,LFSCache>
-      {
-
-      LocalView()
-      {}
-
-      LocalView(BlockVectorContainer& vc)
-        : UncachedVectorView<BlockVectorContainer,LFSCache>(vc)
-      {}
-
-    };
-
-      template<typename LFSCache>
-      struct ConstLocalView
-        : public ConstUncachedVectorView<const BlockVectorContainer,LFSCache>
-      {
-
-      ConstLocalView()
-      {}
-
-      ConstLocalView(const BlockVectorContainer& vc)
-        : BlockVectorView<const BlockVectorContainer,LFSCache>(vc)
-      {}
-
-    };
-
-#endif // HAVE_TEMPLATE_ALIASES
-
 
       BlockVectorContainer(const BlockVectorContainer& rhs)
         : _gfs(rhs._gfs)
-        , _container(make_shared<Container>(native(rhs)))
+        , _container(std::make_shared<Container>(native(rhs)))
       {}
 
       BlockVectorContainer (const GFS& gfs, Dune::PDELab::Backend::attached_container = Dune::PDELab::Backend::attached_container())
         : _gfs(gfs)
-        , _container(make_shared<Container>(gfs.ordering().blockCount(),gfs.backend().blockSize()))
+        , _container(std::make_shared<Container>(gfs.ordering().blockCount(),gfs.backend().blockSize()))
       {}
 
       //! Creates an BlockVectorContainer without allocating an underlying ISTL vector.
@@ -102,7 +68,7 @@ namespace Dune {
 
       BlockVectorContainer(const GFS& gfs, const E& e)
         : _gfs(gfs)
-        , _container(make_shared<Container>(gfs.ordering().blockCount(),gfs.backend().blockSize()))
+        , _container(std::make_shared<Container>(gfs.ordering().blockCount(),gfs.backend().blockSize()))
       {
         (*_container)=e;
       }
@@ -112,7 +78,7 @@ namespace Dune {
         _container.reset();
       }
 
-      void attach(shared_ptr<Container> container)
+      void attach(std::shared_ptr<Container> container)
       {
         _container = container;
       }
@@ -122,7 +88,7 @@ namespace Dune {
         return bool(_container);
       }
 
-      const shared_ptr<Container>& storage() const
+      const std::shared_ptr<Container>& storage() const
       {
         return _container;
       }
@@ -142,7 +108,7 @@ namespace Dune {
           }
         else
           {
-            _container = make_shared<Container>(native(r));
+            _container = std::make_shared<Container>(native(r));
           }
         return *this;
       }
@@ -274,7 +240,7 @@ namespace Dune {
       }
 
       const GFS& _gfs;
-      shared_ptr<Container> _container;
+      std::shared_ptr<Container> _container;
     };
 
 

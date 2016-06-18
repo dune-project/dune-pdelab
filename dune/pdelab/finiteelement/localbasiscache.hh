@@ -1,6 +1,8 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_LOCALBASISCACHE_HH
-#define DUNE_PDELAB_LOCALBASISCACHE_HH
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
+
+#ifndef DUNE_PDELAB_FINITEELEMENT_LOCALBASISCACHE_HH
+#define DUNE_PDELAB_FINITEELEMENT_LOCALBASISCACHE_HH
 
 #include<vector>
 #include<map>
@@ -11,7 +13,7 @@ namespace Dune {
   namespace PDELab {
 
     //! \brief store values of basis functions and gradients in a cache
-    template<class LocalBasisType>
+    template<class LocalBasisType, bool immutableIfConst = false>
     class LocalBasisCache
     {
       typedef typename LocalBasisType::Traits::DomainFieldType DomainFieldType;
@@ -65,8 +67,12 @@ namespace Dune {
       }
 
       //! evaluate basis functions at a point
-      const std::vector<RangeType>&
-      evaluateFunction (const DomainType& position, const LocalBasisType& localbasis) const
+      template<typename DT>
+      std::enable_if_t<
+        std::is_same<DT,DomainType>::value && immutableIfConst,
+        const std::vector<RangeType>&
+        >
+      evaluateFunction (const DT& position, const LocalBasisType& localbasis) const
       {
         auto it = functioncache.find(position);
         if (it!=functioncache.end()) return it->second;
@@ -75,8 +81,12 @@ namespace Dune {
       }
 
       //! evaluate Jacobians at a point
-      const std::vector<JacobianType>&
-      evaluateJacobian (const DomainType& position, const LocalBasisType& localbasis) const
+      template<typename DT>
+      std::enable_if_t<
+        std::is_same<DT,DomainType>::value && immutableIfConst,
+        const std::vector<JacobianType>&
+        >
+      evaluateJacobian (const DT& position, const LocalBasisType& localbasis) const
       {
         auto it = jacobiancache.find(position);
         if (it!=jacobiancache.end()) return it->second;
@@ -84,12 +94,45 @@ namespace Dune {
         DUNE_THROW(Exception,"cache does not have basis jacobians at position " << position);
       }
 
+      //! evaluate basis functions at a point
+      template<typename DT>
+      std::enable_if_t<
+        std::is_same<DT,DomainType>::value && not immutableIfConst,
+        const std::vector<RangeType>&
+        >
+      evaluateFunction (const DT& position, const LocalBasisType& localbasis) const
+      {
+        typename FunctionCache::iterator it = functioncache.find(position);
+        if (it!=functioncache.end()) return it->second;
+        std::vector<RangeType> values;
+        localbasis.evaluateFunction(position,values);
+        it = functioncache.insert(functioncache.begin(),std::pair<DomainType,std::vector<RangeType> >(position,values));
+        return it->second;
+      }
+
+      //! evaluate Jacobians at a point
+      template<typename DT>
+      std::enable_if_t<
+        std::is_same<DT,DomainType>::value && not immutableIfConst,
+        const std::vector<JacobianType>&
+        >
+      evaluateJacobian (const DT& position, const LocalBasisType& localbasis) const
+      {
+        typename JacobianCache::iterator it = jacobiancache.find(position);
+        if (it!=jacobiancache.end()) return it->second;
+        std::vector<JacobianType> values;
+        localbasis.evaluateJacobian(position,values);
+        it = jacobiancache.insert(jacobiancache.begin(),std::pair<DomainType,std::vector<JacobianType> >(position,values));
+        return it->second;
+      }
+
+
     private:
-      FunctionCache functioncache;
-      JacobianCache jacobiancache;
+      mutable FunctionCache functioncache;
+      mutable JacobianCache jacobiancache;
     };
 
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENT_LOCALBASISCACHE_HH

@@ -1,7 +1,7 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
-#ifndef DUNE_PDELAB_EIGEN_SOLVERS_HH
-#define DUNE_PDELAB_EIGEN_SOLVERS_HH
+#ifndef DUNE_PDELAB_BACKEND_EIGEN_SOLVERS_HH
+#define DUNE_PDELAB_BACKEND_EIGEN_SOLVERS_HH
 
 #include <dune/common/ftraits.hh>
 #include <dune/common/deprecated.hh>
@@ -348,4 +348,4 @@ namespace Dune {
 
 #endif // HAVE_EIGEN
 
-#endif // DUNE_PDELAB_EIGENSOLVERBACKEND
+#endif // DUNE_PDELAB_BACKEND_EIGEN_SOLVERS_HH

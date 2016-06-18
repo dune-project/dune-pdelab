@@ -66,7 +66,7 @@ namespace Dune {
         > LocalAssembler;
 
       // Fix this as soon as the default Partitions are constexpr
-      typedef typename conditional<
+      typedef typename std::conditional<
         GFSU::Traits::EntitySet::Partitions::partitionIterator() == InteriorBorder_Partition,
         NonOverlappingBorderDOFExchanger<FastDGGridOperator>,
         OverlappingBorderDOFExchanger<FastDGGridOperator>

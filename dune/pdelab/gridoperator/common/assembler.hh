@@ -1,3 +1,5 @@
+#ifndef DUNE_PDELAB_GRIDOPERATOR_COMMON_ASSEMBLER_HH
+#define DUNE_PDELAB_GRIDOPERATOR_COMMON_ASSEMBLER_HH
 #include <gridoperatorutilities.hh>
 #include <assemblerutilties.hh>
 
@@ -572,3 +574,4 @@ which they will be called during assembling. This is done via the
 Dune::PDELab::GridOperatorInterface::setupGridOperators method.
 
  */
+#endif // DUNE_PDELAB_GRIDOPERATOR_COMMON_ASSEMBLER_HH

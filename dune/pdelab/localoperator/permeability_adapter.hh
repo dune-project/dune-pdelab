@@ -1,5 +1,7 @@
-#ifndef PERMEABILITY_ADAPTER_HH
-#define PERMEABILITY_ADAPTER_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_PERMEABILITY_ADAPTER_HH
+#define DUNE_PDELAB_LOCALOPERATOR_PERMEABILITY_ADAPTER_HH
+
+#include <dune/pdelab/common/function.hh>
 
 #include <dune/pdelab/common/function.hh>
 
@@ -92,4 +94,4 @@ private:
   T& t;
 };
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_PERMEABILITY_ADAPTER_HH

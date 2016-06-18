@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_HANGINGNODECONSTRAINTS_HH
-#define DUNE_PDELAB_HANGINGNODECONSTRAINTS_HH
+#ifndef DUNE_PDELAB_CONSTRAINTS_HANGINGNODE_HH
+#define DUNE_PDELAB_CONSTRAINTS_HANGINGNODE_HH
 
 #include <cstddef>
 
@@ -421,4 +421,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_CONSTRAINTS_HANGINGNODE_HH

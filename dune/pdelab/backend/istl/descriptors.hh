@@ -81,89 +81,6 @@ namespace Dune {
 
       };
 
-    }
-
-    namespace ISTLParameters {
-
-      enum
-      DUNE_DEPRECATED_MSG("ISTLParameters::blocking is deprecated and will be removed after PDELab 2.4. Use the new istl::VectorBackend and istl::Blocking instead. Note that the enum values of istl::Blocking are named differently!")
-      Blocking
-        {
-          no_blocking,
-          dynamic_blocking,
-          static_blocking
-        };
-    }
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
-    template<ISTLParameters::Blocking blocking = ISTLParameters::no_blocking, std::size_t block_size = 1>
-    using ISTLVectorBackend DUNE_DEPRECATED_MSG("ISTLVectorBackend is deprecated and will be removed after PDELab 2.4. Use istl::VectorBackend instead") = istl::VectorBackend<static_cast<istl::Blocking>(blocking),block_size>;
-
-#pragma GCC diagnostic pop
-
-    //! Backend using ISTL matrices.
-    /**
-     * ISTLMatrixBackend is a matrix backend descriptor for ISTL matrices. It expects that
-     * both the ansatz and the test function space use ISTL vectors and automatically deduces
-     * the correct matrix type from those two vector backends.
-     */
-    struct
-    DUNE_DEPRECATED_MSG("ISTLMatrixBackend has been deprecated and will be removed after the release of PDELab 2.4. Use istl::BCRSMatrixBackend with the newer pattern construction method instead")
-    ISTLMatrixBackend
-    {
-
-      typedef std::size_t size_type;
-
-      // The default matrix construction method does not collect statistics, so provide a dummy type here.
-      typedef int Statistics;
-
-      //! The type of the pattern object passed to the GridOperator for pattern construction.
-      template<typename Matrix, typename GFSV, typename GFSU>
-      using Pattern = typename istl::build_pattern_type<
-        typename Matrix::Container,
-        GFSV,
-        GFSU,
-        typename GFSV::Ordering::ContainerAllocationTag
-        >::type;
-
-      template<typename VV, typename VU, typename E>
-      struct MatrixHelper
-      {
-        typedef istl::BCRSMatrix<
-          typename VV::GridFunctionSpace,
-          typename VU::GridFunctionSpace,
-          typename istl::build_matrix_type<
-            E,
-            typename VV::Container,
-            typename VU::Container
-            >::type,
-          Statistics
-          > type;
-      };
-
-      template<typename GridOperator, typename Matrix>
-      std::vector<Statistics> buildPattern(const GridOperator& grid_operator, Matrix& matrix) const
-      {
-        Pattern<
-          Matrix,
-          typename GridOperator::Traits::TestGridFunctionSpace,
-          typename GridOperator::Traits::TrialGridFunctionSpace
-          > pattern(grid_operator.testGridFunctionSpace().ordering(),grid_operator.trialGridFunctionSpace().ordering());
-        grid_operator.fill_pattern(pattern);
-        allocate_matrix(grid_operator.testGridFunctionSpace().ordering(),
-                        grid_operator.trialGridFunctionSpace().ordering(),
-                        pattern,
-                        Backend::native(matrix)
-                        );
-        return std::vector<Statistics>();
-      }
-
-    };
-
-    namespace istl {
-
 #ifndef DOXYGEN
 
       namespace flat {
@@ -212,38 +129,9 @@ namespace Dune {
         // The ELL matrix construction process does not collect statistics, so provide a dummy type here.
         typedef int Statistics;
 
-#if HAVE_TEMPLATE_ALIASES || DOXYGEN
-
         //! The type of the pattern object passed to the GridOperator for pattern construction.
         template<typename Matrix, typename GFSV, typename GFSU>
         using Pattern = flat::Pattern<typename GFSV::Ordering,typename GFSU::Ordering>;
-
-#else // HAVE_TEMPLATE_ALIASES
-
-        template<typename Matrix, typename GFSV, typename GFSU>
-        struct Pattern
-          : public flat::Pattern<typename GFSV::Ordering,typename GFSU::Ordering>
-        {
-
-          typedef OrderingBase<
-            typename GFSV::Ordering::Traits::DOFIndex,
-            typename GFSV::Ordering::Traits::ContainerIndex
-            > RowOrdering;
-
-          typedef OrderingBase<
-            typename GFSU::Ordering::Traits::DOFIndex,
-            typename GFSU::Ordering::Traits::ContainerIndex
-            > ColOrdering;
-
-          typedef flat::Pattern<typename GFSV::Ordering,typename GFSU::Ordering> BaseT;
-
-          Pattern(const RowOrdering& row_ordering, const ColOrdering& col_ordering)
-            : BaseT(row_ordering,col_ordering)
-          {}
-
-        };
-
-#endif // HAVE_TEMPLATE_ALIASES
 
         typedef typename Alloc::size_type size_type;
 
@@ -257,7 +145,6 @@ namespace Dune {
             > type;
         };
 
-
         template<typename GridOperator, typename Matrix>
         std::vector<Statistics> buildPattern(const GridOperator& grid_operator, Matrix& matrix) const
         {
@@ -270,10 +157,23 @@ namespace Dune {
           allocate_matrix(grid_operator.testGridFunctionSpace().ordering(),
                           grid_operator.trialGridFunctionSpace().ordering(),
                           pattern,
-                          istl::raw(matrix)
+                          Backend::native(matrix)
                           );
           return std::vector<Statistics>();
         }
+
+        std::size_t entriesPerRow() const
+        {
+          return _entries_per_row;
+        }
+
+        FlatMatrixBackend(std::size_t entries_per_row)
+          : _entries_per_row(entries_per_row)
+        {}
+
+      private:
+
+        std::size_t _entries_per_row;
 
       };
 
@@ -326,38 +226,9 @@ namespace Dune {
       // The BELL matrix construction process does not collect statistics, so provide a dummy type here.
       typedef int Statistics;
 
-#if HAVE_TEMPLATE_ALIASES || DOXYGEN
-
         //! The type of the pattern object passed to the GridOperator for pattern construction.
         template<typename Matrix, typename GFSV, typename GFSU>
         using Pattern = flat::Pattern<typename GFSV::Ordering,typename GFSU::Ordering>;
-
-#else // HAVE_TEMPLATE_ALIASES
-
-        template<typename Matrix, typename GFSV, typename GFSU>
-        struct Pattern
-          : public flat::Pattern<typename GFSV::Ordering,typename GFSU::Ordering>
-        {
-
-          typedef OrderingBase<
-            typename GFSV::Ordering::Traits::DOFIndex,
-            typename GFSV::Ordering::Traits::ContainerIndex
-            > RowOrdering;
-
-          typedef OrderingBase<
-            typename GFSU::Ordering::Traits::DOFIndex,
-            typename GFSU::Ordering::Traits::ContainerIndex
-            > ColOrdering;
-
-          typedef flat::Pattern<typename GFSV::Ordering,typename GFSU::Ordering> BaseT;
-
-          Pattern(const RowOrdering& row_ordering, const ColOrdering& col_ordering)
-            : BaseT(row_ordering,col_ordering)
-          {}
-
-        };
-
-#endif // HAVE_TEMPLATE_ALIASES
 
         template<typename VV, typename VU, typename E>
         struct MatrixHelper
@@ -381,7 +252,7 @@ namespace Dune {
           allocate_matrix(grid_operator.testGridFunctionSpace().ordering(),
                           grid_operator.trialGridFunctionSpace().ordering(),
                           pattern,
-                          istl::raw(matrix)
+                          Backend::native(matrix)
                           );
           return std::vector<Statistics>();
         }
@@ -392,7 +263,6 @@ namespace Dune {
 
   } // namespace PDELab
 } // namespace Dune
-
 
 
 #endif // DUNE_PDELAB_BACKEND_ISTL_DESCRIPTORS_HH

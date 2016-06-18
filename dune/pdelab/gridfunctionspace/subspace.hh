@@ -67,7 +67,7 @@ namespace Dune {
           using SubOrdering = TypeTree::ChildForTreePath<Ordering,OrderingTP>;
 
           // Only descend in the GFS tree if the current ordering child consumes a tree index entry.
-          typedef typename conditional<
+          typedef typename std::conditional<
             SubOrdering::consume_tree_index,
             typename GFS::template Child<TypeTree::TreePathFront<GFSTP>::value>::type,
             GFS
@@ -80,7 +80,7 @@ namespace Dune {
             >::type SubOrderingTP;
 
           // Keep (synthesized ordering node) or drop (ordering with associated GFS) first entry of GFS TreePath.
-          typedef typename conditional<
+          typedef typename std::conditional<
             SubOrdering::consume_tree_index,
             typename TypeTree::TreePathPopFront<GFSTP>::type,
             GFSTP
@@ -383,7 +383,7 @@ namespace Dune {
       template<typename GFS, typename TreePath>
       class GridFunctionSubSpace
         : public TypeTree::ProxyNode<const TypeTree::ChildForTreePath<GFS,TreePath>>
-        , public SubSpaceFeatureProvider<GFS,TreePath,typename TypeTree::ChildForTreePath<GFS,TreePath>::ImplementationTag>
+        , public SubSpaceFeatureProvider<GFS,TreePath,TypeTree::ImplementationTag<TypeTree::ChildForTreePath<GFS,TreePath>>>
         , public GridFunctionSubSpaceOutputParameters<TypeTree::ChildForTreePath<GFS,TreePath>>
       {
 
@@ -392,14 +392,14 @@ namespace Dune {
         using FeatureT = SubSpaceFeatureProvider<
           GFS,
           TreePath,
-          typename TypeTree::ChildForTreePath<GFS,TreePath>::ImplementationTag
+          TypeTree::ImplementationTag<TypeTree::ChildForTreePath<GFS,TreePath>>
           >;
 
       public:
 
         //! Construct a GridFunctionSubSpace from the storage object of a root space.
         explicit GridFunctionSubSpace(std::shared_ptr<const GFS> gfs_storage)
-          : NodeT(TypeTree::extract_child_storage(*gfs_storage,TreePath()))
+          : NodeT(TypeTree::childStorage(*gfs_storage,TreePath()))
           , FeatureT(*gfs_storage)
           , _base_gfs(gfs_storage)
         {
@@ -412,7 +412,7 @@ namespace Dune {
 
         //! Construct a GridFunctionSubSpace from a root space.
         explicit GridFunctionSubSpace(const GFS& gfs)
-          : NodeT(TypeTree::extract_child_storage(gfs,TreePath()))
+          : NodeT(TypeTree::childStorage(gfs,TreePath()))
           , FeatureT(gfs)
           , _base_gfs(stackobject_to_shared_ptr(gfs))
         {
@@ -431,8 +431,8 @@ namespace Dune {
          *       copy constructor.
          */
         template<typename TP>
-        explicit GridFunctionSubSpace(std::shared_ptr<const GridFunctionSubSpace<GFS,TP> > gfs_storage, typename enable_if<!is_same<TP,TreePath>::value,void*>::type = nullptr)
-          : NodeT(TypeTree::extract_child_storage(gfs_storage->baseGridFunctionSpace(),TreePath()))
+        explicit GridFunctionSubSpace(std::shared_ptr<const GridFunctionSubSpace<GFS,TP> > gfs_storage, typename std::enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
+          : NodeT(TypeTree::childStorage(gfs_storage->baseGridFunctionSpace(),TreePath()))
           , FeatureT(gfs_storage->baseGridFunctionSpace())
           , _base_gfs(gfs_storage->baseGridFunctionSpaceStorage())
         {
@@ -451,8 +451,8 @@ namespace Dune {
          *       copy constructor.
          */
         template<typename TP>
-        explicit GridFunctionSubSpace(const GridFunctionSubSpace<GFS,TP>& gfs, typename enable_if<!is_same<TP,TreePath>::value,void*>::type = nullptr)
-          : NodeT(TypeTree::extract_child_storage(gfs.baseGridFunctionSpace(),TreePath()))
+        explicit GridFunctionSubSpace(const GridFunctionSubSpace<GFS,TP>& gfs, typename std::enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
+          : NodeT(TypeTree::childStorage(gfs.baseGridFunctionSpace(),TreePath()))
           , FeatureT(gfs.baseGridFunctionSpace())
           , _base_gfs(gfs.baseGridFunctionSpaceStorage())
         {
@@ -472,7 +472,7 @@ namespace Dune {
 
         //! Our ImplementationTag is derived from the tag of the original GridFunctionSpace.
         typedef GridFunctionSubSpaceTag<
-          typename ChildGridFunctionSpace::ImplementationTag
+          TypeTree::ImplementationTag<ChildGridFunctionSpace>
           > ImplementationTag;
 
         //! Returns the root GridFunctionSpace that this subspace view is based on.

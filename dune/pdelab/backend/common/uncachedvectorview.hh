@@ -15,7 +15,7 @@ namespace Dune {
     struct ConstUncachedVectorView
     {
 
-      typedef typename remove_const<V>::type Container;
+      typedef typename std::remove_const<V>::type Container;
       typedef LFSC LFSCache;
 
       typedef typename Container::E ElementType;

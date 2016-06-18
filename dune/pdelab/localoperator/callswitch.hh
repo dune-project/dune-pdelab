@@ -149,6 +149,8 @@ namespace Dune {
         Y& y_s)
       {
       }
+
+
       template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
       static void nonlinear_jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
       {
@@ -170,6 +172,8 @@ namespace Dune {
         Y& y_s)
       {
       }
+
+
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
       {
@@ -275,6 +279,7 @@ namespace Dune {
         la.lambda_boundary(ig,lfsv,r);
       }
 
+
       template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
       static void jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
       {
@@ -284,6 +289,7 @@ namespace Dune {
           );
         la.jacobian_apply_volume(eg,lfsu,x,lfsv,y);
       }
+
       template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
       static void jacobian_apply_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
       {
@@ -293,6 +299,7 @@ namespace Dune {
           );
         la.jacobian_apply_volume_post_skeleton(eg,lfsu,x,lfsv,y);
       }
+
       template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
       static void jacobian_apply_skeleton (const LA& la, const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
@@ -316,6 +323,7 @@ namespace Dune {
           );
         la.jacobian_apply_boundary(ig,lfsu_s,x_s,lfsv_s,y_s);
       }
+
 
       template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
       static auto nonlinear_jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
@@ -351,6 +359,7 @@ namespace Dune {
       {
         la.jacobian_apply_boundary(ig,lfsu_s,x_s,z_s,lfsv_s,y_s);
       }
+
 
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)

@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_GRIDEXAMPLES_HH
-#define DUNE_PDELAB_GRIDEXAMPLES_HH
+#ifndef DUNE_PDELAB_TEST_GRIDEXAMPLES_HH
+#define DUNE_PDELAB_TEST_GRIDEXAMPLES_HH
 
 #include <memory>
 #include <vector>
@@ -314,4 +314,4 @@ public:
   }
 };
 
-#endif
+#endif // DUNE_PDELAB_TEST_GRIDEXAMPLES_HH

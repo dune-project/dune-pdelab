@@ -57,7 +57,7 @@ namespace Dune{
       typedef TBBLocalAssembler<TBBGridOperator,LOP,nonoverlapping_mode>
       LocalAssembler;
 
-      typedef typename conditional<
+      typedef typename std::conditional<
         nonoverlapping_mode,
         NonOverlappingBorderDOFExchanger<TBBGridOperator>,
         OverlappingBorderDOFExchanger<TBBGridOperator>
@@ -269,7 +269,7 @@ namespace Dune{
       typedef ColoredTBBLocalAssembler<ColoredTBBGridOperator,LOP,
                                        nonoverlapping_mode> LocalAssembler;
 
-      typedef typename conditional<
+      typedef typename std::conditional<
         nonoverlapping_mode,
         NonOverlappingBorderDOFExchanger<ColoredTBBGridOperator>,
         OverlappingBorderDOFExchanger<ColoredTBBGridOperator>
@@ -479,7 +479,7 @@ namespace Dune{
       typedef BatchedTBBLocalAssembler<BatchedTBBGridOperator,LOP,
                                        nonoverlapping_mode> LocalAssembler;
 
-      typedef typename conditional<
+      typedef typename std::conditional<
         nonoverlapping_mode,
         NonOverlappingBorderDOFExchanger<BatchedTBBGridOperator>,
         OverlappingBorderDOFExchanger<BatchedTBBGridOperator>

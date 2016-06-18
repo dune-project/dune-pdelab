@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_SEQ_AMG_DG_BACKEND_HH
-#define DUNE_PDELAB_SEQ_AMG_DG_BACKEND_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_SEQ_AMG_DG_BACKEND_HH
+#define DUNE_PDELAB_BACKEND_ISTL_SEQ_AMG_DG_BACKEND_HH
 
 #include <dune/common/power.hh>
 #include <dune/common/parametertree.hh>
@@ -379,4 +379,4 @@ namespace Dune {
     };
   }
 }
-#endif
+#endif // DUNE_PDELAB_BACKEND_ISTL_SEQ_AMG_DG_BACKEND_HH

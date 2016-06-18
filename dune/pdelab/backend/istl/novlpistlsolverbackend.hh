@@ -1,7 +1,7 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
-#ifndef DUNE_NOVLPISTLSOLVERBACKEND_HH
-#define DUNE_NOVLPISTLSOLVERBACKEND_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_NOVLPISTLSOLVERBACKEND_HH
+#define DUNE_PDELAB_BACKEND_ISTL_NOVLPISTLSOLVERBACKEND_HH
 
 #include <cstddef>
 
@@ -749,6 +749,7 @@ namespace Dune {
 #if HAVE_MPI
         typedef typename istl::CommSelector<96,Dune::MPIHelper::isFake>::type Comm;
         _grid_operator.make_consistent(A);
+        istl::assertParallelUG(gfs.gridView().comm());
         Comm oocc(gfs.gridView().comm(),Dune::SolverCategory::nonoverlapping);
         phelper.createIndexSetAndProjectForAMG(mat, oocc);
         typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
@@ -915,11 +916,6 @@ namespace Dune {
         \param[in] params_ a parameter object of Type Dune::Amg::Parameters
       */
       void setParameters(const Parameters& params_)
-      {
-        params = params_;
-      }
-
-      void setparams(Parameters params_) DUNE_DEPRECATED_MSG("setparams() is deprecated, use setParameters() instead")
       {
         params = params_;
       }
@@ -1110,4 +1106,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_BACKEND_ISTL_NOVLPISTLSOLVERBACKEND_HH

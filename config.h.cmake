@@ -64,4 +64,7 @@
 /* Define to 1 if GCC's __typeof__ extension is supported. */
 #cmakedefine HAVE_GCC___TYPEOF__ 1
 
+/* Define to 1 if sequential UG has been found */
+#cmakedefine PDELAB_SEQUENTIAL_UG 1
+
 /* end dune-pdelab */

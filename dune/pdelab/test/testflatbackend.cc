@@ -4,48 +4,29 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include<iostream>
-#include<vector>
-#include<map>
-#include<string>
-#include<dune/common/parallel/mpihelper.hh>
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include <dune/common/shared_ptr.hh>
-#include<dune/common/static_assert.hh>
-#include<dune/common/memory/blocked_allocator.hh>
-#include<dune/grid/yaspgrid.hh>
-#include<dune/istl/bvector.hh>
-#include<dune/istl/operators.hh>
-#include<dune/istl/solvers.hh>
-#include<dune/istl/preconditioners.hh>
-#include<dune/istl/io.hh>
-#include<dune/istl/paamg/amg.hh>
+#include <iostream>
+#include <vector>
+#include <map>
+#include <string>
 
-#include"../finiteelementmap/p0fem.hh"
-#include"../finiteelementmap/p12dfem.hh"
-#include"../finiteelementmap/pk2dfem.hh"
-#include"../finiteelementmap/q12dfem.hh"
-#include"../finiteelementmap/q22dfem.hh"
-#include"../finiteelementmap/q1fem.hh"
-#include"../finiteelementmap/conformingconstraints.hh"
-#include"../gridfunctionspace/gridfunctionspace.hh"
-#include"../gridfunctionspace/gridfunctionspaceutilities.hh"
-#include"../gridfunctionspace/interpolate.hh"
-#include"../constraints/common/constraints.hh"
-#include"../common/function.hh"
-#include"../common/vtkexport.hh"
-#include"../backend/istlvectorbackend.hh"
-#include"../backend/istl/flatvectorbackend.hh"
-#include"../backend/istl/flatmatrixbackend.hh"
-#include"../backend/istlmatrixbackend.hh"
-#include"../gridoperator/gridoperator.hh"
-#include"../backend/istlsolverbackend.hh"
-#include"../localoperator/laplacedirichletp12d.hh"
-#include"../localoperator/poisson.hh"
-#include"../gridfunctionspace/vtk.hh"
+#include <dune/common/parallel/mpihelper.hh>
+#include <dune/common/exceptions.hh>
+#include <dune/common/fvector.hh>
+#include <dune/common/memory/blocked_allocator.hh>
+#include <dune/grid/yaspgrid.hh>
 
-#include"gridexamples.hh"
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/interpolate.hh>
+#include <dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/pdelab/finiteelementmap/qkfem.hh>
+#include <dune/pdelab/finiteelementmap/pkfem.hh>
+#include <dune/pdelab/backend/istl.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab/constraints/conforming.hh>
+#include <dune/pdelab/gridoperator/gridoperator.hh>
+#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
+
+#include "gridexamples.hh"
 
 //===============================================================
 //===============================================================
@@ -61,107 +42,59 @@
 //===============================================================
 
 // function for defining the source term
+
 template<typename GV, typename RF>
-class F
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  F<GV,RF> >
+struct Problem
+  : public Dune::PDELab::ConvectionDiffusionModelProblem<GV,RF>
 {
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,F<GV,RF> > BaseT;
 
-  F (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x,
-                              typename Traits::RangeType& y) const
+  using Base = Dune::PDELab::ConvectionDiffusionModelProblem<GV,RF>;
+
+public:
+
+  using Traits = typename Base::Traits;
+
+  template<typename E, typename X>
+  auto f(const E& e, const X& xl) const
   {
-    if (x[0]>0.25 && x[0]<0.375 && x[1]>0.25 && x[1]<0.375)
-      y = 50.0;
-    else
-      y = 0.0;
+    auto x = e.geometry().global(xl);
+    return (x[0]>0.25 && x[0]<0.375 && x[1]>0.25 && x[1]<0.375) ? 50.0 : 0.0;
   }
-};
 
-
-// boundary grid function selecting boundary conditions
-class ConstraintsParameters
-  : public Dune::PDELab::DirichletConstraintsParameters
-{
-
-public:
-
-  template<typename I>
-  bool isDirichlet(const I & ig, const Dune::FieldVector<typename I::ctype, I::dimension-1> & x) const
+  template<typename I, typename X>
+  auto bctype(const I& i, const X& xl) const
   {
-    Dune::FieldVector<typename I::ctype,I::dimension>
-      xg = ig.geometry().global(x);
-
-    if (xg[1]<1E-6 || xg[1]>1.0-1E-6)
+    auto x = i.geometry().global(xl);
+    if ((x[1]<1E-6 || x[1]>1.0-1E-6) || (x[0]>1.0-1E-6 && x[1]>0.5+1E-6))
       {
-        return false;
+        return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
       }
-    if (xg[0]>1.0-1E-6 && xg[1]>0.5+1E-6)
-      {
-        return false;
-      }
-    return true;
+    return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
 
-  template<typename I>
-  bool isNeumann(const I & ig, const Dune::FieldVector<typename I::ctype, I::dimension-1> & x) const
+  template<typename E, typename X>
+  auto g(const E& e, const X& xl) const
   {
-    return !isDirichlet(ig,x);
-  }
-
-};
-
-
-// function for Dirichlet boundary conditions and initialization
-template<typename GV, typename RF>
-class G
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  G<GV,RF> >
-{
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G<GV,RF> > BaseT;
-
-  G (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x,
-                              typename Traits::RangeType& y) const
-  {
-    typename Traits::DomainType center;
-    for (int i=0; i<GV::dimension; i++) center[i] = 0.5;
+    auto x = e.geometry().global(xl);
+    auto center = x;
+    center = 0.5;
     center -= x;
-    y = exp(-center.two_norm2());
+    using std::exp;
+    return exp(-center.two_norm2());
   }
-};
 
-// function for defining the flux boundary condition
-template<typename GV, typename RF>
-class J
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  J<GV,RF> >
-{
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,J<GV,RF> > BaseT;
-
-  J (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x,
-                              typename Traits::RangeType& y) const
+  template<typename I, typename X>
+  auto j(const I& i, const X& xl) const
   {
+    auto x = i.geometry().global(xl);
     if (x[1]<1E-6 || x[1]>1.0-1E-6)
-      {
-        y = 0;
-        return;
-      }
-    if (x[0]>1.0-1E-6 && x[1]>0.5+1E-6)
-      {
-        y = -5.0;
-        return;
-      }
+      return 0.0;
+    else
+      return -5.0;
   }
+
 };
+
 
 //===============================================================
 // Problem setup and solution
@@ -176,13 +109,15 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int chunk_size
   typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
 
+  using Dune::PDELab::Backend::native;
+
   typedef Dune::Memory::blocked_cache_aligned_allocator<R,std::size_t,8> Allocator;
 
 
   typedef Dune::PDELab::istl::FlatVectorBackend<Allocator> FVB;
   typedef Dune::PDELab::istl::FlatMatrixBackend<Allocator> FMB;
 
-  typedef Dune::PDELab::ISTLVectorBackend<> OVB;
+  typedef Dune::PDELab::istl::VectorBackend<> OVB;
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<
@@ -194,36 +129,35 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int chunk_size
   GFS gfs(gv,fem);
   gfs.name("solution");
 
+  // make local operator
+  using Problem = ::Problem<GV,R>;
+  Problem problem;
+
+  using LOP = Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM>;
+  LOP lop(problem);
+
+  auto bctype = Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem>(gv,problem);
+
+  auto g = Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem>(gv,problem);
+
   // make constraints map and initialize it from a function
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
   C cg;
-  cg.clear();
-  ConstraintsParameters constraintsparameters;
-  Dune::PDELab::constraints(constraintsparameters,gfs,cg);
-
-  // make local operator
-  typedef G<GV,R> GType;
-  GType g(gv);
-  typedef F<GV,R> FType;
-  FType f(gv);
-  typedef J<GV,R> JType;
-  JType j(gv);
-  typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType,q> LOP;
-  LOP lop(f,constraintsparameters,j);
+  Dune::PDELab::constraints(bctype,gfs,cg);
 
   // make grid operator
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
                                      FMB,
                                      double,double,double,
                                      C,C> GridOperator;
-  GridOperator gridoperator(gfs,cg,gfs,cg,lop);
+  GridOperator gridoperator(gfs,cg,gfs,cg,lop,FMB(9));
 
   // make coefficent Vector and initialize it from a function
   // There is some weird shuffling around here - please leave it in,
   // it's there to test the copy constructor and assignment operator of the
   // matrix wrapper
   typedef typename GridOperator::Traits::Domain DV;
-  DV x0(gfs,Dune::PDELab::tags::unattached_container());
+  DV x0(gfs,Dune::PDELab::Backend::unattached_container());
   {
     DV x1(gfs);
     DV x2(x1);
@@ -234,7 +168,8 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int chunk_size
   x0 = 0.0;
   Dune::PDELab::interpolate(g,gfs,x0);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
-  raw(x0).setChunkSize(chunk_size);
+  native(x0).setChunkSize(chunk_size);
+
 
   // represent operator as a matrix
   // There is some weird shuffling around here - please leave it in,
@@ -258,17 +193,17 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int chunk_size
   // evaluate residual w.r.t initial guess
   typedef typename GridOperator::Traits::Range RV;
   RV r(gfs);
-  raw(r).setChunkSize(chunk_size);
+  native(r).setChunkSize(chunk_size);
   r = 0.0;
   gridoperator.residual(x0,r);
-  raw(x0).setChunkSize(chunk_size);
+  native(x0).setChunkSize(chunk_size);
 
   std::cout << "norms start" << std::endl;
-  std::cout << raw(x0).two_norm2() << std::endl;
-  std::cout << raw(r).two_norm2() << std::endl;
+  std::cout << native(x0).two_norm2() << std::endl;
+  std::cout << native(r).two_norm2() << std::endl;
   std::cout << "norms end" << std::endl;
 
-  raw(m).umv(raw(r),raw(x0));
+  native(m).umv(native(r),native(x0));
 
 #if 0
   // make ISTL solver
@@ -278,18 +213,6 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int chunk_size
   Dune::SeqSSOR<Native<M>, Native<DV>, Native<RV> > ssor(native(m),1,1.0);
   Dune::SeqILU0<Native<M>, Native<DV>, Native<RV> > ilu0(native(m),1.0);
   Dune::Richardson<Native<DV>, Native<RV> > richardson(1.0);
-
-  //   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
-  //     Dune::Amg::FirstDiagonal> > Criterion;
-  //   typedef Dune::SeqSSOR<M,V,V> Smoother;
-  //   typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
-  //   SmootherArgs smootherArgs;
-  //   smootherArgs.iterations = 2;
-  //   int maxlevel = 20, coarsenTarget = 100;
-  //   Criterion criterion(maxlevel, coarsenTarget);
-  //   criterion.setMaxDistance(2);
-  //   typedef Dune::Amg::AMG<Dune::MatrixAdapter<M,V,V>,V,Smoother> AMG;
-  //   AMG amg(opa,criterion,smootherArgs,1,1);
 
   Dune::CGSolver<Native<DV> > solvera(opa,ilu0,1E-10,5000,2);
   // FIXME: Use ISTLOnTheFlyOperator in the second solver again
@@ -319,49 +242,50 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
+    int refinement = argc > 1 ? atoi(argv[1]) : 3;
+    int chunk_size = argc > 2 ? atoi(argv[2]) : 16;
+
     // YaspGrid Q1 2D test
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
-      grid.globalRefine(3);
+      std::array<int,2> N = {{1,1}};
+      Dune::YaspGrid<2> grid(L,N);
+      grid.globalRefine(refinement);
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      auto gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q12DLocalFiniteElementMap<DF,double> FEM;
-      FEM fem;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,GV::ctype,double,1> FEM;
+      FEM fem(gv);
 
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q1_2d",atoi(argv[2]));
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q1_2d",chunk_size);
     }
 
     // YaspGrid Q2 2D test
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
-      grid.globalRefine(atoi(argv[1]));
+      std::array<int,2> N = {{1,1}};
+      Dune::YaspGrid<2> grid(L,N);
+      grid.globalRefine(refinement);
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      auto gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q22DLocalFiniteElementMap<DF,double> FEM;
-      FEM fem;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,GV::ctype,double,2> FEM;
+      FEM fem(gv);
 
       // solve problem
       for (int i = 0; i < 10; ++i)
-        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q2_2d",atoi(argv[2]));
+        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q2_2d",chunk_size);
     }
 #if 0
     // YaspGrid Q2 3D test
@@ -390,7 +314,7 @@ int main(int argc, char** argv)
 #if HAVE_UG
     {
       // make grid
-      Dune::shared_ptr<Dune::UGGrid<2> > grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
+      std::shared_ptr<Dune::UGGrid<2> > grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
       grid->globalRefine(4);
 
       // get view

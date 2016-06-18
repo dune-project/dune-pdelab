@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_CONFORMINGCONSTRAINTS_HH
-#define DUNE_PDELAB_CONFORMINGCONSTRAINTS_HH
+#ifndef DUNE_PDELAB_CONSTRAINTS_CONFORMING_HH
+#define DUNE_PDELAB_CONSTRAINTS_CONFORMING_HH
 
 #include <cstddef>
 #include <algorithm>
@@ -264,4 +264,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_CONSTRAINTS_CONFORMING_HH

@@ -45,6 +45,11 @@ namespace Dune {
         i++;
       }
 
+      int index() const
+      {
+        return i;
+      }
+
     private:
       char fname[255];
       char basename[255];
@@ -54,4 +59,4 @@ namespace Dune {
     /** @} */
   } // end namespace PDELab
 } // end namespace Dune
-#endif
+#endif // DUNE_PDELAB_COMMON_INSTATIONARYFILENAMEHELPER_HH

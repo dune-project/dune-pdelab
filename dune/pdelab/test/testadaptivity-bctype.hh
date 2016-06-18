@@ -1,3 +1,6 @@
+#ifndef DUNE_PDELAB_TEST_TESTADAPTIVITY_BCTYPE_HH
+#define DUNE_PDELAB_TEST_TESTADAPTIVITY_BCTYPE_HH
+
 #include<dune/common/fvector.hh>
 
 #include<dune/pdelab/common/function.hh>
@@ -24,3 +27,5 @@ public:
   }
 
 };
+
+#endif // DUNE_PDELAB_TEST_TESTADAPTIVITY_BCTYPE_HH

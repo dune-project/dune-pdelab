@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_DIFFUSIONMIXED_HH
-#define DUNE_PDELAB_DIFFUSIONMIXED_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_DIFFUSIONMIXED_HH
+#define DUNE_PDELAB_LOCALOPERATOR_DIFFUSIONMIXED_HH
 
 #include <cstddef>
 #include<vector>
@@ -12,6 +12,9 @@
 #include<dune/geometry/type.hh>
 #include<dune/geometry/quadraturerules.hh>
 #include<dune/geometry/referenceelements.hh>
+
+#include<dune/pdelab/common/quadraturerules.hh>
+#include<dune/pdelab/common/referenceelements.hh>
 
 #include"defaultimp.hh"
 #include"pattern.hh"
@@ -39,7 +42,7 @@ namespace Dune {
                            public LocalOperatorDefaultFlags
     {
 
-      typedef typename ConvectionDiffusionBoundaryConditions::Type BCType;
+      using BCType = typename ConvectionDiffusionBoundaryConditions::Type;
 
     public:
       // pattern assembly flags
@@ -63,54 +66,65 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        // select the two components
-        typedef typename LFSU::template Child<0>::Type VelocitySpace;
-        const VelocitySpace& velocityspace = lfsu.template child<0>();
-        typedef typename LFSU::template Child<1>::Type PressureSpace;
-        const PressureSpace& pressurespace = lfsu.template child<1>();
+        // Define types
+        using VelocitySpace = typename LFSU::template Child<0>::Type;
+        using PressureSpace = typename LFSU::template Child<1>::Type;
+        using DF = typename VelocitySpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::DomainFieldType;
+        using RF = typename VelocitySpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType;
+        using VelocityJacobianType = typename VelocitySpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::JacobianType;
+        using VelocityRangeType = typename VelocitySpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
+        using PressureRangeType = typename PressureSpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
 
-        // domain and range field type
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType VelocityJacobianType;
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType VelocityRangeType;
-        typedef typename PressureSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType PressureRangeType;
+        // select the two components
+        using namespace Indices;
+        const auto& velocityspace = child(lfsu,_0);
+        const auto& pressurespace = lfsu.template child<1>();
 
         // dimensions
         const int dim = EG::Geometry::mydimension;
 
+        // References to the cell
+        const auto& cell = eg.entity();
+
+        // Get geometry
+        auto geo = eg.geometry();
+
         // evaluate transformation which must be linear
-        Dune::FieldVector<DF,dim> pos; pos = 0.0;
-        typename EG::Geometry::JacobianInverseTransposed jac;
-        jac = eg.geometry().jacobianInverseTransposed(pos);
+        Dune::FieldVector<DF,dim> pos;
+        pos=0.0;
+        auto jac = geo.jacobianInverseTransposed(pos);
         jac.invert();
-        RF det = eg.geometry().integrationElement(pos);
+        auto det = geo.integrationElement(pos);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
-        //typename K::Traits::RangeType tensor;
-        Dune::GeometryType gt = eg.geometry().type();
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
-
-        typename PARAM::Traits::PermTensorType tensor;
-        tensor = param.A(eg.entity(),localcenter);
+        auto ref_el = referenceElement(geo);
+        auto localcenter = ref_el.position(0,0);
+        auto tensor = param.A(cell,localcenter);
         tensor.invert(); // need iverse for mixed method
 
+        // Initialize vectors outside for loop
+        std::vector<VelocityRangeType> vbasis(velocityspace.size());
+        std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
+        VelocityRangeType sigma;
+        VelocityRangeType Kinvsigma;
+        std::vector<VelocityJacobianType> vjacbasis(velocityspace.size());
+        std::vector<PressureRangeType> pbasis(pressurespace.size());
+        std::vector<RF> divergence(velocityspace.size(),0.0);
+
+
         // \sigma\cdot v term
-        const Dune::QuadratureRule<DF,dim>& vrule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder_v);
         // loop over quadrature points
-        for (const auto& ip : vrule)
+        for (const auto& ip : quadratureRule(geo,qorder_v))
           {
             // evaluate shape functions at ip (this is a Galerkin method)
-            std::vector<VelocityRangeType> vbasis(velocityspace.size());
             velocityspace.finiteElement().localBasis().evaluateFunction(ip.position(),vbasis);
 
             // transform basis vectors
-            std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
             for (std::size_t i=0; i<velocityspace.size(); i++)
               {
                 vtransformedbasis[i] = 0.0;
@@ -118,38 +132,35 @@ namespace Dune {
               }
 
             // compute sigma
-            VelocityRangeType sigma; sigma = 0.0;
+            sigma=0.0;
             for (std::size_t i=0; i<velocityspace.size(); i++)
               sigma.axpy(x(velocityspace,i),vtransformedbasis[i]);
 
             // K^{-1} * sigma
-            VelocityRangeType Kinvsigma;
             tensor.mv(sigma,Kinvsigma);
 
             // integrate  (K^{-1}*sigma) * phi_i
-            RF factor = ip.weight() / det;
+            auto factor = ip.weight() / det;
             for (std::size_t i=0; i<velocityspace.size(); i++)
               r.accumulate(velocityspace,i,(Kinvsigma*vtransformedbasis[i])*factor);
           }
 
         // u div v term, div sigma q term, a0*u term
-        const Dune::QuadratureRule<DF,dim>& prule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder_p);
         // loop over quadrature points
-        for (const auto& ip : prule)
+        for (const auto& ip : quadratureRule(geo,qorder_p))
           {
             // evaluate shape functions at ip (this is a Galerkin method)
-            std::vector<VelocityJacobianType> vbasis(velocityspace.size());
-            velocityspace.finiteElement().localBasis().evaluateJacobian(ip.position(),vbasis);
-            std::vector<PressureRangeType> pbasis(pressurespace.size());
+            velocityspace.finiteElement().localBasis().evaluateJacobian(ip.position(),vjacbasis);
             pressurespace.finiteElement().localBasis().evaluateFunction(ip.position(),pbasis);
 
             // compute u
-            PressureRangeType u; u = 0.0;
+            PressureRangeType u;
+            u=0.0;
             for (std::size_t i=0; i<pressurespace.size(); i++)
               u.axpy(x(pressurespace,i),pbasis[i]);
 
             // evaluate Helmholtz term (reaction term)
-            typename PARAM::Traits::RangeFieldType a0value = param.c(eg.entity(),ip.position());
+            auto a0value = param.c(cell,ip.position());
 
             // integrate a0 * u * q
             RF factor = ip.weight();
@@ -157,10 +168,11 @@ namespace Dune {
               r.accumulate(pressurespace,i,-a0value*u*pbasis[i]*factor);
 
             // compute divergence of velocity basis functions on reference element
-            std::vector<RF> divergence(velocityspace.size(),0.0);
-            for (std::size_t i=0; i<velocityspace.size(); i++)
+            for (std::size_t i=0; i<velocityspace.size(); i++){
+              divergence[i] = 0;
               for (int j=0; j<dim; j++)
-                divergence[i] += vbasis[i][j][j];
+                divergence[i] += vjacbasis[i][j][j];
+            }
 
             // integrate sigma * phi_i
             for (std::size_t i=0; i<velocityspace.size(); i++)
@@ -181,36 +193,35 @@ namespace Dune {
       template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
-        // select the two components
-        typedef typename LFSV::template Child<1>::Type PressureSpace;
-        const PressureSpace& pressurespace = lfsv.template child<1>();
+        // Define types
+        using PressureSpace = typename LFSV::template Child<1>::Type;
+        using PressureRangeType = typename PressureSpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
 
-        // domain and range field type
-        typedef typename PressureSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename PressureSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename PressureSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType PressureRangeType;
+        // select the pressure component
+        using namespace Indices;
+        const auto& pressurespace = child(lfsv,_1);
 
-        // dimensions
-        const int dim = EG::Geometry::mydimension;
+        // References to the cell
+        const auto& cell = eg.entity();
 
-        // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder_p);
+        // Get geometry
+        auto geo = eg.geometry();
+
+        // Initialize vectors outside for loop
+        std::vector<PressureRangeType> pbasis(pressurespace.size());
+
         // loop over quadrature points
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,qorder_p))
           {
             // evaluate shape functions
-            std::vector<PressureRangeType> pbasis(pressurespace.size());
             pressurespace.finiteElement().localBasis().evaluateFunction(ip.position(),pbasis);
 
             // evaluate right hand side parameter function
-            RF y = param.f(eg.entity(),ip.position());
+            auto y = param.f(cell,ip.position());
 
             // integrate f
-            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
+            auto factor = ip.weight() * geo.integrationElement(ip.position());
             for (std::size_t i=0; i<pressurespace.size(); i++)
               r.accumulate(pressurespace,i,y*pbasis[i]*factor);
           }
@@ -220,53 +231,59 @@ namespace Dune {
       template<typename IG, typename LFSV, typename R>
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
       {
-        // select the two components
-        typedef typename LFSV::template Child<0>::Type VelocitySpace;
-        const VelocitySpace& velocityspace = lfsv.template child<0>();
+        // Define types
+        using VelocitySpace = typename LFSV::template Child<0>::Type;
+        using DF = typename VelocitySpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::DomainFieldType;
+        using VelocityRangeType = typename VelocitySpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType;
 
-        // domain and range field type
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename VelocitySpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType VelocityRangeType;
+        // select the two velocity component
+        using namespace Indices;
+        const auto& velocityspace = child(lfsv,_0);
 
         // dimensions
         const int dim = IG::dimension;
 
-        auto inside_cell = ig.inside();
+        // References to the inside cell
+        const auto& cell_inside = ig.inside();
+
+        // Get geometry
+        auto geo = ig.geometry();
+        auto geo_inside = cell_inside.geometry();
+
+        // Get geometry of intersection in local coordinates of cell_inside
+        auto geo_in_inside = ig.geometryInInside();
 
         // evaluate transformation which must be linear
-        Dune::FieldVector<DF,dim> pos; pos = 0.0;
+        Dune::FieldVector<DF,dim> pos;
+        pos = 0.0;
         typename IG::Entity::Geometry::JacobianInverseTransposed jac;
-        jac = inside_cell.geometry().jacobianInverseTransposed(pos);
+        jac = geo_inside.jacobianInverseTransposed(pos);
         jac.invert();
-        RF det = inside_cell.geometry().integrationElement(pos);
+        auto det = geo_inside.integrationElement(pos);
 
-        // select quadrature rule
-        Dune::GeometryType gtface = ig.geometryInInside().type();
-        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder_v);
+        // Declare vectors outside for loop
+        std::vector<VelocityRangeType> vbasis(velocityspace.size());
+        std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
 
         // loop over quadrature points and integrate normal flux
-        for (const auto& ip : rule)
+        for (const auto& ip : quadratureRule(geo,qorder_v))
           {
             // evaluate boundary condition type
-            BCType bctype = param.bctype(ig.intersection(),ip.position());
+            auto bctype = param.bctype(ig.intersection(),ip.position());
 
             // skip rest if we are on Neumann boundary
             if (bctype == ConvectionDiffusionBoundaryConditions::Neumann)
               continue;
 
             // position of quadrature point in local coordinates of element
-            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(ip.position());
+            auto local = geo_in_inside.global(ip.position());
 
             // evaluate test shape functions
-            std::vector<VelocityRangeType> vbasis(velocityspace.size());
             velocityspace.finiteElement().localBasis().evaluateFunction(local,vbasis);
 
             // transform basis vectors
-            std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
             for (std::size_t i=0; i<velocityspace.size(); i++)
               {
                 vtransformedbasis[i] = 0.0;
@@ -274,10 +291,10 @@ namespace Dune {
               }
 
             // evaluate Dirichlet boundary condition
-            RF y = param.g(inside_cell,local);
+            auto y = param.g(cell_inside,local);
 
             // integrate g v*normal
-            RF factor = ip.weight()*ig.geometry().integrationElement(ip.position())/det;
+            auto factor = ip.weight()*geo.integrationElement(ip.position())/det;
             for (std::size_t i=0; i<velocityspace.size(); i++)
               r.accumulate(velocityspace,i,y*(vtransformedbasis[i]*ig.unitOuterNormal(ip.position()))*factor);
           }
@@ -293,4 +310,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_DIFFUSIONMIXED_HH

@@ -112,7 +112,7 @@ namespace Dune {
             const size_type dim = ES::dimension;
             node._codim_used.reset();
             node._gt_used.assign(Dune::GlobalGeometryTypeIndex::size(dim),false);
-            node._gt_dof_offsets.assign(Dune::GlobalGeometryTypeIndex::size(dim) * Node::CHILDREN,0);
+            node._gt_dof_offsets.assign(Dune::GlobalGeometryTypeIndex::size(dim) * TypeTree::degree(node),0);
             node._max_local_size = 0;
           }
       }
@@ -138,7 +138,7 @@ namespace Dune {
             const size_type size_offset = child._child_count > 0 ? child._child_count - 1 : 0;
 
             for (size_type gt = 0; gt < Dune::GlobalGeometryTypeIndex::size(ES::dimension); ++gt)
-              node._gt_dof_offsets[gt * Node::CHILDREN + childIndex] = child._gt_dof_offsets[gt * per_gt_size + size_offset];
+              node._gt_dof_offsets[gt * TypeTree::degree(node) + childIndex] = child._gt_dof_offsets[gt * per_gt_size + size_offset];
           }
       }
 
@@ -149,12 +149,12 @@ namespace Dune {
           {
             typedef typename std::vector<typename Node::Traits::SizeType>::iterator iterator;
 
-            iterator next_gt_it = node._gt_dof_offsets.begin() + Node::CHILDREN;
+            iterator next_gt_it = node._gt_dof_offsets.begin() + TypeTree::degree(node);
             const iterator end_it = node._gt_dof_offsets.end();
 
             for (iterator it = node._gt_dof_offsets.begin();
                  it != end_it;
-                 it += Node::CHILDREN, next_gt_it += Node::CHILDREN)
+                 it += TypeTree::degree(node), next_gt_it += TypeTree::degree(node))
               std::partial_sum(it,next_gt_it,it);
           }
       }
@@ -375,12 +375,12 @@ namespace Dune {
 
                 for (size_type gt = 0; gt < GlobalGeometryTypeIndex::size(ES::dimension); ++gt)
                   {
-                    for (size_type child_index = 0; child_index < Node::CHILDREN; ++child_index)
+                    for (size_type child_index = 0; child_index < TypeTree::degree(node); ++child_index)
                       {
                         const size_type per_gt_size = node.childOrdering(child_index)._child_count > 0 ? node.childOrdering(child_index)._child_count : 1;
                         const size_type size_offset = node.childOrdering(child_index)._child_count > 0 ? node.childOrdering(child_index)._child_count - 1 : 0;
 
-                        node._gt_dof_offsets[gt * Node::CHILDREN + child_index] = node.childOrdering(child_index)._gt_dof_offsets[gt * per_gt_size + size_offset];
+                        node._gt_dof_offsets[gt * TypeTree::degree(node) + child_index] = node.childOrdering(child_index)._gt_dof_offsets[gt * per_gt_size + size_offset];
                       }
                   }
 
@@ -390,8 +390,8 @@ namespace Dune {
 
                 for (iterator it = node._gt_dof_offsets.begin();
                      it != end_it;
-                     it += Node::CHILDREN)
-                  std::partial_sum(it,it + Node::CHILDREN,it);
+                     it += TypeTree::degree(node))
+                  std::partial_sum(it,it + TypeTree::degree(node),it);
 
                 node._fixed_size = true;
               }
@@ -408,7 +408,7 @@ namespace Dune {
                     for (size_type entity_index = 0; entity_index < entity_count; ++entity_index)
                       {
                         size_type carry = 0;
-                        for (size_type child_index = 0; child_index < Node::CHILDREN; ++child_index)
+                        for (size_type child_index = 0; child_index < TypeTree::degree(node); ++child_index)
                           node._entity_dof_offsets[index++] = (carry += node.childOrdering(child_index).size(geometry_type_index,entity_index));
                       }
                   }
@@ -780,4 +780,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_ORDERING_LEAFORDERING_HH
+#endif // DUNE_PDELAB_ORDERING_GRIDVIEWORDERING_HH

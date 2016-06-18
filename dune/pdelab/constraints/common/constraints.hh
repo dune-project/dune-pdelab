@@ -160,7 +160,7 @@ namespace Dune {
 
         // standard case - leaf in both trees
         template<typename P, typename LFS, typename TreePath>
-        typename enable_if<P::isLeaf && LFS::isLeaf>::type
+        typename std::enable_if<P::isLeaf && LFS::isLeaf>::type
         leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           // extract constraints type
@@ -172,7 +172,7 @@ namespace Dune {
 
         // reuse constraints parameter information from p for all LFS children
         template<typename P, typename LFS, typename TreePath>
-        typename enable_if<P::isLeaf && (!LFS::isLeaf)>::type
+        typename std::enable_if<P::isLeaf && (!LFS::isLeaf)>::type
         leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           // traverse LFS tree and reuse parameter information
@@ -293,7 +293,7 @@ namespace Dune {
 
         // standard case - leaf in both trees
         template<typename P, typename LFS, typename TreePath>
-        typename enable_if<P::isLeaf && LFS::isLeaf>::type
+        typename std::enable_if<P::isLeaf && LFS::isLeaf>::type
         leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           // allocate local constraints map
@@ -309,7 +309,7 @@ namespace Dune {
 
         // reuse constraints parameter information from p for all LFS children
         template<typename P, typename LFS, typename TreePath>
-        typename enable_if<P::isLeaf && (!LFS::isLeaf)>::type
+        typename std::enable_if<P::isLeaf && (!LFS::isLeaf)>::type
         leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           // traverse LFS tree and reuse parameter information
@@ -540,7 +540,7 @@ namespace Dune {
     };
     // trafos for leaf nodes
     template<typename GridFunction>
-    typename conditional<
+    typename std::conditional<
       (GridFunction::Traits::dimRange == 1),
       // trafo for scalar leaf nodes
       TypeTree::GenericLeafNodeTransformation<GridFunction,gf_to_constraints,OldStyleConstraintsWrapper<GridFunction> >,
@@ -730,7 +730,7 @@ namespace Dune {
         // transform tree
         P p = Transformation::transform(f);
         // call parameter based implementation
-        ConstraintsAssemblerHelper<P, GFS, CG, IsGridFunction<P>::value>::assemble(p,gfs,cg,verbose);
+        ConstraintsAssemblerHelper<P, GFS, CG, isGridFunction<P>>::assemble(p,gfs,cg,verbose);
       }
     };
 #endif
@@ -780,7 +780,7 @@ namespace Dune {
     {
       // clear global constraints
       cg.clear();
-      ConstraintsAssemblerHelper<P, GFS, CG, IsGridFunction<P>::value>::assemble(p,gfs,cg,verbose);
+      ConstraintsAssemblerHelper<P, GFS, CG, isGridFunction<P>>::assemble(p,gfs,cg,verbose);
     }
 
     //! construct constraints from given boundary condition function

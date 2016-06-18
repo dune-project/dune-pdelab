@@ -97,7 +97,7 @@ namespace Dune {
       };
 
       template<typename Decorated>
-      DUNE_CONSTEXPR bool deactivate_standard_blocking_for_ordering(const Chunked<Decorated>&)
+      constexpr bool deactivate_standard_blocking_for_ordering(const Chunked<Decorated>&)
       {
         return true;
       }

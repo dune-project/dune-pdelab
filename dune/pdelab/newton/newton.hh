@@ -537,7 +537,7 @@ namespace Dune
 
     public:
       enum Strategy {
-        /** \brief don't do any linesearch or damping */
+        /** \brief don't do any line search or damping */
         noLineSearch,
         /** \brief perform a linear search for the optimal damping parameter with multiples of damping
 
@@ -613,7 +613,7 @@ namespace Dune
              catch (NewtonDefectError)
               {
                 if (this->verbosity_level_ >= 4)
-                  std::cout << "          Nans detected" << std::endl;
+                  std::cout << "          NaNs detected" << std::endl;
               }       // ignore NaNs and try again with lower lambda
 
             if (this->res_.defect <= (1.0 - lambda/4) * this->prev_defect_)
@@ -683,7 +683,7 @@ namespace Dune
           return hackbuschReusken;
         if (s == "hackbuschReuskenAcceptBest")
           return hackbuschReuskenAcceptBest;
-        DUNE_THROW(Exception, "unknown linesearch strategy" << s);
+        DUNE_THROW(Exception, "unknown line search strategy" << s);
       }
 
     private:
@@ -783,4 +783,4 @@ namespace Dune
   } // end namespace PDELab
 } // end namespace Dune
 
-#endif // DUNE_PDELAB_NEWTON_HH
+#endif // DUNE_PDELAB_NEWTON_NEWTON_HH

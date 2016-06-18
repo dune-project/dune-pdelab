@@ -1,21 +1,19 @@
-#ifndef DUNE_NPDE_PK1D_HH
-#define DUNE_NPDE_PK1D_HH
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
 
-#include<vector>
-#include<iostream>
-#include<dune/common/fvector.hh>
-#include<dune/common/fmatrix.hh>
-#include<dune/common/exceptions.hh>
+// Pk in one dimension with k as runtime variable
 
-#include<dune/geometry/type.hh>
-#include<dune/geometry/referenceelements.hh>
-#include<dune/geometry/quadraturerules.hh>
+#ifndef DUNE_PDELAB_FINITEELEMENT_PK1D_HH
+#define DUNE_PDELAB_FINITEELEMENT_PK1D_HH
+
+#include <vector>
+
+#include <dune/common/fmatrix.hh>
+#include <dune/geometry/type.hh>
 
 #include<dune/localfunctions/common/localbasis.hh>
 #include<dune/localfunctions/common/localkey.hh>
 #include<dune/localfunctions/common/localfiniteelementtraits.hh>
-
-#include<dune/pdelab/finiteelementmap/finiteelementmap.hh>
 
 namespace Dune {
 
@@ -179,58 +177,6 @@ namespace Dune {
       return new Pk1dLocalFiniteElement(*this);
     }
   };
-
-  namespace PDELab {
-
-    /** \brief FiniteElementMap for the Pk basis in 1d
-     *
-     *  \tparam D Type to represent domain.
-     *  \tparam R Type to represent range.
-     */
-    template<class D, class R>
-    class Pk1dLocalFiniteElementMap
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Pk1dLocalFiniteElement<D,R> >
-    {
-    public:
-      Pk1dLocalFiniteElementMap (std::size_t k)
-        : Dune::PDELab::SimpleLocalFiniteElementMap< Pk1dLocalFiniteElement<D,R> >(Pk1dLocalFiniteElement<D,R>(k))
-        , _k(k)
-      {}
-
-      bool fixedSize() const
-      {
-        return true;
-      }
-
-      bool hasDOFs(int codim) const
-      {
-        switch (codim)
-          {
-          case 0:
-            return _k != 1;
-          case 1:
-            return _k > 0;
-          }
-        return false;
-      }
-
-      std::size_t size(GeometryType gt) const
-      {
-        if (gt.isVertex())
-          return _k > 0 ? 1 : 0;
-        if (gt.isLine())
-          return _k > 0 ? _k - 1 : 1;
-        return 0;
-      }
-
-      std::size_t maxLocalSize() const
-      {
-        return _k + 1;
-      }
-
-    private:
-      const std::size_t _k;
-    };
-  }
 }
-#endif
+
+#endif // DUNE_PDELAB_FINITEELEMENT_PK1D_HH

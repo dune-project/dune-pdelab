@@ -1,7 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_BACKEND_TAGS_HH
-#define DUNE_PDELAB_BACKEND_TAGS_HH
+#ifndef DUNE_PDELAB_BACKEND_COMMON_TAGS_HH
+#define DUNE_PDELAB_BACKEND_COMMON_TAGS_HH
+
+#include <dune/common/deprecated.hh>
 
 #include <dune/common/deprecated.hh>
 
@@ -33,15 +35,8 @@ namespace Dune {
 
     }
 
-    namespace tags {
-
-      using unattached_container DUNE_DEPRECATED_MSG("unattached_containers was moved to the namespace Dune::PDELab::Backend for PDELab 2.4. Please update your code accordingly.") = Backend::unattached_container;
-      using attached_container DUNE_DEPRECATED_MSG("unattached_containers was moved to the namespace Dune::PDELab::Backend for PDELab 2.4. Please update your code accordingly.") = Backend::attached_container;
-
-    }
-
   } // namespace PDELab
 
 } // namespace Dune
 
-#endif // DUNE_PDELAB_BACKEND_TAGS_HH
+#endif // DUNE_PDELAB_BACKEND_COMMON_TAGS_HH

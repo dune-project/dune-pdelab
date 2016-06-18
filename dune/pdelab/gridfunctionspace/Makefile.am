@@ -17,7 +17,6 @@ gridfunctionspace_HEADERS =			\
 	subspace.hh				\
 	subspacelocalfunctionspace.hh		\
 	tags.hh					\
-	utility.hh				\
 	vectorgridfunctionspace.hh		\
 	vtk.hh
 

@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_INTERIORNODECONSTRAINTS_HH
-#define DUNE_PDELAB_INTERIORNODECONSTRAINTS_HH
+#ifndef DUNE_PDELAB_CONSTRAINTS_INTERIORNODE_HH
+#define DUNE_PDELAB_CONSTRAINTS_INTERIORNODE_HH
 
 #include <dune/common/array.hh>
 #include <dune/grid/common/gridenums.hh>
@@ -110,4 +110,4 @@ namespace Dune {
   } // end namespace PDELab
 } // end namespace Dune
 
-#endif // DUNE_PDELAB_INTERIORNODECONSTRAINTS_HH
+#endif // DUNE_PDELAB_CONSTRAINTS_INTERIORNODE_HH

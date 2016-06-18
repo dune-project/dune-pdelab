@@ -22,7 +22,6 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/backend/eigen.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
-#include <dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
 
