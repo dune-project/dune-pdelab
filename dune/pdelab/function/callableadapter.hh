@@ -235,7 +235,7 @@ namespace Dune {
       }
 
       // pass time to parameter object
-      void setTime (RF t) {
+      void setTime (RF t) const {
         p.setTime(t);
       }
     };
@@ -270,7 +270,7 @@ namespace Dune {
       }
 
       // pass time to parameter object
-      void setTime (RF t) {
+      void setTime (RF t) const {
         p.setTime(t);
       }
     };
