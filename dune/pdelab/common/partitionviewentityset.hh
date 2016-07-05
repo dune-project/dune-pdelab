@@ -83,6 +83,7 @@ namespace Dune {
       {
 
         using Iterator = typename GV::template Codim<codim>::template Partition<Partitions::partitionIterator()>::Iterator;
+        using ReverseIterator = typename GV::template Codim<codim>::template Partition<Partitions::partitionIterator()>::ReverseIterator;
 
         using Entity = typename GV::template Codim<codim>::Entity;
 
@@ -95,6 +96,7 @@ namespace Dune {
         {
 
           using Iterator = typename GV::template Codim<codim>::template Partition<pitype>::Iterator;
+          using ReverseIterator = typename GV::template Codim<codim>::template Partition<pitype>::ReverseIterator;
 
         };
 
@@ -188,6 +190,36 @@ namespace Dune {
       {
         return gridView().template end<codim,pitype>();
       }
+
+
+      template<dim_type codim>
+      typename Codim<codim>::ReverseIterator
+      rbegin() const
+      {
+        return gridView().template rbegin<codim,Partitions::partitionIterator()>();
+      }
+
+      template<dim_type codim>
+      typename Codim<codim>::ReverseIterator
+      rend() const
+      {
+        return gridView().template rend<codim,Partitions::partitionIterator()>();
+      }
+
+      template<dim_type codim, PartitionIteratorType pitype>
+      typename GV::template Codim<codim>::template Partition<pitype>::ReverseIterator
+      rbegin() const
+      {
+        return gridView().template rbegin<codim,pitype>();
+      }
+
+      template<dim_type codim, PartitionIteratorType pitype>
+      typename GV::template Codim<codim>::template Partition<pitype>::ReverseIterator
+      rend() const
+      {
+        return gridView().template rend<codim,pitype>();
+      }
+
 
       size_type size(dim_type codim) const
       {

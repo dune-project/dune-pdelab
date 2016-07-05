@@ -662,7 +662,12 @@ namespace Dune {
      * \tparam dimR Force a different number of components for the resulting
      *              GridFunction than the PowerGridFunctionSpace.
      */
+#ifdef __clang__
+    // clang is too stupid to correctly apply the constexpr qualifier of staticDegree in this context
+    template<typename T, typename X, std::size_t dimR = TypeTree::StaticDegree<T>::value>
+#else
     template<typename T, typename X, std::size_t dimR = TypeTree::staticDegree<T>>
+#endif
     class VectorDiscreteGridFunction
       : public GridFunctionInterface<
           GridFunctionTraits<
