@@ -38,7 +38,7 @@ namespace Dune {
           Dune::BCRSMatrix<Block,Allocator>
           >
         {
-          typedef BlockVector<
+          typedef Dune::BlockVector<
             typename matrix_element_vector<Block>::type,
             Allocator
             > type;
