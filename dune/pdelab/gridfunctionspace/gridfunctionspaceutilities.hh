@@ -666,7 +666,7 @@ namespace Dune {
     // clang is too stupid to correctly apply the constexpr qualifier of staticDegree in this context
     template<typename T, typename X, std::size_t dimR = TypeTree::StaticDegree<T>::value>
 #else
-    template<typename T, typename X, std::size_t dimR = TypeTree::staticDegree<T>>
+    template<typename T, typename X, std::size_t dimR = TypeTree::StaticDegree<T>::value>
 #endif
     class VectorDiscreteGridFunction
       : public GridFunctionInterface<
@@ -808,10 +808,10 @@ namespace Dune {
                    typename T::Traits::GridViewType,
                    typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
                    //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain,
-                   TypeTree::staticDegree<T>,
+                   TypeTree::StaticDegree<T>::value,
                    Dune::FieldMatrix<
                      typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-                     TypeTree::staticDegree<T>,
+                     TypeTree::StaticDegree<T>::value,
                      T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain
                    >
                  >,
@@ -826,10 +826,10 @@ namespace Dune {
                   typename T::Traits::GridViewType,
                   typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
                   //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain,
-                  TypeTree::staticDegree<T>,
+                  TypeTree::StaticDegree<T>::value,
                   Dune::FieldMatrix<
                     typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-                    TypeTree::staticDegree<T>,
+                    TypeTree::StaticDegree<T>::value,
                     T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain>
                   >,
                   VectorDiscreteGridFunctionGradient<T,X>
@@ -1031,7 +1031,7 @@ namespace Dune {
         , xl(gfs.maxLocalSize())
         , J(gfs.maxLocalSize())
       {
-        static_assert(LBTraits::dimDomain == TypeTree::staticDegree<T>,
+        static_assert(LBTraits::dimDomain == TypeTree::StaticDegree<T>::value,
                            "dimDomain and number of children has to be the same");
       }
 
@@ -1109,7 +1109,7 @@ namespace Dune {
               will be triggered.
 
      */
-    template<typename T, typename X, std::size_t dimR = TypeTree::staticDegree<T>>
+    template<typename T, typename X, std::size_t dimR = TypeTree::StaticDegree<T>::value>
     class VectorDiscreteGridFunctionCurl
     {
       typedef T GFS;
@@ -1138,12 +1138,12 @@ namespace Dune {
         typename T::Traits::GridViewType,
         typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
         //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-        TypeTree::staticDegree<T>,
+        TypeTree::StaticDegree<T>::value,
         Dune::FieldVector<
           typename T::template Child<0>::Type::Traits::FiniteElementType
           ::Traits::LocalBasisType::Traits::RangeFieldType,
           //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange
-          TypeTree::staticDegree<T>
+          TypeTree::StaticDegree<T>::value
           >
         >,
       VectorDiscreteGridFunctionCurl<T,X>
@@ -1157,12 +1157,12 @@ namespace Dune {
           typename T::Traits::GridViewType,
           typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
           //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-          TypeTree::staticDegree<T>,
+          TypeTree::StaticDegree<T>::value,
           Dune::FieldVector<
             typename T::template Child<0>::Type::Traits::FiniteElementType
             ::Traits::LocalBasisType::Traits::RangeFieldType,
             //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange
-            TypeTree::staticDegree<T>
+            TypeTree::StaticDegree<T>::value
             >
           >,
         VectorDiscreteGridFunctionCurl<T,X> > BaseT;
@@ -1183,7 +1183,7 @@ namespace Dune {
         , xl(gfs.maxLocalSize())
         , J(gfs.maxLocalSize())
       {
-        static_assert(LBTraits::dimDomain == TypeTree::staticDegree<T>,
+        static_assert(LBTraits::dimDomain == TypeTree::StaticDegree<T>::value,
                            "dimDomain and number of children has to be the same");
       }
 
@@ -1312,7 +1312,7 @@ namespace Dune {
         , xl(gfs.maxLocalSize())
         , J(gfs.maxLocalSize())
       {
-        static_assert(LBTraits::dimDomain == TypeTree::staticDegree<T>,
+        static_assert(LBTraits::dimDomain == TypeTree::StaticDegree<T>::value,
                            "dimDomain and number of children has to be the same");
       }
 

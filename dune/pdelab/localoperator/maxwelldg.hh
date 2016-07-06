@@ -344,7 +344,7 @@ namespace Dune {
         using size_type = typename DGSpace::Traits::SizeType;
 
         // paranoia check number of number of components
-        static_assert(TypeTree::staticDegree<LFSV> == dim*2,
+        static_assert(TypeTree::StaticDegree<LFSV>::value == dim*2,
                       "need exactly dim*2 components!");
 
         // get local function space that is identical for all components
@@ -788,8 +788,8 @@ namespace Dune {
                            LocalPattern& pattern) const
       {
         // paranoia check number of number of components
-        static_assert(TypeTree::staticDegree<LFSU>==TypeTree::staticDegree<LFSV>, "need U=V!");
-        static_assert(TypeTree::staticDegree<LFSV>==dim*2, "need exactly dim*2 components!");
+        static_assert(TypeTree::StaticDegree<LFSU>::value==TypeTree::StaticDegree<LFSV>::value, "need U=V!");
+        static_assert(TypeTree::StaticDegree<LFSV>::value==dim*2, "need exactly dim*2 components!");
 
         for (size_t k=0; k<TypeTree::degree(lfsv); k++)
           for (size_t i=0; i<lfsv.child(k).size(); ++i)

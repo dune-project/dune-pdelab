@@ -237,14 +237,14 @@ namespace Dune {
                                              typename LFS::ChildType::Traits::FiniteElement
                                              >::Basis
                                            >::RangeField,
-                                         TypeTree::staticDegree<LFS>,
+                                         TypeTree::StaticDegree<LFS>::value,
                                          Dune::FieldVector<
                                            typename BasisInterfaceSwitch<
                                              typename FiniteElementInterfaceSwitch<
                                                typename LFS::ChildType::Traits::FiniteElement
                                                >::Basis
                                              >::RangeField,
-                                           TypeTree::staticDegree<LFS>
+                                           TypeTree::StaticDegree<LFS>::value
                                            >
                                          >,
                                        DGFTreeVectorFunction<LFS,Data>
@@ -264,10 +264,10 @@ namespace Dune {
           GridFunctionTraits<
             typename LFS::Traits::GridView,
             typename BasisSwitch::RangeField,
-            TypeTree::staticDegree<LFS>,
+            TypeTree::StaticDegree<LFS>::value,
             Dune::FieldVector<
               typename BasisSwitch::RangeField,
-              TypeTree::staticDegree<LFS>
+              TypeTree::StaticDegree<LFS>::value
               >
             >,
           DGFTreeVectorFunction<LFS,Data>

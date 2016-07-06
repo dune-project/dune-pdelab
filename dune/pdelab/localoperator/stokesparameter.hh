@@ -103,13 +103,13 @@ namespace Dune {
        * power grid function.
        */
       template<typename GF, typename Entity, typename Domain>
-      FieldVector<typename GF::template Child<0>::Type::Traits::RangeFieldType,TypeTree::staticDegree<GF>>
+      FieldVector<typename GF::template Child<0>::Type::Traits::RangeFieldType,TypeTree::StaticDegree<GF>::value>
       evaluateVelocityGridFunction(const GF& gf,
                                    const Entity& e,
                                    const Domain& x)
       {
-        static_assert(Domain::dimension == TypeTree::staticDegree<GF>,"dimension of function range does not match grid dimension");
-        FieldVector<typename GF::template Child<0>::Type::Traits::RangeFieldType,TypeTree::staticDegree<GF>> y;
+        static_assert(Domain::dimension == TypeTree::StaticDegree<GF>::value,"dimension of function range does not match grid dimension");
+        FieldVector<typename GF::template Child<0>::Type::Traits::RangeFieldType,TypeTree::StaticDegree<GF>::value> y;
         typename GF::template Child<0>::Type::Traits::RangeType cy;
         for (int d = 0; d < Domain::dimension; ++d)
           {
