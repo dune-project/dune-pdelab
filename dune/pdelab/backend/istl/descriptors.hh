@@ -87,7 +87,7 @@ namespace Dune {
 
         // forward declaration for backend
         template<typename GFSV, typename GFSU>
-        struct Pattern;
+        class Pattern;
 
       }
 
