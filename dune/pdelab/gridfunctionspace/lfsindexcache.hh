@@ -303,6 +303,14 @@ namespace Dune {
 
       void update()
       {
+#if HACKED_LFS_INDEX_CACHE
+
+        _container_indices[0].resize(2);
+        _container_indices[0][0] = 0;
+        _container_indices[0][1] = LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(_lfs.dofIndex(0));
+
+#else // HACKED_LFS_INDEX_CACHE
+
         // clear out existing state
         _container_index_map.clear();
         for (typename CIVector::iterator it = _container_indices.begin(); it != _container_indices.end(); ++it)
@@ -374,6 +382,7 @@ namespace Dune {
                   }
               }
           }
+#endif // HACKED_LFS_INDEX_CACHE
       }
 
       const DI& dofIndex(size_type i) const
@@ -594,6 +603,13 @@ namespace Dune {
 
       void update()
       {
+#if HACKED_LFS_INDEX_CACHE
+
+        _container_indices[0].resize(2);
+        _container_indices[0][0] = 0;
+        _container_indices[0][1] = LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(_lfs.dofIndex(0));
+
+#else // HACKED_LFS_INDEX_CACHE
         // clear out existing state
         _container_index_map.clear();
         for (typename CIVector::iterator it = _container_indices.begin(); it != _container_indices.end(); ++it)
@@ -614,6 +630,7 @@ namespace Dune {
           fast
           > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs.subSpaceDepth());
         TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
+#endif // HACKED_LFS_INDEX_CACHE
       }
 
       const DI& dofIndex(size_type i) const
