@@ -221,9 +221,9 @@ namespace Dune {
       /*! \brief Norm of a right-hand side vector.
         The vector must be consistent on the interior+border partition
       */
-      virtual double norm (const X& x)
+      virtual field_type norm (const X& x)
       {
-        return sqrt(static_cast<double>(this->dot(x,x)));
+        return sqrt(static_cast<field_type>(this->dot(x,x)));
       }
 
     private:
