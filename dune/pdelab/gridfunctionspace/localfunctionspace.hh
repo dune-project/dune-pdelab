@@ -98,6 +98,7 @@ namespace Dune {
         node.offset = offset;
         if (fast)
           {
+            node.pfe = nullptr;
             node.n = node.pgfs->finiteElementMap().maxLocalSize();
           }
         else
@@ -584,6 +585,7 @@ namespace Dune {
       //! get finite element
       const typename Traits::FiniteElementType& finiteElement () const
       {
+        assert(pfe);
         return *pfe;
       }
 
