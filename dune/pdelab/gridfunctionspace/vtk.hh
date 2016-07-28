@@ -510,7 +510,7 @@ namespace Dune {
           >::type
         post(const LFS& lfs, TreePath tp)
         {
-          if (predicate(lfs))
+          if (predicate(lfs, tp))
             add_vector_solution(lfs,tp,TypeTree::ImplementationTag<typename LFS::Traits::GridFunctionSpace>());
         }
 
@@ -524,7 +524,7 @@ namespace Dune {
           >::type
         leaf(const LFS& lfs, TreePath tp)
         {
-          if (predicate(lfs))
+          if (predicate(lfs, tp))
             add_to_vtk_writer(std::make_shared<DGFTreeLeafFunction<LFS,Data> >(lfs,data),tp);
         }
 
@@ -545,8 +545,8 @@ namespace Dune {
 
       struct DefaultPredicate
       {
-        template<typename T>
-        bool operator()(const T& t) const
+        template<typename LFS>
+        bool operator()(const LFS& lfs, Dune::TypeTree::DynamicTreePath tp) const
         {
           return true;
         }
