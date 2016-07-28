@@ -545,8 +545,8 @@ namespace Dune {
 
       struct DefaultPredicate
       {
-        template<typename LFS>
-        bool operator()(const LFS& lfs, Dune::TypeTree::DynamicTreePath tp) const
+        template<typename LFS, typename TP>
+        bool operator()(const LFS& lfs, TP tp) const
         {
           return true;
         }
