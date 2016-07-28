@@ -137,8 +137,11 @@ namespace Dune {
       typedef X domain_type;
       typedef typename X::ElementType field_type;
 
-      //! define the category
-      enum {category=Dune::SolverCategory::nonoverlapping};
+      //! Category of the scalar product (see SolverCategory::Category)
+      virtual SolverCategory::Category category() const
+      {
+        return SolverCategory::nonoverlapping;
+      }
 
       /*! \brief Constructor needs to know the grid function space
        */

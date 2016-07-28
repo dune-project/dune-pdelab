@@ -48,8 +48,11 @@ namespace Dune {
       typedef Y range_type;
       typedef typename X::ElementType field_type;
 
-      //redefine the category, that is the only difference
-      enum {category=Dune::SolverCategory::overlapping};
+      //! Category of the linear operator (see SolverCategory::Category)
+      virtual SolverCategory::Category category() const
+      {
+        return SolverCategory::overlapping;
+      }
 
       OverlappingOperator (const CC& cc_, const M& A)
         : cc(cc_), _A_(A)
@@ -93,8 +96,11 @@ namespace Dune {
       typedef X domain_type;
       typedef typename X::ElementType field_type;
 
-      //! define the category
-      enum {category=Dune::SolverCategory::overlapping};
+      //! Category of the scalar product (see SolverCategory::Category)
+      virtual SolverCategory::Category category() const
+      {
+        return SolverCategory::overlapping;
+      }
 
       /*! \brief Constructor needs to know the grid function space
        */
@@ -141,11 +147,11 @@ namespace Dune {
       //! \brief The range type of the preconditioner.
       using range_type = Dune::PDELab::Backend::Vector<GFS,typename P::range_type::field_type>;
 
-      // define the category
-      enum {
-        //! \brief The category the preconditioner is part of.
-        category=Dune::SolverCategory::overlapping
-      };
+      //! Category of the linear operator (see SolverCategory::Category)
+      virtual SolverCategory::Category category() const
+      {
+        return SolverCategory::overlapping;
+      }
 
       //! Constructor.
       OverlappingWrappedPreconditioner (const GFS& gfs_, P& prec_, const CC& cc_,
@@ -373,7 +379,12 @@ namespace Dune {
       : public ScalarProduct<X>
     {
     public:
-      enum {category=Dune::SolverCategory::overlapping};
+      //! Category of the scalar product (see SolverCategory::Category)
+      virtual SolverCategory::Category category() const
+      {
+        return SolverCategory::overlapping;
+      }
+
       OVLPScalarProduct(const OVLPScalarProductImplementation<GFS>& implementation_)
         : implementation(implementation_)
       {}
