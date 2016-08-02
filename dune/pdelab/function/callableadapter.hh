@@ -30,7 +30,7 @@ namespace Dune {
       GlobalCallableToGridFunctionAdapter (const GV& gv_, const F& f_) : gv(gv_), f(f_) {}
 
       //! get a reference to the grid view
-      inline const GV& getGridView () {return gv;}
+      inline const GV& getGridView () const {return gv;}
 
       //! evaluate extended function on element
       inline void evaluate (const typename Traits::ElementType& e,
@@ -80,7 +80,7 @@ namespace Dune {
       LocalCallableToGridFunctionAdapter (const GV& gv_, const F& f_) : gv(gv_), f(f_) {}
 
       //! get a reference to the grid view
-      inline const GV& getGridView () {return gv;}
+      inline const GV& getGridView () const {return gv;}
 
       //! evaluate extended function on element
       inline void evaluate (const typename Traits::ElementType& e,
@@ -203,7 +203,7 @@ namespace Dune {
       {}
 
       //! get a reference to the grid view
-      inline const GV& getGridView () {return gv;}
+      inline const GV& getGridView () const {return gv;}
 
       //! evaluate extended function on element
       inline void evaluate (const typename Traits::ElementType& e,
@@ -239,7 +239,7 @@ namespace Dune {
       LocalCallableToInstationaryGridFunctionAdapter (const GV& gv_, const F& f_, P& p_) : gv(gv_), f(f_), p(p_) {}
 
       //! get a reference to the grid view
-      inline const GV& getGridView () {return gv;}
+      inline const GV& getGridView () const {return gv;}
 
       //! evaluate extended function on element
       inline void evaluate (const typename Traits::ElementType& e,
