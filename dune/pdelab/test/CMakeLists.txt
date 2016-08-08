@@ -34,8 +34,7 @@ dune_add_test(SOURCES testlocalfunctionspace.cc)
 dune_add_test(SOURCES testlocaloperatorinterface.cc)
 
 dune_add_test(SOURCES testpk2dinterpolation.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
-              SKIP_ON_77)
+              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 add_dune_alberta_flags(testpk2dinterpolation)
 
 dune_add_test(SOURCES testpk.cc
@@ -53,8 +52,7 @@ dune_add_test(SOURCES testrt0.cc
 add_dune_alberta_flags(testrt0)
 
 dune_add_test(SOURCES testrt02dgridfunctionspace.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
-              SKIP_ON_77)
+              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 add_dune_alberta_flags(testrt02dgridfunctionspace)
 
 dune_add_test(SOURCES testutilities.cc)
