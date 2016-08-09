@@ -181,6 +181,7 @@ namespace Dune {
 
       DGGO& dggo;
       CGGFS& cggfs;
+      std::shared_ptr<CGOperator> cgop;
       std::shared_ptr<AMG> amg;
       Parameters amg_parameters;
       unsigned maxiter;
@@ -333,7 +334,6 @@ namespace Dune {
           std::cout << "=== reuse CG matrix, SKIPPING triple matrix product " << std::endl;
 
         // set up AMG solver for the CG subspace
-        CGOperator cgop(acg);
         typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
         SmootherArgs smootherArgs;
         smootherArgs.iterations = 1;
@@ -345,7 +345,8 @@ namespace Dune {
         // only construct a new AMG for the CG-subspace if the matrix changes
         double amg_setup_time = 0.0;
         if(reuse == false || firstapply == true) {
-          amg.reset(new AMG(cgop,criterion,smootherArgs));
+          cgop.reset(new CGOperator(acg));
+          amg.reset(new AMG(*cgop,criterion,smootherArgs));
           firstapply = false;
           amg_setup_time = watch.elapsed();
           if (verbose>0)
