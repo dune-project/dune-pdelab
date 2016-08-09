@@ -1,4 +1,5 @@
 install(FILES compositegridfunctionspace.hh
+              dunefunctionsgridfunctionspace.hh
               datahandleprovider.hh
               entityindexcache.hh
               genericdatahandle.hh
