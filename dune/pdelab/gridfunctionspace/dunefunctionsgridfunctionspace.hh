@@ -42,6 +42,80 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
+    //! \brief collect types exported by a finite element map
+    template<class T>
+    struct DuneFunctionsFiniteElementMapTraits
+    {
+      //! Type of finite element from local functions
+      typedef T FiniteElementType;
+
+      //! Type of finite element from local functions
+      typedef T FiniteElement;
+    };
+
+    //! wrap up element from local functions
+    template<typename DFBasis>
+    class DuneFunctionsFiniteElementMap
+    {
+    public:
+
+      using Traits = DuneFunctionsFiniteElementMapTraits<typename DFBasis::LocalView::Tree::FiniteElement>;
+
+      DuneFunctionsFiniteElementMap(const DFBasis& basis)
+      : basis_(basis),
+        elementMapper_(basis.gridView()),
+        localView_(elementMapper_.size())
+      {}
+
+      bool fixedSize() const
+      {
+        return false;
+      }
+
+      bool hasDOFs(int codim) const
+      {
+        return true;
+      }
+
+     /** \brief Return local basis for the given entity.
+      */
+      template<class EntityType>
+      const typename Traits::FiniteElementType&
+      find (const EntityType& e) const
+      {
+        auto idx = elementMapper_.index(e);
+
+        if (not localView_[idx])
+        {
+          localView_[idx] = std::make_unique<typename DFBasis::LocalView>(basis_.localView());
+          localView_[idx]->bind(e);
+        }
+
+        return localView_[idx]->tree().finiteElement();
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        DUNE_THROW(NotImplemented, "!");
+        return 0;
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        DUNE_THROW(NotImplemented, "!");
+        return 0;
+      }
+
+    private:
+      const DFBasis& basis_;
+
+      MultipleCodimMultipleGeomTypeMapper<typename DFBasis::GridView, MCMGElementLayout> elementMapper_;
+
+      // The dune-functions local view for each grid element
+      mutable std::vector<std::unique_ptr<typename DFBasis::LocalView> > localView_;
+    };
+
+
     //=======================================
     // grid function space : single component case
     //=======================================
@@ -97,8 +171,7 @@ namespace Dune {
 
     /** \brief A pdelab grid function space implemented by a dune-functions function space basis
      *
-     *  \tparam GV   Type implementing GridView
-     *  \tparam FEM  Type implementing FiniteElementMapInterface
+     *  \tparam DFBasis A dune-functions function space basis
      *  \tparam CE   Type for constraints assembler
      *  \tparam B    Backend type
      *  \tparam P    Parameter type. Possible types are
@@ -107,22 +180,26 @@ namespace Dune {
      * entity) or \link GridFunctionStaticSize \endlink (number of unknowns per
      * entity, known at compile-time)
      */
-    template<typename GV, typename FEM, typename CE=NoConstraints,
+    template<typename DFBasis, typename CE=NoConstraints,
              typename B=istl::VectorBackend<>, typename P=DefaultLeafOrderingTag>
     class DuneFunctionsGridFunctionSpace
       : public TypeTree::LeafNode
       , public GridFunctionSpaceBase<
-                 DuneFunctionsGridFunctionSpace<GV,FEM,CE,B,P>,
-                 DuneFunctionsGridFunctionSpaceTraits<GV,FEM,CE,B,P>
+                 DuneFunctionsGridFunctionSpace<DFBasis,CE,B,P>,
+                 DuneFunctionsGridFunctionSpaceTraits<typename DFBasis::GridView,
+                                                      DuneFunctionsFiniteElementMap<DFBasis>,CE,B,P>
                  >
       , public GridFunctionOutputParameters
-      , public DataHandleProvider<DuneFunctionsGridFunctionSpace<GV,FEM,CE,B,P> >
+      , public DataHandleProvider<DuneFunctionsGridFunctionSpace<DFBasis,CE,B,P> >
     {
+      using GV = typename DFBasis::GridView;
 
       typedef TypeTree::TransformTree<DuneFunctionsGridFunctionSpace,gfs_to_ordering<DuneFunctionsGridFunctionSpace> > ordering_transformation;
 
       template<typename,typename>
       friend class GridFunctionSpaceBase;
+
+      using FEM = DuneFunctionsFiniteElementMap<DFBasis>;
 
     public:
       //! export Traits class
@@ -165,78 +242,24 @@ namespace Dune {
       };
 
       // ****************************************************************************************************
-      // Construct from GridView
+      // Construct from a dune-functions basis
       // ****************************************************************************************************
 
       //! constructor
-      DuneFunctionsGridFunctionSpace (const typename Traits::GridView& gridview, const FEM& fem, const CE& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+      DuneFunctionsGridFunctionSpace (const DFBasis& dfBasis, const CE& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : BaseT(backend,ordering_tag)
-        , _es(gridview)
-        , pfem(stackobject_to_shared_ptr(fem))
+        , _es(dfBasis.gridView())
+        , dfBasis_(dfBasis)
+        , pfem(std::make_shared<FEM>(dfBasis))
         , _pce(stackobject_to_shared_ptr(ce))
       {
       }
 
       //! constructor
-      DuneFunctionsGridFunctionSpace (const typename Traits::GridView& gridview, const std::shared_ptr<const FEM>& fem, const std::shared_ptr<const CE>& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+      DuneFunctionsGridFunctionSpace (const DFBasis& dfBasis, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : BaseT(backend,ordering_tag)
-        , _es(gridview)
-        , pfem(fem)
-        , _pce(ce)
-      {}
-
-      //! constructor
-      DuneFunctionsGridFunctionSpace (const typename Traits::GridView& gridview, const FEM& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : BaseT(backend,ordering_tag)
-        , _es(gridview)
-        , pfem(stackobject_to_shared_ptr(fem))
-        , _pce(std::make_shared<CE>())
-      {}
-
-      //! constructor
-      DuneFunctionsGridFunctionSpace (const typename Traits::GridView& gridview, const std::shared_ptr<const FEM>& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : BaseT(backend,ordering_tag)
-        , _es(gridview)
-        , pfem(fem)
-        , _pce(std::make_shared<CE>())
-      {}
-
-
-      // ****************************************************************************************************
-      // Construct from EntitySet
-      // ****************************************************************************************************
-
-
-      //! constructor
-      DuneFunctionsGridFunctionSpace (const typename Traits::EntitySet& entitySet, const FEM& fem, const CE& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : BaseT(backend,ordering_tag)
-        , _es(entitySet)
-        , pfem(stackobject_to_shared_ptr(fem))
-        , _pce(stackobject_to_shared_ptr(ce))
-      {
-      }
-
-      //! constructor
-      DuneFunctionsGridFunctionSpace (const typename Traits::EntitySet& entitySet, const std::shared_ptr<const FEM>& fem, const std::shared_ptr<const CE>& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : BaseT(backend,ordering_tag)
-        , _es(entitySet)
-        , pfem(fem)
-        , _pce(ce)
-      {}
-
-      //! constructor
-      DuneFunctionsGridFunctionSpace (const typename Traits::EntitySet& entitySet, const FEM& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : BaseT(backend,ordering_tag)
-        , _es(entitySet)
-        , pfem(stackobject_to_shared_ptr(fem))
-        , _pce(std::make_shared<CE>())
-      {}
-
-      //! constructor
-      DuneFunctionsGridFunctionSpace (const typename Traits::EntitySet& entitySet, const std::shared_ptr<const FEM>& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : BaseT(backend,ordering_tag)
-        , _es(entitySet)
-        , pfem(fem)
+        , _es(dfBasis.gridView())
+        , pfem(std::make_shared<FEM>(dfBasis))
         , _pce(std::make_shared<CE>())
       {}
 
@@ -353,6 +376,7 @@ namespace Dune {
       }
 
       typename Traits::EntitySet _es;
+      DFBasis dfBasis_;
       std::shared_ptr<FEM const> pfem;
       std::shared_ptr<CE const> _pce;
 
