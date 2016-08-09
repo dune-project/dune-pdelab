@@ -14,6 +14,11 @@ to the [PDELab bugtracker][] instead.
 Changes
 =======
 
+PDELab 3.0
+----------
+
+-   Removed support for autotools.
+
 PDELab 2.4
 ----------
 
