@@ -627,10 +627,10 @@ namespace Dune {
         smootherArgs.relaxationFactor = 1;
 
         Criterion criterion(params);
-        Operator oop(mat);
         //only construct a new AMG if the matrix changes
         if (reuse==false || firstapply==true){
-          amg.reset(new AMG(oop, criterion, smootherArgs));
+          oop.reset(new Operator(mat));
+          amg.reset(new AMG(*oop, criterion, smootherArgs));
           firstapply = false;
           stats.tsetup = watch.elapsed();
           stats.levels = amg->maxlevels();
@@ -639,7 +639,7 @@ namespace Dune {
         watch.reset();
         Dune::InverseOperatorResult stat;
 
-        Solver<VectorType> solver(oop,*amg,reduction,maxiter,verbose);
+        Solver<VectorType> solver(*oop,*amg,reduction,maxiter,verbose);
         solver.apply(Backend::native(z),Backend::native(r),stat);
         stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
@@ -666,6 +666,7 @@ namespace Dune {
       bool reuse;
       bool firstapply;
       bool usesuperlu;
+      std::shared_ptr<Operator> oop;
       std::shared_ptr<AMG> amg;
       ISTLAMGStatistics stats;
     };
