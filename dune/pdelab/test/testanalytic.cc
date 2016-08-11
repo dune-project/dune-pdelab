@@ -70,7 +70,7 @@ int main(int argc, char** argv)
 
     // need a 3D grid for user friendly version
     Dune::FieldVector<double,3> L3(1.0); L3[0] = 4;
-    Dune::array<int,3> N3(Dune::fill_array<int,3>(1)); N3[0] = 4;
+    std::array<int,3> N3(Dune::fill_array<int,3>(1)); N3[0] = 4;
     Dune::YaspGrid<3> grid(L3,N3);
     grid.globalRefine(4);
     testuserfriendly(grid.leafGridView());

@@ -115,7 +115,7 @@ namespace Dune {
       const M & mapper_;
       std::vector<unsigned char> polOrder_;
       unsigned int defaultP_;
-      Dune::array< std::shared_ptr<FiniteElementType>, maxP+1 > finiteElements_;
+      std::array< std::shared_ptr<FiniteElementType>, maxP+1 > finiteElements_;
     };
 
 

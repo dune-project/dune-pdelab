@@ -210,7 +210,7 @@ namespace Dune {
 
                 // copy data to correct types for YaspGrid
                 Dune::FieldVector<double,dimworld> L(1.0);
-                Dune::array<int,dimworld> N(Dune::fill_array<int,dimworld>(cells));
+                std::array<int,dimworld> N(Dune::fill_array<int,dimworld>(cells));
                 std::bitset<dimworld> B(false);
 
                 // instantiate the grid
@@ -235,7 +235,7 @@ namespace Dune {
 
                 // copy data to correct types for YaspGrid
                 Dune::FieldVector<double,dimworld> L;
-                Dune::array<int,dimworld> N;
+                std::array<int,dimworld> N;
                 std::bitset<dimworld> B(false);
                 for (size_t i=0; i<dimworld; i++)
                     {
@@ -265,7 +265,7 @@ namespace Dune {
 
                 // copy data to correct types for YaspGrid
                 Dune::FieldVector<double,dimworld> L;
-                Dune::array<int,dimworld> N;
+                std::array<int,dimworld> N;
                 std::bitset<dimworld> B(false);
                 for (size_t i=0; i<dimworld; i++)
                     {

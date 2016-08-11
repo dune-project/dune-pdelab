@@ -284,7 +284,7 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::array<int,2> N(Dune::fill_array<int,2>(1));
       Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 
@@ -305,7 +305,7 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::array<int,2> N(Dune::fill_array<int,2>(1));
       Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 
@@ -326,7 +326,7 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
-      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::array<int,3> N(Dune::fill_array<int,3>(1));
       Dune::YaspGrid<3> grid(L,N);
       grid.globalRefine(3);
 
@@ -347,7 +347,7 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
-      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::array<int,3> N(Dune::fill_array<int,3>(1));
       Dune::YaspGrid<3> grid(L,N);
       grid.globalRefine(3);
 

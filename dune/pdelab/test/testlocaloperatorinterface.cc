@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 
     // Create grid
     Dune::FieldVector<Real,dim> l(1.0);
-    Dune::array<int,dim> s;
+    std::array<int,dim> s;
     std::fill(s.begin(), s.end(), cells);
     std::bitset<dim> p(0);
     int overlap = 0;

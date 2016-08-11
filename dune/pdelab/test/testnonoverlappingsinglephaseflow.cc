@@ -129,7 +129,7 @@ int main(int argc, char** argv)
     // Build grid with uneven row/col number to provoke a reentrant corner in parallel case with UG
     Dune::FieldVector<typename GridType::ctype,dim> lowerLeft(0);
     Dune::FieldVector<typename GridType::ctype,dim> upperRight(1);
-    Dune::array<unsigned int,dim> elements;
+    std::array<unsigned int,dim> elements;
     std::fill(elements.begin(), elements.end(), 17);
 
     auto grid = Dune::StructuredGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements);
