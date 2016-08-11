@@ -67,6 +67,12 @@ namespace Dune {
       double max;
       double avg;
       double std_dev;
+      std::uint64_t operations;
+
+      BenchmarkEntry()
+        : operations(0)
+      {}
+
     };
 
     template<typename TimeSource = DefaultTimeSource>
@@ -79,6 +85,8 @@ namespace Dune {
         , _run(0)
         , _max_runs(max_runs)
         , _statistics_stale(true)
+        , _threads(1)
+        , _join_mode(JoinMode::undefined)
       {
         _run_times.timings.resize(max_runs);
       }
@@ -138,6 +146,11 @@ namespace Dune {
         _statistics_stale = true;
       }
 
+      void setOperations(std::string task, std::uint64_t operations)
+      {
+        _tasks[task].operations = operations;
+      }
+
       void end(std::string task, std::ostream& s)
       {
         end(task);
@@ -169,6 +182,8 @@ namespace Dune {
 
       void update_statistics()
       {
+        if (!_statistics_stale)
+          return;
         _max_name_len = 5; // strlen("total")
         for (std::map<std::string,BenchmarkEntry>::iterator it = _tasks.begin(), end = _tasks.end();
              it != end;
@@ -183,11 +198,22 @@ namespace Dune {
         _statistics_stale = false;
       }
 
+      double normalize_time(double t) const
+      {
+        switch (_join_mode)
+          {
+          case JoinMode::avg:
+            return t / _threads;
+          default:
+            return t;
+          }
+      }
+
       void print_entry(std::ostream& s, std::string name, const BenchmarkEntry& entry, bool summary_only = false) const
       {
         s << std::setw(_max_name_len + 1) << std::left << name
           << std::right << std::scientific << std::setw(10) << std::setprecision(2);
-        if (!summary_only)
+        if (_threads == 1 && !summary_only)
           for (std::vector<Timing>::const_iterator it = entry.timings.begin(),
                  end = entry.timings.end();
                it != end;
@@ -195,10 +221,19 @@ namespace Dune {
             {
               s << std::setw(10) << it->elapsed();
             }
-        s << std::setw(10) << entry.min
-          << std::setw(10) << entry.max
-          << std::setw(10) << entry.avg
-          << std::setw(10) << entry.std_dev;
+        s << std::setw(10) << normalize_time(entry.min)
+          << std::setw(10) << normalize_time(entry.max)
+          << std::setw(10) << normalize_time(entry.avg);
+
+        if (_threads == 1)
+          s << std::setw(10) << entry.std_dev;
+
+        if (entry.operations)
+          {
+            s << std::setw(10) << std::setprecision(3) << std::fixed << (entry.operations / normalize_time(entry.avg) * 1e-9);
+            if (_threads > 1)
+              s << std::setw(14) << std::setprecision(3) << std::fixed << (entry.operations / normalize_time(entry.avg) * 1e-9 / _threads);
+          }
 
         s << std::endl;
       }
@@ -212,16 +247,28 @@ namespace Dune {
 
         s << _name << " (" << std::setw(2) << _run << " of " << std::setw(2) << _max_runs << ") runs" << std::endl;
 
+        if (_threads > 1)
+          s << "joined statistics from " << _threads << " threads" << std::endl;
+
         s << std::setw(_max_name_len + 1) << "";
 
-        if (!summary_only)
+        if (_threads == 1 && !summary_only)
           for (std::size_t i = 0; i < _max_runs; ++i)
             s << std::setw(10) << i;
 
         s << std::setw(10) << "min"
           << std::setw(10) << "max"
-          << std::setw(10) << "avg"
-          << std::setw(10) << "std_dev" << std::endl;
+          << std::setw(10) << "avg";
+
+        if (_threads == 1)
+          s << std::setw(10) << "std_dev";
+
+        s << std::setw(10) << "GFLOPs";
+
+        if (_threads > 1)
+          s << std::setw(14) << "GFLOPs/core";
+
+        s << std::endl;
 
         for (std::map<std::string,BenchmarkEntry>::const_iterator it = _tasks.begin(), end = _tasks.end();
              it != end;
@@ -229,6 +276,54 @@ namespace Dune {
           print_entry(s,it->first,it->second,summary_only);
 
         print_entry(s,"total",_run_times,summary_only);
+      }
+
+      enum class JoinMode {
+        undefined,
+        max,
+        min,
+        avg,
+        sum,
+      };
+
+      void join(BenchmarkHelper& bh, JoinMode jm)
+      {
+        if (_join_mode == JoinMode::undefined)
+          _join_mode = jm;
+
+        if (_join_mode != jm)
+          DUNE_THROW(Exception,"Can't change JoinMode");
+
+        update_statistics();
+        bh.update_statistics();
+        for (auto& t : _tasks)
+          {
+            auto& t1 = t.second;
+            const auto& t2 = bh._tasks[t.first];
+            t1.operations += t2.operations;
+            switch (jm)
+              {
+              case JoinMode::max:
+                t1.min = std::max(t1.min,t2.min);
+                t1.max = std::max(t1.max,t2.max);
+                t1.avg = std::max(t1.avg,t2.avg);
+                break;
+              case JoinMode::min:
+                t1.min = std::min(t1.min,t2.min);
+                t1.max = std::min(t1.max,t2.max);
+                t1.avg = std::min(t1.avg,t2.avg);
+                break;
+              case JoinMode::avg:
+              case JoinMode::sum:
+                t1.min += t2.min;
+                t1.max += t2.max;
+                t1.avg += t2.avg;
+                break;
+              default:
+                DUNE_THROW(Exception,"Invalid JoinMode");
+              }
+          }
+        ++_threads;
       }
 
     private:
@@ -240,6 +335,8 @@ namespace Dune {
       bool _statistics_stale;
       BenchmarkEntry _run_times;
       std::size_t _max_name_len;
+      std::size_t _threads;
+      JoinMode _join_mode;
 
     };
 
