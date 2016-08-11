@@ -2,6 +2,7 @@ install(FILES compositegridfunctionspace.hh
               datahandleprovider.hh
               entityindexcache.hh
               genericdatahandle.hh
+              gridfunctionadapter.hh
               gridfunctionspace.hh
               gridfunctionspacebase.hh
               gridfunctionspaceutilities.hh
