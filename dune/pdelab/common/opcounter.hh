@@ -110,6 +110,7 @@ namespace oc {
       size_type sin_count;
       size_type sqrt_count;
       size_type comparison_count;
+      size_type blend_count;
 
       Counters()
         : addition_count(0)
@@ -120,6 +121,7 @@ namespace oc {
         , sin_count(0)
         , sqrt_count(0)
         , comparison_count(0)
+        , blend_count(0)
       {}
 
       void reset()
@@ -132,6 +134,7 @@ namespace oc {
         sin_count = 0;
         sqrt_count = 0;
         comparison_count = 0;
+        blend_count = 0;
       }
 
       template<typename Stream>
@@ -145,8 +148,9 @@ namespace oc {
            << "sin: " << sin_count << std::endl
            << "sqrt: " << sqrt_count << std::endl
            << "comparisons: " << comparison_count << std::endl
+           << "blends: " << blend_count << std::endl
            << std::endl
-           << "total: " << addition_count + multiplication_count + division_count + exp_count + pow_count + sin_count + sqrt_count + comparison_count << std::endl;
+           << "total: " << addition_count + multiplication_count + division_count + exp_count + pow_count + sin_count + sqrt_count << std::endl;
 
         if (doReset)
           reset();
@@ -162,6 +166,7 @@ namespace oc {
         sin_count += rhs.sin_count;
         sqrt_count += rhs.sqrt_count;
         comparison_count += rhs.comparison_count;
+        blend_count += rhs.blend_count;
         return *this;
       }
 
@@ -176,6 +181,7 @@ namespace oc {
         r.sin_count = sin_count - rhs.sin_count;
         r.sqrt_count = sqrt_count - rhs.sqrt_count;
         r.comparison_count = comparison_count - rhs.comparison_count;
+        r.blend_count = blend_count - rhs.blend_count;
         return r;
       }
 
@@ -194,6 +200,16 @@ namespace oc {
     static void divisions(std::size_t n)
     {
       counters.division_count += n;
+    }
+
+    static void comparisons(std::size_t n)
+    {
+      counters.comparison_count += n;
+    }
+
+    static void blends(std::size_t n)
+    {
+      counters.blend_count += n;
     }
 
     static void reset()
@@ -856,6 +872,50 @@ namespace oc {
   {
     ++OpCounter<F>::counters.comparison_count;
     return {std::abs(a._v)};
+  }
+
+  template<typename F>
+  OpCounter<F> max(const OpCounter<F>& a, const OpCounter<F>& b)
+  {
+    ++OpCounter<F>::counters.comparison_count;
+    using std::max;
+    return {max(a._v,b._v)};
+  }
+
+  template<typename F>
+  OpCounter<F> min(const OpCounter<F>& a, const OpCounter<F>& b)
+  {
+    ++OpCounter<F>::counters.comparison_count;
+    using std::min;
+    return {min(a._v,b._v)};
+  }
+
+  template<typename F>
+  OpCounter<F> round(const OpCounter<F>& a)
+  {
+    using std::round;
+    return {round(a._v)};
+  }
+
+  template<typename F>
+  OpCounter<F> trunc(const OpCounter<F>& a)
+  {
+    using std::trunc;
+    return {trunc(a._v)};
+  }
+
+  template<typename F>
+  OpCounter<F> ceil(const OpCounter<F>& a)
+  {
+    using std::ceil;
+    return {ceil(a._v)};
+  }
+
+  template<typename F>
+  OpCounter<F> floor(const OpCounter<F>& a)
+  {
+    using std::floor;
+    return {floor(a._v)};
   }
 
 }
