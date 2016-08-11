@@ -25,5 +25,7 @@ install(FILES benchmarkhelper.hh
               topologyutility.hh
               typetraits.hh
               utility.hh
+              vectorclass.hh
               vtkexport.hh
+              when.hh
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/common)
