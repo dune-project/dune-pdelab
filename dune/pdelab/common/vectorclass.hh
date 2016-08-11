@@ -9,6 +9,8 @@
 #error Do not manually set VCL_NAMESPACE, it is used internally by PDELab
 #endif
 
+#define BARRIER asm volatile("": : :"memory")
+
 #ifndef ENABLE_COUNTER
 
 #include <vectorclass.h>
@@ -37,47 +39,64 @@ struct Vec4d
 
   Vec4d(F d)
   {
+    BARRIER;
     std::fill(_d,_d+4,d);
+    BARRIER;
   }
 
   Vec4d(double d)
   {
+    BARRIER;
     std::fill(_d,_d+4,d);
+    BARRIER;
   }
 
   Vec4d(F d0, F d1, F d2, F d3)
     : _d{d0,d1,d2,d3}
-  {}
+  {
+    BARRIER;
+  }
 
   Vec4d& load(const F* p)
   {
+    BARRIER;
     std::copy(p,p+4,_d);
+    BARRIER;
     return *this;
   }
 
   Vec4d& load_a(const F* p)
   {
+    BARRIER;
     std::copy(p,p+4,_d);
+    BARRIER;
     return *this;
   }
 
   void store(F* p) const
   {
+    BARRIER;
     std::copy(_d,_d+4,p);
+    BARRIER;
   }
 
   void store_a(F* p) const
   {
+    BARRIER;
     std::copy(_d,_d+4,p);
+    BARRIER;
   }
 
   Vec4d const& insert(uint32_t index, F value)
   {
+    BARRIER;
     _d[index] = value;
+    BARRIER;
   }
 
   F extract(uint32_t index) const
   {
+    BARRIER;
     return _d[index];
   }
 
@@ -97,124 +116,170 @@ struct Vec4d
 
 // vector operator + : add element by element
 static inline Vec4d operator + (Vec4d const & a, Vec4d const & b) {
+  BARRIER;
   Vec4d r;
   std::transform(a._d,a._d+4,b._d,r._d,[](auto x, auto y){ return x + y; });
+  BARRIER;
   return r;
 }
 
 // vector operator += : add
 static inline Vec4d & operator += (Vec4d & a, Vec4d const & b) {
+  BARRIER;
   std::transform(a._d,a._d+4,b._d,a._d,[](auto x, auto y){ return x + y; });
+  BARRIER;
   return a;
 }
 
 // postfix operator ++
 static inline Vec4d operator ++ (Vec4d & a, int) {
-    Vec4d a0 = a;
-    a = a + 1.0;
-    return a0;
+  BARRIER;
+  Vec4d a0 = a;
+  a = a + 1.0;
+  BARRIER;
+  return a0;
 }
 
 // prefix operator ++
 static inline Vec4d & operator ++ (Vec4d & a) {
-    a = a + 1.0;
-    return a;
+  BARRIER;
+  a = a + 1.0;
+  BARRIER;
+  return a;
 }
 
 // vector operator - : subtract element by element
 static inline Vec4d operator - (Vec4d const & a, Vec4d const & b) {
+  BARRIER;
   Vec4d r;
   std::transform(a._d,a._d+4,b._d,r._d,[](auto x, auto y){ return x - y; });
+  BARRIER;
   return r;
 }
 
 // vector operator - : unary minus
 // Change sign bit, even for 0, INF and NAN
 static inline Vec4d operator - (Vec4d const & a) {
+  BARRIER;
   Vec4d r(a);
   for (size_t i = 0 ; i < 3 ; ++i)
     r._d[i] = -a._d[i];
+  BARRIER;
   return r;
 }
 
 // vector operator -= : subtract
 static inline Vec4d & operator -= (Vec4d & a, Vec4d const & b) {
+  BARRIER;
   std::transform(a._d,a._d+4,b._d,a._d,[](auto x, auto y){ return x - y; });
+  BARRIER;
   return a;
 }
 
 // postfix operator --
 static inline Vec4d operator -- (Vec4d & a, int) {
-    Vec4d a0 = a;
-    a = a - 1.0;
-    return a0;
+  BARRIER;
+  Vec4d a0 = a;
+  a = a - 1.0;
+  BARRIER;
+  return a0;
 }
 
 // prefix operator --
 static inline Vec4d & operator -- (Vec4d & a) {
-    a = a - 1.0;
-    return a;
+  BARRIER;
+  a = a - 1.0;
+  BARRIER;
+  return a;
 }
 
 // vector operator * : multiply element by element
 static inline Vec4d operator * (Vec4d const & a, Vec4d const & b) {
+  BARRIER;
   Vec4d r;
   std::transform(a._d,a._d+4,b._d,r._d,[](auto x, auto y){ return x * y; });
+  BARRIER;
   return r;
 }
 
 // vector operator *= : multiply
 static inline Vec4d & operator *= (Vec4d & a, Vec4d const & b) {
+  BARRIER;
   std::transform(a._d,a._d+4,b._d,a._d,[](auto x, auto y){ return x * y; });
+  BARRIER;
   return a;
 }
 
 // vector operator / : divide all elements by same integer
 static inline Vec4d operator / (Vec4d const & a, Vec4d const & b) {
+  BARRIER;
   Vec4d r;
   std::transform(a._d,a._d+4,b._d,r._d,[](auto x, auto y){ return x / y; });
+  BARRIER;
   return r;
 }
 
 // vector operator /= : divide
 static inline Vec4d & operator /= (Vec4d & a, Vec4d const & b) {
+  BARRIER;
   std::transform(a._d,a._d+4,b._d,a._d,[](auto x, auto y){ return x / y; });
+  BARRIER;
   return a;
 }
 
 // vector operator == : returns true for elements for which a == b
 static inline _vcl::Vec4db operator == (Vec4d const & a, Vec4d const & b) {
+  BARRIER;
   _vcl::Vec4d a_, b_;
+  BARRIER;
   a_.load(a._d[0].data());
+  BARRIER;
   b_.load(b._d[0].data());
+  BARRIER;
   Vec4d::F::comparisons(4);
+  BARRIER;
   return a_ == b_;
 }
 
 // vector operator != : returns true for elements for which a != b
 static inline _vcl::Vec4db operator != (Vec4d const & a, Vec4d const & b) {
+  BARRIER;
   _vcl::Vec4d a_, b_;
+  BARRIER;
   a_.load(a._d[0].data());
+  BARRIER;
   b_.load(b._d[0].data());
+  BARRIER;
   Vec4d::F::comparisons(4);
+  BARRIER;
   return a_ != b_;
 }
 
 // vector operator < : returns true for elements for which a < b
 static inline _vcl::Vec4db operator < (Vec4d const & a, Vec4d const & b) {
+  BARRIER;
   _vcl::Vec4d a_, b_;
+  BARRIER;
   a_.load(a._d[0].data());
+  BARRIER;
   b_.load(b._d[0].data());
+  BARRIER;
   Vec4d::F::comparisons(4);
+  BARRIER;
   return a_ < b_;
 }
 
 // vector operator <= : returns true for elements for which a <= b
 static inline _vcl::Vec4db operator <= (Vec4d const & a, Vec4d const & b) {
+  BARRIER;
   _vcl::Vec4d a_, b_;
+  BARRIER;
   a_.load(a._d[0].data());
+  BARRIER;
   b_.load(b._d[0].data());
+  BARRIER;
   Vec4d::F::comparisons(4);
+  BARRIER;
   return a_ <= b_;
 }
 
@@ -286,35 +351,45 @@ static inline Vec4db operator ! (Vec4d const & a) {
 
 // Horizontal add: Calculates the sum of all vector elements.
 static inline Vec4d::F horizontal_add (Vec4d const & a) {
+  BARRIER;
   return std::accumulate(a._d,a._d+4,Vec4d::F(0.0));
+  BARRIER;
 }
 
 // function max: a > b ? a : b
 static inline Vec4d max(Vec4d const & a, Vec4d const & b) {
+  BARRIER;
   Vec4d r;
   std::transform(a._d,a._d+4,b._d,r._d,[](auto x, auto y){ return max(x,y); });
+  BARRIER;
   return r;
 }
 
 // function min: a < b ? a : b
 static inline Vec4d min(Vec4d const & a, Vec4d const & b) {
+  BARRIER;
   Vec4d r;
   std::transform(a._d,a._d+4,b._d,r._d,[](auto x, auto y){ return min(x,y); });
+  BARRIER;
   return r;
 }
 
 // function abs: absolute value
 // Removes sign bit, even for -0.0f, -INF and -NAN
 static inline Vec4d abs(Vec4d const & a) {
+  BARRIER;
   Vec4d r;
   std::transform(a._d,a._d+4,r._d,[](auto x){ return abs(x); });
+  BARRIER;
   return r;
 }
 
 // function sqrt: square root
 static inline Vec4d sqrt(Vec4d const & a) {
+  BARRIER;
   Vec4d r;
   std::transform(a._d,a._d+4,r._d,[](auto x){ return sqrt(x); });
+  BARRIER;
   return r;
 }
 
@@ -400,29 +475,37 @@ static inline Vec4d pow(Vec4d const & a, Const_int_t<n>) {
 
 // function round: round to nearest integer (even). (result as double vector)
 static inline Vec4d round(Vec4d const & a) {
+  BARRIER;
   Vec4d r;
   std::transform(a._d,a._d+4,r._d,[](auto x){ return round(x); });
+  BARRIER;
   return r;
 }
 
 // function truncate: round towards zero. (result as double vector)
 static inline Vec4d truncate(Vec4d const & a) {
+  BARRIER;
   Vec4d r;
   std::transform(a._d,a._d+4,r._d,[](auto x){ return trunc(x); });
+  BARRIER;
   return r;
 }
 
 // function floor: round towards minus infinity. (result as double vector)
 static inline Vec4d floor(Vec4d const & a) {
+  BARRIER;
   Vec4d r;
   std::transform(a._d,a._d+4,r._d,[](auto x){ return floor(x); });
+  BARRIER;
   return r;
 }
 
 // function ceil: round towards plus infinity. (result as double vector)
 static inline Vec4d ceil(Vec4d const & a) {
+  BARRIER;
   Vec4d r;
   std::transform(a._d,a._d+4,r._d,[](auto x){ return ceil(x); });
+  BARRIER;
   return r;
 }
 
@@ -444,39 +527,53 @@ static inline Vec4i truncate_to_int(Vec4d const & a) {
 
 // Multiply and add
 static inline Vec4d mul_add(Vec4d const & a, Vec4d const & b, Vec4d const & c) {
+  BARRIER;
   Vec4d r;
   for (size_t i = 0 ; i < 4 ; ++i)
     r._d[i] = a._d[i] * b._d[i] + c._d[i];
+  BARRIER;
   return r;
 }
 
 
 // Multiply and subtract
 static inline Vec4d mul_sub(Vec4d const & a, Vec4d const & b, Vec4d const & c) {
+  BARRIER;
   Vec4d r;
   for (size_t i = 0 ; i < 4 ; ++i)
     r._d[i] = a._d[i] * b._d[i] - c._d[i];
+  BARRIER;
   return r;
 }
 
 // Multiply and inverse subtract
 static inline Vec4d nmul_add(Vec4d const & a, Vec4d const & b, Vec4d const & c) {
+  BARRIER;
   Vec4d r;
   for (size_t i = 0 ; i < 4 ; ++i)
     r._d[i] = - a._d[i] * b._d[i] + c._d[i];
+  BARRIER;
   return r;
 }
 
 
 template <int i0, int i1, int i2, int i3>
 static inline Vec4d blend4d(Vec4d const & a, Vec4d const & b) {
+  BARRIER;
   _vcl::Vec4d a_,b_;
+  BARRIER;
   a_.load(a._d[0].data());
+  BARRIER;
   b_.load(b._d[0].data());
+  BARRIER;
   _vcl::Vec4d r_ = _vcl::blend4d<i0,i1,i2,i3>(a_,b_);
+  BARRIER;
   Vec4d::F::blends(1);
+  BARRIER;
   Vec4d r;
+  BARRIER;
   r_.store(r._d[0].data());
+  BARRIER;
   return r;
 }
 
