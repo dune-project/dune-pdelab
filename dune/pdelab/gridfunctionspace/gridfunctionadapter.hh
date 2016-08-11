@@ -3,6 +3,7 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_GRIDFUNCTIONADAPTER_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_GRIDFUNCTIONADAPTER_HH
 
+#include <dune/pdelab/common/function.hh>
 
 /*! \brief Adapter returning f1(x)-f2(x) for two given grid functions
 
