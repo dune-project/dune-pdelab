@@ -496,7 +496,7 @@ int main(int argc, char** argv)
     if (true) {
       const int dim = 2;
       Dune::FieldVector<double,dim> L(1.0);
-      Dune::array<int,dim> N(Dune::fill_array<int,dim>(n));
+      std::array<int,dim> N(Dune::fill_array<int,dim>(n));
       std::bitset<dim> periodic(false);
       int overlap=o;
       Dune::YaspGrid<dim> grid(L,N,periodic,overlap,helper.getCommunicator());

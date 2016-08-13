@@ -160,11 +160,11 @@ namespace Dune {
     //=====================================================
 
     template<int d>
-    class MultiIndex : public Dune::array<int,d>
+    class MultiIndex : public std::array<int,d>
     {
     public:
 
-      MultiIndex () : Dune::array<int,d>()
+      MultiIndex () : std::array<int,d>()
       {
       }
 
@@ -634,9 +634,9 @@ namespace Dune {
 
     private:
       // store multiindices and coefficients on heap
-      Dune::array<std::shared_ptr<MultiIndex<d> >,n> alpha; // store index to multiindex map
+      std::array<std::shared_ptr<MultiIndex<d> >,n> alpha; // store index to multiindex map
       std::shared_ptr<LowprecMat> coeffs; // coefficients with respect to monomials
-      Dune::array<std::shared_ptr<LowprecMat>,d > gradcoeffs; // coefficients of gradient
+      std::array<std::shared_ptr<LowprecMat>,d > gradcoeffs; // coefficients of gradient
 
       // compute orthonormalized shapefunctions from a given set of coefficients
       void orthonormalize()

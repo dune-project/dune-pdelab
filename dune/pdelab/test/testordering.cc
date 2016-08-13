@@ -237,7 +237,7 @@ int main(int argc, char** argv)
       typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::conforming> Grid;
       Dune::FieldVector<double,2> l(0.0);
       Dune::FieldVector<double,2> u(1.0);
-      Dune::array<unsigned int,2> N = {{1,1}};
+      std::array<unsigned int,2> N = {{1,1}};
       std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(l,u,N);
       grid->globalRefine(1);
 
@@ -250,7 +250,7 @@ int main(int argc, char** argv)
       std::cout << "3D tests" << std::endl;
       // need a grid in order to test grid functions
       Dune::FieldVector<double,3> L(1.0);
-      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::array<int,3> N(Dune::fill_array<int,3>(1));
       Dune::YaspGrid<3> grid(L,N);
       grid.globalRefine(1);
 

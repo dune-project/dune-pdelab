@@ -228,7 +228,7 @@ int main(int argc, char **argv)
 
     typedef Dune::YaspGrid<dim> GM;
     Dune::FieldVector<double,dim> L(1.0);
-    Dune::array<int,dim> N(Dune::fill_array<int,dim>(cells));
+    std::array<int,dim> N(Dune::fill_array<int,dim>(cells));
 
     std::bitset<dim> periodic (false);
     periodic[0] = true;
