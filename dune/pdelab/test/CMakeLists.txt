@@ -17,6 +17,9 @@ dune_add_test(NAME testcomplexnumbers-istlbackend
 dune_add_test(SOURCES testconstraints.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 
+dune_add_test(SOURCES testdunefunctionsgfs.cc
+              CMAKE_GUARD dune-functions_FOUND)
+
 dune_add_test(SOURCES testfunction.cc)
 
 dune_add_test(SOURCES testgridfunctionspace.cc)
