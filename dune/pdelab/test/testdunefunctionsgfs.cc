@@ -11,14 +11,17 @@
 #include <dune/functions/functionspacebases/hierarchicvectorwrapper.hh>
 
 #include <dune/pdelab/gridfunctionspace/dunefunctionsgridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/dunefunctionsvectorgridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/constraints/conforming.hh>
 #include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
+#include <dune/pdelab/localoperator/linearelasticity.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
 
 using namespace Dune;
 
@@ -156,13 +159,186 @@ void solvePoissonProblem()
   vtkWriter.write("testdunefunctionsgfs-poisson");
 }
 
+template <class GridView>
+class StVenantKirchhoffParameters
+  : public Dune::PDELab::LinearElasticityParameterInterface<
+  Dune::PDELab::LinearElasticityParameterTraits<GridView, double>,
+  StVenantKirchhoffParameters<GridView> >
+{
+public:
+  typedef Dune::PDELab::LinearElasticityParameterTraits<GridView, double> Traits;
+
+  StVenantKirchhoffParameters(typename Traits::RangeFieldType l,
+                              typename Traits::RangeFieldType m) :
+    lambda_(l), mu_(m)
+  {}
+
+  void f (const typename Traits::ElementType& e,
+          const typename Traits::DomainType& x,
+          typename Traits::RangeType & y) const
+  {
+    std::fill(y.begin(), y.end(), 1e5);
+  }
+
+  template<typename I>
+  bool isDirichlet(const I & ig,
+                   const typename Traits::IntersectionDomainType & coord) const
+  {
+    return true;
+  }
+
+  typename Traits::RangeFieldType
+  lambda (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    return lambda_;
+  }
+
+  typename Traits::RangeFieldType
+  mu (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    return mu_;
+  }
+
+private:
+  typename Traits::RangeFieldType lambda_;
+  typename Traits::RangeFieldType mu_;
+};
+
+
+template <int order>
+void solveElasticityProblem()
+{
+  //////////////////////////////////
+  //   Generate the grid
+  //////////////////////////////////
+
+  const int dim = 2;
+  typedef YaspGrid<dim> GridType;
+  FieldVector<double,dim> l(1);
+  std::array<int,dim> elements = {10, 10};
+  GridType grid(l,elements);
+
+  ////////////////////////////////////////////////////////
+  //  Assemble the algebraic system
+  ////////////////////////////////////////////////////////
+
+  // Construct Lagrangian finite element space basis
+  using GridView = typename GridType::LeafGridView;
+  auto gridView = grid.leafGridView();
+  using Basis = Functions::PQkNodalBasis<GridView,order>;
+  Basis basis(gridView);
+
+  typedef PDELab::QkLocalFiniteElementMap<GridView,double,double,order> FEM;
+  FEM fem(gridView);
+
+  typedef PDELab::ConformingDirichletConstraints Constraints;
+  Constraints con;
+
+  typedef PDELab::DuneFunctionsVectorGridFunctionSpace<Basis,
+                                            dim,
+                                            PDELab::istl::VectorBackend<PDELab::istl::Blocking::fixed>,
+                                            PDELab::istl::VectorBackend<>,
+                                            Constraints,
+                                            PDELab::EntityBlockedOrderingTag,
+                                            PDELab::DefaultLeafOrderingTag
+                                           > GFS;
+  GFS gfs(basis);
+  gfs.name("displacement");
+
+  // Container for the Dirichlet boundary conditions
+  typedef typename GFS::template ConstraintsContainer<double>::Type C;
+  C constraintsContainer;
+
+  // create the model describing our problem
+  auto lambda = 1e6;
+  auto mu     = 1e6;
+  StVenantKirchhoffParameters<GridView> model(lambda, mu);
+
+  PDELab::constraints(model,gfs,constraintsContainer);
+
+  // make grid operator
+  PDELab::LinearElasticity<StVenantKirchhoffParameters<GridView> > lop(model);
+
+  // set up linear operator acting on the FEM space
+  typedef PDELab::GridOperator<GFS,
+                               GFS,
+                               PDELab::LinearElasticity<StVenantKirchhoffParameters<GridView> >,
+                               PDELab::istl::BCRSMatrixBackend<>,
+                               double,double,double,C,C> GridOperator;
+
+  GridOperator gridOperator(gfs, constraintsContainer, gfs, constraintsContainer, lop, {9});
+
+  typedef typename GridOperator::Traits::Domain V;
+  typedef typename GridOperator::Jacobian M;
+  using MatrixType = typename M::Container;   //  BCRSMatrix<FieldMatrix<double, dim, dim> >
+  using VectorType = typename V::Container;   //  BlockVector<FieldVector<double,dim> >
+
+  // Dummy coefficient vector
+  V x0(gfs);
+  x0 = 0.0;
+
+  // represent operator as a matrix
+  MatrixType stiffnessMatrix;
+  M m(gridOperator,stiffnessMatrix);
+  m = 0.0;
+
+  // Compute stiffness matrix
+  gridOperator.jacobian(x0, m);
+
+  // evaluate residual w.r.t pseudo "current" iterate
+  VectorType rhs;
+  V r(gfs,rhs);  //Use the rhs object for the actual storage
+  r = 0.0;
+
+  gridOperator.residual(x0,r);
+
+  ///////////////////////////
+  //   Compute solution
+  ///////////////////////////
+
+  VectorType x(rhs.size());
+  x = 0;
+
+  // Technicality:  turn the matrix into a linear operator
+  MatrixAdapter<MatrixType,VectorType,VectorType> op(stiffnessMatrix);
+
+  // A preconditioner
+  SeqILU0<MatrixType,VectorType,VectorType> ilu0(stiffnessMatrix,1.0);
+
+  // A preconditioned conjugate-gradient solver
+  CGSolver<VectorType> cg(op,ilu0,1E-4,
+                          50,   // maximum number of iterations
+                          2);
+
+  // Object storing some statistics about the solving process
+  InverseOperatorResult statistics;
+
+  // Solve!
+  cg.apply(x, rhs, statistics);
+
+  // Output result to VTK file
+  auto pressureFunction = Functions::makeDiscreteGlobalBasisFunction<FieldVector<double,dim> >(basis,x);
+
+  SubsamplingVTKWriter<GridView> vtkWriter(gridView,2);
+  vtkWriter.addVertexData(pressureFunction, VTK::FieldInfo("displacement", VTK::FieldInfo::Type::vector, dim));
+  vtkWriter.write("testdunefunctionsgfs-elasticity");
+}
+
+
 int main(int argc, char** argv) try
 {
   // Set up MPI if available
   MPIHelper::instance(argc, argv);
 
+  // Test simple scalar spaces
   solvePoissonProblem<1>();
   solvePoissonProblem<2>();
+
+  // Test a vector-valued space
+  solveElasticityProblem<1>();
+  solveElasticityProblem<2>();
+
+  return 0;
 }
 catch (Exception &e)
 {
