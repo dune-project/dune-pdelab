@@ -671,6 +671,66 @@ namespace Dune {
         }
       };
 
+      template<int i>
+      struct NonlinearJacobianApplyVolumeOperation {
+        template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+        static void apply(const ArgPtrs& lops, const EG& eg,
+                          const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv,
+                          Y& y)
+        {
+          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
+            tuple_element<i,Args>::type::doAlphaVolume>::
+            nonlinear_jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, z, lfsv, y);
+        }
+      };
+
+      template<int i>
+      struct NonlinearJacobianApplyVolumePostSkeletonOperation {
+        template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+        static void apply(const ArgPtrs& lops, const EG& eg,
+                          const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv,
+                          Y& y)
+        {
+          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
+            tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
+            nonlinear_jacobian_apply_volume_post_skeleton(*get<i>(lops), eg,
+                                                          lfsu, x, z, lfsv,
+                                                          y);
+        }
+      };
+
+      template<int i>
+      struct NonlinearJacobianApplySkeletonOperation {
+        template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+        static void apply(const ArgPtrs& lops, const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+                          const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
+                          Y& y_s, Y& y_n)
+        {
+          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
+            tuple_element<i,Args>::type::doAlphaSkeleton>::
+          nonlinear_jacobian_apply_skeleton(*get<i>(lops), ig,
+                                                    lfsu_s, x_s, z_s, lfsv_s,
+                                                    lfsu_n, x_n, z_n, lfsv_n,
+                                                    y_s, y_n);
+        }
+      };
+
+      template<int i>
+      struct NonlinearJacobianApplyBoundaryOperation {
+        template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+        static void apply(const ArgPtrs& lops, const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+                          Y& y_s)
+        {
+          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
+            tuple_element<i,Args>::type::doAlphaBoundary>::
+            nonlinear_jacobian_apply_boundary(*get<i>(lops), ig,
+                                              lfsu_s, x_s, z_s, lfsv_s,
+                                              y_s);
+        }
+      };
+
     public:
       //! apply an element's jacobian
       /**
@@ -739,6 +799,60 @@ namespace Dune {
       {
         ForLoop<JacobianApplyBoundaryOperation, 0, size-1>::
           apply(lops, ig, lfsu_s, x_s, lfsv_s, y_s);
+      }
+
+      //! apply an element's jacobian (nonlinear case)
+      /**
+       * \note Summands with zero weight don't contribute to the jacobian, and
+       *       the calls to the evaluation methods are eliminated at run-time.
+       */
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename C>
+      void jacobian_apply_volume(const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, C& r) const
+      {
+        ForLoop<NonlinearJacobianApplyVolumeOperation, 0, size-1>::
+          apply(lops, eg, lfsu, x, z, lfsv, r);
+      }
+
+      //! \brief apply an element's jacobian after the intersections have been
+      //!        handled (nonlinear case)
+      /**
+       * \note Summands with zero weight don't contribute to the jacobian, and
+       *       the calls to the evaluation methods are eliminated at run-time.
+       */
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename C>
+      void jacobian_apply_volume_post_skeleton(const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, C& r) const
+      {
+        ForLoop<NonlinearJacobianApplyVolumePostSkeletonOperation, 0, size-1>::
+          apply(lops, eg, lfsu, x, z, lfsv, r);
+      }
+
+      //! apply an internal intersections's jacobians (nonlinear case)
+      /**
+       * \note Summands with zero weight don't contribute to the jacobian, and
+       *       the calls to the evaluation methods are eliminated at run-time.
+       */
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename C>
+      void jacobian_apply_skeleton(const IG& ig,
+                                   const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+                                   const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
+                                   C& r_s, C& r_n) const
+      {
+        ForLoop<NonlinearJacobianApplySkeletonOperation, 0, size-1>::
+          apply(lops, ig, lfsu_s, x_s, z_s, lfsv_s, lfsu_n, x_n, z_n, lfsv_n, r_s, r_n);
+      }
+
+      //! apply a boundary intersections's jacobian (nonlinear case)
+      /**
+       * \note Summands with zero weight don't contribute to the jacobian, and
+       *       the calls to the evaluation methods are eliminated at run-time.
+       */
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename C>
+      void jacobian_apply_boundary(const IG& ig,
+                                   const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+                                   C& r_s) const
+      {
+        ForLoop<NonlinearJacobianApplyBoundaryOperation, 0, size-1>::
+          apply(lops, ig, lfsu_s, x_s, z_s, lfsv_s, r_s);
       }
 
       //! \} Methods for the application of the jacobian
