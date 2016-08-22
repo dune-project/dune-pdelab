@@ -387,7 +387,7 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           WeightedVectorAccumulationView<C>& r)
         {
-          apply(lops, weights[i]*r.weight(), eg, lfsu, x, lfsv, r.container());
+          apply(lops, weights[i]*r.weight(), eg, lfsu, x, lfsv, r);
         }
         template<typename EG, typename LFSU, typename X, typename LFSV,
                  typename C>
@@ -397,9 +397,11 @@ namespace Dune {
                           C& r)
         {
           if(weight != K(0)) {
-            WeightedVectorAccumulationView<C> view(r, weight);
+            const typename C::weight_type old_weight = r.weight();
+            r.setWeight(weight);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
-              alpha_volume(*get<i>(lops), eg, lfsu, x, lfsv, view);
+              alpha_volume(*get<i>(lops), eg, lfsu, x, lfsv, r);
+            r.setWeight(old_weight);
           }
         }
       };
@@ -414,7 +416,7 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           WeightedVectorAccumulationView<C>& r)
         {
-          apply(lops, weights[i]*r.weight(), eg, lfsu, x, lfsv, r.container());
+          apply(lops, weights[i]*r.weight(), eg, lfsu, x, lfsv, r);
         }
         template<typename EG, typename LFSU, typename X, typename LFSV,
                  typename C>
@@ -424,11 +426,13 @@ namespace Dune {
                           C& r)
         {
           if(weight != K(0)) {
-            WeightedVectorAccumulationView<C> view(r, weight);
+            const typename C::weight_type old_weight = r.weight();
+            r.setWeight(weight);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton>::
               alpha_volume_post_skeleton(*get<i>(lops), eg,
                                          lfsu, x, lfsv,
-                                         view);
+                                         r);
+            r.setWeight(old_weight);
           }
         }
       };
@@ -449,7 +453,7 @@ namespace Dune {
                 ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
-                r_s.container(), r_n.container());
+                r_s, r_n);
         }
         template<typename IG, typename LFSU, typename X, typename LFSV,
                  typename C>
@@ -461,14 +465,19 @@ namespace Dune {
                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                           C& r_s, C& r_n)
         {
-          if(weight_s != K(0) || weight_n != K(0)) {
-            WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
-            WeightedVectorAccumulationView<C> view_n(r_n, weight_n);
+          if(weight_s != K(0) or weight_n != K(0)) {
+            const typename C::weight_type
+              old_weight_s = r_s.weight(),
+              old_weight_n = r_n.weight();
+            r_s.setWeight(weight_s);
+            r_n.setWeight(weight_n);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
               alpha_skeleton(*get<i>(lops), ig,
                              lfsu_s, x_s, lfsv_s,
                              lfsu_n, x_n, lfsv_n,
-                             view_s, view_n);
+                             r_s, r_n);
+            r_s.setWeight(old_weight_s);
+            r_n.setWeight(old_weight_n);
           }
         }
       };
@@ -485,7 +494,7 @@ namespace Dune {
         {
           apply(lops, weights[i]*r_s.weight(), ig,
                 lfsu_s, x_s, lfsv_s,
-                r_s.container());
+                r_s);
         }
         template<typename IG, typename LFSU, typename X, typename LFSV,
                  typename C>
@@ -496,9 +505,11 @@ namespace Dune {
                           C& r_s)
         {
           if(weight_s != K(0)) {
-            WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
+            const typename C::weight_type old_weight_s = r_s.weight();
+            r_s.setWeight(weight_s);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary>::
-              alpha_boundary(*get<i>(lops), ig, lfsu_s, x_s, lfsv_s, view_s);
+              alpha_boundary(*get<i>(lops), ig, lfsu_s, x_s, lfsv_s, r_s);
+            r_s.setWeight(old_weight_s);
           }
         }
       };
@@ -593,7 +604,7 @@ namespace Dune {
                           const LFSV& lfsv,
                           WeightedVectorAccumulationView<C>& r)
         {
-          apply(lops, weights[i]*r.weight(), eg, lfsv, r.container());
+          apply(lops, weights[i]*r.weight(), eg, lfsv, r);
         }
         template<typename EG, typename LFSV, typename C>
         static void apply(const ArgPtrs& lops, typename C::weight_type weight,
@@ -602,9 +613,11 @@ namespace Dune {
                           C& r)
         {
           if(weight != K(0)) {
-            WeightedVectorAccumulationView<C> view(r, weight);
+            const typename C::weight_type old_weight = r.weight();
+            r.setWeight(weight);
             LocalAssemblerCallSwitch<Arg, Arg::doLambdaVolume>::
-              lambda_volume(*get<i>(lops), eg, lfsv, view);
+              lambda_volume(*get<i>(lops), eg, lfsv, r);
+            r.setWeight(old_weight);
           }
         }
       };
@@ -618,7 +631,7 @@ namespace Dune {
                           const LFSV& lfsv,
                           WeightedVectorAccumulationView<C>& r)
         {
-          apply(lops, weights[i]*r.weight(), eg, lfsv, r.container());
+          apply(lops, weights[i]*r.weight(), eg, lfsv, r);
         }
         template<typename EG, typename LFSV, typename C>
         static void apply(const ArgPtrs& lops, typename C::weight_type weight,
@@ -627,9 +640,11 @@ namespace Dune {
                           C& r)
         {
           if(weight != K(0)) {
-            WeightedVectorAccumulationView<C> view(r, weight);
+            const typename C::weight_type old_weight = r.weight();
+            r.setWeight(weight);
             LocalAssemblerCallSwitch<Arg, Arg::doLambdaVolumePostSkeleton>::
-              lambda_volume_post_skeleton(*get<i>(lops), eg, lfsv, view);
+              lambda_volume_post_skeleton(*get<i>(lops), eg, lfsv, r);
+            r.setWeight(old_weight);
           }
         }
       };
@@ -647,7 +662,7 @@ namespace Dune {
           apply(lops, weights[i]*r_s.weight(), weights[i]*r_n.weight(),
                 ig,
                 lfsv_s, lfsv_n,
-                r_s.container(), r_n.container());
+                r_s, r_n);
         }
         template<typename IG, typename LFSV, typename C>
         static void apply(const ArgPtrs& lops,
@@ -657,13 +672,18 @@ namespace Dune {
                           const LFSV& lfsv_s, const LFSV& lfsv_n,
                           C& r_s, C& r_n)
         {
-          if(weight_s != K(0) || weight_n != K(0)) {
-            WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
-            WeightedVectorAccumulationView<C> view_n(r_n, weight_n);
+          if(weight_s != K(0) or weight_n != K(0)) {
+            const typename C::weight_type
+              old_weight_s = r_s.weight(),
+              old_weight_n = r_n.weight();
+            r_s.setWeight(weight_s);
+            r_n.setWeight(weight_n);
             LocalAssemblerCallSwitch<Arg, Arg::doLambdaSkeleton>::
               lambda_skeleton(*get<i>(lops), ig,
                               lfsv_s, lfsv_n,
-                              view_s, view_n);
+                              r_s, r_n);
+            r_s.setWeight(old_weight_s);
+            r_n.setWeight(old_weight_n);
           }
         }
       };
@@ -677,7 +697,7 @@ namespace Dune {
                           const LFSV& lfsv_s,
                           WeightedVectorAccumulationView<C>& r_s)
         {
-          apply(lops, weights[i]*r_s.weight(), ig, lfsv_s, r_s.container());
+          apply(lops, weights[i]*r_s.weight(), ig, lfsv_s, r_s);
         }
         template<typename IG, typename LFSV, typename C>
         static void apply(const ArgPtrs& lops,
@@ -687,9 +707,11 @@ namespace Dune {
                           C& r_s)
         {
           if(weight_s != K(0)) {
-            WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
+            const typename C::weight_type old_weight_s = r_s.weight();
+            r_s.setWeight(weight_s);
             LocalAssemblerCallSwitch<Arg, Arg::doLambdaBoundary>::
-              lambda_boundary(*get<i>(lops), ig, lfsv_s, view_s);
+              lambda_boundary(*get<i>(lops), ig, lfsv_s, r_s);
+            r_s.setWeight(old_weight_s);
           }
         }
       };
@@ -769,7 +791,7 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           WeightedVectorAccumulationView<C>& r)
         {
-          apply(lops, weights[i]*r.weight(), eg, lfsu, x, lfsv, r.container());
+          apply(lops, weights[i]*r.weight(), eg, lfsu, x, lfsv, r);
         }
         template<typename EG, typename LFSU, typename X, typename LFSV,
                  typename C>
@@ -779,9 +801,11 @@ namespace Dune {
                           C& r)
         {
           if(weight != K(0)) {
-            WeightedVectorAccumulationView<C> view(r, weight);
+            const typename C::weight_type old_weight = r.weight();
+            r.setWeight(weight);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
-              jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, lfsv, view);
+              jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, lfsv, r);
+            r.setWeight(old_weight);
           }
         }
       };
@@ -796,7 +820,7 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           WeightedVectorAccumulationView<C>& r)
         {
-          apply(lops, weights[i]*r.weight(), eg, lfsu, x, lfsv, r.container());
+          apply(lops, weights[i]*r.weight(), eg, lfsu, x, lfsv, r);
         }
         template<typename EG, typename LFSU, typename X, typename LFSV,
                  typename C>
@@ -806,11 +830,13 @@ namespace Dune {
                           C& r)
         {
           if(weight != K(0)) {
-            WeightedVectorAccumulationView<C> view(r, weight);
+            const typename C::weight_type old_weight = r.weight();
+            r.setWeight(weight);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton>::
               jacobian_apply_volume_post_skeleton(*get<i>(lops), eg,
                                                   lfsu, x, lfsv,
-                                                  view);
+                                                  r);
+            r.setWeight(old_weight);
           }
         }
       };
@@ -831,7 +857,7 @@ namespace Dune {
                 ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
-                r_s.container(), r_n.container());
+                r_s, r_n);
         }
         template<typename IG, typename LFSU, typename X, typename LFSV,
                  typename C>
@@ -843,14 +869,19 @@ namespace Dune {
                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                           C& r_s, C& r_n)
         {
-          if(weight_s != K(0) || weight_n != K(0)) {
-            WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
-            WeightedVectorAccumulationView<C> view_n(r_n, weight_n);
+          if(weight_s != K(0) or weight_n != K(0)) {
+            const typename C::weight_type
+              old_weight_s = r_s.weight(),
+              old_weight_n = r_n.weight();
+            r_s.setWeight(weight_s);
+            r_n.setWeight(weight_n);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
               jacobian_apply_skeleton(*get<i>(lops), ig,
                                       lfsu_s, x_s, lfsv_s,
                                       lfsu_n, x_n, lfsv_n,
-                                      view_s, view_n);
+                                      r_s, r_n);
+            r_s.setWeight(old_weight_s);
+            r_n.setWeight(old_weight_n);
           }
         }
       };
@@ -867,7 +898,7 @@ namespace Dune {
         {
           apply(lops, weights[i]*r_s.weight(), ig,
                 lfsu_s, x_s, lfsv_s,
-                r_s.container());
+                r_s);
         }
         template<typename IG, typename LFSU, typename X, typename LFSV,
                  typename C>
@@ -878,11 +909,13 @@ namespace Dune {
                           C& r_s)
         {
           if(weight_s != K(0)) {
-            WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
+            const typename C::weight_type old_weight_s = r_s.weight();
+            r_s.setWeight(weight_s);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary>::
               jacobian_apply_boundary(*get<i>(lops), ig,
                                       lfsu_s, x_s, lfsv_s,
-                                      view_s);
+                                      r_s);
+            r_s.setWeight(old_weight_s);
           }
         }
       };
@@ -978,7 +1011,7 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           WeightedMatrixAccumulationView<C>& m)
         {
-          apply(lops, weights[i]*m.weight(), eg, lfsu, x, lfsv, m.container());
+          apply(lops, weights[i]*m.weight(), eg, lfsu, x, lfsv, m);
         }
         template<typename EG, typename LFSU, typename X, typename LFSV,
                  typename C>
@@ -988,9 +1021,11 @@ namespace Dune {
                           C& m)
         {
           if(weight != K(0)) {
-            WeightedMatrixAccumulationView<C> view(m, weight);
+            const typename C::weight_type old_weight = m.weight();
+            m.setWeight(weight);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
-              jacobian_volume(*get<i>(lops), eg, lfsu, x, lfsv, view);
+              jacobian_volume(*get<i>(lops), eg, lfsu, x, lfsv, m);
+            m.setWeight(old_weight);
           }
         }
       };
@@ -1005,7 +1040,7 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           WeightedMatrixAccumulationView<C>& m)
         {
-          apply(lops, weights[i]*m.weight(), eg, lfsu, x, lfsv, m.container());
+          apply(lops, weights[i]*m.weight(), eg, lfsu, x, lfsv, m);
         }
         template<typename EG, typename LFSU, typename X, typename LFSV,
                  typename C>
@@ -1015,11 +1050,13 @@ namespace Dune {
                           C& m)
         {
           if(weight != K(0)) {
-            WeightedMatrixAccumulationView<C> view(m, weight);
+            const typename C::weight_type old_weight = m.weight();
+            m.setWeight(weight);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton>::
               jacobian_volume_post_skeleton(*get<i>(lops), eg,
                                             lfsu, x, lfsv,
-                                            view);
+                                            m);
+            m.setWeight(old_weight);
           }
         }
       };
@@ -1044,8 +1081,8 @@ namespace Dune {
                 ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
-                m_ss.container(), m_sn.container(),
-                m_ns.container(), m_nn.container());
+                m_ss, m_sn,
+                m_ns, m_nn);
         }
         template<typename IG, typename LFSU, typename X, typename LFSV,
                  typename C>
@@ -1059,18 +1096,27 @@ namespace Dune {
                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                           C& m_ss, C& m_sn, C& m_ns, C& m_nn)
         {
-          if(weight_ss != K(0) || weight_sn != K(0) ||
-             weight_ns != K(0) || weight_nn != K(0))
+          if(weight_ss != K(0) or weight_sn != K(0) or
+             weight_ns != K(0) or weight_nn != K(0))
           {
-            WeightedMatrixAccumulationView<C> view_ss(m_ss, weight_ss);
-            WeightedMatrixAccumulationView<C> view_sn(m_sn, weight_sn);
-            WeightedMatrixAccumulationView<C> view_ns(m_ns, weight_ns);
-            WeightedMatrixAccumulationView<C> view_nn(m_nn, weight_nn);
+            const typename C::weight_type
+              old_weight_ss = m_ss.weight(),
+              old_weight_sn = m_sn.weight(),
+              old_weight_ns = m_ns.weight(),
+              old_weight_nn = m_nn.weight();
+            m_ss.setWeight(weight_ss);
+            m_sn.setWeight(weight_sn);
+            m_ns.setWeight(weight_ns);
+            m_nn.setWeight(weight_nn);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
               jacobian_skeleton(*get<i>(lops), ig,
                                 lfsu_s, x_s, lfsv_s,
                                 lfsu_n, x_n, lfsv_n,
-                                view_ss, view_sn, view_ns, view_nn);
+                                m_ss, m_sn, m_ns, m_nn);
+            m_ss.setWeight(old_weight_ss);
+            m_sn.setWeight(old_weight_sn);
+            m_ns.setWeight(old_weight_ns);
+            m_nn.setWeight(old_weight_nn);
           }
         }
       };
@@ -1087,7 +1133,7 @@ namespace Dune {
         {
           apply(lops, weights[i]*m_ss.weight(), ig,
                 lfsu_s, x_s, lfsv_s,
-                m_ss.container());
+                m_ss);
         }
         template<typename IG, typename LFSU, typename X, typename LFSV,
                  typename C>
@@ -1099,10 +1145,12 @@ namespace Dune {
         {
           if(weight_ss != K(0))
           {
-            WeightedMatrixAccumulationView<C> view_ss(m_ss, weight_ss);
+            const typename C::weight_type old_weight_ss = m_ss.weight();
+            m_ss.setWeight(weight_ss);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary>::
               jacobian_boundary(*get<i>(lops), ig,
-                                lfsu_s, x_s, lfsv_s, view_ss);
+                                lfsu_s, x_s, lfsv_s, m_ss);
+            m_ss.setWeight(old_weight_ss);
           }
         }
       };
