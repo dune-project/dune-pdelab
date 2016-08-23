@@ -2,6 +2,7 @@ include(UsePETSc)
 include(UseEigen)
 
 find_package(VCL)
+include(AddVCLFlags)
 
 function(add_dune_petsc_flags)
   if(PETSC_FOUND)
