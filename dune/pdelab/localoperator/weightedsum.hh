@@ -1466,6 +1466,205 @@ namespace Dune {
 
       //////////////////////////////////////////////////////////////////////
       //
+      //! \name Additional methods for matrix-free block preconditioners
+      //! \{
+      //
+
+    private :
+      // template meta programs
+
+      template<int i>
+      struct JacobianSkeletonDiagOperation
+      {
+        typedef typename tuple_element<i,Args>::type Arg;
+        template<typename IG, typename LFSU, typename X, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops, const Weights& weights,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                          WeightedMatrixAccumulationView<C>& mat_ss)
+        {
+          apply(lops, weights[i]*mat_ss.weight(), ig, lfsu_s, x_s, lfsv_s, mat_ss);
+        }
+        template<typename IG, typename LFSU, typename X, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                          C& mat_ss)
+        {
+          if(weight != K(0)) {
+            const typename C::weight_type old_weight = mat_ss.weight();
+            mat_ss.setWeight(weight);
+            get<i>(lops)->jacobian_skeleton_diag(ig,lfsu_s,x_s,lfsv_s,mat_ss);
+            mat_ss.setWeight(old_weight);
+          }
+        }
+      };
+
+      template<int i>
+      struct JacobianApplySkeletonDiagOperation
+      {
+        typedef typename tuple_element<i,Args>::type Arg;
+        //--------------------------------------------
+        // linear part
+        template<typename IG, typename LFSU, typename X, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops, const Weights& weights,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                          WeightedVectorAccumulationView<C>& r_s)
+        {
+          apply(lops, weights[i]*r_s.weight(), ig, lfsu_s, x_s, lfsv_s, r_s);
+        }
+        template<typename IG, typename LFSU, typename X, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                          C& r_s)
+        {
+          if(weight != K(0)) {
+            const typename C::weight_type old_weight = r_s.weight();
+            r_s.setWeight(weight);
+            get<i>(lops)->jacobian_apply_skeleton_diag(ig,lfsu_s,x_s,lfsv_s,r_s);
+            r_s.setWeight(old_weight);
+          }
+        }
+        //--------------------------------------------
+        // nonlinear part
+        template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops, const Weights& weights,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
+                          WeightedVectorAccumulationView<C>& r_s)
+        {
+          apply(lops, weights[i]*r_s.weight(), ig, lfsu_s, x_s, z_s, lfsv_s, r_s);
+        }
+        template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
+                          C& r_s)
+        {
+          if(weight != K(0)) {
+            const typename C::weight_type old_weight = r_s.weight();
+            r_s.setWeight(weight);
+            get<i>(lops)->jacobian_apply_skeleton_diag(ig,lfsu_s,x_s,z_s,lfsv_s,r_s);
+            r_s.setWeight(old_weight);
+          }
+        }
+      };
+
+      template<int i>
+      struct JacobianApplySkeletonOtherToSelfOperation
+      {
+        typedef typename tuple_element<i,Args>::type Arg;
+        //--------------------------------------------
+        // linear part
+        template<typename IG, typename LFSU, typename X, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops, const Weights& weights,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                          const LFSU& lfsu_n, const X& x_n,
+                          WeightedVectorAccumulationView<C>& r_s)
+        {
+          apply(lops, weights[i]*r_s.weight(), ig, lfsu_s, x_s, lfsv_s, lfsu_n, x_n, r_s);
+        }
+        template<typename IG, typename LFSU, typename X, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                          const LFSU& lfsu_n, const X& x_n,
+                          C& r_s)
+        {
+          if(weight != K(0)) {
+            const typename C::weight_type old_weight = r_s.weight();
+            r_s.setWeight(weight);
+            get<i>(lops)->jacobian_apply_skeleton_other_to_self(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,r_s);
+            r_s.setWeight(old_weight);
+          }
+        }
+        //--------------------------------------------
+        // nonlinear part
+        template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops, const Weights& weights,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
+                          const LFSU& lfsu_n, const X& x_n, const Z& z_n,
+                          WeightedVectorAccumulationView<C>& r_s)
+        {
+          apply(lops, weights[i]*r_s.weight(), ig, lfsu_s, x_s, z_s, lfsv_s, lfsu_n, x_n, z_n, r_s);
+        }
+        template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
+                          const LFSU& lfsu_n, const X& x_n, const Z& z_n,
+                          C& r_s)
+        {
+          if(weight != K(0)) {
+            const typename C::weight_type old_weight = r_s.weight();
+            r_s.setWeight(weight);
+            get<i>(lops)->jacobian_apply_skeleton_other_to_self(ig,lfsu_s,x_s,z_s,lfsv_s,lfsu_n,x_n,z_n,r_s);
+            r_s.setWeight(old_weight);
+          }
+        }
+      };
+
+    public :
+
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename LocalMatrix>
+      void jacobian_skeleton_diag(const IG& ig,
+                                  const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                  LocalMatrix& mat_ss) const
+      {
+        ForLoop<JacobianSkeletonDiagOperation, 0, size-1>::
+          apply(lops, weights, ig, lfsu_s, x_s, lfsv_s, mat_ss);
+      }
+
+      //! linear case
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename RT>
+      void jacobian_apply_skeleton_diag(const IG& ig,
+                                        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                        RT& r_s) const
+      {
+        ForLoop<JacobianApplySkeletonDiagOperation, 0, size-1>::
+          apply(lops, weights, ig, lfsu_s, x_s, lfsv_s, r_s);
+      }
+
+      //! nonlinear case
+      template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename RT>
+      void jacobian_apply_skeleton_diag(const IG& ig,
+                                        const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
+                                        RT& r_s) const
+      {
+        ForLoop<JacobianApplySkeletonDiagOperation, 0, size-1>::
+          apply(lops, weights, ig, lfsu_s, x_s, z_s, lfsv_s, r_s);
+      }
+
+      //! linear case
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename RT>
+      void jacobian_apply_skeleton_other_to_self(const IG& ig,
+                                                 const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                                 const LFSU& lfsu_n, const X& x_n,
+                                                 RT& r_s) const
+      {
+        ForLoop<JacobianApplySkeletonOtherToSelfOperation, 0, size-1>::
+          apply(lops, weights, ig, lfsu_s, x_s, lfsv_s, lfsu_n, x_n, r_s);
+      }
+
+      //! nonlinear case
+      template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename RT>
+      void jacobian_apply_skeleton_other_to_self(const IG& ig,
+                                                 const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
+                                                 const LFSU& lfsu_n, const X& x_n, const Z& z_n,
+                                                 RT& r_s) const
+      {
+        ForLoop<JacobianApplySkeletonOtherToSelfOperation, 0, size-1>::
+          apply(lops, weights, ig, lfsu_s, x_s, z_s, lfsv_s, lfsu_n, x_n, z_n, r_s);
+      }
+
+      //! /} Additional methods for matrix-free block preconditioners
+
+      //////////////////////////////////////////////////////////////////////
+      //
       //! \name Methods for instationary problems
       //! \{
       //
