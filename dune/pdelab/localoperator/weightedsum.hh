@@ -923,20 +923,21 @@ namespace Dune {
       template<int i>
       struct NonlinearJacobianApplyVolumeOperation {
         typedef typename tuple_element<i,Args>::type Arg;
-        template<typename EG, typename LFSU, typename X, typename LFSV, typename C>
+        template<typename EG, typename LFSU, typename X, typename Z, typename LFSV, typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const EG& eg,
-                          const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv,
+                          const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv,
                           WeightedVectorAccumulationView<C>& r)
         {
           apply(lops, weights[i]*r.weight(), eg, lfsu, x, z, lfsv, r);
         }
-        template<typename EG, typename LFSU, typename X, typename LFSV,
+        template<typename EG, typename LFSU, typename X, typename Z, typename LFSV,
                  typename C>
-        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+        static auto apply(const ArgPtrs& lops, typename C::weight_type weight,
                           const EG& eg,
-                          const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv,
+                          const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv,
                           C& r)
+          -> typename std::enable_if<std::is_same<X,Z>::value>::type
         {
           if(weight != K(0)) {
             const typename C::weight_type old_weight = r.weight();
@@ -944,6 +945,22 @@ namespace Dune {
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
               nonlinear_jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, z, lfsv, r);
             r.setWeight(old_weight);
+          }
+        }
+        template<typename EG, typename LFSU, typename X, typename Z, typename LFSV,
+                 typename C>
+        static auto apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const EG& eg,
+                          const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv,
+                          C& y)
+          -> typename std::enable_if<not std::is_same<X,Z>::value>::type
+        {
+          if(weight != K(0)) {
+            const typename C::weight_type old_weight = y.weight();
+            y.setWeight(weight);
+            // if the types X and Z are different, the CallSwitch doesn't work
+            get<i>(lops)->jacobian_apply_volume(eg,lfsu,x,z,lfsv,y);
+            y.setWeight(old_weight);
           }
         }
       };
@@ -1025,23 +1042,24 @@ namespace Dune {
       template<int i>
       struct NonlinearJacobianApplyBoundaryOperation {
         typedef typename tuple_element<i,Args>::type Arg;
-        template<typename IG, typename LFSU, typename X, typename LFSV, typename C>
+        template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const IG& ig,
-                          const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+                          const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
                           WeightedVectorAccumulationView<C>& r_s)
         {
           apply(lops, weights[i]*r_s.weight(), ig,
                 lfsu_s, x_s, z_s, lfsv_s,
                 r_s);
         }
-        template<typename IG, typename LFSU, typename X, typename LFSV,
+        template<typename IG, typename LFSU, typename X, typename Z, typename LFSV,
                  typename C>
-        static void apply(const ArgPtrs& lops,
+        static auto apply(const ArgPtrs& lops,
                           typename C::weight_type weight_s,
                           const IG& ig,
-                          const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+                          const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
                           C& r_s)
+          -> typename std::enable_if<std::is_same<X,Z>::value>::type
         {
           if(weight_s != K(0)) {
             const typename C::weight_type old_weight_s = r_s.weight();
@@ -1050,6 +1068,23 @@ namespace Dune {
               nonlinear_jacobian_apply_boundary(*get<i>(lops), ig,
                                                 lfsu_s, x_s, z_s, lfsv_s,
                                                 r_s);
+            r_s.setWeight(old_weight_s);
+          }
+        }
+        template<typename IG, typename LFSU, typename X, typename Z, typename LFSV,
+                 typename C>
+        static auto apply(const ArgPtrs& lops,
+                          typename C::weight_type weight_s,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
+                          C& r_s)
+          -> typename std::enable_if<not std::is_same<X,Z>::value>::type
+        {
+          if(weight_s != K(0)) {
+            const typename C::weight_type old_weight_s = r_s.weight();
+            r_s.setWeight(weight_s);
+            // if the types X and Z are different, the CallSwitch doesn't work
+            get<i>(lops)->jacobian_apply_skeleton_diag(ig,lfsu_s,x_s,z_s,lfsv_s,r_s);
             r_s.setWeight(old_weight_s);
           }
         }
@@ -1125,13 +1160,20 @@ namespace Dune {
           apply(lops, weights, ig, lfsu_s, x_s, lfsv_s, r_s);
       }
 
-      //! apply an element's jacobian (nonlinear case)
+      //! apply an element's jacobian (nonlinear case) for different types of
+      //! linearization point and input for operator application
       /**
+       * \tparam X Type of linearization point.
+       * \tparam Z Type of input for operator application.
+       *
        * \note Summands with zero weight don't contribute to the jacobian, and
        *       the calls to the evaluation methods are eliminated at run-time.
+       *
+       * \note If X and Z are of different types each local operator has to
+       *       provide the jacobian application as this wrapper.
        */
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename C>
-      void jacobian_apply_volume(const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, C& r) const
+      template<typename EG, typename LFSU, typename X, typename Z, typename LFSV, typename C>
+      void jacobian_apply_volume(const EG& eg, const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv, C& r) const
       {
         ForLoop<NonlinearJacobianApplyVolumeOperation, 0, size-1>::
           apply(lops, weights, eg, lfsu, x, z, lfsv, r);
@@ -1165,14 +1207,21 @@ namespace Dune {
           apply(lops, weights, ig, lfsu_s, x_s, z_s, lfsv_s, lfsu_n, x_n, z_n, lfsv_n, r_s, r_n);
       }
 
-      //! apply a boundary intersections's jacobian (nonlinear case)
+      //! apply a boundary intersections's jacobian (nonlinear case) for different types of
+      //! linearization point and input for operator application
       /**
+       * \tparam X Type of linearization point.
+       * \tparam Z Type of input for operator application.
+       *
        * \note Summands with zero weight don't contribute to the jacobian, and
        *       the calls to the evaluation methods are eliminated at run-time.
+       *
+       * \note If X and Z are of different types each local operator has to
+       *       provide the jacobian application as this wrapper.
        */
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename C>
+      template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename C>
       void jacobian_apply_boundary(const IG& ig,
-                                   const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+                                   const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
                                    C& r_s) const
       {
         ForLoop<NonlinearJacobianApplyBoundaryOperation, 0, size-1>::
