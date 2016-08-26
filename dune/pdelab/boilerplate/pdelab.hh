@@ -26,6 +26,7 @@
 #include <dune/geometry/type.hh>
 #include <dune/geometry/quadraturerules.hh>
 
+#define DUNE_AVOID_CAPABILITIES_IS_PARALLEL_DEPRECATION_WARNING
 #include <dune/grid/onedgrid.hh>
 #include <dune/grid/io/file/vtk.hh>
 #include <dune/grid/yaspgrid.hh>
