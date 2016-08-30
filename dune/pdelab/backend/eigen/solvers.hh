@@ -72,7 +72,7 @@ namespace Dune {
       template<class V>
       typename Dune::template FieldTraits<typename V::ElementType >::real_type norm(const V& v) const
       {
-        return native(v).norm();
+        return Backend::native(v).norm();
       }
 
     private:
