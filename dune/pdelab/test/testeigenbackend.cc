@@ -24,6 +24,7 @@
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/pdelab/stationary/linearproblem.hh>
 
 #include "gridexamples.hh"
 
@@ -239,6 +240,17 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
     // solve the jacobian system
     r *= -1.0; // need -residual
     solver.apply(m,x,r,1e-10);
+    x += x0;
+  }
+
+  // test the solver backend as part of a pdelab solver
+  {
+    typedef Dune::PDELab::EigenBackend_BiCGSTAB_Diagonal LS;
+    LS linearSolver(5000);
+
+    x = 0.0;
+    Dune::PDELab::StationaryLinearProblemSolver<GridOperator,LS,DV> slp(gridoperator,linearSolver,x,1e-10);
+    slp.apply();
     x += x0;
   }
 
