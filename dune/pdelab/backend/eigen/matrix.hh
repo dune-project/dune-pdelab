@@ -81,7 +81,7 @@ namespace Dune
         typedef MatrixPatternInserter<Container> Pattern;
 
         template<typename GO>
-        MatrixContainer(const GO& go, int avg_per_row)
+        MatrixContainer(const GO& go, int avg_per_row = 0)
           : _container(std::make_shared<Container>())
         {
           allocate_matrix(_container, go, avg_per_row, ElementType(0));
@@ -234,7 +234,8 @@ namespace Dune
           int rows = go.testGridFunctionSpace().ordering().blockCount();
           int cols = go.trialGridFunctionSpace().ordering().blockCount();
           c->resize(rows,cols);
-          c->reserve(Eigen::VectorXi::Constant(rows,avg_per_row));
+          if (avg_per_row)
+              c->reserve(Eigen::VectorXi::Constant(rows,avg_per_row));
           // setup pattern
           Pattern pattern(*c);
           go.fill_pattern(pattern);

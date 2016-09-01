@@ -245,6 +245,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 
   // test the solver backend as part of a pdelab solver
   {
+    std::cout << "StationaryLinearProblemSolver" << std::endl;
     typedef Dune::PDELab::EigenBackend_BiCGSTAB_Diagonal LS;
     LS linearSolver(5000);
 
