@@ -246,6 +246,11 @@ namespace Dune{
         return go0.matrixBackend();
       }
 
+      const typename LocalAssembler::Traits::TrialGridFunctionSpaceConstraints trialConstraints() const
+      {
+        return local_assembler.trialConstraints();
+      }
+
     private:
       Assembler & global_assembler;
       GO0 & go0;
