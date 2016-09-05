@@ -131,13 +131,18 @@ namespace Dune {
       : public Experimental::LocalFunctionSpace<Experimental::GridFunctionSpace<DFBasis,V,CE>>
     {
 
-      using GFS = GridFunctionSpace<DFBasis,V,CE>;
+      using GFS = Experimental::GridFunctionSpace<DFBasis,V,CE>;
 
     public:
 
       LocalFunctionSpace(std::shared_ptr<const GFS> gfs)
         : Experimental::LocalFunctionSpace<GFS>(gfs)
       {}
+
+      LocalFunctionSpace(const GFS& gfs)
+        : Experimental::LocalFunctionSpace<GFS>(stackobject_to_shared_ptr(gfs))
+      {}
+
     };
 
     template<typename DFBasis, typename V, typename CE>
@@ -145,12 +150,16 @@ namespace Dune {
       : public Experimental::LocalFunctionSpace<Experimental::GridFunctionSpace<DFBasis,V,CE>>
     {
 
-      using GFS = GridFunctionSpace<DFBasis,V,CE>;
+      using GFS = Experimental::GridFunctionSpace<DFBasis,V,CE>;
 
     public:
 
       LocalFunctionSpace(std::shared_ptr<const GFS> gfs)
         : Experimental::LocalFunctionSpace<GFS>(gfs)
+      {}
+
+      LocalFunctionSpace(const GFS& gfs)
+        : Experimental::LocalFunctionSpace<GFS>(stackobject_to_shared_ptr(gfs))
       {}
 
     };
