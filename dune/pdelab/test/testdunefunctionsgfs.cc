@@ -105,6 +105,7 @@ void solvePoissonProblem()
   typedef PDELab::ConvectionDiffusionFEM<decltype(problem),typename GridFunctionSpace::Traits::FiniteElementMap> LOP;
   LOP lop(problem);
 
+  Dune::PDELab::Backend::Vector<GridFunctionSpace,double> v(gfs,0);
   typedef PDELab::GridOperator<GridFunctionSpace,
                                GridFunctionSpace,
                                LOP,
