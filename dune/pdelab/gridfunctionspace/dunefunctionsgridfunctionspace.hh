@@ -15,6 +15,8 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/dunefunctionslocalfunctionspace.hh>
 
+#include <dune/pdelab/backend/istl/dunefunctions.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -54,6 +56,20 @@ namespace Dune {
 
           using Basis = DFBasis;
 
+          using Backend = istl::SimpleVectorBackend<V>;
+
+          struct FEM
+          {
+            struct Traits
+            {
+              using FiniteElement = typename DFBasis::LocalView::Tree::FiniteElement;
+              using FiniteElementType = FiniteElement;
+            };
+          };
+
+          using FiniteElementMap = FEM;
+          using FiniteElementMapType = FEM;
+
         };
 
         using Basis          = DFBasis;
@@ -73,6 +89,7 @@ namespace Dune {
           using size_type      = std::size_t;
 
           using CacheTag       = DuneFunctionsCacheTag;
+          using ContainerAllocationTag = FlatContainerAllocationTag;
 
           Ordering(const GridFunctionSpace& gfs)
             : _gfs(gfs)
