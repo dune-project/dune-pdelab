@@ -11,6 +11,7 @@
 #include <dune/functions/functionspacebases/hierarchicvectorwrapper.hh>
 
 #include <dune/pdelab/gridfunctionspace/dunefunctionsgridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/dunefunctionslfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
