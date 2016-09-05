@@ -102,7 +102,7 @@ void solvePoissonProblem()
 
   /*
   // make grid operator
-  typedef PDELab::ConvectionDiffusionFEM<decltype(problem), std::decay_t<decltype(gfs.finiteElementMap()) > > LOP;
+  typedef PDELab::ConvectionDiffusionFEM<decltype(problem),typename GridFunctionSpace::Traits::FiniteElementMap> LOP;
   LOP lop(problem);
 
   typedef PDELab::GridOperator<GridFunctionSpace,
