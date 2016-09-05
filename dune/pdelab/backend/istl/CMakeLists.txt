@@ -6,6 +6,7 @@ install(FILES
   cg_to_dg_prolongation.hh
   descriptors.hh
   ensureistlinclude.hh
+  dunefunctions.hh
   forwarddeclarations.hh
   istlsolverbackend.hh
   matrixhelpers.hh
