@@ -306,7 +306,7 @@ namespace Dune {
       namespace impl {
 
         template<template<typename> class Container, typename GFS, typename E>
-        struct BackendVectorSelectorHelper<SimpleVectorBackend<Container>, GFS, E>
+        struct BackendVectorSelectorHelper<simple::VectorBackend<Container>, GFS, E>
           : public SimpleVectorSelectorHelper<GFS,E>
         {};
 
