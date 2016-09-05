@@ -56,7 +56,7 @@ namespace Dune {
 
         };
 
-        // LeafGridFunctionSpaceTag ImplementationTag;
+        using Basis          = DFBasis;
 
         struct Ordering {
 
@@ -71,7 +71,6 @@ namespace Dune {
           using DOFIndex       = typename DFBasis::MultiIndex;
           using ContainerIndex = DOFIndex;
           using size_type      = std::size_t;
-          using Basis          = DFBasis;
 
           Ordering(const GridFunctionSpace& gfs)
             : _gfs(gfs)
