@@ -16,7 +16,7 @@ namespace Dune
 {
   namespace PDELab
   {
-    namespace EIGEN
+    namespace Eigen
     {
 
       template<typename M>
@@ -37,12 +37,12 @@ namespace Dune
 
       template<typename GFSV, typename GFSU, typename ET, int _Options>
       class MatrixContainer
-        : public Backend::impl::Wrapper<Eigen::SparseMatrix<ET,_Options>>
+        : public Backend::impl::Wrapper<::Eigen::SparseMatrix<ET,_Options>>
       {
 
       public:
 
-        typedef Eigen::SparseMatrix<ET,_Options> Container;
+        typedef ::Eigen::SparseMatrix<ET,_Options> Container;
 
       private:
 
@@ -234,7 +234,7 @@ namespace Dune
           int rows = go.testGridFunctionSpace().ordering().blockCount();
           int cols = go.trialGridFunctionSpace().ordering().blockCount();
           c->resize(rows,cols);
-          c->reserve(Eigen::VectorXi::Constant(rows,avg_per_row));
+          c->reserve(::Eigen::VectorXi::Constant(rows,avg_per_row));
           // setup pattern
           Pattern pattern(*c);
           go.fill_pattern(pattern);

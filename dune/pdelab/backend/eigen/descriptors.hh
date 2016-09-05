@@ -15,7 +15,7 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-    namespace EIGEN {
+    namespace Eigen {
 
       template<typename GFS, typename E>
       class VectorContainer;
@@ -51,7 +51,7 @@ namespace Dune {
 
     };
 
-    template<int _Options = Eigen::RowMajor>
+    template<int _Options = ::Eigen::RowMajor>
     struct EigenMatrixBackend
     {
 
@@ -59,12 +59,12 @@ namespace Dune {
 
       //! The type of the pattern object passed to the GridOperator for pattern construction.
       template<typename Matrix, typename GFSV, typename GFSU>
-      using Pattern = EIGEN::MatrixPatternInserter<typename Matrix::Container>;
+      using Pattern = PDELab::Eigen::MatrixPatternInserter<typename Matrix::Container>;
 
       template<typename VV, typename VU, typename E>
       struct MatrixHelper
       {
-        typedef EIGEN::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace, E, _Options> type;
+        typedef PDELab::Eigen::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace, E, _Options> type;
       };
     };
 

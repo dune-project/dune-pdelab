@@ -16,14 +16,14 @@
 namespace Dune {
   namespace PDELab {
 
-    namespace EIGEN {
+    namespace Eigen {
 
       template<typename GFS, typename ET>
       class VectorContainer
-        : public Backend::impl::Wrapper<Eigen::Matrix<ET, Eigen::Dynamic, 1>>
+        : public Backend::impl::Wrapper<::Eigen::Matrix<ET, ::Eigen::Dynamic, 1>>
       {
       public:
-        typedef Eigen::Matrix<ET, Eigen::Dynamic, 1> Container;
+        typedef ::Eigen::Matrix<ET, ::Eigen::Dynamic, 1> Container;
 
       private:
 
@@ -178,7 +178,7 @@ namespace Dune {
 
         typename Dune::template FieldTraits<E>::real_type infinity_norm() const
         {
-          return _container->template lpNorm<Eigen::Infinity>();
+          return _container->template lpNorm<::Eigen::Infinity>();
         }
 
         //! (*this)^T y
@@ -269,7 +269,7 @@ namespace Dune {
     template<typename GFS, typename E>
     struct EigenVectorSelectorHelper
     {
-      using Type = EIGEN::VectorContainer<GFS, E>;
+      using Type = PDELab::Eigen::VectorContainer<GFS, E>;
     };
 
     namespace Backend {
