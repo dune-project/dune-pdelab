@@ -140,7 +140,7 @@ public:
 template<typename GV, typename FEM, typename CON>
 void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 {
-  typedef Dune::PDELab::EigenMatrixBackend<> MBE;
+  typedef Dune::PDELab::Eigen::MatrixBackend<> MBE;
 
   // constants and types
   typedef typename FEM::Traits::FiniteElementType::Traits::
@@ -151,7 +151,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
     GV,
     FEM,
     CON,
-    Dune::PDELab::EigenVectorBackend
+    Dune::PDELab::Eigen::VectorBackend
     > GFS;
   GFS gfs(gv,fem);
   gfs.name("solution");

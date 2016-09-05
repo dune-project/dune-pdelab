@@ -276,7 +276,7 @@ namespace Dune {
       namespace impl {
 
         template<typename GFS, typename E>
-        struct BackendVectorSelectorHelper<EigenVectorBackend, GFS, E>
+        struct BackendVectorSelectorHelper<Eigen::VectorBackend, GFS, E>
           : public EigenVectorSelectorHelper<GFS,E>
         {};
 

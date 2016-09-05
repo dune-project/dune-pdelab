@@ -30,43 +30,59 @@ namespace Dune {
 
 #endif // DOXYGEN
 
-    /** Eigen backend for FunctionSpace
-     *
-     * works with EIGEN >= 3.1
+    namespace Eigen {
+
+      /** Eigen backend for FunctionSpace
+       *
+       * works with EIGEN >= 3.1
+       */
+      struct VectorBackend
+      {
+        typedef std::size_t size_type;
+
+        struct Traits
+        {
+          static const size_type max_blocking_depth = 0;
+        };
+
+        template<typename GFS>
+        bool blocked(const GFS& gfs) const
+        {
+          return false;
+        }
+
+      };
+
+      template<int _Options = ::Eigen::RowMajor>
+      struct MatrixBackend
+      {
+        typedef std::size_t size_type;
+
+        //! The type of the pattern object passed to the GridOperator for pattern construction.
+        template<typename Matrix, typename GFSV, typename GFSU>
+        using Pattern = PDELab::Eigen::MatrixPatternInserter<typename Matrix::Container>;
+
+        template<typename VV, typename VU, typename E>
+        struct MatrixHelper
+        {
+          typedef PDELab::Eigen::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace, E, _Options> type;
+        };
+      };
+
+    } // namespace Eigen
+
+    /** \brief For backward compatibility: access to Eigen::VectorBackend by its old name
+     * \deprecated Use Eigen::VectorBackend instead!
      */
-    struct EigenVectorBackend
-    {
-      typedef std::size_t size_type;
+    using EigenVectorBackend DUNE_DEPRECATED_MSG("Use Eigen::VectorBackend instead of EigenVectorBackend")
+        = Eigen::VectorBackend;
 
-      struct Traits
-      {
-        static const size_type max_blocking_depth = 0;
-      };
-
-      template<typename GFS>
-      bool blocked(const GFS& gfs) const
-      {
-        return false;
-      }
-
-    };
-
+    /** \brief For backward compatibility: access to Eigen::MatrixBackend by its old name
+     * \deprecated Use Eigen::MatrixBackend instead!
+     */
     template<int _Options = ::Eigen::RowMajor>
-    struct EigenMatrixBackend
-    {
-
-      typedef std::size_t size_type;
-
-      //! The type of the pattern object passed to the GridOperator for pattern construction.
-      template<typename Matrix, typename GFSV, typename GFSU>
-      using Pattern = PDELab::Eigen::MatrixPatternInserter<typename Matrix::Container>;
-
-      template<typename VV, typename VU, typename E>
-      struct MatrixHelper
-      {
-        typedef PDELab::Eigen::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace, E, _Options> type;
-      };
-    };
+    using EigenMatrixBackend DUNE_DEPRECATED_MSG("Use Eigen::MatrixBackend instead of EigenMatrixBackend")
+        = Eigen::MatrixBackend<_Options>;
 
   } // namespace PDELab
 } // namespace Dune
