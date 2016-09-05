@@ -136,7 +136,7 @@ namespace Dune {
         std::shared_ptr<const GFS> _gfs;
         LocalView _local_view;
         TreePath _tree_path;
-        Tree _tree;
+        const Tree& _tree;
         LocalIndexSet _local_index_set;
 
       };
