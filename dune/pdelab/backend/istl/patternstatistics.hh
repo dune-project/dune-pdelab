@@ -6,7 +6,7 @@
 
 namespace Dune {
   namespace PDELab {
-    namespace istl {
+    namespace ISTL {
 
       //! Statistics about the pattern of a BCRSMatrix.
       template<typename T>
@@ -92,7 +92,7 @@ namespace Dune {
 
       };
 
-    } // namespace istl
+    } // namespace ISTL
   } // namespace PDELab
 } // namespace Dune
 

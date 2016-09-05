@@ -18,7 +18,7 @@ namespace Dune {
 
 #ifndef DOXYGEN // All of the following functions are mere implementation details
 
-    namespace istl {
+    namespace ISTL {
 
       template<typename CI, typename Block>
       typename Block::field_type&
@@ -384,7 +384,7 @@ namespace Dune {
                                                   TypeTree::bottom_up_reduction>
       {};
 
-    } // namespace istl
+    } // namespace ISTL
 
 #endif // DOXYGEN
 

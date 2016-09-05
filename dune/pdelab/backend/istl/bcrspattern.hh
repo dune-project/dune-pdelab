@@ -16,7 +16,7 @@
 
 namespace Dune {
   namespace PDELab {
-    namespace istl {
+    namespace ISTL {
 
       //! Pattern builder for generic BCRS-like sparse matrices.
       /**
@@ -403,7 +403,7 @@ namespace Dune {
       };
 
 
-    } // namespace istl
+    } // namespace ISTL
   } // namespace PDELab
 } // namespace Dune
 

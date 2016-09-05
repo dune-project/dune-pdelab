@@ -19,7 +19,7 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-    namespace istl {
+    namespace ISTL {
 
       template<typename RV, typename CV, typename block_type>
       struct matrix_for_vectors;
@@ -409,7 +409,7 @@ namespace Dune {
         c.endindices();
       }
 
-    } // namespace istl
+    } // namespace ISTL
 
 #endif // DOXYGEN
 
