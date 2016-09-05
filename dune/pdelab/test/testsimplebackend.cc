@@ -149,7 +149,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
     GV,
     FEM,
     CON,
-    Dune::PDELab::SimpleVectorBackend<>
+    Dune::PDELab::Simple::VectorBackend<>
     > GFS;
   GFS gfs(gv,fem);
   gfs.name("solution");
@@ -270,10 +270,10 @@ int main(int argc, char** argv)
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
-              Dune::PDELab::SimpleMatrixBackend<>
+              Dune::PDELab::Simple::MatrixBackend<>
               >(gv,fem,"simplebackend_yasp_Q1_2d",2);
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
-              Dune::PDELab::SimpleSparseMatrixBackend<>
+              Dune::PDELab::Simple::SparseMatrixBackend<>
               >(gv,fem,"simplesparsebackend_yasp_Q1_2d",2);
     }
 
@@ -296,12 +296,12 @@ int main(int argc, char** argv)
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
-              Dune::PDELab::SimpleMatrixBackend<>
+              Dune::PDELab::Simple::MatrixBackend<>
               >(gv,fem,"simplebackend_yasp_Q2_2d",2);
 
       // and again with the space matrix
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
-              Dune::PDELab::SimpleSparseMatrixBackend<>
+              Dune::PDELab::Simple::SparseMatrixBackend<>
               >(gv,fem,"simplesparsebackend_yasp_Q2_2d",2);
     }
 

@@ -17,7 +17,7 @@
 
 namespace Dune {
   namespace PDELab {
-    namespace simple {
+    namespace Simple {
 
       template<typename _RowOrdering, typename _ColOrdering>
       class SparseMatrixPattern
@@ -345,7 +345,7 @@ namespace Dune {
         std::shared_ptr< Container > _container;
       };
 
-    } // namespace simple
+    } // namespace Simple
   } // namespace PDELab
 } // namespace Dune
 
