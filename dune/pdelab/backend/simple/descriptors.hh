@@ -33,68 +33,92 @@ namespace Dune {
 
 #endif // DOXYGEN
 
-    template<template<typename> class Container = simple::default_vector>
-    struct SimpleVectorBackend
-    {
-      template<typename E>
-      using vector_type = Container<E>;
+    namespace simple {
 
-      typedef typename vector_type<double>::size_type size_type;
-
-      struct Traits
+      template<template<typename> class Container = simple::default_vector>
+      struct VectorBackend
       {
-        static const size_type max_blocking_depth = 0;
+        template<typename E>
+        using vector_type = Container<E>;
+
+        typedef typename vector_type<double>::size_type size_type;
+
+        struct Traits
+        {
+          static const size_type max_blocking_depth = 0;
+        };
+
+        template<typename GFS>
+        bool blocked(const GFS& gfs) const
+        {
+          return false;
+        }
+
       };
 
-      template<typename GFS>
-      bool blocked(const GFS& gfs) const
+      template<template<typename> class Container = simple::default_vector>
+      struct MatrixBackend
       {
-        return false;
-      }
 
-    };
+        typedef std::size_t size_type;
 
-    template<template<typename> class Container = simple::default_vector>
-    struct SimpleMatrixBackend
-    {
+        template<typename Matrix, typename GFSV, typename GFSU>
+        struct Pattern
+        {};
 
-      typedef std::size_t size_type;
-
-      template<typename Matrix, typename GFSV, typename GFSU>
-      struct Pattern
-      {};
-
-      template<typename VV, typename VU, typename E>
-      struct MatrixHelper
-      {
-        typedef simple::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container<E> > type;
+        template<typename VV, typename VU, typename E>
+        struct MatrixHelper
+        {
+          typedef simple::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container<E> > type;
+        };
       };
-    };
 
+      template<template<typename> class Container = simple::default_vector, typename IndexType = std::size_t>
+      struct SparseMatrixBackend
+      {
+
+        typedef IndexType size_type;
+
+        //! The type of the pattern object passed to the GridOperator for pattern construction.
+        template<typename Matrix, typename GFSV, typename GFSU>
+        using Pattern = simple::SparseMatrixPattern<
+          OrderingBase<
+            typename GFSV::Ordering::Traits::DOFIndex,
+            typename GFSV::Ordering::Traits::ContainerIndex
+            >,
+          OrderingBase<
+            typename GFSU::Ordering::Traits::DOFIndex,
+            typename GFSU::Ordering::Traits::ContainerIndex> >;
+
+        template<typename VV, typename VU, typename E>
+        struct MatrixHelper
+        {
+          typedef simple::SparseMatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container, E, size_type> type;
+        };
+      };
+
+    } // namespace simple
+
+    /** \brief For backward compatibility: access to simple::VectorBackend by its old name
+     * \deprecated Use simple::VectorBackend instead!
+     */
+    template<template<typename> class Container = simple::default_vector>
+    using SimpleVectorBackend DUNE_DEPRECATED_MSG("Use simple::VectorBackend instead of SimpleVectorBackend")
+        = simple::VectorBackend<Container>;
+
+    /** \brief For backward compatibility: access to simple::MatrixBackend by its old name
+     * \deprecated Use simple::MatrixBackend instead!
+     */
+    template<template<typename> class Container = simple::default_vector>
+    using SimpleMatrixBackend DUNE_DEPRECATED_MSG("Use simple::MatrixBackend instead of SimpleMatrixBackend")
+        = simple::MatrixBackend<Container>;
+
+    /** \brief For backward compatibility: access to simple::SparseMatrixBackend by its old name
+     * \deprecated Use simple::SparseMatrixBackend instead!
+     */
     template<template<typename> class Container = simple::default_vector, typename IndexType = std::size_t>
-    struct SimpleSparseMatrixBackend
-    {
-
-      typedef IndexType size_type;
-
-      //! The type of the pattern object passed to the GridOperator for pattern construction.
-      template<typename Matrix, typename GFSV, typename GFSU>
-      using Pattern = simple::SparseMatrixPattern<
-        OrderingBase<
-          typename GFSV::Ordering::Traits::DOFIndex,
-          typename GFSV::Ordering::Traits::ContainerIndex
-          >,
-        OrderingBase<
-          typename GFSU::Ordering::Traits::DOFIndex,
-          typename GFSU::Ordering::Traits::ContainerIndex> >;
-
-
-      template<typename VV, typename VU, typename E>
-      struct MatrixHelper
-      {
-        typedef simple::SparseMatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container, E, size_type> type;
-      };
-    };
+    using SimpleSparseMatrixBackend DUNE_DEPRECATED_MSG("Use simple::SparseMatrixBackend instead of SimpleSparseMatrixBackend")
+        = simple::SparseMatrixBackend<Container, IndexType>;
 
   } // namespace PDELab
 } // namespace Dune
