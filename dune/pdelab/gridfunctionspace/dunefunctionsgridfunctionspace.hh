@@ -72,6 +72,8 @@ namespace Dune {
           using ContainerIndex = DOFIndex;
           using size_type      = std::size_t;
 
+          using CacheTag       = DuneFunctionsCacheTag;
+
           Ordering(const GridFunctionSpace& gfs)
             : _gfs(gfs)
           {}
