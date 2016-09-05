@@ -16,7 +16,7 @@
 
 namespace Dune {
   namespace PDELab {
-    namespace simple {
+    namespace Simple {
 
       template<typename GFSV, typename GFSU, typename C>
       class MatrixContainer
@@ -218,7 +218,7 @@ namespace Dune {
         std::shared_ptr<Container> _container;
       };
 
-    } // namespace simple
+    } // namespace Simple
 
   } // namespace PDELab
 } // namespace Dune

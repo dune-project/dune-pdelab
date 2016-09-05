@@ -12,7 +12,7 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-    namespace simple {
+    namespace Simple {
 
       template<typename GFS, typename C>
       class VectorContainer;
@@ -33,9 +33,9 @@ namespace Dune {
 
 #endif // DOXYGEN
 
-    namespace simple {
+    namespace Simple {
 
-      template<template<typename> class Container = simple::default_vector>
+      template<template<typename> class Container = Simple::default_vector>
       struct VectorBackend
       {
         template<typename E>
@@ -56,7 +56,7 @@ namespace Dune {
 
       };
 
-      template<template<typename> class Container = simple::default_vector>
+      template<template<typename> class Container = Simple::default_vector>
       struct MatrixBackend
       {
 
@@ -69,11 +69,11 @@ namespace Dune {
         template<typename VV, typename VU, typename E>
         struct MatrixHelper
         {
-          typedef simple::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container<E> > type;
+          typedef Simple::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container<E> > type;
         };
       };
 
-      template<template<typename> class Container = simple::default_vector, typename IndexType = std::size_t>
+      template<template<typename> class Container = Simple::default_vector, typename IndexType = std::size_t>
       struct SparseMatrixBackend
       {
 
@@ -81,7 +81,7 @@ namespace Dune {
 
         //! The type of the pattern object passed to the GridOperator for pattern construction.
         template<typename Matrix, typename GFSV, typename GFSU>
-        using Pattern = simple::SparseMatrixPattern<
+        using Pattern = Simple::SparseMatrixPattern<
           OrderingBase<
             typename GFSV::Ordering::Traits::DOFIndex,
             typename GFSV::Ordering::Traits::ContainerIndex
@@ -93,32 +93,32 @@ namespace Dune {
         template<typename VV, typename VU, typename E>
         struct MatrixHelper
         {
-          typedef simple::SparseMatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container, E, size_type> type;
+          typedef Simple::SparseMatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container, E, size_type> type;
         };
       };
 
-    } // namespace simple
+    } // namespace Simple
 
-    /** \brief For backward compatibility: access to simple::VectorBackend by its old name
-     * \deprecated Use simple::VectorBackend instead!
+    /** \brief For backward compatibility: access to Simple::VectorBackend by its old name
+     * \deprecated Use Simple::VectorBackend instead!
      */
-    template<template<typename> class Container = simple::default_vector>
-    using SimpleVectorBackend DUNE_DEPRECATED_MSG("Use simple::VectorBackend instead of SimpleVectorBackend")
-        = simple::VectorBackend<Container>;
+    template<template<typename> class Container = Simple::default_vector>
+    using SimpleVectorBackend DUNE_DEPRECATED_MSG("Use Simple::VectorBackend instead of SimpleVectorBackend")
+        = Simple::VectorBackend<Container>;
 
-    /** \brief For backward compatibility: access to simple::MatrixBackend by its old name
-     * \deprecated Use simple::MatrixBackend instead!
+    /** \brief For backward compatibility: access to Simple::MatrixBackend by its old name
+     * \deprecated Use Simple::MatrixBackend instead!
      */
-    template<template<typename> class Container = simple::default_vector>
-    using SimpleMatrixBackend DUNE_DEPRECATED_MSG("Use simple::MatrixBackend instead of SimpleMatrixBackend")
-        = simple::MatrixBackend<Container>;
+    template<template<typename> class Container = Simple::default_vector>
+    using SimpleMatrixBackend DUNE_DEPRECATED_MSG("Use Simple::MatrixBackend instead of SimpleMatrixBackend")
+        = Simple::MatrixBackend<Container>;
 
-    /** \brief For backward compatibility: access to simple::SparseMatrixBackend by its old name
-     * \deprecated Use simple::SparseMatrixBackend instead!
+    /** \brief For backward compatibility: access to Simple::SparseMatrixBackend by its old name
+     * \deprecated Use Simple::SparseMatrixBackend instead!
      */
-    template<template<typename> class Container = simple::default_vector, typename IndexType = std::size_t>
-    using SimpleSparseMatrixBackend DUNE_DEPRECATED_MSG("Use simple::SparseMatrixBackend instead of SimpleSparseMatrixBackend")
-        = simple::SparseMatrixBackend<Container, IndexType>;
+    template<template<typename> class Container = Simple::default_vector, typename IndexType = std::size_t>
+    using SimpleSparseMatrixBackend DUNE_DEPRECATED_MSG("Use Simple::SparseMatrixBackend instead of SimpleSparseMatrixBackend")
+        = Simple::SparseMatrixBackend<Container, IndexType>;
 
   } // namespace PDELab
 } // namespace Dune
