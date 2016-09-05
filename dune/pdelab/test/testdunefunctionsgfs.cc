@@ -6,7 +6,8 @@
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 
-#include <dune/functions/functionspacebases/pqknodalbasis.hh>
+#include <dune/functions/functionspacebases/lagrangebasis.hh>
+#include <dune/functions/functionspacebases/powerbasis.hh>
 #include <dune/functions/gridfunctions/discreteglobalbasisfunction.hh>
 #include <dune/functions/functionspacebases/hierarchicvectorwrapper.hh>
 
@@ -205,7 +206,7 @@ private:
   typename Traits::RangeFieldType mu_;
 };
 
-/*
+
 template <int order>
 void solveElasticityProblem()
 {
@@ -226,24 +227,26 @@ void solveElasticityProblem()
   // Construct Lagrangian finite element space basis
   using GridView = typename GridType::LeafGridView;
   auto gridView = grid.leafGridView();
-  using Basis = Functions::PQkNodalBasis<GridView,order>;
-  Basis basis(gridView);
 
-  typedef PDELab::QkLocalFiniteElementMap<GridView,double,double,order> FEM;
-  FEM fem(gridView);
+  typedef BlockVector<FieldVector<double,dim> > VectorType;
+
+  using namespace Functions::BasisBuilder;
+
+  auto basis = makeBasis(
+    gridView,
+    power<dim>(
+      lagrange<order>(),
+      flatInterleaved())
+    );
+
+  using Basis = decltype(basis);
 
   typedef PDELab::ConformingDirichletConstraints Constraints;
   Constraints con;
 
-  typedef PDELab::DuneFunctionsVectorGridFunctionSpace<Basis,
-                                            dim,
-                                            PDELab::istl::VectorBackend<PDELab::istl::Blocking::fixed>,
-                                            PDELab::istl::VectorBackend<>,
-                                            Constraints,
-                                            PDELab::EntityBlockedOrderingTag,
-                                            PDELab::DefaultLeafOrderingTag
-                                           > GFS;
-  GFS gfs(basis);
+  typedef PDELab::Experimental::GridFunctionSpace<Basis,VectorType,Constraints> GFS;
+  GFS gfs(basis,con);
+
   gfs.name("displacement");
 
   // Container for the Dirichlet boundary conditions
@@ -272,7 +275,7 @@ void solveElasticityProblem()
   typedef typename GridOperator::Traits::Domain V;
   typedef typename GridOperator::Jacobian M;
   using MatrixType = typename M::Container;   //  BCRSMatrix<FieldMatrix<double, dim, dim> >
-  using VectorType = typename V::Container;   //  BlockVector<FieldVector<double,dim> >
+  //using VectorType = typename V::Container;   //  BlockVector<FieldVector<double,dim> >
 
   // Dummy coefficient vector
   V x0(gfs);
@@ -324,7 +327,6 @@ void solveElasticityProblem()
   vtkWriter.addVertexData(pressureFunction, VTK::FieldInfo("displacement", VTK::FieldInfo::Type::vector, dim));
   vtkWriter.write("testdunefunctionsgfs-elasticity");
 }
-*/
 
 
 int main(int argc, char** argv) try
@@ -337,8 +339,8 @@ int main(int argc, char** argv) try
   solvePoissonProblem<2>();
 
   // Test a vector-valued space
-  //solveElasticityProblem<1>();
-  //solveElasticityProblem<2>();
+  solveElasticityProblem<1>();
+  solveElasticityProblem<2>();
 
   return 0;
 }
