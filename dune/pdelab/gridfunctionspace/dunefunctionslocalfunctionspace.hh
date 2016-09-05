@@ -30,16 +30,26 @@ namespace Dune {
       struct LeafLFSMixin
         : public TypeTree::LeafNode
       {
+
         const auto& finiteElement() const
         {
-          return static_cast<const LFS*>(this)->_tree().finiteElement();
+          return static_cast<const LFS*>(this)->tree().finiteElement();
         }
+
+        template<typename Tree>
+        struct Traits
+        {
+          using FiniteElement = typename Tree::FiniteElement;
+          using FiniteElementType = FiniteElement;
+        };
       };
 
       template<typename GFS, typename TreePath = TypeTree::HybridTreePath<>>
       class LocalFunctionSpace
         : public LeafLFSMixin<LocalFunctionSpace<GFS,TreePath>>
       {
+
+      public:
 
         using Basis = typename GFS::Basis;
         using LocalView = typename Basis::LocalView;
@@ -51,11 +61,13 @@ namespace Dune {
         friend class LFSIndexCacheBase;
 
         struct Traits
+          : public LeafLFSMixin<LocalFunctionSpace<GFS,TreePath>>::template Traits<Tree>
         {
 
           using GridFunctionSpace = GFS;
           using SizeType          = std::size_t;
           using DOFIndex          = typename Basis::MultiIndex;
+          using ConstraintsType   = typename GFS::Traits::ConstraintsType;
 
         };
 
@@ -65,7 +77,8 @@ namespace Dune {
           : _gfs(gfs)
           , _local_view(gfs->basis())
           , _tree_path(tree_path)
-          , _tree(_local_view().tree().child(tree_path))
+          , _tree(TypeTree::child(_local_view.tree(),tree_path))
+          , _local_index_set(gfs->basis().localIndexSet())
         {}
 
         size_type subSpaceDepth() const
@@ -105,7 +118,17 @@ namespace Dune {
         void bind(const typename GFS::Traits::EntitySet::template Codim<0>::Entity& e)
         {
           _local_view.bind(e);
-          _local_index_set.bind(e);
+          _local_index_set.bind(_local_view);
+        }
+
+        const typename Traits::ConstraintsType& constraints() const
+        {
+          return _gfs->constraints();
+        }
+
+        const Tree& tree() const
+        {
+          return _tree;
         }
 
       private:
