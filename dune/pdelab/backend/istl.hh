@@ -10,4 +10,13 @@
 #include <dune/pdelab/backend/istl/cg_to_dg_prolongation.hh>
 #include <dune/pdelab/backend/istl/utility.hh>
 
+/** \brief For backward compatibility -- Do not use this! */
+namespace Dune {
+  namespace PDELab {
+    namespace istl {
+      using namespace ISTL;
+    }
+  }
+}
+
 #endif // DUNE_PDELAB_BACKEND_ISTL_HH

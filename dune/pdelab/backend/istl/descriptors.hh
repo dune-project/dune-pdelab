@@ -20,7 +20,7 @@ namespace Dune {
       }
 #endif
 
-    namespace istl {
+    namespace ISTL {
 
       //! The type of blocking employed at this node in the function space tree.
       enum class Blocking

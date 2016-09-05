@@ -10,7 +10,7 @@
 
 namespace Dune {
   namespace PDELab {
-    namespace istl {
+    namespace ISTL {
 
 #ifndef DOXYGEN
 
@@ -358,7 +358,7 @@ namespace Dune {
 
       };
 
-    } // namespace istl
+    } // namespace ISTL
   } // namespace PDELab
 } // namespace Dune
 

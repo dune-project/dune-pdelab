@@ -11,7 +11,7 @@ namespace Dune {
 
   namespace PDELab {
 
-    namespace istl {
+    namespace ISTL {
 
       // ********************************************************************************
       // tag definitions
@@ -248,7 +248,7 @@ namespace Dune {
         return typename tags::container<T>::type();
       }
 
-    } // namespace istl
+    } // namespace ISTL
 
   } // namespace PDELab
 } // namespace Dune

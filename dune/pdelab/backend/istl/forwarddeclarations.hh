@@ -45,7 +45,7 @@ namespace Dune {
 
   namespace PDELab {
 
-    namespace istl {
+    namespace ISTL {
 
       template<typename GFS, typename C>
       class BlockVector;
@@ -56,7 +56,7 @@ namespace Dune {
       template<typename E, typename VV, typename VU>
       struct build_matrix_type;
 
-    } // namespace istl
+    } // namespace ISTL
   } // namespace PDELab
 } // namespace Dune
 

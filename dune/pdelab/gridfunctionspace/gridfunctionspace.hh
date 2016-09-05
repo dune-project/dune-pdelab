@@ -159,7 +159,7 @@ namespace Dune {
      * entity, known at compile-time)
      */
     template<typename GV, typename FEM, typename CE=NoConstraints,
-             typename B=istl::VectorBackend<>, typename P=DefaultLeafOrderingTag>
+             typename B=ISTL::VectorBackend<>, typename P=DefaultLeafOrderingTag>
     class GridFunctionSpace
       : public TypeTree::LeafNode
       , public GridFunctionSpaceBase<

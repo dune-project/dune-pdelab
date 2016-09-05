@@ -142,7 +142,7 @@ namespace Dune {
 
       /*! \brief Constructor needs to know the grid function space
        */
-      NonoverlappingScalarProduct (const GFS& gfs_, const istl::ParallelHelper<GFS>& helper_)
+      NonoverlappingScalarProduct (const GFS& gfs_, const ISTL::ParallelHelper<GFS>& helper_)
         : gfs(gfs_), helper(helper_)
       {}
 
@@ -178,7 +178,7 @@ namespace Dune {
 
     private:
       const GFS& gfs;
-      const istl::ParallelHelper<GFS>& helper;
+      const ISTL::ParallelHelper<GFS>& helper;
     };
 
     // parallel Richardson preconditioner
@@ -200,7 +200,7 @@ namespace Dune {
       };
 
       //! \brief Constructor.
-      NonoverlappingRichardson (const GFS& gfs_, const istl::ParallelHelper<GFS>& helper_)
+      NonoverlappingRichardson (const GFS& gfs_, const ISTL::ParallelHelper<GFS>& helper_)
         : gfs(gfs_), helper(helper_)
       {
       }
@@ -225,7 +225,7 @@ namespace Dune {
 
     private:
       const GFS& gfs;
-      const istl::ParallelHelper<GFS>& helper;
+      const ISTL::ParallelHelper<GFS>& helper;
     };
 
     //! parallel non-overlapping Jacobi preconditioner
@@ -246,7 +246,7 @@ namespace Dune {
       : public Dune::Preconditioner<X,Y>
     {
 
-      typedef typename istl::BlockMatrixDiagonal<A>::MatrixElementVector Diagonal;
+      typedef typename ISTL::BlockMatrixDiagonal<A>::MatrixElementVector Diagonal;
 
       Diagonal _inverse_diagonal;
 
@@ -288,7 +288,7 @@ namespace Dune {
         : _inverse_diagonal(m)
       {
         // make the diagonal consistent...
-        typename istl::BlockMatrixDiagonal<A>::template AddMatrixElementVectorDataHandle<GFS> addDH(gfs, _inverse_diagonal);
+        typename ISTL::BlockMatrixDiagonal<A>::template AddMatrixElementVectorDataHandle<GFS> addDH(gfs, _inverse_diagonal);
         gfs.gridView().communicate(addDH,
                                    InteriorBorder_InteriorBorder_Interface,
                                    ForwardCommunication);
@@ -323,7 +323,7 @@ namespace Dune {
     template<class GFS>
     class ISTLBackend_NOVLP_CG_NOPREC
     {
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      typedef ISTL::ParallelHelper<GFS> PHELPER;
 
     public:
       /*! \brief make a linear solver object
@@ -398,7 +398,7 @@ namespace Dune {
     template<class GFS>
     class ISTLBackend_NOVLP_CG_Jacobi
     {
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      typedef ISTL::ParallelHelper<GFS> PHELPER;
 
       const GFS& gfs;
       PHELPER phelper;
@@ -480,7 +480,7 @@ namespace Dune {
     template<class GFS>
     class ISTLBackend_NOVLP_BCGS_NOPREC
     {
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      typedef ISTL::ParallelHelper<GFS> PHELPER;
 
     public:
       /*! \brief make a linear solver object
@@ -554,7 +554,7 @@ namespace Dune {
     template<class GFS>
     class ISTLBackend_NOVLP_BCGS_Jacobi
     {
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      typedef ISTL::ParallelHelper<GFS> PHELPER;
 
     public:
       /*! \brief make a linear solver object
@@ -629,7 +629,7 @@ namespace Dune {
     template<typename GFS>
     class ISTLBackend_NOVLP_ExplicitDiagonal
     {
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      typedef ISTL::ParallelHelper<GFS> PHELPER;
 
       const GFS& gfs;
       PHELPER phelper;
@@ -700,7 +700,7 @@ namespace Dune {
     class ISTLBackend_NOVLP_BASE_PREC
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      typedef ISTL::ParallelHelper<GFS> PHELPER;
 
     public:
       /*! \brief Constructor.
@@ -747,9 +747,9 @@ namespace Dune {
         MatrixType& mat = Backend::native(A);
         using VectorType = Backend::Native<W>;
 #if HAVE_MPI
-        typedef typename istl::CommSelector<96,Dune::MPIHelper::isFake>::type Comm;
+        typedef typename ISTL::CommSelector<96,Dune::MPIHelper::isFake>::type Comm;
         _grid_operator.make_consistent(A);
-        istl::assertParallelUG(gfs.gridView().comm());
+        ISTL::assertParallelUG(gfs.gridView().comm());
         Comm oocc(gfs.gridView().comm(),Dune::SolverCategory::nonoverlapping);
         phelper.createIndexSetAndProjectForAMG(mat, oocc);
         typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
@@ -866,12 +866,12 @@ namespace Dune {
     class ISTLBackend_AMG_NOVLP : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      typedef typename istl::ParallelHelper<GFS> PHELPER;
+      typedef typename ISTL::ParallelHelper<GFS> PHELPER;
       typedef typename GO::Traits::Jacobian M;
       typedef Backend::Native<M> MatrixType;
       typedef typename GO::Traits::Domain V;
       typedef Backend::Native<V> VectorType;
-      typedef typename istl::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
+      typedef typename ISTL::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
 #if HAVE_MPI
       typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
       typedef Dune::NonoverlappingBlockPreconditioner<Comm,Smoother> ParSmoother;

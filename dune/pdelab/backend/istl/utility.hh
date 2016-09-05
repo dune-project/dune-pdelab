@@ -12,7 +12,7 @@ namespace Dune {
 
   namespace PDELab {
 
-    namespace istl {
+    namespace ISTL {
 
 #ifndef DOXYGEN
 
@@ -69,7 +69,7 @@ namespace Dune {
         : public impl::nesting_depth<T,0,typename tags::container<T>::type::base_tag>
       {};
 
-    } // namespace istl
+    } // namespace ISTL
   } // namespace PDELab
 } // namespace Dune
 

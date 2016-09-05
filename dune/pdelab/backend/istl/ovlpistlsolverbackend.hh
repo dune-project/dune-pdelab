@@ -98,7 +98,7 @@ namespace Dune {
 
       /*! \brief Constructor needs to know the grid function space
        */
-      OverlappingScalarProduct (const GFS& gfs_, const istl::ParallelHelper<GFS>& helper_)
+      OverlappingScalarProduct (const GFS& gfs_, const ISTL::ParallelHelper<GFS>& helper_)
         : gfs(gfs_), helper(helper_)
       {}
 
@@ -126,7 +126,7 @@ namespace Dune {
 
     private:
       const GFS& gfs;
-      const istl::ParallelHelper<GFS>& helper;
+      const ISTL::ParallelHelper<GFS>& helper;
     };
 
     // wrapped sequential preconditioner
@@ -149,7 +149,7 @@ namespace Dune {
 
       //! Constructor.
       OverlappingWrappedPreconditioner (const GFS& gfs_, P& prec_, const CC& cc_,
-                                        const istl::ParallelHelper<GFS>& helper_)
+                                        const ISTL::ParallelHelper<GFS>& helper_)
         : gfs(gfs_), prec(prec_), cc(cc_), helper(helper_)
       {}
 
@@ -186,7 +186,7 @@ namespace Dune {
       const GFS& gfs;
       P& prec;
       const CC& cc;
-      const istl::ParallelHelper<GFS>& helper;
+      const ISTL::ParallelHelper<GFS>& helper;
     };
 
 
@@ -281,7 +281,7 @@ namespace Dune {
         \param helper_ The parallel istl helper.
       */
       RestrictedSuperLUSubdomainSolver (const GFS& gfs_, const M& A_,
-                                        const istl::ParallelHelper<GFS>& helper_)
+                                        const ISTL::ParallelHelper<GFS>& helper_)
         : gfs(gfs_), solver(Backend::native(A_),false), helper(helper_) // this does the decomposition
       {}
 
@@ -315,7 +315,7 @@ namespace Dune {
     private:
       const GFS& gfs;
       Dune::SuperLU<ISTLM> solver;
-      const istl::ParallelHelper<GFS>& helper;
+      const ISTL::ParallelHelper<GFS>& helper;
     };
 #endif
 
@@ -351,20 +351,20 @@ namespace Dune {
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
-      const istl::ParallelHelper<GFS>& parallelHelper() const
+      const ISTL::ParallelHelper<GFS>& parallelHelper() const
       {
         return helper;
       }
 
       // need also non-const version;
-      istl::ParallelHelper<GFS>& parallelHelper() // P.B.: needed for createIndexSetAndProjectForAMG
+      ISTL::ParallelHelper<GFS>& parallelHelper() // P.B.: needed for createIndexSetAndProjectForAMG
       {
         return helper;
       }
 
     private:
       const GFS& gfs;
-      istl::ParallelHelper<GFS> helper;
+      ISTL::ParallelHelper<GFS> helper;
     };
 
 
@@ -931,12 +931,12 @@ namespace Dune {
     class ISTLBackend_AMG : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      typedef ISTL::ParallelHelper<GFS> PHELPER;
       typedef typename GO::Traits::Jacobian M;
       typedef Backend::Native<M> MatrixType;
       typedef typename GO::Traits::Domain V;
       typedef Backend::Native<V> VectorType;
-      typedef typename istl::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
+      typedef typename ISTL::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
 #if HAVE_MPI
       typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
       typedef Dune::BlockPreconditioner<VectorType,VectorType,Comm,Smoother> ParSmoother;

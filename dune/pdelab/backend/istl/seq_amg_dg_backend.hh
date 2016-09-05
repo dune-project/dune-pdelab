@@ -161,7 +161,7 @@ namespace Dune {
       typedef Backend::Native<CGV> CGVector;                       // istl CG vector
 
       // prolongation matrix
-      typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+      typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
       typedef Dune::PDELab::EmptyTransformation CC;
       typedef TransferLOP CGTODGLOP; // local operator
       typedef Dune::PDELab::GridOperator<CGGFS,GFS,CGTODGLOP,MBE,field_type,field_type,field_type,CC,CC> PGO;

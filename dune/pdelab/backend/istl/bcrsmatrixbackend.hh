@@ -8,7 +8,7 @@
 
 namespace Dune {
   namespace PDELab {
-    namespace istl {
+    namespace ISTL {
 
       // ********************************************************************************
       // infrastructure for deducing the pattern type from row and column orderings
@@ -256,7 +256,7 @@ namespace Dune {
 
       };
 
-    } // namespace istl
+    } // namespace ISTL
   } // namespace PDELab
 } // namespace Dune
 
