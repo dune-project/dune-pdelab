@@ -78,8 +78,10 @@ void solvePoissonProblem()
   VectorType rhs;
 
   // Construct Lagrangian finite element space basis
-  using GridView = typename GridType::LeafGridView;
-  auto gridView = grid.leafGridView();
+  using GridView_ = typename GridType::LeafGridView;
+  auto gridView_ = grid.leafGridView();
+  using GridView = Dune::PDELab::AllEntitySet<GridView_>;
+  auto gridView = GridView(gridView_,GridView::allCodims());
   using Basis = Functions::PQkNodalBasis<GridView,order>;
   auto basis = std::make_shared<Basis>(gridView);
 
