@@ -58,6 +58,15 @@ namespace Dune {
       {
         typedef std::size_t size_type;
 
+        size_type avg_nz_per_row;
+
+        DUNE_DEPRECATED_MSG("Please us the constructor taking the avg non-zeros")
+        MatrixBackend() : avg_nz_per_row(0)
+        {}
+
+        MatrixBackend(size_type avg_nz_per_row_) : avg_nz_per_row(avg_nz_per_row_)
+        {}
+
         //! The type of the pattern object passed to the GridOperator for pattern construction.
         template<typename Matrix, typename GFSV, typename GFSU>
         using Pattern = PDELab::Eigen::MatrixPatternInserter<typename Matrix::Container>;
