@@ -141,8 +141,6 @@ public:
 template<typename GV, typename FEM, typename CON>
 void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 {
-  typedef Dune::PDELab::EigenMatrixBackend<> MBE;
-
   // constants and types
   typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
@@ -172,12 +170,19 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
   LOP lop(problem);
 
+  // matrix backend
+  typedef Dune::PDELab::EigenMatrixBackend<> MBE;
+  int avgnz = 27;
+  MBE mbe;
+
   // make grid operator
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
                                      MBE,
                                      double,double,double,
                                      C,C> GridOperator;
-  GridOperator gridoperator(gfs,cg,gfs,cg,lop);
+  GridOperator gridoperator(gfs,cg,gfs,cg,lop,mbe);
+
+  Dune::Timer timer;
 
   // make coefficent Vector and initialize it from a function
   // There is some weird shuffling around here - please leave it in,
@@ -206,7 +211,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   typedef typename GridOperator::Traits::Jacobian M;
   M m;
   {
-    M m1(gridoperator, 27);
+    M m1(gridoperator, avgnz);
     M m2(m1);
     m2 = 0.0;
     m = m1;
@@ -224,7 +229,6 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   r = 0.0;
   gridoperator.residual(x0,r);
 
-  DV x(gfs,0.0);
   // test the container interface
   {
     // make ISTL solver
@@ -233,26 +237,34 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
     Dune::Richardson<DV,RV> richardson(1.0);
   }
 
+  DV x(gfs,0.0);
+
   // test the solver backend
   {
+    M m(gridoperator, avgnz);
     // make EIGEN solver
     Dune::PDELab::EigenBackend_BiCGSTAB_Diagonal solver;
+    x = 0.0;
+    gridoperator.jacobian(x0,m);
     // solve the jacobian system
     r *= -1.0; // need -residual
     solver.apply(m,x,r,1e-10);
     x += x0;
+
+    std::cout << "Time manually: " << timer.elapsed() << std::endl;
   }
 
   // test the solver backend as part of a pdelab solver
   {
+    Dune::Timer timer;
     std::cout << "StationaryLinearProblemSolver" << std::endl;
     typedef Dune::PDELab::EigenBackend_BiCGSTAB_Diagonal LS;
     LS linearSolver(5000);
-
     x = 0.0;
     Dune::PDELab::StationaryLinearProblemSolver<GridOperator,LS,DV> slp(gridoperator,linearSolver,x,1e-10);
     slp.apply();
     x += x0;
+    std::cout << "Time SLPSolver: " << timer.elapsed() << std::endl;
   }
 
   // output grid function with VTKWriter
@@ -277,7 +289,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<double,2> L(1.0);
       std::array<int,2> N(Dune::fill_array<int,2>(1));
       Dune::YaspGrid<2> grid(L,N);
-      grid.globalRefine(3);
+      grid.globalRefine(5);
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
@@ -298,7 +310,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<double,2> L(1.0);
       std::array<int,2> N(Dune::fill_array<int,2>(1));
       Dune::YaspGrid<2> grid(L,N);
-      grid.globalRefine(3);
+      grid.globalRefine(5);
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
