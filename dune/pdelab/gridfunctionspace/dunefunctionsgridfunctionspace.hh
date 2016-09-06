@@ -52,6 +52,7 @@ namespace Dune {
           using EntitySet = Dune::PDELab::impl::EntitySet<typename DFBasis::GridView>;
 
           using size_type = std::size_t;
+          using SizeType  = size_type;
           using ConstraintsType = CE;
 
           using Basis = DFBasis;
@@ -80,7 +81,8 @@ namespace Dune {
 
             using DOFIndex       = typename DFBasis::MultiIndex;
             using ContainerIndex = DOFIndex;
-            using SizeType       = std::size_t;
+            using size_type      = std::size_t;
+            using SizeType       = size_type;
 
           };
 
