@@ -236,7 +236,7 @@ namespace Dune
           c->resize(rows,cols);
           size_type nz = go.matrixBackend().avg_nz_per_row;
           if (nz)
-            c->reserve(Eigen::VectorXi::Constant(rows,nz));
+            c->reserve(::Eigen::VectorXi::Constant(rows,nz));
           // setup pattern
           Pattern pattern(*c);
           go.fill_pattern(pattern);
