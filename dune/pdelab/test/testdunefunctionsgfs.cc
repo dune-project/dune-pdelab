@@ -100,12 +100,13 @@ void solvePoissonProblem()
   PDELab::ConvectionDiffusionBoundaryConditionAdapter<decltype(problem)> bctype(problem);
   PDELab::constraints(bctype,gfs,constraintsContainer);
 
-  /*
+
   // make grid operator
   typedef PDELab::ConvectionDiffusionFEM<decltype(problem),typename GridFunctionSpace::Traits::FiniteElementMap> LOP;
   LOP lop(problem);
 
   Dune::PDELab::Backend::Vector<GridFunctionSpace,double> v(gfs,0);
+
   typedef PDELab::GridOperator<GridFunctionSpace,
                                GridFunctionSpace,
                                LOP,
@@ -156,12 +157,12 @@ void solvePoissonProblem()
   cg.apply(x, rhs, statistics);
 
   // Output result to VTK file
-  auto pressureFunction = Functions::makeDiscreteGlobalBasisFunction<double>(basis,x);
+  auto pressureFunction = Functions::makeDiscreteGlobalBasisFunction<double>(*basis,x);
 
   SubsamplingVTKWriter<GridView> vtkWriter(gridView,2);
   vtkWriter.addVertexData(pressureFunction, VTK::FieldInfo("pressure", VTK::FieldInfo::Type::scalar, 1));
   vtkWriter.write("testdunefunctionsgfs-poisson");
-  */
+
 }
 
 template <class GridView>
