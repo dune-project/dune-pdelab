@@ -209,7 +209,7 @@ namespace Dune {
       {}
 
       //! get a reference to the grid view
-      inline const GV& getGridView () {return gv;}
+      inline const GV& getGridView () const {return gv;}
 
       //! evaluate extended function on element
       inline void evaluate (const typename Traits::ElementType& e,
