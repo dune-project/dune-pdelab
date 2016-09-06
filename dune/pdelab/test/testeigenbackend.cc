@@ -173,7 +173,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   // matrix backend
   typedef Dune::PDELab::Eigen::MatrixBackend<> MBE;
   int avgnz = 27;
-  MBE mbe;
+  MBE mbe(avgnz);
 
   // make grid operator
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
@@ -211,7 +211,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   typedef typename GridOperator::Traits::Jacobian M;
   M m;
   {
-    M m1(gridoperator, avgnz);
+    M m1(gridoperator);
     M m2(m1);
     m2 = 0.0;
     m = m1;
@@ -241,7 +241,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 
   // test the solver backend
   {
-    M m(gridoperator, avgnz);
+    M m(gridoperator);
     // make EIGEN solver
     Dune::PDELab::EigenBackend_BiCGSTAB_Diagonal solver;
     x = 0.0;
@@ -250,7 +250,6 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
     r *= -1.0; // need -residual
     solver.apply(m,x,r,1e-10);
     x += x0;
-
     std::cout << "Time manually: " << timer.elapsed() << std::endl;
   }
 
