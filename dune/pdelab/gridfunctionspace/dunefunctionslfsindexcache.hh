@@ -9,8 +9,8 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename GFS_, typename C>
-    class LFSIndexCacheBase<Experimental::LocalFunctionSpace<GFS_>,C,Experimental::DuneFunctionsCacheTag>
+    template<typename LFS, typename C>
+    class LFSIndexCacheBase<LFS,C,Experimental::DuneFunctionsCacheTag>
     {
 
       enum DOFFlags
@@ -22,9 +22,8 @@ namespace Dune {
 
     public:
 
-      using LocalFunctionSpace = Experimental::LocalFunctionSpace<GFS_>;
-      using LFS                = LocalFunctionSpace;
-      using GFS                = GFS_;
+      using LocalFunctionSpace = LFS;
+      using GFS                = typename LFS::Traits::GridFunctionSpace;;
       using Ordering           = typename GFS::Ordering;
       using DOFIndex           = typename Ordering::Traits::DOFIndex;
       using DI                 = DOFIndex;
@@ -122,17 +121,17 @@ namespace Dune {
         */
       }
 
-      const DI& dofIndex(size_type i) const
+      DI dofIndex(size_type i) const
       {
         return _lfs.dofIndex(i);
       }
 
-      const CI& containerIndex(size_type i) const
+      CI containerIndex(size_type i) const
       {
         return _lfs.dofIndex(i);
       }
 
-      const CI& containerIndex(const DI& i) const
+      CI containerIndex(const DI& i) const
       {
         return i;
       }
@@ -333,17 +332,17 @@ namespace Dune {
         : _lfs(lfs)
       {}
 
-      const DI& dofIndex(size_type i) const
+      DI dofIndex(size_type i) const
       {
         return _lfs.dofIndex(i);
       }
 
-      const CI& containerIndex(size_type i) const
+      CI containerIndex(size_type i) const
       {
         return _lfs.dofIndex(i);
       }
 
-      const CI& containerIndex(const DI& i) const
+      CI containerIndex(const DI& i) const
       {
         return i;
       }
