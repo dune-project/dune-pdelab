@@ -57,6 +57,17 @@ namespace Dune {
 
       typedef std::size_t size_type;
 
+      size_type avg_nz_per_row;
+
+      DUNE_DEPRECATED_MSG("Please us the constructor taking the avg non-zeros")
+      EigenMatrixBackend() :
+        avg_nz_per_row(0)
+      {}
+
+      EigenMatrixBackend(size_type avg_nz_per_row_) :
+        avg_nz_per_row(avg_nz_per_row_)
+      {}
+
       //! The type of the pattern object passed to the GridOperator for pattern construction.
       template<typename Matrix, typename GFSV, typename GFSU>
       using Pattern = EIGEN::MatrixPatternInserter<typename Matrix::Container>;
