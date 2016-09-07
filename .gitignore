@@ -33,3 +33,5 @@ Makefile.in
 /missing
 /stamp-h1
 /test-driver
+# ignore build directories
+/build*/
