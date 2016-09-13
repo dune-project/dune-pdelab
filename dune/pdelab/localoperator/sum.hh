@@ -50,10 +50,11 @@ namespace Dune {
        *       of the two local operators lop0, lop1
        *       invoke it as follows in the code
        *       \code
-       *       typedef Dune::PDELab::InstationarySumLocalOperator<RF,std::tuple<LOP0,LOP1> > ISumLOP;
+       *       typedef Dune::PDELab::InstationarySumLocalOperator<RF,std::tuple<LOP0,LOP1>> ISumLOP;
        *       std::tuple<LOP0&,LOP1&> reftuple_lop(lop0,lop1);
-       *       ISumLOP isum_lop(lop0,lop1);
+       *       ISumLOP isum_lop(reftuple_lop);
        *       \endcode
+       *       The weights have to be specified afterwards.
       */
       InstationarySumLocalOperator(ArgRefs& lops_)
         : lops(transformTuple<AddPtrTypeEvaluator>(lops_))

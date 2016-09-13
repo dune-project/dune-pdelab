@@ -63,10 +63,11 @@ namespace Dune {
        *       of the two local operators lop0, lop1
        *       invoke it as follows in the code
        *       \code
-       *       typedef Dune::PDELab::WeightedSumLocalOperator<RF,std::tuple<LOP0,LOP1> > WSumLOP;
+       *       typedef Dune::PDELab::WeightedSumLocalOperator<RF,std::tuple<LOP0,LOP1>> WSumLOP;
        *       std::tuple<LOP0&,LOP1&> reftuple_lop(lop0,lop1);
-       *       WSumLOP wsum_lop(lop0,lop1);
+       *       WSumLOP wsum_lop(reftuple_lop);
        *       \endcode
+       *       The weights have to be specified afterwards.
        */
       WeightedSumLocalOperator
       ( const Weights& weights_ = Weights(1))
@@ -81,10 +82,11 @@ namespace Dune {
        *       of the two local operators lop0, lop1
        *       invoke it as follows in the code
        *       \code
-       *       typedef Dune::PDELab::WeightedSumLocalOperator<RF,std::tuple<LOP0,LOP1> > WSumLOP;
+       *       typedef Dune::PDELab::WeightedSumLocalOperator<RF,std::tuple<LOP0,LOP1>> WSumLOP;
        *       std::tuple<LOP0&,LOP1&> reftuple_lop(lop0,lop1);
-       *       WSumLOP wsum_lop(lop0,lop1);
+       *       WSumLOP wsum_lop(reftuple_lop);
        *       \endcode
+       *       The weights have to be specified afterwards.
        */
       WeightedSumLocalOperator
       ( ArgRefs& lops_,
