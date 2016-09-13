@@ -52,19 +52,42 @@ namespace Dune {
       //! \{
       //
 
-      //! construct a WeightedSumLocalOperator
-      /**
+      /** \brief construct a WeightedSumLocalOperator
+       *
        * No summand local operators are set.  They must be initialized with
        * setSummand() before the constructed object is used.
+       *
+       * \note The current implementation of WeightedSumLocalOperator will be
+       *       deprecated in the near future and rewritten according to the
+       *       C++-11 standard. If you nevertheless want to construct a weighted sum
+       *       of the two local operators lop0, lop1
+       *       invoke it as follows in the code
+       *       \code
+       *       typedef Dune::PDELab::WeightedSumLocalOperator<RF,std::tuple<LOP0,LOP1> > WSumLOP;
+       *       std::tuple<LOP0&,LOP1&> reftuple_lop(lop0,lop1);
+       *       WSumLOP wsum_lop(lop0,lop1);
+       *       \endcode
        */
       WeightedSumLocalOperator
       ( const Weights& weights_ = Weights(1))
         : weights(weights_)
       { }
 
-      //! construct a WeightedSumLocalOperator from a tuple of local operators
+      /** \brief construct a WeightedSumLocalOperator from a tuple of local operators
+       *
+       * \note The current implementation of WeightedSumLocalOperator will be
+       *       deprecated in the near future and rewritten according to the
+       *       C++-11 standard. If you nevertheless want to construct a weighted sum
+       *       of the two local operators lop0, lop1
+       *       invoke it as follows in the code
+       *       \code
+       *       typedef Dune::PDELab::WeightedSumLocalOperator<RF,std::tuple<LOP0,LOP1> > WSumLOP;
+       *       std::tuple<LOP0&,LOP1&> reftuple_lop(lop0,lop1);
+       *       WSumLOP wsum_lop(lop0,lop1);
+       *       \endcode
+       */
       WeightedSumLocalOperator
-      ( const ArgRefs& lops_,
+      ( ArgRefs& lops_,
         const Weights& weights_ = Weights(1))
         : lops(transformTuple<AddPtrTypeEvaluator>(lops_)), weights(weights_)
       { }

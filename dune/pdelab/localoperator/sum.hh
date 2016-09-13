@@ -42,9 +42,20 @@ namespace Dune {
       //! \{
       //
 
-      //! \brief construct a InstationarySumLocalOperator from a tuple of
-      //!        local operators
-      InstationarySumLocalOperator(const ArgRefs& lops_)
+      /** \brief construct a InstationarySumLocalOperator from a tuple of local operators
+       *
+       * \note The current implementation of InstationarySumLocalOperator will be
+       *       deprecated in the near future and rewritten according to the
+       *       C++-11 standard. If you nevertheless want to construct a sum
+       *       of the two local operators lop0, lop1
+       *       invoke it as follows in the code
+       *       \code
+       *       typedef Dune::PDELab::InstationarySumLocalOperator<RF,std::tuple<LOP0,LOP1> > ISumLOP;
+       *       std::tuple<LOP0&,LOP1&> reftuple_lop(lop0,lop1);
+       *       ISumLOP isum_lop(lop0,lop1);
+       *       \endcode
+      */
+      InstationarySumLocalOperator(ArgRefs& lops_)
         : lops(transformTuple<AddPtrTypeEvaluator>(lops_))
       { }
 
