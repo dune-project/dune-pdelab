@@ -4,8 +4,6 @@
 #include <type_traits>
 #include <utility>
 
-#include <dune/common/deprecated.hh>
-
 namespace Dune {
   namespace PDELab {
     namespace Backend {
