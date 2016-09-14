@@ -179,7 +179,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   // make coefficent Vector and initialize it from a function
   // There is some weird shuffling around here - please leave it in,
   // it's there to test the copy constructor and assignment operator of the
-  // matrix wrapper
+  // vector wrapper.
   typedef typename GridOperator::Traits::Domain DV;
   DV x0(gfs,Dune::PDELab::Backend::unattached_container());
   {
@@ -199,7 +199,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   // represent operator as a matrix
   // There is some weird shuffling around here - please leave it in,
   // it's there to test the copy constructor and assignment operator of the
-  // matrix wrapper
+  // matrix wrapper.
   typedef typename GridOperator::Traits::Jacobian M;
   M m;
   {
