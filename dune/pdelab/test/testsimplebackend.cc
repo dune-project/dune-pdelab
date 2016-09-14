@@ -179,7 +179,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   // make coefficent Vector and initialize it from a function
   // There is some weird shuffling around here - please leave it in,
   // it's there to test the copy constructor and assignment operator of the
-  // matrix wrapper
+  // vector wrapper.
   typedef typename GridOperator::Traits::Domain DV;
   DV x0(gfs,Dune::PDELab::Backend::unattached_container());
   {
@@ -199,7 +199,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   // represent operator as a matrix
   // There is some weird shuffling around here - please leave it in,
   // it's there to test the copy constructor and assignment operator of the
-  // matrix wrapper
+  // matrix wrapper.
   typedef typename GridOperator::Traits::Jacobian M;
   M m;
   {
@@ -261,10 +261,10 @@ int main(int argc, char** argv)
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      const GV gv=grid.leafGridView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
+      typedef GV::ctype DF;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
       FEM fem(gv);
 
@@ -287,10 +287,10 @@ int main(int argc, char** argv)
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      const GV gv=grid.leafGridView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
+      typedef GV::ctype DF;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,2> FEM;
       FEM fem(gv);
 
