@@ -264,7 +264,7 @@ int main(int argc, char** argv)
       const GV gv=grid.leafGridView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
+      typedef GV::ctype DF;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
       FEM fem(gv);
 
@@ -290,7 +290,7 @@ int main(int argc, char** argv)
       const GV gv=grid.leafGridView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
+      typedef GV::ctype DF;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,2> FEM;
       FEM fem(gv);
 
