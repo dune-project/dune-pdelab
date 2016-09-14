@@ -35,6 +35,12 @@ namespace Dune
         M & _matrix;
       };
 
+      /** \brief Wrapper class for a sparse matrix from the Eigen library
+       *
+       * \tparam GFSV
+       * \tparam GFSU
+       * \tparam ET Number type used for the matrix entries
+       */
       template<typename GFSV, typename GFSU, typename ET, int _Options>
       class MatrixContainer
         : public Backend::impl::Wrapper<::Eigen::SparseMatrix<ET,_Options>>

@@ -20,6 +20,11 @@ namespace Dune {
 
     namespace Eigen {
 
+      /** \brief Wrapper class for a coefficient vector from the Eigen library
+       *
+       * \tparam GFS GridFunctionSpace
+       * \tparam ET Number type used for coefficient values
+       */
       template<typename GFS, typename ET>
       class VectorContainer
         : public Backend::impl::Wrapper<::Eigen::Matrix<ET, ::Eigen::Dynamic, 1>>
