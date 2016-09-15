@@ -442,8 +442,6 @@ namespace Dune {
           res_.linear_solver_time += linear_solver_timer.elapsed();
           res_.linear_solver_iterations += solver_.result().iterations;
           auto linear_solver_time = linear_solver_timer.elapsed();
-          res_.linear_solver_time += linear_solver_time;
-          res_.linear_solver_iterations += solver_.result().iterations;
 
           //============================================
           // line search with correction z

@@ -5,7 +5,7 @@ set(modules
   DunePdelabTestMacros.cmake
   FindPackageMultipass.cmake
   FindPETSc.cmake
-  FindVCL.cmka
+  FindVCL.cmake
   ResolveCompilerPaths.cmake
   UseEigen.cmake
   UsePETSc.cmake)

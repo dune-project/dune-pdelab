@@ -100,6 +100,7 @@ namespace Dune {
           {
             node.pfe = nullptr;
             node.n = node.pgfs->finiteElementMap().maxLocalSize();
+            Node::FESwitch::setStore(node.pfe, node.pgfs->finiteElementMap().find(e));
           }
         else
           {

@@ -17,7 +17,7 @@ find_path(VCL_INCLUDE_DIR
 include(CMakePushCheckState)
 include(CheckCXXSourceCompiles)
 cmake_push_check_state()
-set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES} ${VCL_INCLUDE_DIR}")
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${VCL_INCLUDE_DIR})
 set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -march=native -O3")
 check_cxx_source_compiles("
 #include \"vectorclass.h\"

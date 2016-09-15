@@ -7,7 +7,6 @@
 #include <dune/pdelab/instationary/explicitonestep.hh>
 #include <dune/pdelab/instationary/implicitonestep.hh>
 
-// TODO: Remove include after PDELab 2.4
 #include <dune/pdelab/common/instationaryfilenamehelper.hh>
 
 #endif // DUNE_PDELAB_INSTATIONARY_ONESTEP_HH
