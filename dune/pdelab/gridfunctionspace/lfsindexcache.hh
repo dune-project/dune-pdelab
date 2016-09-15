@@ -303,13 +303,12 @@ namespace Dune {
 
       void update()
       {
-#if HACKED_LFS_INDEX_CACHE
-
-        _container_indices[0].resize(2);
-        _container_indices[0][0] = 0;
-        _container_indices[0][1] = LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(_lfs.dofIndex(0));
-
-#else // HACKED_LFS_INDEX_CACHE
+        if(fast) {
+          _container_indices[0].resize(2);
+          _container_indices[0][0] = 0;
+          _container_indices[0][1] = LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(_lfs.dofIndex(0));
+        }
+        else {
 
         // clear out existing state
         _container_index_map.clear();
@@ -382,7 +381,7 @@ namespace Dune {
                   }
               }
           }
-#endif // HACKED_LFS_INDEX_CACHE
+        }
       }
 
       const DI& dofIndex(size_type i) const
@@ -603,13 +602,13 @@ namespace Dune {
 
       void update()
       {
-#if HACKED_LFS_INDEX_CACHE
+        if(fast) {
+          _container_indices[0].resize(2);
+          _container_indices[0][0] = 0;
+          _container_indices[0][1] = LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(_lfs.dofIndex(0));
+        }
+        else {
 
-        _container_indices[0].resize(2);
-        _container_indices[0][0] = 0;
-        _container_indices[0][1] = LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(_lfs.dofIndex(0));
-
-#else // HACKED_LFS_INDEX_CACHE
         // clear out existing state
         _container_index_map.clear();
         for (typename CIVector::iterator it = _container_indices.begin(); it != _container_indices.end(); ++it)
@@ -630,7 +629,7 @@ namespace Dune {
           fast
           > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs.subSpaceDepth());
         TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
-#endif // HACKED_LFS_INDEX_CACHE
+        }
       }
 
       const DI& dofIndex(size_type i) const
@@ -756,6 +755,11 @@ namespace Dune {
 
       void update()
       {
+        if(fast) {
+          DUNE_THROW(Dune::Exception, "This function shouldn't be called in fast mode");
+        }
+        else {
+
         _constraints.resize(0);
         std::vector<std::pair<size_type,typename C::const_iterator> > non_dirichlet_constrained_dofs;
         size_type constraint_entry_count = 0;
@@ -799,6 +803,7 @@ namespace Dune {
                 _constraints_iterators[it->first].second = eit;
               }
           }
+        }
       }
 
       const DI& dofIndex(size_type i) const
