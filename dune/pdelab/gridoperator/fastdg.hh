@@ -169,48 +169,62 @@ namespace Dune {
       }
 
       //! Fill pattern of jacobian matrix
-      void fill_pattern(Pattern & p) const {
+      template<typename Dir = Direction::Forward>
+      void fill_pattern(Pattern & p, Dir direction = Dir()) const {
         typedef typename LocalAssembler::LocalPatternAssemblerEngine PatternEngine;
         global_assembler.assemble
           ([&p](LocalAssembler &la) -> PatternEngine&
                 { return la.localPatternAssemblerEngine(p); },
-           local_assembler);
+           local_assembler,
+           direction
+           );
       }
 
       //! Assemble residual
-      void residual(const Domain & x, Range & r) const {
+      template<typename Dir = Direction::Forward>
+      void residual(const Domain & x, Range & r, Dir direction = Dir()) const {
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
         global_assembler.assemble
           ([&r,&x](LocalAssembler &la) -> ResidualEngine&
                 { return la.localResidualAssemblerEngine(r,x); },
-           local_assembler);
+           local_assembler,
+           direction
+           );
       }
 
       //! Assembler jacobian
-      void jacobian(const Domain & x, Jacobian & a) const {
+      template<typename Dir = Direction::Forward>
+      void jacobian(const Domain & x, Jacobian & a, Dir direction = Dir()) const {
         typedef typename LocalAssembler::LocalJacobianAssemblerEngine JacobianEngine;
         global_assembler.assemble
           ([&a,&x](LocalAssembler &la) -> JacobianEngine&
                 { return la.localJacobianAssemblerEngine(a,x); },
-           local_assembler);
+           local_assembler,
+           direction
+           );
       }
 
       //! Apply jacobian matrix without explicitly assembling it
-      void jacobian_apply(const Domain & x, Range & r) const {
+      template<typename Dir = Direction::Forward>
+      void jacobian_apply(const Domain & x, Range & r, Dir direction = Dir()) const {
         typedef typename LocalAssembler::LocalJacobianApplyAssemblerEngine JacobianApplyEngine;
         global_assembler.assemble
           ([&r,&x](LocalAssembler &la) -> JacobianApplyEngine&
                 { return la.localJacobianApplyAssemblerEngine(r,x); },
-           local_assembler);
+           local_assembler,
+           direction
+           );
       }
 
       //! Apply jacobian matrix without explicitly assembling it
-      void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r) const {
+      template<typename Dir = Direction::Forward>
+      void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r, Dir direction = Dir()) const {
         typedef typename LocalAssembler::LocalNonlinearJacobianApplyAssemblerEngine NonlinearJacobianApplyEngine;
         global_assembler.assemble
           ([&r,&x,&z](LocalAssembler &la) -> NonlinearJacobianApplyEngine&
                { return la.localNonlinearJacobianApplyAssemblerEngine(r,x,z); },
-           local_assembler);
+           local_assembler,
+           direction);
       }
 
       void make_consistent(Jacobian& a) const {
