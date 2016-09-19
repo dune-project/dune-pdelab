@@ -310,77 +310,77 @@ namespace Dune {
         }
         else {
 
-        // clear out existing state
-        _container_index_map.clear();
-        for (typename CIVector::iterator it = _container_indices.begin(); it != _container_indices.end(); ++it)
-          it->clear();
+          // clear out existing state
+          _container_index_map.clear();
+          for (typename CIVector::iterator it = _container_indices.begin(); it != _container_indices.end(); ++it)
+            it->clear();
 
-        _inverse_map.clear();
-        _inverse_cache_built = false;
+          _inverse_map.clear();
+          _inverse_cache_built = false;
 
-        // extract size for all leaf spaces (into a flat list)
-        typedef ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount> LeafSizeVector;
-        LeafSizeVector leaf_sizes;
-        leaf_sizes.resize(TypeTree::TreeInfo<LFS>::leafCount);
-        extract_lfs_leaf_sizes(_lfs,leaf_sizes.begin());
+          // extract size for all leaf spaces (into a flat list)
+          typedef ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount> LeafSizeVector;
+          LeafSizeVector leaf_sizes;
+          leaf_sizes.resize(TypeTree::TreeInfo<LFS>::leafCount);
+          extract_lfs_leaf_sizes(_lfs,leaf_sizes.begin());
 
-        // perform the actual mapping
-        map_dof_indices_to_container_indices<
-          typename LFS::Traits::DOFIndexContainer::const_iterator,
-          typename CIVector::iterator,
-          typename LeafSizeVector::const_iterator,
-          TypeTree::TreeInfo<Ordering>::depth,
-          fast
-          > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs.subSpaceDepth());
-        TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
+          // perform the actual mapping
+          map_dof_indices_to_container_indices<
+            typename LFS::Traits::DOFIndexContainer::const_iterator,
+            typename CIVector::iterator,
+            typename LeafSizeVector::const_iterator,
+            TypeTree::TreeInfo<Ordering>::depth,
+            fast
+            > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs.subSpaceDepth());
+          TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
 
-        if (_enable_constraints_caching)
-          {
-            _constraints.resize(0);
-            std::vector<std::pair<size_type,typename C::const_iterator> > non_dirichlet_constrained_dofs;
-            size_type constraint_entry_count = 0;
-            size_type end = fast ? 1 : _lfs.size();
-            for (size_type i = 0; i < end; ++i)
-              {
-                const CI& container_index = _container_indices[i];
-                const typename C::const_iterator cit = _gfs_constraints.find(container_index);
-                if (cit == _gfs_constraints.end())
-                  {
-                    _dof_flags[i] = DOF_NONCONSTRAINED;
-                    continue;
-                  }
+          if (_enable_constraints_caching)
+            {
+              _constraints.resize(0);
+              std::vector<std::pair<size_type,typename C::const_iterator> > non_dirichlet_constrained_dofs;
+              size_type constraint_entry_count = 0;
+              size_type end = fast ? 1 : _lfs.size();
+              for (size_type i = 0; i < end; ++i)
+                {
+                  const CI& container_index = _container_indices[i];
+                  const typename C::const_iterator cit = _gfs_constraints.find(container_index);
+                  if (cit == _gfs_constraints.end())
+                    {
+                      _dof_flags[i] = DOF_NONCONSTRAINED;
+                      continue;
+                    }
 
-                if (cit->second.size() == 0)
-                  {
-                    _dof_flags[i] = DOF_CONSTRAINED | DOF_DIRICHLET;
-                    _constraints_iterators[i] = make_pair(_constraints.end(),_constraints.end());
-                  }
-                else
-                  {
-                    _dof_flags[i] = DOF_CONSTRAINED;
-                    constraint_entry_count += cit->second.size();
-                    non_dirichlet_constrained_dofs.push_back(make_pair(i,cit));
-                  }
-              }
+                  if (cit->second.size() == 0)
+                    {
+                      _dof_flags[i] = DOF_CONSTRAINED | DOF_DIRICHLET;
+                      _constraints_iterators[i] = make_pair(_constraints.end(),_constraints.end());
+                    }
+                  else
+                    {
+                      _dof_flags[i] = DOF_CONSTRAINED;
+                      constraint_entry_count += cit->second.size();
+                      non_dirichlet_constrained_dofs.push_back(make_pair(i,cit));
+                    }
+                }
 
-            if (constraint_entry_count > 0)
-              {
-                _constraints.resize(constraint_entry_count);
-                typename ConstraintsVector::iterator eit = _constraints.begin();
-                for (typename std::vector<std::pair<size_type,typename C::const_iterator> >::const_iterator it = non_dirichlet_constrained_dofs.begin();
-                     it != non_dirichlet_constrained_dofs.end();
-                     ++it)
-                  {
-                    _constraints_iterators[it->first].first = eit;
-                    for (typename C::mapped_type::const_iterator cit = it->second->second.begin(); cit != it->second->second.end(); ++cit, ++eit)
-                      {
-                        eit->first = &(cit->first);
-                        eit->second = cit->second;
-                      }
-                    _constraints_iterators[it->first].second = eit;
-                  }
-              }
-          }
+              if (constraint_entry_count > 0)
+                {
+                  _constraints.resize(constraint_entry_count);
+                  typename ConstraintsVector::iterator eit = _constraints.begin();
+                  for (typename std::vector<std::pair<size_type,typename C::const_iterator> >::const_iterator it = non_dirichlet_constrained_dofs.begin();
+                       it != non_dirichlet_constrained_dofs.end();
+                       ++it)
+                    {
+                      _constraints_iterators[it->first].first = eit;
+                      for (typename C::mapped_type::const_iterator cit = it->second->second.begin(); cit != it->second->second.end(); ++cit, ++eit)
+                        {
+                          eit->first = &(cit->first);
+                          eit->second = cit->second;
+                        }
+                      _constraints_iterators[it->first].second = eit;
+                    }
+                }
+            }
         }
       }
 
@@ -609,26 +609,26 @@ namespace Dune {
         }
         else {
 
-        // clear out existing state
-        _container_index_map.clear();
-        for (typename CIVector::iterator it = _container_indices.begin(); it != _container_indices.end(); ++it)
-          it->clear();
+          // clear out existing state
+          _container_index_map.clear();
+          for (typename CIVector::iterator it = _container_indices.begin(); it != _container_indices.end(); ++it)
+            it->clear();
 
-        // extract size for all leaf spaces (into a flat list)
-        typedef ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount> LeafSizeVector;
-        LeafSizeVector leaf_sizes;
-        leaf_sizes.resize(TypeTree::TreeInfo<LFS>::leafCount);
-        extract_lfs_leaf_sizes(_lfs,leaf_sizes.begin());
+          // extract size for all leaf spaces (into a flat list)
+          typedef ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount> LeafSizeVector;
+          LeafSizeVector leaf_sizes;
+          leaf_sizes.resize(TypeTree::TreeInfo<LFS>::leafCount);
+          extract_lfs_leaf_sizes(_lfs,leaf_sizes.begin());
 
-        // perform the actual mapping
-        map_dof_indices_to_container_indices<
-          typename LFS::Traits::DOFIndexContainer::const_iterator,
-          typename CIVector::iterator,
-          typename LeafSizeVector::const_iterator,
-          TypeTree::TreeInfo<Ordering>::depth,
-          fast
-          > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs.subSpaceDepth());
-        TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
+          // perform the actual mapping
+          map_dof_indices_to_container_indices<
+            typename LFS::Traits::DOFIndexContainer::const_iterator,
+            typename CIVector::iterator,
+            typename LeafSizeVector::const_iterator,
+            TypeTree::TreeInfo<Ordering>::depth,
+            fast
+            > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs.subSpaceDepth());
+          TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
         }
       }
 
@@ -760,49 +760,49 @@ namespace Dune {
         }
         else {
 
-        _constraints.resize(0);
-        std::vector<std::pair<size_type,typename C::const_iterator> > non_dirichlet_constrained_dofs;
-        size_type constraint_entry_count = 0;
-        for (size_type i = 0; i < _lfs.size(); ++i)
-          {
-            const DI& dof_index = _lfs.dofIndex(i);
-            const typename C::const_iterator cit = _gfs_constraints.find(dof_index);
-            if (cit == _gfs_constraints.end())
-              {
-                _dof_flags[i] = DOF_NONCONSTRAINED;
-                continue;
-              }
+          _constraints.resize(0);
+          std::vector<std::pair<size_type,typename C::const_iterator> > non_dirichlet_constrained_dofs;
+          size_type constraint_entry_count = 0;
+          for (size_type i = 0; i < _lfs.size(); ++i)
+            {
+              const DI& dof_index = _lfs.dofIndex(i);
+              const typename C::const_iterator cit = _gfs_constraints.find(dof_index);
+              if (cit == _gfs_constraints.end())
+                {
+                  _dof_flags[i] = DOF_NONCONSTRAINED;
+                  continue;
+                }
 
-            if (cit->second.size() == 0)
-              {
-                _dof_flags[i] = DOF_CONSTRAINED | DOF_DIRICHLET;
-                _constraints_iterators[i] = make_pair(_constraints.end(),_constraints.end());
-              }
-            else
-              {
-                _dof_flags[i] = DOF_CONSTRAINED;
-                constraint_entry_count += cit->second.size();
-                non_dirichlet_constrained_dofs.push_back(make_pair(i,cit));
-              }
-          }
+              if (cit->second.size() == 0)
+                {
+                  _dof_flags[i] = DOF_CONSTRAINED | DOF_DIRICHLET;
+                  _constraints_iterators[i] = make_pair(_constraints.end(),_constraints.end());
+                }
+              else
+                {
+                  _dof_flags[i] = DOF_CONSTRAINED;
+                  constraint_entry_count += cit->second.size();
+                  non_dirichlet_constrained_dofs.push_back(make_pair(i,cit));
+                }
+            }
 
-        if (constraint_entry_count > 0)
-          {
-            _constraints.resize(constraint_entry_count);
-            typename ConstraintsVector::iterator eit = _constraints.begin();
-            for (typename std::vector<std::pair<size_type,typename C::const_iterator> >::const_iterator it = non_dirichlet_constrained_dofs.begin();
-                 it != non_dirichlet_constrained_dofs.end();
-                 ++it)
-              {
-                _constraints_iterators[it->first].first = eit;
-                for (typename C::mapped_type::const_iterator cit = it->second->second.begin(); cit != it->second->second.end(); ++cit, ++eit)
-                  {
-                    eit->first = cit->first;
-                    eit->second = cit->second;
-                  }
-                _constraints_iterators[it->first].second = eit;
-              }
-          }
+          if (constraint_entry_count > 0)
+            {
+              _constraints.resize(constraint_entry_count);
+              typename ConstraintsVector::iterator eit = _constraints.begin();
+              for (typename std::vector<std::pair<size_type,typename C::const_iterator> >::const_iterator it = non_dirichlet_constrained_dofs.begin();
+                   it != non_dirichlet_constrained_dofs.end();
+                   ++it)
+                {
+                  _constraints_iterators[it->first].first = eit;
+                  for (typename C::mapped_type::const_iterator cit = it->second->second.begin(); cit != it->second->second.end(); ++cit, ++eit)
+                    {
+                      eit->first = cit->first;
+                      eit->second = cit->second;
+                    }
+                  _constraints_iterators[it->first].second = eit;
+                }
+            }
         }
       }
 
