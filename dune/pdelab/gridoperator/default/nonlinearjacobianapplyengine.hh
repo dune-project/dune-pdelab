@@ -201,12 +201,12 @@ namespace Dune{
       template<typename LFSUC>
       void loadCoefficientsLFSUInside(const LFSUC & lfsu_s_cache){
         global_sl_view.read(xl);
-        global_zl_view.read(xl);
+        global_zl_view.read(zl);
       }
       template<typename LFSUC>
       void loadCoefficientsLFSUOutside(const LFSUC & lfsu_n_cache){
         global_sn_view.read(xn);
-        global_zn_view.read(xn);
+        global_zn_view.read(zn);
       }
       template<typename LFSUC>
       void loadCoefficientsLFSUCoupling(const LFSUC & lfsu_c_cache)
