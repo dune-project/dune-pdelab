@@ -256,7 +256,7 @@ namespace Dune{
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
           nonlinear_jacobian_apply_skeleton(lop,ig,
                                             lfsu_s_cache.localFunctionSpace(),xl,zl,lfsv_s_cache.localFunctionSpace(),
-                                            lfsu_n_cache.localFunctionSpace(),xn,zl,lfsv_n_cache.localFunctionSpace(),
+                                            lfsu_n_cache.localFunctionSpace(),xn,zn,lfsv_n_cache.localFunctionSpace(),
                                             rl_view,rn_view);
       }
 
