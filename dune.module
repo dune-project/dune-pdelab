@@ -1,11 +1,8 @@
-#dune module information file#
-##############################
+# dune module information file
 
-#Name of the module
 Module: dune-pdelab
 Version: 3.0-dev
 Maintainer: dune-pdelab@dune-project.org
-#depending on
-Depends: dune-common (>= 3.0) dune-geometry (>= 3.0) dune-grid (>= 3.0) dune-localfunctions (>= 3.0) dune-istl (>= 3.0) dune-typetree (>= 3.0)
+Depends: dune-grid (>= 3.0) dune-localfunctions (>= 3.0) dune-istl (>= 3.0) dune-typetree (>= 3.0)
 Suggests: dune-alugrid
 Whitespace-Hook: Yes
