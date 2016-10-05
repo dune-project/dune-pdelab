@@ -104,9 +104,9 @@ namespace Dune {
        */
       template<typename GF, typename Entity, typename Domain>
       FieldVector<typename GF::template Child<0>::Type::Traits::RangeFieldType,TypeTree::staticDegree<GF>>
-      evaluateVelocityGridFunction(const GF& gf,
-                                   const Entity& e,
-                                   const Domain& x)
+        evaluateVelocityGridFunction(const GF& gf,
+                                     const Entity& e,
+                                     const Domain& x)
       {
         static_assert(Domain::dimension == TypeTree::staticDegree<GF>,"dimension of function range does not match grid dimension");
         FieldVector<typename GF::template Child<0>::Type::Traits::RangeFieldType,TypeTree::staticDegree<GF>> y;
@@ -267,10 +267,10 @@ namespace Dune {
         (GV::dimension > 1) &&
         AlwaysTrue<IG>::value, // required to force lazy evaluation
         typename Traits::VelocityRange
-        >::type
-      j(const IG& ig,
-        const typename Traits::IntersectionDomain& x,
-        typename Traits::Domain normal) const
+          >::type
+          j(const IG& ig,
+            const typename Traits::IntersectionDomain& x,
+            typename Traits::Domain normal) const
       {
         typename J::Traits::RangeType r;
         auto e = ig.inside();
@@ -286,9 +286,9 @@ namespace Dune {
         AlwaysTrue<IG>::value, // required to force lazy evaluation
         typename Traits::VelocityRange
         >::type
-      j(const IG& ig,
-        const typename Traits::IntersectionDomain& x,
-        const typename Traits::Domain& normal) const
+        j(const IG& ig,
+          const typename Traits::IntersectionDomain& x,
+          const typename Traits::Domain& normal) const
       {
         auto e = ig.inside();
         typename J::Traits::RangeType y;
@@ -330,7 +330,7 @@ namespace Dune {
 
       /** \brief Constructor */
       StokesVelocityDirichletConstraints (const PRM & _prm)
-      : prm_(_prm) { }
+        : prm_(_prm) { }
 
       /** Predicate identifying Dirichlet boundaries for velocity. */
       template<typename I>
@@ -357,7 +357,7 @@ namespace Dune {
 
       /** \brief Constructor */
       StokesPressureDirichletConstraints (const PRM & _prm)
-      : prm_(_prm) { }
+        : prm_(_prm) { }
 
       /** Predicate identifying Dirichlet boundaries for velocity. */
       template<typename I>
@@ -376,23 +376,23 @@ namespace Dune {
     template<typename PRM, int rangeDim>
     class NavierStokesFunctionAdapterBase
       : public Dune::PDELab::GridFunctionBase<
-          Dune::PDELab::GridFunctionTraits<
-            typename PRM::Traits::GridView,
-            typename PRM::Traits::RangeField,
-            rangeDim,
-            Dune::FieldVector<typename PRM::Traits::RangeField,rangeDim>
-            >,
-          NavierStokesFunctionAdapterBase<PRM,rangeDim>
-          >
-    {
-    public:
-      //! Traits class
-      typedef Dune::PDELab::GridFunctionTraits<
+      Dune::PDELab::GridFunctionTraits<
         typename PRM::Traits::GridView,
         typename PRM::Traits::RangeField,
         rangeDim,
         Dune::FieldVector<typename PRM::Traits::RangeField,rangeDim>
-        > Traits;
+        >,
+      NavierStokesFunctionAdapterBase<PRM,rangeDim>
+      >
+    {
+    public:
+      //! Traits class
+      typedef Dune::PDELab::GridFunctionTraits<
+      typename PRM::Traits::GridView,
+      typename PRM::Traits::RangeField,
+      rangeDim,
+      Dune::FieldVector<typename PRM::Traits::RangeField,rangeDim>
+      > Traits;
 
       //! Constructor
       NavierStokesFunctionAdapterBase(PRM& prm)
@@ -454,40 +454,40 @@ namespace Dune {
       {
         y = parameters().g(e,x);
       }
-};
+    };
 
 
 
 #if 0
-/** \brief Factory for a Dirichlet function which can be used
-    for interpolation. */
-template < typename PRM >
-class NavierStokesDirichletFunctionAdapterFactory
-{
-public:
-  typedef Dune::PDELab::CompositeGridFunction<
-    NavierStokesDirichletFunctionAdapter<PRM>,
-     NavierStokesPressureDirichletFunctionAdapter<PRM> >
-  BoundaryDirichletFunction;
+    /** \brief Factory for a Dirichlet function which can be used
+        for interpolation. */
+    template < typename PRM >
+    class NavierStokesDirichletFunctionAdapterFactory
+    {
+    public:
+      typedef Dune::PDELab::CompositeGridFunction<
+      NavierStokesDirichletFunctionAdapter<PRM>,
+      NavierStokesPressureDirichletFunctionAdapter<PRM> >
+      BoundaryDirichletFunction;
 
-NavierStokesDirichletFunctionAdapterFactory(PRM & prm)
-: v(prm), p(prm), df(v,p)
-{}
+      NavierStokesDirichletFunctionAdapterFactory(PRM & prm)
+        : v(prm), p(prm), df(v,p)
+      {}
 
-BoundaryDirichletFunction & dirichletFunction()
-{
-  return df;
-}
+      BoundaryDirichletFunction & dirichletFunction()
+      {
+        return df;
+      }
 
-private:
-NavierStokesVelocityDirichletFunctionAdapter<PRM> v;
-NavierStokesPressureDirichletFunctionAdapter<PRM> p;
-BoundaryDirichletFunction df;
-};
+    private:
+      NavierStokesVelocityDirichletFunctionAdapter<PRM> v;
+      NavierStokesPressureDirichletFunctionAdapter<PRM> p;
+      BoundaryDirichletFunction df;
+    };
 #endif
 
 
-} // end namespace PDELab
+  } // end namespace PDELab
 } // end namespace Dune
 
 #endif // DUNE_PDELAB_LOCALOPERATOR_STOKESPARAMETER_HH
