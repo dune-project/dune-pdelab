@@ -64,6 +64,9 @@ namespace Dune {
       //! Boundary condition indicator type
       using BC = StokesBoundaryCondition;
 
+      using InstatBase = InstationaryLocalOperatorDefaultMethods<double>;
+      using Real = typename InstatBase::RealType;
+
       static const bool navier = P::assemble_navier;
       static const bool full_tensor = P::assemble_full_tensor;
 
@@ -82,6 +85,13 @@ namespace Dune {
         : _p(p)
         , superintegration_order(superintegration_order_)
       {}
+
+      // set time in parameter class
+      void setTime(Real t)
+      {
+        InstatBase::setTime(t);
+        _p.setTime(t);
+      }
 
       // volume integral depending on test and ansatz functions
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
