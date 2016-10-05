@@ -1,5 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 
+#ifndef DOXYGEN
+
 // this whole file is an implementation detail and should never be included directly!
 
 #ifndef _DUNE_PDELAB_HAVE_LOWERCASE_ISTL_NAMESPACE
@@ -23,3 +25,5 @@ namespace Dune {
   after that release, please switch to only including dune/pdelab/backend/istl.hh instead
 
 #endif // not defined (DUNE_PDELAB_BACKEND_ISTL_HH) and not defined (_DUNE_PDELAB_SUPPRESS_ISTL_HH_WARNING)
+
+#endif // DOXYGEN
