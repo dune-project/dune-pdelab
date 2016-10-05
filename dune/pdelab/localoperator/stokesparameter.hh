@@ -156,8 +156,8 @@ namespace Dune {
                                     B& b,
                                     V& v,
                                     J& j)
-        : _rho(config.get<double>("rho"))
-        , _mu(config.get<double>("mu"))
+        : _rho(config.get<RF>("rho"))
+        , _mu(config.get<RF>("mu"))
         , _f(f)
         , _b(b)
         , _v(v)
@@ -185,7 +185,7 @@ namespace Dune {
       f(const EG& e, const typename Traits::Domain& x) const
       {
         typename F::Traits::RangeType fvalue;
-        return evaluateVelocityGridFunction(_f,e.entity(),x);
+        return evaluateVelocityGridFunction(_f,e,x);
       }
 
       //! boundary condition type from local intersection coordinate
