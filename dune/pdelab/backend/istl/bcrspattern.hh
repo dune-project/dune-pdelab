@@ -2,6 +2,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_BCRSPATTERN_HH
 #define DUNE_PDELAB_BACKEND_ISTL_BCRSPATTERN_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <utility>
 #include <vector>
 #include <algorithm>
