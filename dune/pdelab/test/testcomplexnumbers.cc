@@ -93,7 +93,7 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,RF,k> FEM;
   FEM fem(gv);
   typedef Dune::PDELab::ConformingDirichletConstraints CON; // constraints class
-  typedef Dune::PDELab::istl::VectorBackend<> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
   gfs.name("solution");
@@ -110,7 +110,7 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
   typedef HelmholtzLocalOperator<PARAM > LOP;
 
   LOP lop(param, 2*k);
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,RF,RF,RF,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop,MBE(std::pow(2*k+1,dim)));
 

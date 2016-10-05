@@ -542,7 +542,7 @@ namespace Dune {
             void make_consistent (const GFS& gfs, DOF& x) const
             {
                 // make vector consistent; this is needed for all overlapping solvers
-                istl::ParallelHelper<GFS> helper(gfs);
+                ISTL::ParallelHelper<GFS> helper(gfs);
                 helper.maskForeignDOFs(Backend::native(x));
                 Dune::PDELab::AddDataHandle<GFS,DOF> adddh(gfs,x);
                 if (gfs.gridView().comm().size()>1)
@@ -575,7 +575,7 @@ namespace Dune {
         // continuous Lagrange finite elements
         template<typename T, typename N, unsigned int degree, typename BCType,
                  Dune::GeometryType::BasicType gt, MeshType mt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=istl::VectorBackend<> >
+                 typename VBET=ISTL::VectorBackend<> >
         class CGSpace {
         public:
 
@@ -870,7 +870,7 @@ namespace Dune {
             void make_consistent (const GFS& gfs, DOF& x) const
             {
                 // make vector consistent; this is needed for all overlapping solvers
-                istl::ParallelHelper<GFS> helper(gfs);
+                ISTL::ParallelHelper<GFS> helper(gfs);
                 helper.maskForeignDOFs(Backend::native(x));
                 Dune::PDELab::AddDataHandle<GFS,DOF> adddh(gfs,x);
                 if (gfs.gridView().comm().size()>1)
@@ -884,7 +884,7 @@ namespace Dune {
         // default implementation, use only specializations below
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::PB::PkSize<degree,T::dimension>::value> >
+                 typename VBET=ISTL::VectorBackend<ISTL::Blocking::fixed,Dune::PB::PkSize<degree,T::dimension>::value> >
         class DGPkSpace
         {
         public:
@@ -983,8 +983,8 @@ namespace Dune {
         // default implementation, use only specializations below
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 //typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::PB::PkSize<degree,T::dimension>::value> >
-                 typename VBET=istl::VectorBackend<> >
+                 //typename VBET=ISTL::VectorBackend<ISTL::Blocking::fixed,Dune::PB::PkSize<degree,T::dimension>::value> >
+                 typename VBET=ISTL::VectorBackend<> >
         class DGQkOPBSpace
         {
         public:
@@ -1083,7 +1083,7 @@ namespace Dune {
         // default implementation, use only specializations below
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
+                 typename VBET=ISTL::VectorBackend<ISTL::Blocking::fixed,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
         class DGQkSpace
         {
         public:
@@ -1178,8 +1178,8 @@ namespace Dune {
         // Discontinuous space using QK with Gauss Lobatto points (use only for cube elements)
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 //typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
-                 typename VBET=istl::VectorBackend<> >
+                 //typename VBET=ISTL::VectorBackend<ISTL::Blocking::fixed,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
+                 typename VBET=ISTL::VectorBackend<> >
         class DGQkGLSpace
         {
         public:
@@ -1274,8 +1274,8 @@ namespace Dune {
         // Discontinuous space using Legendre polynomials (use only for cube elements)
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 //typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
-                 typename VBET=istl::VectorBackend<> >
+                 //typename VBET=ISTL::VectorBackend<ISTL::Blocking::fixed,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
+                 typename VBET=ISTL::VectorBackend<> >
         class DGLegendreSpace
         {
         public:
@@ -1370,7 +1370,7 @@ namespace Dune {
         // Discontinuous P0 space
         template<typename T, typename N,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=istl::VectorBackend<> >
+                 typename VBET=ISTL::VectorBackend<> >
         class P0Space
         {
         public:
@@ -1506,7 +1506,7 @@ namespace Dune {
         {
         public:
             // export types
-            typedef istl::BCRSMatrixBackend<> MBE;
+            typedef ISTL::BCRSMatrixBackend<> MBE;
             typedef Dune::PDELab::GridOperator<typename FS::GFS,typename FS::GFS,LOP,MBE,
                                                typename FS::NT,typename FS::NT,typename FS::NT,
                                                typename FS::CC,typename FS::CC> GO;
@@ -1559,7 +1559,7 @@ namespace Dune {
         {
         public:
             // export types
-            typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+            typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
             typedef Dune::PDELab::GridOperator<typename FS::GFS,typename FS::GFS,LOP,MBE,
                                                typename FS::NT,typename FS::NT,typename FS::NT,
                                                typename FS::CC,typename FS::CC> GO;
@@ -1613,7 +1613,7 @@ namespace Dune {
         {
         public:
             // export types
-            typedef istl::BCRSMatrixBackend<> MBE;
+            typedef ISTL::BCRSMatrixBackend<> MBE;
             typedef Dune::PDELab::GridOperator<typename FSU::GFS,typename FSV::GFS,LOP,MBE,
                                                typename FSU::NT,typename FSU::NT,typename FSU::NT,
                                                typename FSU::CC,typename FSV::CC> GO;
@@ -1666,7 +1666,7 @@ namespace Dune {
         {
         public:
             // export types
-            typedef istl::BCRSMatrixBackend<> MBE;
+            typedef ISTL::BCRSMatrixBackend<> MBE;
             typedef Dune::PDELab::OneStepGridOperator<typename GO1::GO,typename GO2::GO,implicit> GO;
             typedef typename GO::Jacobian MAT;
 

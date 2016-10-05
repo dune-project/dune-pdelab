@@ -152,7 +152,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
-    Dune::PDELab::istl::VectorBackend<> > GFS;
+    Dune::PDELab::ISTL::VectorBackend<> > GFS;
   GFS gfs(gv,fem);
   gfs.name("solution");
 
@@ -175,7 +175,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   typedef Dune::PDELab::ISTLMatrixBackend MBE;
   MBE mbe;
 #else
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
 #endif
 

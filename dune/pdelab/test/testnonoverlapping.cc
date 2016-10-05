@@ -58,7 +58,7 @@ void run_test(const GV& gv, const FEM& fem, std::string suffix)
 
   using RF = double;
 
-  using VBE = Dune::PDELab::istl::VectorBackend<>;
+  using VBE = Dune::PDELab::ISTL::VectorBackend<>;
   using NoConstraints = Dune::PDELab::NoConstraints;
 
   using GFS = Dune::PDELab::GridFunctionSpace<EntitySet,FEM,NoConstraints,VBE>;
@@ -70,7 +70,7 @@ void run_test(const GV& gv, const FEM& fem, std::string suffix)
 
   using CC = Dune::PDELab::EmptyTransformation;
 
-  using MBE = Dune::PDELab::istl::BCRSMatrixBackend<>;
+  using MBE = Dune::PDELab::ISTL::BCRSMatrixBackend<>;
 
   using GridOperator = Dune::PDELab::GridOperator<
     GFS,GFS,
