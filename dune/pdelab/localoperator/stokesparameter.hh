@@ -309,10 +309,10 @@ namespace Dune {
     private:
       const RF _rho;
       const RF _mu;
-      const F& _f;
-      const B& _b;
-      const V& _v;
-      const J& _j;
+      F& _f;
+      B& _b;
+      V& _v;
+      J& _j;
     };
 
 

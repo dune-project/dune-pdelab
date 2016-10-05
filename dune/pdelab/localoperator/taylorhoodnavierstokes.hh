@@ -1,4 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_LOCALOPERATOR_TAYLORHOODNAVIERSTOKES_HH
 #define DUNE_PDELAB_LOCALOPERATOR_TAYLORHOODNAVIERSTOKES_HH
 
@@ -77,7 +77,7 @@ namespace Dune {
 
       using PhysicalParameters = P;
 
-      TaylorHoodNavierStokes (const PhysicalParameters & p, int superintegration_order_ = 0)
+      TaylorHoodNavierStokes (PhysicalParameters& p, int superintegration_order_ = 0)
 
         : _p(p)
         , superintegration_order(superintegration_order_)
@@ -496,7 +496,7 @@ namespace Dune {
       }
 
     private:
-      const P& _p;
+      P& _p;
       const int superintegration_order;
     };
 
