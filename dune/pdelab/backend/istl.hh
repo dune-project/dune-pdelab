@@ -14,7 +14,7 @@
 namespace Dune {
   namespace PDELab {
     namespace istl {
-      using namespace ISTL;
+      using namespace Dune::PDELab::ISTL;
     }
   }
 }
