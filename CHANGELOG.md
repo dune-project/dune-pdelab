@@ -14,7 +14,7 @@ to the [PDELab bugtracker][] instead.
 Changes
 =======
 
-PDELab 3.0
+PDELab 2.5
 ----------
 
 -   Removed support for autotools.
@@ -199,7 +199,7 @@ PDELab 2.4
 -   Tests for PDELab are now created using a new CMake function `pdelab_add_test()`, which makes it possible to have
     tests that run on multiple MPI ranks as well as a number of other interesting features. If you are interested, you
     can also use this function in your own modules -- take a look at `cmake/modules/DunePdelabTestMacros.cmake` for
-    the documentation. DUNE 3.0 will contain a similar feature in the core modules. Moreover, `make test` will **not**
+    the documentation. DUNE 2.5 will contain a similar feature in the core modules. Moreover, `make test` will **not**
     build the PDELab tests anymore before running them, you have to explicitly build them using `make build_tests`.
     The manual approach avoids lots of dark CMake magic and makes it possible to build multiple tests in parallel.
 
