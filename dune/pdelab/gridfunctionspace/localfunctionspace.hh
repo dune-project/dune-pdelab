@@ -672,11 +672,11 @@ namespace Dune {
     /**
        \brief Create a local function space from a global function space
 
-       The local function space can be tagged with on of the tags
+       The local function space can be tagged with one of the tags
        defined in localfunctionspacetags.hh. This allows to
        destinguish between trial and test space.
 
-       If no TAG is specified the AnySpaceTag is used, which basicly
+       If no TAG is specified the AnySpaceTag is used, which basically
        states, that it is not clear, whether this is a trial of a test
        space.
 

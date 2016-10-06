@@ -16,7 +16,7 @@ namespace Dune {
      * \nosubgrouping
      *
      * This class is for documentation purposes only.  Each method given here
-     * is controlled by an flag.  If the corresponding flag for a method is
+     * is controlled by a flag.  If the corresponding flag for a method is
      * false, that method is never called and it is permissible for the method
      * to be missing entirely from the local operator.  The flags are those
      * from LocalOperatorDefaultFlags.
@@ -43,13 +43,13 @@ namespace Dune {
      *     do*VolumePostSkeleton flags,
      * \li \c *_skeleton(): methods called on the interior intersections,
      *     controlled by the \c do*Skeleton flags, and finally
-     * \li \c *_boundary(): methods called on the bounary intersections,
+     * \li \c *_boundary(): methods called on the boundary intersections,
      *     controlled by the \c do*Boundary flags.
      *
      * Not all combinations of categories and methods do actually exist.
      *
      * To assemble the global sparsity pattern, residual or jacobian, the
-     * GridOperatorSpace iterates over the elements of the grid.  For each
+     * GridOperator iterates over the elements of the grid.  For each
      * element, it will call the appropriate \c *_volume() method.  Then it
      * will iterate through the elements intersections and call the
      * appropriate \c *_skeleton() or \c *_boundary() methods on the
@@ -58,9 +58,9 @@ namespace Dune {
      *
      * The special flag \ref doSkeletonTwoSided controls whether each interior
      * intersection is visited once or twice.  If it is true, each
-     * intersection is \em may be given to \c *_skeleton() twice -- the second
-     * time with the meaning of \em inside and \em outside exchanged.  Note
-     * "may": In the paralell case only interior entities are visited, so
+     * intersection \em may be given to \c *_skeleton() twice -- the second
+     * time with the meaning of \em inside and \em outside exchanged.  Note the
+     * "may": In the parallel case only interior entities are visited, so
      * intersections at a processor boundary will only be visited once per
      * processor in any case.
      *
@@ -72,12 +72,12 @@ namespace Dune {
      * processes are considered.
      *
      * The \c alpha and \c lambda categories are a bit special in that the
-     * GridOperatorSpace uses them together -- each time a method on the local
+     * GridOperator uses them together -- each time a method on the local
      * operator should be called, it will first call the \c alpha_*() method
      * and then call the \c lambda_*() method.
      *
      * If the controlling flag for a method is false, the call to the method
-     * is omitted in such a way that the method does not even has to be
+     * is omitted in such a way that the method does not even have to be
      * present on the local operator.  If both the \c do*Skeleton and \c
      * do*Boundary flags are false, the iteration through the intersections is
      * skipped.
