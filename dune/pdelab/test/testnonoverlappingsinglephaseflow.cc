@@ -57,7 +57,7 @@ void driver(PROBLEM& problem, ES es, const FEM& fem,
   //typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints<GV> CON;
   using CON = Dune::PDELab::ConformingDirichletConstraints;
   typedef Dune::PDELab::GridFunctionSpace
-    <ES,FEM,CON,Dune::PDELab::istl::VectorBackend<> > GFS;
+    <ES,FEM,CON,Dune::PDELab::ISTL::VectorBackend<> > GFS;
   CON con; // (gv);
   GFS gfs(es,fem,con);
   gfs.name("solution");
@@ -72,7 +72,7 @@ void driver(PROBLEM& problem, ES es, const FEM& fem,
   // make grid operator
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP;
   LOP lop(problem);
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator
       <GFS,GFS,LOP,

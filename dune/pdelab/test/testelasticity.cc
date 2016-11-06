@@ -124,7 +124,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
 
   // make function space
   typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-  typedef Dune::PDELab::istl::VectorBackend<> ComponentVectorBackend;
+  typedef Dune::PDELab::ISTL::VectorBackend<> ComponentVectorBackend;
 
   typedef Dune::PDELab::DefaultLeafOrderingTag Mapper;
 
@@ -133,7 +133,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
     GV,
     FEM,
     dim,
-    Dune::PDELab::istl::VectorBackend<>,
+    Dune::PDELab::ISTL::VectorBackend<>,
     ComponentVectorBackend,
     Constraints,
     OrderingTag,
@@ -160,7 +160,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   typedef Dune::PDELab::LinearElasticity<Param> LO;
   LO lo(param);
 
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   MBE mbe(9); // 2D Q1
 
   // make grid operator

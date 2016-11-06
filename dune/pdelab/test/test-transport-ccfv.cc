@@ -184,7 +184,7 @@ void stationary (const GV& gv)
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem(gt); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  typedef Dune::PDELab::istl::VectorBackend<> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
@@ -206,7 +206,7 @@ void stationary (const GV& gv)
   // <<<4>>> Make grid operator
   typedef Dune::PDELab::ConvectionDiffusionCCFV<Param> LOP;
   LOP lop(param);
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop,mbe);
@@ -259,7 +259,7 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem(gt); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  typedef Dune::PDELab::istl::VectorBackend<> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
@@ -283,7 +283,7 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   LOP lop(param);
   typedef Dune::PDELab::ConvectionDiffusionCCFVTemporalOperator<Param> SLOP;
   SLOP slop(param);
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // number of nonzero entries per row can be cross-checked by patternStatistics().
   Dune::PDELab::FractionalStepParameter<Real> method;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO0;
@@ -360,7 +360,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem(gt); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
-  typedef Dune::PDELab::istl::VectorBackend<> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
@@ -384,7 +384,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   LOP lop(param);
   typedef Dune::PDELab::ConvectionDiffusionCCFVTemporalOperator<Param> SLOP;
   SLOP slop(param);
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // number of nonzero entries per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO0;
   GO0 go0(gfs,cc,gfs,cc,lop,mbe);

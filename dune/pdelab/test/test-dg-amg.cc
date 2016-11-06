@@ -166,7 +166,7 @@ int main(int argc, char **argv)
   typedef typename FS::GFS GFS;
   typedef typename FS::CC DGCC2;
   DGCC2 dgcc2; // empty: no constraints!
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,DGCC2,DGCC2> DGGO2;
   DGGO2 dggo2(fs.getGFS(),dgcc2,fs.getGFS(),dgcc2,lop,MBE(5));
 

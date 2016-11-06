@@ -51,10 +51,10 @@ int main(int argc, char** argv)
       V_FEM v_fem(gv);
       P_FEM p_fem(gv);
 
-      typedef Dune::PDELab::istl::VectorBackend<> V_Component_Backend;
-      typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed,2> V_Backend;
-      typedef Dune::PDELab::istl::VectorBackend<> P_Backend;
-      typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::bcrs> TH_Backend;
+      typedef Dune::PDELab::ISTL::VectorBackend<> V_Component_Backend;
+      typedef Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,2> V_Backend;
+      typedef Dune::PDELab::ISTL::VectorBackend<> P_Backend;
+      typedef Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::bcrs> TH_Backend;
 
       typedef Dune::PDELab::DefaultLeafOrderingTag V_Component_Ordering;
       typedef Dune::PDELab::ordering::Chunked<Dune::PDELab::EntityBlockedOrderingTag> V_Ordering;

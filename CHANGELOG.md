@@ -19,6 +19,20 @@ PDELab 2.5
 
 -   Removed support for autotools.
 
+-   The namespace `Dune::PDELab::istl` has been renamed to `Dune::PDELab::ISTL` for consistency
+    reasons. Please update your code accordingly. A quick way to do so is
+
+    ```
+    git grep -l "istl::" | xargs perl -i -pe "s/istl::/ISTL::/g"
+    ```
+    The old namespace still works, but unfortunately we haven't found a way to emit a deprecation
+    warning if code still uses it, so the automatic conversion shown above is probably your best
+    bet.
+
+-   Directly including **any** files in the directory `dune/pdelab/backend/istl/` is deprecated; doing
+    so after 2.5 will probably not work anymore. If your are using ISTL, just include the single header
+    `dune/pdelab/backend/istl.hh` instead.
+
 PDELab 2.4
 ----------
 
