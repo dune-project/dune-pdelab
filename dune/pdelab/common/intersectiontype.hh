@@ -37,7 +37,7 @@ namespace Dune {
     std::tuple<IntersectionType,typename EntitySet::Element> classifyIntersection(const EntitySet& entity_set, const Intersection& is)
     {
       auto type = static_cast<IntersectionType>(1* is.neighbor() + 2*is.boundary());
-      if (type == IntersectionType::skeleton)
+      if (type == IntersectionType::skeleton || type == IntersectionType::periodic)
 #if DUNE_VERSION_NEWER_REV(DUNE_GRID,2,4,1)
         if (entity_set.partitions() == Partitions::all)
 #else
