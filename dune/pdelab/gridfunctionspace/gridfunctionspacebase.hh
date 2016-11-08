@@ -125,6 +125,43 @@ namespace Dune {
       };
 
 
+      template<typename size_type>
+      struct update_entity_sets
+        : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
+      {
+
+        template<typename GFS>
+        void update(GFS& gfs)
+        {
+          auto& entity_set = gfs.entitySet();
+          assert(entity_set.update_count() == _current_update_count || entity_set.update_count() == _current_update_count + 1 );
+          if (entity_set.update_count() == _current_update_count)
+            entity_set.update(_force);
+        }
+
+        template<typename GFS, typename TreePath>
+        void leaf(GFS& gfs, TreePath tp)
+        {
+          update(gfs);
+        }
+
+        template<typename GFS, typename TreePath>
+        void post(GFS& gfs, TreePath tp)
+        {
+          update(gfs);
+        }
+
+        explicit update_entity_sets(const bool force, const size_type current_update_count)
+          : _force(force)
+          , _current_update_count(current_update_count)
+        {}
+
+        const bool _force;
+        const size_type _current_update_count;
+
+      };
+
     } // namespace impl
 
 #endif // DOXYGEN
@@ -204,8 +241,10 @@ namespace Dune {
        */
       void update(bool force = false)
       {
+
         auto entity_set = gfs().entitySet();
-        entity_set.update(force);
+        const auto current_update_count = entity_set.update_count();
+        TypeTree::applyToTree(gfs(),impl::update_entity_sets<typename Traits::SizeType>(force, current_update_count));
         // We bypass the normal access using ordering() here to avoid a double
         // update if the Ordering has not been created yet.
         if (!gfs()._ordering)

@@ -125,9 +125,17 @@ namespace Dune {
       }
 
       //! get grid view partition
+      template< int child_index = 0 >
+      typename Traits::EntitySet& entitySet ()
+      {
+        return gfs().template child<child_index>().entitySet();
+      }
+
+      //! get grid view partition
+      template< int child_index = 0 >
       const typename Traits::EntitySet& entitySet () const
       {
-        return gfs().template child<0>().entitySet();
+        return gfs().template child<child_index>().entitySet();
       }
 
       PowerCompositeGridFunctionSpaceBase(const B& backend, const OrderingTag& ordering_tag)
