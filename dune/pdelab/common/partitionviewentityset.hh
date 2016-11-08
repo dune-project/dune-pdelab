@@ -256,10 +256,12 @@ namespace Dune {
 
       PartitionViewEntitySet(const GridView& gv, CodimMask supported_codims)
         : _index_set(std::make_shared<IndexSet>(gv,supported_codims,true))
+        , _update_count(0)
       {}
 
       explicit PartitionViewEntitySet(const GridView& gv)
         : _index_set(std::make_shared<IndexSet>(gv,CodimMask(),false))
+        , _update_count(0)
       {}
 
       //! Reset this EntitySet, which removes all entities from it.
@@ -297,12 +299,19 @@ namespace Dune {
        */
       bool update(bool force = false)
       {
+        ++_update_count;
         return _index_set->update(force);
+      }
+
+      const size_t& update_count() const
+      {
+        return _update_count;
       }
 
     private:
 
       std::shared_ptr<IndexSet> _index_set;
+      size_t _update_count;
 
     };
 

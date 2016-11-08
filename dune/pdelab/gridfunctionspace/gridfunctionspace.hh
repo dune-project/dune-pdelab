@@ -305,6 +305,12 @@ namespace Dune {
       }
 
       //! get EntitySet
+      typename Traits::EntitySet& entitySet ()
+      {
+        return _es;
+      }
+
+      //! get EntitySet
       const typename Traits::EntitySet& entitySet () const
       {
         return _es;
