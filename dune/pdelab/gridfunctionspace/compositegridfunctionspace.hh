@@ -9,6 +9,7 @@
 #include <dune/typetree/compositenode.hh>
 #include <dune/typetree/utility.hh>
 
+#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
 #include <dune/pdelab/gridfunctionspace/datahandleprovider.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
@@ -201,6 +202,8 @@ namespace Dune {
       // GFS::update() before GFS::ordering().
       void create_ordering() const
       {
+        set_entity_set_visitor<typename Traits::EntitySet> visitor(this->entitySet());
+        TypeTree::applyToTree(*this,visitor);
         _ordering = std::make_shared<Ordering>(ordering_transformation::transform(*this));
       }
 
