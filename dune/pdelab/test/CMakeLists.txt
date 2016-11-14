@@ -23,6 +23,10 @@ dune_add_test(SOURCES testgridfunctionspace.cc)
 
 dune_add_test(SOURCES testgridfunctionspace-fixedsize.cc)
 
+dune_add_test(SOURCES testpowergridfunctionspace-fixedsize.cc)
+
+dune_add_test(SOURCES testplasticitygfs.cc)
+
 dune_add_test(SOURCES testheat-instationary-periodic.cc)
 
 dune_add_test(SOURCES testelasticity.cc)

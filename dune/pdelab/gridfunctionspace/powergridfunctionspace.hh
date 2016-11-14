@@ -275,6 +275,8 @@ namespace Dune {
       // GFS::update() before GFS::ordering().
       void create_ordering() const
       {
+        set_entity_set_visitor<typename Traits::EntitySet> visitor(this->entitySet());
+        TypeTree::applyToTree(*this,visitor);
         _ordering = std::make_shared<Ordering>(ordering_transformation::transform(*this));
       }
 
