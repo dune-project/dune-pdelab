@@ -64,7 +64,7 @@ namespace Dune {
       //! Boundary condition indicator type
       using BC = StokesBoundaryCondition;
 
-      using InstatBase = InstationaryLocalOperatorDefaultMethods<typename PRM::Traits::RangeField>;
+      using InstatBase = InstationaryLocalOperatorDefaultMethods<typename P::Traits::RangeField>;
       using Real = typename InstatBase::RealType;
 
       static const bool navier = P::assemble_navier;
