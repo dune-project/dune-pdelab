@@ -3,19 +3,20 @@
 #ifndef DUNE_PDELAB_GRIDOPERATOR_COMMON_BORDERDOFEXCHANGER_HH
 #define DUNE_PDELAB_GRIDOPERATOR_COMMON_BORDERDOFEXCHANGER_HH
 
-#include <cstddef>
-#include <vector>
 #include <algorithm>
+#include <cstddef>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/tuples.hh>
 
 #include <dune/geometry/typeindex.hh>
-#include <dune/grid/common/gridenums.hh>
+
 #include <dune/grid/common/datahandleif.hh>
+#include <dune/grid/common/gridenums.hh>
 
 #include <dune/pdelab/common/borderindexidcache.hh>
 #include <dune/pdelab/common/globaldofindex.hh>

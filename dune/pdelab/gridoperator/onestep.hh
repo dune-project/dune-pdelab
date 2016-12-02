@@ -2,10 +2,10 @@
 #ifndef DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
 #define DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
 
-#include <dune/pdelab/instationary/onestep.hh>
-#include <dune/pdelab/gridoperator/onestep/localassembler.hh>
-#include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
+#include <dune/pdelab/gridoperator/onestep/localassembler.hh>
+#include <dune/pdelab/instationary/onestep.hh>
 
 namespace Dune{
   namespace PDELab{
