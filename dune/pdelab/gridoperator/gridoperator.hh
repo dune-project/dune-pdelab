@@ -6,7 +6,7 @@
 
 #include <tuple>
 
-#include <dune/common/tupleutility.hh>
+#include <dune/common/hybridutilities.hh>
 
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/gridoperator/common/borderdofexchanger.hh>
@@ -171,9 +171,9 @@ namespace Dune{
       template<typename GridOperatorTuple>
       static void setupGridOperators(GridOperatorTuple tuple)
       {
-        Dune::ForEachValue<GridOperatorTuple> forEach(tuple);
         SetupGridOperator<GridOperatorTuple> setup_visitor;
-        forEach.apply(setup_visitor);
+        Hybrid::forEach(tuple,
+                        [&](auto &el) { setup_visitor.visit(el); });
       }
 
       //! Interpolate the constrained dofs from given function
