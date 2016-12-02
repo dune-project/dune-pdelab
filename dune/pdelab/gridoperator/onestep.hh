@@ -2,6 +2,8 @@
 #ifndef DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
 #define DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
 
+#include <tuple>
+
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
 #include <dune/pdelab/gridoperator/onestep/localassembler.hh>
@@ -72,7 +74,7 @@ namespace Dune{
           const_residual( go0_.testGridFunctionSpace() ),
           local_assembler(la0,la1, const_residual)
       {
-        GO0::setupGridOperators(Dune::tie(go0_,go1_));
+        GO0::setupGridOperators(std::tie(go0_,go1_));
         if(!implicit)
           local_assembler.setDTAssemblingMode(LocalAssembler::DoNotAssembleDT);
       }

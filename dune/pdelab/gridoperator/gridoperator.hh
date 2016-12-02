@@ -4,6 +4,8 @@
 // TODO: Remove deprecated nonoverlapping parameter. This will break
 // boilerplate code and needs to be done with care.
 
+#include <tuple>
+
 #include <dune/common/tupleutility.hh>
 
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -150,7 +152,7 @@ namespace Dune{
       template <typename GridOperatorTuple>
       struct SetupGridOperator {
         SetupGridOperator()
-          : index(0), size(Dune::tuple_size<GridOperatorTuple>::value) {}
+          : index(0), size(std::tuple_size<GridOperatorTuple>::value) {}
 
         template <typename T>
         void visit(T& elem) {
