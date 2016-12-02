@@ -4,7 +4,9 @@
 // TODO: Remove deprecated nonoverlapping parameter. This will break
 // boilerplate code and needs to be done with care.
 
-#include <dune/common/tupleutility.hh>
+#include <tuple>
+
+#include <dune/common/hybridutilities.hh>
 
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/gridoperator/common/borderdofexchanger.hh>
@@ -150,7 +152,7 @@ namespace Dune{
       template <typename GridOperatorTuple>
       struct SetupGridOperator {
         SetupGridOperator()
-          : index(0), size(Dune::tuple_size<GridOperatorTuple>::value) {}
+          : index(0), size(std::tuple_size<GridOperatorTuple>::value) {}
 
         template <typename T>
         void visit(T& elem) {
@@ -169,9 +171,9 @@ namespace Dune{
       template<typename GridOperatorTuple>
       static void setupGridOperators(GridOperatorTuple tuple)
       {
-        Dune::ForEachValue<GridOperatorTuple> forEach(tuple);
         SetupGridOperator<GridOperatorTuple> setup_visitor;
-        forEach.apply(setup_visitor);
+        Hybrid::forEach(tuple,
+                        [&](auto &el) { setup_visitor.visit(el); });
       }
 
       //! Interpolate the constrained dofs from given function

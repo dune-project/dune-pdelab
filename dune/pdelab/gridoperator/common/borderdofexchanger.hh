@@ -3,19 +3,20 @@
 #ifndef DUNE_PDELAB_GRIDOPERATOR_COMMON_BORDERDOFEXCHANGER_HH
 #define DUNE_PDELAB_GRIDOPERATOR_COMMON_BORDERDOFEXCHANGER_HH
 
-#include <cstddef>
-#include <vector>
 #include <algorithm>
+#include <cstddef>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/tuples.hh>
 
 #include <dune/geometry/typeindex.hh>
-#include <dune/grid/common/gridenums.hh>
+
 #include <dune/grid/common/datahandleif.hh>
+#include <dune/grid/common/gridenums.hh>
 
 #include <dune/pdelab/common/borderindexidcache.hh>
 #include <dune/pdelab/common/globaldofindex.hh>
@@ -258,7 +259,7 @@ namespace Dune {
 
                   ColDOFIndex dj;
                   GFSU::Ordering::Traits::DOFIndexAccessor::store(dj,col_entity.geometryTypeIndex(),col_entity.entityIndex(),col_it->treeIndex());
-                  buf.write(make_tuple(_entity_cache.dofIndex(i).treeIndex(),*col_it,matrix(_entity_cache.containerIndex(i),_gfsu.ordering().mapIndex(dj))));
+                  buf.write(std::make_tuple(_entity_cache.dofIndex(i).treeIndex(),*col_it,matrix(_entity_cache.containerIndex(i),_gfsu.ordering().mapIndex(dj))));
                 }
             }
         }
@@ -446,7 +447,7 @@ namespace Dune {
               DataType data;
               buff.read(data);
 
-              std::pair<bool,typename CommunicationCache::EntityIndex> col_index = _communication_cache.findIndex(get<1>(data).entityID());
+              std::pair<bool,typename CommunicationCache::EntityIndex> col_index = _communication_cache.findIndex(std::get<1>(data).entityID());
               if (!col_index.first)
                 continue;
 
@@ -454,15 +455,15 @@ namespace Dune {
               GFSV::Ordering::Traits::DOFIndexAccessor::store(di,
                                                               e.type(),
                                                               _entity_set.indexSet().index(e),
-                                                              get<0>(data));
+                                                              std::get<0>(data));
 
               ColDOFIndex dj;
               GFSU::Ordering::Traits::DOFIndexAccessor::store(dj,
                                                               col_index.second.geometryTypeIndex(),
                                                               col_index.second.entityIndex(),
-                                                              get<1>(data).treeIndex());
+                                                              std::get<1>(data).treeIndex());
 
-              _matrix(_gfsv.ordering().mapIndex(di),_gfsu.ordering().mapIndex(dj)) += get<2>(data);
+              _matrix(_gfsv.ordering().mapIndex(di),_gfsu.ordering().mapIndex(dj)) += std::get<2>(data);
             }
         }
 
