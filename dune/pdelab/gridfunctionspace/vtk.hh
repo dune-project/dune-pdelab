@@ -91,7 +91,7 @@ namespace Dune {
         using EntitySet = typename GFS::Traits::EntitySet;
         using Cell = typename EntitySet::Traits::Element;
         using IndexSet = typename EntitySet::Traits::IndexSet;
-        typedef typename GFS::Traits::SizeType size_type;
+        typedef typename IndexSet::IndexType size_type;
 
         static const auto dim = EntitySet::dimension;
 
