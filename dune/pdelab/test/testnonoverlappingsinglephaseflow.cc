@@ -44,10 +44,12 @@
 // set up diffusion problem and solve it
 //===============================================================
 
-template< typename PROBLEM, typename ES, typename FEM>
-void driver(PROBLEM& problem, ES es, const FEM& fem,
+template< typename PROBLEM, typename GV, typename FEM>
+void driver(PROBLEM& problem, GV gv, const FEM& fem,
             std::string filename)
 {
+  using ES = Dune::PDELab::NonOverlappingEntitySet<GV>;
+
   // constants and types and global variables
   typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
@@ -59,7 +61,7 @@ void driver(PROBLEM& problem, ES es, const FEM& fem,
   typedef Dune::PDELab::GridFunctionSpace
     <ES,FEM,CON,Dune::PDELab::ISTL::VectorBackend<> > GFS;
   CON con; // (gv);
-  GFS gfs(es,fem,con);
+  GFS gfs(gv,fem,con);
   gfs.name("solution");
   // con.compute_ghosts(gfs);
 
@@ -67,7 +69,7 @@ void driver(PROBLEM& problem, ES es, const FEM& fem,
   typedef typename GFS::template ConstraintsContainer<R>::Type CC;
   CC cc;
   cc.clear();
-  Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<PROBLEM> bctype(es,problem);
+  Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<PROBLEM> bctype(gv,problem);
 
   // make grid operator
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP;
@@ -84,7 +86,7 @@ void driver(PROBLEM& problem, ES es, const FEM& fem,
   typedef typename GO::Traits::Domain V;
   V x(gfs,0.0);
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<PROBLEM> G;
-  G g(es,problem);
+  G g(gv,problem);
   Dune::PDELab::interpolate(g,gfs,x);
   Dune::PDELab::constraints(bctype,gfs,cc,false);
   Dune::PDELab::set_nonconstrained_dofs(cc,0.0,x);
@@ -95,8 +97,7 @@ void driver(PROBLEM& problem, ES es, const FEM& fem,
   SLP slp(go,ls,x,1e-12);
   slp.apply();
 
-  using GV = typename ES::Traits::GridView;
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(es.gridView(),3);
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
   vtkwriter.write(filename,Dune::VTK::ascii);
 }
@@ -136,21 +137,20 @@ int main(int argc, char** argv)
     grid->loadBalance();
 
     typedef GridType::LeafGridView GV;
-    using ES = Dune::PDELab::NonOverlappingEntitySet<GV>;
-    ES es(grid->leafGridView());
+    GV gv = grid->leafGridView();
 
-    typedef Parameter<ES,double> PROBLEM;
+    typedef Parameter<GV,double> PROBLEM;
     PROBLEM problem;
 
     typedef GridType::ctype DF;
     const int degree = 1;
-    typedef Dune::PDELab::QkLocalFiniteElementMap<ES,DF,double,degree> FEM;
-    FEM fem(es);
+    typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
+    FEM fem(gv);
 
 #if GRID_UG
-    driver(problem,es,fem,"nonoverlappingsinglephaseflow-ug");
+    driver(problem,gv,fem,"nonoverlappingsinglephaseflow-ug");
 #else
-    driver(problem,es,fem,"nonoverlappingsinglephaseflow-yasp");
+    driver(problem,gv,fem,"nonoverlappingsinglephaseflow-yasp");
 #endif
 
     return 0;

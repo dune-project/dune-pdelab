@@ -705,7 +705,7 @@ namespace Dune {
             static const int dim = T::dimension;
             static const int dimworld = T::dimensionworld;
 
-            typedef CGFEMBase<ES,ctype,N,degree,dim,gt> FEMB;
+            typedef CGFEMBase<GV,ctype,N,degree,dim,gt> FEMB;
             typedef CGCONBase<Grid,degree,gt,mt,SolverCategory::nonoverlapping,BCType> CONB;
 
             typedef typename FEMB::FEM FEM;
@@ -722,9 +722,9 @@ namespace Dune {
 
             // constructor making the grid function space an all that is needed
             CGSpace (Grid& grid, const BCType& bctype)
-                : gv(grid.leafGridView()), es(gv), femb(es), conb(grid,bctype)
+                : gv(grid.leafGridView()), femb(gv), conb(grid,bctype)
             {
-                gfsp = std::shared_ptr<GFS>(new GFS(es,femb.getFEM(),conb.getCON()));
+                gfsp = std::shared_ptr<GFS>(new GFS(gv,femb.getFEM(),conb.getCON()));
                 gfsp->name("cgspace");
                 // initialize ordering
                 gfsp->update();
@@ -803,7 +803,6 @@ namespace Dune {
 
         private:
             GV gv; // need this object here because FEM and GFS store a const reference !!
-            ES es;
             FEMB femb;
             CONB conb;
             std::shared_ptr<GFS> gfsp;
