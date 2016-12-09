@@ -1,4 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_LOCALOPERATOR_TAYLORHOODNAVIERSTOKES_HH
 #define DUNE_PDELAB_LOCALOPERATOR_TAYLORHOODNAVIERSTOKES_HH
 
@@ -64,6 +64,9 @@ namespace Dune {
       //! Boundary condition indicator type
       using BC = StokesBoundaryCondition;
 
+      using InstatBase = InstationaryLocalOperatorDefaultMethods<typename P::Traits::RangeField>;
+      using Real = typename InstatBase::RealType;
+
       static const bool navier = P::assemble_navier;
       static const bool full_tensor = P::assemble_full_tensor;
 
@@ -77,11 +80,18 @@ namespace Dune {
 
       using PhysicalParameters = P;
 
-      TaylorHoodNavierStokes (const PhysicalParameters & p, int superintegration_order_ = 0)
+      TaylorHoodNavierStokes (PhysicalParameters& p, int superintegration_order_ = 0)
 
         : _p(p)
         , superintegration_order(superintegration_order_)
       {}
+
+      // set time in parameter class
+      void setTime(Real t)
+      {
+        InstatBase::setTime(t);
+        _p.setTime(t);
+      }
 
       // volume integral depending on test and ansatz functions
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
@@ -499,7 +509,7 @@ namespace Dune {
       }
 
     private:
-      const P& _p;
+      P& _p;
       const int superintegration_order;
     };
 

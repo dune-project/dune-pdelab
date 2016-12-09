@@ -180,7 +180,7 @@ namespace Dune {
     class NavierStokesVelVecMass :
       public FullVolumePattern ,
       public LocalOperatorDefaultFlags ,
-      public InstationaryLocalOperatorDefaultMethods<double>
+      public InstationaryLocalOperatorDefaultMethods<typename PRM::Traits::RangeField>
     {
     public:
       // pattern assembly flags
