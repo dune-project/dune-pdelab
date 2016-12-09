@@ -237,6 +237,7 @@ namespace Dune {
      * \tparam X        Vector type used to store the result of applying the
      *                  preconditioner.
      * \tparam Y        Vector type used to store the defect.
+     * \tparam A        The matrix type to be used.
      *
      * The Jacobi preconditioner approximates the inverse of a matrix M by
      * taking the diagonal diag(M) and inverting that.  In the parallel case
@@ -697,6 +698,13 @@ namespace Dune {
     //! \} Nonoverlapping Solvers
 
 
+    /*! \brief Utility base class for preconditioned novlp backends.
+     * \tparam GO The type of the grid operator for the spatial discretization.
+     *            This class will be used to adjust the discretization matrix.
+     *            and extract the trial grid function space.
+     * \tparam Preconditioner The type of preconditioner to use.
+     * \tparam Solver The type of solver to use.
+     */
     template<class GO,
              template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
@@ -812,8 +820,9 @@ namespace Dune {
 
   /**
    * @brief Nonoverlapping parallel BiCGSTAB solver preconditioned by block SSOR.
-   * @tparam GO The type of the grid operator
-   * (or the fakeGOTraits class for the old grid operator space).
+   * @tparam GO The type of the grid operator used for the spatial discretization
+   * (or the fakeGOTraits class for the old grid operator space). It is used
+   * to adjust the discretization matrix and extract the trial grid function space.
    *
    * The solver uses a NonoverlappingBlockPreconditioner with underlying
    * sequential SSOR preconditioner. The crucial step is to add up the matrix entries
@@ -842,6 +851,9 @@ namespace Dune {
 
   /**
    * @brief Nonoverlapping parallel CG solver preconditioned by block SSOR.
+   * @tparam GO The type of the grid operator used for the spatial discretization.
+   *            This class will be used to adjust the discretization matrix.
+   *             and extract the trial grid function space.
    */
   template<class GO>
   class ISTLBackend_NOVLP_CG_SSORk
@@ -1033,6 +1045,8 @@ namespace Dune {
    * @brief Nonoverlapping parallel CG solver preconditioned with AMG smoothed by SSOR.
    * @tparam GO The type of the grid operator
    * (or the fakeGOTraits class for the old grid operator space).
+   * This class will be used to adjust the discretization matrix.
+   * and extract the trial grid function space.
    * @tparam s The bits to use for the global index.
    *
    * The solver uses AMG with underlying
@@ -1058,6 +1072,8 @@ namespace Dune {
    * @brief Nonoverlapping parallel BiCGStab solver preconditioned with AMG smoothed by SSOR.
    * @tparam GO The type of the grid operator
    * (or the fakeGOTraits class for the old grid operator space).
+   * This class will be used to adjust the discretization matrix.
+   * and extract the trial grid function space.
    * @tparam s The bits to use for the global index.
    *
    * The solver uses AMG with underlying
@@ -1081,8 +1097,10 @@ namespace Dune {
 
   /**
    * @brief Nonoverlapping parallel LoopSolver preconditioned with AMG smoothed by SSOR.
-   * @tparam GO The type of the grid operator
+   * @tparam GO The type of the grid operator used for the spatial discretization
    * (or the fakeGOTraits class for the old grid operator space).
+   * This class will be used to adjust the discretization matrix.
+   * and extract the trial grid function space.
    * @tparam s The bits to use for the global index.
    *
    * The solver uses AMG with underlying
