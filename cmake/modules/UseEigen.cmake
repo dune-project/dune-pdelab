@@ -1,3 +1,14 @@
+# Variables used by this module:
+#
+# EIGEN3_INCLUDE_DIR  Path to the directory with the Eigen3 headers
+#
+# Variables defined by this module:
+
+# EIGEN3_FOUND  True if Eigen3 found and usable
+
+# look for Eigen3 CMake test
+# if it is not shipped with the CMake installation, look in the directory of Eigen3 headers
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${EIGEN3_INCLUDE_DIR}/cmake)
 find_package(Eigen3)
 
 set(HAVE_EIGEN ${EIGEN3_FOUND})
