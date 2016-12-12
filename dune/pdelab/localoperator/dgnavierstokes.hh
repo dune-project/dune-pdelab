@@ -38,7 +38,7 @@ namespace Dune {
       using BC = StokesBoundaryCondition;
       using RF = typename PRM::Traits::RangeField;
 
-      using InstatBase = InstationaryLocalOperatorDefaultMethods<double>;
+      using InstatBase = InstationaryLocalOperatorDefaultMethods<typename PRM::Traits::RangeField>;
       using Real = typename InstatBase::RealType;
 
       static const bool navier = PRM::assemble_navier;
