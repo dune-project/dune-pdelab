@@ -13,7 +13,10 @@
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
+#include <dune/pdelab/backend/common/aliasedvectorview.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
+#include <dune/pdelab/backend/istl/flatvectorbackend.hh>
+#include <dune/pdelab/backend/istl/flatmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/vectorhelpers.hh>
 #include <dune/pdelab/backend/istl/vectoriterator.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -40,6 +43,8 @@ namespace Dune {
         typedef typename Container::block_type block_type;
         typedef typename Container::size_type size_type;
 
+        using value_type = E;
+
         typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
 
         typedef ISTL::vector_iterator<C> iterator;
@@ -52,6 +57,11 @@ namespace Dune {
         template<typename LFSCache>
         using ConstLocalView = ConstUncachedVectorView<const BlockVector,LFSCache>;
 
+        template<typename LFSCache>
+        using AliasedLocalView = AliasedVectorView<BlockVector,LFSCache>;
+
+        template<typename LFSCache>
+        using ConstAliasedLocalView = ConstAliasedVectorView<const BlockVector,LFSCache>;
 
         BlockVector(const BlockVector& rhs)
           : _gfs(rhs._gfs)
@@ -97,6 +107,18 @@ namespace Dune {
         void detach()
         {
           _container.reset();
+        }
+
+        template<typename LFSCache>
+        value_type* data(const LFSCache& lfs_cache)
+        {
+          return &((*this)[lfs_cache.containerIndex(0)]);
+        }
+
+        template<typename LFSCache>
+        const value_type* data(const LFSCache& lfs_cache) const
+        {
+          return &((*this)[lfs_cache.containerIndex(0)]);
         }
 
         void attach(std::shared_ptr<Container> container)
