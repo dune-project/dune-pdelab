@@ -15,8 +15,6 @@
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/common/aliasedvectorview.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
-#include <dune/pdelab/backend/istl/flatvectorbackend.hh>
-#include <dune/pdelab/backend/istl/flatmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/vectorhelpers.hh>
 #include <dune/pdelab/backend/istl/vectoriterator.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
