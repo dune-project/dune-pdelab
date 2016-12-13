@@ -76,7 +76,7 @@ namespace Dune {
       };
 
 
-      template<typename Entity>
+      template<typename Entity, bool fast>
       struct ComputeSizeVisitor
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
@@ -98,8 +98,17 @@ namespace Dune {
         void leaf(Node& node, TreePath treePath)
         {
           node.offset = offset;
-          Node::FESwitch::setStore(node.pfe, node.pgfs->finiteElementMap().find(e));
-          node.n = Node::FESwitch::basis(*node.pfe).size();
+          if (fast)
+            {
+              node.pfe = nullptr;
+              node.n = node.pgfs->finiteElementMap().maxLocalSize();
+              Node::FESwitch::setStore(node.pfe, node.pgfs->finiteElementMap().find(e));
+            }
+          else
+            {
+              Node::FESwitch::setStore(node.pfe, node.pgfs->finiteElementMap().find(e));
+              node.n = Node::FESwitch::basis(*node.pfe).size();
+            }
           offset += node.n;
         }
 
@@ -114,7 +123,7 @@ namespace Dune {
       };
 
 
-      template<typename Entity>
+      template<typename Entity, bool fast>
       struct FillIndicesVisitor
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
@@ -124,7 +133,7 @@ namespace Dune {
         void leaf(Node& node, TreePath treePath)
         {
           // setup DOFIndices for this finite element
-          node.dofIndices(e,node._dof_indices->begin()+node.offset,node._dof_indices->begin()+node.offset+node.n);
+          node.dofIndices(e,node._dof_indices->begin()+node.offset,node._dof_indices->begin()+node.offset+node.n,std::integral_constant<bool,fast>{});
         }
 
         template<typename Node, typename Child, typename TreePath, typename ChildIndex>
@@ -182,13 +191,13 @@ namespace Dune {
       template<typename>
       friend struct PropagateGlobalStorageVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct ComputeSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct FillIndicesVisitor;
 
-      template<typename LFS, typename C, typename Tag>
+      template<typename LFS, typename C, typename Tag, bool>
       friend class LFSIndexCacheBase;
 
     public:
@@ -326,25 +335,26 @@ namespace Dune {
          \param node reference to the derived node, the address must be the same as this
          \param e entity to bind to
        */
-      template<typename NodeType>
-      void bind (NodeType& node, const typename Traits::Element& e);
+      template<typename NodeType, bool fast = false>
+      void bind (NodeType& node, const typename Traits::Element& e, std::integral_constant<bool,fast> = std::integral_constant<bool,fast>{});
     };
 
     template <typename GFS, typename DOFIndex>
-    template <typename NodeType>
+    template <typename NodeType, bool fast>
     void GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>::bind (NodeType& node,
-         const typename GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>::Traits::Element& e)
+                                                                 const typename GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>::Traits::Element& e,
+                                                                 std::integral_constant<bool,fast>)
     {
       typedef typename GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>::Traits::Element Element;
       assert(&node == this);
 
       // compute sizes
-      ComputeSizeVisitor<Element> csv(e);
+      ComputeSizeVisitor<Element,fast> csv(e);
       TypeTree::applyToTree(node,csv);
 
 
       // initialize iterators and fill indices
-      FillIndicesVisitor<Element> fiv(e);
+      FillIndicesVisitor<Element,fast> fiv(e);
       TypeTree::applyToTree(node,fiv);
     }
 
@@ -375,10 +385,10 @@ namespace Dune {
       template<typename>
       friend struct ClearSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct ComputeSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct FillIndicesVisitor;
 
     public:
@@ -404,10 +414,11 @@ namespace Dune {
       {}
 
       //! \brief bind local function space to entity
-      void bind (const typename Traits::Element& e)
+      template<bool fast = false>
+      void bind (const typename Traits::Element& e, std::integral_constant<bool,fast> fast_ = std::integral_constant<bool,fast>{})
       {
         // call method on base class, this avoid the barton neckman trick
-        BaseT::bind(*this,e);
+        BaseT::bind(*this,e,fast_);
       }
 
     };
@@ -453,10 +464,10 @@ namespace Dune {
       template<typename>
       friend struct ClearSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct ComputeSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct FillIndicesVisitor;
 
     public:
@@ -481,10 +492,11 @@ namespace Dune {
       {}
 
       //! \brief bind local function space to entity
-      void bind (const typename Traits::Element& e)
+      template<bool fast = false>
+      void bind (const typename Traits::Element& e, std::integral_constant<bool,fast> fast_ = std::integral_constant<bool,fast>{})
       {
         // call method on base class, this avoid the barton neckman trick
-        BaseT::bind(*this,e);
+        BaseT::bind(*this,e,fast_);
       }
 
     };
@@ -544,10 +556,10 @@ namespace Dune {
       template<typename>
       friend struct ClearSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct ComputeSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct FillIndicesVisitor;
 
     public:
@@ -578,6 +590,7 @@ namespace Dune {
       //! get finite element
       const typename Traits::FiniteElementType& finiteElement () const
       {
+        assert(pfe);
         return *pfe;
       }
 
@@ -588,35 +601,45 @@ namespace Dune {
       }
 
       //! Calculates the multiindices associated with the given entity.
-      template<typename Entity, typename DOFIndexIterator>
-      void dofIndices(const Entity& e, DOFIndexIterator it, DOFIndexIterator endit)
+      template<typename Entity, typename DOFIndexIterator, bool fast>
+      void dofIndices(const Entity& e, DOFIndexIterator it, DOFIndexIterator endit, std::integral_constant<bool,fast>)
       {
-        // get layout of entity
-        const typename FESwitch::Coefficients &coeffs =
-          FESwitch::coefficients(*pfe);
-
-        using EntitySet = typename GFS::Traits::EntitySet;
-        auto es = this->gridFunctionSpace().entitySet();
-
-        const Dune::ReferenceElement<double,EntitySet::dimension>& refEl =
-          Dune::ReferenceElements<double,EntitySet::dimension>::general(this->pfe->type());
-
-        for (std::size_t i = 0; i < std::size_t(coeffs.size()); ++i, ++it)
+        if (fast)
           {
-            // get geometry type of subentity
-            auto gt = refEl.type(coeffs.localKey(i).subEntity(),
-                                 coeffs.localKey(i).codim());
+            auto gt = e.type();
+            auto index = this->gridFunctionSpace().entitySet().indexSet().index(e);
+            GFS::Ordering::Traits::DOFIndexAccessor::store(*it,gt,index,0);
+            ++it;
+          }
+        else
+          {
+            // get layout of entity
+            const typename FESwitch::Coefficients &coeffs =
+              FESwitch::coefficients(*pfe);
 
-            // evaluate consecutive index of subentity
-            auto index = es.indexSet().subIndex(e,
-                                                coeffs.localKey(i).subEntity(),
-                                                coeffs.localKey(i).codim());
+            using EntitySet = typename GFS::Traits::EntitySet;
+            auto es = this->gridFunctionSpace().entitySet();
 
-            // store data
-            GFS::Ordering::Traits::DOFIndexAccessor::store(*it,gt,index,coeffs.localKey(i).index());
+            const Dune::ReferenceElement<double,EntitySet::dimension>& refEl =
+              Dune::ReferenceElements<double,EntitySet::dimension>::general(this->pfe->type());
 
-            // make sure we don't write past the end of the iterator range
-            assert(it != endit);
+            for (std::size_t i = 0; i < std::size_t(coeffs.size()); ++i, ++it)
+              {
+                // get geometry type of subentity
+                auto gt = refEl.type(coeffs.localKey(i).subEntity(),
+                  coeffs.localKey(i).codim());
+
+                // evaluate consecutive index of subentity
+                auto index = es.indexSet().subIndex(e,
+                  coeffs.localKey(i).subEntity(),
+                  coeffs.localKey(i).codim());
+
+                // store data
+                GFS::Ordering::Traits::DOFIndexAccessor::store(*it,gt,index,coeffs.localKey(i).index());
+
+                // make sure we don't write past the end of the iterator range
+                assert(it != endit);
+              }
           }
       }
 
@@ -643,10 +666,11 @@ namespace Dune {
       }
 
       //! \brief bind local function space to entity
-      void bind (const typename Traits::Element& e)
+      template<bool fast = false>
+      void bind (const typename Traits::Element& e, std::integral_constant<bool,fast> fast_ = std::integral_constant<bool,fast>{})
       {
         // call method on base class, this avoid the barton neckman trick
-        BaseT::bind(*this,e);
+        BaseT::bind(*this,e,fast_);
       }
 
       //    private:
@@ -749,10 +773,10 @@ namespace Dune {
       template<typename>
       friend struct ClearSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct ComputeSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct FillIndicesVisitor;
 
     public:
