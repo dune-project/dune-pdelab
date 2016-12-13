@@ -215,6 +215,11 @@ namespace Dune {
     //! the LFSIndexCache.
     struct SimpleLFSCacheTag {};
 
+    namespace Experimental {
+
+      struct DuneFunctionsCacheTag {};
+
+    }
 
     template<typename GFS, typename Tag>
     struct _build_dof_index_type
