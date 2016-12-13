@@ -7,6 +7,5 @@
 #include <dune/pdelab/instationary/explicitonestep.hh>
 #include <dune/pdelab/instationary/implicitonestep.hh>
 
-#include <dune/pdelab/common/instationaryfilenamehelper.hh>
 
 #endif // DUNE_PDELAB_INSTATIONARY_ONESTEP_HH
