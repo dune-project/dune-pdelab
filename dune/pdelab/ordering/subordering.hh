@@ -105,10 +105,6 @@ namespace Dune {
       template<typename ItIn, typename ItOut>
       void map_lfs_indices(ItIn begin, const ItIn end, ItOut out) const
       {
-        // Only allocate storage for our local copy of the DOFIndices once
-        // we really need it.
-        // _dof_indices.resize(maxLocalSize()); TODO:Remove this thing!
-
         // Do the mapping up to the root ordering.
         // Avoid spelling out the type of ItIn here (it has to be a DOFIndexViewIterator),
         // so we don't need to include lfsindexcache.hh.
