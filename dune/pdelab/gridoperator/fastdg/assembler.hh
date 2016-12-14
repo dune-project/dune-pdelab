@@ -89,17 +89,16 @@ namespace Dune{
        * \param engineFactory Factory object used to get the engine.
        * \param la            Local assembler to get the engine from.
        */
-      template<class EngineFactory, class LocalAssembler, typename Direction>
+      template<class EngineFactory, class LocalAssembler>
       void assemble(const EngineFactory &engineFactory,
-                    LocalAssembler &la,
-                    Direction dir) const
+                    LocalAssembler &la) const
       {
-        assemble(engineFactory(la),dir);
+        assemble(engineFactory(la));
       }
 
     private:
-      template<class LocalAssemblerEngine, typename Direction>
-      void assemble(LocalAssemblerEngine & assembler_engine, Direction direction) const
+      template<class LocalAssemblerEngine>
+      void assemble(LocalAssemblerEngine & assembler_engine) const
       {
         const bool fast = true;
         typedef LFSIndexCache<LFSU,CU,fast> LFSUCache;
@@ -131,7 +130,7 @@ namespace Dune{
         auto& index_set = entity_set.indexSet();
 
         // Traverse grid view
-        for (const auto& element : elements(entity_set,direction))
+        for (const auto& element : elements(entity_set))
           {
             // Compute unique id
             auto ids = index_set.uniqueIndex(element);
