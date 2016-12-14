@@ -298,6 +298,37 @@ namespace Dune {
       }
 
 
+      template<typename RI, typename Block>
+      void clear_matrix_row_block(tags::field_matrix_1_1, Block& b, const RI& ri, int i)
+      {
+        assert(i == -1);
+        b = 0;
+      }
+
+      template<typename RI, typename Block>
+      void clear_matrix_row_block(tags::field_matrix_1_any, Block& b, const RI& ri, int i)
+      {
+        DUNE_THROW(Dune::Exception,"Should never get here!");
+      }
+
+      template<typename RI, typename Block>
+      void clear_matrix_row_block(tags::field_matrix_n_any, Block& b, const RI& ri, int i)
+      {
+        assert(i == 0);
+        b = 0;
+      }
+
+      template<typename RI, typename Block>
+      void clear_matrix_row_block(tags::bcrs_matrix, Block& b, const RI& ri, int i)
+      {
+        typedef typename Block::ColIterator col_iterator_type;
+        const col_iterator_type end = b[ri[i]].end();
+        for(col_iterator_type cit = b[ri[i]].begin(); cit != end; ++cit)
+          clear_matrix_row_block(container_tag(*cit),*cit,ri,i-1);
+      }
+
+
+
       template<typename T, typename RI, typename CI, typename Block>
       void write_matrix_element_if_exists(const T& v, tags::field_matrix_1_1, Block& b, const RI& ri, const CI& ci, int i, int j)
       {
@@ -335,6 +366,45 @@ namespace Dune {
       {
         if (b.exists(ri[i],ci[j]))
           write_matrix_element_if_exists(v,container_tag(b[ri[i]][ci[j]]),b[ri[i]][ci[j]],ri,ci,i-1,j-1);
+      }
+
+
+
+
+      template<typename T, typename RI, typename CI, typename Block>
+      void write_matrix_element_if_exists_to_block(const T& v, tags::field_matrix_1_1, Block& b, const RI& ri, const CI& ci, int i, int j)
+      {
+        assert(i == -1);
+        assert(j == -1);
+        b[0][0] = v;
+      }
+
+      template<typename T, typename RI, typename CI, typename Block>
+      void write_matrix_element_if_exists_to_block(const T& v, tags::field_matrix_n_m, Block& b, const RI& ri, const CI& ci, int i, int j)
+      {
+        assert(i == 0);
+        assert(j == 0);
+        for (std::size_t i = 0; i < b.rows; ++i)
+          b[i][i] = v;
+      }
+
+      template<typename T, typename RI, typename CI, typename Block>
+      void write_matrix_element_if_exists_to_block(const T& v, tags::field_matrix_1_m, Block& b, const RI& ri, const CI& ci, int i, int j)
+      {
+        DUNE_THROW(Dune::Exception,"Should never get here!");
+      }
+
+      template<typename T, typename RI, typename CI, typename Block>
+      void write_matrix_element_if_exists_to_block(const T& v, tags::field_matrix_n_1, Block& b, const RI& ri, const CI& ci, int i, int j)
+      {
+        DUNE_THROW(Dune::Exception,"Should never get here!");
+      }
+
+      template<typename T, typename RI, typename CI, typename Block>
+      void write_matrix_element_if_exists_to_block(const T& v, tags::bcrs_matrix, Block& b, const RI& ri, const CI& ci, int i, int j)
+      {
+        if (b.exists(ri[i],ci[j]))
+          write_matrix_element_if_exists_to_block(v,container_tag(b[ri[i]][ci[j]]),b[ri[i]][ci[j]],ri,ci,i-1,j-1);
       }
 
 
