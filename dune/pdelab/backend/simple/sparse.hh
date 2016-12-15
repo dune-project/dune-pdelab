@@ -273,6 +273,14 @@ namespace Dune {
           (*this)(ri,ri) = diagonal_entry;
         }
 
+        void clear_row_block(const RowIndex& ri, const ElementType& diagonal_entry)
+        {
+          std::fill(
+            _container->_data.begin() + _container->_rowoffset[ri[0]],
+            _container->_data.begin() + _container->_rowoffset[ri[0]+1], ElementType(0));
+          (*this)(ri,ri) = diagonal_entry;
+        }
+
       protected:
         template<typename GO>
         static void allocate_matrix(std::shared_ptr<Container> & c, const GO & go, const ElementType& e)
