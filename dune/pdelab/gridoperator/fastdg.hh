@@ -149,7 +149,7 @@ namespace Dune {
       template <typename GridOperatorTuple>
       struct SetupGridOperator {
         SetupGridOperator()
-          : index(0), size(Dune::tuple_size<GridOperatorTuple>::value) {}
+          : index(0), size(std::tuple_size<GridOperatorTuple>::value) {}
 
         template <typename T>
         void visit(T& elem) {
