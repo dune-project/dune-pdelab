@@ -211,6 +211,12 @@ namespace Dune {
           (*this)(ri,ri) = diagonal_entry;
         }
 
+        void clear_row_block(const RowIndex& ri, const E& diagonal_entry)
+        {
+          std::fill(_container->begin() + ri[0]*_cols,_container->begin() + (ri[0]+1)*_cols,E(0));
+          (*this)(ri,ri) = diagonal_entry;
+        }
+
       private:
 
         std::size_t _rows;
