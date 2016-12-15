@@ -3,7 +3,7 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_DUNEFUNCTIONS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_DUNEFUNCTIONS_HH
 
-#include <dune/pdelab/backend/istl/vector.hh>
+#include <dune/pdelab/backend/istl.hh>
 
 namespace Dune {
   namespace PDELab {
