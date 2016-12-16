@@ -186,6 +186,70 @@ namespace Dune {
       const X* u_;
     };
 
+    /** \brief Application of a linearized operator in the overlapping case.
+
+        \tparam CC Constraints container.
+        \tparam X  Trial vector.
+        \tparam Y  Test Vector;
+        \tparam Go Grid operator implementing the operator application.
+    */
+    template<class CC, class X, class Y, class GO>
+    class OverlappingLinearizedOnTheFlyOperator
+      : public Dune::LinearOperator<X,Y>
+    {
+    public :
+      typedef X domain_type;
+      typedef Y range_type;
+      typedef typename X::field_type field_type;
+      static const bool isLinear = GO::LocalAssembler::isLinear;
+
+      enum { category = Dune::SolverCategory::overlapping };
+
+      OverlappingLinearizedOnTheFlyOperator(const CC& cc, const GO& go)
+        : cc_(cc), go_(go), u_(static_cast<X*>(0))
+      {}
+
+      //! Set linearization point.
+      //! Must be called before apply() and applyscaleadd() for nonlinear problems.
+      void setLinearizationPoint(const X& u)
+      {
+        u_ = &u;
+      }
+
+      virtual void apply(const X& x, Y& y) const
+      {
+        y = 0.0;
+        if(isLinear)
+          go_.jacobian_apply(x,x,y);
+        else {
+          if(u_ == nullptr)
+            DUNE_THROW(Dune::InvalidStateException, "You seem to apply a linearized operator of a nonlinear problem but haven't set the linearization point explicitly!");
+          go_.jacobian_apply(*u_,x,y);
+        }
+        Dune::PDELab::set_constrained_dofs(cc_,0.0,y);
+      }
+
+      virtual void applyscaleadd(field_type alpha, const X& x, Y& y) const
+      {
+        Y temp(y);
+        temp = 0.0;
+        if(isLinear)
+          go_.jacobian_apply(x,x,temp);
+        else {
+          if(u_ == nullptr)
+            DUNE_THROW(Dune::InvalidStateException, "You seem to apply a linearized operator of a nonlinear problem but haven't set the linearization point explicitly!");
+          go_.jacobian_apply(*u_,x,temp);
+        }
+        y.axpy(alpha,temp);
+        Dune::PDELab::set_constrained_dofs(cc_,0.0,y);
+      }
+
+    private :
+      const CC& cc_;
+      const GO& go_;
+      const X* u_;
+    };
+
     // new scalar product assuming at least overlap 1
     // uses unique partitioning of nodes for parallelization
     template<class GFS, class X>
