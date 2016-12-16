@@ -132,6 +132,9 @@ namespace Dune {
       // with clang not finding the const overloads of the operator from the base class.
       using ConstAliasedVectorView<V,LFSC>::operator[];
 
+      // pull in const version of data access
+      using ConstAliasedVectorView<V,LFSC>::data;
+
       AliasedVectorView()
         : weight_(1.0)
       {}

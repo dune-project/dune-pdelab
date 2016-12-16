@@ -123,24 +123,28 @@ namespace Dune{
       LocalAssembler & localAssembler() const { return local_assembler; }
 
       //! Fill pattern of jacobian matrix
-      void fill_pattern(Pattern & p) const {
+      template<typename Dir = Direction::Forward>
+      void fill_pattern(Pattern & p, Dir direction = Dir()) const {
         if(implicit){
           typedef typename LocalAssembler::LocalPatternAssemblerEngine PatternEngine;
           global_assembler.assemble
             ([&p](LocalAssembler &la) -> PatternEngine&
                   { return la.localPatternAssemblerEngine(p); },
-             local_assembler);
+             local_assembler,
+             direction);
         } else {
           typedef typename LocalAssembler::LocalExplicitPatternAssemblerEngine PatternEngine;
           global_assembler.assemble
             ([&p](LocalAssembler &la) -> PatternEngine&
                   { return la.localExplicitPatternAssemblerEngine(p); },
-             local_assembler);
+             local_assembler,
+             direction);
         }
       }
 
       //! Assemble constant part of residual
-      void preStage(unsigned int stage, const std::vector<Domain*> & x){
+      template<typename Dir = Direction::Forward>
+      void preStage(unsigned int stage, const std::vector<Domain*> & x, Dir direction = Dir()){
         if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
 
         typedef typename LocalAssembler::LocalPreStageAssemblerEngine PreStageEngine;
@@ -148,37 +152,44 @@ namespace Dune{
         global_assembler.assemble
           ([&x](LocalAssembler &la) -> PreStageEngine&
                 { return la.localPreStageAssemblerEngine(x); },
-           local_assembler);
+           local_assembler,
+           direction);
         //Dune::printvector(std::cout,const_residual.base(),"const residual","row",4,9,1);
       }
 
       //! Assemble residual
-      void residual(const Domain & x, Range & r) const {
+      template<typename Dir = Direction::Forward>
+      void residual(const Domain & x, Range & r, Dir direction = Dir()) const {
         if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
 
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
         global_assembler.assemble
           ([&r,&x](LocalAssembler &la) -> ResidualEngine&
                 { return la.localResidualAssemblerEngine(r,x); },
-           local_assembler);
+           local_assembler,
+           direction);
         //Dune::printvector(std::cout,r.base(),"residual","row",4,9,1);
       }
 
       //! Assemble jacobian
-      void jacobian(const Domain & x, Jacobian & a) const {
+      template<typename Dir = Direction::Forward>
+      void jacobian(const Domain & x, Jacobian & a, Dir direction = Dir()) const {
         if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
 
         typedef typename LocalAssembler::LocalJacobianAssemblerEngine JacobianEngine;
         global_assembler.assemble
           ([&a,&x](LocalAssembler &la) -> JacobianEngine&
                 { return la.localJacobianAssemblerEngine(a,x); },
-           local_assembler);
+           local_assembler,
+           direction);
         //printmatrix(std::cout,a.base(),"global stiffness matrix","row",9,1);
       }
 
       //! Assemble jacobian and residual simultaneously for explicit treatment
+      template<typename Dir = Direction::Forward>
       void explicit_jacobian_residual(unsigned int stage, const std::vector<Domain*> & x,
-                                      Jacobian & a, Range & r1, Range & r0)
+                                      Jacobian & a, Range & r1, Range & r0,
+                                      Dir direction = Dir())
       {
         if(implicit){DUNE_THROW(Dune::Exception,"This function should not be called in implicit mode");}
 
@@ -193,11 +204,13 @@ namespace Dune{
            {
              return la.localExplicitJacobianResidualAssemblerEngine(a,r0,r1,x);
            },
-           local_assembler);
+           local_assembler,
+           direction);
       }
 
       //! Apply jacobian without explicitly assembling it
-      void jacobian_apply(const Domain& x, Range& r) const
+      template<typename Dir = Direction::Forward>
+      void jacobian_apply(const Domain& x, Range& r, Dir direction = Dir()) const
       {
         if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
 
@@ -205,18 +218,21 @@ namespace Dune{
         global_assembler.assemble
           ([&r,&x](LocalAssembler &la) -> JacobianApplyEngine&
                 { return la.localJacobianApplyAssemblerEngine(r,x); },
-           local_assembler);
+           local_assembler,
+           direction);
       }
 
       //! Apply jacobian matrix without explicitly assembling it
-      void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r) const {
+      template<typename Dir = Direction::Forward>
+      void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r, Dir direction = Dir()) const {
         if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
 
         typedef typename LocalAssembler::LocalNonlinearJacobianApplyAssemblerEngine NonlinearJacobianApplyEngine;
         global_assembler.assemble
           ([&r,&x,&z](LocalAssembler &la) -> NonlinearJacobianApplyEngine&
                { return la.localNonlinearJacobianApplyAssemblerEngine(r,x,z); },
-           local_assembler);
+           local_assembler,
+           direction);
       }
 
       //! Interpolate constrained values from given function f

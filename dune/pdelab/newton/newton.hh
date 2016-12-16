@@ -147,9 +147,9 @@ namespace Dune
     protected:
       virtual void defect(TestVector& r)
       {
-        r = 0.0;                                        // TODO: vector interface
+        r = 0.0;
         this->gridoperator_.residual(*this->u_, r);
-        this->res_.defect = this->solver_.norm(r);                    // TODO: solver interface
+        this->res_.defect = this->solver_.norm(r);
         if (!std::isfinite(this->res_.defect))
           DUNE_THROW(NewtonDefectError,
                      "NewtonSolver::defect(): Non-linear defect is NaN or Inf");
@@ -161,12 +161,12 @@ namespace Dune
       {
         if (this->verbosity_level_ >= 4)
           std::cout << "      Solving linear system..." << std::endl;
-        z = 0.0;                                        // TODO: vector interface
-        this->solver_.apply(A, z, r, this->linear_reduction_);        // TODO: solver interface
+        z = 0.0;
+        this->solver_.apply(A, z, r, this->linear_reduction_);
 
         ios_base_all_saver restorer(std::cout); // store old ios flags
 
-        if (!this->solver_.result().converged)                 // TODO: solver interface
+        if (!this->solver_.result().converged)
           DUNE_THROW(NewtonLinearSolverError,
                      "NewtonSolver::linearSolve(): Linear solver did not converge "
                      "in " << this->solver_.result().iterations << " iterations");
@@ -480,7 +480,7 @@ namespace Dune
           {
             if (this->verbosity_level_ >= 3)
               std::cout << "      Reassembling matrix..." << std::endl;
-            A = 0.0;                                    // TODO: Matrix interface
+            A = 0.0;
             this->gridoperator_.jacobian(*this->u_, A);
             this->reassembled_ = true;
           }
@@ -584,7 +584,7 @@ namespace Dune
       {
         if (strategy_ == noLineSearch)
           {
-            this->u_->axpy(-1.0, z);                     // TODO: vector interface
+            this->u_->axpy(-1.0, z);
             this->defect(r);
             return;
           }
@@ -594,7 +594,7 @@ namespace Dune
         RFType lambda = 1.0;
         RFType best_lambda = 0.0;
         RFType best_defect = this->res_.defect;
-        TrialVector prev_u(*this->u_);  // TODO: vector interface
+        TrialVector prev_u(*this->u_);
         unsigned int i = 0;
         ios_base_all_saver restorer(std::cout); // store old ios flags
 
@@ -606,7 +606,7 @@ namespace Dune
                         << lambda
                         << std::endl;
 
-            this->u_->axpy(-lambda, z);                  // TODO: vector interface
+            this->u_->axpy(-lambda, z);
             try {
               this->defect(r);
             }
@@ -666,7 +666,7 @@ namespace Dune
               }
 
             lambda *= damping_factor_;
-            *this->u_ = prev_u;                          // TODO: vector interface
+            *this->u_ = prev_u;
           }
         if (this->verbosity_level_ >= 4)
           std::cout << "          line search damping factor:   "

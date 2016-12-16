@@ -17,19 +17,20 @@ find_path(VCL_INCLUDE_DIR
 include(CMakePushCheckState)
 include(CheckCXXSourceCompiles)
 cmake_push_check_state()
-set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES} ${VCL_INCLUDE_DIR}")
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${VCL_INCLUDE_DIR})
 set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -march=native -O3")
 check_cxx_source_compiles("
+#define VCL_NAMESPACE _vcl
 #include \"vectorclass.h\"
 int main() {
-  Vec4i a(10,11,12,13);
-  Vec4i b(20,21,22,23);
+  _vcl::Vec4i a(10,11,12,13);
+  _vcl::Vec4i b(20,21,22,23);
 
-  Vec4i c = a + b;
+  _vcl::Vec4i c = a + b;
 
   int d = 0;
-  d += horizontal_add(a);
-  d += horizontal_add(b);
+  d += _vcl::horizontal_add(a);
+  d += _vcl::horizontal_add(b);
 
   return 0;
 }

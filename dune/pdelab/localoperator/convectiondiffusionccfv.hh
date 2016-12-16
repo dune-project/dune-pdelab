@@ -60,7 +60,17 @@ namespace Dune {
       enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = false };
 
-      ConvectionDiffusionCCFV (TP& param_) : param(param_)
+
+      /* If the parameter use_for_amg4dg_rediscretisation, for Dirichlet
+       * boundary conditions the full distance to the neighbouring grid cell
+       * is used to be consistent with the BC treatment in the DG operator.
+       * The operator can then be used to describe the P0 limit of the DG
+       * operator.
+       */
+      ConvectionDiffusionCCFV (TP& param_,
+                               bool use_for_amg4dg_rediscretisation_=false)
+        : param(param_),
+          use_for_amg4dg_rediscretisation(use_for_amg4dg_rediscretisation_)
       {}
 
       // volume integral depending on test and ansatz functions
@@ -410,6 +420,10 @@ namespace Dune {
             auto global_outside = geo.global(face_local);
             global_inside -= global_outside;
             auto distance = global_inside.two_norm();
+            // Calculate distance to center of neighbouring boundary cell, to
+            // be consistent with treatment in DG operator
+            if (use_for_amg4dg_rediscretisation)
+              distance *= 2.0;
 
             // evaluate diffusion coefficient
             auto tensor_inside = param.A(cell_inside,local_inside);
@@ -489,6 +503,7 @@ namespace Dune {
 
     private:
       TP& param;
+      const bool use_for_amg4dg_rediscretisation;
       bool first_stage;
       mutable typename TP::Traits::RangeFieldType dtmin; // accumulate minimum dt here
       mutable typename TP::Traits::RangeFieldType cellinflux;

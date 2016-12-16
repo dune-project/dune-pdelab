@@ -21,13 +21,13 @@ namespace Dune {
     // It computes the right hand side and solves the problem.
     //===============================================================
 
-    template<typename GO, typename LS, typename V>
     /** \brief Matrix free iterative solver for linear problems in residual
      *         form.
      *
      * Solves problem of the from \f$r(u,v)=0\f$ where \f$r\f$ is a
      * bilinear form.
      */
+    template<typename GO, typename LS, typename V>
     class MatrixFreeStationaryLinearProblemSolver
     {
       /** \brief Field value type */
