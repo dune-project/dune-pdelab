@@ -206,7 +206,7 @@ namespace Dune {
 
       //! Apply jacobian matrix without explicitly assembling it
       template<typename Dir = Direction::Forward>
-      void jacobian_apply(const Domain & x, Range & r, Dir direction = Dir()) const {
+      void DUNE_DEPRECATED_MSG("jacobian_apply(x,r) is deprecated. Please use jacobian_apply(x,z,r) instead!") jacobian_apply(const Domain & x, Range & r, Dir direction = Dir()) const {
         typedef typename LocalAssembler::LocalJacobianApplyAssemblerEngine JacobianApplyEngine;
         global_assembler.assemble
           ([&r,&x](LocalAssembler &la) -> JacobianApplyEngine&
@@ -218,7 +218,7 @@ namespace Dune {
 
       //! Apply jacobian matrix without explicitly assembling it
       template<typename Dir = Direction::Forward>
-      void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r, Dir direction = Dir()) const {
+      void DUNE_DEPRECATED_MSG("nonlinear_jacobian_apply(x,z,r) is deprecated. Please use jacobian_apply(x,z,r) instead!") nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r, Dir direction = Dir()) const {
         typedef typename LocalAssembler::LocalNonlinearJacobianApplyAssemblerEngine NonlinearJacobianApplyEngine;
         global_assembler.assemble
           ([&r,&x,&z](LocalAssembler &la) -> NonlinearJacobianApplyEngine&
