@@ -80,6 +80,9 @@ namespace Dune
             //! \brief Whether to visit the skeleton methods from both sides
             enum { /*! \hideinitializer */ doSkeletonTwoSided = false };
 
+            //! \brief Whether operator is linear
+            enum { /*! \hideinitializer */ isLinear = true };
+
             //! \} Special flags
         };
 

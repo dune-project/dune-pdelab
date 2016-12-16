@@ -248,6 +248,7 @@ namespace Dune{
       static bool doPatternSkeleton()  { return LOP::doPatternSkeleton; }
       static bool doPatternBoundary()  { return LOP::doPatternBoundary; }
       static bool doPatternVolumePostSkeleton()  { return LOP::doPatternVolumePostSkeleton; }
+      static bool isLinear() { return LOP::isLinear; }
       //! @}
 
       //! Query whether to do preprocessing in the engines

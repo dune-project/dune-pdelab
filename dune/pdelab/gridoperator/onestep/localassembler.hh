@@ -298,6 +298,8 @@ namespace Dune{
 
       //! @}
 
+      static bool isLinear() { return (LocalAssemblerDT0::isLinear and LocalAssemblerDT1::isLinear); }
+
       LA0 &child0() { return *la0; }
       LA1 &child1() { return *la1; }
 
