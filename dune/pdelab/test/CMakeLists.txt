@@ -66,6 +66,8 @@ dune_add_test(SOURCES testutilities.cc)
 
 dune_add_test(SOURCES testinterpolate.cc)
 
+dune_add_test(SOURCES test-instationary-with-boundary-constraints.cc)
+
 dune_add_test(SOURCES testnumericaljacobianmethods.cc)
 
 dune_add_test(SOURCES testrtfem.cc
