@@ -8,6 +8,8 @@
 #include <cmath>
 #include <memory>
 
+#include <type_traits>
+
 #include <math.h>
 
 #include <dune/common/exceptions.hh>
@@ -21,6 +23,36 @@ namespace Dune
 {
   namespace PDELab
   {
+  namespace Impl
+  {
+  // Some SFinae magic to execute setReuse(bool) on a backend
+  template<typename T1, typename = void>
+  struct HasSetReuse
+  : std::false_type
+  {};
+
+  template<typename T>
+  struct HasSetReuse<T, decltype(std::declval<T>().setReuse(true), void())>
+  : std::true_type
+  {};
+
+  template<typename T>
+  inline void setLinearSystemReuse(T& solver_backend, bool reuse, std::true_type)
+  {
+    solver_backend.setReuse(reuse);
+  }
+
+  template<typename T>
+  inline void setLinearSystemReuse(T&, bool, std::false_type)
+  {}
+
+  template<typename T>
+  inline void setLinearSystemReuse(T& solver_backend, bool reuse)
+  {
+    setLinearSystemReuse(solver_backend, reuse, HasSetReuse<T>());
+  }
+  }
+
     // Exception classes used in NewtonSolver
     class NewtonError : public Exception {};
     class NewtonDefectError : public NewtonError {};
@@ -184,6 +216,8 @@ namespace Dune
         if (this->verbosity_level_ >= 4)
           std::cout << "      Solving linear system..." << std::endl;
         z = 0.0;                                        // TODO: vector interface
+        // If possible tell solver backend to reuse linear system when we did not reassemble.
+        Impl::setLinearSystemReuse(this->solver_, this->reassembled_);
         this->solver_.apply(A, z, r, this->linear_reduction_);        // TODO: solver interface
 
         ios_base_all_saver restorer(std::cout); // store old ios flags
