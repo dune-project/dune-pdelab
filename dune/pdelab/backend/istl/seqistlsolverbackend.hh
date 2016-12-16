@@ -38,7 +38,7 @@ namespace Dune {
         \tparam GO Grid operator implementing the operator application.
      */
     template<typename X, typename Y, typename GO>
-    class OnTheFlyOperator : public Dune::LinearOperator<X,Y>
+    class DUNE_DEPRECATED_MSG("OnTheFlyOperator is deprecated. Please use LinearizedOnTheFlyOperator instead!") OnTheFlyOperator : public Dune::LinearOperator<X,Y>
     {
     public:
       typedef X domain_type;
@@ -47,6 +47,7 @@ namespace Dune {
 
       enum {category=Dune::SolverCategory::sequential};
 
+      DUNE_DEPRECATED_MSG("OnTheFlyOperator is deprecated. Please use LinearizedOnTheFlyOperator instead!")
       OnTheFlyOperator (const GO& go)
         : go_(go)
       {}
@@ -82,7 +83,7 @@ namespace Dune {
         \tparam GO Grid operator implementing the operator application.
     */
     template<typename X, typename Y, typename GO>
-    class NonlinearOnTheFlyOperator : public Dune::LinearOperator<X,Y>
+    class DUNE_DEPRECATED_MSG("NonlinearOnTheFlyOperator is deprecated. Please use LinearizedOnTheFlyOperator instead!") NonlinearOnTheFlyOperator : public Dune::LinearOperator<X,Y>
     {
     public :
       typedef X domain_type;
@@ -91,6 +92,7 @@ namespace Dune {
 
       enum { category = Dune::SolverCategory::sequential };
 
+      DUNE_DEPRECATED_MSG("NonlinearOnTheFlyOperator is deprecated. Please use LinearizedOnTheFlyOperator instead!")
       NonlinearOnTheFlyOperator(const GO& go)
         : go_(go)
         , u_(static_cast<X*>(0))

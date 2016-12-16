@@ -90,7 +90,7 @@ namespace Dune {
         \tparam GO Grid operator implementing the jacobian application.
      */
     template<class CC, class X, class Y, class GO>
-    class OverlappingOnTheFlyOperator
+    class DUNE_DEPRECATED_MSG("OverlappingOnTheFlyOperator is deprecated. Please use OverlappingLinearizedOnTheFlyOperator instead!") OverlappingOnTheFlyOperator
       : public Dune::LinearOperator<X,Y>
     {
     public :
@@ -101,6 +101,7 @@ namespace Dune {
 
       enum { category = Dune::SolverCategory::overlapping };
 
+      DUNE_DEPRECATED_MSG("OverlappingOnTheFlyOperator is deprecated. Please use OverlappingLinearizedOnTheFlyOperator instead!")
       OverlappingOnTheFlyOperator(const CC& cc, const GO& go)
         : cc_(cc), go_(go)
       {}
@@ -140,7 +141,7 @@ namespace Dune {
         \tparam GO Grid operator implementing the jacobian application.
      */
     template<class CC, class X, class Y, class GO>
-    class OverlappingNonlinearOnTheFlyOperator
+    class DUNE_DEPRECATED_MSG("OverlappingNonlinearOnTheFlyOperator is deprecated. Please use OverlappingLinearizedOnTheFlyOperator instead!") OverlappingNonlinearOnTheFlyOperator
       : public Dune::LinearOperator<X,Y>
     {
     public :
@@ -151,6 +152,7 @@ namespace Dune {
 
       enum { category = Dune::SolverCategory::overlapping };
 
+      DUNE_DEPRECATED_MSG("OverlappingNonlinearOnTheFlyOperator is deprecated. Please use OverlappingLinearizedOnTheFlyOperator instead!")
       OverlappingNonlinearOnTheFlyOperator(const CC& cc, const GO& go)
         : cc_(cc), go_(go), u_(static_cast<X*>(0))
       {}
