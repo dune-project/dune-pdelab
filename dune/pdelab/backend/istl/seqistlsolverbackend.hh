@@ -603,6 +603,18 @@ namespace Dune {
         params = params_;
       }
 
+      //! Set whether the AMG should be reused again during call to apply().
+      void setReuse(bool reuse_)
+      {
+        reuse = reuse_;
+      }
+
+      //! Return whether the AMG is reused during call to apply()
+      bool getReuse() const
+      {
+        return reuse;
+      }
+
       /*! \brief compute global norm of a vector
 
         \param[in] v the given vector
