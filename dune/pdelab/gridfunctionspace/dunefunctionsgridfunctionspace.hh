@@ -14,6 +14,7 @@
 
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/dunefunctionslocalfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/dunefunctionslfsindexcache.hh>
 
 #include <dune/pdelab/backend/istl/dunefunctions.hh>
 
