@@ -235,6 +235,19 @@ namespace Dune{
            direction);
       }
 
+      //! Apply jacobian matrix without explicitly assembling it
+      template<typename Dir = Direction::Forward>
+      void jacobian_apply(const Domain & x, const Domain & z, Range & r, Dir direction = Dir()) const {
+        if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
+
+        typedef typename LocalAssembler::LocalNonlinearJacobianApplyAssemblerEngine NonlinearJacobianApplyEngine;
+        global_assembler.assemble
+          ([&r,&x,&z](LocalAssembler &la) -> NonlinearJacobianApplyEngine&
+               { return la.localNonlinearJacobianApplyAssemblerEngine(r,x,z); },
+           local_assembler,
+           direction);
+      }
+
       //! Interpolate constrained values from given function f
       template<typename F, typename X>
       void interpolate (unsigned stage, const X& xold, F& f, X& x) const

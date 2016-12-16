@@ -240,6 +240,17 @@ namespace Dune{
            direction);
       }
 
+      //! Apply jacobian matrix without explicitly assembling it
+      template<typename Dir = Direction::Forward>
+      void jacobian_apply(const Domain & x, const Domain & z, Range & r, Dir direction = Dir()) const {
+        typedef typename LocalAssembler::LocalNonlinearJacobianApplyAssemblerEngine NonlinearJacobianApplyEngine;
+        global_assembler.assemble
+          ([&r,&z,&x](LocalAssembler &la) -> NonlinearJacobianApplyEngine&
+                { return la.localNonlinearJacobianApplyAssemblerEngine(r,x,z); },
+           local_assembler,
+           direction);
+      }
+
 
       void make_consistent(Jacobian& a) const {
         dof_exchanger->accumulateBorderEntries(*this,a);
