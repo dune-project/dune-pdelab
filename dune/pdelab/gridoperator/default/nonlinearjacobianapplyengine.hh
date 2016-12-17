@@ -34,6 +34,8 @@ namespace Dune{
 
       //! The type of the local operator
       typedef typename LA::LocalOperator LOP;
+      //! Whether local operator is nonlinear
+      static const bool nonLinear = not LOP::isLinear;
 
       //! The type of the residual vector
       typedef typename LA::Traits::Residual Residual;
@@ -124,7 +126,9 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void onBindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache){
         global_sl_view.bind(lfsu_cache);
-        xl.resize(lfsu_cache.size());
+        // drop operations for the linearization point if the problem is linear
+        if(nonLinear)
+          xl.resize(lfsu_cache.size());
         global_zl_view.bind(lfsu_cache);
         zl.resize(lfsu_cache.size());
       }
@@ -138,7 +142,9 @@ namespace Dune{
       template<typename IG, typename LFSUC, typename LFSVC>
       void onBindLFSUVInside(const IG & ig, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache){
         global_sl_view.bind(lfsu_cache);
-        xl.resize(lfsu_cache.size());
+        // drop operations for the linearization point if the problem is linear
+        if(nonLinear)
+          xl.resize(lfsu_cache.size());
         global_zl_view.bind(lfsu_cache);
         zl.resize(lfsu_cache.size());
       }
@@ -149,7 +155,9 @@ namespace Dune{
                               const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
         global_sn_view.bind(lfsu_n_cache);
-        xn.resize(lfsu_n_cache.size());
+        // drop operations for the linearization point if the problem is linear
+        if(nonLinear)
+          xn.resize(lfsu_n_cache.size());
         global_zn_view.bind(lfsu_n_cache);
         zn.resize(lfsu_n_cache.size());
       }
@@ -200,13 +208,17 @@ namespace Dune{
       //! @{
       template<typename LFSUC>
       void loadCoefficientsLFSUInside(const LFSUC & lfsu_s_cache){
-        global_sl_view.read(xl);
-        global_zl_view.read(xl);
+        // drop operations for the linearization point if the problem is linear
+        if(nonLinear)
+          global_sl_view.read(xl);
+        global_zl_view.read(zl);
       }
       template<typename LFSUC>
       void loadCoefficientsLFSUOutside(const LFSUC & lfsu_n_cache){
-        global_sn_view.read(xn);
-        global_zn_view.read(xn);
+        // drop operations for the linearization point if the problem is linear
+        if(nonLinear)
+          global_sn_view.read(xn);
+        global_zn_view.read(zn);
       }
       template<typename LFSUC>
       void loadCoefficientsLFSUCoupling(const LFSUC & lfsu_c_cache)
@@ -244,7 +256,7 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
-          nonlinear_jacobian_apply_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,zl,lfsv_cache.localFunctionSpace(),rl_view);
+          jacobian_apply_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,zl,lfsv_cache.localFunctionSpace(),rl_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -254,10 +266,10 @@ namespace Dune{
         rl_view.setWeight(local_assembler.weight());
         rn_view.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
-          nonlinear_jacobian_apply_skeleton(lop,ig,
-                                            lfsu_s_cache.localFunctionSpace(),xl,zl,lfsv_s_cache.localFunctionSpace(),
-                                            lfsu_n_cache.localFunctionSpace(),xn,zl,lfsv_n_cache.localFunctionSpace(),
-                                            rl_view,rn_view);
+          jacobian_apply_skeleton(lop,ig,
+                                  lfsu_s_cache.localFunctionSpace(),xl,zl,lfsv_s_cache.localFunctionSpace(),
+                                  lfsu_n_cache.localFunctionSpace(),xn,zn,lfsv_n_cache.localFunctionSpace(),
+                                  rl_view,rn_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -265,7 +277,7 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
-          nonlinear_jacobian_apply_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,zl,lfsv_s_cache.localFunctionSpace(),rl_view);
+          jacobian_apply_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,zl,lfsv_s_cache.localFunctionSpace(),rl_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -280,7 +292,7 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
-          nonlinear_jacobian_apply_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),xl,zl,lfsv_cache.localFunctionSpace(),rl_view);
+          jacobian_apply_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),xl,zl,lfsv_cache.localFunctionSpace(),rl_view);
       }
 
       //! @}
