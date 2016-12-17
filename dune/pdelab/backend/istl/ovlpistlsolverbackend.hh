@@ -201,7 +201,7 @@ namespace Dune {
       typedef X domain_type;
       typedef Y range_type;
       typedef typename X::field_type field_type;
-      static const bool isLinear = GO::LocalAssembler::isLinear;
+      static const bool isLinear = GO::LocalAssembler::isLinear();
 
       enum { category = Dune::SolverCategory::overlapping };
 
