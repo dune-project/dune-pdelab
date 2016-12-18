@@ -145,6 +145,9 @@ namespace Dune {
       //! \brief Whether to visit the skeleton methods from both sides
       enum { doSkeletonTwoSided = Backend::doSkeletonTwoSided };
 
+      //! \brief Whether operator is linear
+      enum { isLinear = Backend::isLinear };
+
       //! \} Control flags
 
       //////////////////////////////////////////////////////////////////////

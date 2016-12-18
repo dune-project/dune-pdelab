@@ -81,10 +81,17 @@ namespace Dune {
     private:
       template<typename T1, typename T2>
       struct OrOperation
-        : public std::integral_constant<bool, T1::value || T2:: value>
+        : public std::integral_constant<bool, T1::value or T2::value>
       { };
       template<template<int> class Value>
       struct AccFlag : public GenericForLoop<OrOperation, Value, 0, size-1>
+      { };
+      template<typename T1, typename T2>
+      struct AndOperation
+        : public std::integral_constant<bool, T1::value and T2::value>
+      { };
+      template<template<int> class Value>
+      struct LinearFlag : public GenericForLoop<AndOperation, Value, 0, size-1>
       { };
 
       template<int i>
@@ -151,6 +158,11 @@ namespace Dune {
                 tuple_element<i, Args>::type::doSkeletonTwoSided)>
       { };
 
+      template<int i>
+      struct isLinearValue : public std::integral_constant
+      <bool, tuple_element<i,Args>::type::isLinear>
+      { };
+
     public:
       //! \brief Whether to assemble the pattern on the elements, i.e. whether
       //!        or not pattern_volume() should be called.
@@ -213,6 +225,8 @@ namespace Dune {
                     "Some summands require a one-sided skelton, others a "
                     "two-sided skeleton.  This is not supported.");
 
+      enum { isLinear = LinearFlag<isLinearValue>::value };
+
       //! \} Control flags
 
       //////////////////////////////////////////////////////////////////////
@@ -232,7 +246,8 @@ namespace Dune {
                           LocalPattern& pattern)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doPatternVolume>::
+                                   tuple_element<i,Args>::type::doPatternVolume,
+                                   tuple_element<i,Args>::type::isLinear>::
             pattern_volume(*get<i>(lops), lfsu, lfsv, pattern);
         }
       };
@@ -245,7 +260,8 @@ namespace Dune {
                           LocalPattern& pattern)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doPatternVolumePostSkeleton>::
+                                   tuple_element<i,Args>::type::doPatternVolumePostSkeleton,
+                                   tuple_element<i,Args>::type::isLinear>::
             pattern_volume_post_skeleton(*get<i>(lops), lfsu, lfsv, pattern);
         }
       };
@@ -260,7 +276,8 @@ namespace Dune {
                           LocalPattern& pattern_ns)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doPatternSkeleton>::
+                                   tuple_element<i,Args>::type::doPatternSkeleton,
+                                   tuple_element<i,Args>::type::isLinear>::
             pattern_skeleton(*get<i>(lops),
                              lfsu_s, lfsv_s, lfsu_n, lfsv_n,
                              pattern_sn, pattern_ns);
@@ -275,7 +292,8 @@ namespace Dune {
                           LocalPattern& pattern_ss)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doPatternBoundary>::
+                                   tuple_element<i,Args>::type::doPatternBoundary,
+                                   tuple_element<i,Args>::type::isLinear>::
             pattern_boundary(*get<i>(lops), lfsu_s, lfsv_s, pattern_ss);
         }
       };
@@ -365,7 +383,8 @@ namespace Dune {
                           R& r)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolume>::
+                                   tuple_element<i,Args>::type::doAlphaVolume,
+                                   tuple_element<i,Args>::type::isLinear>::
           alpha_volume(*get<i>(lops), eg, lfsu, x, lfsv, r);
         }
       };
@@ -379,7 +398,8 @@ namespace Dune {
                           R& r)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
+                                   tuple_element<i,Args>::type::doAlphaVolumePostSkeleton,
+                                   tuple_element<i,Args>::type::isLinear>::
             alpha_volume_post_skeleton(*get<i>(lops), eg,
                                        lfsu, x, lfsv,
                                        r);
@@ -396,7 +416,8 @@ namespace Dune {
                           R& r_s, R& r_n)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaSkeleton>::
+                                   tuple_element<i,Args>::type::doAlphaSkeleton,
+                                   tuple_element<i,Args>::type::isLinear>::
             alpha_skeleton(*get<i>(lops), ig,
                            lfsu_s, x_s, lfsv_s,
                            lfsu_n, x_n, lfsv_n,
@@ -413,7 +434,8 @@ namespace Dune {
                           R& r_s)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaBoundary>::
+                                   tuple_element<i,Args>::type::doAlphaBoundary,
+                                   tuple_element<i,Args>::type::isLinear>::
             alpha_boundary(*get<i>(lops), ig, lfsu_s, x_s, lfsv_s, r_s);
         }
       };
@@ -507,7 +529,8 @@ namespace Dune {
                           R& r)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doLambdaVolume>::
+                                   tuple_element<i,Args>::type::doLambdaVolume,
+                                   tuple_element<i,Args>::type::isLinear>::
             lambda_volume(*get<i>(lops), eg, lfsv, r);
         }
       };
@@ -520,7 +543,8 @@ namespace Dune {
                           R& r)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doLambdaVolumePostSkeleton>::
+                                   tuple_element<i,Args>::type::doLambdaVolumePostSkeleton,
+                                   tuple_element<i,Args>::type::isLinear>::
             lambda_volume_post_skeleton(*get<i>(lops), eg, lfsv, r);
         }
       };
@@ -534,7 +558,8 @@ namespace Dune {
                           R& r_s, R& r_n)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doLambdaSkeleton>::
+                                   tuple_element<i,Args>::type::doLambdaSkeleton,
+                                   tuple_element<i,Args>::type::isLinear>::
             lambda_skeleton(*get<i>(lops), ig,
                             lfsv_s, lfsv_n,
                             r_s, r_n);
@@ -549,7 +574,8 @@ namespace Dune {
                           R& r_s)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doLambdaBoundary>::
+                                   tuple_element<i,Args>::type::doLambdaBoundary,
+                                   tuple_element<i,Args>::type::isLinear>::
             lambda_boundary(*get<i>(lops), ig, lfsv_s, r_s);
         }
       };
@@ -628,7 +654,8 @@ namespace Dune {
                           Y& y)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolume>::
+                                   tuple_element<i,Args>::type::doAlphaVolume,
+                                   tuple_element<i,Args>::type::isLinear>::
             jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, lfsv, y);
         }
       };
@@ -642,7 +669,8 @@ namespace Dune {
                           Y& y)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
+                                   tuple_element<i,Args>::type::doAlphaVolumePostSkeleton,
+                                   tuple_element<i,Args>::type::isLinear>::
             jacobian_apply_volume_post_skeleton(*get<i>(lops), eg,
                                                 lfsu, x, lfsv,
                                                 y);
@@ -659,7 +687,8 @@ namespace Dune {
                           Y& y_s, Y& y_n)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaSkeleton>::
+                                   tuple_element<i,Args>::type::doAlphaSkeleton,
+                                   tuple_element<i,Args>::type::isLinear>::
           jacobian_apply_skeleton(*get<i>(lops), ig,
                                   lfsu_s, x_s, lfsv_s,
                                   lfsu_n, x_n, lfsv_n,
@@ -676,7 +705,8 @@ namespace Dune {
                           Y& y_s)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaBoundary>::
+                                   tuple_element<i,Args>::type::doAlphaBoundary,
+                                   tuple_element<i,Args>::type::isLinear>::
             jacobian_apply_boundary(*get<i>(lops), ig,
                                     lfsu_s, x_s, lfsv_s,
                                     y_s);
@@ -691,7 +721,8 @@ namespace Dune {
                           Y& y)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolume>::
+                                   tuple_element<i,Args>::type::doAlphaVolume,
+                                   tuple_element<i,Args>::type::isLinear>::
             nonlinear_jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, z, lfsv, y);
         }
       };
@@ -704,7 +735,8 @@ namespace Dune {
                           Y& y)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
+                                   tuple_element<i,Args>::type::doAlphaVolumePostSkeleton,
+                                   tuple_element<i,Args>::type::isLinear>::
             nonlinear_jacobian_apply_volume_post_skeleton(*get<i>(lops), eg,
                                                           lfsu, x, z, lfsv,
                                                           y);
@@ -720,7 +752,8 @@ namespace Dune {
                           Y& y_s, Y& y_n)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaSkeleton>::
+                                   tuple_element<i,Args>::type::doAlphaSkeleton,
+                                   tuple_element<i,Args>::type::isLinear>::
           nonlinear_jacobian_apply_skeleton(*get<i>(lops), ig,
                                                     lfsu_s, x_s, z_s, lfsv_s,
                                                     lfsu_n, x_n, z_n, lfsv_n,
@@ -736,7 +769,8 @@ namespace Dune {
                           Y& y_s)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaBoundary>::
+                                   tuple_element<i,Args>::type::doAlphaBoundary,
+                                   tuple_element<i,Args>::type::isLinear>::
             nonlinear_jacobian_apply_boundary(*get<i>(lops), ig,
                                               lfsu_s, x_s, z_s, lfsv_s,
                                               y_s);
@@ -887,7 +921,8 @@ namespace Dune {
                           LocalMatrix& mat)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolume>::
+                                   tuple_element<i,Args>::type::doAlphaVolume,
+                                   tuple_element<i,Args>::type::isLinear>::
             jacobian_volume(*get<i>(lops), eg, lfsu, x, lfsv, mat);
         }
       };
@@ -901,7 +936,8 @@ namespace Dune {
                           LocalMatrix& mat)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
+                                   tuple_element<i,Args>::type::doAlphaVolumePostSkeleton,
+                                   tuple_element<i,Args>::type::isLinear>::
             jacobian_volume_post_skeleton(*get<i>(lops), eg,
                                           lfsu, x, lfsv,
                                           mat);
@@ -919,7 +955,8 @@ namespace Dune {
                           LocalMatrix& mat_ns, LocalMatrix& mat_nn)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaSkeleton>::
+                                   tuple_element<i,Args>::type::doAlphaSkeleton,
+                                   tuple_element<i,Args>::type::isLinear>::
             jacobian_skeleton(*get<i>(lops), ig,
                               lfsu_s, x_s, lfsv_s,
                               lfsu_n, x_n, lfsv_n,
@@ -936,7 +973,8 @@ namespace Dune {
                           LocalMatrix& mat_ss)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaBoundary>::
+                                   tuple_element<i,Args>::type::doAlphaBoundary,
+                                   tuple_element<i,Args>::type::isLinear>::
             jacobian_boundary(*get<i>(lops), ig,
                               lfsu_s, x_s, lfsv_s, mat_ss);
         }

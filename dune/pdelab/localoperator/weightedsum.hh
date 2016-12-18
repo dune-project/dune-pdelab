@@ -123,10 +123,17 @@ namespace Dune {
     private:
       template<typename T1, typename T2>
       struct OrOperation
-        : public std::integral_constant<bool, T1::value || T2:: value>
+        : public std::integral_constant<bool, T1::value or T2::value>
       { };
       template<template<int> class Value>
       struct AccFlag : public GenericForLoop<OrOperation, Value, 0, size-1>
+      { };
+      template<typename T1, typename T2>
+      struct AndOperation
+        : public std::integral_constant<bool, T1::value and T2::value>
+      { };
+      template<template<int> class Value>
+      struct LinearFlag : public GenericForLoop<AndOperation, Value, 0, size-1>
       { };
 
       template<int i>
@@ -193,6 +200,11 @@ namespace Dune {
                 tuple_element<i, Args>::type::doSkeletonTwoSided)>
       { };
 
+      template<int i>
+      struct isLinearValue : public std::integral_constant
+      <bool, tuple_element<i,Args>::type::isLinear>
+      { };
+
     public:
       //! \brief Whether to assemble the pattern on the elements, i.e. whether
       //!        or not pattern_volume() should be called.
@@ -255,6 +267,8 @@ namespace Dune {
                     "Some summands require a one-sided skelton, others a "
                     "two-sided skeleton.  This is not supported.");
 
+      enum { isLinear = LinearFlag<isLinearValue>::value };
+
       //! \} Control flags
 
       //////////////////////////////////////////////////////////////////////
@@ -275,7 +289,8 @@ namespace Dune {
         {
           if(weights[i] != K(0))
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doPatternVolume>::
+                                     tuple_element<i,Args>::type::doPatternVolume,
+                                     tuple_element<i,Args>::type::isLinear>::
               pattern_volume(*get<i>(lops), lfsu, lfsv, pattern);
         }
       };
@@ -289,7 +304,8 @@ namespace Dune {
         {
           if(weights[i] != K(0))
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doPatternVolumePostSkeleton>::
+                                     tuple_element<i,Args>::type::doPatternVolumePostSkeleton,
+                                     tuple_element<i,Args>::type::isLinear>::
               pattern_volume_post_skeleton(*get<i>(lops), lfsu, lfsv, pattern);
         }
       };
@@ -305,7 +321,8 @@ namespace Dune {
         {
           if(weights[i] != K(0))
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doPatternSkeleton>::
+                                     tuple_element<i,Args>::type::doPatternSkeleton,
+                                     tuple_element<i,Args>::type::isLinear>::
               pattern_skeleton(*get<i>(lops),
                                lfsu_s, lfsv_s, lfsu_n, lfsv_n,
                                pattern_sn, pattern_ns);
@@ -321,7 +338,8 @@ namespace Dune {
         {
           if(weights[i] != K(0))
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doPatternBoundary>::
+                                     tuple_element<i,Args>::type::doPatternBoundary,
+                                     tuple_element<i,Args>::type::isLinear>::
               pattern_boundary(*get<i>(lops), lfsu_s, lfsv_s, pattern_ss);
         }
       };
@@ -424,7 +442,7 @@ namespace Dune {
           if(weight != K(0)) {
             const typename C::weight_type old_weight = r.weight();
             r.setWeight(weight);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume, Arg::isLinear>::
               alpha_volume(*get<i>(lops), eg, lfsu, x, lfsv, r);
             r.setWeight(old_weight);
           }
@@ -453,7 +471,7 @@ namespace Dune {
           if(weight != K(0)) {
             const typename C::weight_type old_weight = r.weight();
             r.setWeight(weight);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton, Arg::isLinear>::
               alpha_volume_post_skeleton(*get<i>(lops), eg,
                                          lfsu, x, lfsv,
                                          r);
@@ -496,7 +514,7 @@ namespace Dune {
               old_weight_n = r_n.weight();
             r_s.setWeight(weight_s);
             r_n.setWeight(weight_n);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton, Arg::isLinear>::
               alpha_skeleton(*get<i>(lops), ig,
                              lfsu_s, x_s, lfsv_s,
                              lfsu_n, x_n, lfsv_n,
@@ -532,7 +550,7 @@ namespace Dune {
           if(weight_s != K(0)) {
             const typename C::weight_type old_weight_s = r_s.weight();
             r_s.setWeight(weight_s);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary, Arg::isLinear>::
               alpha_boundary(*get<i>(lops), ig, lfsu_s, x_s, lfsv_s, r_s);
             r_s.setWeight(old_weight_s);
           }
@@ -640,7 +658,7 @@ namespace Dune {
           if(weight != K(0)) {
             const typename C::weight_type old_weight = r.weight();
             r.setWeight(weight);
-            LocalAssemblerCallSwitch<Arg, Arg::doLambdaVolume>::
+            LocalAssemblerCallSwitch<Arg, Arg::doLambdaVolume, Arg::isLinear>::
               lambda_volume(*get<i>(lops), eg, lfsv, r);
             r.setWeight(old_weight);
           }
@@ -667,7 +685,7 @@ namespace Dune {
           if(weight != K(0)) {
             const typename C::weight_type old_weight = r.weight();
             r.setWeight(weight);
-            LocalAssemblerCallSwitch<Arg, Arg::doLambdaVolumePostSkeleton>::
+            LocalAssemblerCallSwitch<Arg, Arg::doLambdaVolumePostSkeleton, Arg::isLinear>::
               lambda_volume_post_skeleton(*get<i>(lops), eg, lfsv, r);
             r.setWeight(old_weight);
           }
@@ -703,7 +721,7 @@ namespace Dune {
               old_weight_n = r_n.weight();
             r_s.setWeight(weight_s);
             r_n.setWeight(weight_n);
-            LocalAssemblerCallSwitch<Arg, Arg::doLambdaSkeleton>::
+            LocalAssemblerCallSwitch<Arg, Arg::doLambdaSkeleton, Arg::isLinear>::
               lambda_skeleton(*get<i>(lops), ig,
                               lfsv_s, lfsv_n,
                               r_s, r_n);
@@ -734,7 +752,7 @@ namespace Dune {
           if(weight_s != K(0)) {
             const typename C::weight_type old_weight_s = r_s.weight();
             r_s.setWeight(weight_s);
-            LocalAssemblerCallSwitch<Arg, Arg::doLambdaBoundary>::
+            LocalAssemblerCallSwitch<Arg, Arg::doLambdaBoundary, Arg::isLinear>::
               lambda_boundary(*get<i>(lops), ig, lfsv_s, r_s);
             r_s.setWeight(old_weight_s);
           }
@@ -828,7 +846,7 @@ namespace Dune {
           if(weight != K(0)) {
             const typename C::weight_type old_weight = r.weight();
             r.setWeight(weight);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume, Arg::isLinear>::
               jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, lfsv, r);
             r.setWeight(old_weight);
           }
@@ -857,7 +875,7 @@ namespace Dune {
           if(weight != K(0)) {
             const typename C::weight_type old_weight = r.weight();
             r.setWeight(weight);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton, Arg::isLinear>::
               jacobian_apply_volume_post_skeleton(*get<i>(lops), eg,
                                                   lfsu, x, lfsv,
                                                   r);
@@ -900,7 +918,7 @@ namespace Dune {
               old_weight_n = r_n.weight();
             r_s.setWeight(weight_s);
             r_n.setWeight(weight_n);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton, Arg::isLinear>::
               jacobian_apply_skeleton(*get<i>(lops), ig,
                                       lfsu_s, x_s, lfsv_s,
                                       lfsu_n, x_n, lfsv_n,
@@ -936,7 +954,7 @@ namespace Dune {
           if(weight_s != K(0)) {
             const typename C::weight_type old_weight_s = r_s.weight();
             r_s.setWeight(weight_s);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary, Arg::isLinear>::
               jacobian_apply_boundary(*get<i>(lops), ig,
                                       lfsu_s, x_s, lfsv_s,
                                       r_s);
@@ -967,7 +985,7 @@ namespace Dune {
           if(weight != K(0)) {
             const typename C::weight_type old_weight = r.weight();
             r.setWeight(weight);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume, Arg::isLinear>::
               nonlinear_jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, z, lfsv, r);
             r.setWeight(old_weight);
           }
@@ -1011,7 +1029,7 @@ namespace Dune {
           if(weight != K(0)) {
             const typename C::weight_type old_weight = r.weight();
             r.setWeight(weight);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton, Arg::isLinear>::
               nonlinear_jacobian_apply_volume_post_skeleton(*get<i>(lops), eg,
                                                             lfsu, x, z, lfsv,
                                                             r);
@@ -1053,7 +1071,7 @@ namespace Dune {
               old_weight_n = r_n.weight();
             r_s.setWeight(weight_s);
             r_n.setWeight(weight_n);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton, Arg::isLinear>::
               nonlinear_jacobian_apply_skeleton(*get<i>(lops), ig,
                                                 lfsu_s, x_s, z_s, lfsv_s,
                                                 lfsu_n, x_n, z_n, lfsv_n,
@@ -1089,7 +1107,7 @@ namespace Dune {
           if(weight_s != K(0)) {
             const typename C::weight_type old_weight_s = r_s.weight();
             r_s.setWeight(weight_s);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary, Arg::isLinear>::
               nonlinear_jacobian_apply_boundary(*get<i>(lops), ig,
                                                 lfsu_s, x_s, z_s, lfsv_s,
                                                 r_s);
@@ -1286,7 +1304,7 @@ namespace Dune {
           if(weight != K(0)) {
             const typename C::weight_type old_weight = m.weight();
             m.setWeight(weight);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume, Arg::isLinear>::
               jacobian_volume(*get<i>(lops), eg, lfsu, x, lfsv, m);
             m.setWeight(old_weight);
           }
@@ -1315,7 +1333,7 @@ namespace Dune {
           if(weight != K(0)) {
             const typename C::weight_type old_weight = m.weight();
             m.setWeight(weight);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton, Arg::isLinear>::
               jacobian_volume_post_skeleton(*get<i>(lops), eg,
                                             lfsu, x, lfsv,
                                             m);
@@ -1371,7 +1389,7 @@ namespace Dune {
             m_sn.setWeight(weight_sn);
             m_ns.setWeight(weight_ns);
             m_nn.setWeight(weight_nn);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton, Arg::isLinear>::
               jacobian_skeleton(*get<i>(lops), ig,
                                 lfsu_s, x_s, lfsv_s,
                                 lfsu_n, x_n, lfsv_n,
@@ -1410,7 +1428,7 @@ namespace Dune {
           {
             const typename C::weight_type old_weight_ss = m_ss.weight();
             m_ss.setWeight(weight_ss);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary, Arg::isLinear>::
               jacobian_boundary(*get<i>(lops), ig,
                                 lfsu_s, x_s, lfsv_s, m_ss);
             m_ss.setWeight(old_weight_ss);
