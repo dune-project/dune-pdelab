@@ -573,7 +573,7 @@ namespace Dune {
       ISTLBackend_OVLP_MatrixFree_Richardson (const GFS& gfs, const CC& cc, const GO& go,
                                               unsigned maxiter=5000, int verbose=1)
         : OVLPScalarProductImplementation<GFS>(gfs)
-        , gfs_(gfs), cc_(cc), opa_(go), u_(static_cast<V*>(0))
+        , gfs_(gfs), cc_(cc), opa_(cc,go), u_(static_cast<V*>(0))
         , maxiter_(maxiter), verbose_(verbose)
       {}
 
@@ -608,7 +608,7 @@ namespace Dune {
     private :
       const GFS& gfs_;
       const CC& cc_;
-      Dune::PDELab::LinearizedOnTheFlyOperator<V,W,GO> opa_;
+      Dune::PDELab::OverlappingLinearizedOnTheFlyOperator<CC,V,W,GO> opa_;
       const V* u_;
       unsigned maxiter_;
       int verbose_;
