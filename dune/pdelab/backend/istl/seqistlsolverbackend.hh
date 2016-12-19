@@ -237,18 +237,20 @@ namespace Dune {
       int verbose;
     };
 
-    template<class Operator, template<class> class Solver>
+    template<class GO, template<class> class Solver>
     class ISTLBackend_SEQ_MatrixFree_Richardson
       : public SequentialNorm, public LinearResultStorage
     {
+      using V = typename GO::Traits::Domain;
+      using W = typename GO::Traits::Range;
     public:
       /*! \brief make a linear solver object
 
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_MatrixFree_Richardson(Operator& op, unsigned maxiter=5000, int verbose=1)
-        : opa_(op), u_(static_cast<typename Operator::domain_type*>(0))
+      explicit ISTLBackend_SEQ_MatrixFree_Richardson(const GO& go, unsigned maxiter=5000, int verbose=1)
+        : opa_(go), u_(static_cast<V*>(0))
         , maxiter_(maxiter)
         , verbose_(verbose)
       {}
@@ -262,7 +264,6 @@ namespace Dune {
         \param[in] r right hand side
         \param[in] reduction to be achieved
       */
-      template<class V, class W>
       void apply(V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
       {
         Dune::Richardson<V,W> prec(0.7);
@@ -278,15 +279,15 @@ namespace Dune {
 
       //! Set position of jacobian.
       //! Must be called before apply().
-      void setLinearizationPoint(const typename Operator::domain_type& u)
+      void setLinearizationPoint(const V& u)
       {
         u_ = &u;
         opa_.setLinearizationPoint(u);
       }
 
     private:
-      Operator& opa_;
-      const typename Operator::domain_type* u_;
+      Dune::PDELab::LinearizedOnTheFlyOperator<V,W,GO> opa_;
+      const V* u_;
       unsigned maxiter_;
       int verbose_;
     };

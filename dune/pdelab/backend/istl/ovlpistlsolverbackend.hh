@@ -561,21 +561,22 @@ namespace Dune {
       const OVLPScalarProductImplementation<GFS>& implementation;
     };
 
-    template<class GFS, class CC, class Operator,
+    template<class GFS, class CC, class GO,
              template<class> class Solver>
     class ISTLBackend_OVLP_MatrixFree_Richardson
       : public OVLPScalarProductImplementation<GFS>
       , public LinearResultStorage
     {
+      using V = typename GO::Traits::Domain;
+      using W = typename GO::Traits::Range;
     public :
-      ISTLBackend_OVLP_MatrixFree_Richardson (const GFS& gfs, const CC& cc, Operator& op,
+      ISTLBackend_OVLP_MatrixFree_Richardson (const GFS& gfs, const CC& cc, const GO& go,
                                               unsigned maxiter=5000, int verbose=1)
         : OVLPScalarProductImplementation<GFS>(gfs)
-        , gfs_(gfs), cc_(cc), opa_(op), u_(static_cast<typename Operator::domain_type*>(0))
+        , gfs_(gfs), cc_(cc), opa_(go), u_(static_cast<V*>(0))
         , maxiter_(maxiter), verbose_(verbose)
       {}
 
-      template<class V, class W>
       void apply(V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType>::real_type reduction)
       {
         using Dune::PDELab::Backend::Native;
@@ -598,7 +599,7 @@ namespace Dune {
 
       //! Set position of jacobian.
       //! Must be called before apply() in the nonlinear case.
-      void setLinearizationPoint(const typename Operator::domain_type& u)
+      void setLinearizationPoint(const V& u)
       {
         u_ = &u;
         opa_.setLinearizationPoint(u);
@@ -607,8 +608,8 @@ namespace Dune {
     private :
       const GFS& gfs_;
       const CC& cc_;
-      Operator& opa_;
-      const typename Operator::domain_type* u_;
+      Dune::PDELab::LinearizedOnTheFlyOperator<V,W,GO> opa_;
+      const V* u_;
       unsigned maxiter_;
       int verbose_;
     }; // end class ISTLBackend_OVLP_MatrixFree_Richardson
