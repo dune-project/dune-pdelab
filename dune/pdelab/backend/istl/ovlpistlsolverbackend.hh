@@ -206,7 +206,7 @@ namespace Dune {
       enum { category = Dune::SolverCategory::overlapping };
 
       OverlappingLinearizedOnTheFlyOperator(const CC& cc, const GO& go)
-        : cc_(cc), go_(go), u_(static_cast<X*>(0))
+        : cc_(cc), go_(go), u_(nullptr)
       {}
 
       //! Set linearization point.
@@ -573,7 +573,7 @@ namespace Dune {
       ISTLBackend_OVLP_MatrixFree_Richardson (const GFS& gfs, const CC& cc, const GO& go,
                                               unsigned maxiter=5000, int verbose=1)
         : OVLPScalarProductImplementation<GFS>(gfs)
-        , gfs_(gfs), cc_(cc), opa_(cc,go), u_(static_cast<V*>(0))
+        , gfs_(gfs), cc_(cc), opa_(cc,go), u_(nullptr)
         , maxiter_(maxiter), verbose_(verbose)
       {}
 

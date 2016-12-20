@@ -143,7 +143,7 @@ namespace Dune {
 
       LinearizedOnTheFlyOperator(const GO& go)
         : go_(go)
-        , u_(static_cast<X*>(0))
+        , u_(nullptr)
       {}
 
       //! Set linearization point.
@@ -250,7 +250,7 @@ namespace Dune {
         \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_SEQ_MatrixFree_Richardson(const GO& go, unsigned maxiter=5000, int verbose=1)
-        : opa_(go), u_(static_cast<V*>(0))
+        : opa_(go), u_(nullptr)
         , maxiter_(maxiter)
         , verbose_(verbose)
       {}
