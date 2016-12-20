@@ -127,6 +127,9 @@ namespace Dune {
       enum { doAlphaBoundary  = true };
       enum { doLambdaVolume   = true };
 
+      // is linear flag
+      enum { isLinear = false };
+
       /** \brief Constructor
 
           \param [in] _prm                        Parameter class for this local operator

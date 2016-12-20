@@ -78,6 +78,9 @@ namespace Dune {
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
 
+      // is linear flag
+      enum { isLinear = false };
+
       using PhysicalParameters = P;
 
       TaylorHoodNavierStokes (PhysicalParameters& p, int superintegration_order_ = 0)

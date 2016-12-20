@@ -240,6 +240,9 @@ namespace Dune {
       enum { doAlphaVolume = true };
       enum { doAlphaBoundary = true };
 
+      // is linear flag
+      enum { isLinear = false };
+
       NonLinearConvectionDiffusionFEM (T& param_, int intorder_=2)
         : param(param_), intorder(intorder_)
       {}

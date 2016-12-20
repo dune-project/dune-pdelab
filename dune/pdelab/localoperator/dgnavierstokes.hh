@@ -60,6 +60,9 @@ namespace Dune {
       enum { doLambdaVolume   = true };
       enum { doLambdaBoundary = true };
 
+      // is linear flag
+      enum { isLinear = false };
+
       /** \brief Constructor
 
           \param [in] _prm                        Parameter class for this local operator
