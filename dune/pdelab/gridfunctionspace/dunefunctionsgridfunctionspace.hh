@@ -158,14 +158,14 @@ namespace Dune {
 
         //! constructor
         GridFunctionSpace (std::shared_ptr<DFBasis> df_basis, std::shared_ptr<CE> ce)
-          : _es(df_basis->gridView())
+          : _es(df_basis->gridView(), Traits::EntitySet::allCodims())
           , _df_basis(std::move(df_basis))
           , _pce(std::move(ce))
           , _ordering(*this)
         {}
 
         GridFunctionSpace (std::shared_ptr<DFBasis> df_basis)
-          : _es(df_basis->gridView())
+          : _es(df_basis->gridView(), Traits::EntitySet::allCodims())
           , _df_basis(std::move(df_basis))
           , _pce(std::make_shared<CE>())
           , _ordering(*this)
