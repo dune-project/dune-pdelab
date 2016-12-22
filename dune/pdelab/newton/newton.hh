@@ -752,7 +752,7 @@ namespace Dune
          MaxIterations = 7
          AbsoluteLimit = 1e-6
          Reduction = 1e-4
-         LinearReduction = 1e-3
+         MinLinearReduction = 1e-3
          LineSearchDamping  = 0.9
          \endcode
 
