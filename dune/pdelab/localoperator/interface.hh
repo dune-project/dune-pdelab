@@ -4,6 +4,7 @@
 #define DUNE_PDELAB_LOCALOPERATOR_INTERFACE_HH
 
 #include <dune/pdelab/localoperator/flags.hh>
+#include <dune/pdelab/localoperator/idefault.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -82,8 +83,10 @@ namespace Dune {
      * do*Boundary flags are false, the iteration through the intersections is
      * skipped.
      */
+    template<bool linear = true>
     class LocalOperatorInterface
       : public LocalOperatorDefaultFlags
+      , public InstationaryLocalOperatorDefaultMethods<>
     {
     public:
 
@@ -99,6 +102,7 @@ namespace Dune {
       static const bool doLambdaVolumePostSkeleton = true;
       static const bool doLambdaSkeleton = true;
       static const bool doLambdaBoundary = true;
+      static const bool isLinear = linear;
 
       //////////////////////////////////////////////////////////////////////
       //
