@@ -6,6 +6,7 @@ install(FILES callswitch.hh
               darcyccfv.hh
               darcyfem.hh
               defaultimp.hh
+              dginteriorpenaltyparameter.hh
               dgnavierstokes.hh
               dgnavierstokesparameter.hh
               dgnavierstokesvelvecfem.hh
@@ -26,6 +27,7 @@ install(FILES callswitch.hh
               maxwelldg.hh
               maxwellparameter.hh
               navierstokesmass.hh
+              nonlinearconvectiondiffusionfem.hh
               numericaljacobian.hh
               numericaljacobianapply.hh
               numericalnonlinearjacobianapply.hh
