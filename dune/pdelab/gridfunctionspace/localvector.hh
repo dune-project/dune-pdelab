@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include <numeric>
 #include <dune/pdelab/gridfunctionspace/localfunctionspacetags.hh>
 
 /** \file
