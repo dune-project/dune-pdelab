@@ -34,15 +34,16 @@
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/finiteelementmap/qkdg.hh>
 
+template<bool linear = true>
 class TestNumericalJacobiansLOP
-  : public Dune::PDELab::NumericalJacobianVolume<TestNumericalJacobiansLOP>,
-    public Dune::PDELab::NumericalJacobianVolumePostSkeleton<TestNumericalJacobiansLOP>,
-    public Dune::PDELab::NumericalJacobianSkeleton<TestNumericalJacobiansLOP>,
-    public Dune::PDELab::NumericalJacobianBoundary<TestNumericalJacobiansLOP>,
-    public Dune::PDELab::NumericalJacobianApplyVolume<TestNumericalJacobiansLOP>,
-    public Dune::PDELab::NumericalJacobianApplyVolumePostSkeleton<TestNumericalJacobiansLOP>,
-    public Dune::PDELab::NumericalJacobianApplySkeleton<TestNumericalJacobiansLOP>,
-    public Dune::PDELab::NumericalJacobianApplyBoundary<TestNumericalJacobiansLOP>,
+  : public Dune::PDELab::NumericalJacobianVolume<TestNumericalJacobiansLOP<linear>>,
+    public Dune::PDELab::NumericalJacobianVolumePostSkeleton<TestNumericalJacobiansLOP<linear>>,
+    public Dune::PDELab::NumericalJacobianSkeleton<TestNumericalJacobiansLOP<linear>>,
+    public Dune::PDELab::NumericalJacobianBoundary<TestNumericalJacobiansLOP<linear>>,
+    public Dune::PDELab::NumericalJacobianApplyVolume<TestNumericalJacobiansLOP<linear>>,
+    public Dune::PDELab::NumericalJacobianApplyVolumePostSkeleton<TestNumericalJacobiansLOP<linear>>,
+    public Dune::PDELab::NumericalJacobianApplySkeleton<TestNumericalJacobiansLOP<linear>>,
+    public Dune::PDELab::NumericalJacobianApplyBoundary<TestNumericalJacobiansLOP<linear>>,
     public Dune::PDELab::LocalOperatorDefaultFlags
 {
 public:
@@ -50,6 +51,7 @@ public:
   static const bool doAlphaVolumePostSkeleton = true;
   static const bool doAlphaSkeleton = true;
   static const bool doAlphaBoundary = true;
+  static const bool isLinear = linear;
 
   template<typename EG, typename LFSU, typename X, typename LFSV,
            typename R>
@@ -123,31 +125,38 @@ int main(int argc, char** argv)
     GFS gfs(gv,fem);
     gfs.name("x_h");
 
-    // Make local operator
-    using LOP = TestNumericalJacobiansLOP;
-    LOP lop;
+    // Make linear local operator
+    using LinearLOP = TestNumericalJacobiansLOP<true>;
+    LinearLOP linear_lop;
+    // Make nonlinear local operator
+    using NonlinearLOP = TestNumericalJacobiansLOP<false>;
+    NonlinearLOP nonlinear_lop;
 
-    // Make grid operator
+    // Make grid operators from linear and nonlinear local operators
     using MBE = Dune::PDELab::istl::BCRSMatrixBackend<>;
     MBE mbe(9); // number of nonzeroes per row can be cross-checked by patternStatistics().
     using CC = typename GFS::template ConstraintsContainer<Real>::Type;
     CC cc;
-    using GO = Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC>;
-    GO go(gfs,cc,gfs,cc,lop,mbe);
+    using LinearGO = Dune::PDELab::GridOperator<GFS,GFS,LinearLOP,MBE,Real,Real,Real,CC,CC>;
+    LinearGO linear_go(gfs,cc,gfs,cc,linear_lop,mbe);
+    using NonlinearGO = Dune::PDELab::GridOperator<GFS,GFS,NonlinearLOP,MBE,Real,Real,Real,CC,CC>;
+    NonlinearGO nonlinear_go(gfs,cc,gfs,cc,nonlinear_lop,mbe);
 
     // Initialize vectors and matrices for gridoperator calls
-    typedef typename GO::Traits::Domain U;
+    typedef typename LinearGO::Traits::Domain U;
     U u(gfs,0.0);
-    using R = typename GO::Traits::Range;
+    using R = typename LinearGO::Traits::Range;
     R r(gfs);
-    using J = typename GO::Traits::Jacobian;
-    J jac(go);
+    using J = typename LinearGO::Traits::Jacobian;
+    J jac(linear_go);
 
     // Call gridoperator methods
-    go.residual(u,r);
-    go.jacobian(u,jac);
-    go.jacobian_apply(u,r);
-    go.nonlinear_jacobian_apply(u,u,r);
+    linear_go.residual(u,r);
+    linear_go.jacobian(u,jac);
+    linear_go.jacobian_apply(u,u,r,Dune::Direction::forward);
+    nonlinear_go.residual(u,r);
+    nonlinear_go.jacobian(u,jac);
+    nonlinear_go.jacobian_apply(u,u,r,Dune::Direction::forward);
 
     return 0;
   }
