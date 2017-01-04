@@ -89,6 +89,12 @@ void solvePoissonProblem()
   typedef PDELab::Experimental::GridFunctionSpace<Basis,VectorType,Constraints> GridFunctionSpace;
   GridFunctionSpace gfs(basis,con);
 
+  // Test the 'size' method
+  if (order==1 and gfs.size() != gridView.size(dim))
+      DUNE_THROW(Exception, "gfs.size() does not return the correct number!");
+  assert(gfs.size() == gfs.globalSize());
+  assert(gfs.size() == gfs.blockCount());
+
   // Container for the Dirichlet boundary conditions
   typedef typename GridFunctionSpace::template ConstraintsContainer<double>::Type C;
   C constraintsContainer;
