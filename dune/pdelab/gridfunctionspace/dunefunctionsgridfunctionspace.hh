@@ -201,6 +201,26 @@ namespace Dune {
           return _ordering;
         }
 
+        typename Traits::SizeType size() const
+        {
+          return _ordering.size();
+        }
+
+        typename Traits::SizeType blockCount() const
+        {
+          return _ordering.blockCount();
+        }
+
+        typename Traits::SizeType globalSize() const
+        {
+          return _ordering.size();
+        }
+
+        typename Traits::SizeType maxLocalSize () const
+        {
+          return _ordering.maxLocalSize();
+        }
+
         const std::string& name() const
         {
           return _name;
