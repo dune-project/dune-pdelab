@@ -761,7 +761,7 @@ namespace Dune
          newton.setParameters(param.sub("NewtonParameters"));
          \endcode
       */
-      void setParameters(Dune::ParameterTree & param)
+      void setParameters(const Dune::ParameterTree & param)
       {
         typedef typename TstV::ElementType RFType;
         if (param.hasKey("VerbosityLevel"))
