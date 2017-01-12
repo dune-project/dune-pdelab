@@ -44,13 +44,6 @@ namespace Dune{
                                               typename GO::Traits::TrialGridFunctionSpaceConstraints,
                                               typename GO::Traits::TestGridFunctionSpaceConstraints>
     {
-
-      // The GridOperator has to be a friend to modify the do{Pre,Post}Processing flags
-      template<typename, typename, typename,
-               typename, typename, typename, typename,
-               typename, typename, int>
-      friend class GridOperator;
-
     public:
 
       //! The traits class
@@ -141,14 +134,21 @@ namespace Dune{
 #endif // HAVE_TBB
 
       //! get a reference to the local operator
-      LOP &localOperator() { return *lop; }
+      LOP &localOperator()
+      {
+        return *lop;
+      }
       //! get a reference to the local operator
-      const LOP &localOperator() const { return *lop; }
+      const LOP &localOperator() const
+      {
+        return *lop;
+      }
 
       //! Notifies the local assembler about the current time of
       //! assembling. Should be called before assembling if the local
       //! operator has time dependencies.
-      void setTime(Real time_){
+      void setTime(Real time_)
+      {
         lop->setTime(time_);
       }
 

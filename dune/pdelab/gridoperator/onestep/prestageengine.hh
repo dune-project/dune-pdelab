@@ -69,12 +69,12 @@ namespace Dune{
          creates this engine
       */
       OneStepLocalPreStageAssemblerEngine(LocalAssembler & la_)
-        : BaseT(la_),
-          invalid_residual(static_cast<Residual*>(0)),
-          invalid_solutions(static_cast<Solutions*>(0)),
-          const_residual_0(invalid_residual),
-          const_residual_1(invalid_residual),
-          solutions(invalid_solutions)
+        : BaseT(la_)
+        , invalid_residual(nullptr)
+        , invalid_solutions(nullptr)
+        , const_residual_0(invalid_residual)
+        , const_residual_1(invalid_residual)
+        , solutions(invalid_solutions)
       {}
 
       //! Query methods for the global grid assembler
@@ -85,13 +85,15 @@ namespace Dune{
 
       //! Set current solution vector. Must be called before
       //! setConstResidual()! Should be called prior to assembling.
-      void setSolutions(const Solutions & solutions_){
+      void setSolutions(const Solutions & solutions_)
+      {
         solutions = &solutions_;
       }
 
       //! Set current const residual vector. Should be called prior to
       //! assembling.
-      void setConstResiduals(Residual & const_residual_0_, Residual & const_residual_1_){
+      void setConstResiduals(Residual & const_residual_0_, Residual & const_residual_1_)
+      {
         const_residual_0 = &const_residual_0_;
         const_residual_1 = &const_residual_1_;
 
@@ -107,7 +109,8 @@ namespace Dune{
 
       //! Set current const residual vector. Should be called prior to
       //! assembling.
-      void setConstResidual(Residual & const_residual_){
+      void setConstResidual(Residual & const_residual_)
+      {
         const_residual_0 = &const_residual_;
         const_residual_1 = &const_residual_;
 

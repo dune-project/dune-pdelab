@@ -60,9 +60,9 @@ namespace Dune{
       */
       OneStepLocalNonlinearJacobianApplyAssemblerEngine(LocalAssembler& local_assembler_)
         : BaseT(local_assembler_)
-        , invalid_residual(static_cast<Residual*>(0))
-        , invalid_solution(static_cast<Solution*>(0))
-        , invalid_update(static_cast<Solution*>(0))
+        , invalid_residual(nullptr)
+        , invalid_solution(nullptr)
+        , invalid_update(nullptr)
         , residual(invalid_residual), solution(invalid_solution), update(invalid_update)
       {}
 
@@ -97,7 +97,8 @@ namespace Dune{
       //! When multiple engines are combined in one assembling
       //! procedure, this method allows to reset the weights which may
       //! have been changed by the other engines.
-      void setWeights(){
+      void setWeights()
+      {
         la.child0().setWeight(b_rr * la.dt_factor0());
         la.child1().setWeight(la.dt_factor1());
       }
@@ -125,7 +126,8 @@ namespace Dune{
       }
 
       template<typename GFSU, typename GFSV>
-      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv)
+      {
         lae0->postAssembly(gfsu,gfsv);
         lae1->postAssembly(gfsu,gfsv);
       }

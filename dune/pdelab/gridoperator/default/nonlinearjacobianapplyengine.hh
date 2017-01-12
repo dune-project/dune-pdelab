@@ -85,7 +85,10 @@ namespace Dune{
       //! @}
 
       //! Public access to the wrapping local assembler
-      const LocalAssembler & localAssembler() const { return local_assembler; }
+      const LocalAssembler & localAssembler() const
+      {
+        return local_assembler;
+      }
 
       //! Trial space constraints
       const typename LocalAssembler::Traits::TrialGridFunctionSpaceConstraints& trialConstraints() const
@@ -101,21 +104,24 @@ namespace Dune{
 
       //! Set current residual vector. Should be called prior to
       //! assembling.
-      void setResidual(Residual & residual_){
+      void setResidual(Residual & residual_)
+      {
         global_rl_view.attach(residual_);
         global_rn_view.attach(residual_);
       }
 
       //! Set current solution vector. Should be called prior to
       //! assembling.
-      void setSolution(const Solution & solution_){
+      void setSolution(const Solution & solution_)
+      {
         global_sl_view.attach(solution_);
         global_sn_view.attach(solution_);
       }
 
       //! Set current solution vector. Should be called prior to
       //! assembling.
-      void setUpdate(const Solution & update_){
+      void setUpdate(const Solution & update_)
+      {
         global_zl_view.attach(update_);
         global_zn_view.attach(update_);
       }
@@ -124,7 +130,8 @@ namespace Dune{
       //! global assembler.
       //! @{
       template<typename EG, typename LFSUC, typename LFSVC>
-      void onBindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache){
+      void onBindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
+      {
         global_sl_view.bind(lfsu_cache);
         // drop operations for the linearization point if the problem is linear
         if(nonLinear)
@@ -134,13 +141,15 @@ namespace Dune{
       }
 
       template<typename EG, typename LFSVC>
-      void onBindLFSV(const EG & eg, const LFSVC & lfsv_cache){
+      void onBindLFSV(const EG & eg, const LFSVC & lfsv_cache)
+      {
         global_rl_view.bind(lfsv_cache);
         rl.assign(lfsv_cache.size(),0.0);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
-      void onBindLFSUVInside(const IG & ig, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache){
+      void onBindLFSUVInside(const IG & ig, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
+      {
         global_sl_view.bind(lfsu_cache);
         // drop operations for the linearization point if the problem is linear
         if(nonLinear)
@@ -163,7 +172,8 @@ namespace Dune{
       }
 
       template<typename IG, typename LFSVC>
-      void onBindLFSVInside(const IG & ig, const LFSVC & lfsv_cache){
+      void onBindLFSVInside(const IG & ig, const LFSVC & lfsv_cache)
+      {
         global_rl_view.bind(lfsv_cache);
         rl.assign(lfsv_cache.size(),0.0);
       }
@@ -183,13 +193,15 @@ namespace Dune{
       //! discarded
       //! @{
       template<typename EG, typename LFSVC>
-      void onUnbindLFSV(const EG & eg, const LFSVC & lfsv_cache){
+      void onUnbindLFSV(const EG & eg, const LFSVC & lfsv_cache)
+      {
         global_rl_view.add(rl);
         global_rl_view.commit();
       }
 
       template<typename IG, typename LFSVC>
-      void onUnbindLFSVInside(const IG & ig, const LFSVC & lfsv_cache){
+      void onUnbindLFSVInside(const IG & ig, const LFSVC & lfsv_cache)
+      {
         global_rl_view.add(rl);
         global_rl_view.commit();
       }
@@ -207,14 +219,16 @@ namespace Dune{
       //! Methods for loading of the local function's coefficients
       //! @{
       template<typename LFSUC>
-      void loadCoefficientsLFSUInside(const LFSUC & lfsu_s_cache){
+      void loadCoefficientsLFSUInside(const LFSUC & lfsu_s_cache)
+      {
         // drop operations for the linearization point if the problem is linear
         if(nonLinear)
           global_sl_view.read(xl);
         global_zl_view.read(zl);
       }
       template<typename LFSUC>
-      void loadCoefficientsLFSUOutside(const LFSUC & lfsu_n_cache){
+      void loadCoefficientsLFSUOutside(const LFSUC & lfsu_n_cache)
+      {
         // drop operations for the linearization point if the problem is linear
         if(nonLinear)
           global_sn_view.read(xn);
@@ -222,16 +236,19 @@ namespace Dune{
       }
       template<typename LFSUC>
       void loadCoefficientsLFSUCoupling(const LFSUC & lfsu_c_cache)
-      {DUNE_THROW(Dune::NotImplemented,"No coupling lfsu available for ");}
+      {
+        DUNE_THROW(Dune::NotImplemented,"No coupling lfsu available for ");
+      }
       //! @}
 
       //! Notifier functions, called immediately before and after assembling
       //! @{
 
-      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
-        if(local_assembler.doPostProcessing()){
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv)
+      {
+        if(local_assembler.doPostProcessing())
             Dune::PDELab::constrain_residual(*(local_assembler.pconstraintsv),global_rl_view.container());
-        }
+
       }
 
       //! @}
@@ -285,7 +302,9 @@ namespace Dune{
                                              const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                                              const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache,
                                              const LFSUC & lfsu_coupling_cache, const LFSVC & lfsv_coupling_cache)
-      {DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");}
+      {
+        DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");
+      }
 
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
