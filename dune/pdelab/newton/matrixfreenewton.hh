@@ -47,7 +47,7 @@ namespace Dune {
       }
       MatrixFreeNewton(const GridOperator& go, Solver& solver)
         : gridoperator_(go)
-        , u_(static_cast<TrialVector*>(0))
+        , u_(nullptr)
         , solver_(solver)
         , verbosity_level_(1), maxit_(40), force_iteration_(false)
         , min_linear_reduction_(1e-3), fixed_linear_reduction_(false)
@@ -383,7 +383,7 @@ namespace Dune {
                     << res_.defect << std::endl;
         }
 
-        // allocate the correction vector only one
+        // allocate the correction vector only once
         if(not z_)
           z_ = std::make_shared<TrialVector>(gridoperator_.trialGridFunctionSpace());
 
@@ -425,6 +425,9 @@ namespace Dune {
               linear_reduction_ =
                 std::min(min_linear_reduction_,res_.defect*res_.defect/(prev_defect_*prev_defect_));
           }
+
+          // store residual from previous nonlinear iteration
+          prev_defect_ = res_.defect;
 
           ios_base_all_saver restorer(std::cout); // store old ios flags
 

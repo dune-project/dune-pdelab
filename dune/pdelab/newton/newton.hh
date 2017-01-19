@@ -90,7 +90,7 @@ namespace Dune
 
       NewtonBase(const GridOperator& go)
         : gridoperator_(go)
-        , u_(0)
+        , u_(nullptr)
         , verbosity_level_(1)
         , keep_matrix_(true)
       {
@@ -138,7 +138,7 @@ namespace Dune
 
       const Result& result() const
       {
-        if (!result_valid_)
+        if (not result_valid_)
           DUNE_THROW(NewtonError,
                      "NewtonSolver::result() called before NewtonSolver::solve()");
         return this->res_;
@@ -150,7 +150,7 @@ namespace Dune
         r = 0.0;
         this->gridoperator_.residual(*this->u_, r);
         this->res_.defect = this->solver_.norm(r);
-        if (!std::isfinite(this->res_.defect))
+        if (not std::isfinite(this->res_.defect))
           DUNE_THROW(NewtonDefectError,
                      "NewtonSolver::defect(): Non-linear defect is NaN or Inf");
       }
@@ -166,7 +166,7 @@ namespace Dune
 
         ios_base_all_saver restorer(std::cout); // store old ios flags
 
-        if (!this->solver_.result().converged)
+        if (not this->solver_.result().converged)
           DUNE_THROW(NewtonLinearSolverError,
                      "NewtonSolver::linearSolve(): Linear solver did not converge "
                      "in " << this->solver_.result().iterations << " iterations");
@@ -205,7 +205,7 @@ namespace Dune
 
       try
         {
-          if(!this->r_) {
+          if(not this->r_) {
             // std::cout << "=== Setting up residual vector ..." << std::endl;
             this->r_ = std::make_shared<TestVector>(this->gridoperator_.testGridFunctionSpace());
           }
@@ -227,16 +227,16 @@ namespace Dune
                         << this->res_.defect << std::endl;
             }
 
-          if(!this->A_) {
+          if(not this->A_) {
             // std::cout << "==== Setting up jacobian matrix ... " << std::endl;
             this->A_ = std::make_shared<Matrix>(this->gridoperator_);
           }
-          if(!this->z_) {
+          if(not this->z_) {
             // std::cout << "==== Setting up correction vector ... " << std::endl;
             this->z_ = std::make_shared<TrialVector>(this->gridoperator_.trialGridFunctionSpace());
           }
 
-          while (!this->terminate())
+          while (not this->terminate())
             {
               if (this->verbosity_level_ >= 3)
                 std::cout << "  Newton iteration " << this->res_.iterations
@@ -349,7 +349,7 @@ namespace Dune
                   << "   (" << std::setprecision(4) << this->res_.elapsed << "s)"
                   << std::endl;
 
-      if(!this->keep_matrix_)
+      if(not this->keep_matrix_)
         this->A_.reset();
     } // end apply
 
