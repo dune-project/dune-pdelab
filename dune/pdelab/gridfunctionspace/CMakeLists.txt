@@ -11,6 +11,7 @@ install(FILES compositegridfunctionspace.hh
               gridfunctionspaceutilities.hh
               interpolate.hh
               lfsindexcache.hh
+              loadbalance.hh
               localfunctionspace.hh
               localfunctionspacetags.hh
               localvector.hh
