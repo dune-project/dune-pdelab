@@ -11,8 +11,7 @@
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-#include <dune/pdelab/backend/istl/vector.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/constraints/conforming.hh>
 #include <dune/pdelab/finiteelementmap/pkqkfem.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
