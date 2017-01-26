@@ -74,7 +74,6 @@
 #include <dune/pdelab/finiteelementmap/opbfem.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/finiteelementmap/qkdg.hh>
-#include <dune/pdelab/finiteelementmap/qkdggl.hh>
 #include <dune/pdelab/adaptivity/adaptivity.hh>
 #include <dune/pdelab/instationary/onestep.hh>
 #include <dune/pdelab/common/instationaryfilenamehelper.hh>
