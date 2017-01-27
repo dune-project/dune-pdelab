@@ -44,13 +44,6 @@ namespace Dune{
                                               typename GO::Traits::TrialGridFunctionSpaceConstraints,
                                               typename GO::Traits::TestGridFunctionSpaceConstraints>
     {
-
-      // The GridOperator has to be a friend to modify the do{Pre,Post}Processing flags
-      template<typename, typename, typename,
-               typename, typename, typename, typename,
-               typename, typename, int>
-      friend class GridOperator;
-
     public:
 
       //! The traits class
