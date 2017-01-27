@@ -20,6 +20,9 @@ dune_add_test(SOURCES testconstraints.cc
 dune_add_test(SOURCES testdunefunctionsgfs.cc
               CMAKE_GUARD dune-functions_FOUND)
 
+dune_add_test(SOURCES testelectrodynamic.cc
+              CMAKE_GUARD dune-alugrid_FOUND)
+
 dune_add_test(SOURCES testfunction.cc)
 
 dune_add_test(SOURCES testgridfunctionspace.cc)
