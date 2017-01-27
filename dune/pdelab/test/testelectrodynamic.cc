@@ -8,13 +8,14 @@
 #include "config.h"
 #endif
 #include <iostream>
+#include <memory>
 
 // #include <dune/stuff/common/disable_warnings.hh>
 
 #include <dune/common/parallel/mpihelper.hh> // An initializer of MPI
 #include <dune/common/exceptions.hh>         // We use exceptions
 
-#include <dune/grid/alugrid.hh>
+#include <dune/alugrid/grid.hh>
 #include <dune/grid/io/file/gmshreader.hh>
 #include <dune/grid/common/gridinfo.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
@@ -33,13 +34,14 @@
 
 #include <dune/istl/matrixmarket.hh>
 // #include <dune/stuff/common/disable_warnings.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istlmatrixbackend.hh>
-#include <dune/pdelab/backend/istlsolverbackend.hh>
+// #include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
+// #include <dune/pdelab/backend/istlmatrixbackend.hh>
+// #include <dune/pdelab/backend/istlsolverbackend.hh>
 
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/backend/seqistlsolverbackend.hh>
+// #include <dune/pdelab/backend/seqistlsolverbackend.hh>
 #include <dune/pdelab/stationary/linearproblem.hh>
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
@@ -243,7 +245,7 @@ int main(int argc, char** argv) {
     typedef Dune::PDELab::ConformingDirichletConstraints CON;
     // typedef Dune::PDELab::NoConstraints CON;
 
-    typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+    typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
     typedef Dune::PDELab::GridFunctionSpace<GV, FiniteElementMap, CON, VBE>
     GFS;
 
@@ -265,7 +267,7 @@ int main(int argc, char** argv) {
     LocaloperatorS localoperatorS(mu);
     LocaloperatorT localoperatorT(eps);
     LocaloperatorFull localoperatorFull(eps, mu, 3e7, meshinfo);
-    typedef Dune::PDELab::ISTLMatrixBackend MBE;
+    typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
     typedef Dune::PDELab::GridOperator<GFS, GFS, LocaloperatorS, MBE,
                                        double, double, double, CC, CC> GOS;
     typedef Dune::PDELab::GridOperator<GFS, GFS, LocaloperatorT, MBE,
@@ -273,9 +275,10 @@ int main(int argc, char** argv) {
     typedef Dune::PDELab::GridOperator<GFS, GFS, LocaloperatorFull, MBE,
                                        double, double, double, CC,
                                        CC> GOFull;
-    GOS goS(gfs, cc, gfs, cc, localoperatorS);
-    GOT goT(gfs, cc, gfs, cc, localoperatorT);
-    GOFull goFull(gfs, cc, gfs, cc, localoperatorFull);
+    MBE mbe(4);  // the diagonal plus 3 neighbor elements
+    GOS goS(gfs, cc, gfs, cc, localoperatorS, mbe);
+    GOT goT(gfs, cc, gfs, cc, localoperatorT, mbe);
+    GOFull goFull(gfs, cc, gfs, cc, localoperatorFull, mbe);
 
     typedef GOS::Traits::Domain US;
     typedef GOT::Traits::Domain UT;
@@ -298,9 +301,9 @@ int main(int argc, char** argv) {
     // get rhs:
     GOFull::Range rhs(gfs);
     goFull.residual(uFull, rhs);
-    GOS::Jacobian::Container matrixS(jS.base());
-    GOT::Jacobian::Container matrixT(jT.base());
-    GOFull::Jacobian::Container matrixFull(jFull.base());
+    auto matrixS = Dune::PDELab::Backend::native(jS);
+    auto matrixT = Dune::PDELab::Backend::native(jT);
+    auto matrixFull = Dune::PDELab::Backend::native(jFull);
 
     Dune::storeMatrixMarket(matrixS, "matrixS.mtx");
     Dune::storeMatrixMarket(matrixT, "matrixT.mtx");
@@ -319,14 +322,15 @@ int main(int argc, char** argv) {
 
     for (double frequency = 1e6; frequency < 3e8; frequency *= 1.05) {
       LocaloperatorFull localoperatorFull2(eps, mu, frequency, meshinfo);
-      GOFull goFull2(gfs, cc, gfs, cc, localoperatorFull2);
+      GOFull goFull2(gfs, cc, gfs, cc, localoperatorFull2, mbe);
       U u(gfs, 0);
       SLP slp(goFull2, ls, u, 1e-10);
       slp.apply();
       DGF udgf(gfs, u);
       Dune::VTKWriter<GV> myvtkwriter(gv, Dune::VTK::nonconforming);
-      myvtkwriter.addVertexData(
-          new Dune::PDELab::VTKGridFunctionAdapter<DGF>(udgf, "solution"));
+      myvtkwriter.addVertexData
+        (std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >
+         (udgf, "solution"));
       myvtkwriter.write(
           "vtkout_" + boost::lexical_cast<std::string>((int)frequency),
           Dune::VTK::appendedraw);
