@@ -91,8 +91,8 @@ public:
 
   Electrodynamic_Full(const Eps& eps, const Mu& mu, double frequency,
                       const MeshInfo& m, int qorder = 2)
-    : edyn_t_lop_(eps, qorder)
-    , edyn_s_lop_(mu, qorder)
+    : edyn_s_lop_(mu, qorder)
+    , edyn_t_lop_(eps, qorder)
     , meshinfo_(m)
     , frequency_(frequency) {
     // empty
@@ -121,7 +121,6 @@ public:
     BasisTraits;
 
     typedef typename BasisTraits::DomainField DF;
-    typedef typename BasisTraits::DomainLocal DomainLocal;
 
     typedef typename BasisTraits::RangeField RF;
     typedef typename BasisTraits::Range Range;
