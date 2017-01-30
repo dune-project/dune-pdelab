@@ -217,6 +217,7 @@ int main(int argc, char** argv) {
 
     // here we start something real:
 
+    std::string nameprefix = "testelectrodynamic";
     std::string meshfilename = "mesh.msh";
     if(argc >= 2)
       meshfilename = argv[1];
@@ -308,9 +309,9 @@ int main(int argc, char** argv) {
     auto matrixT = Dune::PDELab::Backend::native(jT);
     auto matrixFull = Dune::PDELab::Backend::native(jFull);
 
-    Dune::storeMatrixMarket(matrixS, "matrixS.mtx");
-    Dune::storeMatrixMarket(matrixT, "matrixT.mtx");
-    Dune::storeMatrixMarket(matrixFull, "matrixFull.mtx");
+    Dune::storeMatrixMarket(matrixS,    nameprefix + "_matrixS.mtx");
+    Dune::storeMatrixMarket(matrixT,    nameprefix + "_matrixT.mtx");
+    Dune::storeMatrixMarket(matrixFull, nameprefix + "_matrixFull.mtx");
 
     // now solve a problem
     typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
@@ -335,7 +336,7 @@ int main(int argc, char** argv) {
         (std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >
          (udgf, "solution"));
       myvtkwriter.write(
-          "vtkout_" + boost::lexical_cast<std::string>((int)frequency),
+          nameprefix + "_" + boost::lexical_cast<std::string>((int)frequency),
           Dune::VTK::appendedraw);
     }
 
