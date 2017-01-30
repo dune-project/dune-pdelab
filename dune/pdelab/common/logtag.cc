@@ -145,6 +145,7 @@ namespace Dune {
         return s;
       }
 
+#if HAVE_MPI
       std::ostream &writeRank(std::ostream &s) {
         if(rank() < 0)
           return s << '?';
@@ -159,6 +160,7 @@ namespace Dune {
         s.fill(fill);
         return s;
       }
+#endif
 
       void writeSeconds(std::ostream &s, TimeSpec seconds, std::size_t width) {
         Dune::ios_base_all_saver saver(s);
