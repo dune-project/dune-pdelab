@@ -12,6 +12,7 @@
 
 #include <math.h>
 
+#include <dune/common/debugstream.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/ios_state.hh>
 #include <dune/common/timer.hh>
@@ -39,6 +40,8 @@ namespace Dune
   template<typename T>
   inline void setLinearSystemReuse(T& solver_backend, bool reuse, std::true_type)
   {
+    if (!solver_backend.getReuse() && reuse)
+      dwarn << "WARNING: Newton needed to override your choice to reuse the linear system in order to work!" << std::endl;
     solver_backend.setReuse(reuse);
   }
 
