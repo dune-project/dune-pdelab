@@ -217,6 +217,10 @@ int main(int argc, char** argv) {
 
     // here we start something real:
 
+    std::string meshfilename = "mesh.msh";
+    if(argc >= 2)
+      meshfilename = argv[1];
+
     // create the grid
     const int dim = 2;
     typedef Dune::ALUGrid<dim, dim, Dune::simplex, Dune::conforming>
@@ -224,7 +228,7 @@ int main(int argc, char** argv) {
 
     MeshInfo meshinfo;
     Dune::shared_ptr<GridType> mygrid(Dune::GmshReader<GridType>::read(
-        "mesh.msh", meshinfo.boundary_id_to_physical_entity,
+        meshfilename, meshinfo.boundary_id_to_physical_entity,
         meshinfo.element_index_to_physical_entity));
     Dune::gridinfo(*mygrid);
 
