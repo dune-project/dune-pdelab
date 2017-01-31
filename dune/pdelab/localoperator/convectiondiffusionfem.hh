@@ -1,4 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONFEM_HH
 #define DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONFEM_HH
 
@@ -1004,8 +1004,6 @@ namespace Dune {
 
     };
 
-
-
-  }
-}
+  } // end namespace PDELab
+} // end namespace Dune
 #endif // DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONFEM_HH
