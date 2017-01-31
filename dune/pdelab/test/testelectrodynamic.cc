@@ -13,16 +13,12 @@
 #endif
 
 #include <iostream>
-// #include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>
 
-// #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/parallel/mpihelper.hh>
-
-// #include <dune/localfunctions/common/interfaceswitch.hh>
 
 #include <dune/grid/common/gridinfo.hh>
 #include <dune/grid/io/file/gmshreader.hh>
@@ -31,13 +27,7 @@
 
 #include <dune/alugrid/grid.hh>
 
-// #include <dune/istl/bvector.hh>
-// #include <dune/istl/io.hh>
 #include <dune/istl/matrixmarket.hh>
-// #include <dune/istl/operators.hh>
-// #include <dune/istl/preconditioners.hh>
-// #include <dune/istl/solvers.hh>
-// #include <dune/istl/superlu.hh>
 
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/istl.hh>
