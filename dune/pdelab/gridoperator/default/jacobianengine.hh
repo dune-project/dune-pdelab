@@ -63,7 +63,7 @@ namespace Dune{
          creates this engine
       */
       DefaultLocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(local_assembler_.lop),
+        : local_assembler(local_assembler_), lop(local_assembler_.localOperator()),
           al_view(al,1.0),
           al_sn_view(al_sn,1.0),
           al_ns_view(al_ns,1.0),
@@ -215,7 +215,7 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
-        al_view.setWeight(local_assembler.weight);
+        al_view.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
           jacobian_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),al_view);
       }
@@ -224,10 +224,10 @@ namespace Dune{
       void assembleUVSkeleton(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                               const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
-        al_view.setWeight(local_assembler.weight);
-        al_sn_view.setWeight(local_assembler.weight);
-        al_ns_view.setWeight(local_assembler.weight);
-        al_nn_view.setWeight(local_assembler.weight);
+        al_view.setWeight(local_assembler.weight());
+        al_sn_view.setWeight(local_assembler.weight());
+        al_ns_view.setWeight(local_assembler.weight());
+        al_nn_view.setWeight(local_assembler.weight());
 
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
           jacobian_skeleton(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),lfsu_n_cache.localFunctionSpace(),xn,lfsv_n_cache.localFunctionSpace(),al_view,al_sn_view,al_ns_view,al_nn_view);
@@ -236,7 +236,7 @@ namespace Dune{
       template<typename IG, typename LFSUC, typename LFSVC>
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
-        al_view.setWeight(local_assembler.weight);
+        al_view.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
           jacobian_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),al_view);
       }
@@ -258,7 +258,7 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
-        al_view.setWeight(local_assembler.weight);
+        al_view.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
           jacobian_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),al_view);
       }
