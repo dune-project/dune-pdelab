@@ -60,21 +60,23 @@ namespace Dune{
       */
       OneStepLocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
         : BaseT(local_assembler_),
-          invalid_jacobian(static_cast<Jacobian*>(0)),
-          invalid_solution(static_cast<Solution*>(0)),
+          invalid_jacobian(nullptr),
+          invalid_solution(nullptr),
           jacobian(invalid_jacobian), solution(invalid_solution)
       {}
 
 
       //! Set current solution vector. Must be called before
       //! setResidual(). Should be called prior to assembling.
-      void setSolution(const Solution & solution_){
+      void setSolution(const Solution & solution_)
+      {
         solution = &solution_;
       }
 
       //! Set current residual vector. Should be called prior to
       //! assembling.
-      void setJacobian(Jacobian & jacobian_){
+      void setJacobian(Jacobian & jacobian_)
+      {
         jacobian = &jacobian_;
 
         assert(solution != invalid_solution);
@@ -87,7 +89,8 @@ namespace Dune{
       //! When multiple engines are combined in one assembling
       //! procedure, this method allows to reset the weights which may
       //! have been changed by the other engines.
-      void setWeights(){
+      void setWeights()
+      {
         la.la0.setWeight(b_rr * la.dt_factor0);
         la.la1.setWeight(la.dt_factor1);
       }
@@ -114,7 +117,8 @@ namespace Dune{
       }
 
       template<typename GFSU, typename GFSV>
-      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv)
+      {
         lae0->postAssembly(gfsu,gfsv);
         lae1->postAssembly(gfsu,gfsv);
       }

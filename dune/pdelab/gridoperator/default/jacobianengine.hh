@@ -63,7 +63,8 @@ namespace Dune{
          creates this engine
       */
       DefaultLocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(local_assembler_.localOperator()),
+        : local_assembler(local_assembler_),
+          lop(local_assembler_.localOperator()),
           al_view(al,1.0),
           al_sn_view(al_sn,1.0),
           al_ns_view(al_ns,1.0),
@@ -87,7 +88,10 @@ namespace Dune{
       //! @}
 
       //! Public access to the wrapping local assembler
-      const LocalAssembler & localAssembler() const { return local_assembler; }
+      const LocalAssembler & localAssembler() const
+      {
+        return local_assembler;
+      }
 
       //! Trial space constraints
       const typename LocalAssembler::Traits::TrialGridFunctionSpaceConstraints& trialConstraints() const
@@ -103,7 +107,8 @@ namespace Dune{
 
       //! Set current residual vector. Should be called prior to
       //! assembling.
-      void setJacobian(Jacobian & jacobian_){
+      void setJacobian(Jacobian & jacobian_)
+      {
         global_a_ss_view.attach(jacobian_);
         global_a_sn_view.attach(jacobian_);
         global_a_ns_view.attach(jacobian_);
@@ -112,7 +117,8 @@ namespace Dune{
 
       //! Set current solution vector. Should be called prior to
       //! assembling.
-      void setSolution(const Solution & solution_){
+      void setSolution(const Solution & solution_)
+      {
         global_s_s_view.attach(solution_);
         global_s_n_view.attach(solution_);
       }
@@ -121,7 +127,8 @@ namespace Dune{
       //! global assembler.
       //! @{
       template<typename EG, typename LFSUC, typename LFSVC>
-      void onBindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache){
+      void onBindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
+      {
         global_s_s_view.bind(lfsu_cache);
         xl.resize(lfsu_cache.size());
         global_a_ss_view.bind(lfsv_cache,lfsu_cache);
@@ -149,7 +156,8 @@ namespace Dune{
       //! discarded
       //! @{
       template<typename EG, typename LFSUC, typename LFSVC>
-      void onUnbindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache){
+      void onUnbindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
+      {
         local_assembler.scatter_jacobian(al,global_a_ss_view,false);
       }
 
@@ -168,21 +176,26 @@ namespace Dune{
       //! Methods for loading of the local function's coefficients
       //! @{
       template<typename LFSUC>
-      void loadCoefficientsLFSUInside(const LFSUC & lfsu_cache){
+      void loadCoefficientsLFSUInside(const LFSUC & lfsu_cache)
+      {
         global_s_s_view.read(xl);
       }
       template<typename LFSUC>
-      void loadCoefficientsLFSUOutside(const LFSUC & lfsu_n_cache){
+      void loadCoefficientsLFSUOutside(const LFSUC & lfsu_n_cache)
+      {
         global_s_n_view.read(xn);
       }
       template<typename LFSUC>
       void loadCoefficientsLFSUCoupling(const LFSUC & lfsu_c_cache)
-      {DUNE_THROW(Dune::NotImplemented,"No coupling lfsu_cache available for ");}
+      {
+        DUNE_THROW(Dune::NotImplemented,"No coupling lfsu_cache available for ");
+      }
       //! @}
 
       //! Notifier functions, called immediately before and after assembling
       //! @{
-      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv)
+      {
         Jacobian& jacobian = global_a_ss_view.container();
         global_s_s_view.detach();
         global_s_n_view.detach();
@@ -191,9 +204,9 @@ namespace Dune{
         global_a_ns_view.detach();
         global_a_nn_view.detach();
 
-        if(local_assembler.doPostProcessing()){
+        if(local_assembler.doPostProcessing())
           local_assembler.handle_dirichlet_constraints(gfsv,jacobian);
-        }
+
       }
       //! @}
 
@@ -246,14 +259,18 @@ namespace Dune{
                                              const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                                              const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache,
                                              const LFSUC & lfsu_coupling_cache, const LFSVC & lfsv_coupling_cache)
-      {DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");}
+      {
+        DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");
+      }
 
       template<typename IG, typename LFSVC>
       static void assembleVEnrichedCoupling(const IG & ig,
                                             const LFSVC & lfsv_s_cache,
                                             const LFSVC & lfsv_n_cache,
                                             const LFSVC & lfsv_coupling_cache)
-      {DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");}
+      {
+        DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");
+      }
 
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)

@@ -52,13 +52,15 @@ namespace Dune{
          creates this engine
       */
       OneStepLocalPatternAssemblerEngine(const LocalAssembler & la_)
-        : BaseT(la_),
-          invalid_pattern(static_cast<Pattern*>(0)), pattern(invalid_pattern)
+        : BaseT(la_)
+        , invalid_pattern(nullptr)
+        , pattern(invalid_pattern)
       {}
 
       //! Set current residual vector. Should be called prior to
       //! assembling.
-      void setPattern(Pattern & pattern_){
+      void setPattern(Pattern & pattern_)
+      {
 
         // Set pointer to global pattern
         pattern = &pattern_;
@@ -71,7 +73,8 @@ namespace Dune{
 
       //! @name Notification functions
       //! @{
-      void preAssembly(){
+      void preAssembly()
+      {
         implicit = la.osp_method->implicit();
 
         lae0->preAssembly();
@@ -79,7 +82,8 @@ namespace Dune{
       }
 
       template<typename GFSU, typename GFSV>
-      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv)
+      {
         lae0->postAssembly(gfsu,gfsv);
         lae1->postAssembly(gfsu,gfsv);
       }

@@ -1,4 +1,5 @@
-
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
+// vi: set et ts=2 sw=2 sts=2:
 #ifndef DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
 #define DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
 
@@ -56,7 +57,8 @@ namespace Dune{
       //! @}
 
       template <typename MFT>
-      struct MatrixContainer{
+      struct MatrixContainer
+      {
         typedef Jacobian Type;
       };
 
@@ -75,7 +77,7 @@ namespace Dune{
           local_assembler(la0,la1, const_residual)
       {
         GO0::setupGridOperators(std::tie(go0_,go1_));
-        if(!implicit)
+        if(not implicit)
           local_assembler.setDTAssemblingMode(LocalAssembler::DoNotAssembleDT);
       }
 
@@ -84,13 +86,13 @@ namespace Dune{
       //! (zero-th order time derivative).
       void divideMassTermByDeltaT()
       {
-        if(!implicit)
+        if(not implicit)
           DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
         local_assembler.setDTAssemblingMode(LocalAssembler::DivideOperator1ByDT);
       }
       void multiplySpatialTermByDeltaT()
       {
-        if(!implicit)
+        if(not implicit)
           DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
         local_assembler.setDTAssemblingMode(LocalAssembler::MultiplyOperator0ByDT);
       }
@@ -124,12 +126,16 @@ namespace Dune{
       LocalAssembler & localAssembler() const { return local_assembler; }
 
       //! Fill pattern of jacobian matrix
-      void fill_pattern(Pattern & p) const {
-        if(implicit){
+      void fill_pattern(Pattern & p) const
+      {
+        if(implicit)
+        {
           typedef typename LocalAssembler::LocalPatternAssemblerEngine PatternEngine;
           PatternEngine & pattern_engine = local_assembler.localPatternAssemblerEngine(p);
           global_assembler.assemble(pattern_engine);
-        } else {
+        }
+        else
+        {
           typedef typename LocalAssembler::LocalExplicitPatternAssemblerEngine PatternEngine;
           PatternEngine & pattern_engine = local_assembler.localExplicitPatternAssemblerEngine(p);
           global_assembler.assemble(pattern_engine);
@@ -137,8 +143,10 @@ namespace Dune{
       }
 
       //! Assemble constant part of residual
-      void preStage(unsigned int stage, const std::vector<Domain*> & x){
-        if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
+      void preStage(unsigned int stage, const std::vector<Domain*> & x)
+      {
+        if(not implicit)
+          DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
 
         typedef typename LocalAssembler::LocalPreStageAssemblerEngine PreStageEngine;
         local_assembler.setStage(stage);
@@ -148,8 +156,10 @@ namespace Dune{
       }
 
       //! Assemble residual
-      void residual(const Domain & x, Range & r) const {
-        if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
+      void residual(const Domain & x, Range & r) const
+      {
+        if(not implicit)
+          DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
 
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
         ResidualEngine & residual_engine = local_assembler.localResidualAssemblerEngine(r,x);
@@ -158,8 +168,10 @@ namespace Dune{
       }
 
       //! Assemble jacobian
-      void jacobian(const Domain & x, Jacobian & a) const {
-        if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
+      void jacobian(const Domain & x, Jacobian & a) const
+      {
+        if(not implicit)
+          DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
 
         typedef typename LocalAssembler::LocalJacobianAssemblerEngine JacobianEngine;
         JacobianEngine & jacobian_engine = local_assembler.localJacobianAssemblerEngine(a,x);
@@ -171,7 +183,8 @@ namespace Dune{
       void explicit_jacobian_residual(unsigned int stage, const std::vector<Domain*> & x,
                                       Jacobian & a, Range & r1, Range & r0)
       {
-        if(implicit){DUNE_THROW(Dune::Exception,"This function should not be called in implicit mode");}
+        if(not implicit)
+          DUNE_THROW(Dune::Exception,"This function should not be called in implicit mode");
 
         local_assembler.setStage(stage);
 

@@ -34,7 +34,6 @@ namespace Dune{
                                               typename GO::Traits::TrialGridFunctionSpaceConstraints,
                                               typename GO::Traits::TestGridFunctionSpaceConstraints>
     {
-
     public:
 
       //! The traits class
@@ -76,7 +75,7 @@ namespace Dune{
       typedef DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalJacobianApplyAssemblerEngine;
       typedef DefaultLocalNonlinearJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalNonlinearJacobianApplyAssemblerEngine;
 
-      // friend declerations such that engines are able to call scatter_jacobian() and add_entry() from base class
+      // friend declarations such that engines are able to call scatter_jacobian() and add_entry() from base class
       friend class DefaultLocalPatternAssemblerEngine<DefaultLocalAssembler>;
       friend class DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler>;
       //! @}
@@ -116,7 +115,8 @@ namespace Dune{
       //! Notifies the local assembler about the current time of
       //! assembling. Should be called before assembling if the local
       //! operator has time dependencies.
-      void setTime(Real time_){
+      void setTime(Real time_)
+      {
         lop_.setTime(time_);
       }
 

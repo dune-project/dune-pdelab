@@ -235,7 +235,8 @@ namespace Dune{
       }
 
 
-      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv)
+      {
         post_border_pattern_assembly(std::integral_constant<bool,LocalAssembler::isNonOverlapping>(),
                                      gfsu,
                                      gfsv);
