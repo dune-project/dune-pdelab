@@ -35,12 +35,6 @@ namespace Dune{
                                               typename GO::Traits::TestGridFunctionSpaceConstraints>
     {
 
-      // The GridOperator has to be a friend to modify the do{Pre,Post}Processing flags
-      template<typename, typename, typename,
-               typename, typename, typename, typename,
-               typename, typename, int>
-      friend class GridOperator;
-
     public:
 
       //! The traits class
@@ -91,7 +85,7 @@ namespace Dune{
 
       //! Constructor with empty constraints
       DefaultLocalAssembler (LOP & lop_, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
-        : lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
+        : lop(lop_),  weight(1.0), doPreProcessing_(true), doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
         , jacobian_apply_engine(*this)
         , nonlinear_jacobian_apply_engine(*this)
@@ -102,7 +96,7 @@ namespace Dune{
       DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_,
                              shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : Base(cu_, cv_),
-          lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
+          lop(lop_),  weight(1.0), doPreProcessing_(true), doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
         , jacobian_apply_engine(*this)
         , nonlinear_jacobian_apply_engine(*this)
@@ -209,14 +203,26 @@ namespace Dune{
       static bool doPatternVolumePostSkeleton()  { return LOP::doPatternVolumePostSkeleton; }
       //! @}
 
+      //! Query whether to do preprocessing in the engines
+      /**
+       * This method is used by the engines.
+       */
+      bool doPreProcessing() const { return doPreProcessing_; }
+
       //! This method allows to set the behavior with regard to any
       //! preprocessing within the engines. It is called by the
       //! setupGridOperators() method of the GridOperator and should
       //! not be called directly.
       void preProcessing(bool v)
       {
-        doPreProcessing = v;
+        doPreProcessing_ = v;
       }
+
+      //! Query whether to do postprocessing in the engines
+      /**
+       * This method is used by the engines.
+       */
+      bool doPostProcessing() const { return doPostProcessing_; }
 
       //! This method allows to set the behavior with regard to any
       //! postprocessing within the engines. It is called by the
@@ -224,7 +230,7 @@ namespace Dune{
       //! not be called directly.
       void postProcessing(bool v)
       {
-        doPostProcessing = v;
+        doPostProcessing_ = v;
       }
 
     private:
@@ -237,11 +243,11 @@ namespace Dune{
 
       //! Indicates whether this local operator has to perform pre
       //! processing
-      bool doPreProcessing;
+      bool doPreProcessing_;
 
       //! Indicates whether this local operator has to perform post
       //! processing
-      bool doPostProcessing;
+      bool doPostProcessing_;
 
       //! The engine member objects
       //! @{
