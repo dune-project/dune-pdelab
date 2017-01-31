@@ -35,11 +35,8 @@ namespace Dune {
      * \tparam TP model of ConvectionDiffusionParameterInterface
      */
     template<typename TP>
-    class ConvectionDiffusionCCFV
-      :
-      // public NumericalJacobianSkeleton<ConvectionDiffusionCCFV<TP> >,
-      // public NumericalJacobianBoundary<ConvectionDiffusionCCFV<TP> >,
-      // public NumericalJacobianVolume<ConvectionDiffusionCCFV<TP> >,
+    class ConvectionDiffusionCCFV :
+      public Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionCCFV<TP> >,
       public FullSkeletonPattern,
       public FullVolumePattern,
       public LocalOperatorDefaultFlags,
@@ -60,23 +57,35 @@ namespace Dune {
       enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = false };
 
-      ConvectionDiffusionCCFV (TP& param_) : param(param_)
+      ConvectionDiffusionCCFV (TP& param_)
+        : Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionCCFV<TP> >(1.0e-7)
+        , param(param_)
       {}
 
       // volume integral depending on test and ansatz functions
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
+        // get cell
+        const auto& cell = eg.entity();
+
         // cell center
         auto geo = eg.geometry();
         auto ref_el = referenceElement(geo);
         auto local_inside = ref_el.position(0,0);
 
         // evaluate reaction term
-        auto c = param.c(eg.entity(),local_inside);
+        auto c = param.c(cell,local_inside);
 
         // and accumulate
         r.accumulate(lfsu,0,(c*x(lfsu,0))*geo.volume());
+      }
+
+      // apply jacobian of volume term
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
+      {
+        alpha_volume(eg,lfsu,x,lfsv,y);
       }
 
       // jacobian of volume term
@@ -84,13 +93,16 @@ namespace Dune {
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
       {
+        // get cell
+        const auto& cell = eg.entity();
+
         // cell center
         auto geo = eg.geometry();
         auto ref_el = referenceElement(geo);
         auto local_inside = ref_el.position(0,0);
 
         // evaluate reaction term
-        auto c = param.c(eg.entity(),local_inside);
+        auto c = param.c(cell,local_inside);
 
         // and accumulate
         mat.accumulate(lfsu,0,lfsu,0,c*geo.volume());
@@ -167,6 +179,16 @@ namespace Dune {
         r_n.accumulate(lfsu_n,0,-(u_upwind*vn)*face_volume-k_avg*(x_s(lfsu_s,0)-x_n(lfsu_n,0))*face_volume/distance);
       }
 
+      // apply jacobian of skeleton term
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      void jacobian_apply_skeleton (const IG& ig,
+                                    const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                    const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+                                    Y& y_s, Y& y_n) const
+      {
+        alpha_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,y_s,y_n);
+      }
+
       template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
       void jacobian_skeleton (const IG& ig,
                               const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
@@ -230,7 +252,7 @@ namespace Dune {
         global_inside -= global_outside;
         auto distance = global_inside.two_norm();
 
-        // contribution to residual on inside element, other residual is computed by symmetric call
+        // contribution to jacobians on inside element and outside element for test and trial function
         mat_ss.accumulate(lfsu_s,0,lfsu_s,0,   k_avg*face_volume/distance );
         mat_ns.accumulate(lfsu_n,0,lfsu_s,0,  -k_avg*face_volume/distance );
         mat_sn.accumulate(lfsu_s,0,lfsu_n,0,  -k_avg*face_volume/distance );
@@ -253,7 +275,10 @@ namespace Dune {
       void alpha_volume_post_skeleton(const EG& eg, const LFSU& lfsu, const X& x,
                                       const LFSV& lfsv, R& r) const
       {
-        if (!first_stage) return; // time step calculation is only done in first stage
+        if (not first_stage) return; // time step calculation is only done in first stage
+
+        // get cell
+        const auto& cell = eg.entity();
 
         // cell center
         auto geo = eg.geometry();
@@ -261,7 +286,7 @@ namespace Dune {
         auto local_inside = ref_el.position(0,0);
 
         // compute optimal dt for this cell
-        auto cellcapacity = param.d(eg.entity(),local_inside)*geo.volume();
+        auto cellcapacity = param.d(cell,local_inside)*geo.volume();
         auto celldt = cellcapacity/(cellinflux+1E-30);
         dtmin = std::min(dtmin,celldt);
       }
@@ -418,7 +443,7 @@ namespace Dune {
             tensor_inside.mv(n_F,An_F);
             auto k_inside = n_F*An_F;
 
-            // contribution to residual on inside element
+            // contribution to jacobian on inside element for test and trial function
             mat_ss.accumulate(lfsu_s,0,lfsv_s,0, k_inside*face_volume/distance );
 
             return;
@@ -442,13 +467,16 @@ namespace Dune {
       template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
+        // get cell
+        const auto& cell = eg.entity();
+
         // cell center
         auto geo = eg.geometry();
         auto ref_el = referenceElement(geo);
         auto local_inside = ref_el.position(0,0);
 
         // evaluate source and sink term
-        auto f = param.f(eg.entity(),local_inside);
+        auto f = param.f(cell,local_inside);
 
         r.accumulate(lfsv,0,-f*geo.volume());
       }
@@ -504,9 +532,7 @@ namespace Dune {
      * \f}
      */
     template<class TP>
-    class ConvectionDiffusionCCFVTemporalOperator
-      :
-      // public NumericalJacobianApplyVolume<ConvectionDiffusionCCFVTemporalOperator<TP> >,
+    class ConvectionDiffusionCCFVTemporalOperator :
       public FullVolumePattern,
       public LocalOperatorDefaultFlags,
       public InstationaryLocalOperatorDefaultMethods<typename TP::Traits::RangeFieldType>
@@ -527,16 +553,26 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
+        // get cell
+        const auto& cell = eg.entity();
+
         // cell center
         auto geo = eg.geometry();
         auto ref_el = referenceElement(geo);
         auto local_inside = ref_el.position(0,0);
 
         // capacity term
-        auto capacity = param.d(eg.entity(),local_inside);
+        auto capacity = param.d(cell,local_inside);
 
         // residual contribution
         r.accumulate(lfsu,0,capacity*x(lfsu,0)*geo.volume());
+      }
+
+      // apply jacobian of volume term
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
+      {
+        alpha_volume(eg,lfsu,x,lfsv,y);
       }
 
       // jacobian of volume term
@@ -544,15 +580,18 @@ namespace Dune {
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
       {
+        // get cell
+        const auto& cell = eg.entity();
+
         // cell center
         auto geo = eg.geometry();
         auto ref_el = referenceElement(geo);
         auto local_inside = ref_el.position(0,0);
 
         // capacity term
-        auto capacity = param.d(eg.entity(),local_inside);
+        auto capacity = param.d(cell,local_inside);
 
-        // residual contribution
+        // jacobian contribution
         mat.accumulate(lfsu,0,lfsu,0,capacity*geo.volume());
       }
 
