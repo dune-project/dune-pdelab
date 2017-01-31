@@ -137,14 +137,21 @@ namespace Dune{
 #endif // HAVE_TBB
 
       //! get a reference to the local operator
-      LOP &localOperator() { return *lop; }
+      LOP &localOperator()
+      {
+        return *lop;
+      }
       //! get a reference to the local operator
-      const LOP &localOperator() const { return *lop; }
+      const LOP &localOperator() const
+      {
+        return *lop;
+      }
 
       //! Notifies the local assembler about the current time of
       //! assembling. Should be called before assembling if the local
       //! operator has time dependencies.
-      void setTime(Real time_){
+      void setTime(Real time_)
+      {
         lop->setTime(time_);
       }
 
