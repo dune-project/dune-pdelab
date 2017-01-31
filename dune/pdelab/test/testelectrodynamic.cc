@@ -15,6 +15,7 @@
 #include <iostream>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <dune/common/fvector.hh>
@@ -68,10 +69,11 @@ public:
   static constexpr bool doAlphaVolume    = true;
   static constexpr bool doLambdaBoundary = true;
 
-  Electrodynamic_Full(const Eps& eps, const Mu& mu, double frequency,
+  template<class Eps_, class Mu_>
+  Electrodynamic_Full(Eps_&& eps, Mu_&& mu, double frequency,
                       const MeshInfo& m, int qorder = 2)
-    : edyn_s_lop_(mu, qorder)
-    , edyn_t_lop_(eps, qorder)
+    : edyn_s_lop_(std::forward<Mu_>(mu),   qorder)
+    , edyn_t_lop_(std::forward<Eps_>(eps), qorder)
     , meshinfo_(m)
     , frequency_(frequency)
   { /* empty */ }
@@ -134,34 +136,6 @@ private:
 
   const MeshInfo& meshinfo_;
   double frequency_;
-};
-
-template <typename cdomaintype>
-struct Mu {
-  template <typename T1, typename T2, typename T3>
-  void evaluate(T1&, T2&, T3& result) const
-  {
-    // this value is the vaccuum permability mu_0 in N/A^2
-    result = 4e-7 * pi;
-  }
-
-  struct Traits {
-    typedef cdomaintype RangeType;
-  };
-};
-
-template <typename cdomaintype>
-struct Eps {
-  template <typename T1, typename T2, typename T3>
-  void evaluate(T1&, T2&, T3& result) const
-  {
-    // this value is the vaccuum permittivity eps_0 in F/m
-    result = 8.854187817e-12;
-  }
-
-  struct Traits {
-    typedef cdomaintype RangeType;
-  };
 };
 
 class BCTypeParam :
@@ -237,8 +211,15 @@ int main(int argc, char** argv) {
   using MBE = Dune::PDELab::ISTL::BCRSMatrixBackend<>;
   MBE mbe(5); // the edge itself + two adjacent elements * two other edges
 
-  Mu<double> mu;
-  Eps<double> eps;
+  // parameter functions
+  auto mu = [](const auto &elem, const auto &xl) {
+    // this value is the vaccuum permability mu_0 in N/A^2
+    return 4e-7 * pi;
+  };
+  auto eps = [](const auto &elem, const auto &xl) {
+    // this value is the vaccuum permittivity eps_0 in F/m
+    return 8.854187817e-12;
+  };
 
   // build matrices and write them out for analysis
   auto writeMatrix = [&](auto &&lo, const std::string &fname) {
@@ -265,17 +246,17 @@ int main(int argc, char** argv) {
     Dune::storeMatrixMarket(Dune::PDELab::Backend::native(j), fname);
   };
 
-  using LocaloperatorS    = Dune::PDELab::Electrodynamic_S<Mu<double> >;
-  writeMatrix(LocaloperatorS(mu),  nameprefix + "_matrixS.mtx");
+  using Dune::PDELab::makeLocalOperatorEdynS;
+  writeMatrix(makeLocalOperatorEdynS(mu),  nameprefix + "_matrixS.mtx");
 
-  using LocaloperatorT    = Dune::PDELab::Electrodynamic_T<Eps<double> >;
-  writeMatrix(LocaloperatorT(eps), nameprefix + "_matrixT.mtx");
+  using Dune::PDELab::makeLocalOperatorEdynT;
+  writeMatrix(makeLocalOperatorEdynT(eps), nameprefix + "_matrixT.mtx");
 
-  using LocaloperatorFull = Electrodynamic_Full<Eps<double>, Mu<double> >;
-  writeMatrix(LocaloperatorFull(eps, mu, 3e7, meshinfo),
+  using LocalOperatorFull = Electrodynamic_Full<decltype(eps), decltype(mu)>;
+  writeMatrix(LocalOperatorFull(eps, mu, 3e7, meshinfo),
               nameprefix + "_matrix_" + std::to_string((int)3e7) + ".mtx");
 
-  using GOFull = Dune::PDELab::GridOperator<GFS, GFS, LocaloperatorFull, MBE,
+  using GOFull = Dune::PDELab::GridOperator<GFS, GFS, LocalOperatorFull, MBE,
                                             double, double, double, CC, CC>;
 
   // now solve a problem
@@ -290,8 +271,8 @@ int main(int argc, char** argv) {
   const auto& gv = mygrid->leafView();
 
   auto dofreq = [&](double frequency) {
-    LocaloperatorFull localoperatorFull(eps, mu, frequency, meshinfo);
-    GOFull goFull(gfs, cc, gfs, cc, localoperatorFull, mbe);
+    LocalOperatorFull localOperatorFull(eps, mu, frequency, meshinfo);
+    GOFull goFull(gfs, cc, gfs, cc, localOperatorFull, mbe);
     U u(gfs, 0);
     SLP slp(goFull, ls, u, 1e-10);
     slp.apply();
