@@ -84,6 +84,9 @@ namespace Dune{
       typedef FastDGLocalJacobianAssemblerEngine<FastDGLocalAssembler> LocalJacobianAssemblerEngine;
       typedef FastDGLocalJacobianApplyAssemblerEngine<FastDGLocalAssembler> LocalJacobianApplyAssemblerEngine;
       typedef FastDGLocalNonlinearJacobianApplyAssemblerEngine<FastDGLocalAssembler> LocalNonlinearJacobianApplyAssemblerEngine;
+
+      // friend declarations such that engines are able to call scatter_jacobian() and add_entry() from base class
+      friend class FastDGLocalPatternAssemblerEngine<FastDGLocalAssembler>;
       //! @}
 
       //! Constructor with empty constraints
