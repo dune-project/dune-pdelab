@@ -150,7 +150,8 @@ namespace Dune{
       //! Visitor which is called in the method setupGridOperators for
       //! each tuple element.
       template <typename GridOperatorTuple>
-      struct SetupGridOperator {
+      struct SetupGridOperator
+      {
         SetupGridOperator()
           : index(0), size(std::tuple_size<GridOperatorTuple>::value) {}
 
@@ -188,40 +189,46 @@ namespace Dune{
       }
 
       //! Fill pattern of jacobian matrix
-      void fill_pattern(Pattern & p) const {
+      void fill_pattern(Pattern & p) const
+      {
         typedef typename LocalAssembler::LocalPatternAssemblerEngine PatternEngine;
         PatternEngine & pattern_engine = local_assembler.localPatternAssemblerEngine(p);
         global_assembler.assemble(pattern_engine);
       }
 
       //! Assemble residual
-      void residual(const Domain & x, Range & r) const {
+      void residual(const Domain & x, Range & r) const
+      {
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
         ResidualEngine & residual_engine = local_assembler.localResidualAssemblerEngine(r,x);
         global_assembler.assemble(residual_engine);
       }
 
       //! Assembler jacobian
-      void jacobian(const Domain & x, Jacobian & a) const {
+      void jacobian(const Domain & x, Jacobian & a) const
+      {
         typedef typename LocalAssembler::LocalJacobianAssemblerEngine JacobianEngine;
         JacobianEngine & jacobian_engine = local_assembler.localJacobianAssemblerEngine(a,x);
         global_assembler.assemble(jacobian_engine);
       }
 
       //! Apply jacobian matrix without explicitly assembling it
-      void jacobian_apply(const Domain & z, Range & r) const {
+      void jacobian_apply(const Domain & z, Range & r) const
+      {
         typedef typename LocalAssembler::LocalJacobianApplyAssemblerEngine JacobianApplyEngine;
         JacobianApplyEngine & jacobian_apply_engine = local_assembler.localJacobianApplyAssemblerEngine(r,z);
         global_assembler.assemble(jacobian_apply_engine);
       }
 
       //! Apply jacobian matrix without explicitly assembling it
-      void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r) const {
+      void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r) const
+      {
         global_assembler.assemble(local_assembler.localNonlinearJacobianApplyAssemblerEngine(r,x,z));
       }
 
 
-      void make_consistent(Jacobian& a) const {
+      void make_consistent(Jacobian& a) const
+      {
         dof_exchanger->accumulateBorderEntries(*this,a);
       }
 

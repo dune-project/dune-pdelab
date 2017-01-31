@@ -179,7 +179,8 @@ namespace Dune{
     template<typename B,
              typename CU=EmptyTransformation,
              typename CV=EmptyTransformation>
-    class LocalAssemblerBase{
+    class LocalAssemblerBase
+    {
     public:
 
       typedef typename B::size_type SizeType;
