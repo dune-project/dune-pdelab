@@ -261,6 +261,7 @@ int main(int argc, char** argv) {
     typename GO::Range rhs(gfs);
     go.residual(u, rhs);
 
+    // TODO: native() isn't found via ADL, despite what CHANGELOG.md says
     Dune::storeMatrixMarket(Dune::PDELab::Backend::native(j), fname);
   };
 
