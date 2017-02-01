@@ -183,7 +183,7 @@ namespace Dune{
       void explicit_jacobian_residual(unsigned int stage, const std::vector<Domain*> & x,
                                       Jacobian & a, Range & r1, Range & r0)
       {
-        if(not implicit)
+        if(implicit)
           DUNE_THROW(Dune::Exception,"This function should not be called in implicit mode");
 
         local_assembler.setStage(stage);
