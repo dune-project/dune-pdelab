@@ -286,15 +286,18 @@ namespace Dune {
       }
     };
 
-    /** Spatial local operator for discontinuous Galerkin method for Maxwells Equations
+    /** \brief Spatial local operator for discontinuous Galerkin method for
+               Maxwells Equations
 
-        - \nabla \times (\mu^-1 B) + (\sigma/\epsilon) D = j
-        + \nabla \times (\eps^-1 D)                      = 0
+        \f{align*}{
+          - \nabla \times (\mu^{-1} B) + (\frac\sigma\epsilon) D &= j \\
+          + \nabla \times (\epsilon^{-1} D)                      &= 0
+        \f}
 
-        with the state vector u=(D,B) having 2*dim components
+        with the state vector \f$u=(D,B)^T\f$ having 2*dim components
 
         - Assumes that the local function space is a power space
-        with 2*dim identical components.
+          with 2*dim identical components.
         - Assumes Galerkin method, i.e. U=V
 
         \tparam T parameter class
