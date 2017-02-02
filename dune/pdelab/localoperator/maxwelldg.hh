@@ -6,6 +6,7 @@
 
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
+#include<dune/common/indices.hh>
 
 #include <dune/geometry/referenceelements.hh>
 
@@ -342,7 +343,7 @@ namespace Dune {
       {
         // Define types
         using namespace Indices;
-        using DGSpace = TypeTree::Child<LFSV,_0>;
+        using DGSpace = TypeTree::Child<LFSV,0>;
         using RF = typename DGSpace::Traits::FiniteElementType::Traits
           ::LocalBasisType::Traits::RangeFieldType;
         using size_type = typename DGSpace::Traits::SizeType;
@@ -450,7 +451,7 @@ namespace Dune {
 
         // Define types
         using namespace Indices;
-        using DGSpace = TypeTree::Child<LFSV,_0>;
+        using DGSpace = TypeTree::Child<LFSV,0>;
         using DF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType;
         using RF = typename DGSpace::Traits::FiniteElementType::
@@ -583,7 +584,7 @@ namespace Dune {
       {
         // Define types
         using namespace Indices;
-        using DGSpace = TypeTree::Child<LFSV,_0>;
+        using DGSpace = TypeTree::Child<LFSV,0>;
         using DF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType;
         using RF = typename DGSpace::Traits::FiniteElementType::
@@ -691,7 +692,7 @@ namespace Dune {
       {
         // Define types
         using namespace Indices;
-        using DGSpace = TypeTree::Child<LFSV,_0>;
+        using DGSpace = TypeTree::Child<LFSV,0>;
         using size_type = typename DGSpace::Traits::SizeType;
 
         // Get local function space that is identical for all components
@@ -809,7 +810,7 @@ namespace Dune {
       {
         // Define types
         using namespace Indices;
-        using DGSpace = TypeTree::Child<LFSV,_0>;
+        using DGSpace = TypeTree::Child<LFSV,0>;
         using RF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType;
         using size_type = typename DGSpace::Traits::SizeType;
@@ -853,7 +854,7 @@ namespace Dune {
       {
         // Define types
         using namespace Indices;
-        using DGSpace = TypeTree::Child<LFSV,_0>;
+        using DGSpace = TypeTree::Child<LFSV,0>;
         using size_type = typename DGSpace::Traits::SizeType;
 
         // Get local function space that is identical for all components
