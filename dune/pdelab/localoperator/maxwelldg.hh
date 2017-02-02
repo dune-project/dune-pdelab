@@ -298,6 +298,7 @@ namespace Dune {
 
         - Assumes that the local function space is a power space
           with 2*dim identical components.
+        - Actually assumes dim==3 in the flux computation
         - Assumes Galerkin method, i.e. U=V
 
         \tparam T parameter class
@@ -407,6 +408,8 @@ namespace Dune {
             auto factor = qp.weight() * geo.integrationElement(qp.position());
 
             Dune::FieldMatrix<RF,dim*2,dim> F;
+            static_assert(dim == 3, "Sorry, the following flux implementation "
+                          "can only work for dim == 3");
             F[0][0] = 0;            F[0][1] = -muinv*u[5];  F[0][2] = muinv*u[4];
             F[1][0] = muinv*u[5];   F[1][1] = 0;            F[1][2] = -muinv*u[3];
             F[2][0] =-muinv*u[4];   F[2][1] = muinv*u[3];   F[2][2] = 0;
