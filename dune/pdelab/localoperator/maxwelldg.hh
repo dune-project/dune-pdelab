@@ -304,6 +304,12 @@ namespace Dune {
 
         \tparam T parameter class
         \tparam FEM Finite Element Map needed to select the cache
+
+        \warning This operator cannot deal with spatially varying
+                 \f$\epsilon\f$ or \f$\mu\f$.  You will get a result, but it
+                 will contain spurious reflections.  This is a known bug, see
+                 [issue
+                 #41](https://gitlab.dune-project.org/pdelab/dune-pdelab/issues/41).
     */
     template<typename T, typename FEM>
     class DGMaxwellSpatialOperator :
