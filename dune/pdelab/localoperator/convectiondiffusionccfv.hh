@@ -151,7 +151,7 @@ namespace Dune {
         auto iplocal_s = geo_in_inside.global(face_local);
         auto b = param.b(cell_inside,iplocal_s);
         auto vn = b*n_F;
-        auto u_upwind=0;
+        RF u_upwind=0;
         if (vn>=0) u_upwind = x_s(lfsu_s,0); else u_upwind = x_n(lfsu_n,0);
 
         // cell centers in global coordinates

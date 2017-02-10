@@ -356,7 +356,7 @@ namespace Dune {
             /**********************/
 
             // evaluate uDG_s
-            auto uDG_s=0.0;
+            RF uDG_s=0.0;
             evalFunction( iplocal_s, lfsu_s, x_s, uDG_s );
 
             // integrate
