@@ -1095,7 +1095,7 @@ namespace Dune {
                   {
                     for (unsigned int j=0;j<vsize;++j) // test
                       {
-                        auto ten_sum = 1.0;
+                        RF ten_sum = 1.0;
 
                         // Assemble symmetric part for (grad u)^T
                         if(full_tensor)
