@@ -146,13 +146,15 @@ namespace Dune{
       }
 
       //! Access time at given stage
-      Real timeAtStage(int stage_){
+      Real timeAtStage(int stage_) const
+      {
         return time+osp_method->d(stage_)*dt;
       }
 
       //! Access time at given stage
-      Real timeAtStage(){
-        return time+osp_method->d(stage)*dt;
+      Real timeAtStage() const
+      {
+        return time+osp_method->d(stage_)*dt;
       }
 
       void setWeight(const Real weight){

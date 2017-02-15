@@ -144,7 +144,8 @@ namespace Dune{
         local_assembler.setStage(stage);
         PreStageEngine & prestage_engine = local_assembler.localPreStageAssemblerEngine(x);
         global_assembler.assemble(prestage_engine);
-        //Dune::printvector(std::cout,const_residual.base(),"const residual","row",4,9,1);
+        // using Dune::PDELab::Backend::native;
+        // Dune::printvector(std::cout,native(const_residual),"const residual","row",4,9,1);
       }
 
       //! Assemble residual
@@ -154,7 +155,8 @@ namespace Dune{
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
         ResidualEngine & residual_engine = local_assembler.localResidualAssemblerEngine(r,x);
         global_assembler.assemble(residual_engine);
-        //Dune::printvector(std::cout,r.base(),"residual","row",4,9,1);
+        // using Dune::PDELab::Backend::native;
+        // Dune::printvector(std::cout,native(r),"residual","row",4,9,1);
       }
 
       //! Assemble jacobian
@@ -164,7 +166,8 @@ namespace Dune{
         typedef typename LocalAssembler::LocalJacobianAssemblerEngine JacobianEngine;
         JacobianEngine & jacobian_engine = local_assembler.localJacobianAssemblerEngine(a,x);
         global_assembler.assemble(jacobian_engine);
-        //printmatrix(std::cout,a.base(),"global stiffness matrix","row",9,1);
+        // using Dune::PDELab::Backend::native;
+        // printmatrix(std::cout,native(a),"global stiffness matrix","row",9,1);
       }
 
       //! Assemble jacobian and residual simultaneously for explicit treatment
