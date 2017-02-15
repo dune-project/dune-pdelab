@@ -5,10 +5,6 @@
 
 #include <memory>
 
-#if HAVE_TBB
-#include <tbb/tbb_stddef.h>
-#endif
-
 #include <dune/common/shared_ptr.hh>
 
 #include <dune/typetree/typetree.hh>
@@ -110,31 +106,6 @@ namespace Dune{
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this), nonlinear_jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
-
-#if HAVE_TBB
-      //! Splitting constructor
-      FastDGLocalAssembler(FastDGLocalAssembler &other, tbb::split)
-        : Base(other),
-          lop(std::make_shared<LOP>(*other.lop, tbb::split())),
-          weight_(other.weight_),
-          doPreProcessing_(other.doPreProcessing_),
-          doPostProcessing_(other.doPostProcessing_),
-          // pass a dummy value here, we can do the border dof exchange only
-          // on the original pattern engine anyway
-          pattern_engine(*this,nullptr),
-          residual_engine(*this),
-          jacobian_engine(*this),
-          jacobian_apply_engine(*this),
-          nonlinear_jacobian_apply_engine(*this),
-          _reconstruct_border_entries(other._reconstruct_border_entries)
-      {}
-
-      //! join state from other local assembler
-      void join(FastDGLocalAssembler &other)
-      {
-        lop->join(*other.lop);
-      }
-#endif // HAVE_TBB
 
       //! get a reference to the local operator
       LOP &localOperator()
