@@ -26,7 +26,7 @@ namespace Dune{
       template<typename TrialConstraintsContainer, typename TestConstraintsContainer>
       bool needsConstraintsCaching(const TrialConstraintsContainer& cu, const TestConstraintsContainer& cv) const
       {
-        return cu.containsNonDirichletConstraints() || cv.containsNonDirichletConstraints();
+        return cu.containsNonDirichletConstraints() or cv.containsNonDirichletConstraints();
       }
 
       //! The type for real numbers
@@ -46,8 +46,8 @@ namespace Dune{
       OneStepExplicitLocalJacobianResidualAssemblerEngine
       (LocalAssembler & local_assembler_)
         : la(local_assembler_),
-          prestage_engine(0),
-          jacobian_engine(0)
+          prestage_engine(nullptr),
+          jacobian_engine(nullptr)
       {}
 
       void setLocalPreStageEngine(PreStageEngine & prestage_engine_)
@@ -63,65 +63,81 @@ namespace Dune{
       //! Query methods for the global grid assembler
       //! @{
       bool requireSkeleton() const
-      { return prestage_engine->requireSkeleton() ||
-          jacobian_engine->requireSkeleton(); }
+      {
+        return prestage_engine->requireSkeleton() or jacobian_engine->requireSkeleton();
+      }
       bool requireSkeletonTwoSided() const
-      { return prestage_engine->requireSkeletonTwoSided() ||
-          jacobian_engine->requireSkeletonTwoSided(); }
+      {
+        return prestage_engine->requireSkeletonTwoSided() or jacobian_engine->requireSkeletonTwoSided();
+      }
       bool requireUVVolume() const
-      { return prestage_engine->requireUVVolume() ||
-          jacobian_engine->requireUVVolume(); }
+      {
+        return prestage_engine->requireUVVolume() or jacobian_engine->requireUVVolume();
+      }
       bool requireVVolume() const
-      { return prestage_engine->requireVVolume() ||
-          jacobian_engine->requireVVolume(); }
+      {
+        return prestage_engine->requireVVolume() or jacobian_engine->requireVVolume();
+      }
       bool requireUVSkeleton() const
-      { return prestage_engine->requireUVSkeleton() ||
-          jacobian_engine->requireUVSkeleton(); }
+      {
+        return prestage_engine->requireUVSkeleton() or jacobian_engine->requireUVSkeleton();
+      }
       bool requireVSkeleton() const
-      { return prestage_engine->requireVSkeleton() ||
-          jacobian_engine->requireVSkeleton(); }
+      {
+        return prestage_engine->requireVSkeleton() or jacobian_engine->requireVSkeleton();
+      }
       bool requireUVBoundary() const
-      { return prestage_engine->requireUVBoundary() ||
-          jacobian_engine->requireUVBoundary(); }
+      {
+        return prestage_engine->requireUVBoundary() or jacobian_engine->requireUVBoundary();
+      }
       bool requireVBoundary() const
-      { return prestage_engine->requireVBoundary() ||
-          jacobian_engine->requireVBoundary(); }
+      {
+        return prestage_engine->requireVBoundary() or jacobian_engine->requireVBoundary();
+      }
       bool requireUVVolumePostSkeleton() const
-      { return prestage_engine->requireUVVolumePostSkeleton() ||
-          jacobian_engine->requireUVVolumePostSkeleton(); }
+      {
+        return prestage_engine->requireUVVolumePostSkeleton() or jacobian_engine->requireUVVolumePostSkeleton();
+      }
       bool requireVVolumePostSkeleton() const
-      { return prestage_engine->requireVVolumePostSkeleton() ||
-          jacobian_engine->requireVVolumePostSkeleton(); }
+      {
+        return prestage_engine->requireVVolumePostSkeleton() or jacobian_engine->requireVVolumePostSkeleton();
+      }
 
       //! @}
 
       //! Public access to the wrapping local assembler
-      const LocalAssembler & localAssembler() const { return la; }
+      const LocalAssembler & localAssembler() const
+      {
+        return la;
+      }
 
       //! Called immediately after binding of local function space in
       //! global assembler.
       //! @{
       template<typename EG, typename LFSU, typename LFSV>
-      void onBindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv){
-        if (prestage_engine->requireUVVolume() || prestage_engine->requireVVolume())
+      void onBindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
+      {
+        if (prestage_engine->requireUVVolume() or prestage_engine->requireVVolume())
           prestage_engine->onBindLFSUV(eg,lfsu,lfsv);
-        if (jacobian_engine->requireUVVolume() || jacobian_engine->requireVVolume())
+        if (jacobian_engine->requireUVVolume() or jacobian_engine->requireVVolume())
           jacobian_engine->onBindLFSUV(eg,lfsu,lfsv);
       }
 
       template<typename EG, typename LFSV>
-      void onBindLFSV(const EG & eg, const LFSV & lfsv){
-        if (prestage_engine->requireUVVolume() || prestage_engine->requireVVolume())
+      void onBindLFSV(const EG & eg, const LFSV & lfsv)
+      {
+        if (prestage_engine->requireUVVolume() or prestage_engine->requireVVolume())
           prestage_engine->onBindLFSV(eg,lfsv);
-        if (jacobian_engine->requireUVVolume() || jacobian_engine->requireVVolume())
+        if (jacobian_engine->requireUVVolume() or jacobian_engine->requireVVolume())
           jacobian_engine->onBindLFSV(eg,lfsv);
       }
 
       template<typename IG, typename LFSU, typename LFSV>
-      void onBindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv){
-        if (prestage_engine->requireUVVolume() || prestage_engine->requireVVolume())
+      void onBindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv)
+      {
+        if (prestage_engine->requireUVVolume() or prestage_engine->requireVVolume())
           prestage_engine->onBindLFSUVInside(ig,lfsu,lfsv);
-        if (jacobian_engine->requireUVVolume() || jacobian_engine->requireVVolume())
+        if (jacobian_engine->requireUVVolume() or jacobian_engine->requireVVolume())
           jacobian_engine->onBindLFSUVInside(ig,lfsu,lfsv);
       }
 
@@ -137,10 +153,11 @@ namespace Dune{
       }
 
       template<typename IG, typename LFSV>
-      void onBindLFSVInside(const IG & ig, const LFSV & lfsv){
-        if (prestage_engine->requireUVVolume() || prestage_engine->requireVVolume())
+      void onBindLFSVInside(const IG & ig, const LFSV & lfsv)
+      {
+        if (prestage_engine->requireUVVolume() or prestage_engine->requireVVolume())
           prestage_engine->onBindLFSVInside(ig,lfsv);
-        if (jacobian_engine->requireUVVolume() || jacobian_engine->requireVVolume())
+        if (jacobian_engine->requireUVVolume() or jacobian_engine->requireVVolume())
           jacobian_engine->onBindLFSVInside(ig,lfsv);
       }
 
@@ -161,18 +178,20 @@ namespace Dune{
       //! discarded
       //! @{
       template<typename EG, typename LFSV>
-      void onUnbindLFSV(const EG & eg, const LFSV & lfsv){
-        if (prestage_engine->requireUVVolume() || prestage_engine->requireVVolume())
+      void onUnbindLFSV(const EG & eg, const LFSV & lfsv)
+      {
+        if (prestage_engine->requireUVVolume() or prestage_engine->requireVVolume())
           prestage_engine->onUnbindLFSV(eg,lfsv);
-        if (jacobian_engine->requireUVVolume() || jacobian_engine->requireVVolume())
+        if (jacobian_engine->requireUVVolume() or jacobian_engine->requireVVolume())
           jacobian_engine->onUnbindLFSV(eg,lfsv);
       }
 
       template<typename IG, typename LFSV>
-      void onUnbindLFSVInside(const IG & ig, const LFSV & lfsv){
-        if (prestage_engine->requireUVVolume() || prestage_engine->requireVVolume())
+      void onUnbindLFSVInside(const IG & ig, const LFSV & lfsv)
+      {
+        if (prestage_engine->requireUVVolume() or prestage_engine->requireVVolume())
           prestage_engine->onUnbindLFSVInside(ig,lfsv);
-        if (jacobian_engine->requireUVVolume() || jacobian_engine->requireVVolume())
+        if (jacobian_engine->requireUVVolume() or jacobian_engine->requireVVolume())
           jacobian_engine->onUnbindLFSVInside(ig,lfsv);
       }
 
@@ -190,18 +209,18 @@ namespace Dune{
       template<typename EG, typename LFSU, typename LFSV>
       void onUnbindLFSUV(const EG& eg, const LFSU& lfsu, const LFSV& lfsv)
       {
-        if (prestage_engine->requireUVVolume() || prestage_engine->requireVVolume())
+        if (prestage_engine->requireUVVolume() or prestage_engine->requireVVolume())
           prestage_engine->onUnbindLFSUV(eg,lfsu,lfsv);
-        if (jacobian_engine->requireUVVolume() || jacobian_engine->requireVVolume())
+        if (jacobian_engine->requireUVVolume() or jacobian_engine->requireVVolume())
           jacobian_engine->onUnbindLFSUV(eg,lfsu,lfsv);
       }
 
       template<typename IG, typename LFSU, typename LFSV>
       void onUnbindLFSUVInside(const IG& ig, const LFSU& lfsu, const LFSV& lfsv)
       {
-        if (prestage_engine->requireUVVolume() || prestage_engine->requireVVolume())
+        if (prestage_engine->requireUVVolume() or prestage_engine->requireVVolume())
           prestage_engine->onUnbindLFSUVInside(ig,lfsu,lfsv);
-        if (jacobian_engine->requireUVVolume() || jacobian_engine->requireVVolume())
+        if (jacobian_engine->requireUVVolume() or jacobian_engine->requireVVolume())
           jacobian_engine->onUnbindLFSUVInside(ig,lfsu,lfsv);
       }
 
@@ -222,7 +241,8 @@ namespace Dune{
       //! Methods for loading of the local function's coefficients
       //! @{
       template<typename LFSU>
-      void loadCoefficientsLFSUInside(const LFSU & lfsu_s){
+      void loadCoefficientsLFSUInside(const LFSU & lfsu_s)
+      {
         if (prestage_engine->requireUVVolume())
           prestage_engine->loadCoefficientsLFSUInside(lfsu_s);
         if (jacobian_engine->requireUVVolume())
@@ -230,7 +250,8 @@ namespace Dune{
       }
 
       template<typename LFSU>
-      void loadCoefficientsLFSUOutside(const LFSU & lfsu_n){
+      void loadCoefficientsLFSUOutside(const LFSU & lfsu_n)
+      {
         if (prestage_engine->requireUVSkeleton())
           prestage_engine->loadCoefficientsLFSUOutside(lfsu_n);
         if (jacobian_engine->requireUVSkeleton())
@@ -248,13 +269,15 @@ namespace Dune{
       //! Notifier functions, called immediately before and after assembling
       //! @{
 
-      void preAssembly(){
+      void preAssembly()
+      {
         prestage_engine->preAssembly();
         jacobian_engine->preAssembly();
       }
 
       template<typename GFSU, typename GFSV>
-      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv)
+      {
         prestage_engine->postAssembly(gfsu,gfsv);
         jacobian_engine->postAssembly(gfsu,gfsv);
       }
@@ -269,7 +292,7 @@ namespace Dune{
       {
         const bool abort_a = prestage_engine->assembleCell(eg);
         const bool abort_c = jacobian_engine->assembleCell(eg);
-        return abort_a && abort_c;
+        return abort_a and abort_c;
       }
 
       template<typename EG, typename LFSU, typename LFSV>
