@@ -116,6 +116,26 @@ namespace Dune{
         setLocalAssemblerEngineDT1(la.la1.localResidualAssemblerEngine(*const_residual_1,*((*solutions)[0])));
       }
 
+      //! Methods for binding the local function space.
+      //! These methods are empty. The binding of the local function space
+      //! is done after setting the solution in the assembleUVVolume(),
+      //! assembleUVSkeleton(), assembleUVBoundary(), assembleUVProcessor(),
+      //! assembleUVEnrichedCoupling() and assembleUVVolumePostSkeleton() calls.
+      //! @{
+      template<typename EG, typename LFSU, typename LFSV>
+      void onBindLFSUV(const EG& eg, const LFSU& lfsu, const LFSV& lfsv)
+      {}
+      template<typename IG, typename LFSU_S, typename LFSV_S>
+      void onBindLFSUVInside(const IG & ig,
+                             const LFSU_S & lfsu_s, const LFSV_S & lfsv_s)
+      {}
+      template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N>
+      void onBindLFSUVOutside(const IG & ig,
+                              const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n)
+      {}
+      //! @}
+
       //! Methods for loading of the local function's coefficients.
       //! These methods are empty. The loading of the coefficients
       //! is done after setting the solution in the assembleUVVolume(),
