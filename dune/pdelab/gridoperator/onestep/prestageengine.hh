@@ -116,16 +116,21 @@ namespace Dune{
         setLocalAssemblerEngineDT1(la.la1.localResidualAssemblerEngine(*const_residual_1,*((*solutions)[0])));
       }
 
-      //! Methods for loading of the local function's
-      //! coefficients. These methods are blocked. The loading of the
-      //! coefficients is done in each assemble call.
-      //!@{
+      //! Methods for loading of the local function's coefficients.
+      //! These methods are empty. The loading of the coefficients
+      //! is done after setting the solution in the assembleUVVolume(),
+      //! assembleUVSkeleton(), assembleUVBoundary(), assembleUVProcessor(),
+      //! assembleUVEnrichedCoupling() and assembleUVVolumePostSkeleton() calls.
+      //! @{
       template<typename LFSU>
-      void loadCoefficientsLFSUInside(const LFSU & lfsu_s){}
+      void loadCoefficientsLFSUInside(const LFSU & lfsu_s)
+      {}
       template<typename LFSU>
-      void loadCoefficientsLFSUOutside(const LFSU & lfsu_n){}
+      void loadCoefficientsLFSUOutside(const LFSU & lfsu_n)
+      {}
       template<typename LFSU>
-      void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c){}
+      void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c)
+      {}
       //! @}
 
       //! Method setting time for la1 local assembler.
