@@ -161,8 +161,7 @@ namespace Dune{
       }
 
       //! Access time at given stage
-      Real timeAtStage() const
-      {
+      Real timeAtStage(){
         return time+osp_method->d(stage)*dt;
       }
 

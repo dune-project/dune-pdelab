@@ -107,7 +107,8 @@ namespace Dune{
         d_r = la.osp_method->d(la.stage);
 
         // Here we only want to know whether this stage is implicit
-        implicit = std::abs(b_rr) > 1e-6;
+        using std::abs;
+        implicit = abs(b_rr) > 1e-6;
 
         // prepare local operators for stage
         la.la0.setTime(la.time + d_r * la.dt);
