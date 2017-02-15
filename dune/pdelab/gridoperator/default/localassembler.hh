@@ -34,13 +34,6 @@ namespace Dune{
                                               typename GO::Traits::TrialGridFunctionSpaceConstraints,
                                               typename GO::Traits::TestGridFunctionSpaceConstraints>
     {
-
-      // The GridOperator has to be a friend to modify the do{Pre,Post}Processing flags
-      template<typename, typename, typename,
-               typename, typename, typename, typename,
-               typename, typename, int>
-      friend class GridOperator;
-
     public:
 
       //! The traits class
@@ -82,16 +75,14 @@ namespace Dune{
       typedef DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalJacobianApplyAssemblerEngine;
       typedef DefaultLocalNonlinearJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalNonlinearJacobianApplyAssemblerEngine;
 
+      // friend declarations such that engines are able to call scatter_jacobian() and add_entry() from base class
       friend class DefaultLocalPatternAssemblerEngine<DefaultLocalAssembler>;
-      friend class DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler>;
       friend class DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler>;
-      friend class DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler>;
-      friend class DefaultLocalNonlinearJacobianApplyAssemblerEngine<DefaultLocalAssembler>;
       //! @}
 
       //! Constructor with empty constraints
-      DefaultLocalAssembler (LOP & lop_, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
-        : lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
+      DefaultLocalAssembler (LOP & lop, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
+        : lop_(lop),  weight_(1.0), doPreProcessing_(true), doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
         , jacobian_apply_engine(*this)
         , nonlinear_jacobian_apply_engine(*this)
@@ -99,35 +90,54 @@ namespace Dune{
       {}
 
       //! Constructor for non trivial constraints
-      DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_,
+      DefaultLocalAssembler (LOP & lop, const CU& cu, const CV& cv,
                              shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
-        : Base(cu_, cv_),
-          lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
+        : Base(cu, cv),
+          lop_(lop),  weight_(1.0), doPreProcessing_(true), doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
         , jacobian_apply_engine(*this)
         , nonlinear_jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
 
+      //! get a reference to the local operator
+      LOP &localOperator()
+      {
+        return lop_;
+      }
+
+      //! get a reference to the local operator
+      const LOP &localOperator() const
+      {
+        return lop_;
+      }
+
       //! Notifies the local assembler about the current time of
       //! assembling. Should be called before assembling if the local
       //! operator has time dependencies.
-      void setTime(Real time_){
-        lop.setTime(time_);
+      void setTime(Real time_)
+      {
+        lop_.setTime(time_);
+      }
+
+      //! Obtain the weight that was set last
+      RangeField weight() const
+      {
+        return weight_;
       }
 
       //! Notifies the assembler about the current weight of assembling.
-      void setWeight(RangeField weight_){
-        weight = weight_;
+      void setWeight(RangeField weight){
+        weight_ = weight;
       }
 
       //! Time stepping interface
       //! @{
-      void preStage (Real time_, int r_) { lop.preStage(time_,r_); }
-      void preStep (Real time_, Real dt_, std::size_t stages_){ lop.preStep(time_,dt_,stages_); }
-      void postStep (){ lop.postStep(); }
-      void postStage (){ lop.postStage(); }
-      Real suggestTimestep (Real dt) const{return lop.suggestTimestep(dt); }
+      void preStage (Real time_, int r_) { lop_.preStage(time_,r_); }
+      void preStep (Real time_, Real dt_, std::size_t stages_){ lop_.preStep(time_,dt_,stages_); }
+      void postStep (){ lop_.postStep(); }
+      void postStage (){ lop_.postStage(); }
+      Real suggestTimestep (Real dt) const{return lop_.suggestTimestep(dt); }
       //! @}
 
       bool reconstructBorderEntries() const
@@ -209,14 +219,26 @@ namespace Dune{
       static bool doPatternVolumePostSkeleton()  { return LOP::doPatternVolumePostSkeleton; }
       //! @}
 
+      //! Query whether to do preprocessing in the engines
+      /**
+       * This method is used by the engines.
+       */
+      bool doPreProcessing() const { return doPreProcessing_; }
+
       //! This method allows to set the behavior with regard to any
       //! preprocessing within the engines. It is called by the
       //! setupGridOperators() method of the GridOperator and should
       //! not be called directly.
       void preProcessing(bool v)
       {
-        doPreProcessing = v;
+        doPreProcessing_ = v;
       }
+
+      //! Query whether to do postprocessing in the engines
+      /**
+       * This method is used by the engines.
+       */
+      bool doPostProcessing() const { return doPostProcessing_; }
 
       //! This method allows to set the behavior with regard to any
       //! postprocessing within the engines. It is called by the
@@ -224,24 +246,24 @@ namespace Dune{
       //! not be called directly.
       void postProcessing(bool v)
       {
-        doPostProcessing = v;
+        doPostProcessing_ = v;
       }
 
     private:
 
       //! The local operator
-      LOP & lop;
+      LOP & lop_;
 
       //! The current weight of assembling
-      RangeField weight;
+      RangeField weight_;
 
       //! Indicates whether this local operator has to perform pre
       //! processing
-      bool doPreProcessing;
+      bool doPreProcessing_;
 
       //! Indicates whether this local operator has to perform post
       //! processing
-      bool doPostProcessing;
+      bool doPostProcessing_;
 
       //! The engine member objects
       //! @{
