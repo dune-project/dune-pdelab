@@ -254,33 +254,6 @@ namespace Dune {
         return container()(rowIndexCache().containerIndex(i),j);
       }
 
-      /*
-      void add(size_type i, size_type j, const ElementType& v)
-      {
-        container()(rowIndexCache().containerIndex(i),colIndexCache().containerIndex(j)) += v;
-      }
-
-      void add(const RowDOFIndex& i, const ColDOFIndex& j, const ElementType& v)
-      {
-        container()(rowIndexCache().containerIndex(i),colIndexCache().containerIndex(j)) += v;
-      }
-
-      void add(const RowContainerIndex& i, const ColContainerIndex& j, const ElementType& v)
-      {
-        container()(i,j) += v;
-      }
-
-      void add(const RowContainerIndex& i, size_type j, const ElementType& v)
-      {
-        container()(i,colIndexCache().containerIndex(j)) += v;
-      }
-
-      void add(size_type i, const ColContainerIndex& j, const ElementType& v)
-      {
-        container()(rowIndexCache().containerIndex(i),j) += v;
-      }
-      */
-
       template<typename LFSV, typename LFSU>
       void accumulate(const LFSV& lfsv, size_type i, const LFSU& lfsu, size_type j, value_type value)
       {
