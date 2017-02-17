@@ -51,6 +51,20 @@ struct DiscreteGridViewFunctionTraits<Signature,E,D,B,0> :
   Functions::Imp::GridFunctionTraits<Signature,E,D,B>
 {};
 
+/** \brief A discrete function defined over a GridFunctionSpace
+
+    This class models the GridViewFunction concept of
+    dune-functions. I represents a global function. The user can
+    obtain a GridViewFunction::LocalFunction via
+    localfunction(globalfunction) and use this to evaluate in local
+    coordinates.
+
+    @note it is going to replace the old interfaces based on
+    GridFunctionInterface and FunctionInterface
+
+    @tparam GFS the GridFunctionSpace this function is defined on. GFS yields information on the particular basis.
+    @tparam V the storage container for the coefficients of the discrete function.
+ */
 template<typename GFS, typename V, int diffOrder = 0>
 class DiscreteGridViewFunction
 {
@@ -132,6 +146,21 @@ public:
       return *element_;
     }
 
+    /** \brief free function to obtain the derivative of a LocalFunction
+     *
+     *  This free function will be found by ADL.
+     *
+     *  It returns an other LocalFunction, which represents the derivative of parameter t.
+     *  The returned object has always all derivatives. In particular this means that:
+     *  * derivative(lf) yields the jacobian
+     *  * derivative(derivative(lf)) yields the hessian
+     *
+     *  @todo do we really want to return a bound object?
+     *  @note if t is in bound state, the derivative will be bound as well.
+     *
+     *  @param t local function we want to differentiate
+     *
+    */
     friend typename DiscreteGridViewFunction<GFS,V,diffOrder+1>::LocalFunction derivative(const LocalFunction& t)
     {
       typename DiscreteGridViewFunction<GFS,V,diffOrder+1>::LocalFunction
@@ -308,6 +337,15 @@ public:
     return DiscreteGridViewFunction<GFS,V,diffOrder+1>(t.pgfs_, t.v_);
   }
 
+  /**
+   * \brief Get local function of wrapped function
+   *
+   * This is free function will be found by ADL.
+   *
+   * Notice that the returned LocalFunction can
+   * only be used after it has been bound to a
+   * proper local context.
+   */
   friend LocalFunction localFunction(const DiscreteGridViewFunction& t)
   {
     return LocalFunction(t.pgfs_, t.v_);
