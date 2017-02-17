@@ -20,23 +20,23 @@
 
 #include <dune/functions/gridfunctions/gridviewfunction.hh>
 
+namespace std {
+  /** \brief specialization of common_type for FieldVector and scalar */
+  template<typename T, int N, typename R2>
+  struct common_type<Dune::FieldVector<T,N>, R2>
+  {
+    using type = Dune::FieldVector<typename std::common_type<T,R2>::type,N>;
+  };
+  /** \brief specialization of common_type for two FieldVectors */
+  template<typename T, int N, typename R2>
+  struct common_type<Dune::FieldVector<T,N>, Dune::FieldVector<R2,N>>
+  {
+    using type = Dune::FieldVector<typename std::common_type<T,R2>::type,N>;
+  };
+}
+
 namespace Dune {
 namespace PDELab {
-
-namespace Imp {
-  template<typename... T>
-  struct common_type : std::common_type<T...> {};
-  template<typename T, int N, typename R2>
-  struct common_type<FieldVector<T,N>, R2>
-  {
-    using type = FieldVector<typename std::common_type<T,R2>::type,N>;
-  };
-  template<typename T, int N, typename R2>
-  struct common_type<FieldVector<T,N>, FieldVector<R2,N>>
-  {
-    using type = FieldVector<typename std::common_type<T,R2>::type,N>;
-  };
-};
 
 template<typename Signature, typename E, template<class> class D, int B,
          int diffOrder>
@@ -62,7 +62,7 @@ public:
   using LocalBasisTraits = typename GFS::Traits::FiniteElementMap::Traits::FiniteElement::Traits::LocalBasisType::Traits;
   using LocalBasisRange = typename LocalBasisTraits::RangeType;
   using VectorRange = typename V::ElementType;
-  using ElementaryRange = typename Imp::common_type<LocalBasisRange, VectorRange>::type;
+  using ElementaryRange = typename std::common_type<LocalBasisRange, VectorRange>::type;
 
   using LocalDomain = typename EntitySet::LocalCoordinate;
   using Element = typename EntitySet::Element;
