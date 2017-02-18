@@ -2,6 +2,8 @@
 #ifndef DUNE_PDELAB_FUNCTION_LOCALFUNCTION_HH
 #define DUNE_PDELAB_FUNCTION_LOCALFUNCTION_HH
 
+#include <type_traits>
+
 #include <dune/pdelab/function/tags.hh>
 #include <dune/pdelab/function/localfunctionhelper.hh>
 #include <dune/pdelab/function/oldinterfaceadapter.hh>
@@ -97,7 +99,7 @@ namespace PDELab {
     {}
 
     //! Initialize all children with the passed-in objects.
-    template<typename... Args, typename = typename enable_if<(sizeof...(Args) == sizeof...(Children))>::type>
+    template<typename... Args, typename = typename std::enable_if<(sizeof...(Args) == sizeof...(Children))>::type>
     CompositeLocalFunction(Args&&... args)
       : NodeType(std::forward<Args>(args)...)
     {}
