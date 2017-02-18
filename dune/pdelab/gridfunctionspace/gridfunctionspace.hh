@@ -369,7 +369,7 @@ namespace Dune {
         _ordering = std::make_shared<Ordering>(ordering_transformation::transform(*this));
       }
 
-      friend class set_entity_set_visitor<typename Traits::EntitySet>;
+      friend struct set_entity_set_visitor<typename Traits::EntitySet>;
 
       mutable typename Traits::EntitySet _es;
       std::shared_ptr<FEM const> pfem;
