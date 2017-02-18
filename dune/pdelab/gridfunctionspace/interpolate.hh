@@ -98,7 +98,6 @@ namespace Dune {
           xg.write_sub_container(lfs,xl);
 
           // increment index
-          assert(index == treePath.back());
           index++;
         }
 
@@ -111,7 +110,7 @@ namespace Dune {
 
         const IB& ib;
         const LF& lf;
-        std::size_t index;
+        mutable std::size_t index;
         XG& xg;
 
       };
