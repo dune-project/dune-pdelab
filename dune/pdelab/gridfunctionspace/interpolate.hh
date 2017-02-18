@@ -87,7 +87,7 @@ namespace Dune {
         {
           std::vector<typename XG::ElementType> xl(lfs.size());
 
-          using LFSRange = typename LFS::Traits::LocalBasisType::Traits::RangeType;
+          using LFSRange = typename LFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType;
           static_assert(std::is_convertible<LFSRange, typename FieldTraits< LFSRange >::field_type>::value,
             "only interpolation into scalar leaf function spaces is implemented");
 
