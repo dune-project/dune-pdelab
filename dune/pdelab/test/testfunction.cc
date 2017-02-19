@@ -190,21 +190,22 @@ template<int k, class GV>
 void testgridviewfunction (const GV& gv)
 {
     enum { dim = GV::dimension };
-    using QkFEM = Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,k>;
-    QkFEM qkfem(gv);
+    using FEM = Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,k>;
+    FEM fem(gv);
     // make a grid function space
-    using QkGFS = Dune::PDELab::GridFunctionSpace<GV,QkFEM>;
-    QkGFS qkgfs(gv,qkfem);
+    using GFS = Dune::PDELab::GridFunctionSpace<GV,FEM>;
+    GFS gfs(gv,fem);
     // make vector
-    using Vector = Dune::PDELab::Backend::Vector<QkGFS, double>;
-    Vector x(qkgfs);
+    using Vector = Dune::PDELab::Backend::Vector<GFS, double>;
+    Vector x(gfs);
     // make functions
-    typedef Dune::PDELab::DiscreteGridViewFunction<QkGFS,Vector> DiscreteFunction;
-    DiscreteFunction dgvf(qkgfs,x);
+    typedef Dune::PDELab::DiscreteGridViewFunction<GFS,Vector> DiscreteFunction;
+    DiscreteFunction dgvf(gfs,x);
     // interpolate linear function
     using Domain = Dune::FieldVector<typename GV::ctype, GV::dimension>;
-    auto f = [](const Domain& x) {return x[0];};
-    Dune::PDELab::interpolate(f,qkgfs,x);
+    using std::pow;
+    auto f = [](const Domain& x) {return pow(x[0],k);};
+    Dune::PDELab::interpolate(f,gfs,x);
     // make local functions
     auto localf = localFunction(dgvf);
     // iterate grid and evaluate local function
@@ -224,16 +225,21 @@ void testgridviewfunction (const GV& gv)
         Dune::FieldVector<double,1> value;
         Dune::FieldMatrix<double,1,dim> jacobian;
         Dune::FieldMatrix<double,dim,dim> hessian;
-        auto pos = it->geometry().local(it->geometry().center());
+        Dune::FieldVector<double,dim> pos(0.0);
+        auto gpos = it->geometry().global(pos);
         value = localf(pos);
-        assert(std::abs(value - it->geometry().center()[0]) < 1e-6);
+        assert(std::abs(value - pow(gpos[0],k)) < 1e-6);
         if (maxDiffOrder >= 1) {
             jacobian = derivative(localf)(pos);
-            assert(std::abs(jacobian[0][0] - 1.0) < 1e-6);
+            assert(std::abs(jacobian[0][0] - k*pow(gpos[0],k-1)) < 1e-6);
             assert(std::abs(jacobian[0][1]) < 1e-6);
         }
         if (maxDiffOrder >= 2) {
             hessian = derivative(derivative(localf))(pos);
+            assert(std::abs(hessian[0][0] - k*(k-1)*pow(gpos[0],k-2)) < 1e-6);
+            assert(std::abs(hessian[0][1]) < 1e-6);
+            assert(std::abs(hessian[1][1]) < 1e-6);
+            assert(std::abs(hessian[1][1]) < 1e-6);
         }
         if (maxDiffOrder >= 3)
             derivative(
