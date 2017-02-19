@@ -265,25 +265,28 @@ public:
       static const unsigned int dim = GridView::dimensionworld;
       // static_assert(
       //   isHessian<Range>::value,
-      //   "We currently only higher order derivative we support is the Hessian of scalar functions");
+      //   "Currently the only higher order derivative we support is the Hessian of scalar functions");
 
       // get local hessian of the shape functions
       array<std::size_t, dim> directions;
       for(std::size_t i = 0; i < dim; ++i) {
-        for(std::size_t j = i; j < dim; ++j) {
-          directions[0] = 0;
-          directions[1] = 0;
-          directions[i]++;
-          directions[j]++;
-          lfs_.finiteElement().localBasis().evaluate(directions,coord,yb_);
+        // evaluate diagonal entries
+        directions[i] = 2;
+        // evaluate offdiagonal entries
+        directions[i] = 1;
+        for(std::size_t j = i+1; j < dim; ++j) {
+          directions[j] = 1;
+          lfs_.finiteElement().localBasis().partial(directions,coord,yb_);
           assert( yb_.size() == 1); // TODO: we only implement the hessian of scalar functions
           for(std::size_t n = 0; n < yb_.size(); ++n) {
             // sum up derivatives, weighting them with the appropriate coeff
             r[i][j] += xl_[i] * yb_[j];
           }
           // use symmetry of the hessian
-          if (i != j) r[i][j] = r[j][i];
+          r[j][i] = r[i][j];
+          directions[j] = 0;
         }
+        directions[i] = 0;
       }
       // transform back to global coordinates
       for(std::size_t i = 0; i < dim; ++i)
