@@ -54,6 +54,7 @@ void run_test(const GV& gv, const FEM& fem, std::string suffix)
 {
 
   using EntitySet = Dune::PDELab::NonOverlappingEntitySet<GV>;
+  auto entity_set = EntitySet(gv);
 
   using RF = double;
 
@@ -61,7 +62,7 @@ void run_test(const GV& gv, const FEM& fem, std::string suffix)
   using NoConstraints = Dune::PDELab::NoConstraints;
 
   using GFS = Dune::PDELab::GridFunctionSpace<EntitySet,FEM,NoConstraints,VBE>;
-  GFS gfs(gv,fem);
+  GFS gfs(entity_set,fem);
   gfs.name("x");
 
   using LOP = AssigningLOP;
@@ -99,9 +100,9 @@ void run_test(const GV& gv, const FEM& fem, std::string suffix)
       if (r == comm.rank())
         {
           std::cout << "rank: " << r << std::endl;
-          for (const auto& vertex : vertices(gfs.entitySet()))
+          for (const auto& vertex : vertices(entity_set))
             {
-              std::cout << std::setw(3) << gfs.entitySet().indexSet().index(vertex) << " "
+              std::cout << std::setw(3) << entity_set.indexSet().index(vertex) << " "
                         << "(" << vertex.geometry().center() << ") "
                         << gv.grid().globalIdSet().id(vertex)
                         << std::endl;

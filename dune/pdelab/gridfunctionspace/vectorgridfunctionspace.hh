@@ -129,14 +129,14 @@ namespace Dune {
 
       // Preconstruct children - it is important that the children are set before entering the constructor
       // of ImplementationBase!
-      static typename BaseT::NodeStorage create_components(const typename Traits::GridView& gv,
+      static typename BaseT::NodeStorage create_components(const typename Traits::EntitySet& es,
                                                            std::shared_ptr<const FEM> fem_ptr,
                                                            const LeafBackend& leaf_backend,
                                                            const LeafOrderingTag& leaf_ordering_tag)
       {
         typename BaseT::NodeStorage r;
         for (std::size_t i = 0; i < k; ++i)
-          r[i] = std::make_shared<LeafGFS>(gv,fem_ptr,leaf_backend,leaf_ordering_tag);
+          r[i] = std::make_shared<LeafGFS>(es,fem_ptr,leaf_backend,leaf_ordering_tag);
         return r;
       }
 
@@ -145,7 +145,14 @@ namespace Dune {
       VectorGridFunctionSpace(const typename Traits::GridView& gv, const FEM& fem,
                               const Backend& backend = Backend(), const LeafBackend& leaf_backend = LeafBackend(),
                               const OrderingTag& ordering_tag = OrderingTag(), const LeafOrderingTag& leaf_ordering_tag = LeafOrderingTag())
-        : BaseT(create_components(gv,stackobject_to_shared_ptr(fem),leaf_backend,leaf_ordering_tag))
+        : BaseT(create_components(typename Traits::EntitySet(gv),stackobject_to_shared_ptr(fem),leaf_backend,leaf_ordering_tag))
+        , ImplementationBase(backend,ordering_tag)
+      {}
+
+      VectorGridFunctionSpace(const typename Traits::EntitySet& es, const FEM& fem,
+                              const Backend& backend = Backend(), const LeafBackend& leaf_backend = LeafBackend(),
+                              const OrderingTag& ordering_tag = OrderingTag(), const LeafOrderingTag& leaf_ordering_tag = LeafOrderingTag())
+        : BaseT(create_components(es,stackobject_to_shared_ptr(fem),leaf_backend,leaf_ordering_tag))
         , ImplementationBase(backend,ordering_tag)
       {}
 
@@ -235,8 +242,6 @@ namespace Dune {
       // GFS::update() before GFS::ordering().
       void create_ordering() const
       {
-        set_entity_set_visitor<typename Traits::EntitySet> visitor(this->entitySet());
-        TypeTree::applyToTree(*this,visitor);
         _ordering = std::make_shared<Ordering>(ordering_transformation::transform(*this));
       }
 
