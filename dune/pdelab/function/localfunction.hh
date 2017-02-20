@@ -104,7 +104,8 @@ namespace PDELab {
 
   };
 
-  /*
+  /** \brief turn a given function tree into a local function tree
+
     To create a tree with a local view we have to do destinguish
     between the following cases:
 
