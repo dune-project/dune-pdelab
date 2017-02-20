@@ -21,7 +21,6 @@ namespace PDELab {
   public:
     typedef PowerDifferentiableFunctionLocalViewTag ImplementationTag;
 
-    #warning we should make this a free function
     //! Set the time in all leaf nodes of this function tree
     template <typename TT>
     void setTime(TT time){
@@ -75,7 +74,6 @@ namespace PDELab {
   public:
     typedef CompositeDifferentiableFunctionLocalViewTag ImplementationTag;
 
-    #warning we should make this a free function
     //! Set the time in all leaf nodes of this function tree
     template <typename TT>
     void setTime(TT time){
