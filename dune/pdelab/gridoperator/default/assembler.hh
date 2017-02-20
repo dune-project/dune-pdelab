@@ -16,10 +16,9 @@ namespace Dune{
 
        * \tparam GFSU GridFunctionSpace for ansatz functions
        * \tparam GFSV GridFunctionSpace for test functions
-       * \tparam nonoverlapping_mode Indicates whether assembling is done for overlap cells
        */
 
-    template<typename GFSU, typename GFSV, typename CU, typename CV, bool nonoverlapping_mode=false>
+    template<typename GFSU, typename GFSV, typename CU, typename CV>
     class DefaultAssembler {
     public:
 
