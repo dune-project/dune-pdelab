@@ -24,14 +24,14 @@ public:
 
   //! Dirichlet boundary condition type function
   template<typename IG>
-  inline bool isDirichlet(const IG& intersection, const Dune::FieldVector<typename IG::ctype, IG::dimension-1>& xlocal) const
+  inline bool isDirichlet(const IG& intersection, const Dune::FieldVector<typename IG::ctype, GV::dimension-1>& xlocal) const
   {
     return false;
   }
 
   //! Neumann boundary condition type function
   template<typename IG>
-  inline bool isNeumann(const IG& intersection, const Dune::FieldVector<typename IG::ctype, IG::dimension-1>& xlocal) const
+  inline bool isNeumann(const IG& intersection, const Dune::FieldVector<typename IG::ctype, GV::dimension-1>& xlocal) const
   {
     return true;
   }
