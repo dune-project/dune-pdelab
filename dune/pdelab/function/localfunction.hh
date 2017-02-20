@@ -113,6 +113,7 @@ namespace PDELab {
     b) operator(), but no Tag -> makeGridViewFunction -> LocalViewLeafNodeWrapper
     c) HasFreeLocalFunction and NodeTag -> call localView(f)
     d) GridFunctionTag -> create a LocalGridViewFunctionAdapter
+    e) LeafNodeTag, derived from GridFunctionInterface -> create a LocalGridViewFunctionAdapter (this is always a leaf node)
   */
   template<class F, class GV,
            typename std::enable_if<
@@ -177,6 +178,19 @@ namespace PDELab {
     // call the transformation
     return Dune::TypeTree::TransformTree<typename std::decay<F>::type,
                                          GridFunctionToLocalViewTransformation>::transform(f);
+  }
+
+  template<class F, class GV,
+           typename std::enable_if<
+             // case (e)
+             not(IsGridFunction<F>::value)
+             &&
+             std::is_same<TypeTree::NodeTag<F>,TypeTree::LeafNodeTag>::value, int>::type = 0>
+  auto makeLocalFunctionTree(const GridFunctionInterface<typename F::Traits,F>& f, const GV & gv)
+    -> Imp::LocalGridViewFunctionAdapter<F>
+  {
+    // call the transformation
+    return Imp::LocalGridViewFunctionAdapter<F>(static_cast<const F&>(f));
   }
 
 } // end namespace PDELab
