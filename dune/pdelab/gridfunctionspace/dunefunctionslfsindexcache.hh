@@ -23,7 +23,7 @@ namespace Dune {
     public:
 
       using LocalFunctionSpace = LFS;
-      using GFS                = typename LFS::Traits::GridFunctionSpace;;
+      using GFS                = typename LFS::Traits::GridFunctionSpace;
       using Ordering           = typename GFS::Ordering;
       using DOFIndex           = typename Ordering::Traits::DOFIndex;
       using DI                 = DOFIndex;
