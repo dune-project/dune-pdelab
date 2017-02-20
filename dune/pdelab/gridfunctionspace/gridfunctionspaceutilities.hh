@@ -19,25 +19,6 @@
 
 namespace Dune {
   namespace PDELab {
-    template <typename ES>
-    struct set_entity_set_visitor
-      : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
-    {
-
-      template<typename LeafGFS, typename TreePath>
-      void leaf(const LeafGFS& leaf_gfs, TreePath tp)
-      {
-        leaf_gfs._es = es;
-      }
-
-      explicit set_entity_set_visitor(const ES& es_) : es(es_)
-      {
-      }
-
-      const ES& es;
-    };
-
 
     //! \addtogroup GridFunctionSpace
     //! \ingroup PDELab
