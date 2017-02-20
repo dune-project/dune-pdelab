@@ -22,7 +22,7 @@ dune_add_test(SOURCES testdunefunctionsgfs.cc
 
 dune_add_test(SOURCES testelectrodynamic.cc
               CMD_ARGS "${CMAKE_CURRENT_SOURCE_DIR}/grids/circ_in_rect.msh"
-              CMAKE_GUARD dune-alugrid_FOUND)
+              CMAKE_GUARD dune-alugrid_FOUND AND SUPERLU_FOUND)
 
 dune_add_test(SOURCES testfunction.cc)
 
