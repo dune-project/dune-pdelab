@@ -94,7 +94,7 @@ namespace Dune {
           // call interpolate for the basis
           auto f = [&](const Domain& x) -> RangeField { return lf(x)[index]; };
 
-           using LocalFunction = typename Dune::Functions::FunctionFromCallable<RangeField(Domain), decltype(f), Empty>;
+          using LocalFunction = typename Dune::Functions::FunctionFromCallable<RangeField(Domain), decltype(f)>;
           LocalFunction fnkt(f);
 
           ib.interpolate(lfs.finiteElement(), fnkt, xl);
@@ -135,7 +135,7 @@ namespace Dune {
            // call interpolate for the basis
           using Domain = typename Functions::SignatureTraits<F>::Domain;
           using Range = typename Functions::SignatureTraits<F>::Range;
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Empty>;
+          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F>;
           LocalFunction lf(f);
           ib.interpolate(lfs.finiteElement(), lf, xl);
           // write coefficients into local vector
@@ -152,7 +152,7 @@ namespace Dune {
         {
           // call interpolate for the basis
           using Domain = typename Functions::SignatureTraits<F>::Domain;
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Empty>;
+          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F>;
           LocalFunction lf(f);
           TypeTree::applyToTree(lfs,InterpolateLeafFromScalarVisitor<IB,LocalFunction,XG>(ib,lf,xg));
 
