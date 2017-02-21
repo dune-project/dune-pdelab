@@ -82,10 +82,34 @@ PDELab 2.5
     `dune/pdelab/backend/istl.hh` instead. This also holds for the other backends, please include
     `dune/pdelab/backend/eigen.hh` or `dune/pdelab/backend/simple.hh`, respectively.
 
--   It is possible to construct GridFunctions, InstationaryGridFunctions and BoundaryConditionAdapter
-    (if you only use dirichlet and neumann conditions) from callables through helper functions in
-    `dune/pdelab/function/callableadapter.hh`. The callables can either use global coordinates or local
-    coordinates.
+-   It is now possible to handle trees of `dune-functions` functions
+    in the same way as we support trees of
+    `DiscreteGridFunctions`. Internally we now build upon the
+    `dune-functions` concept and provide the necessary wrapper classes
+    (see `makeLocalFunctionTree`).
+
+-   The new class `DiscreteGridViewFunction` implements the
+    `dune-functions` functions concept using
+    `PDELab::GridFunctionSpace` instead of a `dune-functions`
+    basis. This is a major step to fully support `dune-functions`.
+    **Note:**
+	Currently we only support the first and second derivative of a
+    `DiscreteGridViewFunction`.
+
+-   We now support callables (and in particular lambda expressions) in many places:
+    1. it is now possible to pass an analytic function to
+       `interpolate` as a callable. Internally we disctinguish between
+       `GridFunctions` and callables.
+    2. As a temporary hack until we fully support the new
+       `dune-functions` interfaces, it is possible to construct
+       `GridFunctions`, `InstationaryGridFunctions` and
+       `BoundaryConditionAdapter` (if you only use dirichlet and
+       neumann conditions) from callables through helper functions in
+       `dune/pdelab/function/callableadapter.hh`. The callables can
+       either use global coordinates or local coordinates.
+	   **Note:**
+       this feature will vanish in our course to a full transition to
+       support `dune-functions`.
 
 
 PDELab 2.4
