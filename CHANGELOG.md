@@ -1,12 +1,15 @@
 PDELab
 ======
 
-This is the 2.4.0-rc1 version of PDELab, a PDE discretization toolkit built
-on top of the [DUNE][] framework. License information can be found in the file
+This is the 2.5.0 version of PDELab, a PDE discretization toolkit built
+on top of the [DUNE][] framework. It is intended to be used with the 2.5
+release of the Dune core modules. License information can be found in the file
 [LICENSE.md][].
 
-PDELab 2.4 is a major release with many changes. For details and an overview of the bug fixes in
-this release, see the changelog below.
+PDELab 2.5 is mainly a bugfix and cleanup release. There is one notable exception: The release
+introduces a first step of our transition to use [dune-functions][]. For that reason,
+*dune-functions is a hard requirement of dune-pdelab* from this release forward.
+For details and an overview of the bug fixes in this release, see the changelog below.
 
 If you need help, please ask on our [mailing list][]. Bugs can also be submitted
 to the [PDELab bugtracker][] instead.
@@ -17,10 +20,43 @@ Changes
 PDELab 2.5
 ----------
 
--   Removed support for autotools.
+-   [dune-functions][] now is a hard requirement of dune-pdelab.
 
--   The namespace `Dune::PDELab::istl` has been renamed to `Dune::PDELab::ISTL` for consistency
-    reasons. Please update your code accordingly. A quick way to do so is
+-   PDELab now correctly assembles constraints on periodic boundaries.
+
+-   The previously deprecated template parameter on the `GridOperator` that enabled
+    non-overlapping mode is now removed. Non-overlapping computations are based on
+    `EntitySet`s now, see the corresponding part of this changelog.
+
+-   The electrodynamics operators in [electrodynamic.hh][] have seen some bugfixes and
+    modernization. They still suffer some limitations though: Spatially varying coefficients
+    are not possible, as documented in [electrodynamic.hh][].
+
+-   The `ExplicitOneStepMethod` now correctly handles Dirichlet boundary conditions.
+
+-   UMFPack can now be used as a subdomain solver in an overlapping Schwarz method, just
+    like SuperLU can. The corresponding backend class `ISTLBackend_OVLP_CG_UMFPack` can
+    be found in [ovlpistlsolverbackend.hh][].
+
+-   [gridfunctionadapter.hh][] provides adapters for commonly used calculations with grid functions:
+    * `DifferenceAdapter` provides a grid function implementing the difference of two grid functions
+    * `DifferenceSquaredAdapter` implements the squared difference of two grid functions
+    This code had been copied around by a lot of people, so we provide it in dune-pdelab for convenience.
+
+-   The interior penalty DG implementation of Navier Stokes has seen some bugfixes and cleanup.
+    See the [merge request 161][] for details on how to adapt your code.
+
+-   Removed support for autotools and cleaned up the CMake build system using the
+    latest infrastructure from dune-common. The previously introduced macro `pdelab_add_test`
+    is now superseded by `dune_add_test` from dune-common.
+
+-   The case of some namespaces has been changed for consistency reasons. This
+    applies to
+    * `Dune::PDELab::istl` -> `Dune::PDELab::ISTL`
+    * `Dune::PDELab::EIGEN` -> `Dune::PDELab::Eigen`
+    * `Dune::PDELab::simple` -> `Dune::PDELab::Simple`
+
+    Please update your code accordingly. A quick way to do so is
 
     ```
     git grep -l "istl::" | xargs perl -i -pe "s/istl::/ISTL::/g"
@@ -555,3 +591,8 @@ Links
 [dune/pdelab/constraints]: dune/pdelab/constraints
 [dune/pdelab/finiteelementmap]: dune/pdelab/finiteelementmap
 [dune/pdelab/constraints/common]: dune/pdelab/constraints/common
+[dune-functions]: https://gitlab.dune-project.org/staging/dune-functions
+[gridfunctionadapter.hh]: dune/pdelab/gridfunctionspace/gridfunctionadapter.hh
+[merge request 161]: https://gitlab.dune-project.org/pdelab/dune-pdelab/merge_requests/161
+[ovlpistlsolverbackend.hh]: dune/pdelab/backend/istl/ovlpistlsolverbackend.hh
+[electrodynamic.hh]: dune/pdelab/localoperator/electrodynamic.hh
