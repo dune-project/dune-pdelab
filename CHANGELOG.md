@@ -46,6 +46,15 @@ PDELab 2.5
 -   The interior penalty DG implementation of Navier Stokes has seen some bugfixes and cleanup.
     See the [merge request 161][] for details on how to adapt your code.
 
+-   As it was really easy to miss correctly initializing the entity sets of function spaces that are part
+    of a composite or power tree, this release changes the `PartitionViewEntitySet` constructor so that
+    an entity set constructed simply by calling `auto es = EntitySet(grid_view)` will contain index
+    information for all codimensions and will be initialized during the constructor call. This has a
+    negligible performance overhead when using the `AllEntitySet<>` template, but can become more of a
+    problem for non-overlapping computations. But for non-overlapping computations, you will have to manually
+    construct the entityset anyway to avoid problems during interpolation and constraints processing.
+    This fixes #62, #70 and #78 and supercedes !192.
+
 -   Removed support for autotools and cleaned up the CMake build system using the
     latest infrastructure from dune-common. The previously introduced macro `pdelab_add_test`
     is now superseded by `dune_add_test` from dune-common.
