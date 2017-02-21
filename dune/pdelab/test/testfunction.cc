@@ -3,6 +3,7 @@
 #endif
 
 #include <iostream>
+#include <cassert>
 
 #include <dune/common/math.hh>
 #include <dune/common/parallel/mpihelper.hh>
@@ -11,6 +12,11 @@
 
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/vtkexport.hh>
+
+#include <dune/pdelab/backend/istl.hh>
+#include <dune/pdelab/finiteelementmap/qkfem.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/function/discretegridviewfunction.hh>
 
 // an analytic scalar function
 template<typename T>
@@ -180,6 +186,69 @@ void testfunctiontree (const GV& gv)
   vtkwriter.write("multi",Dune::VTK::ascii);
 }
 
+template<int k, class GV>
+void testgridviewfunction (const GV& gv)
+{
+    enum { dim = GV::dimension };
+    using FEM = Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,k>;
+    FEM fem(gv);
+    // make a grid function space
+    using GFS = Dune::PDELab::GridFunctionSpace<GV,FEM>;
+    GFS gfs(gv,fem);
+    // make vector
+    using Vector = Dune::PDELab::Backend::Vector<GFS, double>;
+    Vector x(gfs);
+    // make functions
+    typedef Dune::PDELab::DiscreteGridViewFunction<GFS,Vector> DiscreteFunction;
+    DiscreteFunction dgvf(gfs,x);
+    // interpolate linear function
+    using Domain = Dune::FieldVector<typename GV::ctype, GV::dimension>;
+    using std::pow;
+    auto f = [](const Domain& x) {return pow(x[0],k);};
+    Dune::PDELab::interpolate(f,gfs,x);
+    // make local functions
+    auto localf = localFunction(dgvf);
+    // iterate grid and evaluate local function
+    static const int maxDiffOrder = decltype(localf)::maxDiffOrder;
+    std::cout << "max diff order: " << maxDiffOrder << std::endl;
+    std::cout << "checking for:\n";
+    std::cout << "\tevaluate\n";
+    if (maxDiffOrder >= 1)
+        std::cout << "\tjacobian\n";
+    if (maxDiffOrder >= 2)
+        std::cout << "\thessian\n";
+    if (maxDiffOrder >= 3)
+        std::cout << "\tdiff(3)\n";
+    for (auto it=gv.template begin<0>(); it!=gv.template end<0>(); ++it)
+    {
+        localf.bind(*it);
+        Dune::FieldVector<double,1> value;
+        Dune::FieldMatrix<double,1,dim> jacobian;
+        Dune::FieldMatrix<double,dim,dim> hessian;
+        Dune::FieldVector<double,dim> pos(0.0);
+        auto gpos = it->geometry().global(pos);
+        value = localf(pos);
+        assert(std::abs(value - pow(gpos[0],k)) < 1e-6);
+        if (maxDiffOrder >= 1) {
+            jacobian = derivative(localf)(pos);
+            assert(std::abs(jacobian[0][0] - k*pow(gpos[0],k-1)) < 1e-6);
+            assert(std::abs(jacobian[0][1]) < 1e-6);
+        }
+        if (maxDiffOrder >= 2) {
+            hessian = derivative(derivative(localf))(pos);
+            assert(std::abs(hessian[0][0] - k*(k-1)*pow(gpos[0],k-2)) < 1e-6);
+            assert(std::abs(hessian[0][1]) < 1e-6);
+            assert(std::abs(hessian[1][1]) < 1e-6);
+            assert(std::abs(hessian[1][1]) < 1e-6);
+        }
+        if (maxDiffOrder >= 3)
+            derivative(
+                derivative(
+                    derivative(localf)));
+        localf.unbind();
+    }
+}
+
 int main(int argc, char** argv)
 {
   try{
@@ -214,6 +283,10 @@ int main(int argc, char** argv)
     std::cout << "testing vtk output" << std::endl;
     testvtkexport(grid.leafGridView(),F<Dune::YaspGrid<2>::ctype>());
     testfunctiontree(grid.leafGridView());
+
+    testgridviewfunction<1>(grid.leafGridView());
+    testgridviewfunction<2>(grid.leafGridView());
+    // testgridviewfunction<3>(grid.leafGridView());
 
     // test passed
     return 0;

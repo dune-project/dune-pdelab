@@ -1,4 +1,10 @@
-install(FILES callableadapter.hh
+install(FILES
+              localfunction.hh
+              localfunctionhelper.hh
+              oldinterfaceadapter.hh
+              tags.hh
+              # old interface ...
+              callableadapter.hh
               const.hh
               division.hh
               inverse.hh

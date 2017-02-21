@@ -4,16 +4,20 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_INTERPOLATE_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_INTERPOLATE_HH
 
-#include<vector>
+#include <vector>
+#include <utility>
 
-#include<dune/common/exceptions.hh>
+#include <dune/common/exceptions.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
+#include <dune/localfunctions/common/virtualinterface.hh>
+#include <dune/functions/common/functionfromcallable.hh>
 
 #include <dune/typetree/typetree.hh>
 #include <dune/typetree/pairtraversal.hh>
 
 #include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/function/localfunction.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
@@ -74,31 +78,44 @@ namespace Dune {
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
       {
+        using Domain = typename Functions::SignatureTraits<LF>::Domain;
+        using Range = typename Functions::SignatureTraits<LF>::Range;
+        using RangeField = typename FieldTraits<Range>::field_type;
 
         template<typename LFS, typename TreePath>
         void leaf(const LFS& lfs, TreePath treePath) const
         {
           std::vector<typename XG::ElementType> xl(lfs.size());
 
+          using LFSRange = typename LFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType;
+          static_assert(std::is_convertible<LFSRange, typename FieldTraits< LFSRange >::field_type>::value,
+            "only interpolation into scalar leaf function spaces is implemented");
+
           // call interpolate for the basis
+          auto f = [&](const Domain& x) -> RangeField { return lf(x)[index]; };
 
-          typedef SelectComponentAdapter<LF> LFCOMP;
+          using LocalFunction = typename Dune::Functions::FunctionFromCallable<RangeField(Domain), decltype(f), Dune::Function<Domain,RangeField> >;
+          LocalFunction fnkt(f);
 
-          LFCOMP localfcomp(lf,treePath.back());
-          ib.interpolate(lfs.finiteElement(), localfcomp, xl);
+          ib.interpolate(lfs.finiteElement(), fnkt, xl);
 
           // write coefficients into local vector
           xg.write_sub_container(lfs,xl);
+
+          // increment index
+          index++;
         }
 
         InterpolateLeafFromVectorVisitor(const IB& ib_, const LF& lf_, XG& xg_)
           : ib(ib_)
           , lf(lf_)
+          , index(0)
           , xg(xg_)
         {}
 
         const IB& ib;
         const LF& lf;
+        mutable std::size_t index;
         XG& xg;
 
       };
@@ -115,50 +132,46 @@ namespace Dune {
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
           std::vector<typename XG::ElementType> xl(lfs.size());
-
-          // call interpolate for the basis
-          ib.interpolate(lfs.finiteElement(),
-                         GridFunctionToLocalFunctionAdapter<F>(f,e), xl);
-
+           // call interpolate for the basis
+          using Domain = typename Functions::SignatureTraits<F>::Domain;
+          using Range = typename Functions::SignatureTraits<F>::Range;
+          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Dune::Function<Domain,Range> >;
+          LocalFunction lf(f);
+          ib.interpolate(lfs.finiteElement(), lf, xl);
           // write coefficients into local vector
           xg.write_sub_container(lfs,xl);
         }
 
-        // interpolate PowerLFS from vector-valued function
-        template<typename F, typename LFS, typename TreePath>
-        typename std::enable_if<F::isLeaf && F::Traits::dimRange == 1
-                           && (!LFS::isLeaf)>::type
+        // interpolate PowerLFS from scalar-valued function
+        template<typename F, typename LFS, typename TreePath,
+                 typename Range = typename Functions::SignatureTraits<F>::Range>
+        typename std::enable_if<F::isLeaf &&
+                           std::is_convertible<Range, typename FieldTraits< Range >::field_type>::value &&
+                           (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
-          static_assert((TypeTree::TreeInfo<LFS>::depth == 2),
-                        "Automatic interpolation of vector-valued function " \
-                        "is restricted to trees of depth 1");
-
-          typedef GridFunctionToLocalFunctionAdapter<F> LF;
-          LF localf(f,e);
-
-          TypeTree::applyToTree(lfs,InterpolateLeafFromScalarVisitor<IB,LF,XG>(ib,localf,xg));
+          // call interpolate for the basis
+          using Domain = typename Functions::SignatureTraits<F>::Domain;
+          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Dune::Function<Domain,Range> >;
+          LocalFunction lf(f);
+          TypeTree::applyToTree(lfs,InterpolateLeafFromScalarVisitor<IB,LocalFunction,XG>(ib,lf,xg));
 
         }
 
         // interpolate PowerLFS from vector-valued function
-        template<typename F, typename LFS, typename TreePath>
-        typename std::enable_if<F::isLeaf && (F::Traits::dimRange > 1) &&
-                           (!LFS::isLeaf)>::type
+        template<typename F, typename LFS, typename TreePath,
+                 typename Range = typename Functions::SignatureTraits<F>::Range>
+        typename std::enable_if<F::isLeaf &&
+                          (!std::is_convertible<Range, typename FieldTraits< Range >::field_type>::value) &&
+                          (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
-          static_assert((TypeTree::TreeInfo<LFS>::depth == 2),
-                        "Automatic interpolation of vector-valued function " \
-                        "is restricted to trees of depth 1");
-          static_assert(TypeTree::StaticDegree<LFS>::value == F::Traits::dimRange,
+          static_assert(TypeTree::StaticDegree<LFS>::value == Range::dimension,
                         "Number of children and dimension of range type " \
                         "must match for automatic interpolation of "    \
                         "vector-valued function");
 
-          typedef GridFunctionToLocalFunctionAdapter<F> LF;
-          LF localf(f,e);
-
-          TypeTree::applyToTree(lfs,InterpolateLeafFromVectorVisitor<IB,LF,XG>(ib,localf,xg));
+          TypeTree::applyToTree(lfs,InterpolateLeafFromVectorVisitor<IB,F,XG>(ib,f,xg));
         }
 
         InterpolateVisitor(IB ib_, const E& e_, XG& xg_)
@@ -198,6 +211,9 @@ namespace Dune {
 
       auto entity_set = gfs.entitySet();
 
+      // make local function
+      auto lf = makeLocalFunctionTree(f, gfs.gridView());
+
       // make local function space
       typedef LocalFunctionSpace<GFS> LFS;
       LFS lfs(gfs);
@@ -211,14 +227,16 @@ namespace Dune {
       for (const auto& element : elements(entity_set))
         {
           // bind local function space to element
+          lf.bind(element);
           lfs.bind(element);
           lfs_cache.update();
           x_view.bind(lfs_cache);
 
           // call interpolate
-          TypeTree::applyToTreePair(f,lfs,InterpolateVisitor<InterpolateBackendStandard,Element,XView>(InterpolateBackendStandard(),element,x_view));
+          TypeTree::applyToTreePair(lf,lfs,InterpolateVisitor<InterpolateBackendStandard,Element,XView>(InterpolateBackendStandard(),element,x_view));
 
           x_view.unbind();
+          lf.unbind();
         }
 
       x_view.detach();
