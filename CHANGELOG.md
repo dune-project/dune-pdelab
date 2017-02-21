@@ -55,6 +55,9 @@ PDELab 2.5
     construct the entityset anyway to avoid problems during interpolation and constraints processing.
     This fixes #62, #70 and #78 and supercedes !192.
 
+    If you do **not** want your entity set to auto-initialize, construct it with `auto es = EntitySet(grid_view,false)`.
+    This will give you the old behavior (does not contain any codims, does not get initialized in the constructor).
+
 -   Removed support for autotools and cleaned up the CMake build system using the
     latest infrastructure from dune-common. The previously introduced macro `pdelab_add_test`
     is now superseded by `dune_add_test` from dune-common.
