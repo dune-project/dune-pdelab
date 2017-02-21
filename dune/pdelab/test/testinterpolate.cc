@@ -171,6 +171,14 @@ static void test_interpolate(const GV& gv)
       Dune::PDELab::interpolate(lf,p0gfs,x);
       Dune::PDELab::interpolate(f,p0gfs,x);
   }
+  // interpolate from generic lambda
+  {
+      using Domain = Dune::FieldVector<typename GV::ctype, GV::dimension>;
+      auto f = [](const auto& x) {return x[0];};
+      auto lf = Dune::Functions::makeAnalyticGridViewFunction(f, gv);
+      Dune::PDELab::interpolate(lf,p0gfs,x);
+      Dune::PDELab::interpolate(f,p0gfs,x);
+  }
 }
 
 int main(int argc, char** argv)
