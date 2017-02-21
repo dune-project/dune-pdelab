@@ -66,7 +66,7 @@ PDELab 2.5
     bet.
 
 -   Directly including **any** files in the directory `dune/pdelab/backend/istl/` is deprecated; doing
-    so after 2.5 will probably not work anymore. If your are using ISTL, just include the single header
+    so after 2.5 will probably not work anymore. If you are using ISTL, just include the single header
     `dune/pdelab/backend/istl.hh` instead.
 
 -   It is possible to construct GridFunctions, InstationaryGridFunctions and BoundaryConditionAdapter
