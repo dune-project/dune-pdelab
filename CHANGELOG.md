@@ -67,7 +67,8 @@ PDELab 2.5
 
 -   Directly including **any** files in the directory `dune/pdelab/backend/istl/` is deprecated; doing
     so after 2.5 will probably not work anymore. If you are using ISTL, just include the single header
-    `dune/pdelab/backend/istl.hh` instead.
+    `dune/pdelab/backend/istl.hh` instead. This also holds for the other backends, please include
+    `dune/pdelab/backend/eigen.hh` or `dune/pdelab/backend/simple.hh`, respectively.
 
 -   It is possible to construct GridFunctions, InstationaryGridFunctions and BoundaryConditionAdapter
     (if you only use dirichlet and neumann conditions) from callables through helper functions in
