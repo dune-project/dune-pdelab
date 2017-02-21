@@ -69,6 +69,12 @@ PDELab 2.5
     so after 2.5 will probably not work anymore. If your are using ISTL, just include the single header
     `dune/pdelab/backend/istl.hh` instead.
 
+-   It is possible to construct GridFunctions, InstationaryGridFunctions and BoundaryConditionAdapter
+    (if you only use dirichlet and neumann conditions) from callables through helper functions in
+    `dune/pdelab/function/callableadapter.hh`. The callables can either use global coordinates or local
+    coordinates.
+
+
 PDELab 2.4
 ----------
 
