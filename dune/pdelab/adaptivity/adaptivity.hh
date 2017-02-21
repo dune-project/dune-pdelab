@@ -608,6 +608,14 @@ namespace Dune {
      * @tparam Grid       Type of the grid we want to adapt
      * @tparam GFS        Type of ansatz space, we need to update it after adaptation
      * @tparam X          Container class for DOF vectors
+     *
+     * @param grid        The grid we want to adapt
+     * @param gfs         The ansatz grid function space
+     * @param x1          The DOF container
+     * @param int_order   The integration order used in inversion of the mass matrix.
+     *                    For scalar problems 2*k with k being the polynomial degree
+     *                    of ansatz and test space is a suitable choice. For systems,
+     *                    the same order is currently used for all components.
      */
     template<class Grid, class GFS, class X>
     void adapt_grid (Grid& grid, GFS& gfs, X& x1, int int_order)
