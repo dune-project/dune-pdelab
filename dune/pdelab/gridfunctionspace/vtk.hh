@@ -139,8 +139,7 @@ namespace Dune {
 
       template<typename LFS, typename Data>
       class DGFTreeLeafFunction
-        : public TypeTree::LeafNode
-        , public GridFunctionInterface<GridFunctionTraits<
+        : public GridFunctionBase<GridFunctionTraits<
                                          typename LFS::Traits::GridView,
                                          typename BasisInterfaceSwitch<
                                            typename FiniteElementInterfaceSwitch<
@@ -168,7 +167,7 @@ namespace Dune {
             >::Basis
           > BasisSwitch;
 
-        typedef GridFunctionInterface<
+        typedef GridFunctionBase<
           GridFunctionTraits<
             typename LFS::Traits::GridView,
             typename BasisSwitch::RangeField,
@@ -229,8 +228,7 @@ namespace Dune {
 
       template<typename LFS, typename Data>
       class DGFTreeVectorFunction
-        : public TypeTree::LeafNode
-        , public GridFunctionInterface<GridFunctionTraits<
+        : public GridFunctionBase<GridFunctionTraits<
                                          typename LFS::Traits::GridView,
                                          typename BasisInterfaceSwitch<
                                            typename FiniteElementInterfaceSwitch<
@@ -260,7 +258,7 @@ namespace Dune {
         static_assert(BasisSwitch::dimRange == 1,
                       "Automatic conversion to vector-valued function only supported for scalar components");
 
-        typedef GridFunctionInterface<
+        typedef GridFunctionBase<
           GridFunctionTraits<
             typename LFS::Traits::GridView,
             typename BasisSwitch::RangeField,
