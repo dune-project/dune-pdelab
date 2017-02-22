@@ -53,7 +53,6 @@ PDELab 2.5
     negligible performance overhead when using the `AllEntitySet<>` template, but can become more of a
     problem for non-overlapping computations. But for non-overlapping computations, you will have to manually
     construct the entityset anyway to avoid problems during interpolation and constraints processing.
-    This fixes #62, #70 and #78 and supercedes !192.
 
     If you do **not** want your entity set to auto-initialize, construct it with `auto es = EntitySet(grid_view,false)`.
     This will give you the old behavior (does not contain any codims, does not get initialized in the constructor).
