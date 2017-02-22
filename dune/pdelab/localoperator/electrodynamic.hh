@@ -277,7 +277,7 @@ namespace Dune {
 
         using RF = typename BasisTraits::RangeField;
         using Curl = FieldVector<RF, dimOfCurl(dimR)>;
-        Curl rotphi[lfsu.size()]; // avoid the implicit malloc() of std::vector
+        std::vector<Curl> rotphi(lfsu.size());
 
         // loop over quadrature points
         for(const auto &qp : quadratureRule(eg.geometry(), qorder_))
