@@ -130,7 +130,7 @@ namespace PDELab {
   template<class F, class GV,
            // case (b)
            typename std::enable_if<
-             Functions::IsCallable<F>::value
+             Dune::Functions::Concept::isCallable<F, typename GV::template Codim<0>::Entity::Geometry::GlobalCoordinate>()
              and
              not(models< Dune::Functions::Imp::HasFreeLocalFunction, F>())
              and
