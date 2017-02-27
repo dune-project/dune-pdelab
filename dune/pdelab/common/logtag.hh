@@ -121,17 +121,6 @@ int main() {
     void setLogtagFormatFunc(const FormatFunc &formatFunc)
     { setLogtagFormatter(makeGeneralLogtagFormatter(formatFunc)); }
 
-    //! set the rank to be printed by logtag formatters
-    /**
-     * This function needs to be called explicitly after the MPIHelper has
-     * been set up.
-     *
-     * Not every logtag formatter uses this information.  The special value -1
-     * means that rank information is currently not available (e.g. before the
-     * MPIHelper has been set up).
-     */
-    extern void setLogtagRank(int rank);
-
     //! temporarily use a different log tag format function
     /**
      * This class sets a different log tag format function and restores the

@@ -65,18 +65,16 @@ namespace Dune {
     WithLogtag::~WithLogtag() { setLogtagFormatter(savedFormatter); }
 
     namespace {
-      int &rank() {
 #if HAVE_MPI
+      int &rank() {
         static int rank = -1;
-#else // !HAVE_MPI
-        static int rank = 0;
-#endif // !HAVE_MPI
         return rank;
       }
       std::size_t &rankwidth() {
         static std::size_t rankwidth = 1;
         return rankwidth;
       }
+#endif // !HAVE_MPI
       std::size_t &hostwidth() {
         static std::size_t hostwidth = 1;
         return hostwidth;
