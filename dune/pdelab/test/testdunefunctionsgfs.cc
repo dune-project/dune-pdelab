@@ -11,6 +11,7 @@
 #include <dune/functions/gridfunctions/discreteglobalbasisfunction.hh>
 #include <dune/functions/functionspacebases/hierarchicvectorwrapper.hh>
 
+#include <dune/pdelab/adaptivity/adaptivity.hh>
 #include <dune/pdelab/gridfunctionspace/dunefunctionsgridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -158,6 +159,12 @@ void solvePoissonProblem()
 
   // Solve!
   cg.apply(x, rhs, statistics);
+
+  // Test whether we can refine the grid and carry a function along.
+  // Of course we cannot: we haven't marked anything, and we are using
+  // YaspGrid anyway.  But let's make sure we can at least call the method.
+  VectorContainer xContainer(gfs,x);
+  PDELab::adapt_grid(grid, gfs, xContainer, 2 );
 
   // Output result to VTK file
   auto pressureFunction = Functions::makeDiscreteGlobalBasisFunction<double>(*basis,x);
