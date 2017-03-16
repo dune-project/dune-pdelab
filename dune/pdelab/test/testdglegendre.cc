@@ -208,7 +208,7 @@ int main(int argc, char **argv)
   // calculate l2 error squared between the two functions
   FS::DGF xdgf(fs.getGFS(),x);
   FS2::DGF xdgf2(fs2.getGFS(),x2);
-  typedef DifferenceSquaredAdapter<FS::DGF,FS2::DGF> DifferenceSquared;
+  typedef Dune::PDELab::DifferenceSquaredAdapter<FS::DGF,FS2::DGF> DifferenceSquared;
   DifferenceSquared differencesquared(xdgf,xdgf2);
   typename DifferenceSquared::Traits::RangeType l2errorsquared(0.0);
   Dune::PDELab::integrateGridFunction(differencesquared,l2errorsquared,10);
