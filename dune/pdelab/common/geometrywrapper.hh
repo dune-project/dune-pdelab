@@ -100,26 +100,6 @@ namespace Dune {
         return i.boundary();
       }
 
-      /**
-         \brief Identifier for boundary segment from macro grid.
-
-         One can attach a boundary Id to a boundary segment on the macro
-         grid. This Id will also be used for all fragments of these
-         boundary segments.
-
-         The numbering is defined as:
-         - Id==0 for all intersections without boundary()==false
-         - Id>=0 for all intersections without boundary()==true
-
-         The way the Identifiers are attached to the grid may differ
-         between the different grid implementations.
-
-      */
-      int boundaryId () const
-      {
-        return i.boundaryId();
-      }
-
       //! @brief return true if intersection is shared with another element.
       bool neighbor () const
       {
