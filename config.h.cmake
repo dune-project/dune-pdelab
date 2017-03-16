@@ -46,9 +46,6 @@
 /* This is only true if Eigen3 was found by configure */
 #cmakedefine HAVE_EIGEN ENABLE_EIGEN
 
-/* Define to 1 if GCC's __typeof__ extension is supported. */
-#cmakedefine HAVE_GCC___TYPEOF__ 1
-
 /* Define to 1 if sequential UG has been found */
 #cmakedefine PDELAB_SEQUENTIAL_UG 1
 
