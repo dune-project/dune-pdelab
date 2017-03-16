@@ -68,7 +68,11 @@ namespace Dune {
       //! \todo Please doc me!
       typedef typename Geometry::ctype ctype;
       //! \todo Please doc me!
-      enum { dimension=Entity::dimension };
+      enum DUNE_DEPRECATED_MSG("Deprecated: get this dimension from the grid itself, or from an element!") { dimension=Entity::dimension };
+
+      /** \brief Dimension of the domain space of the geometry */
+      enum { mydimension=I::mydimension };
+
       /** \brief Dimension of the image space of the geometry */
       enum { coorddimension=Geometry::coorddimension };
 
@@ -172,7 +176,7 @@ namespace Dune {
 
         The returned vector may depend on local position within the intersection.
       */
-      Dune::FieldVector<ctype, coorddimension> outerNormal (const Dune::FieldVector<ctype, dimension-1>& local) const
+      Dune::FieldVector<ctype, coorddimension> outerNormal (const Dune::FieldVector<ctype, mydimension>& local) const
       {
         return i.outerNormal(local);
       }
@@ -183,7 +187,7 @@ namespace Dune {
         method is redundant but it may be more efficent to use this function
         rather than computing the integration element via intersectionGlobal().
       */
-      Dune::FieldVector<ctype, coorddimension> integrationOuterNormal (const Dune::FieldVector<ctype, dimension-1>& local) const
+      Dune::FieldVector<ctype, coorddimension> integrationOuterNormal (const Dune::FieldVector<ctype, mydimension>& local) const
       {
         return i.integrationOuterNormal(local);
       }
@@ -193,7 +197,7 @@ namespace Dune {
         The returned vector may depend on the local position within the intersection.
         It is scaled to have unit length.
       */
-      Dune::FieldVector<ctype, coorddimension> unitOuterNormal (const Dune::FieldVector<ctype, dimension-1>& local) const
+      Dune::FieldVector<ctype, coorddimension> unitOuterNormal (const Dune::FieldVector<ctype, mydimension>& local) const
       {
         return i.unitOuterNormal(local);
       }
