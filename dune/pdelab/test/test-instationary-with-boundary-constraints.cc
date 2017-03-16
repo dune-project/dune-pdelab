@@ -202,7 +202,7 @@ bool do_simulation (double T, double dt, GM& grid, std::string basename)
   // Compare implicit and explicit solutions with interpolation of exact solution
   DGF xdgf_implicit_after(fs.getGFS(),x_implicit);
   DGF xdgf_explicit_after(fs.getGFS(),x_explicit);
-  typedef DifferenceSquaredAdapter<G,DGF> DifferenceSquared;
+  typedef Dune::PDELab::DifferenceSquaredAdapter<G,DGF> DifferenceSquared;
   DifferenceSquared differencesquared_implicit(g, xdgf_implicit_after);
   DifferenceSquared differencesquared_explicit(g, xdgf_explicit_after);
   typename DifferenceSquared::Traits::RangeType l2error_implicit(0.0);
@@ -213,7 +213,7 @@ bool do_simulation (double T, double dt, GM& grid, std::string basename)
   std::cout << "Accumlated L2 error for explicit time stepping: " << l2error_explicit << std::endl;
 
   // Compare implicit and explicit version
-  typedef DifferenceSquaredAdapter<DGF,DGF> DifferenceSquaredCompare;
+  typedef Dune::PDELab::DifferenceSquaredAdapter<DGF,DGF> DifferenceSquaredCompare;
   DifferenceSquaredCompare differencesquared_compare(xdgf_implicit_after, xdgf_explicit_after);
   typename DifferenceSquaredCompare::Traits::RangeType l2error_compare(0.0);
   Dune::PDELab::integrateGridFunction(differencesquared_compare, l2error_compare, 10);
