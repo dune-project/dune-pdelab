@@ -5,9 +5,6 @@
 
 #include <cstddef>
 #include <map>
-#include <ostream>
-#include <set>
-#include <vector>
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/typetraits.hh>
@@ -28,6 +25,12 @@ namespace Dune {
     namespace Experimental {
 
       /** \brief A pdelab grid function space implemented by a dune-functions function space basis
+       *
+       * \warning This class works only under quite restrictive assumptions:
+       *  - The dune-functions basis has to be scalar-valued
+       *  - The basis has to be such that the local finite element type for a given element
+       *    can be infered from the GeometryType of the element alone.
+       *    (Due to a restriction in the current implementation of the FiniteElementMap)
        *
        *  \tparam DFBasis A dune-functions function space basis
        *  \tparam V       The type of the underlying ISTL vector
@@ -60,6 +63,7 @@ namespace Dune {
 
           using Backend = istl::SimpleVectorBackend<V>;
 
+          /** \brief Rudimentary internal implementation of a FiniteElementMap */
           struct FEM
           {
             struct Traits
@@ -67,6 +71,37 @@ namespace Dune {
               using FiniteElement = typename DFBasis::LocalView::Tree::FiniteElement;
               using FiniteElementType = FiniteElement;
             };
+
+            /** \brief Get local basis functions for entity
+             *
+             * This method makes a few short-cuts.  The problem is that dune-functions bases return LocalFiniteElement objects
+             * by value, but the method 'find' here hands them out by reference.  Therefore, the FiniteElementMap class
+             * has to assume ownership of these objects.  In principle they can be different for each element.  However,
+             * storing a LocalFiniteElement for each element can be very expensive.  Therefore, we make the simplifying
+             * assumption that the basis is such that the LocalFiniteElement type can be inferred from the GeometryType
+             * of the element alone.  This will work for many interesting case, but it will fail, for example, for
+             * p-adaptive or XFEM-type bases.
+             */
+            const typename Traits::FiniteElementType& find (const typename GridView::template Codim<0>::Entity& element) const
+            {
+              auto type = element.type();
+              auto mapEntry = geometryTypeToLocalView_.find(type);
+              if (mapEntry == geometryTypeToLocalView_.end())
+              {
+                auto newLocalView = std::make_shared<typename DFBasis::LocalView>(_basis->localView());
+                newLocalView->bind(element);
+                auto insertedLocalView = geometryTypeToLocalView_.insert(std::make_pair(type, newLocalView));
+                return insertedLocalView.first->second->tree().finiteElement();
+              }
+              else
+              {
+                return mapEntry->second->tree().finiteElement();
+              }
+            }
+
+            std::shared_ptr<DFBasis> _basis;
+
+            mutable std::map<GeometryType, std::shared_ptr<typename DFBasis::LocalView> > geometryTypeToLocalView_;
           };
 
           using FiniteElementMap = FEM;
@@ -183,6 +218,12 @@ namespace Dune {
           return _es;
         }
 
+        //! get finite element map
+        const auto& finiteElementMap () const
+        {
+          return _finiteElementMap;
+        }
+
         //! return constraints engine
         const typename Traits::ConstraintsType& constraints () const
         {
@@ -221,6 +262,17 @@ namespace Dune {
           return _ordering.maxLocalSize();
         }
 
+        /** \brief Update the indexing information of the GridFunctionSpace.
+         *
+         * \ param force   Set to true if the underlying grid has changed (e.g. due to adaptivity)
+         *                 to force an update of the embedded EntitySet.
+         */
+        void update(bool force = false)
+        {
+          _es.update(force);
+          _df_basis->update(_es.gridView());
+        }
+
         const std::string& name() const
         {
           return _name;
@@ -245,12 +297,60 @@ namespace Dune {
 
         typename Traits::EntitySet _es;
         std::shared_ptr<DFBasis> _df_basis;
+        typename Traits::FiniteElementMap _finiteElementMap;
         std::shared_ptr<CE const> _pce;
         Ordering _ordering;
         std::string _name;
       };
 
     } // namespace Experimental
+
+    /** \brief Dummy data handle -- does nothing
+     *
+     * The pdelab adaptivity code requires such a handle, even when the simulation is purely sequential.
+     * Therefore this data handle exists, but it doesn't actually do anything.
+     */
+    template <typename DFBasis, typename V, typename CE, typename U>
+    class AddDataHandle<Experimental::GridFunctionSpace<DFBasis,V,CE>,U>
+    : public CommDataHandleIF<AddDataHandle<Experimental::GridFunctionSpace<DFBasis,V,CE>,U>, typename U::field_type>
+    {
+      using DataType = typename U::field_type;
+
+      //! constructor
+    public:
+      AddDataHandle(const Experimental::GridFunctionSpace<DFBasis,V,CE>& gfs,
+                    const U& u)
+      {}
+
+      //! returns true if data for this codim should be communicated
+      bool contains (int dim, int codim) const
+      {
+        return false;
+      }
+
+      //! returns true if size per entity of given dim and codim is a constant
+      bool fixedsize (int dim, int codim) const
+      {
+        return true;
+      }
+
+      // How many objects of type DataType have to be sent for a given entity
+      template<class EntityType>
+      size_t size (const EntityType& e) const
+      {
+        return 0;
+      }
+
+      // Pack data from user to message buffer
+      template<class MessageBuffer, class EntityType>
+      void gather(MessageBuffer& buffer, const EntityType& entity) const
+      {}
+
+      // Unpack data from message buffer to user
+      template<class MessageBuffer, class EntityType>
+      void scatter(MessageBuffer& buffer, const EntityType& entity, size_t n)
+      {}
+    };
   } // namespace PDELab
 } // namespace Dune
 
