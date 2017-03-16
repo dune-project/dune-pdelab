@@ -870,13 +870,10 @@ namespace Dune {
           NumberType sum_beta=0.0;
           unsigned int alpha_count = 0;
           unsigned int beta_count = 0;
-          for (typename T::const_iterator it = x.begin(),
-                 end = x.end();
-               it != end;
-               ++it)
+          for (const auto& error : x)
             {
-              if (*it >=eta_alpha) { sum_alpha += *it; alpha_count++;}
-              if (*it < eta_beta) { sum_beta += *it; beta_count++;}
+              if (error >=eta_alpha) { sum_alpha += error; alpha_count++;}
+              if (error < eta_beta) { sum_beta += error; beta_count++;}
             }
           if (verbose>1)
             {
@@ -924,13 +921,10 @@ namespace Dune {
           unsigned int alpha_count = 0;
           unsigned int beta_count = 0;
 
-          for (typename T::const_iterator it = x.begin(),
-                 end = x.end();
-               it != end;
-               ++it)
+          for (const auto& error : x)
             {
-              if (*it>=eta_alpha) { sum_alpha += 1.0; alpha_count++;}
-              if (*it< eta_beta) { sum_beta +=1.0; beta_count++;}
+              if (error>=eta_alpha) { sum_alpha += 1.0; alpha_count++;}
+              if (error< eta_beta) { sum_beta +=1.0; beta_count++;}
             }
           if (verbose>1)
             {
