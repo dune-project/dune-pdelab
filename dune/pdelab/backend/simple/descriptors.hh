@@ -23,7 +23,6 @@ namespace Dune {
       template<typename GFSV, typename GFSU, template<typename> class C, typename ET, typename I>
       class SparseMatrixContainer;
 
-      template<typename _RowOrdering, typename _ColOrdering>
       class SparseMatrixPattern;
 
       template<typename E>
@@ -81,14 +80,7 @@ namespace Dune {
 
         //! The type of the pattern object passed to the GridOperator for pattern construction.
         template<typename Matrix, typename GFSV, typename GFSU>
-        using Pattern = Simple::SparseMatrixPattern<
-          OrderingBase<
-            typename GFSV::Ordering::Traits::DOFIndex,
-            typename GFSV::Ordering::Traits::ContainerIndex
-            >,
-          OrderingBase<
-            typename GFSU::Ordering::Traits::DOFIndex,
-            typename GFSU::Ordering::Traits::ContainerIndex> >;
+        using Pattern = Simple::SparseMatrixPattern;
 
         template<typename VV, typename VU, typename E>
         struct MatrixHelper
