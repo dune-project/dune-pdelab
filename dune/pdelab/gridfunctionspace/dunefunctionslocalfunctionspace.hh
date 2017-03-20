@@ -65,6 +65,7 @@ namespace Dune {
         {
 
           using GridFunctionSpace = GFS;
+          using GridView          = typename GFS::Traits::GridView;
           using SizeType          = std::size_t;
           using DOFIndex          = typename Basis::MultiIndex;
           using ConstraintsType   = typename GFS::Traits::ConstraintsType;

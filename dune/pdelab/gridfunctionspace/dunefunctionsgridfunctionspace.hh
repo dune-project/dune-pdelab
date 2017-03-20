@@ -14,6 +14,7 @@
 #include <dune/pdelab/gridfunctionspace/dunefunctionslfsindexcache.hh>
 
 #include <dune/pdelab/backend/istl/dunefunctions.hh>
+#include <dune/pdelab/backend/istl.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -24,6 +25,18 @@ namespace Dune {
 
     namespace Experimental {
 
+      // The following code recognizes whether the given VectorBackend (VBE) is an ISTL backend.
+      // If this is the case, then we need to replace it by ISTL::SimpleVectorBackend,
+      // because we cannot handle anything more complicated at the moment.
+      template<typename VBE>
+      VBE* registerDuneFunctionsCompatibleVBE(VBE*);
+
+      template<std::size_t block_size>
+      ISTL::SimpleVectorBackend<block_size>* registerDuneFunctionsCompatibleVBE(ISTL::VectorBackend<ISTL::Blocking::none,block_size>*);
+
+      template<typename VBE>
+      using DuneFunctionsCompatibleVBE = std::decay_t<decltype(*registerDuneFunctionsCompatibleVBE(std::declval<VBE*>()))>;
+
       /** \brief A pdelab grid function space implemented by a dune-functions function space basis
        *
        * \warning This class works only under quite restrictive assumptions:
@@ -33,10 +46,10 @@ namespace Dune {
        *    (Due to a restriction in the current implementation of the FiniteElementMap)
        *
        *  \tparam DFBasis A dune-functions function space basis
-       *  \tparam V       The type of the underlying ISTL vector
+       *  \tparam VBE     The type of the underlying vector backend
        *  \tparam CE      Type for constraints assembler
        */
-      template<typename DFBasis, typename V, typename CE>
+      template<typename DFBasis, typename VBE, typename CE>
       class GridFunctionSpace
         : public TypeTree::LeafNode
         , public GridFunctionOutputParameters
@@ -61,7 +74,10 @@ namespace Dune {
 
           using Basis = DFBasis;
 
-          using Backend = istl::SimpleVectorBackend<V>;
+          // The following code recognizes whether the given VectorBackend (VBE) is an ISTL backend.
+          // If this is the case, then we replace it by ISTL::SimpleVectorBackend,
+          // because we cannot handle anything more complicated at the moment.
+          using Backend = DuneFunctionsCompatibleVBE<VBE>;
 
           /** \brief Rudimentary internal implementation of a FiniteElementMap */
           struct FEM
@@ -138,9 +154,11 @@ namespace Dune {
             return _gfs.basis().size();
           }
 
+          /** \brief Same as size(), because block size is always 1
+           */
           size_type blockCount() const
           {
-            return size() / V::block_type::dimension;
+            return size();
           }
 
           size_type maxLocalSize() const
