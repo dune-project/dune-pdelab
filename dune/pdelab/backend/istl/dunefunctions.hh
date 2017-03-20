@@ -7,9 +7,9 @@
 
 namespace Dune {
   namespace PDELab {
-    namespace istl {
+    namespace ISTL {
 
-      template<typename V>
+      template<std::size_t block_size = 1>
       struct SimpleVectorBackend
       {};
 
@@ -21,10 +21,10 @@ namespace Dune {
     namespace Backend {
       namespace impl {
 
-        template<typename V, typename GFS, typename E>
-        struct BackendVectorSelectorHelper<istl::SimpleVectorBackend<V>, GFS, E>
+        template<std::size_t block_size, typename GFS, typename E>
+        struct BackendVectorSelectorHelper<ISTL::SimpleVectorBackend<block_size>, GFS, E>
         {
-          using type = Dune::PDELab::istl::BlockVector<GFS,V>;
+          using type = Dune::PDELab::ISTL::BlockVector<GFS,Dune::BlockVector<Dune::FieldVector<E,block_size>>>;
           using Type = type;
         };
 
