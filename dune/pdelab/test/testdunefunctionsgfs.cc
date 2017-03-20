@@ -71,11 +71,9 @@ void solvePoissonProblem()
   //  Assemble the algebraic system
   ////////////////////////////////////////////////////////
 
-  typedef BlockVector<FieldVector<double,1> > VectorType;
   typedef BCRSMatrix<FieldMatrix<double,1,1> > MatrixType;
 
   MatrixType stiffnessMatrix;
-  VectorType rhs;
 
   // Construct Lagrangian finite element space basis
   using GridView = typename GridType::LeafGridView;
@@ -87,7 +85,9 @@ void solvePoissonProblem()
   typedef PDELab::ConformingDirichletConstraints Constraints;
   auto con = std::make_shared<Constraints>();
 
-  typedef PDELab::Experimental::GridFunctionSpace<Basis,VectorType,Constraints> GridFunctionSpace;
+  using VectorBackend = PDELab::ISTL::VectorBackend<>;
+
+  typedef PDELab::Experimental::GridFunctionSpace<Basis,VectorBackend,Constraints> GridFunctionSpace;
   GridFunctionSpace gfs(basis,con);
 
   // Test the 'size' method
@@ -131,6 +131,8 @@ void solvePoissonProblem()
   go.jacobian(x0,m);      // assemble the stiffness matrix
 
   // evaluate residual w.r.t pseudo "current" iterate
+  using VectorType = PDELab::Backend::Native<PDELab::Backend::Vector<GridFunctionSpace,double> >;
+  VectorType rhs;
   VectorContainer r(gfs,rhs);  //Use the rhs object for the actual storage
   r = 0.0;
 
