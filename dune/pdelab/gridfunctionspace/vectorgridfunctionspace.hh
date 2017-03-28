@@ -20,22 +20,31 @@ namespace Dune {
   namespace PDELab {
 
     //=======================================
-    // power grid function space
+    // vector grid function space
     //=======================================
 
-    /** \brief base class for tuples of grid function spaces
-        product of identical grid function spaces
-        base class that holds implementation of the methods
+    /** \brief tensorproduct space representing a vector valued function space
 
-        PGFS(T,k) = {T}^k
+        In its structure this space is very similar to a
+        PowerGridFunctionSpace:
 
-        \tparam T the underlying are all grid function spaces
-        \tparam k power factor
-        \tparam Mapper is the ordering parameter. Use e.g.
-        \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
-        or \link  GridFunctionSpaceComponentBlockwiseMapper  GridFunctionSpaceComponentBlockwiseMapper \endlink
-        or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
-        or \link  GridFunctionSpaceDynamicBlockwiseMapper  GridFunctionSpaceDynamicBlockwiseMapper \endlink
+        VGFS(FEM,k) = PGFS(GFS(FEM),k) = {GFS(FEM)}^k
+
+        Stating explicitly that a space is a VectorGridFunctionSpace
+        mainly changes the way the data is interpreted. One can
+        immediatelly create a discrete function as a member of a
+        VectorGridFunctionSpace and visualize it via VTK. In this case
+        the output data is automatically tagged as vector valued data,
+        allowing for a better visualization.
+
+        \tparam GV               Type implementing GridView
+        \tparam FEM              Type implementing FiniteElementMapInterface
+        \tparam k                Physical dimension of the space
+        \tparam Backend          Linear algebra backend type at the level of the tensorproduct construction (the same backend one might pass to a PowerGridFunctionSpace)
+        \tparam LeafBackend      Linear algebra backend type at the level of the underlying scalar space (GFS(FEM))
+        \tparam Constraints      Type for constraints assembler
+        \tparam OrderingTag      ordering of DOFs at the level of the tensorproduct construction (usually on will choose either \link LexicographicOrderingTag or \link EntityBlockedOrderingTag)
+        \tparam LeafOrderingTag  ordering of DOFs at the level of the underlying scalar space (default: DefaultLeafOrderingTag)
     */
     template<typename GV,
              typename FEM,
