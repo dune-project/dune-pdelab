@@ -104,7 +104,7 @@ public:
 
 //! solve problem with DG method
 template<class GV, class FEM, class Problem, int degree>
-void runDG(const GV& gv, const FEM& fem, Problem& problem)
+bool runDG(const GV& gv, const FEM& fem, Problem& problem)
 {
   // Coordinate and result type
   typedef typename Problem::RangeFieldType Real;
@@ -162,12 +162,17 @@ void runDG(const GV& gv, const FEM& fem, Problem& problem)
   DifferenceSquared differencesquared(g,udgf);
   typename DifferenceSquared::Traits::RangeType l2errorsquared(0.0);
   Dune::PDELab::integrateGridFunction(differencesquared,l2errorsquared,12);
-  std::cout << "l2 error: " << sqrt(l2errorsquared[0]) << std::endl;
+  std::cout << "l2 error squared: " << l2errorsquared << std::endl;
 
   // write vtk file
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,degree-1);
   vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF>>(udgf,"u_h"));
-  vtkwriter.write("output",Dune::VTK::appendedraw);
+  vtkwriter.write("testfastdgassembler",Dune::VTK::appendedraw);
+
+  bool test_pass = true;
+  if (l2errorsquared>1e-08)
+    test_pass = false;
+  return test_pass;
 }
 
 
@@ -182,6 +187,7 @@ int main(int argc, char** argv)
       std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
   }
 
+  bool test_pass = true;
 
   try{
     typedef double Real;
@@ -211,7 +217,7 @@ int main(int argc, char** argv)
     FEMDG femdg;
 
     // Solve problem
-    runDG <GV, FEMDG, Problem, degree>(gv, femdg, problem);
+    test_pass = runDG <GV, FEMDG, Problem, degree>(gv, femdg, problem);
   }
 
   catch (Dune::Exception &e){
@@ -223,5 +229,5 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  return 0;
+  return test_pass;
 }
