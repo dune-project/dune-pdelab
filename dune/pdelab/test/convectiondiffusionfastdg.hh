@@ -233,7 +233,7 @@ namespace Dune {
             auto factor = ip.weight() * geo.integrationElement(ip.position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
-                mat.accumulate(lfsu,i,lfsu,j,( Agradphi[j]*gradphi[i] - phi[j]*(b*gradphi[i]) + c*phi[j]*phi[i] )*factor);
+                mat.data()[lfsu.size()*i+j] += (( Agradphi[j]*gradphi[i] - phi[j]*(b*gradphi[i]) + c*phi[j]*phi[i] )*factor);
           }
       }
 
@@ -557,37 +557,37 @@ namespace Dune {
             for (size_type j=0; j<lfsu_s.size(); j++) {
               auto temp1 = -(An_F_s*tgradphi_s[j])*omega_s*factor;
               for (size_type i=0; i<lfsu_s.size(); i++) {
-                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,omegaup_s * phi_s[j] * normalflux *factor * phi_s[i]);
-                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,temp1 * phi_s[i]);
-                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,phi_s[j] * factor * theta * omega_s * (An_F_s*tgradphi_s[i]));
-                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,phi_s[j] * ipfactor * phi_s[i]);
+                mat_ss.data()[lfsu_s.size()*i+j] += (omegaup_s * phi_s[j] * normalflux *factor * phi_s[i]);
+                mat_ss.data()[lfsu_s.size()*i+j] += (temp1 * phi_s[i]);
+                mat_ss.data()[lfsu_s.size()*i+j] += (phi_s[j] * factor * theta * omega_s * (An_F_s*tgradphi_s[i]));
+                mat_ss.data()[lfsu_s.size()*i+j] += (phi_s[j] * ipfactor * phi_s[i]);
               }
             }
             for (size_type j=0; j<lfsu_n.size(); j++) {
               auto temp1 = -(An_F_n*tgradphi_n[j])*omega_n*factor;
               for (size_type i=0; i<lfsu_s.size(); i++) {
-                mat_sn.accumulate(lfsu_s,i,lfsu_n,j,omegaup_n * phi_n[j] * normalflux *factor * phi_s[i]);
-                mat_sn.accumulate(lfsu_s,i,lfsu_n,j,temp1 * phi_s[i]);
-                mat_sn.accumulate(lfsu_s,i,lfsu_n,j,-phi_n[j] * factor * theta * omega_s * (An_F_s*tgradphi_s[i]));
-                mat_sn.accumulate(lfsu_s,i,lfsu_n,j,-phi_n[j] * ipfactor * phi_s[i]);
+                mat_sn.data()[lfsu_s.size()*i+j] += (omegaup_n * phi_n[j] * normalflux *factor * phi_s[i]);
+                mat_sn.data()[lfsu_s.size()*i+j] += (temp1 * phi_s[i]);
+                mat_sn.data()[lfsu_s.size()*i+j] += (-phi_n[j] * factor * theta * omega_s * (An_F_s*tgradphi_s[i]));
+                mat_sn.data()[lfsu_s.size()*i+j] += (-phi_n[j] * ipfactor * phi_s[i]);
               }
             }
             for (size_type j=0; j<lfsu_s.size(); j++) {
               auto temp1 = -(An_F_s*tgradphi_s[j])*omega_s*factor;
               for (size_type i=0; i<lfsu_n.size(); i++) {
-                mat_ns.accumulate(lfsu_n,i,lfsu_s,j,-omegaup_s * phi_s[j] * normalflux *factor * phi_n[i]);
-                mat_ns.accumulate(lfsu_n,i,lfsu_s,j,-temp1 * phi_n[i]);
-                mat_ns.accumulate(lfsu_n,i,lfsu_s,j,phi_s[j] * factor * theta * omega_n * (An_F_n*tgradphi_n[i]));
-                mat_ns.accumulate(lfsu_n,i,lfsu_s,j,-phi_s[j] * ipfactor * phi_n[i]);
+                mat_ns.data()[lfsu_n.size()*i+j] += (-omegaup_s * phi_s[j] * normalflux *factor * phi_n[i]);
+                mat_ns.data()[lfsu_n.size()*i+j] += (-temp1 * phi_n[i]);
+                mat_ns.data()[lfsu_n.size()*i+j] += (phi_s[j] * factor * theta * omega_n * (An_F_n*tgradphi_n[i]));
+                mat_ns.data()[lfsu_n.size()*i+j] += (-phi_s[j] * ipfactor * phi_n[i]);
               }
             }
             for (size_type j=0; j<lfsu_n.size(); j++) {
               auto temp1 = -(An_F_n*tgradphi_n[j])*omega_n*factor;
               for (size_type i=0; i<lfsu_n.size(); i++) {
-                mat_nn.accumulate(lfsu_n,i,lfsu_n,j,-omegaup_n * phi_n[j] * normalflux *factor * phi_n[i]);
-                mat_nn.accumulate(lfsu_n,i,lfsu_n,j,-temp1 * phi_n[i]);
-                mat_nn.accumulate(lfsu_n,i,lfsu_n,j,-phi_n[j] * factor * theta * omega_n * (An_F_n*tgradphi_n[i]));
-                mat_nn.accumulate(lfsu_n,i,lfsu_n,j,phi_n[j] * ipfactor * phi_n[i]);
+                mat_nn.data()[lfsu_n.size()*i+j] += (-omegaup_n * phi_n[j] * normalflux *factor * phi_n[i]);
+                mat_nn.data()[lfsu_n.size()*i+j] += (-temp1 * phi_n[i]);
+                mat_nn.data()[lfsu_n.size()*i+j] += (-phi_n[j] * factor * theta * omega_n * (An_F_n*tgradphi_n[i]));
+                mat_nn.data()[lfsu_n.size()*i+j] += (phi_n[j] * ipfactor * phi_n[i]);
               }
             }
           }
@@ -871,7 +871,7 @@ namespace Dune {
                 // convection term
                 for (size_type j=0; j<lfsu_s.size(); j++)
                   for (size_type i=0; i<lfsu_s.size(); i++)
-                    mat_ss.accumulate(lfsu_s,i,lfsu_s,j,phi_s[j] * normalflux * factor * phi_s[i]);
+                    mat_ss.data()[lfsu_s.size()*i+j] += (phi_s[j] * normalflux * factor * phi_s[i]);
 
                 continue;
               }
@@ -899,22 +899,22 @@ namespace Dune {
             // convection term
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
-                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,omegaup_s * phi_s[j] * normalflux * factor * phi_s[i]);
+                mat_ss.data()[lfsu_s.size()*i+j] += (omegaup_s * phi_s[j] * normalflux * factor * phi_s[i]);
 
             // diffusion term
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
-                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,-(An_F_s*tgradphi_s[j]) * factor * phi_s[i]);
+                mat_ss.data()[lfsu_s.size()*i+j] += (-(An_F_s*tgradphi_s[j]) * factor * phi_s[i]);
 
             // (non-)symmetric IP term
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
-                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,phi_s[j] * factor * theta * (An_F_s*tgradphi_s[i]));
+                mat_ss.data()[lfsu_s.size()*i+j] += (phi_s[j] * factor * theta * (An_F_s*tgradphi_s[i]));
 
             // standard IP term
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
-                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,penalty_factor * phi_s[j] * phi_s[i] * factor);
+                mat_ss.data()[lfsu_s.size()*i+j] += (penalty_factor * phi_s[j] * phi_s[i] * factor);
           }
       }
 
