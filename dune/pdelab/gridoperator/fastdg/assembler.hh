@@ -96,7 +96,6 @@ namespace Dune{
         assemble(engineFactory(la));
       }
 
-    private:
       template<class LocalAssemblerEngine>
       void assemble(LocalAssemblerEngine & assembler_engine) const
       {
@@ -291,6 +290,8 @@ namespace Dune{
         assembler_engine.postAssembly(gfsu,gfsv);
 
       }
+
+    private:
 
       /* global function spaces */
       const GFSU& gfsu;
