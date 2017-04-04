@@ -44,6 +44,8 @@ dune_add_test(SOURCES testdglegendre.cc)
 
 dune_add_test(SOURCES testfastdgassembler.cc)
 
+dune_add_test(SOURCES testinstationaryfastdgassembler.cc)
+
 dune_add_test(SOURCES testlocalfunctionspace.cc)
 
 dune_add_test(SOURCES testlocaloperatorinterface.cc)
