@@ -126,6 +126,9 @@ namespace Dune {
         // Transformation matrix
         typename EG::Geometry::JacobianInverseTransposed jac;
 
+        // Weight of time stepping
+        auto t_weight = r.weight();
+
         // loop over quadrature points
         auto intorder = intorderadd + quadrature_factor * order;
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -166,7 +169,7 @@ namespace Dune {
             auto c = param.c(cell,ip.position());
 
             // integrate (A grad u - bu)*grad phi_i + a*u*phi_i
-            RF factor = ip.weight() * geo.integrationElement(ip.position());
+            RF factor = ip.weight() * geo.integrationElement(ip.position()) * t_weight;
             for (size_type i=0; i<lfsv.size(); i++)
               r.data()[i] += ( Agradu*gradpsi[i] - u*(b*gradpsi[i]) + c*u*psi[i] )*factor;
           }
@@ -205,6 +208,9 @@ namespace Dune {
         // Transformation matrix
         typename EG::Geometry::JacobianInverseTransposed jac;
 
+        // Weight of time stepping
+        auto t_weight = mat.weight();
+
         // loop over quadrature points
         auto intorder = intorderadd + quadrature_factor * order;
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -230,7 +236,7 @@ namespace Dune {
             auto c = param.c(cell,ip.position());
 
             // integrate (A grad u - bu)*grad phi_i + a*u*phi_i
-            auto factor = ip.weight() * geo.integrationElement(ip.position());
+            auto factor = ip.weight() * geo.integrationElement(ip.position()) * t_weight;
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
                 mat.data()[lfsu.size()*i+j] += (( Agradphi[j]*gradphi[i] - phi[j]*(b*gradphi[i]) + c*phi[j]*phi[i] )*factor);
@@ -328,6 +334,10 @@ namespace Dune {
         // Transformation matrix
         typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
+        // Weight of time stepping
+        auto t_weight = r_s.weight();
+        assert(r_s.weight()==r_n.weight());
+
         // loop over quadrature points
         auto intorder = intorderadd+quadrature_factor*order;
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -391,7 +401,7 @@ namespace Dune {
               }
 
             // integration factor
-            auto factor = ip.weight()*geo.integrationElement(ip.position());
+            auto factor = ip.weight()*geo.integrationElement(ip.position()) * t_weight;
 
             // convection term
             auto term1 = (omegaup_s*u_s + omegaup_n*u_n) * normalflux *factor;
@@ -509,6 +519,12 @@ namespace Dune {
         // Transformation matrix
         typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
+        // Weight of time stepping
+        auto t_weight = mat_ss.weight();
+        assert(mat_ss.weight()==mat_sn.weight());
+        assert(mat_ss.weight()==mat_ns.weight());
+        assert(mat_ss.weight()==mat_nn.weight());
+
         // loop over quadrature points
         const int intorder = intorderadd+quadrature_factor*order;
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -550,7 +566,7 @@ namespace Dune {
               }
 
             // integration factor
-            auto factor = ip.weight() * geo.integrationElement(ip.position());
+            auto factor = ip.weight() * geo.integrationElement(ip.position()) * t_weight;
             auto ipfactor = penalty_factor * factor;
 
             // do all terms in the order: I convection, II diffusion, III consistency, IV ip
@@ -656,6 +672,9 @@ namespace Dune {
         // Transformation matrix
         typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
+        // Weight of time stepping
+        auto t_weight = r_s.weight();
+
         // loop over quadrature points
         auto intorder = intorderadd+quadrature_factor*order;
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -676,7 +695,7 @@ namespace Dune {
             auto& psi_s = cache[order_s].evaluateFunction(iplocal_s,lfsv_s.finiteElement().localBasis());
 
             // integration factor
-            RF factor = ip.weight() * geo.integrationElement(ip.position());
+            RF factor = ip.weight() * geo.integrationElement(ip.position()) * t_weight;
 
             if (bctype == ConvectionDiffusionBoundaryConditions::Neumann)
               {
@@ -834,6 +853,9 @@ namespace Dune {
         // Transformation matrix
         typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
+        // Weight of time stepping
+        auto t_weight = mat_ss.weight();
+
         // loop over quadrature points
         auto intorder = intorderadd+quadrature_factor*order;
         for (const auto& ip : quadratureRule(geo,intorder))
@@ -854,7 +876,7 @@ namespace Dune {
             auto& phi_s = cache[order_s].evaluateFunction(iplocal_s,lfsu_s.finiteElement().localBasis());
 
             // integration factor
-            auto factor = ip.weight() * geo.integrationElement(ip.position());
+            auto factor = ip.weight() * geo.integrationElement(ip.position()) * t_weight;
 
             // evaluate velocity field and upwinding, assume H(div) velocity field => choose any side
             auto b = param.b(cell_inside,iplocal_s);
@@ -931,6 +953,9 @@ namespace Dune {
         // get geometries
         auto geo = eg.geometry();
 
+        // Weight of time stepping
+        auto t_weight = r.weight();
+
         // loop over quadrature points
         auto order = lfsv.finiteElement().localBasis().order();
         auto intorder = intorderadd + 2 * order;
@@ -943,7 +968,7 @@ namespace Dune {
             auto f = param.f(cell,ip.position());
 
             // integrate f
-            auto factor = ip.weight() * geo.integrationElement(ip.position());
+            auto factor = ip.weight() * geo.integrationElement(ip.position()) * t_weight;
             for (size_type i=0; i<lfsv.size(); i++)
               r.data()[i] += (-f*phi[i]*factor);
           }
