@@ -129,7 +129,7 @@ namespace Dune{
         auto& index_set = entity_set.indexSet();
 
         // Traverse grid view
-        for (const auto& element : elements(entity_set))
+        for (const auto& element : elements(entity_set,Partition::interiorBorder))
           {
             // Compute unique id
             auto ids = index_set.uniqueIndex(element);
@@ -191,7 +191,9 @@ namespace Dune{
                             auto idn = index_set.uniqueIndex(outside_element);
 
                             // Visit face if id is bigger
-                            bool visit_face = ids > idn || require_skeleton_two_sided;
+                            bool visit_face = ids > idn
+                              or outside_element.partitionType() != InteriorEntity
+                              or require_skeleton_two_sided;
 
                             // unique vist of intersection
                             if (visit_face)
