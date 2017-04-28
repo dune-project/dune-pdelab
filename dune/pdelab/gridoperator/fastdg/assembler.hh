@@ -129,7 +129,7 @@ namespace Dune{
         auto& index_set = entity_set.indexSet();
 
         // Traverse grid view
-        for (const auto& element : elements(entity_set,Partition::interiorBorder))
+        for (const auto& element : elements(entity_set,Partitions::interiorBorder))
           {
             // Compute unique id
             auto ids = index_set.uniqueIndex(element);
