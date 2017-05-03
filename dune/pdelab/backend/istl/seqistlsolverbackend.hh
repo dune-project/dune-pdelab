@@ -42,8 +42,6 @@ namespace Dune {
       typedef Y range_type;
       typedef typename X::field_type field_type;
 
-      enum {category=Dune::SolverCategory::sequential};
-
       OnTheFlyOperator (GOS& gos_)
         : gos(gos_)
       {}
@@ -60,6 +58,11 @@ namespace Dune {
         temp = 0.0;
         gos.jacobian_apply(x,temp);
         y.axpy(alpha,temp);
+      }
+
+      virtual SolverCategory::Category category() const
+      {
+        return SolverCategory::sequential;
       }
 
     private:

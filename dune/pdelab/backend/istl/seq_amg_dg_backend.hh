@@ -44,11 +44,10 @@ namespace Dune {
       typedef typename CGPrec::domain_type CGX;
       typedef typename CGPrec::range_type CGY;
 
-      // define the category
-      enum {
-        //! \brief The category the preconditioner is part of.
-        category=Dune::SolverCategory::sequential
-      };
+      virtual SolverCategory::Category category() const
+      {
+        return SolverCategory::sequential;
+      }
 
       /*! \brief Constructor.
 

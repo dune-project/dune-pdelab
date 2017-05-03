@@ -66,9 +66,6 @@ namespace Dune {
       //! export type of the entries for x
       typedef typename X::field_type field_type;
 
-      //redefine the category, that is the only difference
-      enum {category=Dune::SolverCategory::nonoverlapping};
-
       //! Construct a non-overlapping operator
       /**
        * \param gfs_ GridFunctionsSpace for the vectors.
@@ -120,6 +117,11 @@ namespace Dune {
           gfs.gridView().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
       }
 
+      virtual SolverCategory::Category category() const
+      {
+        return SolverCategory::nonoverlapping;
+      }
+
       //! extract the matrix
       virtual const M& getmat () const
       {
@@ -140,8 +142,10 @@ namespace Dune {
       typedef X domain_type;
       typedef typename X::ElementType field_type;
 
-      //! define the category
-      enum {category=Dune::SolverCategory::nonoverlapping};
+      virtual SolverCategory::Category category() const
+      {
+        return SolverCategory::nonoverlapping;
+      }
 
       /*! \brief Constructor needs to know the grid function space
        */
@@ -197,10 +201,10 @@ namespace Dune {
       typedef typename X::ElementType field_type;
 
       // define the category
-      enum {
-        //! \brief The category the preconditioner is part of.
-        category=Dune::SolverCategory::nonoverlapping
-      };
+      virtual SolverCategory::Category category() const
+      {
+        return SolverCategory::nonoverlapping;
+      }
 
       //! \brief Constructor.
       NonoverlappingRichardson (const GFS& gfs_, const ISTL::ParallelHelper<GFS>& helper_)
@@ -270,10 +274,10 @@ namespace Dune {
       //! \brief The field type of the preconditioner.
       typedef typename X::ElementType field_type;
 
-      enum {
-        //! \brief The category the preconditioner is part of.
-        category=Dune::SolverCategory::nonoverlapping
-      };
+      virtual SolverCategory::Category category() const
+      {
+        return SolverCategory::nonoverlapping;
+      }
 
       //! \brief Constructor.
       /**
