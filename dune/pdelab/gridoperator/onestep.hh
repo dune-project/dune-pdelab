@@ -256,6 +256,11 @@ namespace Dune{
         const_residual = Range(go0.testGridFunctionSpace());
       }
 
+      void make_consistent(Jacobian& a) const
+      {
+        go0.make_consistent(a);
+      }
+
       const typename Traits::MatrixBackend& matrixBackend() const
       {
         return go0.matrixBackend();
