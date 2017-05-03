@@ -326,10 +326,10 @@ namespace Dune {
     using CGW = Dune::PDELab::Backend::Vector<CGGFS,typename CGPrec::range_type::field_type>;
 
     // define the category
-    enum {
-      //! \brief The category the preconditioner is part of.
-      category=Dune::SolverCategory::overlapping
-    };
+    virtual SolverCategory::Category category() const
+    {
+      return SolverCategory::overlapping;
+    }
 
     /*! \brief Constructor.
 
