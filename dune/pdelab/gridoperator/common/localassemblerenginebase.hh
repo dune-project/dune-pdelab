@@ -99,6 +99,11 @@ namespace Dune {
           return false;
         }
 
+        auto partition() const
+        {
+          return Partitions::interiorBorder;
+        }
+
         //! @}
 
         //! @name Callbacks for LocalFunctionSpace binding and unbinding events
