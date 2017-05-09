@@ -90,7 +90,7 @@ int main(int argc, char** argv)
     typedef Dune::PDELab::PkLocalFiniteElementMap<GV,D,R,1> FEM;
     FEM fem(gv);
     typedef Dune::PDELab::NoConstraints CON;
-    typedef Dune::PDELab::istl::VectorBackend<> VBE;
+    typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
     typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
     GFS gfs(gv,fem);
     gfs.name("function");

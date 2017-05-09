@@ -1,6 +1,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_SEQ_AMG_DG_BACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_SEQ_AMG_DG_BACKEND_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <dune/common/power.hh>
 #include <dune/common/parametertree.hh>
 
@@ -161,7 +164,7 @@ namespace Dune {
       typedef Backend::Native<CGV> CGVector;                       // istl CG vector
 
       // prolongation matrix
-      typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+      typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
       typedef Dune::PDELab::EmptyTransformation CC;
       typedef TransferLOP CGTODGLOP; // local operator
       typedef Dune::PDELab::GridOperator<CGGFS,GFS,CGTODGLOP,MBE,field_type,field_type,field_type,CC,CC> PGO;
@@ -181,6 +184,7 @@ namespace Dune {
 
       DGGO& dggo;
       CGGFS& cggfs;
+      std::shared_ptr<CGOperator> cgop;
       std::shared_ptr<AMG> amg;
       Parameters amg_parameters;
       unsigned maxiter;
@@ -236,6 +240,8 @@ namespace Dune {
         , amg_parameters(15,2000)
         , maxiter(params.get<int>("max_iterations",5000))
         , verbose(params.get<int>("verbose",1))
+        , reuse(params.get<bool>("reuse", false))
+        , firstapply(true)
         , usesuperlu(params.get<bool>("use_superlu",true))
         , low_order_space_entries_per_row(params.get<std::size_t>("low_order_space.entries_per_row",StaticPower<3,GFS::Traits::GridView::dimension>::power))
         , cgtodglop()
@@ -333,7 +339,6 @@ namespace Dune {
           std::cout << "=== reuse CG matrix, SKIPPING triple matrix product " << std::endl;
 
         // set up AMG solver for the CG subspace
-        CGOperator cgop(acg);
         typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
         SmootherArgs smootherArgs;
         smootherArgs.iterations = 1;
@@ -345,7 +350,8 @@ namespace Dune {
         // only construct a new AMG for the CG-subspace if the matrix changes
         double amg_setup_time = 0.0;
         if(reuse == false || firstapply == true) {
-          amg.reset(new AMG(cgop,criterion,smootherArgs));
+          cgop.reset(new CGOperator(acg));
+          amg.reset(new AMG(*cgop,criterion,smootherArgs));
           firstapply = false;
           amg_setup_time = watch.elapsed();
           if (verbose>0)

@@ -128,7 +128,7 @@ namespace Dune {
 
             std::size_t size(GeometryType gt) const
             {
-                assert(false && "this method should never be called");
+                DUNE_THROW(NotImplemented, "PkQkLocalFiniteElement is not fixed-size!");
             }
 
             std::size_t maxLocalSize() const

@@ -7,12 +7,24 @@
 
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
+#include <dune/functions/gridfunctions/analyticgridviewfunction.hh>
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
+
+double x_component_A(const Dune::FieldVector<double,2> & x)
+{
+    return x[0];
+}
+
+template<typename Coord>
+double x_component_B(const Coord & x)
+{
+    return x[0];
+}
 
 template<typename GV, std::size_t range_dim>
 struct interpolation_function
@@ -36,7 +48,7 @@ public:
 
 
 template<class GV>
-static void test_interpolate(const GV& gv)
+static void test_interpolate_old_interface(const GV& gv)
 {
   // instantiate finite element maps
   Dune::GeometryType gt;
@@ -56,16 +68,16 @@ static void test_interpolate(const GV& gv)
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> GFS2;
   GFS2 gfs2(gv,q22dfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,Dune::PDELab::NoConstraints,
-                                          Dune::PDELab::istl::VectorBackend<> > GFS3;
+                                          Dune::PDELab::ISTL::VectorBackend<> > GFS3;
   GFS3 gfs3(gv,q22dfem);
 
   // test power
-  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,3,Dune::PDELab::istl::VectorBackend<> > PGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,3,Dune::PDELab::ISTL::VectorBackend<> > PGFS;
   PGFS pgfs(gfs2,gfs2,gfs2);
 
   // test composite
   typedef Dune::PDELab::CompositeGridFunctionSpace<
-    Dune::PDELab::istl::VectorBackend<>,
+    Dune::PDELab::ISTL::VectorBackend<>,
     Dune::PDELab::LexicographicOrderingTag,
     P0GFS,GFS1,GFS2,GFS3
     > CGFS;
@@ -75,7 +87,7 @@ static void test_interpolate(const GV& gv)
   // master space - contains power and composite twice, once for interpolation from
   // scalar function, once for interpolation from vector function
   typedef Dune::PDELab::CompositeGridFunctionSpace<
-    Dune::PDELab::istl::VectorBackend<>,
+    Dune::PDELab::ISTL::VectorBackend<>,
     Dune::PDELab::LexicographicOrderingTag,
     GFS1,PGFS,CGFS,PGFS,CGFS
     > GFS;
@@ -107,9 +119,66 @@ static void test_interpolate(const GV& gv)
 
   // interpolate
   Dune::PDELab::interpolate(f,gfs,x);
+}
 
-  //Dune::VTKWriter<GV> vtkwriter(gv);
-  //Dune::PDELab::vtkwriter_tree_addvertexdata(vtkwriter,
+template<class GV>
+static void test_interpolate(const GV& gv)
+{
+  // instantiate finite element maps
+  Dune::GeometryType gt;
+  gt.makeCube(2);
+  using P0FEM = Dune::PDELab::P0LocalFiniteElementMap<double,double,GV::dimension>;
+  P0FEM p0fem(gt);
+
+  // make a grid function space
+  using P0GFS = Dune::PDELab::GridFunctionSpace<GV,P0FEM>;
+  P0GFS p0gfs(gv,p0fem);
+
+  // make coefficent Vector
+  using V = Dune::PDELab::Backend::Vector<P0GFS, double>;
+  V x(p0gfs,0.0);
+
+  // interpolate from old-style scalar function
+  {
+      using scalar_interpolation_function = interpolation_function<GV,1>;
+      scalar_interpolation_function f(gv);
+      auto f2 = f;
+      Dune::PDELab::interpolate(f,p0gfs,x);
+      Dune::PDELab::interpolate(f2,p0gfs,x);
+  }
+  // interpolate from global function
+  {
+      auto f = x_component_A;
+      auto lf = Dune::Functions::makeAnalyticGridViewFunction(f, gv);
+      Dune::PDELab::interpolate(lf,p0gfs,x);
+      Dune::PDELab::interpolate(x_component_A,p0gfs,x);
+      Dune::PDELab::interpolate(f,p0gfs,x);
+  }
+  // interpolate from global template function
+  {
+      using Domain = Dune::FieldVector<typename GV::ctype, GV::dimension>;
+      auto f = x_component_B<Domain>;
+      auto lf = Dune::Functions::makeAnalyticGridViewFunction(f, gv);
+      Dune::PDELab::interpolate(lf,p0gfs,x);
+      Dune::PDELab::interpolate(x_component_B<Domain>,p0gfs,x);
+      Dune::PDELab::interpolate(f,p0gfs,x);
+  }
+  // interpolate from lambda
+  {
+      using Domain = Dune::FieldVector<typename GV::ctype, GV::dimension>;
+      auto f = [](const Domain& x) {return x[0];};
+      auto lf = Dune::Functions::makeAnalyticGridViewFunction(f, gv);
+      Dune::PDELab::interpolate(lf,p0gfs,x);
+      Dune::PDELab::interpolate(f,p0gfs,x);
+  }
+  // interpolate from generic lambda
+  {
+      using Domain = Dune::FieldVector<typename GV::ctype, GV::dimension>;
+      auto f = [](const auto& x) {return x[0];};
+      auto lf = Dune::Functions::makeAnalyticGridViewFunction(f, gv);
+      Dune::PDELab::interpolate(lf,p0gfs,x);
+      Dune::PDELab::interpolate(f,p0gfs,x);
+  }
 }
 
 int main(int argc, char** argv)
@@ -121,10 +190,11 @@ int main(int argc, char** argv)
     std::cout << "interpolation tests (2D)" << std::endl;
     // need a grid in order to test grid functions
     Dune::FieldVector<double,2> L(1.0);
-    Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+    std::array<int,2> N(Dune::fill_array<int,2>(1));
     Dune::YaspGrid<2> grid(L,N);
     grid.globalRefine(1);
 
+    test_interpolate_old_interface(grid.leafGridView());
     test_interpolate(grid.leafGridView());
 
 	// test passed

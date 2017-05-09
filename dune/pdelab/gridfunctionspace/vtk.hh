@@ -91,7 +91,7 @@ namespace Dune {
         using EntitySet = typename GFS::Traits::EntitySet;
         using Cell = typename EntitySet::Traits::Element;
         using IndexSet = typename EntitySet::Traits::IndexSet;
-        typedef typename GFS::Traits::SizeType size_type;
+        typedef typename IndexSet::IndexType size_type;
 
         static const auto dim = EntitySet::dimension;
 
@@ -139,8 +139,7 @@ namespace Dune {
 
       template<typename LFS, typename Data>
       class DGFTreeLeafFunction
-        : public TypeTree::LeafNode
-        , public GridFunctionInterface<GridFunctionTraits<
+        : public GridFunctionBase<GridFunctionTraits<
                                          typename LFS::Traits::GridView,
                                          typename BasisInterfaceSwitch<
                                            typename FiniteElementInterfaceSwitch<
@@ -168,7 +167,7 @@ namespace Dune {
             >::Basis
           > BasisSwitch;
 
-        typedef GridFunctionInterface<
+        typedef GridFunctionBase<
           GridFunctionTraits<
             typename LFS::Traits::GridView,
             typename BasisSwitch::RangeField,
@@ -229,22 +228,21 @@ namespace Dune {
 
       template<typename LFS, typename Data>
       class DGFTreeVectorFunction
-        : public TypeTree::LeafNode
-        , public GridFunctionInterface<GridFunctionTraits<
+        : public GridFunctionBase<GridFunctionTraits<
                                          typename LFS::Traits::GridView,
                                          typename BasisInterfaceSwitch<
                                            typename FiniteElementInterfaceSwitch<
                                              typename LFS::ChildType::Traits::FiniteElement
                                              >::Basis
                                            >::RangeField,
-                                         TypeTree::staticDegree<LFS>,
+                                         TypeTree::StaticDegree<LFS>::value,
                                          Dune::FieldVector<
                                            typename BasisInterfaceSwitch<
                                              typename FiniteElementInterfaceSwitch<
                                                typename LFS::ChildType::Traits::FiniteElement
                                                >::Basis
                                              >::RangeField,
-                                           TypeTree::staticDegree<LFS>
+                                           TypeTree::StaticDegree<LFS>::value
                                            >
                                          >,
                                        DGFTreeVectorFunction<LFS,Data>
@@ -260,14 +258,14 @@ namespace Dune {
         static_assert(BasisSwitch::dimRange == 1,
                       "Automatic conversion to vector-valued function only supported for scalar components");
 
-        typedef GridFunctionInterface<
+        typedef GridFunctionBase<
           GridFunctionTraits<
             typename LFS::Traits::GridView,
             typename BasisSwitch::RangeField,
-            TypeTree::staticDegree<LFS>,
+            TypeTree::StaticDegree<LFS>::value,
             Dune::FieldVector<
               typename BasisSwitch::RangeField,
-              TypeTree::staticDegree<LFS>
+              TypeTree::StaticDegree<LFS>::value
               >
             >,
           DGFTreeVectorFunction<LFS,Data>
@@ -510,7 +508,7 @@ namespace Dune {
           >::type
         post(const LFS& lfs, TreePath tp)
         {
-          if (predicate(lfs))
+          if (predicate(lfs, tp))
             add_vector_solution(lfs,tp,TypeTree::ImplementationTag<typename LFS::Traits::GridFunctionSpace>());
         }
 
@@ -524,7 +522,7 @@ namespace Dune {
           >::type
         leaf(const LFS& lfs, TreePath tp)
         {
-          if (predicate(lfs))
+          if (predicate(lfs, tp))
             add_to_vtk_writer(std::make_shared<DGFTreeLeafFunction<LFS,Data> >(lfs,data),tp);
         }
 
@@ -545,8 +543,8 @@ namespace Dune {
 
       struct DefaultPredicate
       {
-        template<typename T>
-        bool operator()(const T& t) const
+        template<typename LFS, typename TP>
+        bool operator()(const LFS& lfs, TP tp) const
         {
           return true;
         }

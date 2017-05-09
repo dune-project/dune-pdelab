@@ -44,9 +44,6 @@ namespace Dune {
     template<typename T>
     using IsGridFunction = std::integral_constant<bool,impl::IsGridFunction<std::decay_t<T>>::value>;
 
-    template<typename T>
-    constexpr bool isGridFunction = IsGridFunction<T>::value;
-
   } // end namespace PDELab
 } // end namespace Dune
 

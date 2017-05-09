@@ -16,7 +16,7 @@ namespace Dune
 {
   namespace PDELab
   {
-    namespace EIGEN
+    namespace Eigen
     {
 
       template<typename M>
@@ -35,14 +35,20 @@ namespace Dune
         M & _matrix;
       };
 
+      /** \brief Wrapper class for a sparse matrix from the Eigen library
+       *
+       * \tparam GFSV
+       * \tparam GFSU
+       * \tparam ET Number type used for the matrix entries
+       */
       template<typename GFSV, typename GFSU, typename ET, int _Options>
       class MatrixContainer
-        : public Backend::impl::Wrapper<Eigen::SparseMatrix<ET,_Options>>
+        : public Backend::impl::Wrapper<::Eigen::SparseMatrix<ET,_Options>>
       {
 
       public:
 
-        typedef Eigen::SparseMatrix<ET,_Options> Container;
+        typedef ::Eigen::SparseMatrix<ET,_Options> Container;
 
       private:
 
@@ -81,17 +87,17 @@ namespace Dune
         typedef MatrixPatternInserter<Container> Pattern;
 
         template<typename GO>
-        MatrixContainer(const GO& go, int avg_per_row)
+        MatrixContainer(const GO& go)
           : _container(std::make_shared<Container>())
         {
-          allocate_matrix(_container, go, avg_per_row, ElementType(0));
+          allocate_matrix(_container, go, ElementType(0));
         }
 
         template<typename GO>
-        MatrixContainer(const GO& go, int avg_per_row, const ElementType& e)
+        MatrixContainer(const GO& go, const ElementType& e)
           : _container(std::make_shared<Container>())
         {
-          allocate_matrix(_container, go, avg_per_row, e);
+          allocate_matrix(_container, go, e);
         }
 
         //! Creates an MatrixContainer without allocating an underlying Eigen matrix.
@@ -228,13 +234,15 @@ namespace Dune
 
       protected:
         template<typename GO>
-        static void allocate_matrix(std::shared_ptr<Container> & c, const GO & go, int avg_per_row, const ElementType& e)
+        static void allocate_matrix(std::shared_ptr<Container> & c, const GO & go, const ElementType& e)
         {
           // guess size
           int rows = go.testGridFunctionSpace().ordering().blockCount();
           int cols = go.trialGridFunctionSpace().ordering().blockCount();
           c->resize(rows,cols);
-          c->reserve(Eigen::VectorXi::Constant(rows,avg_per_row));
+          size_type nz = go.matrixBackend().avg_nz_per_row;
+          if (nz)
+            c->reserve(::Eigen::VectorXi::Constant(rows,nz));
           // setup pattern
           Pattern pattern(*c);
           go.fill_pattern(pattern);

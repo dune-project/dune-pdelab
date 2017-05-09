@@ -134,7 +134,7 @@ int main(int argc, char** argv)
     if (false)
     {
       Dune::FieldVector<double,2> L(1.0);
-      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::array<int,2> N(Dune::fill_array<int,2>(1));
       Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(5);
       testrt0(grid.leafGridView());

@@ -3,6 +3,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_DESCRIPTORS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_DESCRIPTORS_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/istl/forwarddeclarations.hh>
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
@@ -20,7 +23,7 @@ namespace Dune {
       }
 #endif
 
-    namespace istl {
+    namespace ISTL {
 
       //! The type of blocking employed at this node in the function space tree.
       enum class Blocking

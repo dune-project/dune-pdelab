@@ -119,7 +119,15 @@ namespace Dune {
         return container()(rowIndexCache().containerIndex(i),colIndexCache().containerIndex(j));
       }
 
-      const ElementType& operator()(const RowDOFIndex& i, const ColDOFIndex& j) const
+      // disable this function if DOFIndex and ContainerIndex have the same type - required for interoperability
+      // with function spaces based on dune-functions bases
+      template<typename RDI, typename CDI>
+      std::enable_if_t<
+        (std::is_same<RDI,RowDOFIndex>{} and std::is_same<CDI,ColDOFIndex>{} and not
+         (std::is_same<RDI,RowContainerIndex>{} and std::is_same<CDI,ColContainerIndex>{})),
+        const ElementType&
+        >
+      operator()(const RDI& i, const CDI& j) const
       {
         return container()(rowIndexCache().containerIndex(i),colIndexCache().containerIndex(j));
       }
@@ -220,7 +228,15 @@ namespace Dune {
         return container()(rowIndexCache().containerIndex(i),colIndexCache().containerIndex(j));
       }
 
-      ElementType& operator()(const RowDOFIndex& i, const ColDOFIndex& j)
+      // disable this function if DOFIndex and ContainerIndex have the same type - required for interoperability
+      // with function spaces based on dune-functions bases
+      template<typename RDI, typename CDI>
+      std::enable_if_t<
+        (std::is_same<RDI,RowDOFIndex>{} and std::is_same<CDI,ColDOFIndex>{} and not
+         (std::is_same<RDI,RowContainerIndex>{} and std::is_same<CDI,ColContainerIndex>{})),
+        const ElementType&
+        >
+      operator()(const RDI& i, const CDI& j)
       {
         return container()(rowIndexCache().containerIndex(i),colIndexCache().containerIndex(j));
       }
@@ -245,7 +261,14 @@ namespace Dune {
         container()(rowIndexCache().containerIndex(i),colIndexCache().containerIndex(j)) += v;
       }
 
-      void add(const RowDOFIndex& i, const ColDOFIndex& j, const ElementType& v)
+      // disable this function if DOFIndex and ContainerIndex have the same type - required for interoperability
+      // with function spaces based on dune-functions bases
+      template<typename RDI, typename CDI>
+      std::enable_if_t<
+        (std::is_same<RDI,RowDOFIndex>{} and std::is_same<CDI,ColDOFIndex>{} and not
+         (std::is_same<RDI,RowContainerIndex>{} and std::is_same<CDI,ColContainerIndex>{}))
+        >
+      add(const RDI& i, const CDI& j, const ElementType& v)
       {
         container()(rowIndexCache().containerIndex(i),colIndexCache().containerIndex(j)) += v;
       }

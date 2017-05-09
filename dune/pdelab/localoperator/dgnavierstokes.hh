@@ -33,7 +33,7 @@ namespace Dune {
     class DGNavierStokes :
       public LocalOperatorDefaultFlags,
       public FullSkeletonPattern, public FullVolumePattern,
-      public InstationaryLocalOperatorDefaultMethods<double>
+      public InstationaryLocalOperatorDefaultMethods<typename PRM::Traits::RangeField>
     {
       using BC = StokesBoundaryCondition;
       using RF = typename PRM::Traits::RangeField;
@@ -78,7 +78,7 @@ namespace Dune {
       {}
 
       // Store current dt
-      void preStep (RealType , RealType dt, int )
+      void preStep (Real , Real dt, int )
       {
         current_dt = dt;
       }
@@ -423,6 +423,8 @@ namespace Dune {
         std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v_n(vsize_n);
         Dune::FieldMatrix<RF,dim,dim> jacu_s(0.0), jacu_n(0.0);
 
+        auto penalty_factor = prm.getFaceIP(geo,geo_inside,geo_outside);
+
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : quadratureRule(geo,qorder))
           {
@@ -430,8 +432,6 @@ namespace Dune {
             // position of quadrature point in local coordinates of element
             auto local_s = geo_in_inside.global(ip.position());
             auto local_n = geo_in_outside.global(ip.position());
-
-            auto penalty_factor = prm.getFaceIP(ig,ip.position());
 
             // value of velocity shape functions
             FESwitch_V::basis(lfsv_s_v.finiteElement()).evaluateFunction(local_s,phi_v_s);
@@ -528,8 +528,8 @@ namespace Dune {
               // standard IP term integral
               //================================================//
               for(unsigned int i=0; i<vsize_s; i++) {
-                r_s.accumulate(lfsv_s_v,i, penalty_factor * jumpu_d * phi_v_s[i] * weight);
-                r_n.accumulate(lfsv_n_v,i, -penalty_factor * jumpu_d * phi_v_n[i] * weight);
+                r_s.accumulate(lfsv_s_v,i, penalty_factor * jumpu_d * phi_v_s[i] * factor);
+                r_n.accumulate(lfsv_n_v,i, -penalty_factor * jumpu_d * phi_v_n[i] * factor);
               } // end i
 
               //================================================//
@@ -620,6 +620,8 @@ namespace Dune {
         std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v_s(vsize_s);
         std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v_n(vsize_n);
 
+        auto penalty_factor = prm.getFaceIP(geo,geo_inside,geo_outside);
+
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : quadratureRule(geo,qorder))
           {
@@ -627,8 +629,6 @@ namespace Dune {
             // position of quadrature point in local coordinates of element
             auto local_s = geo_in_inside.global(ip.position());
             auto local_n = geo_in_outside.global(ip.position());
-
-            auto penalty_factor = prm.getFaceIP(ig,ip.position());
 
             // value of velocity shape functions
             FESwitch_V::basis(lfsv_s_v.finiteElement()).evaluateFunction(local_s,phi_v_s);
@@ -665,7 +665,7 @@ namespace Dune {
                   auto val = (0.5*(grad_phi_v_s[i][0]*normal)*phi_v_s[j]) * factor;
                   mat_ss.accumulate(lfsv_s_v,j,lfsv_s_v,i, -val);
                   mat_ss.accumulate(lfsv_s_v,i,lfsv_s_v,j, epsilon * val);
-                  mat_ss.accumulate(lfsv_s_v,i,lfsv_s_v,j, phi_v_s[i] * phi_v_s[j] * penalty_factor * weight);
+                  mat_ss.accumulate(lfsv_s_v,i,lfsv_s_v,j, phi_v_s[i] * phi_v_s[j] * penalty_factor * factor);
 
                   // Assemble symmetric part for (grad u)^T
                   if(full_tensor) {
@@ -683,7 +683,7 @@ namespace Dune {
                   auto val = (-0.5*(grad_phi_v_s[i][0]*normal)*phi_v_n[j]) * factor;
                   mat_ns.accumulate(lfsv_n_v,j,lfsv_s_v,i,- val);
                   mat_sn.accumulate(lfsv_s_v,i,lfsv_n_v,j, epsilon*val);
-                  mat_ns.accumulate(lfsv_n_v,j,lfsv_s_v,i, -phi_v_s[i] * phi_v_n[j] * penalty_factor * weight);
+                  mat_ns.accumulate(lfsv_n_v,j,lfsv_s_v,i, -phi_v_s[i] * phi_v_n[j] * penalty_factor * factor);
 
                   // Assemble symmetric part for (grad u)^T
                   if(full_tensor) {
@@ -700,7 +700,7 @@ namespace Dune {
                   auto val = (0.5*(grad_phi_v_n[i][0]*normal)*phi_v_s[j]) * factor;
                   mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v,i, - val);
                   mat_ns.accumulate(lfsv_n_v,i,lfsv_s_v,j, epsilon*val );
-                  mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v,i, -phi_v_n[i] * phi_v_s[j] * penalty_factor * weight);
+                  mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v,i, -phi_v_n[i] * phi_v_s[j] * penalty_factor * factor);
 
                   // Assemble symmetric part for (grad u)^T
                   if(full_tensor) {
@@ -718,7 +718,7 @@ namespace Dune {
                   auto val = (-0.5*(grad_phi_v_n[i][0]*normal)*phi_v_n[j]) * factor;
                   mat_nn.accumulate(lfsv_n_v,j,lfsv_n_v,i, - val);
                   mat_nn.accumulate(lfsv_n_v,i,lfsv_n_v,j, epsilon*val);
-                  mat_nn.accumulate(lfsv_n_v,j,lfsv_n_v,i, phi_v_n[i] * phi_v_n[j] * penalty_factor * weight);
+                  mat_nn.accumulate(lfsv_n_v,j,lfsv_n_v,i, phi_v_n[i] * phi_v_n[j] * penalty_factor * factor);
 
                   // Assemble symmetric part for (grad u)^T
                   if(full_tensor) {
@@ -819,13 +819,13 @@ namespace Dune {
         std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v(vsize);
         Dune::FieldMatrix<RF,dim,dim> jacu(0.0);
 
+        auto penalty_factor = prm.getFaceIP(geo,geo_inside);
+
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : quadratureRule(geo,qorder))
           {
             // position of quadrature point in local coordinates of element
             auto local = geo_in_inside.global(ip.position());
-
-            auto penalty_factor = prm.getFaceIP(ig,ip.position() );
 
             // value of velocity shape functions
             FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
@@ -903,7 +903,7 @@ namespace Dune {
                     //================================================//
                     // \mu \int \sigma / |\gamma|^\beta v u
                     //================================================//
-                    r.accumulate(lfsv_v,i, u[d] * phi_v[i] * penalty_factor * factor);
+                    r.accumulate(lfsv_v,i, u[d] * phi_v[i] * mu * penalty_factor * factor);
 
                     //================================================//
                     // \int p v n
@@ -942,7 +942,7 @@ namespace Dune {
                     //================================================//
                     // \mu \int \sigma / |\gamma|^\beta v u
                     //================================================//
-                    r.accumulate(lfsv_v,i, penalty_factor * (u * normal) * phi_v[i] * normal[d] * factor);
+                    r.accumulate(lfsv_v,i, mu * penalty_factor * (u * normal) * phi_v[i] * normal[d] * factor);
                   } // end i
                 } // end d
 
@@ -1003,13 +1003,13 @@ namespace Dune {
         std::vector<RT> phi_p(psize);
         std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v(vsize);
 
+        auto penalty_factor = prm.getFaceIP(geo,geo_inside);
+
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : quadratureRule(geo,qorder))
           {
             // position of quadrature point in local coordinates of element
             auto local = geo_in_inside.global(ip.position());
-
-            auto penalty_factor = prm.getFaceIP(ig,ip.position() );
 
             // value of velocity shape functions
             FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
@@ -1067,7 +1067,7 @@ namespace Dune {
                       //================================================//
                       // \mu \int \sigma / |\gamma|^\beta v u
                       //================================================//
-                      mat.accumulate(lfsv_v,j,lfsv_v,i, phi_v[i] * phi_v[j] * penalty_factor * factor);
+                      mat.accumulate(lfsv_v,j,lfsv_v,i, phi_v[i] * phi_v[j] * mu * penalty_factor * factor);
                     }
 
                     //================================================//
@@ -1095,7 +1095,7 @@ namespace Dune {
                   {
                     for (unsigned int j=0;j<vsize;++j) // test
                       {
-                        auto ten_sum = 1.0;
+                        RF ten_sum = 1.0;
 
                         // Assemble symmetric part for (grad u)^T
                         if(full_tensor)
@@ -1120,7 +1120,7 @@ namespace Dune {
                 //================================================//
                 // \mu \int \sigma / |\gamma|^\beta v u
                 //================================================//
-                auto p_factor = penalty_factor * factor;
+                auto p_factor = mu * penalty_factor * factor;
                 for (unsigned int i=0;i<vsize;++i)
                   {
                     for (unsigned int j=0;j<vsize;++j)
@@ -1170,6 +1170,9 @@ namespace Dune {
         using FESwitch_P = FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType >;
         using size_type = typename LFSV::Traits::SizeType;
 
+        // Get cell
+        const auto& cell = eg.entity();
+
         // Get geometries
         auto geo = eg.geometry();
 
@@ -1197,7 +1200,7 @@ namespace Dune {
             auto weight = ip.weight() * geo.integrationElement(ip.position());
 
             // evaluate source term
-            auto fval(prm.f(eg,local));
+            auto fval(prm.f(cell,local));
 
             //================================================//
             // \int (f*v)
@@ -1276,6 +1279,8 @@ namespace Dune {
         std::vector<RT> phi_p(psize);
         std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v(vsize);
 
+        auto penalty_factor = prm.getFaceIP(geo,geo_inside);
+
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : quadratureRule(geo,qorder))
           {
@@ -1283,8 +1288,6 @@ namespace Dune {
             Dune::FieldVector<DF,dim-1> flocal = ip.position();
             Dune::FieldVector<DF,dim> local = geo_in_inside.global(flocal);
             //Dune::FieldVector<DF,dimw> global = ig.geometry().global(flocal);
-
-            auto penalty_factor = prm.getFaceIP(ig,flocal);
 
             // value of velocity shape functions
             FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
@@ -1327,7 +1330,7 @@ namespace Dune {
                     //================================================//
                     // \int \sigma / |\gamma|^\beta v u_0
                     //================================================//
-                    r.accumulate(lfsv_v,i, -phi_v[i] * penalty_factor * u0[d] * weight);
+                    r.accumulate(lfsv_v,i, -phi_v[i] * penalty_factor * u0[d] * factor);
 
                   } // end i
                 } // end d

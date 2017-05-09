@@ -23,9 +23,7 @@ namespace Dune{
       template<typename TrialConstraintsContainer, typename TestConstraintsContainer>
       bool needsConstraintsCaching(const TrialConstraintsContainer& cu, const TestConstraintsContainer& cv) const
       {
-        return
-          lae0->needsConstraintsCaching(cu,cv) ||
-          lae1->needsConstraintsCaching(cu,cv);
+        return (lae0->needsConstraintsCaching(cu,cv) or lae1->needsConstraintsCaching(cu,cv));
       }
 
 
@@ -50,8 +48,8 @@ namespace Dune{
          creates this engine
       */
       OneStepLocalAssemblerEngineBase(LocalAssembler & local_assembler_)
-        : invalid_lae0(static_cast<LocalAssemblerEngineDT0*>(0)),
-          invalid_lae1(static_cast<LocalAssemblerEngineDT1*>(0)),
+        : invalid_lae0(nullptr),
+          invalid_lae1(nullptr),
           la(local_assembler_),
           lae0(invalid_lae0), lae1(invalid_lae1),
           implicit(true)
@@ -140,19 +138,22 @@ namespace Dune{
       //! global assembler.
       //! @{
       template<typename EG, typename LFSU, typename LFSV>
-      void onBindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv){
+      void onBindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
+      {
         lae0->onBindLFSUV(eg,lfsu,lfsv);
         lae1->onBindLFSUV(eg,lfsu,lfsv);
       }
 
       template<typename EG, typename LFSV>
-      void onBindLFSV(const EG & eg, const LFSV & lfsv){
+      void onBindLFSV(const EG & eg, const LFSV & lfsv)
+      {
         lae0->onBindLFSV(eg,lfsv);
         lae1->onBindLFSV(eg,lfsv);
       }
 
       template<typename IG, typename LFSU, typename LFSV>
-      void onBindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv){
+      void onBindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv)
+      {
         lae0->onBindLFSUVInside(ig,lfsu,lfsv);
         lae1->onBindLFSUVInside(ig,lfsu,lfsv);
       }
@@ -162,13 +163,15 @@ namespace Dune{
                typename LFSU_N, typename LFSV_N>
       void onBindLFSUVOutside(const IG & ig,
                               const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
-                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n){
+                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n)
+      {
         lae0->onBindLFSUVOutside(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
         lae1->onBindLFSUVOutside(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
       }
 
       template<typename IG, typename LFSV>
-      void onBindLFSVInside(const IG & ig, const LFSV & lfsv){
+      void onBindLFSVInside(const IG & ig, const LFSV & lfsv)
+      {
         lae0->onBindLFSVInside(ig,lfsv);
         lae1->onBindLFSVInside(ig,lfsv);
       }
@@ -178,7 +181,8 @@ namespace Dune{
                typename LFSV_N>
       void onBindLFSVOutside(const IG & ig,
                              const LFSV_S & lfsv_s,
-                             const LFSV_N & lfsv_n){
+                             const LFSV_N & lfsv_n)
+      {
         lae0->onBindLFSVOutside(ig,lfsv_s,lfsv_n);
         lae1->onBindLFSVOutside(ig,lfsv_s,lfsv_n);
       }
@@ -190,7 +194,8 @@ namespace Dune{
       void onBindLFSUVCoupling(const IG & ig,
                                const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
                                const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
-                               const LFSU_C & lfsu_c, const LFSV_C & lfsv_c){
+                               const LFSU_C & lfsu_c, const LFSV_C & lfsv_c)
+      {
         lae0->onBindLFSUVCoupling(ig,
                                   lfsu_s,lfsv_s,
                                   lfsu_n,lfsv_n,
@@ -208,7 +213,8 @@ namespace Dune{
       void onBindLFSVCoupling(const IG & ig,
                               const LFSV_S & lfsv_s,
                               const LFSV_N & lfsv_n,
-                              const LFSV_C & lfsv_c){
+                              const LFSV_C & lfsv_c)
+      {
         lae0->onBindLFSVCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
         lae1->onBindLFSVCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
       }
@@ -219,19 +225,22 @@ namespace Dune{
       //! discarded
       //! @{
       template<typename EG, typename LFSU, typename LFSV>
-      void onUnbindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv){
+      void onUnbindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
+      {
         lae0->onUnbindLFSUV(eg,lfsu, lfsv);
         lae1->onUnbindLFSUV(eg,lfsu, lfsv);
       }
 
       template<typename EG, typename LFSV>
-      void onUnbindLFSV(const EG & eg, const LFSV & lfsv){
+      void onUnbindLFSV(const EG & eg, const LFSV & lfsv)
+      {
         lae0->onUnbindLFSV(eg,lfsv);
         lae1->onUnbindLFSV(eg,lfsv);
       }
 
       template<typename IG, typename LFSU, typename LFSV>
-      void onUnbindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv){
+      void onUnbindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv)
+      {
         lae0->onUnbindLFSUVInside(ig,lfsu, lfsv);
         lae1->onUnbindLFSUVInside(ig,lfsu, lfsv);
       }
@@ -241,13 +250,15 @@ namespace Dune{
                typename LFSU_N, typename LFSV_N>
       void onUnbindLFSUVOutside(const IG & ig,
                                 const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
-                                const LFSU_N & lfsu_n, const LFSV_N & lfsv_n){
+                                const LFSU_N & lfsu_n, const LFSV_N & lfsv_n)
+      {
         lae0->onUnbindLFSUVOutside(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
         lae1->onUnbindLFSUVOutside(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
       }
 
       template<typename IG, typename LFSV>
-      void onUnbindLFSVInside(const IG & ig, const LFSV & lfsv){
+      void onUnbindLFSVInside(const IG & ig, const LFSV & lfsv)
+      {
         lae0->onUnbindLFSVInside(ig,lfsv);
         lae1->onUnbindLFSVInside(ig,lfsv);
       }
@@ -257,7 +268,8 @@ namespace Dune{
                typename LFSV_N>
       void onUnbindLFSVOutside(const IG & ig,
                                const LFSV_S & lfsv_s,
-                               const LFSV_N & lfsv_n){
+                               const LFSV_N & lfsv_n)
+      {
         lae0->onUnbindLFSVOutside(ig,lfsv_s,lfsv_n);
         lae1->onUnbindLFSVOutside(ig,lfsv_s,lfsv_n);
       }
@@ -269,7 +281,8 @@ namespace Dune{
       void onUnbindLFSUVCoupling(const IG & ig,
                                  const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
                                  const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
-                                 const LFSU_C & lfsu_c, const LFSV_C & lfsv_c){
+                                 const LFSU_C & lfsu_c, const LFSV_C & lfsv_c)
+      {
         lae0->onUnbindLFSUVCoupling(ig,
                                     lfsu_s,lfsv_s,
                                     lfsu_n,lfsv_n,
@@ -287,7 +300,8 @@ namespace Dune{
       void onUnbindLFSVCoupling(const IG & ig,
                                 const LFSV_S & lfsv_s,
                                 const LFSV_N & lfsv_n,
-                                const LFSV_C & lfsv_c){
+                                const LFSV_C & lfsv_c)
+      {
         lae0->onUnbindLFSVCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
         lae1->onUnbindLFSVCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
       }
@@ -298,17 +312,20 @@ namespace Dune{
       //! coefficients.
       //!@{
       template<typename LFSU>
-      void loadCoefficientsLFSUInside(const LFSU & lfsu_s){
+      void loadCoefficientsLFSUInside(const LFSU & lfsu_s)
+      {
         lae0->loadCoefficientsLFSUInside(lfsu_s);
         lae1->loadCoefficientsLFSUInside(lfsu_s);
       }
       template<typename LFSU>
-      void loadCoefficientsLFSUOutside(const LFSU & lfsu_n){
+      void loadCoefficientsLFSUOutside(const LFSU & lfsu_n)
+      {
         lae0->loadCoefficientsLFSUOutside(lfsu_n);
         lae1->loadCoefficientsLFSUOutside(lfsu_n);
       }
       template<typename LFSU>
-      void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c){
+      void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c)
+      {
         lae0->loadCoefficientsLFSUCoupling(lfsu_c);
         lae1->loadCoefficientsLFSUCoupling(lfsu_c);
       }

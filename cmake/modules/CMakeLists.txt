@@ -2,7 +2,6 @@ set(modules
   AddVCLFlags.cmake
   CorrectWindowsPaths.cmake
   DunePdelabMacros.cmake
-  DunePdelabTestMacros.cmake
   FindPackageMultipass.cmake
   FindPETSc.cmake
   FindVCL.cmake

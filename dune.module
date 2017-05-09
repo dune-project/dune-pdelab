@@ -1,7 +1,5 @@
-#dune module information file#
-##############################
+# dune module information file
 
-#Name of the module
 Module: dune-pdelab
 Version: 4.0-exadev
 Maintainer: dune-pdelab@dune-project.org

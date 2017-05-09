@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 
     // Create grid
     Dune::FieldVector<Real,dim> l(1.0);
-    Dune::array<int,dim> s;
+    std::array<int,dim> s;
     std::fill(s.begin(), s.end(), cells);
     std::bitset<dim> p(0);
     int overlap = 0;
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     FEM fem;
     using CON = Dune::PDELab::NoConstraints;
     const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-    using VBE = Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed,blocksize>;
+    using VBE = Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,blocksize>;
     using GFS = Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE>;
     GFS gfs(gv,fem);
     gfs.name("x_h");
@@ -128,7 +128,7 @@ int main(int argc, char** argv)
     LOP lop;
 
     // Make grid operator
-    using MBE = Dune::PDELab::istl::BCRSMatrixBackend<>;
+    using MBE = Dune::PDELab::ISTL::BCRSMatrixBackend<>;
     MBE mbe(9); // number of nonzeroes per row can be cross-checked by patternStatistics().
     using CC = typename GFS::template ConstraintsContainer<Real>::Type;
     CC cc;

@@ -51,8 +51,7 @@ namespace Dune {
      */
     template<typename T, typename X>
     class DiscreteGridFunction
-      : public TypeTree::LeafNode
-      , GridFunctionInterface<
+      : GridFunctionBase<
           GridFunctionTraits<
             typename T::Traits::GridViewType,
             typename BasisInterfaceSwitch<
@@ -81,7 +80,7 @@ namespace Dune {
           typename T::Traits::FiniteElementType
           >::Basis
         > BasisSwitch;
-      typedef GridFunctionInterface<
+      typedef GridFunctionBase<
         GridFunctionTraits<
           typename T::Traits::GridViewType,
           typename BasisSwitch::RangeField,
@@ -178,7 +177,7 @@ namespace Dune {
      */
     template<typename T, typename X>
     class DiscreteGridFunctionCurl :
-      public GridFunctionInterface<
+      public GridFunctionBase<
         GridFunctionTraits<
           typename T::Traits::GridViewType,
           typename JacobianToCurl<typename T::Traits::FiniteElementType::
@@ -245,7 +244,7 @@ namespace Dune {
       { return pgfs->gridView(); }
 
     private:
-      typedef GridFunctionInterface<Traits, DiscreteGridFunctionCurl<T,X> >
+      typedef GridFunctionBase<Traits, DiscreteGridFunctionCurl<T,X> >
         BaseT;
       typedef LocalFunctionSpace<GFS> LFS;
       typedef LFSIndexCache<LFS> LFSCache;
@@ -348,7 +347,7 @@ namespace Dune {
      */
     template<typename T, typename X>
     class DiscreteGridFunctionGlobalCurl
-      : public GridFunctionInterface<
+      : public GridFunctionBase<
           DiscreteGridFunctionCurlTraits<
             typename T::Traits::GridViewType,
             typename T::Traits::FiniteElementType::Traits::
@@ -367,7 +366,7 @@ namespace Dune {
 
     private:
       typedef T GFS;
-      typedef GridFunctionInterface<
+      typedef GridFunctionBase<
         Traits,
         DiscreteGridFunctionGlobalCurl<T,X> > BaseT;
       typedef typename T::Traits::FiniteElementType::Traits::
@@ -459,7 +458,7 @@ namespace Dune {
      */
     template<typename T, typename X>
     class DiscreteGridFunctionGradient
-      : public GridFunctionInterface<
+      : public GridFunctionBase<
           GridFunctionTraits<
             typename T::Traits::GridViewType,
             typename T::Traits::FiniteElementType::Traits::LocalBasisType
@@ -487,7 +486,7 @@ namespace Dune {
           LBTraits::dimDomain> > Traits;
 
     private:
-      typedef GridFunctionInterface<
+      typedef GridFunctionBase<
         Traits,
         DiscreteGridFunctionGradient<T,X> > BaseT;
 
@@ -565,7 +564,7 @@ namespace Dune {
      */
     template<typename T, typename X>
     class DiscreteGridFunctionPiola
-      : public GridFunctionInterface<
+      : public GridFunctionBase<
           GridFunctionTraits<
             typename T::Traits::GridViewType,
             typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
@@ -577,7 +576,7 @@ namespace Dune {
     {
       typedef T GFS;
 
-      typedef GridFunctionInterface<
+      typedef GridFunctionBase<
         GridFunctionTraits<
           typename T::Traits::GridViewType,
           typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
@@ -666,10 +665,10 @@ namespace Dune {
     // clang is too stupid to correctly apply the constexpr qualifier of staticDegree in this context
     template<typename T, typename X, std::size_t dimR = TypeTree::StaticDegree<T>::value>
 #else
-    template<typename T, typename X, std::size_t dimR = TypeTree::staticDegree<T>>
+    template<typename T, typename X, std::size_t dimR = TypeTree::StaticDegree<T>::value>
 #endif
     class VectorDiscreteGridFunction
-      : public GridFunctionInterface<
+      : public GridFunctionBase<
           GridFunctionTraits<
             typename T::Traits::GridViewType,
             typename T::template Child<0>::Type::Traits::FiniteElementType
@@ -682,12 +681,11 @@ namespace Dune {
               >
             >,
           VectorDiscreteGridFunction<T,X>
-          >,
-        public TypeTree::LeafNode
+          >
     {
       typedef T GFS;
 
-      typedef GridFunctionInterface<
+      typedef GridFunctionBase<
         GridFunctionTraits<
           typename T::Traits::GridViewType,
           typename T::template Child<0>::Type::Traits::FiniteElementType
@@ -803,33 +801,32 @@ namespace Dune {
      */
     template<typename T, typename X>
     class VectorDiscreteGridFunctionGradient
-      : public GridFunctionInterface<
+      : public GridFunctionBase<
                  GridFunctionTraits<
                    typename T::Traits::GridViewType,
                    typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
                    //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain,
-                   TypeTree::staticDegree<T>,
+                   TypeTree::StaticDegree<T>::value,
                    Dune::FieldMatrix<
                      typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-                     TypeTree::staticDegree<T>,
+                     TypeTree::StaticDegree<T>::value,
                      T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain
                    >
                  >,
                  VectorDiscreteGridFunctionGradient<T,X>
-               >,
-        public TypeTree::LeafNode
+               >
     {
       typedef T GFS;
 
-      typedef GridFunctionInterface<
+      typedef GridFunctionBase<
                 GridFunctionTraits<
                   typename T::Traits::GridViewType,
                   typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
                   //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain,
-                  TypeTree::staticDegree<T>,
+                  TypeTree::StaticDegree<T>::value,
                   Dune::FieldMatrix<
                     typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-                    TypeTree::staticDegree<T>,
+                    TypeTree::StaticDegree<T>::value,
                     T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain>
                   >,
                   VectorDiscreteGridFunctionGradient<T,X>
@@ -997,18 +994,17 @@ namespace Dune {
     */
     template<typename T, typename X>
     class VectorDiscreteGridFunctionDiv
-      : public Dune::PDELab::GridFunctionInterface<
+      : public Dune::PDELab::GridFunctionBase<
       Dune::PDELab::GridFunctionTraits<
         typename T::Traits::GridViewType,
         typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
         T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
         typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeType>,
       VectorDiscreteGridFunctionDiv<T,X> >
-      , public TypeTree::LeafNode
     {
       typedef T GFS;
 
-      typedef Dune::PDELab::GridFunctionInterface<
+      typedef Dune::PDELab::GridFunctionBase<
         Dune::PDELab::GridFunctionTraits<
           typename T::Traits::GridViewType,
           typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
@@ -1031,7 +1027,7 @@ namespace Dune {
         , xl(gfs.maxLocalSize())
         , J(gfs.maxLocalSize())
       {
-        static_assert(LBTraits::dimDomain == TypeTree::staticDegree<T>,
+        static_assert(LBTraits::dimDomain == TypeTree::StaticDegree<T>::value,
                            "dimDomain and number of children has to be the same");
       }
 
@@ -1109,7 +1105,7 @@ namespace Dune {
               will be triggered.
 
      */
-    template<typename T, typename X, std::size_t dimR = TypeTree::staticDegree<T>>
+    template<typename T, typename X, std::size_t dimR = TypeTree::StaticDegree<T>::value>
     class VectorDiscreteGridFunctionCurl
     {
       typedef T GFS;
@@ -1133,36 +1129,35 @@ namespace Dune {
      */
     template<typename T, typename X>
     class VectorDiscreteGridFunctionCurl<T,X,3>
-      : public Dune::PDELab::GridFunctionInterface<
+      : public Dune::PDELab::GridFunctionBase<
       Dune::PDELab::GridFunctionTraits<
         typename T::Traits::GridViewType,
         typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
         //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-        TypeTree::staticDegree<T>,
+        TypeTree::StaticDegree<T>::value,
         Dune::FieldVector<
           typename T::template Child<0>::Type::Traits::FiniteElementType
           ::Traits::LocalBasisType::Traits::RangeFieldType,
           //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange
-          TypeTree::staticDegree<T>
+          TypeTree::StaticDegree<T>::value
           >
         >,
       VectorDiscreteGridFunctionCurl<T,X>
       >
-      , public TypeTree::LeafNode
     {
       typedef T GFS;
 
-      typedef Dune::PDELab::GridFunctionInterface<
+      typedef Dune::PDELab::GridFunctionBase<
         Dune::PDELab::GridFunctionTraits<
           typename T::Traits::GridViewType,
           typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
           //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-          TypeTree::staticDegree<T>,
+          TypeTree::StaticDegree<T>::value,
           Dune::FieldVector<
             typename T::template Child<0>::Type::Traits::FiniteElementType
             ::Traits::LocalBasisType::Traits::RangeFieldType,
             //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange
-            TypeTree::staticDegree<T>
+            TypeTree::StaticDegree<T>::value
             >
           >,
         VectorDiscreteGridFunctionCurl<T,X> > BaseT;
@@ -1183,7 +1178,7 @@ namespace Dune {
         , xl(gfs.maxLocalSize())
         , J(gfs.maxLocalSize())
       {
-        static_assert(LBTraits::dimDomain == TypeTree::staticDegree<T>,
+        static_assert(LBTraits::dimDomain == TypeTree::StaticDegree<T>::value,
                            "dimDomain and number of children has to be the same");
       }
 
@@ -1278,18 +1273,17 @@ namespace Dune {
      */
     template<typename T, typename X>
     class VectorDiscreteGridFunctionCurl<T,X,2>
-      : public Dune::PDELab::GridFunctionInterface<
+      : public Dune::PDELab::GridFunctionBase<
       Dune::PDELab::GridFunctionTraits<
         typename T::Traits::GridViewType,
         typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
         T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
         typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeType>,
       VectorDiscreteGridFunctionDiv<T,X> >
-      , public TypeTree::LeafNode
     {
       typedef T GFS;
 
-      typedef Dune::PDELab::GridFunctionInterface<
+      typedef Dune::PDELab::GridFunctionBase<
         Dune::PDELab::GridFunctionTraits<
           typename T::Traits::GridViewType,
           typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
@@ -1312,7 +1306,7 @@ namespace Dune {
         , xl(gfs.maxLocalSize())
         , J(gfs.maxLocalSize())
       {
-        static_assert(LBTraits::dimDomain == TypeTree::staticDegree<T>,
+        static_assert(LBTraits::dimDomain == TypeTree::StaticDegree<T>::value,
                            "dimDomain and number of children has to be the same");
       }
 

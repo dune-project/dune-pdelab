@@ -3,6 +3,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_VECTORITERATOR_HH
 #define DUNE_PDELAB_BACKEND_ISTL_VECTORITERATOR_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <iterator>
 #include <cassert>
 #include <tuple>
@@ -13,7 +16,7 @@ namespace Dune {
 
   namespace PDELab {
 
-    namespace istl {
+    namespace ISTL {
 
       namespace impl {
 
@@ -357,7 +360,7 @@ namespace Dune {
 
       };
 
-    } // namespace istl
+    } // namespace ISTL
   } // namespace PDELab
 } // namespace Dune
 

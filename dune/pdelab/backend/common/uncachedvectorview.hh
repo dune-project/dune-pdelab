@@ -94,7 +94,14 @@ namespace Dune {
       }
 
 
-      const ElementType& operator[](const DOFIndex& di) const
+      // disable this function if DOFIndex and ContainerIndex have the same type - required for interoperability
+      // with function spaces based on dune-functions bases
+      template<typename DI>
+      std::enable_if_t<
+        (std::is_same<DI,DOFIndex>{} and not std::is_same<DI,ContainerIndex>{}),
+        const ElementType&
+        >
+      operator[](const DI& di) const
       {
         return container()[cache().containerIndex(di)];
       }
@@ -224,8 +231,14 @@ namespace Dune {
         return container()[cache().containerIndex(i)];
       }
 
-
-      ElementType& operator[](const DOFIndex& di)
+      // disable this function if DOFIndex and ContainerIndex have the same type - required for interoperability
+      // with function spaces based on dune-functions bases
+      template<typename DI>
+      std::enable_if_t<
+        (std::is_same<DI,DOFIndex>{} and not std::is_same<DI,ContainerIndex>{}),
+        ElementType&
+        >
+      operator[](const DOFIndex& di)
       {
         return container()[cache().containerIndex(di)];
       }

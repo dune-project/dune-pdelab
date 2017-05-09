@@ -3,6 +3,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_VECTORHELPERS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_VECTORHELPERS_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <dune/common/typetraits.hh>
 
 #include <dune/istl/bvector.hh>
@@ -18,7 +21,7 @@ namespace Dune {
 
 #ifndef DOXYGEN // All of the following functions are mere implementation details
 
-    namespace istl {
+    namespace ISTL {
 
       template<typename CI, typename Block>
       typename Block::field_type&
@@ -384,7 +387,7 @@ namespace Dune {
                                                   TypeTree::bottom_up_reduction>
       {};
 
-    } // namespace istl
+    } // namespace ISTL
 
 #endif // DOXYGEN
 

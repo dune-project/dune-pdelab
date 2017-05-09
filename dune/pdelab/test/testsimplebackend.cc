@@ -149,7 +149,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
     GV,
     FEM,
     CON,
-    Dune::PDELab::SimpleVectorBackend<>
+    Dune::PDELab::Simple::VectorBackend<>
     > GFS;
   GFS gfs(gv,fem);
   gfs.name("solution");
@@ -179,7 +179,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   // make coefficent Vector and initialize it from a function
   // There is some weird shuffling around here - please leave it in,
   // it's there to test the copy constructor and assignment operator of the
-  // matrix wrapper
+  // vector wrapper.
   typedef typename GridOperator::Traits::Domain DV;
   DV x0(gfs,Dune::PDELab::Backend::unattached_container());
   {
@@ -199,7 +199,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   // represent operator as a matrix
   // There is some weird shuffling around here - please leave it in,
   // it's there to test the copy constructor and assignment operator of the
-  // matrix wrapper
+  // matrix wrapper.
   typedef typename GridOperator::Traits::Jacobian M;
   M m;
   {
@@ -255,25 +255,25 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::array<int,2> N(Dune::fill_array<int,2>(1));
       Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      const GV gv=grid.leafGridView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
+      typedef GV::ctype DF;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
       FEM fem(gv);
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
-              Dune::PDELab::SimpleMatrixBackend<>
+              Dune::PDELab::Simple::MatrixBackend<>
               >(gv,fem,"simplebackend_yasp_Q1_2d",2);
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
-              Dune::PDELab::SimpleSparseMatrixBackend<>
+              Dune::PDELab::Simple::SparseMatrixBackend<>
               >(gv,fem,"simplesparsebackend_yasp_Q1_2d",2);
     }
 
@@ -281,27 +281,27 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::array<int,2> N(Dune::fill_array<int,2>(1));
       Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      const GV gv=grid.leafGridView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
+      typedef GV::ctype DF;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,2> FEM;
       FEM fem(gv);
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
-              Dune::PDELab::SimpleMatrixBackend<>
+              Dune::PDELab::Simple::MatrixBackend<>
               >(gv,fem,"simplebackend_yasp_Q2_2d",2);
 
       // and again with the space matrix
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
-              Dune::PDELab::SimpleSparseMatrixBackend<>
+              Dune::PDELab::Simple::SparseMatrixBackend<>
               >(gv,fem,"simplesparsebackend_yasp_Q2_2d",2);
     }
 

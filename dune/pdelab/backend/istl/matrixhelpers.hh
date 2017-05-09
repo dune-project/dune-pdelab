@@ -3,6 +3,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_MATRIXHELPERS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_MATRIXHELPERS_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include<utility>
 #include<vector>
 #include <unordered_map>
@@ -19,7 +22,7 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-    namespace istl {
+    namespace ISTL {
 
       template<typename RV, typename CV, typename block_type>
       struct matrix_for_vectors;
@@ -479,7 +482,7 @@ namespace Dune {
         c.endindices();
       }
 
-    } // namespace istl
+    } // namespace ISTL
 
 #endif // DOXYGEN
 

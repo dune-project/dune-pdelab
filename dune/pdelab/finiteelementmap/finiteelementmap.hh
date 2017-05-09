@@ -157,7 +157,7 @@ namespace Dune {
       EdgeS0LocalFiniteElementMap (const GV& gv_)
         : gv(gv_), orient(gv_.size(0))
       {
-        typedef typename GV::Grid::ctype ct;
+        using ct = typename GV::Grid::ctype;
         auto& refElem =
           ReferenceElements<ct, dim>::general(FE().type());
 
@@ -165,7 +165,7 @@ namespace Dune {
 
         // create all variants
         variant.resize(1 << refElem.size(dim-1));
-        for (unsigned int i=0; i<variant.size(); i++)
+        for (std::size_t i=0; i<variant.size(); i++)
           variant[i] = FE(i);
 
         // compute orientation for all elements
@@ -178,13 +178,13 @@ namespace Dune {
             orient[elemid] = 0;
 
             std::vector<typename GV::Grid::GlobalIdSet::IdType> vid(refElem.size(dim));
-            for(unsigned int i = 0; i < vid.size(); ++i)
+            for(std::size_t i = 0; i < vid.size(); ++i)
               vid[i] = idSet.subId(element, i, dim);
 
             // loop over all edges of the element
             for(int i = 0; i < refElem.size(dim-1); ++i) {
-              int v0 = refElem.subEntity(i, dim-1, 0, dim);
-              int v1 = refElem.subEntity(i, dim-1, 1, dim);
+              auto v0 = refElem.subEntity(i, dim-1, 0, dim);
+              auto v1 = refElem.subEntity(i, dim-1, 1, dim);
               // if (edge orientation in refelement) != (edge orientation in indexset)
               if((v0 > v1) != (vid[v0] > vid[v1]))
                 orient[elemid] |= 1 << i;
@@ -234,7 +234,7 @@ namespace Dune {
         // loop once over the grid
         for(const auto& cell : elements(gv))
         {
-          unsigned int myId = is.index(cell);
+          auto myId = is.index(cell);
           orient[myId] = 0;
 
           for (const auto& intersection : intersections(gv,cell))

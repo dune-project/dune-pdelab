@@ -2,6 +2,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_BCRSMATRIX_HH
 #define DUNE_PDELAB_BACKEND_ISTL_BCRSMATRIX_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
@@ -12,7 +15,7 @@
 namespace Dune {
   namespace PDELab {
 
-    namespace istl {
+    namespace ISTL {
 
       template<typename GFSV, typename GFSU, typename C, typename Stats>
       class BCRSMatrix
@@ -36,7 +39,7 @@ namespace Dune {
         typedef typename GFSV::Ordering::Traits::ContainerIndex RowIndex;
         typedef typename GFSU::Ordering::Traits::ContainerIndex ColIndex;
 
-        typedef typename istl::build_pattern_type<C,GFSV,GFSU,typename GFSV::Ordering::ContainerAllocationTag>::type Pattern;
+        typedef typename ISTL::build_pattern_type<C,GFSV,GFSU,typename GFSV::Ordering::ContainerAllocationTag>::type Pattern;
 
         typedef Stats PatternStatistics;
 
@@ -199,12 +202,12 @@ namespace Dune {
 
         E& operator()(const RowIndex& ri, const ColIndex& ci)
         {
-          return istl::access_matrix_element(istl::container_tag(*_container),*_container,ri,ci,ri.size()-1,ci.size()-1);
+          return ISTL::access_matrix_element(ISTL::container_tag(*_container),*_container,ri,ci,ri.size()-1,ci.size()-1);
         }
 
         const E& operator()(const RowIndex& ri, const ColIndex& ci) const
         {
-          return istl::access_matrix_element(istl::container_tag(*_container),*_container,ri,ci,ri.size()-1,ci.size()-1);
+          return ISTL::access_matrix_element(ISTL::container_tag(*_container),*_container,ri,ci,ri.size()-1,ci.size()-1);
         }
 
       private:
@@ -241,8 +244,8 @@ namespace Dune {
 
         void clear_row(const RowIndex& ri, const E& diagonal_entry)
         {
-          istl::clear_matrix_row(istl::container_tag(*_container),*_container,ri,ri.size()-1);
-          istl::write_matrix_element_if_exists(diagonal_entry,istl::container_tag(*_container),*_container,ri,ri,ri.size()-1,ri.size()-1);
+          ISTL::clear_matrix_row(ISTL::container_tag(*_container),*_container,ri,ri.size()-1);
+          ISTL::write_matrix_element_if_exists(diagonal_entry,ISTL::container_tag(*_container),*_container,ri,ri,ri.size()-1,ri.size()-1);
         }
 
         void clear_row_block(const RowIndex& ri, const E& diagonal_entry)
@@ -258,7 +261,7 @@ namespace Dune {
 
       };
 
-    } // namespace istl
+    } // namespace ISTL
 
   } // namespace PDELab
 } // namespace Dune

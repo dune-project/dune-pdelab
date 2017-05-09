@@ -4,7 +4,6 @@
 #define DUNE_PDELAB_COMMON_TOPOLOGYUTILITY_HH
 
 #include <dune/geometry/type.hh>
-#include <dune/geometry/genericgeometry/conversion.hh>
 
 namespace Dune {
 
@@ -25,13 +24,19 @@ namespace Dune {
     template<int dimension, unsigned int topologyId>
     struct BasicTypeFromDimensionAndTopologyId
     {
+      static const bool isCube =
+        ((topologyId ^ ((1 << dimension)-1)) >> 1 == 0);
 
-      //! The topology described by dimension and topologyId.
-      typedef typename GenericGeometry::Topology<topologyId,dimension>::type Topology;
+      static const bool isSimplex =
+        (topologyId | 1) == 1;
 
       //! The BasicType of Topology.
       static const GeometryType::BasicType value =
-        GenericGeometry::DuneGeometryType<Topology,GeometryType::simplex>::basicType;
+        isSimplex ? GeometryType::simplex
+        : (
+          isCube ? GeometryType::cube
+          : GeometryType::none
+          );
     };
 
 

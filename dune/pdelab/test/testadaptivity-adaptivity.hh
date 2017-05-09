@@ -15,7 +15,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
   typedef Dune::PDELab::PkLocalFiniteElementMap<GV,Coord,Real,1> FEM;
   FEM fem(gv);
   typedef Dune::PDELab::ConformingDirichletConstraints CON;     // constraints class
-  typedef Dune::PDELab::istl::VectorBackend<> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
   gfs.name("solution");
@@ -46,7 +46,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
     //  Make grid operator
     typedef Example02LocalOperator<BCTypeParam> LOP;       // operator including boundary
     LOP lop(bctype);
-    typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+    typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
     MBE mbe(7);
     typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
     GO go(gfs,cc,gfs,cc,lop,mbe);

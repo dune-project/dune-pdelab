@@ -1,6 +1,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_OVLP_AMG_DG_BACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_OVLP_AMG_DG_BACKEND_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <dune/common/parametertree.hh>
 #include <dune/common/power.hh>
 
@@ -474,7 +477,7 @@ public:
   typedef Backend::Native<CGV> CGVector;                       // istl CG vector
 
   // prolongation matrix
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   typedef Dune::PDELab::EmptyTransformation CC;
   typedef TransferLOP CGTODGLOP; // local operator
   typedef Dune::PDELab::GridOperator<CGGFS,GFS,CGTODGLOP,MBE,field_type,field_type,field_type,CC,CC> PGO;
@@ -486,7 +489,7 @@ public:
   typedef typename Dune::MatMultMatResult<PTADG,P>::type CGMatrix; // istl coarse space matrix
 
   // AMG in CG-subspace
-  typedef typename Dune::PDELab::istl::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
+  typedef typename Dune::PDELab::ISTL::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
   typedef Dune::OverlappingSchwarzOperator<CGMatrix,CGVector,CGVector,Comm> ParCGOperator;
   typedef Dune::SeqSSOR<CGMatrix,CGVector,CGVector,1> Smoother;
   typedef Dune::BlockPreconditioner<CGVector,CGVector,Comm,Smoother> ParSmoother;
@@ -709,7 +712,7 @@ public:
 
     // now set up parallel AMG solver for the CG subspace
     Comm oocc(gfs.gridView().comm());
-    typedef Dune::PDELab::istl::ParallelHelper<CGGFS> CGHELPER;
+    typedef Dune::PDELab::ISTL::ParallelHelper<CGGFS> CGHELPER;
     CGHELPER cghelper(cggfs,2);
     cghelper.createIndexSetAndProjectForAMG(acg,oocc);
     ParCGOperator paroop(native(acg),oocc);
@@ -739,7 +742,7 @@ public:
     typedef DGPrec<Matrix,Vector,Vector,1> DGPrecType;
     DGPrecType dgprec(native(A),1,0.92);
     //DGPrecType dgprec(native(A),0.92);
-    typedef Dune::PDELab::istl::ParallelHelper<GFS> DGHELPER;
+    typedef Dune::PDELab::ISTL::ParallelHelper<GFS> DGHELPER;
     typedef OvlpDGAMGPrec<GFS,Matrix,DGPrecType,DGCC,CGGFS,AMG,CGCC,P,DGHELPER,Comm> HybridPrec;
     HybridPrec hybridprec(gfs,native(A),dgprec,dgcc,cggfs,*amg,cgcc,native(pmatrix),
                           this->parallelHelper(),oocc,3,3);

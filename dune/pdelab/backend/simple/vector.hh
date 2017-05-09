@@ -21,7 +21,7 @@
 namespace Dune {
   namespace PDELab {
 
-    namespace simple {
+    namespace Simple {
 
       namespace {
 
@@ -287,7 +287,7 @@ namespace Dune {
       };
 
 
-    }
+    } // namespace Simple
 
 
 #ifndef DOXYGEN
@@ -298,7 +298,7 @@ namespace Dune {
 
       using vector_type = typename GFS::Traits::Backend::template vector_type<E>;
 
-      using Type = simple::VectorContainer<GFS,vector_type>;
+      using Type = Simple::VectorContainer<GFS,vector_type>;
 
     };
 
@@ -306,7 +306,7 @@ namespace Dune {
       namespace impl {
 
         template<template<typename> class Container, typename GFS, typename E>
-        struct BackendVectorSelectorHelper<SimpleVectorBackend<Container>, GFS, E>
+        struct BackendVectorSelectorHelper<Simple::VectorBackend<Container>, GFS, E>
           : public SimpleVectorSelectorHelper<GFS,E>
         {};
 

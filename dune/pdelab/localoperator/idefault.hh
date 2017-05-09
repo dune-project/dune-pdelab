@@ -13,7 +13,7 @@ namespace Dune
 
         //! Default class for additional methods in instationary local operators
         /**
-         * The algorithm used by the InstationaryGridOperatorSpace and the
+         * The algorithm used by the InstationaryGridOperator and the
          * OneStepMethod to advance one step in time is as follows:
          * <ol>
          * <li>Call the method preStep(start_time_of_step, step_size, nstages)
@@ -36,7 +36,7 @@ namespace Dune
          * <li>Call postStep() on the temporal local operator.
          * </ol>
          *
-         * The algorithm used by the InstationaryGridOperatorSpace and the
+         * The algorithm used by the InstationaryGridOperator and the
          * ExplicitOneStepMethod to advance one step in time is as follows:
          * <ol>
          * <li>Call the method preStep(start_time_of_step, step_size, nstages)
@@ -64,7 +64,7 @@ namespace Dune
          * <li>Call postStep() on the temporal local operator.
          * </ol>
          *
-         * The algorithm used by the MultiStepGridOperatorSpace and the
+         * The algorithm used by the MultiStepGridOperator and the
          * MultiStepMethod to advance one step in time is as follows:
          * <ol>
          * <li>Call the method preStep(start_time_of_step, step_size, 1)

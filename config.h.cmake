@@ -46,24 +46,6 @@
 /* This is only true if Eigen3 was found by configure */
 #cmakedefine HAVE_EIGEN ENABLE_EIGEN
 
-/* Define to 1 if you have the <tr1/unordered_set> header file. */
-#cmakedefine HAVE_TR1_UNORDERED_SET 1
-
-/* Define to 1 if you have the <tr1/unordered_map> header file. */
-#cmakedefine HAVE_TR1_UNORDERED_MAP 1
-
-/* Define to 1 if you have the <unordered_map> header file. */
-#cmakedefine HAVE_UNORDERED_MAP 1
-
-/* Define to 1 if you have the <unordered_set> header file. */
-#cmakedefine HAVE_UNORDERED_SET 1
-
-/* Define to 1 if decltype if supported. */
-#cmakedefine HAVE_STD_DECLTYPE 1
-
-/* Define to 1 if GCC's __typeof__ extension is supported. */
-#cmakedefine HAVE_GCC___TYPEOF__ 1
-
 /* Define to 1 if sequential UG has been found */
 #cmakedefine PDELAB_SEQUENTIAL_UG 1
 

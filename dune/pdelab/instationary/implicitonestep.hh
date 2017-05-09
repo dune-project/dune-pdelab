@@ -109,6 +109,18 @@ namespace Dune {
         return res;
       }
 
+      //! Set a new result
+      /**
+       *  \param result_ OneStepMethodResult object
+       *
+       *  Set the step number to the next timestep according to the result.
+       */
+      void setResult (const OneStepMethodResult& result_)
+      {
+        res = result_;
+        setStepNumber(res.successful.timesteps+1);
+      }
+
       //! redefine the method to be used; can be done before every step
       /**
        * \param method_ Parameter object.

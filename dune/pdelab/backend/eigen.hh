@@ -8,4 +8,12 @@
 #include <dune/pdelab/backend/eigen/matrix.hh>
 #include <dune/pdelab/backend/eigen/solvers.hh>
 
+/** \brief For backward compatibility -- Do not use this! */
+namespace Dune {
+  namespace PDELab {
+    namespace EIGEN {
+      using namespace Eigen;
+    }
+  }
+}
 #endif // DUNE_PDELAB_BACKEND_EIGEN_HH

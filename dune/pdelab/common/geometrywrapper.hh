@@ -68,7 +68,11 @@ namespace Dune {
       //! \todo Please doc me!
       typedef typename Geometry::ctype ctype;
       //! \todo Please doc me!
-      enum { dimension=Entity::dimension };
+      enum DUNE_DEPRECATED_MSG("Deprecated: get this dimension from the grid itself, or from an element!") { dimension=Entity::dimension };
+
+      /** \brief Dimension of the domain space of the geometry */
+      enum { mydimension=I::mydimension };
+
       /** \brief Dimension of the image space of the geometry */
       enum { coorddimension=Geometry::coorddimension };
 
@@ -94,26 +98,6 @@ namespace Dune {
       bool boundary () const
       {
         return i.boundary();
-      }
-
-      /**
-         \brief Identifier for boundary segment from macro grid.
-
-         One can attach a boundary Id to a boundary segment on the macro
-         grid. This Id will also be used for all fragments of these
-         boundary segments.
-
-         The numbering is defined as:
-         - Id==0 for all intersections without boundary()==false
-         - Id>=0 for all intersections without boundary()==true
-
-         The way the Identifiers are attached to the grid may differ
-         between the different grid implementations.
-
-      */
-      int boundaryId () const
-      {
-        return i.boundaryId();
       }
 
       //! @brief return true if intersection is shared with another element.
@@ -172,7 +156,7 @@ namespace Dune {
 
         The returned vector may depend on local position within the intersection.
       */
-      Dune::FieldVector<ctype, coorddimension> outerNormal (const Dune::FieldVector<ctype, dimension-1>& local) const
+      Dune::FieldVector<ctype, coorddimension> outerNormal (const Dune::FieldVector<ctype, mydimension>& local) const
       {
         return i.outerNormal(local);
       }
@@ -183,7 +167,7 @@ namespace Dune {
         method is redundant but it may be more efficent to use this function
         rather than computing the integration element via intersectionGlobal().
       */
-      Dune::FieldVector<ctype, coorddimension> integrationOuterNormal (const Dune::FieldVector<ctype, dimension-1>& local) const
+      Dune::FieldVector<ctype, coorddimension> integrationOuterNormal (const Dune::FieldVector<ctype, mydimension>& local) const
       {
         return i.integrationOuterNormal(local);
       }
@@ -193,7 +177,7 @@ namespace Dune {
         The returned vector may depend on the local position within the intersection.
         It is scaled to have unit length.
       */
-      Dune::FieldVector<ctype, coorddimension> unitOuterNormal (const Dune::FieldVector<ctype, dimension-1>& local) const
+      Dune::FieldVector<ctype, coorddimension> unitOuterNormal (const Dune::FieldVector<ctype, mydimension>& local) const
       {
         return i.unitOuterNormal(local);
       }
@@ -208,16 +192,16 @@ namespace Dune {
         return i.centerUnitOuterNormal();
       }
 
-      /*! @brief return Entity on the inside of this
-        intersection. That is the Entity where we started this.
+      /*! @brief return Entity on the inside of this intersection.
+          That is the Entity where we started this.
       */
       Entity inside() const
       {
         return i.inside();
       }
 
-      /*! @brief return Entity on the inside of this
-        intersection. That is the Entity where we started this.
+      /*! @brief return Entity on the inside of this intersection.
+          That is the Entity where we started this.
       */
       Entity insideHostEntity() const
       {
@@ -225,8 +209,8 @@ namespace Dune {
         return i.inside();
       }
 
-      /*! @brief return Entity on the outside of this
-        intersection. That is the neighboring Entity.
+      /*! @brief return Entity on the outside of this intersection.
+          That is the neighboring Entity.
 
         @warning Don't call this method if there is no neighboring Entity
         (neighbor() returns false). In this case the result is undefined.

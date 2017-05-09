@@ -6,6 +6,7 @@
 
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
+#include<dune/common/indices.hh>
 
 #include <dune/geometry/referenceelements.hh>
 
@@ -286,19 +287,29 @@ namespace Dune {
       }
     };
 
-    /** Spatial local operator for discontinuous Galerkin method for Maxwells Equations
+    /** \brief Spatial local operator for discontinuous Galerkin method for
+               Maxwells Equations
 
-        - \nabla \times (\mu^-1 B) + (\sigma/\epsilon) D = j
-        + \nabla \times (\eps^-1 D)                      = 0
+        \f{align*}{
+          - \nabla \times (\mu^{-1} B) + (\frac\sigma\epsilon) D &= j \\
+          + \nabla \times (\epsilon^{-1} D)                      &= 0
+        \f}
 
-        with the state vector u=(D,B) having 2*dim components
+        with the state vector \f$u=(D,B)^T\f$ having 2*dim components
 
         - Assumes that the local function space is a power space
-        with 2*dim identical components.
+          with 2*dim identical components.
+        - Actually assumes dim==3 in the flux computation
         - Assumes Galerkin method, i.e. U=V
 
         \tparam T parameter class
         \tparam FEM Finite Element Map needed to select the cache
+
+        \warning This operator cannot deal with spatially varying
+                 \f$\epsilon\f$ or \f$\mu\f$.  You will get a result, but it
+                 will contain spurious reflections.  This is a known bug, see
+                 [issue
+                 #41](https://gitlab.dune-project.org/pdelab/dune-pdelab/issues/41).
     */
     template<typename T, typename FEM>
     class DGMaxwellSpatialOperator :
@@ -338,13 +349,13 @@ namespace Dune {
       {
         // Define types
         using namespace Indices;
-        using DGSpace = TypeTree::Child<LFSV,_0>;
+        using DGSpace = TypeTree::Child<LFSV,0>;
         using RF = typename DGSpace::Traits::FiniteElementType::Traits
           ::LocalBasisType::Traits::RangeFieldType;
         using size_type = typename DGSpace::Traits::SizeType;
 
         // paranoia check number of number of components
-        static_assert(TypeTree::staticDegree<LFSV> == dim*2,
+        static_assert(TypeTree::StaticDegree<LFSV>::value == dim*2,
                       "need exactly dim*2 components!");
 
         // get local function space that is identical for all components
@@ -404,6 +415,8 @@ namespace Dune {
             auto factor = qp.weight() * geo.integrationElement(qp.position());
 
             Dune::FieldMatrix<RF,dim*2,dim> F;
+            static_assert(dim == 3, "Sorry, the following flux implementation "
+                          "can only work for dim == 3");
             F[0][0] = 0;            F[0][1] = -muinv*u[5];  F[0][2] = muinv*u[4];
             F[1][0] = muinv*u[5];   F[1][1] = 0;            F[1][2] = -muinv*u[3];
             F[2][0] =-muinv*u[4];   F[2][1] = muinv*u[3];   F[2][2] = 0;
@@ -444,7 +457,7 @@ namespace Dune {
 
         // Define types
         using namespace Indices;
-        using DGSpace = TypeTree::Child<LFSV,_0>;
+        using DGSpace = TypeTree::Child<LFSV,0>;
         using DF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType;
         using RF = typename DGSpace::Traits::FiniteElementType::
@@ -577,7 +590,7 @@ namespace Dune {
       {
         // Define types
         using namespace Indices;
-        using DGSpace = TypeTree::Child<LFSV,_0>;
+        using DGSpace = TypeTree::Child<LFSV,0>;
         using DF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType;
         using RF = typename DGSpace::Traits::FiniteElementType::
@@ -685,7 +698,7 @@ namespace Dune {
       {
         // Define types
         using namespace Indices;
-        using DGSpace = TypeTree::Child<LFSV,_0>;
+        using DGSpace = TypeTree::Child<LFSV,0>;
         using size_type = typename DGSpace::Traits::SizeType;
 
         // Get local function space that is identical for all components
@@ -788,8 +801,8 @@ namespace Dune {
                            LocalPattern& pattern) const
       {
         // paranoia check number of number of components
-        static_assert(TypeTree::staticDegree<LFSU>==TypeTree::staticDegree<LFSV>, "need U=V!");
-        static_assert(TypeTree::staticDegree<LFSV>==dim*2, "need exactly dim*2 components!");
+        static_assert(TypeTree::StaticDegree<LFSU>::value==TypeTree::StaticDegree<LFSV>::value, "need U=V!");
+        static_assert(TypeTree::StaticDegree<LFSV>::value==dim*2, "need exactly dim*2 components!");
 
         for (size_t k=0; k<TypeTree::degree(lfsv); k++)
           for (size_t i=0; i<lfsv.child(k).size(); ++i)
@@ -803,7 +816,7 @@ namespace Dune {
       {
         // Define types
         using namespace Indices;
-        using DGSpace = TypeTree::Child<LFSV,_0>;
+        using DGSpace = TypeTree::Child<LFSV,0>;
         using RF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType;
         using size_type = typename DGSpace::Traits::SizeType;
@@ -847,7 +860,7 @@ namespace Dune {
       {
         // Define types
         using namespace Indices;
-        using DGSpace = TypeTree::Child<LFSV,_0>;
+        using DGSpace = TypeTree::Child<LFSV,0>;
         using size_type = typename DGSpace::Traits::SizeType;
 
         // Get local function space that is identical for all components

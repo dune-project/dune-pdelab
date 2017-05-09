@@ -31,7 +31,7 @@ namespace Dune {
      */
     template<typename Engine, typename F0, typename... Functions>
     class PointwiseGridFunctionAdapter :
-      public GridFunctionInterface<
+      public GridFunctionBase<
       typename F0::Traits,
       PointwiseGridFunctionAdapter<Engine, F0, Functions...> >
     {
