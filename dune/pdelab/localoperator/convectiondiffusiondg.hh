@@ -94,9 +94,7 @@ namespace Dune {
                              int intorderadd_=0,
                              bool pattern_block_optimization=false
                              )
-        : Dune::PDELab::NumericalJacobianApplyVolume<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
-          Dune::PDELab::NumericalJacobianApplySkeleton<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
-          Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
+        : Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
         FullSkeletonPattern(pattern_block_optimization),
         FullVolumePattern(pattern_block_optimization),
           param(param_), method(method_), weights(weights_),
