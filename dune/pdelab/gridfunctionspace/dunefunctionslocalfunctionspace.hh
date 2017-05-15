@@ -57,7 +57,7 @@ namespace Dune {
         using LocalIndexSet = typename Basis::LocalIndexSet;
         using DOFIndex = typename Basis::MultiIndex;
 
-        template<typename LFS, typename C, typename Tag>
+        template<typename LFS, typename C, typename Tag, bool fast>
         friend class LFSIndexCacheBase;
 
         struct Traits
@@ -116,7 +116,7 @@ namespace Dune {
           return *_gfs;
         }
 
-        void bind(const typename GFS::Traits::EntitySet::template Codim<0>::Entity& e)
+        void bind(const typename GFS::Traits::EntitySet::template Codim<0>::Entity& e,std::false_type = {})
         {
           _local_view.bind(e);
           _local_index_set.bind(_local_view);
