@@ -326,7 +326,7 @@ namespace Dune {
     using CGW = Dune::PDELab::Backend::Vector<CGGFS,typename CGPrec::range_type::field_type>;
 
     // define the category
-    virtual SolverCategory::Category category() const
+    SolverCategory::Category category() const override
     {
       return SolverCategory::overlapping;
     }

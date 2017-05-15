@@ -44,7 +44,7 @@ namespace Dune {
       typedef typename CGPrec::domain_type CGX;
       typedef typename CGPrec::range_type CGY;
 
-      virtual SolverCategory::Category category() const
+      SolverCategory::Category category() const override
       {
         return SolverCategory::sequential;
       }

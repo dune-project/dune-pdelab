@@ -117,7 +117,7 @@ namespace Dune {
           gfs.gridView().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
       }
 
-      virtual SolverCategory::Category category() const
+      SolverCategory::Category category() const override
       {
         return SolverCategory::nonoverlapping;
       }
@@ -142,7 +142,7 @@ namespace Dune {
       typedef X domain_type;
       typedef typename X::ElementType field_type;
 
-      virtual SolverCategory::Category category() const
+      SolverCategory::Category category() const override
       {
         return SolverCategory::nonoverlapping;
       }
@@ -201,7 +201,7 @@ namespace Dune {
       typedef typename X::ElementType field_type;
 
       // define the category
-      virtual SolverCategory::Category category() const
+      SolverCategory::Category category() const override
       {
         return SolverCategory::nonoverlapping;
       }
@@ -274,7 +274,7 @@ namespace Dune {
       //! \brief The field type of the preconditioner.
       typedef typename X::ElementType field_type;
 
-      virtual SolverCategory::Category category() const
+      SolverCategory::Category category() const override
       {
         return SolverCategory::nonoverlapping;
       }

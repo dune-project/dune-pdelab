@@ -60,7 +60,7 @@ namespace Dune {
         y.axpy(alpha,temp);
       }
 
-      virtual SolverCategory::Category category() const
+      SolverCategory::Category category() const override
       {
         return SolverCategory::sequential;
       }
