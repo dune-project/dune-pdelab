@@ -181,9 +181,9 @@ namespace Dune{
       { return *osp_method; }
 
       //! Set the current stage of the one step scheme
-      void setStage(int stage_)
+      void setStage(int stage)
       {
-        stage = stage_;
+        stage_ = stage;
       }
 
       //! Get the current stage of the one step scheme
@@ -208,7 +208,7 @@ namespace Dune{
       //! Access time at given stage
       Real timeAtStage() const
       {
-        return time+osp_method->d(stage)*dt;
+        return time+osp_method->d(stage_)*dt;
       }
 
       void setWeight(const Real weight)
