@@ -71,7 +71,7 @@ namespace Dune {
         Dune::PDELab::set_constrained_dofs(cc,0.0,y);
       }
 
-      virtual SolverCategory::Category category() const
+      SolverCategory::Category category() const override
       {
         return SolverCategory::overlapping;
       }
@@ -126,7 +126,7 @@ namespace Dune {
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
-      virtual SolverCategory::Category category() const
+      SolverCategory::Category category() const override
       {
         return SolverCategory::overlapping;
       }
@@ -175,7 +175,7 @@ namespace Dune {
           gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
       }
 
-      virtual SolverCategory::Category category() const
+      SolverCategory::Category category() const override
       {
         return SolverCategory::overlapping;
       }
@@ -241,7 +241,7 @@ namespace Dune {
           }
       }
 
-      virtual SolverCategory::Category category() const
+      SolverCategory::Category category() const override
       {
         return SolverCategory::overlapping;
       }
@@ -302,7 +302,7 @@ namespace Dune {
           }
       }
 
-      virtual SolverCategory::Category category() const
+      SolverCategory::Category category() const override
       {
         return SolverCategory::overlapping;
       }
@@ -365,7 +365,7 @@ namespace Dune {
           }
       }
 
-      virtual SolverCategory::Category category() const
+      SolverCategory::Category category() const override
       {
         return SolverCategory::overlapping;
       }
@@ -436,7 +436,7 @@ namespace Dune {
       : public ScalarProduct<X>
     {
     public:
-      virtual SolverCategory::Category category() const
+      SolverCategory::Category category() const override
       {
         return SolverCategory::overlapping;
       }
