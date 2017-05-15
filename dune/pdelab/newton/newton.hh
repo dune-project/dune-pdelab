@@ -56,21 +56,6 @@ namespace Dune
   }
   }
 
-    // Status information of Newton's method
-    template<class RFType>
-    struct NewtonResult : LinearSolverResult<RFType>
-    {
-      RFType first_defect;       // the first defect
-      RFType defect;             // the final defect
-      double assembler_time;     // Cumulative time for matrix assembly
-      double linear_solver_time; // Cumulative time for linear solver
-      int linear_solver_iterations; // Total number of linear iterations
-
-      NewtonResult() :
-        first_defect(0.0), defect(0.0), assembler_time(0.0), linear_solver_time(0.0),
-        linear_solver_iterations(0) {}
-    };
-
     template<class GOS, class TrlV, class TstV>
     class NewtonBase
     {
