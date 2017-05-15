@@ -98,7 +98,7 @@ namespace Dune{
       {}
 
       //! Constructor for non trivial constraints
-      DefaultLocalAssembler (LOP & lop, const CU& cu, const CV& cv,
+      DefaultLocalAssembler (LOP & lop_, const CU& cu, const CV& cv,
                              shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : Base(cu, cv),
           lop(stackobject_to_shared_ptr(lop_)),  weight_(1.0), doPreProcessing_(true), doPostProcessing_(true),
@@ -136,13 +136,13 @@ namespace Dune{
       //! get a reference to the local operator
       LOP &localOperator()
       {
-        return lop_;
+        return *lop;
       }
 
       //! get a reference to the local operator
       const LOP &localOperator() const
       {
-        return lop_;
+        return *lop;
       }
 
       //! Notifies the local assembler about the current time of
@@ -150,7 +150,7 @@ namespace Dune{
       //! operator has time dependencies.
       void setTime(Real time_)
       {
-        lop_.setTime(time_);
+        lop->setTime(time_);
       }
 
       //! Obtain the weight that was set last
