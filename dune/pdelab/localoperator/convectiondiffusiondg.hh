@@ -971,7 +971,7 @@ namespace Dune {
             for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
 
             // upwind
-            RF omegaup_s, omegaup_n;
+            RF omegaup_s DUNE_UNUSED , omegaup_n DUNE_UNUSED;
             if (normalflux>=0.0)
               {
                 omegaup_s = 1.0;
