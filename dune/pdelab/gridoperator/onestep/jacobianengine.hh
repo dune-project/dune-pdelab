@@ -93,8 +93,8 @@ namespace Dune{
       //! have been changed by the other engines.
       void setWeights()
       {
-        la.la0.setWeight(b_rr * la.dt_factor0);
-        la.la1.setWeight(la.dt_factor1);
+        la.child0().setWeight(b_rr * la.dt_factor0());
+        la.child1().setWeight(la.dt_factor1());
       }
 
       //! Notifier functions, called immediately before and after assembling
