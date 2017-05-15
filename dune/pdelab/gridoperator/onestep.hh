@@ -164,7 +164,7 @@ namespace Dune{
 
       //! Assemble residual
       template<typename Dir = Direction::Forward>
-      void residual(const Domain & x, Range & r, Dir direction = Dir()) const {
+      void residual(const Domain & x, Range & r, Dir direction = Dir()) const
       {
         if(not implicit)
           DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
@@ -180,7 +180,7 @@ namespace Dune{
 
       //! Assemble jacobian
       template<typename Dir = Direction::Forward>
-      void jacobian(const Domain & x, Jacobian & a, Dir direction = Dir()) const {
+      void jacobian(const Domain & x, Jacobian & a, Dir direction = Dir()) const
       {
         if(not implicit)
           DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
