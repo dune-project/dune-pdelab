@@ -51,9 +51,6 @@ namespace Dune {
       typedef Y range_type;
       typedef typename X::ElementType field_type;
 
-      //redefine the category, that is the only difference
-      enum {category=Dune::SolverCategory::overlapping};
-
       OverlappingOperator (const CC& cc_, const M& A)
         : cc(cc_), _A_(A)
       {}
@@ -72,6 +69,11 @@ namespace Dune {
         using Backend::native;
         native(_A_).usmv(alpha,native(x),native(y));
         Dune::PDELab::set_constrained_dofs(cc,0.0,y);
+      }
+
+      SolverCategory::Category category() const override
+      {
+        return SolverCategory::overlapping;
       }
 
       //! get matrix via *
@@ -95,9 +97,6 @@ namespace Dune {
       //! export types
       typedef X domain_type;
       typedef typename X::ElementType field_type;
-
-      //! define the category
-      enum {category=Dune::SolverCategory::overlapping};
 
       /*! \brief Constructor needs to know the grid function space
        */
@@ -127,6 +126,11 @@ namespace Dune {
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
+      SolverCategory::Category category() const override
+      {
+        return SolverCategory::overlapping;
+      }
+
     private:
       const GFS& gfs;
       const ISTL::ParallelHelper<GFS>& helper;
@@ -143,12 +147,6 @@ namespace Dune {
       using domain_type = Dune::PDELab::Backend::Vector<GFS,typename P::domain_type::field_type>;
       //! \brief The range type of the preconditioner.
       using range_type = Dune::PDELab::Backend::Vector<GFS,typename P::range_type::field_type>;
-
-      // define the category
-      enum {
-        //! \brief The category the preconditioner is part of.
-        category=Dune::SolverCategory::overlapping
-      };
 
       //! Constructor.
       OverlappingWrappedPreconditioner (const GFS& gfs_, P& prec_, const CC& cc_,
@@ -175,6 +173,11 @@ namespace Dune {
         Dune::PDELab::AddDataHandle<GFS,domain_type> adddh(gfs,v);
         if (gfs.gridView().comm().size()>1)
           gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
+      }
+
+      SolverCategory::Category category() const override
+      {
+        return SolverCategory::overlapping;
       }
 
       /*!
@@ -208,13 +211,6 @@ namespace Dune {
       //! \brief The field type of the preconditioner.
       typedef typename X::ElementType field_type;
 
-
-      // define the category
-      enum {
-        //! \brief The category the preconditioner is part of.
-        category=Dune::SolverCategory::overlapping
-      };
-
       /*! \brief Constructor.
 
         Constructor gets all parameters to operate the prec.
@@ -245,6 +241,11 @@ namespace Dune {
           }
       }
 
+      SolverCategory::Category category() const override
+      {
+        return SolverCategory::overlapping;
+      }
+
       /*!
         \brief Clean up.
       */
@@ -270,13 +271,6 @@ namespace Dune {
       typedef Y range_type;
       //! \brief The field type of the preconditioner.
       typedef typename X::ElementType field_type;
-
-
-      // define the category
-      enum {
-        //! \brief The category the preconditioner is part of.
-        category=Dune::SolverCategory::overlapping
-      };
 
       /*! \brief Constructor.
 
@@ -308,6 +302,11 @@ namespace Dune {
           }
       }
 
+      SolverCategory::Category category() const override
+      {
+        return SolverCategory::overlapping;
+      }
+
       /*!
         \brief Clean up.
       */
@@ -331,13 +330,6 @@ namespace Dune {
       typedef Y range_type;
       //! \brief The field type of the preconditioner.
       typedef typename X::ElementType field_type;
-
-
-      // define the category
-      enum {
-        //! \brief The category the preconditioner is part of.
-        category=Dune::SolverCategory::overlapping
-      };
 
       /*! \brief Constructor.
 
@@ -371,6 +363,11 @@ namespace Dune {
             AddDataHandle<GFS,X> adddh(gfs,v);
             gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
           }
+      }
+
+      SolverCategory::Category category() const override
+      {
+        return SolverCategory::overlapping;
       }
 
       /*!
@@ -439,7 +436,11 @@ namespace Dune {
       : public ScalarProduct<X>
     {
     public:
-      enum {category=Dune::SolverCategory::overlapping};
+      SolverCategory::Category category() const override
+      {
+        return SolverCategory::overlapping;
+      }
+
       OVLPScalarProduct(const OVLPScalarProductImplementation<GFS>& implementation_)
         : implementation(implementation_)
       {}
