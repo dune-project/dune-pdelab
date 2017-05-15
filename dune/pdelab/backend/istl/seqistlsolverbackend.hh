@@ -48,7 +48,10 @@ namespace Dune {
       typedef Y range_type;
       typedef typename X::field_type field_type;
 
-      enum {category=Dune::SolverCategory::sequential};
+      SolverCategory::Category category() const override
+      {
+        return Dune::SolverCategory::sequential;
+      }
 
       OnTheFlyOperator (const GO& go)
         : go_(go)
@@ -92,7 +95,10 @@ namespace Dune {
       typedef Y range_type;
       typedef typename X::field_type field_type;
 
-      enum { category = Dune::SolverCategory::sequential };
+      SolverCategory::Category category() const override
+      {
+        return Dune::SolverCategory::sequential;
+      }
 
       NonlinearOnTheFlyOperator(const GO& go)
         : go_(go)
