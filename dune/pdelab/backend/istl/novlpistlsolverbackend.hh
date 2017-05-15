@@ -67,7 +67,10 @@ namespace Dune {
       typedef typename X::field_type field_type;
 
       //redefine the category, that is the only difference
-      enum {category=Dune::SolverCategory::nonoverlapping};
+      SolverCategory::Category category() const override
+      {
+        return Dune::SolverCategory::nonoverlapping;
+      }
 
       //! Construct a non-overlapping operator
       /**
@@ -141,7 +144,10 @@ namespace Dune {
       typedef typename X::ElementType field_type;
 
       //! define the category
-      enum {category=Dune::SolverCategory::nonoverlapping};
+      SolverCategory::Category category() const override
+      {
+        return Dune::SolverCategory::nonoverlapping;
+      }
 
       /*! \brief Constructor needs to know the grid function space
        */
@@ -197,10 +203,10 @@ namespace Dune {
       typedef typename X::ElementType field_type;
 
       // define the category
-      enum {
-        //! \brief The category the preconditioner is part of.
-        category=Dune::SolverCategory::nonoverlapping
-      };
+      SolverCategory::Category category() const override
+      {
+        return Dune::SolverCategory::nonoverlapping;
+      }
 
       //! \brief Constructor.
       NonoverlappingRichardson (const GFS& gfs_, const ISTL::ParallelHelper<GFS>& helper_)
@@ -270,10 +276,10 @@ namespace Dune {
       //! \brief The field type of the preconditioner.
       typedef typename X::ElementType field_type;
 
-      enum {
-        //! \brief The category the preconditioner is part of.
-        category=Dune::SolverCategory::nonoverlapping
-      };
+      SolverCategory::Category category() const override
+      {
+        return Dune::SolverCategory::nonoverlapping;
+      }
 
       //! \brief Constructor.
       /**
