@@ -159,9 +159,6 @@ namespace Dune{
         return weight_;
       }
 
-      //! Obtain the weight that was set last
-      RangeField weight() const { return weight_; }
-
       //! Notifies the assembler about the current weight of assembling.
       void setWeight(RangeField weight){
         weight_ = weight;
