@@ -1,0 +1,8 @@
+---
+debian:9--gcc:
+  image: docker.io/duneci/dune:2.5
+  script: duneci-standard-test
+
+debian:9--clang:
+  image: docker.io/duneci/dune:2.5
+  script: duneci-standard-test --opts=/duneci/opts.clang
