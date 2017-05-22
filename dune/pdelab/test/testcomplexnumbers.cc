@@ -93,7 +93,7 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,RF,k> FEM;
   FEM fem(gv);
   typedef Dune::PDELab::ConformingDirichletConstraints CON; // constraints class
-  typedef Dune::PDELab::istl::VectorBackend<> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
   gfs.name("solution");
@@ -110,7 +110,7 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
   typedef HelmholtzLocalOperator<PARAM > LOP;
 
   LOP lop(param, 2*k);
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,RF,RF,RF,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop,MBE(std::pow(2*k+1,dim)));
 
@@ -303,7 +303,7 @@ int main(int argc, char** argv)
       typedef std::complex<R> C;
 
       Dune::FieldVector<double,2> L(1.);
-      Dune::array<int,2> N(Dune::fill_array<int,2>(8));
+      std::array<int,2> N(Dune::fill_array<int,2>(8));
       std::bitset<2> periodic(false);
       int overlap=0;
       Dune::YaspGrid<2> grid(L,N,periodic,overlap);

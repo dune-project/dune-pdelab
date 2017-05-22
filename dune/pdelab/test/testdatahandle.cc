@@ -74,7 +74,7 @@ static void testdatahandle(const GV& gv)
   DG22DFEM dg22dfem;
 
   typedef Dune::PDELab::NoConstraints NoConstraints;
-  typedef Dune::PDELab::istl::VectorBackend<> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
 
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,NoConstraints,VBE> P0GFS;
@@ -108,7 +108,7 @@ static void testdatahandle(const GV& gv)
   info(gfs2,"DG2");
   info(gfs3,"Q2");
 
-  typedef Dune::PDELab::istl::VectorBackend<> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
 
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE> PGFS1;
   PGFS1 pgfs1(gfs1);
@@ -146,8 +146,8 @@ static void testdatahandle(const GV& gv)
   typedef Dune::PDELab::PowerGridFunctionSpace<
     GFS3,
     3,
-    Dune::PDELab::istl::VectorBackend<
-      Dune::PDELab::istl::Blocking::fixed
+    Dune::PDELab::ISTL::VectorBackend<
+      Dune::PDELab::ISTL::Blocking::fixed
       >,
     Dune::PDELab::EntityBlockedOrderingTag
     > VGFS;
@@ -156,8 +156,8 @@ static void testdatahandle(const GV& gv)
   info(vgfs,"P2^3 (entity-wise blocked, matrix blocks)");
 
   typedef Dune::PDELab::CompositeGridFunctionSpace<
-    Dune::PDELab::istl::VectorBackend<
-      Dune::PDELab::istl::Blocking::bcrs
+    Dune::PDELab::ISTL::VectorBackend<
+      Dune::PDELab::ISTL::Blocking::bcrs
       >,
     Dune::PDELab::LexicographicOrderingTag,
     GFS1,
@@ -170,7 +170,7 @@ static void testdatahandle(const GV& gv)
 
 #if 0
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,Dune::PDELab::NoConstraints,
-                                          Dune::PDELab::istl::VectorBackend<1>,
+                                          Dune::PDELab::ISTL::VectorBackend<1>,
                                           Dune::PDELab::GridFunctionRestrictedMapper> GFS3;
   GFS3 gfs3(gv,q22dfem);
 
@@ -251,7 +251,7 @@ int main(int argc, char** argv)
       // need a grid in order to test grid functions
       Dune::FieldVector<double,2> L(1.0);
       L[0] *= 5;
-      Dune::array<int,2> N(Dune::fill_array<int,2>(2));
+      std::array<int,2> N(Dune::fill_array<int,2>(2));
       N[0] = 10;
       std::bitset<2> B(false);
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,1);
@@ -266,7 +266,7 @@ int main(int argc, char** argv)
       std::cout << "3D tests" << std::endl;
       // need a grid in order to test grid functions
       Dune::FieldVector<double,3> L(1.0);
-      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::array<int,3> N(Dune::fill_array<int,3>(1));
       std::bitset<3> B(false);
       Dune::YaspGrid<3> grid(L,N,B,1);
       grid.globalRefine(1);

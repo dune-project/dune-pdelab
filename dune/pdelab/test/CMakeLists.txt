@@ -2,6 +2,8 @@ add_subdirectory(fem)
 
 dune_add_test(SOURCES testanalytic.cc)
 
+dune_add_test(SOURCES testbindtime.cc)
+
 dune_add_test(SOURCES testclock.cc)
 
 dune_add_test(NAME testcomplexnumbers-istl
@@ -17,11 +19,22 @@ dune_add_test(NAME testcomplexnumbers-istlbackend
 dune_add_test(SOURCES testconstraints.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 
+dune_add_test(SOURCES testdunefunctionsgfs.cc
+              CMAKE_GUARD dune-functions_FOUND)
+
+dune_add_test(SOURCES testelectrodynamic.cc
+              CMD_ARGS "${CMAKE_CURRENT_SOURCE_DIR}/grids/circ_in_rect.msh"
+              CMAKE_GUARD dune-alugrid_FOUND SUPERLU_FOUND)
+
 dune_add_test(SOURCES testfunction.cc)
 
 dune_add_test(SOURCES testgridfunctionspace.cc)
 
 dune_add_test(SOURCES testgridfunctionspace-fixedsize.cc)
+
+dune_add_test(SOURCES testpowergridfunctionspace-fixedsize.cc)
+
+dune_add_test(SOURCES testplasticitygfs.cc)
 
 dune_add_test(SOURCES testheat-instationary-periodic.cc)
 
@@ -34,8 +47,7 @@ dune_add_test(SOURCES testlocalfunctionspace.cc)
 dune_add_test(SOURCES testlocaloperatorinterface.cc)
 
 dune_add_test(SOURCES testpk2dinterpolation.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
-              SKIP_ON_77)
+              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 add_dune_alberta_flags(testpk2dinterpolation)
 
 dune_add_test(SOURCES testpk.cc
@@ -53,13 +65,14 @@ dune_add_test(SOURCES testrt0.cc
 add_dune_alberta_flags(testrt0)
 
 dune_add_test(SOURCES testrt02dgridfunctionspace.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
-              SKIP_ON_77)
+              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 add_dune_alberta_flags(testrt02dgridfunctionspace)
 
 dune_add_test(SOURCES testutilities.cc)
 
 dune_add_test(SOURCES testinterpolate.cc)
+
+dune_add_test(SOURCES test-instationary-with-boundary-constraints.cc)
 
 dune_add_test(SOURCES testnumericaljacobianmethods.cc)
 
@@ -90,7 +103,7 @@ if(dune-alugrid_FOUND)
   dune_add_test(SOURCES testloadbalancing.cc
                 COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
                 MPI_RANKS 2
-                TIMEOUT 20)
+                TIMEOUT 300)
 endif(dune-alugrid_FOUND)
 
 if(GMP_FOUND)
@@ -105,38 +118,38 @@ foreach(degree IN ITEMS 1 2)
                   SOURCES testpoisson-periodic-2d.cc
                   MPI_RANKS 1 2
                   COMPILE_DEFINITIONS DEGREE=${degree} DG=${dg}
-                  TIMEOUT 20)
+                  TIMEOUT 300)
 
     dune_add_test(NAME testpoisson-periodic-3d-deg${degree}-dg${dg}-parallel
                   SOURCES testpoisson-periodic-3d.cc
                   MPI_RANKS 1 4
                   COMPILE_DEFINITIONS DEGREE=${degree} DG=${dg}
-                  TIMEOUT 20)
+                  TIMEOUT 300)
   endforeach()
 endforeach()
 
 dune_add_test(NAME testnonoverlappingsinglephaseflow-yasp
               SOURCES testnonoverlappingsinglephaseflow.cc
               MPI_RANKS 1 2
-              TIMEOUT 20)
+              TIMEOUT 300)
 
 if(UG_FOUND)
   dune_add_test(NAME testnonoverlappingsinglephaseflow-ug
                 SOURCES testnonoverlappingsinglephaseflow.cc
                 COMPILE_DEFINITIONS GRID_UG
                 MPI_RANKS 1 2
-                TIMEOUT 20)
+                TIMEOUT 300)
 
   dune_add_test(SOURCES testnonoverlappingsinglephaseflow-boilerplate.cc
                 COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
                 MPI_RANKS 2
-                TIMEOUT 20)
+                TIMEOUT 300)
 
   dune_add_test(SOURCES testadaptivity.cc)
 
   dune_add_test(SOURCES testnonoverlapping.cc
                 MPI_RANKS 2
-                TIMEOUT 20)
+                TIMEOUT 300)
 endif()
 
 #dune_add_test(SOURCES testbatchedtbbgridoperator.cc)

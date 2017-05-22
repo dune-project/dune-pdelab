@@ -1,18 +1,115 @@
 PDELab
 ======
 
-This is the 2.4.0-rc1 version of PDELab, a PDE discretization toolkit built
-on top of the [DUNE][] framework. License information can be found in the file
+This is the 2.5.0 version of PDELab, a PDE discretization toolkit built
+on top of the [DUNE][] framework. It is intended to be used with the 2.5
+release of the Dune core modules. License information can be found in the file
 [LICENSE.md][].
 
-PDELab 2.4 is a major release with many changes. For details and an overview of the bug fixes in
-this release, see the changelog below.
+PDELab 2.5 is mainly a bugfix and cleanup release. There is one notable exception: The release
+introduces a first step of our transition to use [dune-functions][]. For that reason,
+*dune-functions is a hard requirement of dune-pdelab* from this release forward.
+For details and an overview of the bug fixes in this release, see the changelog below.
 
 If you need help, please ask on our [mailing list][]. Bugs can also be submitted
 to the [PDELab bugtracker][] instead.
 
 Changes
 =======
+
+PDELab 2.5
+----------
+
+-   [dune-functions][] now is a hard requirement of dune-pdelab.
+
+-   PDELab now correctly assembles constraints on periodic boundaries.
+
+-   The previously deprecated template parameter on the `GridOperator` that enabled
+    non-overlapping mode is now removed. Non-overlapping computations are based on
+    `EntitySet`s now, see the corresponding part of this changelog.
+
+-   The electrodynamics operators in [electrodynamic.hh][] have seen some bugfixes and
+    modernization. They still suffer some limitations though: Spatially varying coefficients
+    are not possible, as documented in [electrodynamic.hh][].
+
+-   The `ExplicitOneStepMethod` now correctly handles Dirichlet boundary conditions.
+
+-   UMFPack can now be used as a subdomain solver in an overlapping Schwarz method, just
+    like SuperLU can. The corresponding backend class `ISTLBackend_OVLP_CG_UMFPack` can
+    be found in [ovlpistlsolverbackend.hh][].
+
+-   [gridfunctionadapter.hh][] provides adapters for commonly used calculations with grid functions:
+    * `DifferenceAdapter` provides a grid function implementing the difference of two grid functions
+    * `DifferenceSquaredAdapter` implements the squared difference of two grid functions
+    This code had been copied around by a lot of people, so we provide it in dune-pdelab for convenience.
+
+-   The interior penalty DG implementation of Navier Stokes has seen some bugfixes and cleanup.
+    See the [merge request 161][] for details on how to adapt your code.
+
+-   As it was really easy to miss correctly initializing the entity sets of function spaces that are part
+    of a composite or power tree, this release changes the `PartitionViewEntitySet` constructor so that
+    an entity set constructed simply by calling `auto es = EntitySet(grid_view)` will contain index
+    information for all codimensions and will be initialized during the constructor call. This has a
+    negligible performance overhead when using the `AllEntitySet<>` template, but can become more of a
+    problem for non-overlapping computations. But for non-overlapping computations, you will have to manually
+    construct the entityset anyway to avoid problems during interpolation and constraints processing.
+
+    If you do **not** want your entity set to auto-initialize, construct it with `auto es = EntitySet(grid_view,false)`.
+    This will give you the old behavior (does not contain any codims, does not get initialized in the constructor).
+
+-   Removed support for autotools and cleaned up the CMake build system using the
+    latest infrastructure from dune-common. The previously introduced macro `pdelab_add_test`
+    is now superseded by `dune_add_test` from dune-common.
+
+-   The case of some namespaces has been changed for consistency reasons. This
+    applies to
+    * `Dune::PDELab::istl` -> `Dune::PDELab::ISTL`
+    * `Dune::PDELab::EIGEN` -> `Dune::PDELab::Eigen`
+    * `Dune::PDELab::simple` -> `Dune::PDELab::Simple`
+
+    Please update your code accordingly. A quick way to do so is
+
+    ```
+    git grep -l "istl::" | xargs perl -i -pe "s/istl::/ISTL::/g"
+    ```
+    The old namespace still works, but unfortunately we haven't found a way to emit a deprecation
+    warning if code still uses it, so the automatic conversion shown above is probably your best
+    bet.
+
+-   Directly including **any** files in the directory `dune/pdelab/backend/istl/` is deprecated; doing
+    so after 2.5 will probably not work anymore. If you are using ISTL, just include the single header
+    `dune/pdelab/backend/istl.hh` instead. This also holds for the other backends, please include
+    `dune/pdelab/backend/eigen.hh` or `dune/pdelab/backend/simple.hh`, respectively.
+
+-   It is now possible to handle trees of `dune-functions` functions
+    in the same way as we support trees of
+    `DiscreteGridFunctions`. Internally we now build upon the
+    `dune-functions` concept and provide the necessary wrapper classes
+    (see `makeLocalFunctionTree`).
+
+-   The new class `DiscreteGridViewFunction` implements the
+    `dune-functions` functions concept using
+    `PDELab::GridFunctionSpace` instead of a `dune-functions`
+    basis. This is a major step to fully support `dune-functions`.
+    **Note:**
+	Currently we only support the first and second derivative of a
+    `DiscreteGridViewFunction`.
+
+-   We now support callables (and in particular lambda expressions) in many places:
+    1. it is now possible to pass an analytic function to
+       `interpolate` as a callable. Internally we disctinguish between
+       `GridFunctions` and callables.
+    2. As a temporary hack until we fully support the new
+       `dune-functions` interfaces, it is possible to construct
+       `GridFunctions`, `InstationaryGridFunctions` and
+       `BoundaryConditionAdapter` (if you only use dirichlet and
+       neumann conditions) from callables through helper functions in
+       `dune/pdelab/function/callableadapter.hh`. The callables can
+       either use global coordinates or local coordinates.
+	   **Note:**
+       this feature will vanish in our course to a full transition to
+       support `dune-functions`.
+
 
 PDELab 2.4
 ----------
@@ -194,7 +291,7 @@ PDELab 2.4
 -   Tests for PDELab are now created using a new CMake function `pdelab_add_test()`, which makes it possible to have
     tests that run on multiple MPI ranks as well as a number of other interesting features. If you are interested, you
     can also use this function in your own modules -- take a look at `cmake/modules/DunePdelabTestMacros.cmake` for
-    the documentation. DUNE 3.0 will contain a similar feature in the core modules. Moreover, `make test` will **not**
+    the documentation. DUNE 2.5 will contain a similar feature in the core modules. Moreover, `make test` will **not**
     build the PDELab tests anymore before running them, you have to explicitly build them using `make build_tests`.
     The manual approach avoids lots of dark CMake magic and makes it possible to build multiple tests in parallel.
 
@@ -536,3 +633,8 @@ Links
 [dune/pdelab/constraints]: dune/pdelab/constraints
 [dune/pdelab/finiteelementmap]: dune/pdelab/finiteelementmap
 [dune/pdelab/constraints/common]: dune/pdelab/constraints/common
+[dune-functions]: https://gitlab.dune-project.org/staging/dune-functions
+[gridfunctionadapter.hh]: dune/pdelab/gridfunctionspace/gridfunctionadapter.hh
+[merge request 161]: https://gitlab.dune-project.org/pdelab/dune-pdelab/merge_requests/161
+[ovlpistlsolverbackend.hh]: dune/pdelab/backend/istl/ovlpistlsolverbackend.hh
+[electrodynamic.hh]: dune/pdelab/localoperator/electrodynamic.hh

@@ -3,6 +3,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_TAGS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_TAGS_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <dune/common/documentation.hh>
 #include <dune/istl/forwarddeclarations.hh>
 #include <dune/pdelab/backend/istl/forwarddeclarations.hh>
@@ -12,7 +15,7 @@ namespace Dune {
 
   namespace PDELab {
 
-    namespace istl {
+    namespace ISTL {
 
       // ********************************************************************************
       // tag definitions
@@ -298,7 +301,7 @@ namespace Dune {
         return typename tags::container<T>::type();
       }
 
-    } // namespace istl
+    } // namespace ISTL
 
   } // namespace PDELab
 } // namespace Dune

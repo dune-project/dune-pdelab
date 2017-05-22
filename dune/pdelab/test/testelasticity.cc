@@ -124,7 +124,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
 
   // make function space
   typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-  typedef Dune::PDELab::istl::VectorBackend<> ComponentVectorBackend;
+  typedef Dune::PDELab::ISTL::VectorBackend<> ComponentVectorBackend;
 
   typedef Dune::PDELab::DefaultLeafOrderingTag Mapper;
 
@@ -133,7 +133,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
     GV,
     FEM,
     dim,
-    Dune::PDELab::istl::VectorBackend<>,
+    Dune::PDELab::ISTL::VectorBackend<>,
     ComponentVectorBackend,
     Constraints,
     OrderingTag,
@@ -160,7 +160,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   typedef Dune::PDELab::LinearElasticity<Param> LO;
   LO lo(param);
 
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   MBE mbe(9); // 2D Q1
 
   // make grid operator
@@ -240,7 +240,7 @@ int main(int argc, char** argv)
               << "g = " << g << std::endl;
 
     Dune::FieldVector<double,2> L(1); L[0] = szX;
-    Dune::array<int,2> N(Dune::fill_array<int,2>(1)); N[0] = szX;
+    std::array<int,2> N(Dune::fill_array<int,2>(1)); N[0] = szX;
     Dune::YaspGrid<2> grid(L,N);
     grid.globalRefine(level);
 

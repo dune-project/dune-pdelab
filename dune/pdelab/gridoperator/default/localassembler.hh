@@ -42,13 +42,6 @@ namespace Dune{
                                               typename GO::Traits::TrialGridFunctionSpaceConstraints,
                                               typename GO::Traits::TestGridFunctionSpaceConstraints>
     {
-
-      // The GridOperator has to be a friend to modify the do{Pre,Post}Processing flags
-      template<typename, typename, typename,
-               typename, typename, typename, typename,
-               typename, typename, int>
-      friend class GridOperator;
-
     public:
 
       //! The traits class
@@ -90,11 +83,9 @@ namespace Dune{
       typedef DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalJacobianApplyAssemblerEngine;
       typedef DefaultLocalNonlinearJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalNonlinearJacobianApplyAssemblerEngine;
 
+      // friend declarations such that engines are able to call scatter_jacobian() and add_entry() from base class
       friend class DefaultLocalPatternAssemblerEngine<DefaultLocalAssembler>;
-      friend class DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler>;
       friend class DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler>;
-      friend class DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler>;
-      friend class DefaultLocalNonlinearJacobianApplyAssemblerEngine<DefaultLocalAssembler>;
       //! @}
 
       //! Constructor with empty constraints
@@ -107,9 +98,9 @@ namespace Dune{
       {}
 
       //! Constructor for non trivial constraints
-      DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_,
+      DefaultLocalAssembler (LOP & lop_, const CU& cu, const CV& cv,
                              shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
-        : Base(cu_, cv_),
+        : Base(cu, cv),
           lop(stackobject_to_shared_ptr(lop_)),  weight_(1.0), doPreProcessing_(true), doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
         , jacobian_apply_engine(*this)
@@ -143,19 +134,30 @@ namespace Dune{
 #endif // HAVE_TBB
 
       //! get a reference to the local operator
-      LOP &localOperator() { return *lop; }
+      LOP &localOperator()
+      {
+        return *lop;
+      }
+
       //! get a reference to the local operator
-      const LOP &localOperator() const { return *lop; }
+      const LOP &localOperator() const
+      {
+        return *lop;
+      }
 
       //! Notifies the local assembler about the current time of
       //! assembling. Should be called before assembling if the local
       //! operator has time dependencies.
-      void setTime(Real time_){
+      void setTime(Real time_)
+      {
         lop->setTime(time_);
       }
 
       //! Obtain the weight that was set last
-      RangeField weight() const { return weight_; }
+      RangeField weight() const
+      {
+        return weight_;
+      }
 
       //! Notifies the assembler about the current weight of assembling.
       void setWeight(RangeField weight){

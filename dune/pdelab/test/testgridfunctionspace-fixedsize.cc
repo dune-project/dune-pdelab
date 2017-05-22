@@ -221,7 +221,7 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc, argv);
 
     Dune::FieldVector<double, 2> L(1.0);
-    Dune::array<int, 2> N(Dune::fill_array<int, 2>(2));
+    std::array<int, 2> N(Dune::fill_array<int, 2>(2));
     Dune::YaspGrid<2> grid(L, N);
 
     using GV = Dune::YaspGrid<2>::LeafGridView;

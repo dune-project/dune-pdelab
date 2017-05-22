@@ -4,7 +4,9 @@
 // TODO: Remove deprecated nonoverlapping parameter. This will break
 // boilerplate code and needs to be done with care.
 
-#include <dune/common/tupleutility.hh>
+#include <tuple>
+
+#include <dune/common/hybridutilities.hh>
 
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/gridoperator/common/borderdofexchanger.hh>
@@ -14,25 +16,6 @@
 
 namespace Dune{
   namespace PDELab{
-
-    namespace impl {
-
-      template<int i>
-      struct warn_on_deprecated_nonoverlapping_mode_parameter
-      {
-
-        warn_on_deprecated_nonoverlapping_mode_parameter() DUNE_DEPRECATED_MSG(
-"the nonoverlapping_mode parameter on the GridOperator has been deprecated and will be removed after PDELab 2.4."
-"The correct mode is now automatically deduced from the EntitySet of the function space.")
-        {}
-
-      };
-
-      template<>
-      struct warn_on_deprecated_nonoverlapping_mode_parameter<-1>
-      {};
-
-    }
 
     /**
        \brief Standard grid operator implementation
@@ -50,20 +33,14 @@ namespace Dune{
     template<typename GFSU, typename GFSV, typename LOP,
              typename MB, typename DF, typename RF, typename JF,
              typename CU=Dune::PDELab::EmptyTransformation,
-             typename CV=Dune::PDELab::EmptyTransformation,
-             int nonoverlapping_mode = -1>
+             typename CV=Dune::PDELab::EmptyTransformation
+             >
     class GridOperator
-      : public impl::warn_on_deprecated_nonoverlapping_mode_parameter<nonoverlapping_mode>
     {
     public:
 
-      static_assert(nonoverlapping_mode == -1 ||
-                    nonoverlapping_mode == 0 ||
-                    nonoverlapping_mode == 1,
-                    "invalid value for nonoverlapping_mode! This parameter is also deprecated in PDELab 2.4, so please remove it from your typedefs!");
-
       //! The global assembler type
-      typedef DefaultAssembler<GFSU,GFSV,CU,CV,static_cast<bool>(nonoverlapping_mode)> Assembler;
+      typedef DefaultAssembler<GFSU,GFSV,CU,CV> Assembler;
 
       //! The type of the domain (solution).
       using Domain = Dune::PDELab::Backend::Vector<GFSU,DF>;
@@ -148,9 +125,10 @@ namespace Dune{
       //! Visitor which is called in the method setupGridOperators for
       //! each tuple element.
       template <typename GridOperatorTuple>
-      struct SetupGridOperator {
+      struct SetupGridOperator
+      {
         SetupGridOperator()
-          : index(0), size(Dune::tuple_size<GridOperatorTuple>::value) {}
+          : index(0), size(std::tuple_size<GridOperatorTuple>::value) {}
 
         template <typename T>
         void visit(T& elem) {
@@ -169,9 +147,9 @@ namespace Dune{
       template<typename GridOperatorTuple>
       static void setupGridOperators(GridOperatorTuple tuple)
       {
-        Dune::ForEachValue<GridOperatorTuple> forEach(tuple);
         SetupGridOperator<GridOperatorTuple> setup_visitor;
-        forEach.apply(setup_visitor);
+        Hybrid::forEach(tuple,
+                        [&](auto &el) { setup_visitor.visit(el); });
       }
 
       //! Interpolate the constrained dofs from given function
@@ -241,7 +219,8 @@ namespace Dune{
       }
 
 
-      void make_consistent(Jacobian& a) const {
+      void make_consistent(Jacobian& a) const
+      {
         dof_exchanger->accumulateBorderEntries(*this,a);
       }
 

@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     int overlap = 1;
 
     // Building a non-symmetric grid to make sure coordinate transformations work correctly
-    Dune::array<std::vector<NumberType>,dim> coords;
+    std::array<std::vector<NumberType>,dim> coords;
     for (int i=0; i<2; i++)
     {
       coords[i].resize(7);

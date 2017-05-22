@@ -1,3 +1,5 @@
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
 #ifndef DUNE_PDELAB_BACKEND_EIGEN_VECTOR_HH
 #define DUNE_PDELAB_BACKEND_EIGEN_VECTOR_HH
 
@@ -16,14 +18,19 @@
 namespace Dune {
   namespace PDELab {
 
-    namespace EIGEN {
+    namespace Eigen {
 
+      /** \brief Wrapper class for a coefficient vector from the Eigen library
+       *
+       * \tparam GFS GridFunctionSpace
+       * \tparam ET Number type used for coefficient values
+       */
       template<typename GFS, typename ET>
       class VectorContainer
-        : public Backend::impl::Wrapper<Eigen::Matrix<ET, Eigen::Dynamic, 1>>
+        : public Backend::impl::Wrapper<::Eigen::Matrix<ET, ::Eigen::Dynamic, 1>>
       {
       public:
-        typedef Eigen::Matrix<ET, Eigen::Dynamic, 1> Container;
+        typedef ::Eigen::Matrix<ET, ::Eigen::Dynamic, 1> Container;
 
       private:
 
@@ -178,7 +185,7 @@ namespace Dune {
 
         typename Dune::template FieldTraits<E>::real_type infinity_norm() const
         {
-          return _container->template lpNorm<Eigen::Infinity>();
+          return _container->template lpNorm<::Eigen::Infinity>();
         }
 
         //! (*this)^T y
@@ -269,14 +276,14 @@ namespace Dune {
     template<typename GFS, typename E>
     struct EigenVectorSelectorHelper
     {
-      using Type = EIGEN::VectorContainer<GFS, E>;
+      using Type = PDELab::Eigen::VectorContainer<GFS, E>;
     };
 
     namespace Backend {
       namespace impl {
 
         template<typename GFS, typename E>
-        struct BackendVectorSelectorHelper<EigenVectorBackend, GFS, E>
+        struct BackendVectorSelectorHelper<Eigen::VectorBackend, GFS, E>
           : public EigenVectorSelectorHelper<GFS,E>
         {};
 
@@ -291,6 +298,3 @@ namespace Dune {
 #endif
 
 #endif // DUNE_PDELAB_BACKEND_EIGEN_VECTOR_HH
-
-// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-// vi: set et ts=4 sw=2 sts=2:

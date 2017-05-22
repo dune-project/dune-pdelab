@@ -1,4 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONDG_HH
 #define DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONDG_HH
 
@@ -52,14 +52,12 @@ namespace Dune {
      * \tparam T model of ConvectionDiffusionParameterInterface
      */
     template<typename T, typename FiniteElementMap>
-    class ConvectionDiffusionDG
-      : public Dune::PDELab::NumericalJacobianApplyVolume<ConvectionDiffusionDG<T,FiniteElementMap> >,
-        public Dune::PDELab::NumericalJacobianApplySkeleton<ConvectionDiffusionDG<T,FiniteElementMap> >,
-        public Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >,
-        public Dune::PDELab::FullSkeletonPattern,
-        public Dune::PDELab::FullVolumePattern,
-        public Dune::PDELab::LocalOperatorDefaultFlags,
-        public Dune::PDELab::InstationaryLocalOperatorDefaultMethods<typename T::Traits::RangeFieldType>
+    class ConvectionDiffusionDG :
+      public Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >,
+      public Dune::PDELab::FullSkeletonPattern,
+      public Dune::PDELab::FullVolumePattern,
+      public Dune::PDELab::LocalOperatorDefaultFlags,
+      public Dune::PDELab::InstationaryLocalOperatorDefaultMethods<typename T::Traits::RangeFieldType>
     {
       enum { dim = T::Traits::GridViewType::dimension };
 
@@ -96,9 +94,7 @@ namespace Dune {
                              int intorderadd_=0,
                              bool pattern_block_optimization=false
                              )
-        : Dune::PDELab::NumericalJacobianApplyVolume<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
-          Dune::PDELab::NumericalJacobianApplySkeleton<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
-          Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
+        : Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
         FullSkeletonPattern(pattern_block_optimization),
         FullVolumePattern(pattern_block_optimization),
           param(param_), method(method_), weights(weights_),
@@ -244,6 +240,13 @@ namespace Dune {
             for (size_type i=0; i<lfsv.size(); i++)
               r.accumulate(lfsv,i,( Agradu*gradpsi[i] - u*(b*gradpsi[i]) + c*u*psi[i] )*factor);
           }
+      }
+
+      // apply jacobian of volume term
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
+      {
+        alpha_volume(eg,lfsu,x,lfsv,y);
       }
 
       // jacobian of volume term
@@ -495,6 +498,16 @@ namespace Dune {
             for (size_type i=0; i<lfsv_n.size(); i++)
               r_n.accumulate(lfsv_n,i,-term4 * psi_n[i]);
           }
+      }
+
+      // apply jacobian of skeleton term
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      void jacobian_apply_skeleton (const IG& ig,
+                                    const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                    const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+                                    Y& y_s, Y& y_n) const
+      {
+        alpha_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,y_s,y_n);
       }
 
       template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
@@ -958,7 +971,7 @@ namespace Dune {
             for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
 
             // upwind
-            RF omegaup_s, omegaup_n;
+            RF omegaup_s DUNE_UNUSED , omegaup_n DUNE_UNUSED;
             if (normalflux>=0.0)
               {
                 omegaup_s = 1.0;

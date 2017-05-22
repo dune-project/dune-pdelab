@@ -128,7 +128,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,NumberType,degree> FEM;
   FEM fem(grid.leafGridView());
   typedef Dune::PDELab::OverlappingConformingDirichletConstraints CON; // ovlp
-  typedef Dune::PDELab::istl::VectorBackend<> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> FS;
   FS fs(grid.leafGridView(),fem);
 
@@ -149,7 +149,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   LOP lop(problem,1);
   typedef Dune::PDELab::L2 MLOP;
   MLOP mlop(2*degree + 2);
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   //Dune::PDELab::FractionalStepParameter<Real> method;
   Dune::PDELab::Alexander2Parameter<NumberType> method;
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
 
     typedef Dune::YaspGrid<dim> GM;
     Dune::FieldVector<double,dim> L(1.0);
-    Dune::array<int,dim> N(Dune::fill_array<int,dim>(cells));
+    std::array<int,dim> N(Dune::fill_array<int,dim>(cells));
 
     std::bitset<dim> periodic (false);
     periodic[0] = true;

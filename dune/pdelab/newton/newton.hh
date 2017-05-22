@@ -8,8 +8,12 @@
 #include <cmath>
 #include <memory>
 
+#include <type_traits>
+
 #include <math.h>
 
+#include <dune/common/debugstream.hh>
+#include <dune/common/exceptions.hh>
 #include <dune/common/ios_state.hh>
 #include <dune/common/timer.hh>
 #include <dune/common/parametertree.hh>
@@ -20,6 +24,37 @@ namespace Dune
 {
   namespace PDELab
   {
+  namespace Impl
+  {
+  // Some SFinae magic to execute setReuse(bool) on a backend
+  template<typename T1, typename = void>
+  struct HasSetReuse
+  : std::false_type
+  {};
+
+  template<typename T>
+  struct HasSetReuse<T, decltype(std::declval<T>().setReuse(true), void())>
+  : std::true_type
+  {};
+
+  template<typename T>
+  inline void setLinearSystemReuse(T& solver_backend, bool reuse, std::true_type)
+  {
+    if (!solver_backend.getReuse() && reuse)
+      dwarn << "WARNING: Newton needed to override your choice to reuse the linear system in order to work!" << std::endl;
+    solver_backend.setReuse(reuse);
+  }
+
+  template<typename T>
+  inline void setLinearSystemReuse(T&, bool, std::false_type)
+  {}
+
+  template<typename T>
+  inline void setLinearSystemReuse(T& solver_backend, bool reuse)
+  {
+    setLinearSystemReuse(solver_backend, reuse, HasSetReuse<T>());
+  }
+  }
 
     template<class GOS, class TrlV, class TstV>
     class NewtonBase
@@ -162,6 +197,8 @@ namespace Dune
         if (this->verbosity_level_ >= 4)
           std::cout << "      Solving linear system..." << std::endl;
         z = 0.0;
+        // If possible tell solver backend to reuse linear system when we did not reassemble.
+        Impl::setLinearSystemReuse(this->solver_, this->reassembled_);
         this->solver_.apply(A, z, r, this->linear_reduction_);
 
         ios_base_all_saver restorer(std::cout); // store old ios flags
@@ -730,7 +767,7 @@ namespace Dune
          MaxIterations = 7
          AbsoluteLimit = 1e-6
          Reduction = 1e-4
-         LinearReduction = 1e-3
+         MinLinearReduction = 1e-3
          LineSearchDamping  = 0.9
          \endcode
 
@@ -739,7 +776,7 @@ namespace Dune
          newton.setParameters(param.sub("NewtonParameters"));
          \endcode
       */
-      void setParameters(Dune::ParameterTree & param)
+      void setParameters(const Dune::ParameterTree & param)
       {
         typedef typename TstV::ElementType RFType;
         if (param.hasKey("VerbosityLevel"))

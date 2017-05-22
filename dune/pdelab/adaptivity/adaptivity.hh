@@ -608,6 +608,14 @@ namespace Dune {
      * @tparam Grid       Type of the grid we want to adapt
      * @tparam GFS        Type of ansatz space, we need to update it after adaptation
      * @tparam X          Container class for DOF vectors
+     *
+     * @param grid        The grid we want to adapt
+     * @param gfs         The ansatz grid function space
+     * @param x1          The DOF container
+     * @param int_order   The integration order used in inversion of the mass matrix.
+     *                    For scalar problems 2*k with k being the polynomial degree
+     *                    of ansatz and test space is a suitable choice. For systems,
+     *                    the same order is currently used for all components.
      */
     template<class Grid, class GFS, class X>
     void adapt_grid (Grid& grid, GFS& gfs, X& x1, int int_order)
@@ -862,13 +870,10 @@ namespace Dune {
           NumberType sum_beta=0.0;
           unsigned int alpha_count = 0;
           unsigned int beta_count = 0;
-          for (typename T::const_iterator it = x.begin(),
-                 end = x.end();
-               it != end;
-               ++it)
+          for (const auto& error : x)
             {
-              if (*it >=eta_alpha) { sum_alpha += *it; alpha_count++;}
-              if (*it < eta_beta) { sum_beta += *it; beta_count++;}
+              if (error >=eta_alpha) { sum_alpha += error; alpha_count++;}
+              if (error < eta_beta) { sum_beta += error; beta_count++;}
             }
           if (verbose>1)
             {
@@ -916,13 +921,10 @@ namespace Dune {
           unsigned int alpha_count = 0;
           unsigned int beta_count = 0;
 
-          for (typename T::const_iterator it = x.begin(),
-                 end = x.end();
-               it != end;
-               ++it)
+          for (const auto& error : x)
             {
-              if (*it>=eta_alpha) { sum_alpha += 1.0; alpha_count++;}
-              if (*it< eta_beta) { sum_beta +=1.0; beta_count++;}
+              if (error>=eta_alpha) { sum_alpha += 1.0; alpha_count++;}
+              if (error< eta_beta) { sum_beta +=1.0; beta_count++;}
             }
           if (verbose>1)
             {

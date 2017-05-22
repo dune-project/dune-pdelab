@@ -3,6 +3,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_NOVLPISTLSOLVERBACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_NOVLPISTLSOLVERBACKEND_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <cstddef>
 
 #include <dune/common/deprecated.hh>
@@ -64,7 +67,10 @@ namespace Dune {
       typedef typename X::field_type field_type;
 
       //redefine the category, that is the only difference
-      enum {category=Dune::SolverCategory::nonoverlapping};
+      SolverCategory::Category category() const override
+      {
+        return Dune::SolverCategory::nonoverlapping;
+      }
 
       //! Construct a non-overlapping operator
       /**
@@ -138,11 +144,14 @@ namespace Dune {
       typedef typename X::ElementType field_type;
 
       //! define the category
-      enum {category=Dune::SolverCategory::nonoverlapping};
+      SolverCategory::Category category() const override
+      {
+        return Dune::SolverCategory::nonoverlapping;
+      }
 
       /*! \brief Constructor needs to know the grid function space
        */
-      NonoverlappingScalarProduct (const GFS& gfs_, const istl::ParallelHelper<GFS>& helper_)
+      NonoverlappingScalarProduct (const GFS& gfs_, const ISTL::ParallelHelper<GFS>& helper_)
         : gfs(gfs_), helper(helper_)
       {}
 
@@ -178,7 +187,7 @@ namespace Dune {
 
     private:
       const GFS& gfs;
-      const istl::ParallelHelper<GFS>& helper;
+      const ISTL::ParallelHelper<GFS>& helper;
     };
 
     // parallel Richardson preconditioner
@@ -194,13 +203,13 @@ namespace Dune {
       typedef typename X::ElementType field_type;
 
       // define the category
-      enum {
-        //! \brief The category the preconditioner is part of.
-        category=Dune::SolverCategory::nonoverlapping
-      };
+      SolverCategory::Category category() const override
+      {
+        return Dune::SolverCategory::nonoverlapping;
+      }
 
       //! \brief Constructor.
-      NonoverlappingRichardson (const GFS& gfs_, const istl::ParallelHelper<GFS>& helper_)
+      NonoverlappingRichardson (const GFS& gfs_, const ISTL::ParallelHelper<GFS>& helper_)
         : gfs(gfs_), helper(helper_)
       {
       }
@@ -225,7 +234,7 @@ namespace Dune {
 
     private:
       const GFS& gfs;
-      const istl::ParallelHelper<GFS>& helper;
+      const ISTL::ParallelHelper<GFS>& helper;
     };
 
     //! parallel non-overlapping Jacobi preconditioner
@@ -234,6 +243,7 @@ namespace Dune {
      * \tparam X        Vector type used to store the result of applying the
      *                  preconditioner.
      * \tparam Y        Vector type used to store the defect.
+     * \tparam A        The matrix type to be used.
      *
      * The Jacobi preconditioner approximates the inverse of a matrix M by
      * taking the diagonal diag(M) and inverting that.  In the parallel case
@@ -246,7 +256,7 @@ namespace Dune {
       : public Dune::Preconditioner<X,Y>
     {
 
-      typedef typename istl::BlockMatrixDiagonal<A>::MatrixElementVector Diagonal;
+      typedef typename ISTL::BlockMatrixDiagonal<A>::MatrixElementVector Diagonal;
 
       Diagonal _inverse_diagonal;
 
@@ -266,10 +276,10 @@ namespace Dune {
       //! \brief The field type of the preconditioner.
       typedef typename X::ElementType field_type;
 
-      enum {
-        //! \brief The category the preconditioner is part of.
-        category=Dune::SolverCategory::nonoverlapping
-      };
+      SolverCategory::Category category() const override
+      {
+        return Dune::SolverCategory::nonoverlapping;
+      }
 
       //! \brief Constructor.
       /**
@@ -288,7 +298,7 @@ namespace Dune {
         : _inverse_diagonal(m)
       {
         // make the diagonal consistent...
-        typename istl::BlockMatrixDiagonal<A>::template AddMatrixElementVectorDataHandle<GFS> addDH(gfs, _inverse_diagonal);
+        typename ISTL::BlockMatrixDiagonal<A>::template AddMatrixElementVectorDataHandle<GFS> addDH(gfs, _inverse_diagonal);
         gfs.gridView().communicate(addDH,
                                    InteriorBorder_InteriorBorder_Interface,
                                    ForwardCommunication);
@@ -323,7 +333,7 @@ namespace Dune {
     template<class GFS>
     class ISTLBackend_NOVLP_CG_NOPREC
     {
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      typedef ISTL::ParallelHelper<GFS> PHELPER;
 
     public:
       /*! \brief make a linear solver object
@@ -398,7 +408,7 @@ namespace Dune {
     template<class GFS>
     class ISTLBackend_NOVLP_CG_Jacobi
     {
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      typedef ISTL::ParallelHelper<GFS> PHELPER;
 
       const GFS& gfs;
       PHELPER phelper;
@@ -480,7 +490,7 @@ namespace Dune {
     template<class GFS>
     class ISTLBackend_NOVLP_BCGS_NOPREC
     {
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      typedef ISTL::ParallelHelper<GFS> PHELPER;
 
     public:
       /*! \brief make a linear solver object
@@ -554,7 +564,7 @@ namespace Dune {
     template<class GFS>
     class ISTLBackend_NOVLP_BCGS_Jacobi
     {
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      typedef ISTL::ParallelHelper<GFS> PHELPER;
 
     public:
       /*! \brief make a linear solver object
@@ -629,7 +639,7 @@ namespace Dune {
     template<typename GFS>
     class ISTLBackend_NOVLP_ExplicitDiagonal
     {
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      typedef ISTL::ParallelHelper<GFS> PHELPER;
 
       const GFS& gfs;
       PHELPER phelper;
@@ -694,13 +704,20 @@ namespace Dune {
     //! \} Nonoverlapping Solvers
 
 
+    /*! \brief Utility base class for preconditioned novlp backends.
+     * \tparam GO The type of the grid operator for the spatial discretization.
+     *            This class will be used to adjust the discretization matrix.
+     *            and extract the trial grid function space.
+     * \tparam Preconditioner The type of preconditioner to use.
+     * \tparam Solver The type of solver to use.
+     */
     template<class GO,
              template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
     class ISTLBackend_NOVLP_BASE_PREC
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      typedef istl::ParallelHelper<GFS> PHELPER;
+      typedef ISTL::ParallelHelper<GFS> PHELPER;
 
     public:
       /*! \brief Constructor.
@@ -747,9 +764,9 @@ namespace Dune {
         MatrixType& mat = Backend::native(A);
         using VectorType = Backend::Native<W>;
 #if HAVE_MPI
-        typedef typename istl::CommSelector<96,Dune::MPIHelper::isFake>::type Comm;
+        typedef typename ISTL::CommSelector<96,Dune::MPIHelper::isFake>::type Comm;
         _grid_operator.make_consistent(A);
-        istl::assertParallelUG(gfs.gridView().comm());
+        ISTL::assertParallelUG(gfs.gridView().comm());
         Comm oocc(gfs.gridView().comm(),Dune::SolverCategory::nonoverlapping);
         phelper.createIndexSetAndProjectForAMG(mat, oocc);
         typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
@@ -809,8 +826,9 @@ namespace Dune {
 
   /**
    * @brief Nonoverlapping parallel BiCGSTAB solver preconditioned by block SSOR.
-   * @tparam GO The type of the grid operator
-   * (or the fakeGOTraits class for the old grid operator space).
+   * @tparam GO The type of the grid operator used for the spatial discretization
+   * (or the fakeGOTraits class for the old grid operator space). It is used
+   * to adjust the discretization matrix and extract the trial grid function space.
    *
    * The solver uses a NonoverlappingBlockPreconditioner with underlying
    * sequential SSOR preconditioner. The crucial step is to add up the matrix entries
@@ -839,6 +857,9 @@ namespace Dune {
 
   /**
    * @brief Nonoverlapping parallel CG solver preconditioned by block SSOR.
+   * @tparam GO The type of the grid operator used for the spatial discretization.
+   *            This class will be used to adjust the discretization matrix.
+   *             and extract the trial grid function space.
    */
   template<class GO>
   class ISTLBackend_NOVLP_CG_SSORk
@@ -866,12 +887,12 @@ namespace Dune {
     class ISTLBackend_AMG_NOVLP : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      typedef typename istl::ParallelHelper<GFS> PHELPER;
+      typedef typename ISTL::ParallelHelper<GFS> PHELPER;
       typedef typename GO::Traits::Jacobian M;
       typedef Backend::Native<M> MatrixType;
       typedef typename GO::Traits::Domain V;
       typedef Backend::Native<V> VectorType;
-      typedef typename istl::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
+      typedef typename ISTL::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
 #if HAVE_MPI
       typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
       typedef Dune::NonoverlappingBlockPreconditioner<Comm,Smoother> ParSmoother;
@@ -931,6 +952,19 @@ namespace Dune {
       {
         return params;
       }
+
+      //! Set whether the AMG should be reused again during call to apply().
+      void setReuse(bool reuse_)
+      {
+        reuse = reuse_;
+      }
+
+      //! Return whether the AMG is reused during call to apply()
+      bool getReuse() const
+      {
+        return reuse;
+      }
+
 
       /*! \brief compute global norm of a vector
 
@@ -1030,6 +1064,8 @@ namespace Dune {
    * @brief Nonoverlapping parallel CG solver preconditioned with AMG smoothed by SSOR.
    * @tparam GO The type of the grid operator
    * (or the fakeGOTraits class for the old grid operator space).
+   * This class will be used to adjust the discretization matrix.
+   * and extract the trial grid function space.
    * @tparam s The bits to use for the global index.
    *
    * The solver uses AMG with underlying
@@ -1055,6 +1091,8 @@ namespace Dune {
    * @brief Nonoverlapping parallel BiCGStab solver preconditioned with AMG smoothed by SSOR.
    * @tparam GO The type of the grid operator
    * (or the fakeGOTraits class for the old grid operator space).
+   * This class will be used to adjust the discretization matrix.
+   * and extract the trial grid function space.
    * @tparam s The bits to use for the global index.
    *
    * The solver uses AMG with underlying
@@ -1078,8 +1116,10 @@ namespace Dune {
 
   /**
    * @brief Nonoverlapping parallel LoopSolver preconditioned with AMG smoothed by SSOR.
-   * @tparam GO The type of the grid operator
+   * @tparam GO The type of the grid operator used for the spatial discretization
    * (or the fakeGOTraits class for the old grid operator space).
+   * This class will be used to adjust the discretization matrix.
+   * and extract the trial grid function space.
    * @tparam s The bits to use for the global index.
    *
    * The solver uses AMG with underlying

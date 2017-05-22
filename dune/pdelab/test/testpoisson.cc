@@ -152,7 +152,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
-    Dune::PDELab::istl::VectorBackend<> > GFS;
+    Dune::PDELab::ISTL::VectorBackend<> > GFS;
   GFS gfs(gv,fem);
   gfs.name("solution");
 
@@ -175,7 +175,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   typedef Dune::PDELab::ISTLMatrixBackend MBE;
   MBE mbe;
 #else
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
 #endif
 
@@ -284,7 +284,7 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::array<int,2> N(Dune::fill_array<int,2>(1));
       Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 
@@ -305,7 +305,7 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::array<int,2> N(Dune::fill_array<int,2>(1));
       Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 
@@ -326,7 +326,7 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
-      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::array<int,3> N(Dune::fill_array<int,3>(1));
       Dune::YaspGrid<3> grid(L,N);
       grid.globalRefine(3);
 
@@ -347,7 +347,7 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
-      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::array<int,3> N(Dune::fill_array<int,3>(1));
       Dune::YaspGrid<3> grid(L,N);
       grid.globalRefine(3);
 

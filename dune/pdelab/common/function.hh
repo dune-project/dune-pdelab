@@ -1,6 +1,6 @@
 //-*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_COMMON_FUNCTION_HH
-#define DUNE_PDELAB_COMMON_FUNCTION_HH
+#ifndef DUNE_PDELAB_FUNCTION_HH
+#define DUNE_PDELAB_FUNCTION_HH
 
 #include <iostream>
 #include <sstream>
@@ -17,6 +17,7 @@
 
 #include "vtkexport.hh"
 #include "geometrywrapper.hh"
+#include "typetraits.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -276,285 +277,6 @@ namespace Dune {
       const Imp& asImp () const {return static_cast<const Imp &>(*this);}
     };
 
-    //! \addtogroup PDELab_FunctionAdapters Function Adapters
-    //! \{
-
-    /** \brief make a GridFunction from a Function
-     *
-     *  \tparam G The GridView type
-     *  \tparam T The function type
-     */
-    template<typename G, typename T>
-    class FunctionToGridFunctionAdapter :
-      public TypeTree::LeafNode,
-      public GridFunctionInterface<GridFunctionTraits<
-                                     G,
-                                     typename T::Traits::RangeFieldType,
-                                     T::Traits::dimRange,
-                                     typename T::Traits::RangeType>,
-                                   FunctionToGridFunctionAdapter<G,T> >
-    {
-    public:
-      typedef GridFunctionTraits<G,
-                                 typename T::Traits::RangeFieldType,
-                                 T::Traits::dimRange,
-                                 typename T::Traits::RangeType> Traits;
-      static_assert(
-                    (std::is_same<typename T::Traits::DomainFieldType,
-                     typename Traits::DomainFieldType>::value),
-                    "GridView's and wrapped Functions DomainFieldType don't match");
-      static_assert(
-                    T::Traits::dimDomain==Traits::dimDomain,
-                    "GridView's and wrapped Functions dimDomain don't match");
-      static_assert(
-                    (std::is_same<typename T::Traits::DomainType,
-                     typename Traits::DomainType>::value),
-                    "GridView's and wrapped Functions DomainType don't match");
-
-      /** \brief Create a FunctionToGridFunctionAdapter
-       *
-       *  \param g_ The GridView
-       *  \param t_ The function
-       */
-      FunctionToGridFunctionAdapter (const G& g_, const T& t_) : g(g_), t(t_) {}
-
-      inline void evaluate (const typename Traits::ElementType& e,
-                            const typename Traits::DomainType& x,
-                            typename Traits::RangeType& y) const
-      {
-        t.evaluate(e.geometry().global(x),y);
-      }
-
-      inline const typename Traits::GridViewType& getGridView () const
-      {
-        return g;
-      }
-
-    private:
-      G g;
-      const T& t;
-    };
-
-    /** \brief make a Function from a GridFunction
-     *
-     *  \tparam GF The GridFunction type
-     */
-    template<typename GF>
-    class GridFunctionToFunctionAdapter
-      : public FunctionInterface<FunctionTraits<typename GF::Traits::GridViewType::ctype,
-                                                GF::Traits::GridViewType::dimensionworld,
-                                                Dune::FieldVector<typename GF::Traits::GridViewType::ctype,
-                                                                  GF::Traits::GridViewType::dimensionworld
-                                                                  >,
-                                                typename GF::Traits::RangeFieldType,
-                                                GF::Traits::dimRange,
-                                                Dune::FieldVector<typename GF::Traits::RangeFieldType,
-                                                                  GF::Traits::dimRange>
-                                                >,
-                                 GridFunctionToFunctionAdapter<GF> >
-    {
-    public:
-      //! \brief Export type traits
-      typedef FunctionTraits<typename GF::Traits::GridViewType::ctype,
-                             GF::Traits::GridViewType::dimensionworld,
-                             Dune::FieldVector<typename GF::Traits::GridViewType::ctype,
-                                               GF::Traits::GridViewType::dimensionworld
-                                               >,
-                             typename GF::Traits::RangeFieldType,
-                             GF::Traits::dimRange,
-                             Dune::FieldVector<typename GF::Traits::RangeFieldType,
-                                               GF::Traits::dimRange>
-                             > Traits;
-
-      //! make a GridFunctionToFunctionAdapter
-      GridFunctionToFunctionAdapter(const GF &gf_)
-        : gf(gf_)
-        , hsearch(gf.getGridView().grid(), gf.getGridView().indexSet())
-      { }
-
-      /** \brief Evaluate all basis function at given position
-
-          Evaluates all shape functions at the given position and returns
-          these values in a vector.
-      */
-      inline void evaluate (const typename Traits::DomainType& x,
-                            typename Traits::RangeType& y) const
-      {
-        typename GF::Traits::GridViewType::Grid::Traits::template Codim<0>::Entity
-          ep = hsearch.findEntity(x);
-        gf.evaluate(*ep, ep->geometry().local(x), y);
-      }
-
-    private:
-      const GF &gf;
-      const Dune::HierarchicSearch<typename GF::Traits::GridViewType::Grid,
-                                   typename GF::Traits::GridViewType::IndexSet> hsearch;
-    };
-
-
-    /** \brief make a Function in local coordinates from a Function in global coordinates
-     *
-     *  \tparam T Type of the global function
-     *  \tparam E Type of the grid's element
-     */
-    template<typename T, typename E>
-    class GlobalFunctionToLocalFunctionAdapter :
-      public FunctionInterface<typename T::Traits,
-                               GlobalFunctionToLocalFunctionAdapter<T,E> >
-    {
-    public:
-      typedef typename T::Traits Traits;
-
-      /** \brief Create a GlobalFunctionToLocalFunctionAdapter
-       *
-       *  \param t_ Global function
-       *  \param e_ Grid's element where the local function is defined
-       */
-      GlobalFunctionToLocalFunctionAdapter (const T& t_, const E& e_) : t(t_), e(e_) {}
-
-      /** \brief Evaluate the local function at the given position
-
-          \param[in]  x The position in local coordinates
-          \param[out] y The result of the evaluation
-      */
-      inline void evaluate (const typename Traits::DomainType& x,
-                            typename Traits::RangeType& y) const
-      {
-        t.evaluate(e.geometry().global(x),y);
-      }
-
-    private:
-      const T& t;
-      const E& e;
-    };
-
-
-    /** \brief make a LocalFunction from a GridFunction using local coordinates
-     *
-     *  \tparam T type of the GridFunction
-     */
-    template<typename T> // T: GridFunction, E: Entity
-    class GridFunctionToLocalFunctionAdapter :
-      public FunctionInterface<typename T::Traits,
-                               GridFunctionToLocalFunctionAdapter<T> >
-    {
-    public:
-      typedef typename T::Traits Traits;
-
-      /** \brief Create a GridFunctionToLocalFunctionAdapter
-       *
-       *  \param t_ GridFunction
-       *  \param e_ Grid's element where the local function is defined
-       */
-      GridFunctionToLocalFunctionAdapter (const T& t_,
-                                          const typename Traits::ElementType& e_)
-        : t(t_), e(e_) {}
-
-      /** \brief Evaluate the local function at the given position
-
-          \param[in]  x The position in local coordinates
-          \param[out] y The result of the evaluation
-      */
-      inline void evaluate (const typename Traits::DomainType& x,
-                            typename Traits::RangeType& y) const
-      {
-        t.evaluate(e,x,y);
-      }
-
-    private:
-      const T& t;
-      const typename Traits::ElementType& e;
-    };
-
-
-    //! a Function maps x in DomainType to y in RangeType
-    template<class T>
-    class SelectComponentAdapter : public FunctionInterface<FunctionTraits<typename T::Traits::DomainFieldType,T::Traits::dimDomain,typename T::Traits::DomainType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , SelectComponentAdapter<T> >
-    {
-      typedef FunctionInterface<FunctionTraits<typename T::Traits::DomainFieldType,T::Traits::dimDomain,typename T::Traits::DomainType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , SelectComponentAdapter<T> > BaseT;
-    public:
-      //! \brief Export type traits
-      typedef typename BaseT::Traits Traits;
-
-      SelectComponentAdapter (const T& t_, int k_) : t(t_), k(k_) {}
-
-      /** \brief Evaluate all basis function at given position
-
-          Evaluates all shape functions at the given position and returns
-          these values in a vector.
-      */
-      inline void evaluate (const typename Traits::DomainType& x,
-                            typename Traits::RangeType& y) const
-      {
-        typename T::Traits::RangeType Y;
-        t.evaluate(x,Y);
-        y = Y[k];
-      }
-
-      //! set component to be selected
-      void select (int k_)
-      {
-        k = k_;
-      }
-
-    private:
-      const T& t;
-      int k;
-    };
-
-    //! Takes a BoundaryGridFunction and acts as a single component
-    template<class T>
-    class BoundaryGridFunctionSelectComponentAdapter
-      : public BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType,
-                                                                        typename T::Traits::RangeFieldType,1,
-                                                                        Dune::FieldVector<typename T::Traits::RangeFieldType,1> > ,
-                                             BoundaryGridFunctionSelectComponentAdapter<T> >
-    {
-      typedef BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType,
-                                                                       typename T::Traits::RangeFieldType,1,
-                                                                       Dune::FieldVector<typename T::Traits::RangeFieldType,1> > ,
-                                            BoundaryGridFunctionSelectComponentAdapter<T> > BaseT;
-    public:
-      //! \brief Export type traits
-      typedef typename BaseT::Traits Traits;
-
-      BoundaryGridFunctionSelectComponentAdapter (const T& t_, int k_) : t(t_), k(k_) {}
-
-      /** \brief Evaluate all basis function at given position
-
-          Evaluates all shape functions at the given position and returns
-          these values in a vector.
-      */
-      template<typename I>
-      inline void evaluate (const IntersectionGeometry<I>& ig,
-                            const typename Traits::DomainType& x,
-                            typename Traits::RangeType& y) const
-      {
-        typename T::Traits::RangeType Y;
-        t.evaluate(ig,x,Y);
-        y = Y[k];
-      }
-
-      //! get a reference to the GridView
-      inline const typename Traits::GridViewType& getGridView () const
-      {
-        return t.getGridView();
-      }
-
-
-      //! set component to be selected
-      void select (int k_)
-      {
-        k = k_;
-      }
-
-    private:
-      const T& t;
-      int k;
-    };
-
-    //! \}
-
     //============================
     // Function tree
     //============================
@@ -577,10 +299,17 @@ namespace Dune {
       : public GridFunctionInterface<T,Imp>
       , public TypeTree::LeafNode
     {
+      using Base = GridFunctionInterface<T,Imp>;
     public:
       typedef GridFunctionTag ImplementationTag;
       //! Type of the GridView
       typedef typename T::GridViewType GridViewType;
+
+      using Output = typename Base::Output;
+
+      GridFunctionBase(typename Output::DataSetType dataSetType = Output::vertexData)
+        : Base(dataSetType)
+      {}
     };
 
 
@@ -946,13 +675,12 @@ namespace Dune {
     // of normal flux on the interior of faces.
     template<typename T>
     class NormalFluxGridFunctionAdapter
-      : public Dune::PDELab::GridFunctionInterface<Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,
+      : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,
                                                                                     typename T::Traits::RangeFieldType,
                                                                                     1,
                                                                                     Dune::FieldVector<typename T::Traits::RangeFieldType,1>
                                                                                     >,
                                                    NormalFluxGridFunctionAdapter<T> >
-      , public TypeTree::LeafNode
     {
     public:
       typedef Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > Traits;
@@ -1047,13 +775,13 @@ namespace Dune {
     // backward Piola transformation on each element
     template<typename T>
     class PiolaBackwardAdapter
-      : public Dune::PDELab::GridFunctionInterface<typename T::Traits,PiolaBackwardAdapter<T> >
-      , public TypeTree::LeafNode
+      : public Dune::PDELab::GridFunctionBase<typename T::Traits,PiolaBackwardAdapter<T> >
     {
     public:
       typedef typename T::Traits::GridViewType GridViewType;
       typedef typename T::Traits Traits;
-      typedef Dune::PDELab::GridFunctionInterface<Traits,PiolaBackwardAdapter<T> > BaseT;
+      typedef Dune::PDELab::GridFunctionBase<Traits,PiolaBackwardAdapter<T> > BaseT;
+      // typedef GridFunctionTag ImplementationTag;
 
       PiolaBackwardAdapter (const T& t_) : t(stackobject_to_shared_ptr(t_)) {}
 
@@ -1130,9 +858,287 @@ namespace Dune {
 
     //! \} GridFunctionTree
 
+    //! \addtogroup PDELab_FunctionAdapters Function Adapters
+    //! \{
+
+    /** \brief make a GridFunction from a Function
+     *
+     *  \tparam G The GridView type
+     *  \tparam T The function type
+     */
+    template<typename G, typename T>
+    class FunctionToGridFunctionAdapter :
+      public GridFunctionBase<GridFunctionTraits<
+                                     G,
+                                     typename T::Traits::RangeFieldType,
+                                     T::Traits::dimRange,
+                                     typename T::Traits::RangeType>,
+                                   FunctionToGridFunctionAdapter<G,T> >
+    {
+    public:
+      typedef GridFunctionTraits<G,
+                                 typename T::Traits::RangeFieldType,
+                                 T::Traits::dimRange,
+                                 typename T::Traits::RangeType> Traits;
+      static_assert(
+                    (std::is_same<typename T::Traits::DomainFieldType,
+                     typename Traits::DomainFieldType>::value),
+                    "GridView's and wrapped Functions DomainFieldType don't match");
+      static_assert(
+                    T::Traits::dimDomain==Traits::dimDomain,
+                    "GridView's and wrapped Functions dimDomain don't match");
+      static_assert(
+                    (std::is_same<typename T::Traits::DomainType,
+                     typename Traits::DomainType>::value),
+                    "GridView's and wrapped Functions DomainType don't match");
+
+      /** \brief Create a FunctionToGridFunctionAdapter
+       *
+       *  \param g_ The GridView
+       *  \param t_ The function
+       */
+      FunctionToGridFunctionAdapter (const G& g_, const T& t_) : g(g_), t(t_) {}
+
+      inline void evaluate (const typename Traits::ElementType& e,
+                            const typename Traits::DomainType& x,
+                            typename Traits::RangeType& y) const
+      {
+        t.evaluate(e.geometry().global(x),y);
+      }
+
+      inline const typename Traits::GridViewType& getGridView () const
+      {
+        return g;
+      }
+
+    private:
+      G g;
+      const T& t;
+    };
+
+    /** \brief make a Function from a GridFunction
+     *
+     *  \tparam GF The GridFunction type
+     */
+    template<typename GF>
+    class GridFunctionToFunctionAdapter
+      : public FunctionInterface<FunctionTraits<typename GF::Traits::GridViewType::ctype,
+                                                GF::Traits::GridViewType::dimensionworld,
+                                                Dune::FieldVector<typename GF::Traits::GridViewType::ctype,
+                                                                  GF::Traits::GridViewType::dimensionworld
+                                                                  >,
+                                                typename GF::Traits::RangeFieldType,
+                                                GF::Traits::dimRange,
+                                                Dune::FieldVector<typename GF::Traits::RangeFieldType,
+                                                                  GF::Traits::dimRange>
+                                                >,
+                                 GridFunctionToFunctionAdapter<GF> >
+    {
+    public:
+      //! \brief Export type traits
+      typedef FunctionTraits<typename GF::Traits::GridViewType::ctype,
+                             GF::Traits::GridViewType::dimensionworld,
+                             Dune::FieldVector<typename GF::Traits::GridViewType::ctype,
+                                               GF::Traits::GridViewType::dimensionworld
+                                               >,
+                             typename GF::Traits::RangeFieldType,
+                             GF::Traits::dimRange,
+                             Dune::FieldVector<typename GF::Traits::RangeFieldType,
+                                               GF::Traits::dimRange>
+                             > Traits;
+
+      //! make a GridFunctionToFunctionAdapter
+      GridFunctionToFunctionAdapter(const GF &gf_)
+        : gf(gf_)
+        , hsearch(gf.getGridView().grid(), gf.getGridView().indexSet())
+      { }
+
+      /** \brief Evaluate all basis function at given position
+
+          Evaluates all shape functions at the given position and returns
+          these values in a vector.
+      */
+      inline void evaluate (const typename Traits::DomainType& x,
+                            typename Traits::RangeType& y) const
+      {
+        typename GF::Traits::GridViewType::Grid::Traits::template Codim<0>::EntityPointer
+          ep = hsearch.findEntity(x);
+        gf.evaluate(*ep, ep->geometry().local(x), y);
+      }
+
+    private:
+      const GF &gf;
+      const Dune::HierarchicSearch<typename GF::Traits::GridViewType::Grid,
+                                   typename GF::Traits::GridViewType::IndexSet> hsearch;
+    };
+
+
+    /** \brief make a Function in local coordinates from a Function in global coordinates
+     *
+     *  \tparam T Type of the global function
+     *  \tparam E Type of the grid's element
+     */
+    template<typename T, typename E>
+    class GlobalFunctionToLocalFunctionAdapter :
+      public FunctionInterface<typename T::Traits,
+                               GlobalFunctionToLocalFunctionAdapter<T,E> >
+    {
+    public:
+      typedef typename T::Traits Traits;
+
+      /** \brief Create a GlobalFunctionToLocalFunctionAdapter
+       *
+       *  \param t_ Global function
+       *  \param e_ Grid's element where the local function is defined
+       */
+      GlobalFunctionToLocalFunctionAdapter (const T& t_, const E& e_) : t(t_), e(e_) {}
+
+      /** \brief Evaluate the local function at the given position
+
+          \param[in]  x The position in local coordinates
+          \param[out] y The result of the evaluation
+      */
+      inline void evaluate (const typename Traits::DomainType& x,
+                            typename Traits::RangeType& y) const
+      {
+        t.evaluate(e.geometry().global(x),y);
+      }
+
+    private:
+      const T& t;
+      const E& e;
+    };
+
+
+    /** \brief make a LocalFunction from a GridFunction using local coordinates
+     *
+     *  \tparam T type of the GridFunction
+     */
+    template<typename T> // T: GridFunction, E: Entity
+    class GridFunctionToLocalFunctionAdapter :
+      public FunctionInterface<typename T::Traits,
+                               GridFunctionToLocalFunctionAdapter<T> >
+    {
+    public:
+      typedef typename T::Traits Traits;
+
+      /** \brief Create a GridFunctionToLocalFunctionAdapter
+       *
+       *  \param t_ GridFunction
+       *  \param e_ Grid's element where the local function is defined
+       */
+      GridFunctionToLocalFunctionAdapter (const T& t_,
+                                          const typename Traits::ElementType& e_)
+        : t(t_), e(e_) {}
+
+      /** \brief Evaluate the local function at the given position
+
+          \param[in]  x The position in local coordinates
+          \param[out] y The result of the evaluation
+      */
+      inline void evaluate (const typename Traits::DomainType& x,
+                            typename Traits::RangeType& y) const
+      {
+        t.evaluate(e,x,y);
+      }
+
+    private:
+      const T& t;
+      const typename Traits::ElementType& e;
+    };
+
+
+    //! a Function maps x in DomainType to y in RangeType
+    template<class T>
+    class SelectComponentAdapter : public FunctionInterface<FunctionTraits<typename T::Traits::DomainFieldType,T::Traits::dimDomain,typename T::Traits::DomainType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , SelectComponentAdapter<T> >
+    {
+      typedef FunctionInterface<FunctionTraits<typename T::Traits::DomainFieldType,T::Traits::dimDomain,typename T::Traits::DomainType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , SelectComponentAdapter<T> > BaseT;
+    public:
+      //! \brief Export type traits
+      typedef typename BaseT::Traits Traits;
+
+      SelectComponentAdapter (const T& t_, int k_) : t(t_), k(k_) {}
+
+      /** \brief Evaluate all basis function at given position
+
+          Evaluates all shape functions at the given position and returns
+          these values in a vector.
+      */
+      inline void evaluate (const typename Traits::DomainType& x,
+                            typename Traits::RangeType& y) const
+      {
+        typename T::Traits::RangeType Y;
+        t.evaluate(x,Y);
+        y = Y[k];
+      }
+
+      //! set component to be selected
+      void select (int k_)
+      {
+        k = k_;
+      }
+
+    private:
+      const T& t;
+      int k;
+    };
+
+    //! Takes a BoundaryGridFunction and acts as a single component
+    template<class T>
+    class BoundaryGridFunctionSelectComponentAdapter
+      : public BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType,
+                                                                        typename T::Traits::RangeFieldType,1,
+                                                                        Dune::FieldVector<typename T::Traits::RangeFieldType,1> > ,
+                                             BoundaryGridFunctionSelectComponentAdapter<T> >
+    {
+      typedef BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType,
+                                                                       typename T::Traits::RangeFieldType,1,
+                                                                       Dune::FieldVector<typename T::Traits::RangeFieldType,1> > ,
+                                            BoundaryGridFunctionSelectComponentAdapter<T> > BaseT;
+    public:
+      //! \brief Export type traits
+      typedef typename BaseT::Traits Traits;
+
+      BoundaryGridFunctionSelectComponentAdapter (const T& t_, int k_) : t(t_), k(k_) {}
+
+      /** \brief Evaluate all basis function at given position
+
+          Evaluates all shape functions at the given position and returns
+          these values in a vector.
+      */
+      template<typename I>
+      inline void evaluate (const IntersectionGeometry<I>& ig,
+                            const typename Traits::DomainType& x,
+                            typename Traits::RangeType& y) const
+      {
+        typename T::Traits::RangeType Y;
+        t.evaluate(ig,x,Y);
+        y = Y[k];
+      }
+
+      //! get a reference to the GridView
+      inline const typename Traits::GridViewType& getGridView () const
+      {
+        return t.getGridView();
+      }
+
+
+      //! set component to be selected
+      void select (int k_)
+      {
+        k = k_;
+      }
+
+    private:
+      const T& t;
+      int k;
+    };
+
+    //! \}
+
     //! \} Function
 
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_COMMON_FUNCTION_HH
+#endif

@@ -57,7 +57,7 @@ void driver(PROBLEM& problem, ES es, const FEM& fem,
   //typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints<GV> CON;
   using CON = Dune::PDELab::ConformingDirichletConstraints;
   typedef Dune::PDELab::GridFunctionSpace
-    <ES,FEM,CON,Dune::PDELab::istl::VectorBackend<> > GFS;
+    <ES,FEM,CON,Dune::PDELab::ISTL::VectorBackend<> > GFS;
   CON con; // (gv);
   GFS gfs(es,fem,con);
   gfs.name("solution");
@@ -72,7 +72,7 @@ void driver(PROBLEM& problem, ES es, const FEM& fem,
   // make grid operator
   typedef Dune::PDELab::ConvectionDiffusionFEM<PROBLEM,FEM> LOP;
   LOP lop(problem);
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   typedef Dune::PDELab::GridOperator
       <GFS,GFS,LOP,
@@ -129,7 +129,7 @@ int main(int argc, char** argv)
     // Build grid with uneven row/col number to provoke a reentrant corner in parallel case with UG
     Dune::FieldVector<typename GridType::ctype,dim> lowerLeft(0);
     Dune::FieldVector<typename GridType::ctype,dim> upperRight(1);
-    Dune::array<unsigned int,dim> elements;
+    std::array<unsigned int,dim> elements;
     std::fill(elements.begin(), elements.end(), 17);
 
     auto grid = Dune::StructuredGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements);

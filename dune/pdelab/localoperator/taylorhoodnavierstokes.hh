@@ -249,6 +249,9 @@ namespace Dune {
         // dimensions
         const int dim = EG::Geometry::mydimension;
 
+        // get cell
+        const auto& cell = eg.entity();
+
         // get geometry
         auto geo = eg.geometry();
 
@@ -269,7 +272,7 @@ namespace Dune {
             lfsv_p.finiteElement().localBasis().evaluateFunction(ip.position(),psi);
 
             // forcing term
-            const auto f1 = _p.f(eg,ip.position());
+            const auto f1 = _p.f(cell,ip.position());
 
             // geometric weight
             const auto factor = ip.weight() * geo.integrationElement(ip.position());

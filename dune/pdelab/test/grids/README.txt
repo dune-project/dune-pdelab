@@ -14,6 +14,13 @@
 
 3dgrid.al
 
+circ_in_rect.geo/circ_in_rect.msh
+  A rectangular domain with a circular hole in the center.  Originally by
+  Andreas Buhr.  Andreas also supplied a .msh and I'm using that one here,
+  even though I was unable to get gmsh to regenerate it exactly -- even trying
+  different combinations of options I would always get a diffferent number of
+  nodes.
+
 cube.hexa
 
 cube.tetra

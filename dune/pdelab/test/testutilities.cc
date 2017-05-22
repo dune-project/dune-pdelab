@@ -100,10 +100,10 @@ void testinterpolate (const GV& gv)
   Q1GFS q1gfs(gv,q12dfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
   Q2GFS q2gfs(gv,q22dfem);
-  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTL::VectorBackend<>,
     Dune::PDELab::LexicographicOrderingTag,Q1GFS,Q2GFS> CGFS;
   CGFS cgfs(q1gfs,q2gfs);
-  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,2,Dune::PDELab::istl::VectorBackend<> > PGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,2,Dune::PDELab::ISTL::VectorBackend<> > PGFS;
   PGFS pgfs(q2gfs,q2gfs);
 
   // make coefficent Vectors
@@ -262,9 +262,9 @@ void testtaylorhood (const GV& gv)
   Q1GFS q1gfs(gv,q12dfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
   Q2GFS q2gfs(gv,q22dfem);
-  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension,Dune::PDELab::istl::VectorBackend<> > VGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension,Dune::PDELab::ISTL::VectorBackend<> > VGFS;
   VGFS vgfs(q2gfs);
-  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTL::VectorBackend<>,
     Dune::PDELab::LexicographicOrderingTag,VGFS,Q1GFS> THGFS;
   THGFS thgfs(vgfs,q1gfs);
 
@@ -350,7 +350,7 @@ void testgridfunctions (const GV& gv)
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
   Q2GFS q2gfs(gv,q22dfem);
-  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension,Dune::PDELab::istl::VectorBackend<> > VGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension,Dune::PDELab::ISTL::VectorBackend<> > VGFS;
   VGFS vgfs(q2gfs);
 
   // make coefficent Vector
@@ -452,7 +452,7 @@ int main(int argc, char** argv)
 
     // need a grid in order to test grid functions
     Dune::FieldVector<double,2> L(1.0);
-    Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+    std::array<int,2> N(Dune::fill_array<int,2>(1));
     Dune::YaspGrid<2> grid(L,N);
     grid.globalRefine(2);
 

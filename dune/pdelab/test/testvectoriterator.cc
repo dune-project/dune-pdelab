@@ -11,15 +11,14 @@
 #include <dune/common/dynvector.hh>
 #include <dune/istl/bvector.hh>
 
-#include <dune/pdelab/backend/istl/vectoriterator.hh>
-
+#include <dune/pdelab/backend/istl.hh>
 
 int main(int argc, char** argv)
 {
 
   {
     typedef Dune::BlockVector<Dune::FieldVector<int,1> > V;
-    typedef Dune::PDELab::istl::vector_iterator<V> Iterator;
+    typedef Dune::PDELab::ISTL::vector_iterator<V> Iterator;
 
     V v(20);
     v = 1;
@@ -37,7 +36,7 @@ int main(int argc, char** argv)
 
   {
     typedef Dune::BlockVector<Dune::FieldVector<int,3> > V;
-    typedef Dune::PDELab::istl::vector_iterator<V> Iterator;
+    typedef Dune::PDELab::ISTL::vector_iterator<V> Iterator;
 
     V v(20);
 
@@ -56,7 +55,7 @@ int main(int argc, char** argv)
 
   {
     typedef Dune::BlockVector<Dune::BlockVector<Dune::FieldVector<int,1> > > V;
-    typedef Dune::PDELab::istl::vector_iterator<V> Iterator;
+    typedef Dune::PDELab::ISTL::vector_iterator<V> Iterator;
 
     V v(20);
     int i = 1;
@@ -81,7 +80,7 @@ int main(int argc, char** argv)
 
   {
     typedef Dune::BlockVector<Dune::BlockVector<Dune::FieldVector<int,3> > > V;
-    typedef Dune::PDELab::istl::vector_iterator<V> Iterator;
+    typedef Dune::PDELab::ISTL::vector_iterator<V> Iterator;
 
     V v(20);
     int i = 1;
@@ -106,7 +105,7 @@ int main(int argc, char** argv)
 
   {
     typedef Dune::BlockVector<Dune::DynamicVector<int> > V;
-    typedef Dune::PDELab::istl::vector_iterator<V> Iterator;
+    typedef Dune::PDELab::ISTL::vector_iterator<V> Iterator;
 
     V v(20);
     int i = 1;
@@ -131,7 +130,7 @@ int main(int argc, char** argv)
 
   {
     typedef Dune::BlockVector<Dune::BlockVector<Dune::DynamicVector<int> > > V;
-    typedef Dune::PDELab::istl::vector_iterator<V> Iterator;
+    typedef Dune::PDELab::ISTL::vector_iterator<V> Iterator;
 
     V v(20);
     int i = 1;
@@ -164,7 +163,7 @@ int main(int argc, char** argv)
 
   {
     typedef Dune::BlockVector<Dune::BlockVector<Dune::DynamicVector<int> > > V;
-    typedef Dune::PDELab::istl::vector_iterator<V> Iterator;
+    typedef Dune::PDELab::ISTL::vector_iterator<V> Iterator;
 
     V v(20);
     int i = 19;
@@ -199,7 +198,7 @@ int main(int argc, char** argv)
 
   {
     typedef Dune::BlockVector<Dune::FieldVector<int,1> > V;
-    typedef Dune::PDELab::istl::vector_iterator<const V> Iterator;
+    typedef Dune::PDELab::ISTL::vector_iterator<const V> Iterator;
 
     V v(20);
     v = 1;
@@ -215,8 +214,8 @@ int main(int argc, char** argv)
 
   {
     typedef Dune::BlockVector<Dune::FieldVector<int,1> > V;
-    typedef Dune::PDELab::istl::vector_iterator<V> Iterator;
-    typedef Dune::PDELab::istl::vector_iterator<const V> ConstIterator;
+    typedef Dune::PDELab::ISTL::vector_iterator<V> Iterator;
+    typedef Dune::PDELab::ISTL::vector_iterator<const V> ConstIterator;
 
     V v(20);
     v = 1;

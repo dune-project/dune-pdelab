@@ -3,6 +3,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_PARALLELHELPER_HH
 #define DUNE_PDELAB_BACKEND_ISTL_PARALLELHELPER_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <limits>
 
 #include <dune/common/parallel/mpihelper.hh>
@@ -36,7 +39,7 @@
 
 namespace Dune {
   namespace PDELab {
-    namespace istl {
+    namespace ISTL {
 
       //! \addtogroup Backend
       //! \ingroup PDELab
@@ -115,26 +118,26 @@ namespace Dune {
         {
           using Backend::native;
           // dispatch to implementation.
-          maskForeignDOFs(istl::container_tag(native(x)),native(x),native(_ranks));
+          maskForeignDOFs(ISTL::container_tag(native(x)),native(x),native(_ranks));
         }
 
       private:
 
         // Implementation for block vector; recursively masks blocks.
         template<typename X, typename Mask>
-        void maskForeignDOFs(istl::tags::block_vector, X& x, const Mask& mask) const
+        void maskForeignDOFs(ISTL::tags::block_vector, X& x, const Mask& mask) const
         {
           typename Mask::const_iterator mask_it = mask.begin();
           for (typename X::iterator it = x.begin(),
                  end_it = x.end();
                it != end_it;
                ++it, ++mask_it)
-            maskForeignDOFs(istl::container_tag(*it),*it,*mask_it);
+            maskForeignDOFs(ISTL::container_tag(*it),*it,*mask_it);
         }
 
         // Implementation for field vector, iterates over entries and masks them individually.
         template<typename X, typename Mask>
-        void maskForeignDOFs(istl::tags::field_vector, X& x, const Mask& mask) const
+        void maskForeignDOFs(ISTL::tags::field_vector, X& x, const Mask& mask) const
         {
           typename Mask::const_iterator mask_it = mask.begin();
           for (typename X::iterator it = x.begin(),
@@ -167,7 +170,7 @@ namespace Dune {
         disjointDot(const X& x, const Y& y) const
         {
           using Backend::native;
-          return disjointDot(istl::container_tag(native(x)),
+          return disjointDot(ISTL::container_tag(native(x)),
                              native(x),
                              native(y),
                              native(_ranks)
@@ -184,7 +187,7 @@ namespace Dune {
         typename X::field_type,
         typename Y::field_type
         >::PromotedType
-        disjointDot(istl::tags::block_vector, const X& x, const Y& y, const Mask& mask) const
+        disjointDot(ISTL::tags::block_vector, const X& x, const Y& y, const Mask& mask) const
         {
           typedef typename PromotionTraits<
             typename X::field_type,
@@ -199,7 +202,7 @@ namespace Dune {
                  end_it = x.end();
                x_it != end_it;
                ++x_it, ++y_it,  ++mask_it)
-            r += disjointDot(istl::container_tag(*x_it),*x_it,*y_it,*mask_it);
+            r += disjointDot(ISTL::container_tag(*x_it),*x_it,*y_it,*mask_it);
 
           return r;
         }
@@ -211,7 +214,7 @@ namespace Dune {
           typename X::field_type,
           typename Y::field_type
           >::PromotedType
-        disjointDot(istl::tags::field_vector, const X& x, const Y& y, const Mask& mask) const
+        disjointDot(ISTL::tags::field_vector, const X& x, const Y& y, const Mask& mask) const
         {
           typedef typename PromotionTraits<
             typename X::field_type,
@@ -351,18 +354,18 @@ namespace Dune {
 
         const bool is_bcrs_matrix =
           std::is_same<
-            typename istl::tags::container<
+            typename ISTL::tags::container<
               Backend::Native<M>
               >::type::base_tag,
-          istl::tags::bcrs_matrix
+          ISTL::tags::bcrs_matrix
           >::value;
 
         const bool block_type_is_field_matrix =
           std::is_same<
-            typename istl::tags::container<
+            typename ISTL::tags::container<
               typename Backend::Native<M>::block_type
               >::type::base_tag,
-          istl::tags::field_matrix
+          ISTL::tags::field_matrix
           >::value;
 
         // We assume M to be a BCRSMatrix in the following, so better check for that
@@ -494,7 +497,7 @@ namespace Dune {
 #endif
       //! \} group Backend
 
-    } // namespace istl
+    } // namespace ISTL
   } // namespace PDELab
 } // namespace Dune
 

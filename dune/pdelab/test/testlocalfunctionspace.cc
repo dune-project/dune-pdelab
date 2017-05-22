@@ -34,11 +34,11 @@ void test (const GV& gv)
 
   // power grid function space
   typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,2,
-    Dune::PDELab::istl::VectorBackend<>, Dune::PDELab::LexicographicOrderingTag> PowerGFS;
+    Dune::PDELab::ISTL::VectorBackend<>, Dune::PDELab::LexicographicOrderingTag> PowerGFS;
   PowerGFS powergfs(q2gfs);
 
   // composite grid function space
-  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTL::VectorBackend<>,
       Dune::PDELab::LexicographicOrderingTag,PowerGFS,Q1GFS> CompositeGFS;
   CompositeGFS compositegfs(powergfs,q1gfs);
 
@@ -148,7 +148,7 @@ int main(int argc, char** argv)
 
     // need a grid in order to test grid functions
     Dune::FieldVector<double,2> L(1.0);
-    Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+    std::array<int,2> N(Dune::fill_array<int,2>(1));
     Dune::YaspGrid<2> grid(L,N);
     grid.globalRefine(1);
 

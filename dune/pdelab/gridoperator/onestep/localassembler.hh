@@ -50,10 +50,10 @@ namespace Dune{
       typedef Dune::PDELab::LocalAssemblerTraits<GO> Traits;
 
       //! The base class
-      typedef Dune::PDELab::LocalAssemblerBase
-      <typename GO::Traits::MatrixBackend,
-       typename GO::Traits::TrialGridFunctionSpaceConstraints,
-       typename GO::Traits::TestGridFunctionSpaceConstraints> Base;
+      typedef Dune::PDELab::LocalAssemblerBase<
+        typename GO::Traits::MatrixBackend,
+        typename GO::Traits::TrialGridFunctionSpaceConstraints,
+        typename GO::Traits::TestGridFunctionSpaceConstraints> Base;
 
       //! The local assembler engines
       //! @{
@@ -70,7 +70,8 @@ namespace Dune{
       typedef OneStepLocalNonlinearJacobianApplyAssemblerEngine<OneStepLocalAssembler> LocalNonlinearJacobianApplyAssemblerEngine;
       //! @}
 
-      void static_checks(){
+      void static_checks()
+      {
         static_assert((std::is_same<typename LA0::Traits::Jacobian::Pattern,
                        typename LA1::Traits::Jacobian::Pattern>::value),
                       "Received two local assemblers which are non-compatible "
@@ -139,24 +140,29 @@ namespace Dune{
       //! Notifies the local assembler about the current time of
       //! assembling. Should be called before assembling if the local
       //! operator has time dependencies.
-      void preStep(Real time_, Real dt_, int stages_){
+      void preStep(Real time_, Real dt_, int stages_)
+      {
         time = time_;
         dt = dt_;
 
         // This switch decides which term will be multiplied with dt
-        if(dt_mode == DivideOperator1ByDT){
+        if(dt_mode == DivideOperator1ByDT)
+        {
           dt_factor0_ = 1.0;
           dt_factor1_ = 1.0 / dt;
         }
-        else if(dt_mode == MultiplyOperator0ByDT){
+        else if(dt_mode == MultiplyOperator0ByDT)
+        {
           dt_factor0_ = dt;
           dt_factor1_ = 1.0;
         }
-        else if(dt_mode == DoNotAssembleDT){
+        else if(dt_mode == DoNotAssembleDT)
+        {
           dt_factor0_ = 1.0;
           dt_factor1_ = 1.0;
         }
-        else{
+        else
+        {
           DUNE_THROW(Dune::Exception,"Unknown mode for assembling of time step size!");
         }
 
@@ -165,7 +171,8 @@ namespace Dune{
       }
 
       //! Set the one step method parameters
-      void setMethod(const OneStepParameters & method_){
+      void setMethod(const OneStepParameters & method_)
+      {
         osp_method = & method_;
       }
 
@@ -174,7 +181,8 @@ namespace Dune{
       { return *osp_method; }
 
       //! Set the current stage of the one step scheme
-      void setStage(int stage){
+      void setStage(int stage)
+      {
         stage_ = stage;
       }
 
@@ -186,21 +194,25 @@ namespace Dune{
       //! Determines whether the time step size is multiplied to the
       //! mass term (first order time derivative) or the elliptic term
       //! (zero-th order time derivative).
-      void setDTAssemblingMode(DTAssemblingMode dt_mode_){
+      void setDTAssemblingMode(DTAssemblingMode dt_mode_)
+      {
         dt_mode = dt_mode_;
       }
 
       //! Access time at given stage
-      Real timeAtStage(int stage_){
+      Real timeAtStage(int stage_) const
+      {
         return time+osp_method->d(stage_)*dt;
       }
 
       //! Access time at given stage
-      Real timeAtStage(){
+      Real timeAtStage() const
+      {
         return time+osp_method->d(stage_)*dt;
       }
 
-      void setWeight(const Real weight){
+      void setWeight(const Real weight)
+      {
         la0->setWeight(weight);
         la1->setWeight(weight);
       }

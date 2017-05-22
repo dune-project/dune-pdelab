@@ -52,7 +52,7 @@ namespace Dune {
         using Backend::native;
         // PreconditionerImp preconditioner;
         using Mat = Native<M>;
-        Eigen::BiCGSTAB<Mat, PreconditionerImp> solver;
+        ::Eigen::BiCGSTAB<Mat, PreconditionerImp> solver;
         solver.setMaxIterations(maxiter);
         solver.setTolerance(reduction);
         Dune::Timer watch;
@@ -61,7 +61,7 @@ namespace Dune {
         native(z) = solver.solve(native(r));
         double elapsed = watch.elapsed();
 
-        res.converged  = solver.info() == Eigen::ComputationInfo::Success;
+        res.converged  = solver.info() == ::Eigen::ComputationInfo::Success;
         res.iterations = solver.iterations();
         res.elapsed    = elapsed;
         res.reduction  = solver.error();
@@ -72,7 +72,7 @@ namespace Dune {
       template<class V>
       typename Dune::template FieldTraits<typename V::ElementType >::real_type norm(const V& v) const
       {
-        return native(v).norm();
+        return Backend::native(v).norm();
       }
 
     private:
@@ -81,7 +81,7 @@ namespace Dune {
     };
 
     class EigenBackend_BiCGSTAB_IILU
-      : public EigenBackend_BiCGSTAB_Base<Eigen::IncompleteLUT<double> >
+      : public EigenBackend_BiCGSTAB_Base<::Eigen::IncompleteLUT<double> >
     {
     public:
         explicit EigenBackend_BiCGSTAB_IILU(unsigned maxiter_=5000)
@@ -91,7 +91,7 @@ namespace Dune {
     };
 
     class EigenBackend_BiCGSTAB_Diagonal
-      : public EigenBackend_BiCGSTAB_Base<Eigen::DiagonalPreconditioner<double> >
+      : public EigenBackend_BiCGSTAB_Base<::Eigen::DiagonalPreconditioner<double> >
     {
     public:
         explicit EigenBackend_BiCGSTAB_Diagonal(unsigned maxiter_=5000)
@@ -125,7 +125,7 @@ namespace Dune {
       {
         using Backend::native;
         using Mat = Backend::Native<M>;
-        Eigen::ConjugateGradient<Mat, UpLo, Preconditioner> solver;
+        ::Eigen::ConjugateGradient<Mat, UpLo, Preconditioner> solver;
         solver.setMaxIterations(maxiter);
         solver.setTolerance(reduction);
         Dune::Timer watch;
@@ -135,7 +135,7 @@ namespace Dune {
         double elapsed = watch.elapsed();
 
 
-        res.converged  = solver.info() == Eigen::ComputationInfo::Success;
+        res.converged  = solver.info() == ::Eigen::ComputationInfo::Success;
         res.iterations = solver.iterations();
         res.elapsed    = elapsed;
         res.reduction  = solver.error();
@@ -149,7 +149,7 @@ namespace Dune {
 
 
     class EigenBackend_CG_IILU_Up
-      : public EigenBackend_CG_Base<Eigen::IncompleteLUT<double>, Eigen::Upper >
+      : public EigenBackend_CG_Base<::Eigen::IncompleteLUT<double>, ::Eigen::Upper >
     {
     public:
         explicit EigenBackend_CG_IILU_Up(unsigned maxiter_=5000)
@@ -158,7 +158,7 @@ namespace Dune {
     };
 
     class EigenBackend_CG_Diagonal_Up
-      : public EigenBackend_CG_Base<Eigen::DiagonalPreconditioner<double>, Eigen::Upper >
+      : public EigenBackend_CG_Base<::Eigen::DiagonalPreconditioner<double>, ::Eigen::Upper >
     {
     public:
         explicit EigenBackend_CG_Diagonal_Up(unsigned maxiter_=5000)
@@ -167,7 +167,7 @@ namespace Dune {
     };
 
     class EigenBackend_CG_IILU_Lo
-      : public EigenBackend_CG_Base<Eigen::IncompleteLUT<double>, Eigen::Lower >
+      : public EigenBackend_CG_Base<::Eigen::IncompleteLUT<double>, ::Eigen::Lower >
     {
     public:
         explicit EigenBackend_CG_IILU_Lo(unsigned maxiter_=5000)
@@ -176,7 +176,7 @@ namespace Dune {
     };
 
     class EigenBackend_CG_Diagonal_Lo
-      : public EigenBackend_CG_Base<Eigen::DiagonalPreconditioner<double>, Eigen::Lower >
+      : public EigenBackend_CG_Base<::Eigen::DiagonalPreconditioner<double>, ::Eigen::Lower >
     {
     public:
         explicit EigenBackend_CG_Diagonal_Lo(unsigned maxiter_=5000)
@@ -217,7 +217,7 @@ namespace Dune {
         // use the approximate minimum degree algorithm for the ordering in
         // the solver. This reproduces the default ordering for the Cholesky
         // type solvers.
-        Solver<Mat, UpLo, Eigen::AMDOrdering<typename Mat::Index> > solver;
+        Solver<Mat, UpLo, ::Eigen::AMDOrdering<typename Mat::Index> > solver;
 #else
         Solver<Mat, UpLo> solver;
 #endif
@@ -227,7 +227,7 @@ namespace Dune {
         native(z) = solver.solve(native(r));
         double elapsed = watch.elapsed();
 
-        res.converged  = solver.info() == Eigen::ComputationInfo::Success;
+        res.converged  = solver.info() == ::Eigen::ComputationInfo::Success;
         res.iterations = solver.iterations();
         res.elapsed    = elapsed;
         res.reduction  = solver.error();
@@ -237,7 +237,7 @@ namespace Dune {
     };
 
     class EigenBackend_SimplicialCholesky_Up
-      : public EigenBackend_SPD_Base<Eigen::SimplicialCholesky, Eigen::Upper >
+      : public EigenBackend_SPD_Base<::Eigen::SimplicialCholesky, ::Eigen::Upper >
     {
     public:
         explicit EigenBackend_SimplicialCholesky_Up()
@@ -245,7 +245,7 @@ namespace Dune {
     };
 
     class EigenBackend_SimplicialCholesky_Lo
-      : public EigenBackend_SPD_Base<Eigen::SimplicialCholesky, Eigen::Lower >
+      : public EigenBackend_SPD_Base<::Eigen::SimplicialCholesky, ::Eigen::Lower >
     {
     public:
         explicit EigenBackend_SimplicialCholesky_Lo()
@@ -253,7 +253,7 @@ namespace Dune {
     };
 
 /*    class EigenBackend_SimplicialLDLt_Up
- *      : public EigenBackend_SPD_Base<Eigen::SimplicialLDLt, Eigen::Upper >
+ *      : public EigenBackend_SPD_Base<::Eigen::SimplicialLDLt, ::Eigen::Upper >
  *    {
  *    public:
  *        explicit EigenBackend_SimplicialLDLt_Up()
@@ -261,7 +261,7 @@ namespace Dune {
  *    };
 
  *    class EigenBackend_SimplicialLDLt_Lo
- *      : public EigenBackend_SPD_Base<Eigen::SimplicialLDLt, Eigen::Lower >
+ *      : public EigenBackend_SPD_Base<::Eigen::SimplicialLDLt, ::Eigen::Lower >
  *    {
  *    public:
  *        explicit EigenBackend_SimplicialLDLt_Lo()
@@ -269,7 +269,7 @@ namespace Dune {
  *    };
 
  *    class EigenBackend_SimplicialLLt_Up
- *      : public EigenBackend_SPD_Base<Eigen::SimplicialLLt, Eigen::Upper >
+ *      : public EigenBackend_SPD_Base<::Eigen::SimplicialLLt, ::Eigen::Upper >
  *    {
  *    public:
  *        explicit EigenBackend_SimplicialLLt_Up()
@@ -277,7 +277,7 @@ namespace Dune {
  *    };
 
  *    class EigenBackend_SimplicialLLt_Lo
- *      : public EigenBackend_SPD_Base<Eigen::SimplicialLLt, Eigen::Lower >
+ *      : public EigenBackend_SPD_Base<::Eigen::SimplicialLLt, ::Eigen::Lower >
  *    {
  *    public:
  *        explicit EigenBackend_SimplicialLLt_Lo()
@@ -285,7 +285,7 @@ namespace Dune {
  *    };
 
  *    class EigenBackend_Cholmod_Up
- *      : public EigenBackend_SPD_Base<Eigen::CholmodDecomposition, Eigen::Upper >
+ *      : public EigenBackend_SPD_Base<::Eigen::CholmodDecomposition, ::Eigen::Upper >
  *    {
  *    public:
  *        explicit EigenBackend_Cholmod_Up()
@@ -293,7 +293,7 @@ namespace Dune {
  *    };
 
  *    class EigenBackend_Cholmod_Lo
- *      : public EigenBackend_SPD_Base<Eigen::CholmodDecomposition, Eigen::Lower >
+ *      : public EigenBackend_SPD_Base<::Eigen::CholmodDecomposition, ::Eigen::Lower >
  *    {
  *    public:
  *        explicit EigenBackend_Cholmod_Lo()
@@ -304,7 +304,7 @@ namespace Dune {
       : public SequentialNorm, public LinearResultStorage
     {
     private:
-      const static unsigned int defaultFlag = Eigen::ComputeThinU | Eigen::ComputeThinV;
+      const static unsigned int defaultFlag = ::Eigen::ComputeThinU | ::Eigen::ComputeThinV;
     public:
       /*! \brief make a linear solver object
 
@@ -329,11 +329,11 @@ namespace Dune {
         watch.reset();
         using Backend::native;
         using Mat = Backend::Native<M>;
-        Eigen::JacobiSVD<Mat, Eigen::ColPivHouseholderQRPreconditioner> solver(A, flags_);
+        ::Eigen::JacobiSVD<Mat, ::Eigen::ColPivHouseholderQRPreconditioner> solver(A, flags_);
         native(z) = solver.solve(native(r));
         double elapsed = watch.elapsed();
 
-        res.converged  = solver.info() == Eigen::ComputationInfo::Success;
+        res.converged  = solver.info() == ::Eigen::ComputationInfo::Success;
         res.iterations = solver.iterations();
         res.elapsed    = elapsed;
         res.reduction  = solver.error();

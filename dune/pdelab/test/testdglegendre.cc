@@ -10,6 +10,7 @@
 #include <dune/pdelab/common/functionutilities.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionadapter.hh>
 
 /** Parameter class for the stationary convection-diffusion equation of the following form:
  *
@@ -120,51 +121,6 @@ private:
   typename Traits::RangeFieldType b0;
 };
 
-/*! \brief Adapter returning ||f1(x)-f2(x)||^2 for two given grid functions
-
-  \tparam T1  a grid function type
-  \tparam T2  a grid function type
-*/
-template<typename T1, typename T2>
-class DifferenceSquaredAdapter
-  : public Dune::PDELab::GridFunctionBase<
-  Dune::PDELab::GridFunctionTraits<typename T1::Traits::GridViewType,
-                                   typename T1::Traits::RangeFieldType,
-                                   1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> >
-  ,DifferenceSquaredAdapter<T1,T2> >
-{
-public:
-  typedef Dune::PDELab::GridFunctionTraits<typename T1::Traits::GridViewType,
-                                           typename T1::Traits::RangeFieldType,
-                                           1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> > Traits;
-
-  //! constructor
-  DifferenceSquaredAdapter (const T1& t1_, const T2& t2_) : t1(t1_), t2(t2_) {}
-
-  //! \copydoc GridFunctionBase::evaluate()
-  inline void evaluate (const typename Traits::ElementType& e,
-                        const typename Traits::DomainType& x,
-                        typename Traits::RangeType& y) const
-  {
-    typename T1::Traits::RangeType y1;
-    t1.evaluate(e,x,y1);
-    typename T2::Traits::RangeType y2;
-    t2.evaluate(e,x,y2);
-    y1 -= y2;
-    y = y1.two_norm2();
-  }
-
-  inline const typename Traits::GridViewType& getGridView () const
-  {
-    return t1.getGridView();
-  }
-
-private:
-  const T1& t1;
-  const T2& t2;
-};
-
-
 // Solve problem
 template <typename Grid, typename FS, typename Problem, typename GM, Dune::SolverCategory::Category solvertype, int degree>
 void solveProblem(const Grid& grid, FS& fs, typename FS::DOF x, Problem& problem, std::string basename)
@@ -252,7 +208,7 @@ int main(int argc, char **argv)
   // calculate l2 error squared between the two functions
   FS::DGF xdgf(fs.getGFS(),x);
   FS2::DGF xdgf2(fs2.getGFS(),x2);
-  typedef DifferenceSquaredAdapter<FS::DGF,FS2::DGF> DifferenceSquared;
+  typedef Dune::PDELab::DifferenceSquaredAdapter<FS::DGF,FS2::DGF> DifferenceSquared;
   DifferenceSquared differencesquared(xdgf,xdgf2);
   typename DifferenceSquared::Traits::RangeType l2errorsquared(0.0);
   Dune::PDELab::integrateGridFunction(differencesquared,l2errorsquared,10);

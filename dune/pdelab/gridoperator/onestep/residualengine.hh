@@ -66,32 +66,35 @@ namespace Dune{
          creates this engine
       */
       OneStepLocalResidualAssemblerEngine(LocalAssembler & local_assembler_)
-        : BaseT(local_assembler_),
-          invalid_residual(static_cast<Residual*>(0)),
-          invalid_solution(static_cast<Solution*>(0)),
-          residual_0(invalid_residual),
-          residual_1(invalid_residual),
-          const_residual_0(invalid_residual),
-          const_residual_1(invalid_residual),
-          solution(invalid_solution)
+        : BaseT(local_assembler_)
+        , invalid_residual(nullptr)
+        , invalid_solution(nullptr)
+        , residual_0(invalid_residual)
+        , residual_1(invalid_residual)
+        , const_residual_0(invalid_residual)
+        , const_residual_1(invalid_residual)
+        , solution(invalid_solution)
       {}
 
       //! Set current solution vector. Must be called before
       //! setResidual(). Should be called prior to assembling.
-      void setSolution(const Solution & solution_){
+      void setSolution(const Solution & solution_)
+      {
         solution = &solution_;
       }
 
       //! Set current const residual vector. Must be called before
       //! setResidual(). Should be called prior to assembling.
-      void setConstResidual(const Residual &const_residual_){
+      void setConstResidual(const Residual &const_residual_)
+      {
         const_residual_0 = &const_residual_;
         const_residual_1 = &const_residual_;
       }
 
       //! Set current const residual vector. Should be called prior to
       //! assembling.
-      void setResidual(Residual & residual_){
+      void setResidual(Residual & residual_)
+      {
         residual_0 = &residual_;
         residual_1 = &residual_;
 
@@ -107,7 +110,8 @@ namespace Dune{
       //! setResidual(). Should be called prior to assembling. Here,
       //! separate vectors are used for the operators corresponding to
       //! the time dervatives of order one and zero.
-      void setConstResiduals(const Residual &const_residual_0_, const Residual &const_residual_1_){
+      void setConstResiduals(const Residual &const_residual_0_, const Residual &const_residual_1_)
+      {
         const_residual_0 = &const_residual_0_;
         const_residual_1 = &const_residual_1_;
       }
@@ -116,7 +120,8 @@ namespace Dune{
       //! to assembling. Here, separate vectors are used for the
       //! operators corresponding to the time dervatives of order one
       //! and zero.
-      void setResiduals(Residual & residual_0_, Residual & residual_1_){
+      void setResiduals(Residual & residual_0_, Residual & residual_1_)
+      {
         residual_0 = &residual_0_;
         residual_1 = &residual_1_;
 
@@ -131,7 +136,8 @@ namespace Dune{
       //! When multiple engines are combined in one assembling
       //! procedure, this method allows to reset the weights which may
       //! have been changed by the other engines.
-      void setWeights(){
+      void setWeights()
+      {
         la.child0().setWeight(b_rr * la.dt_factor0());
         la.child1().setWeight(la.dt_factor1());
       }
@@ -157,7 +163,8 @@ namespace Dune{
       }
 
       template<typename GFSU, typename GFSV>
-      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv)
+      {
 
         // Update residual vectors with constant part
         assert(const_residual_0 != invalid_residual);

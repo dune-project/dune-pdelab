@@ -50,7 +50,7 @@ void test_2d_cube(const Constraints& constraints, const VBE& vbe)
 
   // make grid
   Dune::FieldVector<double,2> L(1.0);
-  Dune::array<int,2> N;
+  std::array<int,2> N;
   std::fill(N.begin(),N.end(),1);
   Dune::YaspGrid<2> grid(L,N);
   grid.globalRefine(3);
@@ -76,7 +76,7 @@ void test_3d_cube(const Constraints& constraints, const VBE& vbe)
 
   // make grid
   Dune::FieldVector<double,3> L(1.0);
-  Dune::array<int,3> N;
+  std::array<int,3> N;
   std::fill(N.begin(),N.end(),1);
 
   Dune::YaspGrid<3> grid(L,N);
@@ -263,7 +263,7 @@ int main(int argc, char** argv)
     typedef Dune::PDELab::NoConstraints Constraints;
     Constraints constraints DUNE_UNUSED;
 
-    typedef Dune::PDELab::istl::VectorBackend<> VBE;
+    typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
     VBE vbe DUNE_UNUSED;
 
     typedef double RF DUNE_UNUSED;

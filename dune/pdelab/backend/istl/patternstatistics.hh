@@ -2,11 +2,14 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_PATTERNSTATISTICS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_PATTERNSTATISTICS_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <iostream>
 
 namespace Dune {
   namespace PDELab {
-    namespace istl {
+    namespace ISTL {
 
       //! Statistics about the pattern of a BCRSMatrix.
       template<typename T>
@@ -92,7 +95,7 @@ namespace Dune {
 
       };
 
-    } // namespace istl
+    } // namespace ISTL
   } // namespace PDELab
 } // namespace Dune
 

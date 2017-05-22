@@ -201,7 +201,7 @@ void testpowerp1 (const GV& gv)
   P1GFS p1gfs(gv,p1fem);
 
   // make m components of type P1
-  typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,m,Dune::PDELab::istl::VectorBackend<> > P1mGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,m,Dune::PDELab::ISTL::VectorBackend<> > P1mGFS;
   P1mGFS p1mgfs(p1gfs);
 
   // make coefficent Vector

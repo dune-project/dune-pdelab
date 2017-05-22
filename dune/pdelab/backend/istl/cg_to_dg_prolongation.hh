@@ -2,6 +2,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_CG_TO_DG_PROLONGATION_HH
 #define DUNE_PDELAB_BACKEND_ISTL_CG_TO_DG_PROLONGATION_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/dynmatrix.hh>

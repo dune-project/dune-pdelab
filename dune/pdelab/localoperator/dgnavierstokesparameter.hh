@@ -6,7 +6,7 @@
 
 #include <dune/common/parametertreeparser.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
-#include <dune/pdelab/localoperator/dgparameter.hh>
+#include <dune/pdelab/localoperator/dginteriorpenaltyparameter.hh>
 #include <dune/pdelab/localoperator/stokesparameter.hh>
 
 namespace Dune {
@@ -76,6 +76,7 @@ namespace Dune {
       typedef typename Base::Traits Traits;
 
       //! Constructor
+      DUNE_DEPRECATED_MSG("This constructor is deprecated. Use the parameter tree version instead!")
       DGNavierStokesParameters(const std::string& method, const RF mu, const RF rho,
                                F& f, B& b, V& v, J& j, IP& ip) :
         Base(mu,rho,f,b,v,j) ,
@@ -84,12 +85,31 @@ namespace Dune {
         initFromString(method);
       }
 
-      //! Constructor
+      /** \brief Constructor that parses values from parameter tree.
+
+          In order to parse the values correctly
+          the ini-file should have the following structure:
+
+          \code
+          [parameters]
+          rho = 1.0
+          mu = 1.0
+          [parameters.dg]
+          epsilon = -1
+          sigma = 6.0
+          beta = 1.0
+          \endcode
+
+          And invocation in the code:
+          \code
+          navierstokes_parameters(configuration.sub("parameters"), ... );
+          \endcode
+       */
       DGNavierStokesParameters(const Dune::ParameterTree& configuration,
-                               F& f, B& b, V& v, J& j, IP& ip) :
-        Base(configuration,f,b,v,j) ,
-        _ip(ip) ,
-        _epsilon(configuration.get<int>("epsilon"))
+                               F& f, B& b, V& v, J& j)
+        : Base(configuration,f,b,v,j)
+        , _ip(configuration.sub("dg"))
+        , _epsilon(configuration.sub("dg").get<int>("epsilon"))
       {}
 
 
@@ -101,26 +121,22 @@ namespace Dune {
         return y;
       }
 
-      /** \brief Interior penalty parameter.
-
-          \return The coefficient of the interior penalty term.
-      */
-      template<typename I>
+      /** \brief Get interior penalty parameter from skeleton face.
+       */
+      template<typename GEO, typename IGEO, typename OGEO>
       typename Traits::RangeField
-      getFaceIP(const I & ig) const
+      getFaceIP(const GEO& geo, const IGEO& igeo, const OGEO& ogeo)
       {
-        return _ip.getFaceIP(ig);
+        return _ip.getFaceIP(geo,igeo,ogeo);
       }
 
-      /** \brief Interior penalty parameter.
-
-          \return The coefficient of the interior penalty term.
-      */
-      template<typename I>
+      /** \brief Get interior penalty parameter from boundary face.
+       */
+      template<typename GEO, typename IGEO>
       typename Traits::RangeField
-      getFaceIP(const I & ig, const typename Traits::IntersectionDomain& ) const
+      getFaceIP(const GEO& geo, const IGEO& igeo)
       {
-        return _ip.getFaceIP(ig);
+        return _ip.getFaceIP(geo,igeo);
       }
 
       //! Return the symmetry factor epsilon for this IP
@@ -133,8 +149,8 @@ namespace Dune {
 
     private:
 
-      IP & _ip;              // Interior penalty
-      int _epsilon;          // IP symmetry factor
+      IP _ip;       // Interior penalty
+      int _epsilon; // IP symmetry factor
     }; // end class DGNavierStokesParameters
 
 

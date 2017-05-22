@@ -105,7 +105,6 @@ template<typename GV, typename FEM, typename CON, int q>
 void poisson (const GV& gv, const FEM& fem, std::string filename, int chunk_size)
 {
   // constants and types
-  typedef typename GV::Grid::ctype DF;
   typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
 
@@ -116,8 +115,6 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int chunk_size
 
   typedef Dune::PDELab::istl::FlatVectorBackend<Allocator> FVB;
   typedef Dune::PDELab::istl::FlatMatrixBackend<Allocator> FMB;
-
-  typedef Dune::PDELab::istl::VectorBackend<> OVB;
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<
@@ -258,7 +255,6 @@ int main(int argc, char** argv)
       auto gv=grid.leafGridView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,GV::ctype,double,1> FEM;
       FEM fem(gv);
 
@@ -279,7 +275,6 @@ int main(int argc, char** argv)
       auto gv=grid.leafGridView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,GV::ctype,double,2> FEM;
       FEM fem(gv);
 

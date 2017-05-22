@@ -3,10 +3,12 @@
 #ifndef DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
 #define DUNE_PDELAB_GRIDOPERATOR_ONESTEP_HH
 
-#include <dune/pdelab/instationary/onestep.hh>
-#include <dune/pdelab/gridoperator/onestep/localassembler.hh>
-#include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
+#include <tuple>
+
 #include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
+#include <dune/pdelab/gridoperator/onestep/localassembler.hh>
+#include <dune/pdelab/instationary/onestep.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -55,7 +57,8 @@ namespace Dune{
       //! @}
 
       template <typename MFT>
-      struct MatrixContainer{
+      struct MatrixContainer
+      {
         typedef Jacobian Type;
       };
 
@@ -73,8 +76,8 @@ namespace Dune{
           const_residual( go0_.testGridFunctionSpace() ),
           local_assembler(la0,la1, const_residual)
       {
-        GO0::setupGridOperators(Dune::tie(go0_,go1_));
-        if(!implicit)
+        GO0::setupGridOperators(std::tie(go0_,go1_));
+        if(not implicit)
           local_assembler.setDTAssemblingMode(LocalAssembler::DoNotAssembleDT);
       }
 
@@ -83,13 +86,13 @@ namespace Dune{
       //! (zero-th order time derivative).
       void divideMassTermByDeltaT()
       {
-        if(!implicit)
+        if(not implicit)
           DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
         local_assembler.setDTAssemblingMode(LocalAssembler::DivideOperator1ByDT);
       }
       void multiplySpatialTermByDeltaT()
       {
-        if(!implicit)
+        if(not implicit)
           DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
         local_assembler.setDTAssemblingMode(LocalAssembler::MultiplyOperator0ByDT);
       }
@@ -144,8 +147,10 @@ namespace Dune{
 
       //! Assemble constant part of residual
       template<typename Dir = Direction::Forward>
-      void preStage(unsigned int stage, const std::vector<Domain*> & x, Dir direction = Dir()){
-        if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
+      void preStage(unsigned int stage, const std::vector<Domain*> & x, Dir direction = Dir())
+      {
+        if(not implicit)
+          DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
 
         typedef typename LocalAssembler::LocalPreStageAssemblerEngine PreStageEngine;
         local_assembler.setStage(stage);
@@ -159,8 +164,10 @@ namespace Dune{
 
       //! Assemble residual
       template<typename Dir = Direction::Forward>
-      void residual(const Domain & x, Range & r, Dir direction = Dir()) const {
-        if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
+      void residual(const Domain & x, Range & r, Dir direction = Dir()) const
+      {
+        if(not implicit)
+          DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
 
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
         global_assembler.assemble
@@ -173,8 +180,10 @@ namespace Dune{
 
       //! Assemble jacobian
       template<typename Dir = Direction::Forward>
-      void jacobian(const Domain & x, Jacobian & a, Dir direction = Dir()) const {
-        if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
+      void jacobian(const Domain & x, Jacobian & a, Dir direction = Dir()) const
+      {
+        if(not implicit)
+          DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
 
         typedef typename LocalAssembler::LocalJacobianAssemblerEngine JacobianEngine;
         global_assembler.assemble
@@ -191,7 +200,8 @@ namespace Dune{
                                       Jacobian & a, Range & r1, Range & r0,
                                       Dir direction = Dir())
       {
-        if(implicit){DUNE_THROW(Dune::Exception,"This function should not be called in implicit mode");}
+        if(implicit)
+          DUNE_THROW(Dune::Exception,"This function should not be called in implicit mode");
 
         local_assembler.setStage(stage);
 
@@ -297,6 +307,11 @@ namespace Dune{
       const typename Traits::MatrixBackend& matrixBackend() const
       {
         return go0.matrixBackend();
+      }
+
+      const typename LocalAssembler::Traits::TrialGridFunctionSpaceConstraints trialConstraints() const
+      {
+        return local_assembler.trialConstraints();
       }
 
     private:

@@ -730,7 +730,7 @@ namespace Dune {
         // transform tree
         P p = Transformation::transform(f);
         // call parameter based implementation
-        ConstraintsAssemblerHelper<P, GFS, CG, isGridFunction<P>>::assemble(p,gfs,cg,verbose);
+        ConstraintsAssemblerHelper<P, GFS, CG, IsGridFunction<P>::value>::assemble(p,gfs,cg,verbose);
       }
     };
 #endif
@@ -780,7 +780,7 @@ namespace Dune {
     {
       // clear global constraints
       cg.clear();
-      ConstraintsAssemblerHelper<P, GFS, CG, isGridFunction<P>>::assemble(p,gfs,cg,verbose);
+      ConstraintsAssemblerHelper<P, GFS, CG, IsGridFunction<P>::value>::assemble(p,gfs,cg,verbose);
     }
 
     //! construct constraints from given boundary condition function
