@@ -127,34 +127,20 @@ namespace Dune {
 
       LocalAssembler & localAssembler() const { return local_assembler; }
 
-
-      //! Visitor which is called in the method setupGridOperators for
-      //! each tuple element.
-      template <typename GridOperatorTuple>
-      struct SetupGridOperator {
-        SetupGridOperator()
-          : index(0), size(Dune::tuple_size<GridOperatorTuple>::value) {}
-
-        template <typename T>
-        void visit(T& elem) {
-          elem.localAssembler().preProcessing(index == 0);
-          elem.localAssembler().postProcessing(index == size-1);
-          ++index;
-        }
-
-        int index;
-        const int size;
-      };
-
       //! Method to set up a number of grid operators which are used
       //! in a joint assembling. It is assumed that all operators are
       //! specializations of the same template type
       template<typename GridOperatorTuple>
       static void setupGridOperators(GridOperatorTuple tuple)
       {
-        Dune::ForEachValue<GridOperatorTuple> forEach(tuple);
-        SetupGridOperator<GridOperatorTuple> setup_visitor;
-        forEach.apply(setup_visitor);
+        Hybrid::forEach(
+          tuple,
+          [index = 0ul](auto& elem) mutable
+          {
+            elem.localAssembler().preProcessing(index == 0);
+            elem.localAssembler().postProcessing(index == std::tuple_size_v<GridOperatorTuple> - 1);
+            ++index;
+          });
       }
 
       //! Interpolate the constrained dofs from given function
