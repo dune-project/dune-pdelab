@@ -195,8 +195,8 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   typedef Dune::PDELab::StationaryLinearProblemSolver<IGO, LS,V> PDESOLVER;
   PDESOLVER pdesolver(igo,ls,1e-10);
 
-  // Dune::PDELab::Alexander2Parameter<Real> method;
-  Dune::PDELab::ImplicitEulerParameter<Real> method;
+  Dune::PDELab::Alexander2Parameter<Real> method;
+  // Dune::PDELab::ImplicitEulerParameter<Real> method;
   Dune::PDELab::OneStepMethod<Real,IGO,PDESOLVER,V,V> osm(method,igo,pdesolver);
   osm.setVerbosityLevel(1);
 
@@ -227,16 +227,16 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
    }
 
   // compute L2 error if analytical solution is available
-  typedef DifferenceSquaredAdapter<G,DGF> DifferenceSquared;
+  typedef Dune::PDELab::DifferenceSquaredAdapter<G,DGF> DifferenceSquared;
   DifferenceSquared differencesquared(g,xdgf);
   typename DifferenceSquared::Traits::RangeType l2errorsquared(0.0);
   Dune::PDELab::integrateGridFunction(differencesquared,l2errorsquared,12);
   std::cout << "l2 error squared: " << l2errorsquared << std::endl;
 
-  bool test_pass = true;
+  bool test_fail = false;
   if (l2errorsquared>5e-6)
-    test_pass = false;
-  return test_pass;
+    test_fail = true;
+  return test_fail;
 }
 
 
@@ -251,7 +251,7 @@ int main(int argc, char** argv)
       std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
   }
 
-  bool test_pass = true;
+  bool test_fail = false;
 
   try{
     typedef double Real;
@@ -281,7 +281,7 @@ int main(int argc, char** argv)
     FEMDG femdg;
 
     // Solve problem
-    test_pass = runDG <GV, FEMDG, Problem, degree>(gv, femdg, problem);
+    test_fail = runDG <GV, FEMDG, Problem, degree>(gv, femdg, problem);
   }
 
   catch (Dune::Exception &e){
@@ -293,5 +293,5 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  return test_pass;
+  return test_fail;
 }
