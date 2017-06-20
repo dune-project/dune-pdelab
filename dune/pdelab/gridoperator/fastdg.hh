@@ -14,11 +14,6 @@
 namespace Dune {
   namespace PDELab {
 
-    //==================================================================//
-    // TODO What about the struct: warn_on_deprecated_nonoverlapping_mode_parameter ?
-    //      See file 'gridoperator.hh' for instance.
-    //==================================================================//
-
     /** Fast D(iscontinuous) G(alerkin) grid operator implementation.
 
        \tparam GFSU GridFunctionSpace for ansatz functions
@@ -34,19 +29,13 @@ namespace Dune {
     template<typename GFSU, typename GFSV, typename LOP,
              typename MB, typename DF, typename RF, typename JF,
              typename CU=Dune::PDELab::EmptyTransformation,
-             typename CV=Dune::PDELab::EmptyTransformation,
-             int nonoverlapping_mode = -1>
+             typename CV=Dune::PDELab::EmptyTransformation>
     class FastDGGridOperator
     {
     public:
 
-      static_assert(nonoverlapping_mode == -1 ||
-                    nonoverlapping_mode == 0 ||
-                    nonoverlapping_mode == 1,
-                    "invalid value for nonoverlapping_mode! This parameter is also deprecated in PDELab 2.4, so please remove it from your typedefs!");
-
       //! The global assembler type
-      typedef FastDGAssembler<GFSU,GFSV,CU,CV,static_cast<bool>(nonoverlapping_mode)> Assembler;
+      typedef FastDGAssembler<GFSU,GFSV,CU,CV> Assembler;
 
       //! The type of the domain (solution).
       using Domain = Dune::PDELab::Backend::Vector<GFSU,DF>;
