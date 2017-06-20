@@ -9,8 +9,8 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename LFS, typename C>
-    class LFSIndexCacheBase<LFS,C,Experimental::DuneFunctionsCacheTag>
+    template<typename LFS, typename C, bool fast>
+    class LFSIndexCacheBase<LFS,C,Experimental::DuneFunctionsCacheTag,fast>
     {
 
       enum DOFFlags
@@ -141,8 +141,8 @@ namespace Dune {
     };
 
 
-    template<typename LFS>
-    class LFSIndexCacheBase<LFS,EmptyTransformation,Experimental::DuneFunctionsCacheTag>
+    template<typename LFS, bool fast>
+    class LFSIndexCacheBase<LFS,EmptyTransformation,Experimental::DuneFunctionsCacheTag,fast>
     {
 
     public:

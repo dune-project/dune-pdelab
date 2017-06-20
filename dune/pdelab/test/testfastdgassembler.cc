@@ -158,7 +158,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   // compute L2 error if analytical solution is available
   typedef Dune::PDELab::DiscreteGridFunction<GFS,U> UDGF;
   UDGF udgf(gfs,u);
-  typedef DifferenceSquaredAdapter<G,UDGF> DifferenceSquared;
+  typedef Dune::PDELab::DifferenceSquaredAdapter<G,UDGF> DifferenceSquared;
   DifferenceSquared differencesquared(g,udgf);
   typename DifferenceSquared::Traits::RangeType l2errorsquared(0.0);
   Dune::PDELab::integrateGridFunction(differencesquared,l2errorsquared,12);
@@ -169,10 +169,10 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF>>(udgf,"u_h"));
   vtkwriter.write("testfastdgassembler",Dune::VTK::appendedraw);
 
-  bool test_pass = true;
+  bool test_fail = false;
   if (l2errorsquared>1e-08)
-    test_pass = false;
-  return test_pass;
+    test_fail = true;
+  return test_fail;
 }
 
 
@@ -187,7 +187,7 @@ int main(int argc, char** argv)
       std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
   }
 
-  bool test_pass = true;
+  bool test_fail = false;
 
   try{
     typedef double Real;
@@ -217,7 +217,7 @@ int main(int argc, char** argv)
     FEMDG femdg;
 
     // Solve problem
-    test_pass = runDG <GV, FEMDG, Problem, degree>(gv, femdg, problem);
+    test_fail = runDG <GV, FEMDG, Problem, degree>(gv, femdg, problem);
   }
 
   catch (Dune::Exception &e){
@@ -229,5 +229,5 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  return test_pass;
+  return test_fail;
 }
