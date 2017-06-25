@@ -116,16 +116,41 @@ namespace Dune{
         setLocalAssemblerEngineDT1(la.la1.localResidualAssemblerEngine(*const_residual_1,*((*solutions)[0])));
       }
 
-      //! Methods for loading of the local function's
-      //! coefficients. These methods are blocked. The loading of the
-      //! coefficients is done in each assemble call.
-      //!@{
+      //! Methods for binding the local function space.
+      //! These methods are empty. The binding of the local function space
+      //! is done after setting the solution in the assembleUVVolume(),
+      //! assembleUVSkeleton(), assembleUVBoundary(), assembleUVProcessor(),
+      //! assembleUVEnrichedCoupling() and assembleUVVolumePostSkeleton() calls.
+      //! @{
+      template<typename EG, typename LFSU, typename LFSV>
+      void onBindLFSUV(const EG& eg, const LFSU& lfsu, const LFSV& lfsv)
+      {}
+      template<typename IG, typename LFSU_S, typename LFSV_S>
+      void onBindLFSUVInside(const IG & ig,
+                             const LFSU_S & lfsu_s, const LFSV_S & lfsv_s)
+      {}
+      template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N>
+      void onBindLFSUVOutside(const IG & ig,
+                              const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n)
+      {}
+      //! @}
+
+      //! Methods for loading of the local function's coefficients.
+      //! These methods are empty. The loading of the coefficients
+      //! is done after setting the solution in the assembleUVVolume(),
+      //! assembleUVSkeleton(), assembleUVBoundary(), assembleUVProcessor(),
+      //! assembleUVEnrichedCoupling() and assembleUVVolumePostSkeleton() calls.
+      //! @{
       template<typename LFSU>
-      void loadCoefficientsLFSUInside(const LFSU & lfsu_s){}
+      void loadCoefficientsLFSUInside(const LFSU & lfsu_s)
+      {}
       template<typename LFSU>
-      void loadCoefficientsLFSUOutside(const LFSU & lfsu_n){}
+      void loadCoefficientsLFSUOutside(const LFSU & lfsu_n)
+      {}
       template<typename LFSU>
-      void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c){}
+      void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c)
+      {}
       //! @}
 
       //! Method setting time for la1 local assembler.
@@ -179,23 +204,26 @@ namespace Dune{
       template<typename EG, typename LFSU, typename LFSV>
       void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {
-        for (int s=0; s<la.stage; ++s){
+        for (int s=0; s<la.stage; ++s)
+        {
           // Reset the time in the local assembler
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
-          lae0->setSolution(*((*solutions)[s]));
-          lae1->setSolution(*((*solutions)[s]));
-
-          lae0->loadCoefficientsLFSUInside(lfsu);
-          lae1->loadCoefficientsLFSUInside(lfsu);
-
-          if(do0[s]){
+          if(do0[s])
+          {
+            lae0->setSolution(*((*solutions)[s]));
+            lae0->onBindLFSUV(eg,lfsu,lfsv);
+            lae0->loadCoefficientsLFSUInside(lfsu);
             la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->assembleUVVolume(eg,lfsu,lfsv);
           }
 
-          if(do1[s]){
+          if(do1[s])
+          {
+            lae1->setSolution(*((*solutions)[s]));
+            lae1->onBindLFSUV(eg,lfsu,lfsv);
+            lae1->loadCoefficientsLFSUInside(lfsu);
             la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->assembleUVVolume(eg,lfsu,lfsv);
           }
@@ -205,17 +233,20 @@ namespace Dune{
       template<typename EG, typename LFSV>
       void assembleVVolume(const EG & eg, const LFSV & lfsv)
       {
-        for (int s=0; s<la.stage; ++s){
+        for (int s=0; s<la.stage; ++s)
+        {
           // Reset the time in the local assembler
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
-          if(do0[s]){
+          if(do0[s])
+          {
             la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->assembleVVolume(eg,lfsv);
           }
 
-          if(do1[s]){
+          if(do1[s])
+          {
             la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->assembleVVolume(eg,lfsv);
           }
@@ -227,28 +258,33 @@ namespace Dune{
       void assembleUVSkeleton(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
                               const LFSU_N & lfsu_n, const LFSV_N & lfsv_n)
       {
-        for (int s=0; s<la.stage; ++s){
+        for (int s=0; s<la.stage; ++s)
+        {
           // Reset the time in the local assembler
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
-          lae0->setSolution(*((*solutions)[s]));
-          lae1->setSolution(*((*solutions)[s]));
-
-          lae0->loadCoefficientsLFSUInside(lfsu_s);
-          lae1->loadCoefficientsLFSUInside(lfsu_s);
-          lae0->loadCoefficientsLFSUOutside(lfsu_n);
-          lae1->loadCoefficientsLFSUOutside(lfsu_n);
-
-          if(do0[s]){
+          if(do0[s])
+          {
             la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->setSolution(*((*solutions)[s]));
+            lae0->onBindLFSUVInside(ig,lfsu_s,lfsv_s);
+            lae0->onBindLFSUVOutside(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
+            lae0->loadCoefficientsLFSUInside(lfsu_s);
+            lae0->loadCoefficientsLFSUOutside(lfsu_n);
+            la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
           }
 
-          if(do1[s]){
+          if(do1[s])
+          {
             la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->setSolution(*((*solutions)[s]));
+            lae1->onBindLFSUVInside(ig,lfsu_s,lfsv_s);
+            lae1->onBindLFSUVOutside(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
+            lae1->loadCoefficientsLFSUInside(lfsu_s);
+            lae1->loadCoefficientsLFSUOutside(lfsu_n);
+            la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
           }
         }
@@ -257,17 +293,20 @@ namespace Dune{
       template<typename IG, typename LFSV_S, typename LFSV_N>
       void assembleVSkeleton(const IG & ig, const LFSV_S & lfsv_s, const LFSV_N & lfsv_n)
       {
-        for (int s=0; s<la.stage; ++s){
+        for (int s=0; s<la.stage; ++s)
+        {
           // Reset the time in the local assembler
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
-          if(do0[s]){
+          if(do0[s])
+          {
             la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->assembleVSkeleton(ig,lfsv_s,lfsv_n);
           }
 
-          if(do1[s]){
+          if(do1[s])
+          {
             la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->assembleVSkeleton(ig,lfsv_s,lfsv_n);
           }
@@ -277,23 +316,26 @@ namespace Dune{
       template<typename IG, typename LFSU_S, typename LFSV_S>
       void assembleUVBoundary(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s)
       {
-        for (int s=0; s<la.stage; ++s){
+        for (int s=0; s<la.stage; ++s)
+        {
           // Reset the time in the local assembler
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
-          lae0->setSolution(*((*solutions)[s]));
-          lae1->setSolution(*((*solutions)[s]));
-
-          lae0->loadCoefficientsLFSUInside(lfsu_s);
-          lae1->loadCoefficientsLFSUInside(lfsu_s);
-
-          if(do0[s]){
+          if(do0[s])
+          {
+            lae0->setSolution(*((*solutions)[s]));
+            lae0->onBindLFSUVInside(ig,lfsu_s,lfsv_s);
+            lae0->loadCoefficientsLFSUInside(lfsu_s);
             la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->assembleUVBoundary(ig,lfsu_s,lfsv_s);
           }
 
-          if(do1[s]){
+          if(do1[s])
+          {
+            lae1->setSolution(*((*solutions)[s]));
+            lae1->onBindLFSUVInside(ig,lfsu_s,lfsv_s);
+            lae1->loadCoefficientsLFSUInside(lfsu_s);
             la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->assembleUVBoundary(ig,lfsu_s,lfsv_s);
           }
@@ -303,17 +345,20 @@ namespace Dune{
       template<typename IG, typename LFSV_S>
       void assembleVBoundary(const IG & ig, const LFSV_S & lfsv_s)
       {
-        for (int s=0; s<la.stage; ++s){
+        for (int s=0; s<la.stage; ++s)
+        {
           // Reset the time in the local assembler
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
-          if(do0[s]){
+          if(do0[s])
+          {
             la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->assembleVBoundary(ig,lfsv_s);
           }
 
-          if(do1[s]){
+          if(do1[s])
+          {
             la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->assembleVBoundary(ig,lfsv_s);
           }
@@ -323,23 +368,26 @@ namespace Dune{
       template<typename IG, typename LFSU_S, typename LFSV_S>
       void assembleUVProcessor(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s)
       {
-        for (int s=0; s<la.stage; ++s){
+        for (int s=0; s<la.stage; ++s)
+        {
           // Reset the time in the local assembler
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
-          lae0->setSolution(*((*solutions)[s]));
-          lae1->setSolution(*((*solutions)[s]));
-
-          lae0->loadCoefficientsLFSUInside(lfsu_s);
-          lae1->loadCoefficientsLFSUInside(lfsu_s);
-
-          if(do0[s]){
+          if(do0[s])
+          {
+            lae0->setSolution(*((*solutions)[s]));
+            lae0->onBindLFSUVInside(ig,lfsu_s,lfsv_s);
+            lae0->loadCoefficientsLFSUInside(lfsu_s);
             la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->assembleUVProcessor(ig,lfsu_s,lfsv_s);
           }
 
-          if(do1[s]){
+          if(do1[s])
+          {
+            lae1->setSolution(*((*solutions)[s]));
+            lae1->onBindLFSUVInside(ig,lfsu_s,lfsv_s);
+            lae1->loadCoefficientsLFSUInside(lfsu_s);
             la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->assembleUVProcessor(ig,lfsu_s,lfsv_s);
           }
@@ -349,17 +397,20 @@ namespace Dune{
       template<typename IG, typename LFSV_S>
       void assembleVProcessor(const IG & ig, const LFSV_S & lfsv_s)
       {
-        for (int s=0; s<la.stage; ++s){
+        for (int s=0; s<la.stage; ++s)
+        {
           // Reset the time in the local assembler
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
-          if(do0[s]){
+          if(do0[s])
+          {
             la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->assembleVProcessor(ig,lfsv_s);
           }
 
-          if(do1[s]){
+          if(do1[s])
+          {
             la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->assembleVProcessor(ig,lfsv_s);
           }
@@ -373,29 +424,28 @@ namespace Dune{
                                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
                                              const LFSU_C & lfsu_c, const LFSV_C & lfsv_c)
       {
-        for (int s=0; s<la.stage; ++s){
+        for (int s=0; s<la.stage; ++s)
+        {
           // Reset the time in the local assembler
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
-          lae0->setSolution(*((*solutions)[s]));
-          lae1->setSolution(*((*solutions)[s]));
-
-          lae0->loadCoefficientsLFSUInside(lfsu_s);
-          lae1->loadCoefficientsLFSUInside(lfsu_s);
-
-          lae0->loadCoefficientsLFSUOutside(lfsu_n);
-          lae1->loadCoefficientsLFSUOutside(lfsu_n);
-
-          lae0->loadCoefficientsLFSUCoupling(lfsu_c);
-          lae1->loadCoefficientsLFSUCoupling(lfsu_c);
-
-          if(do0[s]){
+          if(do0[s])
+          {
+            lae0->setSolution(*((*solutions)[s]));
+            lae0->loadCoefficientsLFSUInside(lfsu_s);
+            lae0->loadCoefficientsLFSUOutside(lfsu_n);
+            lae0->loadCoefficientsLFSUCoupling(lfsu_c);
             la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_c,lfsv_c);
           }
 
-          if(do1[s]){
+          if(do1[s])
+          {
+            lae1->setSolution(*((*solutions)[s]));
+            lae1->loadCoefficientsLFSUInside(lfsu_s);
+            lae1->loadCoefficientsLFSUOutside(lfsu_n);
+            lae1->loadCoefficientsLFSUCoupling(lfsu_c);
             la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_c,lfsv_c);
           }
@@ -408,17 +458,20 @@ namespace Dune{
                                             const LFSV_N & lfsv_n,
                                             const LFSV_C & lfsv_c)
       {
-        for (int s=0; s<la.stage; ++s){
+        for (int s=0; s<la.stage; ++s)
+        {
           // Reset the time in the local assembler
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
-          if(do0[s]){
+          if(do0[s])
+          {
             la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->assembleVEnrichedCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
           }
 
-          if(do1[s]){
+          if(do1[s])
+          {
             la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->assembleVEnrichedCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
           }
@@ -429,23 +482,26 @@ namespace Dune{
       template<typename EG, typename LFSU, typename LFSV>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {
-        for (int s=0; s<la.stage; ++s){
+        for (int s=0; s<la.stage; ++s)
+        {
           // Reset the time in the local assembler
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
-          lae0->setSolution(*((*solutions)[s]));
-          lae1->setSolution(*((*solutions)[s]));
-
-          lae0->loadCoefficientsLFSUInside(lfsu);
-          lae1->loadCoefficientsLFSUInside(lfsu);
-
-          if(do0[s]){
+          if(do0[s])
+          {
+            lae0->setSolution(*((*solutions)[s]));
+            lae0->onBindLFSUV(eg,lfsu,lfsv);
+            lae0->loadCoefficientsLFSUInside(lfsu);
             la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
           }
 
-          if(do1[s]){
+          if(do1[s])
+          {
+            lae1->setSolution(*((*solutions)[s]));
+            lae1->onBindLFSUV(eg,lfsu,lfsv);
+            lae1->loadCoefficientsLFSUInside(lfsu);
             la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
           }
@@ -456,17 +512,20 @@ namespace Dune{
       template<typename EG, typename LFSV>
       void assembleVVolumePostSkeleton(const EG & eg, const LFSV & lfsv)
       {
-        for (int s=0; s<la.stage; ++s){
+        for (int s=0; s<la.stage; ++s)
+        {
           // Reset the time in the local assembler
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
-          if(do0[s]){
+          if(do0[s])
+          {
             la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->assembleVVolumePostSkeleton(eg,lfsv);
           }
 
-          if(do1[s]){
+          if(do1[s])
+          {
             la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->assembleVVolumePostSkeleton(eg,lfsv);
           }

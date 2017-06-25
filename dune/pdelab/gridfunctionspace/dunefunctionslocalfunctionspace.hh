@@ -57,7 +57,7 @@ namespace Dune {
         using LocalIndexSet = typename Basis::LocalIndexSet;
         using DOFIndex = typename Basis::MultiIndex;
 
-        template<typename LFS, typename C, typename Tag>
+        template<typename LFS, typename C, typename Tag, bool fast>
         friend class LFSIndexCacheBase;
 
         struct Traits

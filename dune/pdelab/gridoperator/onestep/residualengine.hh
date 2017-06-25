@@ -148,7 +148,8 @@ namespace Dune{
         // Extract the coefficients of the time step scheme
         b_rr = la.osp_method->b(la.stage,la.stage);
         d_r = la.osp_method->d(la.stage);
-        implicit = std::abs(b_rr) > 1e-6;
+        using std::abs;
+        implicit = abs(b_rr) > 1e-6;
 
         // prepare local operators for stage
         la.la0.setTime(la.time + d_r * la.dt);

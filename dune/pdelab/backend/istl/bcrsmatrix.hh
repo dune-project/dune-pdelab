@@ -8,6 +8,7 @@
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
+#include <dune/pdelab/backend/common/aliasedmatrixview.hh>
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 
@@ -42,6 +43,8 @@ namespace Dune {
 
         typedef Stats PatternStatistics;
 
+        using value_type = E;
+
 #ifndef DOXYGEN
 
         // some trickery to avoid exposing average users to the fact that there might
@@ -59,6 +62,12 @@ namespace Dune {
 
         template<typename RowCache, typename ColCache>
         using ConstLocalView = ConstUncachedMatrixView<const BCRSMatrix,RowCache,ColCache>;
+
+        template<typename RowCache, typename ColCache>
+        using AliasedLocalView = AliasedMatrixView<BCRSMatrix,RowCache,ColCache>;
+
+        template<typename RowCache, typename ColCache>
+        using ConstAliasedLocalView = ConstAliasedMatrixView<const BCRSMatrix,RowCache,ColCache>;
 
         template<typename GO>
         explicit BCRSMatrix (const GO& go)
@@ -215,6 +224,18 @@ namespace Dune {
 
       public:
 
+        template<typename RowCache, typename ColCache>
+        value_type* data(const RowCache& row_cache, const ColCache& col_cache)
+        {
+          return &((*this)(row_cache.containerIndex(0),col_cache.containerIndex(0)));
+        }
+
+        template<typename RowCache, typename ColCache>
+        const value_type* data(const RowCache& row_cache, const ColCache& col_cache) const
+        {
+          return &((*this)(row_cache.containerIndex(0),col_cache.containerIndex(0)));
+        }
+
         void flush()
         {}
 
@@ -225,6 +246,12 @@ namespace Dune {
         {
           ISTL::clear_matrix_row(ISTL::container_tag(*_container),*_container,ri,ri.size()-1);
           ISTL::write_matrix_element_if_exists(diagonal_entry,ISTL::container_tag(*_container),*_container,ri,ri,ri.size()-1,ri.size()-1);
+        }
+
+        void clear_row_block(const RowIndex& ri, const E& diagonal_entry)
+        {
+          ISTL::clear_matrix_row_block(ISTL::container_tag(*_container),*_container,ri,ri.size()-1);
+          ISTL::write_matrix_element_if_exists_to_block(diagonal_entry,ISTL::container_tag(*_container),*_container,ri,ri,ri.size()-1,ri.size()-1);
         }
 
       private:
