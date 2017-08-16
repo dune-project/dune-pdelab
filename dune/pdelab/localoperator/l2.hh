@@ -9,12 +9,10 @@
 
 #include<dune/geometry/type.hh>
 #include<dune/geometry/referenceelements.hh>
-#include<dune/geometry/quadraturerules.hh>
 
 #include<dune/localfunctions/common/interfaceswitch.hh>
 
 #include<dune/pdelab/common/quadraturerules.hh>
-#include<dune/pdelab/common/referenceelements.hh>
 
 #include"defaultimp.hh"
 #include"pattern.hh"

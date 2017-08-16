@@ -8,7 +8,6 @@
 #include<dune/geometry/referenceelements.hh>
 #include<dune/localfunctions/raviartthomas/raviartthomascube.hh>
 
-#include<dune/pdelab/common/referenceelements.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/localoperator/pattern.hh>

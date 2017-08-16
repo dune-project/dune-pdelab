@@ -5,7 +5,6 @@
 #include <dune/common/fvector.hh>
 #include <dune/geometry/referenceelements.hh>
 
-#include <dune/pdelab/common/referenceelements.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
