@@ -53,6 +53,22 @@ namespace Dune {
         return 0;
       }
 
+      template<typename FEM>
+      using Dimension = std::integral_constant<decltype(FEM::dimension),FEM::dimension>;
+
+      template<typename FEM>
+      constexpr std::size_t femBlockSizeCheckFEMInterface(std::true_type)
+      {
+        return _femBlockSize<FEM>(Std::is_detected<StaticFEMSize,FEM>());
+      }
+
+      template<typename FEM>
+      DUNE_DEPRECATED_MSG("Your finite element map does not export the dimension. After the release of PDELab 2.6, this will cause compilation failures.")
+      constexpr std::size_t femBlockSizeCheckFEMInterface(std::false_type)
+      {
+        return 0;
+      }
+
     } // namespace Impl
 
 #endif // DOXYGEN
@@ -69,7 +85,7 @@ namespace Dune {
     template<typename FEM>
     constexpr std::size_t finiteElementMapBlockSize()
     {
-      return Impl::_femBlockSize<FEM>(Std::is_detected<StaticFEMSize,FEM>());
+      return Impl::femBlockSizeCheckFEMInterface<FEM>(Std::is_detected<Impl::Dimension,FEM>());
     }
 
     //! An alias template that encapsulates the result of `finiteElementMapBlockSize<FEM>()` in an integral constant.
