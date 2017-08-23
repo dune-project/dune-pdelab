@@ -19,17 +19,17 @@ namespace Dune {
       typedef PB::BasisTraits<basisType> BasisTraits;
     public:
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 0;
       }
 
-      std::size_t size(GeometryType gt) const
+      static constexpr std::size_t size(GeometryType gt)
       {
         if (gt == GeometryType(bt,d))
           return BasisTraits::template Size<k,d>::value;
@@ -37,7 +37,7 @@ namespace Dune {
           return 0;
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return BasisTraits::template Size<k,d>::value;
       }
