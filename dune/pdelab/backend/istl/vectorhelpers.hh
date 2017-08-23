@@ -311,6 +311,12 @@ namespace Dune {
           Child::support_cascaded_blocking &&
           Backend::Traits::block_type == Blocking::none;
 
+        // It is not allowed to specify a block size on an interior node
+        static_assert(
+          Backend::Traits::block_size == 0,
+          "You cannot specify a block size on interior nodes of the function space tree."
+          );
+
         // Throw an assertion if the user requests static blocking at this level,
         // but we cannot support it.
         static_assert((Backend::Traits::block_type != Blocking::fixed) ||
