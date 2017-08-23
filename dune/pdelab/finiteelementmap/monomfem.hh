@@ -29,12 +29,12 @@ namespace Dune {
       {
       }
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 0;
       }
@@ -44,7 +44,7 @@ namespace Dune {
         return gt == _gt ? Dune::MonomImp::Size<d,p>::val : 0;
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return MonomImp::Size<d,p>::val;
       }
