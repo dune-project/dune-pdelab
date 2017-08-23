@@ -39,25 +39,25 @@ namespace Dune {
     {
     public:
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 0;
       }
 
-      std::size_t size(GeometryType gt) const
+      static constexpr std::size_t size(GeometryType gt)
       {
-        if (gt == GeometryType(GeometryType::cube,d))
+        if (gt == GeometryTypes::cube(d))
           return Dune::QkStuff::QkSize<k,d>::value;
         else
           return 0;
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return Dune::QkStuff::QkSize<k,d>::value;
       }
@@ -91,25 +91,25 @@ namespace Dune {
     {
     public:
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 0;
       }
 
-      std::size_t size(GeometryType gt) const
+      static constexpr std::size_t size(GeometryType gt)
       {
-        if (gt == GeometryType(GeometryType::cube,d))
+        if (gt == GeometryTypes::cube(d))
           return Dune::QkStuff::QkSize<k,d>::value;
         else
           return 0;
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return Dune::LegendreStuff::LegendreSize<k,d>::value;
       }
@@ -143,25 +143,25 @@ namespace Dune {
     {
     public:
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 0;
       }
 
-      std::size_t size(GeometryType gt) const
+      static constexpr std::size_t size(GeometryType gt)
       {
-        if (gt == GeometryType(GeometryType::cube,d))
+        if (gt == GeometryTypes::cube(d))
           return Dune::QkStuff::QkSize<k,d>::value;
         else
           return 0;
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return Dune::QkStuff::QkSize<k,d>::value;
       }
@@ -207,6 +207,7 @@ namespace Dune {
                                         Dune::PB::BasisType::Qk>
     {
     public:
+
       //! return type of polynomial basis
       static constexpr QkDGBasisPolynomial polynomial()
       {
