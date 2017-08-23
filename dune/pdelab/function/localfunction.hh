@@ -39,7 +39,7 @@ namespace PDELab {
       TypeTree::applyToTree(*this,visitor);
     }
 
-    //! Deafult Constructor
+    //! Default Constructor
     PowerLocalFunction()
     {}
 
