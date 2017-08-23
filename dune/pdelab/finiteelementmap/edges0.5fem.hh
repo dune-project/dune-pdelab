@@ -45,22 +45,22 @@ namespace Dune {
         Base(feFactory(), voFactory)
       { }
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr hasDOFs(int codim)
       {
         return Geometry::mydimension - codim == 1;
       }
 
-      std::size_t size(GeometryType gt) const
+      static constexpr std::size_t size(GeometryType gt)
       {
-        return gt.isLine() ? 1 : 0;
+        return gt == GeometryTypes::line ? 1 : 0;
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return Dune::EdgeS0_5Common<Geometry::mydimension>::s;
       }
