@@ -32,6 +32,11 @@ namespace Dune {
       //! export Traits
       typedef FiniteElementMapTraits<typename Factory::FiniteElement> Traits;
 
+      // This is not backwards compatible, but I don't know of anyone who is using
+      // this thing, so it's probably not much of a problem.
+      //! The dimension of the finite elements returned by this map.
+      static constexpr int dimension = BackendFEM::dimension;
+
       //! construct PowerFiniteElementMap
       /**
        * \param backend_ Reference to a finite element map for the underlying

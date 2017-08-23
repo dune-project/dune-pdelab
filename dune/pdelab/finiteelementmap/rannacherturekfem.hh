@@ -12,7 +12,7 @@ namespace Dune {
     //! \ingroup FiniteElementMap
     template<class D, class R, std::size_t d>
     class  RannacherTurekLocalFiniteElementMap
-      : public SimpleLocalFiniteElementMap<RannacherTurekLocalFiniteElement<D,R,d> >
+      : public SimpleLocalFiniteElementMap<RannacherTurekLocalFiniteElement<D,R,d>,d>
     {
     public:
       bool fixedSize() const

@@ -24,6 +24,9 @@ namespace Dune {
       //! \brief export type of the signature
       typedef LocalFiniteElementMapTraits<FE> Traits;
 
+      //! The dimension of the finite elements returned by this map.
+      static constexpr int dimension = GV::dimension;
+
       //! \brief Use when Imp has a standard constructor
       BDM1Simplex2DLocalFiniteElementMap(const GV& gv_)
         : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))

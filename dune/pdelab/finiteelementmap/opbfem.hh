@@ -14,7 +14,7 @@ namespace Dune {
     //! \ingroup FiniteElementMap
     template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=R, PB::BasisType basisType = PB::BasisType::Pk>
     class OPBLocalFiniteElementMap
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::OPBLocalFiniteElement<D,R,k,d,bt,ComputationFieldType,basisType> >
+      : public Dune::PDELab::SimpleLocalFiniteElementMap<Dune::OPBLocalFiniteElement<D,R,k,d,bt,ComputationFieldType,basisType>,d>
     {
       typedef PB::BasisTraits<basisType> BasisTraits;
     public:

@@ -16,7 +16,7 @@ namespace Dune {
     //! \ingroup FiniteElementMap
     template<typename GV, typename D, typename R, std::size_t k>
     class QkLocalFiniteElementMap
-      : public SimpleLocalFiniteElementMap< Dune::QkLocalFiniteElement<D,R,GV::dimension,k> >
+      : public SimpleLocalFiniteElementMap<Dune::QkLocalFiniteElement<D,R,GV::dimension,k>,GV::dimension>
     {
 
     public:
