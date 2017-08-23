@@ -111,7 +111,7 @@ namespace Dune {
                 DUNE_THROW(Exception, "We can only handle cubes and simplices");
             }
 
-            bool fixedSize() const
+            static constexpr bool fixedSize()
             {
                 return false;
             }
@@ -134,7 +134,7 @@ namespace Dune {
                 DUNE_THROW(NotImplemented, "PkQkLocalFiniteElement is not fixed-size!");
             }
 
-            std::size_t maxLocalSize() const
+            static constexpr std::size_t maxLocalSize()
             {
                 return (1<<d);
             }
