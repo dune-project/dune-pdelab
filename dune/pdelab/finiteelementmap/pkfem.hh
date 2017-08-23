@@ -35,12 +35,12 @@ namespace Dune {
         PkLocalFiniteElementMapBase(const GV& gv)
         {}
 
-        bool fixedSize() const
+        static constexpr bool fixedSize()
         {
           return true;
         }
 
-        bool hasDOFs(int codim) const
+        static constexpr bool hasDOFs(int codim)
         {
           switch (codim)
             {
@@ -49,21 +49,21 @@ namespace Dune {
             case 0: // line
               return k != 1;
             default:
-              assert(false && "Invalid codim specified!");
+              assert(k >= 0 and k <= 1);
             }
           return false;
         }
 
-        std::size_t size(GeometryType gt) const
+        static constexpr std::size_t size(GeometryType gt)
         {
-          if (gt.isVertex())
+          if (gt == GeometryTypes::vertex)
             return k > 0 ? 1 : 0;
-          if (gt.isLine())
+          if (gt == GeometryTypes::line)
             return k > 0 ? k - 1 : 1;
           return 0;
         }
 
-        std::size_t maxLocalSize() const
+        static constexpr std::size_t maxLocalSize()
         {
           return k + 1;
         }
@@ -121,12 +121,12 @@ namespace Dune {
           return _variant[2 * n0_compressed + (n1 > n2)];
         }
 
-        bool fixedSize() const
+        static constexpr bool fixedSize()
         {
           return true;
         }
 
-        bool hasDOFs(int codim) const
+        static constexpr bool hasDOFs(int codim)
         {
           switch (codim)
             {
@@ -142,18 +142,18 @@ namespace Dune {
           return false;
         }
 
-        std::size_t size(GeometryType gt) const
+        static constexpr std::size_t size(GeometryType gt)
         {
-          if (gt.isVertex())
+          if (gt == GeometryTypes::vertex)
             return k > 0 ? 1 : 0;
-          if (gt.isLine())
+          if (gt == GeometryTypes::line)
             return k > 1 ? k - 1 : 0;
-          if (gt.isTriangle())
+          if (gt == GeometryTypes::triangle)
             return k > 2 ? (k-2)*(k-1)/2 : (k == 0);
           return 0;
         }
 
-        std::size_t maxLocalSize() const
+        static constexpr std::size_t maxLocalSize()
         {
           return (k+1)*(k+2)/2;
         }
@@ -239,12 +239,12 @@ namespace Dune {
           return _variant[_perm_index[compressPerm(vertexmap)]];
         }
 
-        bool fixedSize() const
+        static constexpr bool fixedSize()
         {
           return true;
         }
 
-        bool hasDOFs(int codim) const
+        static constexpr bool hasDOFs(int codim)
         {
           switch (codim)
             {
@@ -262,20 +262,20 @@ namespace Dune {
           return false;
         }
 
-        std::size_t size(GeometryType gt) const
+        static constexpr std::size_t size(GeometryType gt)
         {
-          if (gt.isVertex())
+          if (gt == GeometryTypes::vertex)
             return k > 0 ? 1 : 0;
-          if (gt.isLine())
+          if (gt == GeometryTypes::line)
             return k > 1 ? k - 1 : 0;
-          if (gt.isTriangle())
+          if (gt == GeometryTypes::triangle)
             return k > 2 ? (k-2)*(k-1)/2 : 0;
-          if (gt.isTetrahedron())
+          if (gt == GeometryTypes::tetrahedron)
             return k == 0 ? 1 : (k-3)*(k-2)*(k-1)/6;
           return 0;
         }
 
-        std::size_t maxLocalSize() const
+        static constexpr std::size_t maxLocalSize()
         {
           return (k+1)*(k+2)*(k+3)/6;
         }
