@@ -31,7 +31,7 @@ namespace Dune {
         , _k(k)
       {}
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return true;
       }
