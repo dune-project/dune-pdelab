@@ -37,6 +37,10 @@ namespace Dune {
       }
 
     public:
+
+      //! The dimension of the finite elements returned by this map.
+      static constexpr int dimension = Geometry::mydimension;
+
       EdgeS0_5FiniteElementMap(const VertexOrderFactory &voFactory) :
         Base(feFactory(), voFactory)
       { }

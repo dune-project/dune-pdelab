@@ -1,5 +1,5 @@
-// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-// vi: set et ts=4 sw=4 sts=4:
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
 
 #ifndef DUNE_PDELAB_FINITEELEMENTMAP_OPBFEM_HH
 #define DUNE_PDELAB_FINITEELEMENTMAP_OPBFEM_HH
@@ -14,7 +14,7 @@ namespace Dune {
     //! \ingroup FiniteElementMap
     template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=R, PB::BasisType basisType = PB::BasisType::Pk>
     class OPBLocalFiniteElementMap
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::OPBLocalFiniteElement<D,R,k,d,bt,ComputationFieldType,basisType> >
+      : public Dune::PDELab::SimpleLocalFiniteElementMap<Dune::OPBLocalFiniteElement<D,R,k,d,bt,ComputationFieldType,basisType>,d>
     {
       typedef PB::BasisTraits<basisType> BasisTraits;
     public:

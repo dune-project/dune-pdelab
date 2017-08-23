@@ -27,7 +27,7 @@ namespace Dune {
 
       template<typename GV, typename D, typename R, unsigned int k>
       class PkLocalFiniteElementMapBase<GV,D,R,k,1>
-        : public SimpleLocalFiniteElementMap<Dune::PkLocalFiniteElement<D,R,1,k> >
+        : public SimpleLocalFiniteElementMap<Dune::PkLocalFiniteElement<D,R,1,k>,1>
       {
 
       public:
@@ -302,6 +302,9 @@ namespace Dune {
     {
 
     public:
+
+      //! The dimension of the finite elements returned by this map.
+      static constexpr int dimension = GV::dimension;
 
       PkLocalFiniteElementMap(const GV& gv)
         : fem::PkLocalFiniteElementMapBase<GV,D,R,k,GV::dimension>(gv)

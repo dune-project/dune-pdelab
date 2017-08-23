@@ -124,6 +124,9 @@ namespace Dune {
 
     public:
 
+      //! The dimension of the finite elements returned by this map.
+      static constexpr int dimension = GV::dimension;
+
       //! Constructs a finite element map on the GridView gv.
       RaviartThomasLocalFiniteElementMap(const GV& gv)
         : detail::RaviartThomasLocalFiniteElementMapBaseSelector<GV,GV::dimension,basic_type,D,R,k>::type(gv)

@@ -90,11 +90,28 @@ namespace Dune {
       std::size_t maxLocalSize() const = delete;
     };
 
+    namespace Impl {
+
+      template<int dim>
+      struct inject_dimension
+      {
+        static constexpr int dimension = dim;
+      };
+
+      template<>
+      struct inject_dimension<-1>
+      {
+        DUNE_DEPRECATED_MSG("Your FEM implementation does not export the dimension. This will cause compilation errors after PDELab 2.6.") inject_dimension() {};
+      };
+
+    }
+
     //! simple implementation where all entities have the same finite element
-    template<class Imp>
+    template<class Imp, int dim_ = -1>
     class SimpleLocalFiniteElementMap :
       public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits<Imp>,
-                                            SimpleLocalFiniteElementMap<Imp> >
+                                            SimpleLocalFiniteElementMap<Imp> >,
+      public Impl::inject_dimension<dim_>
     {
     public:
       //! \brief export type of the signature
@@ -152,6 +169,9 @@ namespace Dune {
     public:
       //! \brief export type of the signature
       typedef LocalFiniteElementMapTraits<FE> Traits;
+
+      //! The dimension of the finite elements returned by this map.
+      static constexpr int dimension = GV::dimension;
 
       //! \brief construct EdgeSLocalFiniteElementMap
       EdgeS0LocalFiniteElementMap (const GV& gv_)
@@ -219,6 +239,9 @@ namespace Dune {
     public:
       //! \brief export type of the signature
       typedef LocalFiniteElementMapTraits<FE> Traits;
+
+      //! The dimension of the finite elements returned by this map.
+      static constexpr int dimension = GV::dimension;
 
       //! \brief Use when Imp has a standard constructor
       RTLocalFiniteElementMap(const GV& gv_)

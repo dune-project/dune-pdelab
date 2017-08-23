@@ -35,9 +35,10 @@ namespace Dune {
      */
     template<class D, class R, int k, int d>
     class QkDGLocalFiniteElementMap<D,R,k,d,QkDGBasisPolynomial::lagrange>
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGLagrangeLocalFiniteElement<D,R,k,d> >
+      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGLagrangeLocalFiniteElement<D,R,k,d>,d>
     {
     public:
+
       bool fixedSize() const
       {
         return true;
@@ -86,9 +87,10 @@ namespace Dune {
      */
     template<class D, class R, int k, int d>
     class QkDGLocalFiniteElementMap<D,R,k,d,QkDGBasisPolynomial::legendre>
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGLegendreLocalFiniteElement<D,R,k,d> >
+      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGLegendreLocalFiniteElement<D,R,k,d>,d>
     {
     public:
+
       bool fixedSize() const
       {
         return true;
@@ -137,9 +139,10 @@ namespace Dune {
      */
     template<class D, class R, int k, int d>
     class QkDGLocalFiniteElementMap<D,R,k,d,QkDGBasisPolynomial::lobatto>
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGGLLocalFiniteElement<D,R,k,d> >
+      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGGLLocalFiniteElement<D,R,k,d>,d>
     {
     public:
+
       bool fixedSize() const
       {
         return true;

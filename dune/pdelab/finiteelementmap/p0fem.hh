@@ -10,16 +10,16 @@
 namespace Dune {
   namespace PDELab {
 
-	//! wrap up element from local functions
+    //! wrap up element from local functions
     //! \ingroup FiniteElementMap
-	template<class D, class R, int d>
-	class P0LocalFiniteElementMap
-	  : public SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >
-	{
+    template<class D, class R, int d>
+    class P0LocalFiniteElementMap
+      : public SimpleLocalFiniteElementMap<Dune::P0LocalFiniteElement<D,R,d>,d>
+    {
     public:
 
       P0LocalFiniteElementMap (const Dune::GeometryType& type)
-        : SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >(Dune::P0LocalFiniteElement<D,R,d>(type))
+        : SimpleLocalFiniteElementMap<Dune::P0LocalFiniteElement<D,R,d>,d>(Dune::P0LocalFiniteElement<D,R,d>(type))
         , _gt(type)
       {
       }

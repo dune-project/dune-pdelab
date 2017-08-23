@@ -22,11 +22,12 @@ namespace Dune {
      */
     template<class D, class R>
     class Pk1dLocalFiniteElementMap
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Pk1dLocalFiniteElement<D,R> >
+      : public Dune::PDELab::SimpleLocalFiniteElementMap<Pk1dLocalFiniteElement<D,R>,1>
     {
     public:
+
       Pk1dLocalFiniteElementMap (std::size_t k)
-        : Dune::PDELab::SimpleLocalFiniteElementMap< Pk1dLocalFiniteElement<D,R> >(Pk1dLocalFiniteElement<D,R>(k))
+        : Dune::PDELab::SimpleLocalFiniteElementMap<Pk1dLocalFiniteElement<D,R>,1>(Pk1dLocalFiniteElement<D,R>(k))
         , _k(k)
       {}
 

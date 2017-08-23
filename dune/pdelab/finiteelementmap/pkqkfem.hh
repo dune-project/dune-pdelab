@@ -70,6 +70,9 @@ namespace Dune {
         public:
             typedef FiniteElementMapTraits<FiniteElementType> Traits;
 
+            //! The dimension of the finite elements returned by this map.
+            static constexpr int dimension = d;
+
             /** \brief Default constructor.  Constructs a space of order maxP */
             PkQkLocalFiniteElementMap ()
               : order_(maxP)
