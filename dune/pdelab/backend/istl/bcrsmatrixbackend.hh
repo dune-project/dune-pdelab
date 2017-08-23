@@ -2,9 +2,6 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_BCRSMATRIXBACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_BCRSMATRIXBACKEND_HH
 
-// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
-#include "ensureistlinclude.hh"
-
 #include <dune/pdelab/backend/istl/bcrsmatrix.hh>
 #include <dune/pdelab/backend/istl/bcrspattern.hh>
 #include <dune/pdelab/backend/istl/patternstatistics.hh>

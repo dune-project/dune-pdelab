@@ -13,7 +13,6 @@ install(FILES bdm1cube2dfem.hh
               pkqkfem.hh
               powerfem.hh
               qkdg.hh
-              qkdggl.hh
               qkfem.hh
               rannacherturekfem.hh
               raviartthomasfem.hh

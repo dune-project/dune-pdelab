@@ -4,7 +4,6 @@
 #define DUNE_PDELAB_BACKEND_COMMON_ALIASEDVECTORVIEW_HH
 
 #include <dune/common/typetraits.hh>
-#include <dune/common/deprecated.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 
 namespace Dune {
