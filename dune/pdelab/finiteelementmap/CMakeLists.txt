@@ -24,6 +24,7 @@ install(FILES bdm1cube2dfem.hh
               rt1cube3dfem.hh
               rt1simplex2dfem.hh
               rt2cube2dfem.hh
+              utility.hh
               variablemonomfem.hh
               variableopbfem.hh
               variableqkdgfem.hh
