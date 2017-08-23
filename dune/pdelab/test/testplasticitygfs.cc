@@ -109,8 +109,8 @@ int main(int argc, char* argv[]) try {
   FEM fem;
 
   typedef PDELab::VectorGridFunctionSpace<
-      GridView, FEM, dim, PDELab::ISTL::VectorBackend<>,
-      PDELab::ISTL::VectorBackend<>, PDELab::ConformingDirichletConstraints,
+    GridView, FEM, dim, PDELab::ISTL::VectorBackend<>,
+      PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::none,1>, PDELab::ConformingDirichletConstraints,
       PDELab::EntityBlockedOrderingTag, PDELab::DefaultLeafOrderingTag>
       DisplacementGFS;
 
@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) try {
 
   typedef PDELab::VectorGridFunctionSpace<
       GridView, FEM, nPlasticStrainComponents, PDELab::ISTL::VectorBackend<>,
-      PDELab::ISTL::VectorBackend<>, PDELab::ConformingDirichletConstraints,
+      PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::none,1>, PDELab::ConformingDirichletConstraints,
       PDELab::EntityBlockedOrderingTag, PDELab::DefaultLeafOrderingTag>
       PlasticStrainGFS;
 
