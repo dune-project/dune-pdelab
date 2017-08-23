@@ -10,7 +10,6 @@ install(FILES callswitch.hh
               dgnavierstokes.hh
               dgnavierstokesparameter.hh
               dgnavierstokesvelvecfem.hh
-              dgparameter.hh
               diffusionmixed.hh
               electrodynamic.hh
               errorindicatordg.hh

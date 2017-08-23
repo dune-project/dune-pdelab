@@ -67,8 +67,6 @@ namespace Dune {
       typedef typename I::Entity Entity;
       //! \todo Please doc me!
       typedef typename Geometry::ctype ctype;
-      //! \todo Please doc me!
-      enum DUNE_DEPRECATED_MSG("Deprecated: get this dimension from the grid itself, or from an element!") { dimension=Entity::dimension };
 
       /** \brief Dimension of the domain space of the geometry */
       enum { mydimension=I::mydimension };

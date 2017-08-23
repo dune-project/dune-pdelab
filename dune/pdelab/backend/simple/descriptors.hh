@@ -91,27 +91,6 @@ namespace Dune {
 
     } // namespace Simple
 
-    /** \brief For backward compatibility: access to Simple::VectorBackend by its old name
-     * \deprecated Use Simple::VectorBackend instead!
-     */
-    template<template<typename> class Container = Simple::default_vector>
-    using SimpleVectorBackend DUNE_DEPRECATED_MSG("Use Simple::VectorBackend instead of SimpleVectorBackend")
-        = Simple::VectorBackend<Container>;
-
-    /** \brief For backward compatibility: access to Simple::MatrixBackend by its old name
-     * \deprecated Use Simple::MatrixBackend instead!
-     */
-    template<template<typename> class Container = Simple::default_vector>
-    using SimpleMatrixBackend DUNE_DEPRECATED_MSG("Use Simple::MatrixBackend instead of SimpleMatrixBackend")
-        = Simple::MatrixBackend<Container>;
-
-    /** \brief For backward compatibility: access to Simple::SparseMatrixBackend by its old name
-     * \deprecated Use Simple::SparseMatrixBackend instead!
-     */
-    template<template<typename> class Container = Simple::default_vector, typename IndexType = std::size_t>
-    using SimpleSparseMatrixBackend DUNE_DEPRECATED_MSG("Use Simple::SparseMatrixBackend instead of SimpleSparseMatrixBackend")
-        = Simple::SparseMatrixBackend<Container, IndexType>;
-
   } // namespace PDELab
 } // namespace Dune
 

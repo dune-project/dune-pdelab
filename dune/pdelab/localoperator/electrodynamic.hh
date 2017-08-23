@@ -27,50 +27,6 @@ namespace Dune {
 
     namespace ElectrodynamicImpl {
 
-      //////////////////////////////////////////////////////////////////////
-      // Deprecated interface handling
-
-      // This is an adaptor that turns the old-style policy-object based
-      // parameters into a function-object based one.
-      //
-      // This is here for backward-compatibility only.
-      template<class Params>
-      class Functor
-      {
-        const Params *params_;
-
-      public:
-        DUNE_DEPRECATED_MSG("You are using Dune::PDELab::Electrodynamic_T or "
-                            "Dune::PDELab::Electrodynamic_S with an old-style "
-                            "parameter class for eps/mu.  Please use a "
-                            "callable (function object, (generic) lambda, or "
-                            "a function pointer) instead.")
-        Functor(const Params &params) : params_(&params) {}
-
-        template<class Element, class Pos>
-        typename Params::Traits::RangeType
-        operator()(const Element &e, const Pos &xl) const
-        {
-          typename Params::Traits::RangeType result;
-          params_->evaluate(e, xl, result);
-          return result;
-        };
-      };
-
-      template<class Params, class = void>
-      struct IsOldstyleParams : std::false_type {};
-
-      template<class Params>
-      struct IsOldstyleParams
-          <Params,
-           std::enable_if_t<sizeof(typename Params::Traits::RangeType)> > :
-        std::true_type
-      {};
-
-      template<class Params>
-      using ConstRefOrFunctor =
-        std::conditional_t<IsOldstyleParams<Params>::value,
-                           Functor<Params>, Params>;
 
       //////////////////////////////////////////////////////////////////////
       // Curl manipulation
@@ -118,8 +74,6 @@ namespace Dune {
       , public LocalOperatorDefaultFlags
       , public JacobianBasedAlphaVolume<Electrodynamic_T<Eps> >
     {
-      static constexpr bool oldstyle =
-        ElectrodynamicImpl::IsOldstyleParams<Eps>::value;
 
     public:
 
@@ -131,14 +85,6 @@ namespace Dune {
       /**
        * \param eps    (Reference to) Function object to evaluate.
        * \param qorder Quadrature order to use.
-       *
-       * \note When using the deprecated old style parameter interface, `eps`
-       *       needed to be a reference to a parameter object, and the local
-       *       operator would store a reference to that object.  With the new
-       *       style interface, `eps` is a callable (function object, lambda,
-       *       or even a plain function pointer), and the local operator
-       *       stores a copy.  To get the old behaviour in a non-deprecated
-       *       way, wrap the callable in a `std::reference_wrapper`.
        */
       Electrodynamic_T(const Eps &eps, int qorder = 2) :
         eps_(eps), qorder_(qorder)
@@ -220,8 +166,6 @@ namespace Dune {
       , public LocalOperatorDefaultFlags
       , public JacobianBasedAlphaVolume<Electrodynamic_S<Mu> >
     {
-      static constexpr bool oldstyle =
-        ElectrodynamicImpl::IsOldstyleParams<Mu>::value;
 
     public:
 
@@ -233,14 +177,6 @@ namespace Dune {
       /**
        * \param mu     (Reference to) Function object to evaluate
        * \param qorder Quadrature order to use.
-       *
-       * \note When using the deprecated old style parameter interface, `mu`
-       *       needed to be a reference to a parameter object, and the local
-       *       operator would store a reference to that object.  With the new
-       *       style interface, `mu` is a callable (function object, lambda,
-       *       or even a plain function pointer), and the local operator
-       *       stores a copy.  To get the old behaviour in a non-deprecated
-       *       way, wrap the callable in a `std::reference_wrapper`.
        */
       Electrodynamic_S(const Mu &mu, int qorder = 2) :
         mu_(mu), qorder_(qorder)
