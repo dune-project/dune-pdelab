@@ -34,17 +34,17 @@ namespace Dune {
           16>(gv)
       {}
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 0 || codim == 1;
       }
 
-      std::size_t size(GeometryType gt) const
+      static constexpr std::size_t size(GeometryType gt)
       {
         switch (gt.dim())
           {
@@ -57,7 +57,7 @@ namespace Dune {
           }
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return 24;
       }
