@@ -51,8 +51,7 @@ template<class GV>
 static void test_interpolate_old_interface(const GV& gv)
 {
   // instantiate finite element maps
-  Dune::GeometryType gt;
-  gt.makeCube(2);
+  auto gt = Dune::GeometryTypes::quadrilateral;
   typedef Dune::PDELab::P0LocalFiniteElementMap<double,double,GV::dimension> P0FEM;
   P0FEM p0fem(gt);
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,double,double,1> Q12DFEM;
@@ -125,8 +124,7 @@ template<class GV>
 static void test_interpolate(const GV& gv)
 {
   // instantiate finite element maps
-  Dune::GeometryType gt;
-  gt.makeCube(2);
+  auto gt = Dune::GeometryTypes::quadrilateral;
   using P0FEM = Dune::PDELab::P0LocalFiniteElementMap<double,double,GV::dimension>;
   P0FEM p0fem(gt);
 

@@ -51,8 +51,7 @@ void testpk (const GV& gv)
   const int k = 5;
 
   // instantiate finite element maps
-  Dune::GeometryType gt;
-  gt.makeSimplex(dim);
+  auto gt = Dune::GeometryTypes::simplex(dim);
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,dim> P0FEM;
   P0FEM p0fem(gt);
   typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,1> P1FEM;

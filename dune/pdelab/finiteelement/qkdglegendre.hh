@@ -423,9 +423,8 @@ namespace Dune
     /** \todo Please doc me !
      */
     QkDGLegendreLocalFiniteElement ()
-    {
-      gt.makeCube(d);
-    }
+      : gt(GeometryTypes::cube(d))
+    {}
 
     /** \todo Please doc me !
      */

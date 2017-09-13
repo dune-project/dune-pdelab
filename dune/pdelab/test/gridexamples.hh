@@ -86,7 +86,7 @@ public:
 	pos[0] = 0.0;  pos[1] = 1.0; gf.insertVertex(pos);
 	pos[0] = 1.0;  pos[1] = 1.0; gf.insertVertex(pos);
 
-    Dune::GeometryType type; type.makeTriangle();
+    auto type = Dune::GeometryTypes::triangle;
 	std::vector<unsigned int> vid(3);
 	vid[0] = 0;  vid[1] = 1;  vid[2] = 2; gf.insertElement(type, vid);
 	vid[0] = 2;  vid[1] = 1;  vid[2] = 3; gf.insertElement(type, vid);
@@ -117,8 +117,7 @@ public:
     pos[0] = 1; pos[1] = 0; gf.insertVertex(pos);
     pos[0] = 0; pos[1] = 1; gf.insertVertex(pos);
 
-    Dune::GeometryType type;
-    type.makeTriangle();
+    auto type = Dune::GeometryTypes::triangle;
     std::vector<unsigned int> vid(3);
 
     vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
@@ -157,8 +156,7 @@ public:
     pos[0] = 0; pos[1] = 1; gf.insertVertex(pos);
     pos[0] = 1; pos[1] = 1; gf.insertVertex(pos);
 
-    Dune::GeometryType type;
-    type.makeTriangle();
+    auto type = Dune::GeometryTypes::triangle;
     std::vector<unsigned int> vid(3);
 
     vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
@@ -198,8 +196,7 @@ public:
     pos[0] = 0; pos[1] = 1; pos[2] = 0; gf.insertVertex(pos);
     pos[0] = 0; pos[1] = 0; pos[2] = 1; gf.insertVertex(pos);
 
-    Dune::GeometryType type;
-    type.makeTetrahedron();
+    auto type = Dune::GeometryTypes::tetrahedron;
     std::vector<unsigned int> vid(4);
 
     vid[0] = 0; vid[1] = 1; vid[2] = 2; vid[3] = 3; gf.insertElement(type, vid);
@@ -233,8 +230,7 @@ public:
     pos[0] = 0; pos[1] = 1; pos[2] = 1; gf.insertVertex(pos);
     pos[0] = 1; pos[1] = 1; pos[2] = 1; gf.insertVertex(pos);
 
-    Dune::GeometryType type;
-    type.makeTetrahedron();
+    auto type = Dune::GeometryTypes::tetrahedron;
     std::vector<unsigned int> vid(4);
 
     // tet at vertex 0
@@ -296,8 +292,7 @@ public:
       pos[0] = 0; pos[1] = 1; pos[2] = 1; gf.insertVertex(pos);
       pos[0] = 1; pos[1] = 1; pos[2] = 1; gf.insertVertex(pos);
 
-      Dune::GeometryType type;
-      type.makeTetrahedron();
+      auto type = Dune::GeometryTypes::tetrahedron;
       std::vector<unsigned int> vid(4);
 
       vid[0] = 0; vid[1] = 1; vid[2] = 3; vid[3] = 7; gf.insertElement(type, vid);

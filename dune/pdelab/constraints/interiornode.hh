@@ -89,8 +89,7 @@ namespace Dune {
               // boundary face
               unsigned int f = intersection.indexInInside();
               // remember associated vertices
-              const ReferenceElement<ctype,dim> & refelem =
-                ReferenceElements<ctype,dim>::simplex();
+              auto refelem = Dune::ReferenceElements<ctype,dim>::simplex();
               assert(entity.geometry().type().isSimplex() && "InteriorNodeConstraints only work for simplicial meshes");
               unsigned int sz = refelem.size(f,1, dim);
               assert(sz == dim);

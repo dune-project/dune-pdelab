@@ -32,8 +32,7 @@ namespace Dune {
         typedef typename IG::ctype DT;
         const int dim = IG::dimension;
         const int face = ig.indexInInside();
-        const Dune::ReferenceElement<DT,dim-1> &
-          face_refelem = Dune::ReferenceElements<DT,dim-1>::general(ig.geometry().type());
+        auto face_refelem = referenceElement(ig.geometry());
         const FieldVector<DT, dim-1> ip = face_refelem.position(0,0);
         if (p.isNeumann(ig,ip)) {
           typename T::RowType empty;              // need not interpolate
