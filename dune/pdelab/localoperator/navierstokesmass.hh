@@ -4,7 +4,7 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_NAVIERSTOKESMASS_HH
 #define DUNE_PDELAB_LOCALOPERATOR_NAVIERSTOKESMASS_HH
 
-#include <dune/geometry/quadraturerules.hh>
+#include <dune/geometry/referenceelements.hh>
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
 #include <dune/typetree/compositenode.hh>
@@ -15,7 +15,6 @@
 #include <dune/pdelab/localoperator/idefault.hh>
 
 #include <dune/pdelab/common/quadraturerules.hh>
-#include <dune/pdelab/common/referenceelements.hh>
 
 namespace Dune {
   namespace PDELab {

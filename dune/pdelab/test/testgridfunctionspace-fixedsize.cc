@@ -120,9 +120,8 @@ public:
   typedef Dune::LocalFiniteElementTraits<Basis, Coefficients, Interpolation> Traits;
 
   WrappedFiniteElement()
-  {
-    gt.makeCube(d);
-  }
+    : gt(Dune::GeometryTypes::cube(d))
+  {}
 
   const typename Traits::LocalBasisType& localBasis() const
   {

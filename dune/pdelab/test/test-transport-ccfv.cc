@@ -179,8 +179,7 @@ void stationary (const GV& gv)
   const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
-  Dune::GeometryType gt;
-  gt.makeCube(dim);
+  auto gt = Dune::GeometryTypes::cube(dim);
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem(gt); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
@@ -254,8 +253,7 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
-  Dune::GeometryType gt;
-  gt.makeCube(dim);
+  auto gt = Dune::GeometryTypes::cube(dim);
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem(gt); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;
@@ -355,8 +353,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   const int dim = GV::dimension;
 
   // <<<2>>> Make grid function space
-  Dune::GeometryType gt;
-  gt.makeCube(dim);
+  auto gt = Dune::GeometryTypes::cube(dim);
   typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> FEM;
   FEM fem(gt); // works only for cubes
   typedef Dune::PDELab::P0ParallelConstraints CON;

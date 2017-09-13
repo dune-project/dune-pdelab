@@ -43,9 +43,8 @@ namespace Dune {
 
           const std::size_t dimension = Intersection::dimension;
 
-          typedef Dune::ReferenceElement<DT,dimension> GRE;
-          const GRE& refelement_e = Dune::ReferenceElements<DT,dimension>::general(e.type());
-          const GRE& refelement_f = Dune::ReferenceElements<DT,dimension>::general(f.type());
+          auto refelement_e = referenceElement(e.geometry());
+          auto refelement_f = referenceElement(f.geometry());
 
           // If both entities have hangingnodes, then the face is
           // conforming and no constraints have to be applied.
@@ -58,7 +57,7 @@ namespace Dune {
 
           const Cell& cell = e_has_hangingnodes ? e : f;
           const int faceindex = e_has_hangingnodes ? ig.indexInInside() : ig.indexInOutside();
-          const GRE & refelement = e_has_hangingnodes ? refelement_e : refelement_f;
+          auto refelement = e_has_hangingnodes ? refelement_e : refelement_f;
           const FlagVector & nodeState = e_has_hangingnodes ? nodeState_e : nodeState_f;
           T & trafo = e_has_hangingnodes ? trafo_e : trafo_f;
 
@@ -209,9 +208,8 @@ namespace Dune {
 
           const std::size_t dimension = Intersection::dimension;
 
-          typedef Dune::ReferenceElement<DT,dimension> GRE;
-          const GRE& refelement_e = Dune::ReferenceElements<DT,dimension>::general(e.type());
-          const GRE& refelement_f = Dune::ReferenceElements<DT,dimension>::general(f.type());
+          auto refelement_e = referenceElement(e.geometry());
+          auto refelement_f = referenceElement(f.geometry());
 
           // If both entities have hangingnodes, then the face is
           // conforming and no constraints have to be applied.
@@ -224,7 +222,7 @@ namespace Dune {
 
           const Cell& cell = e_has_hangingnodes ? e : f;
           const int faceindex = e_has_hangingnodes ? ig.indexInInside() : ig.indexInOutside();
-          const GRE & refelement = e_has_hangingnodes ? refelement_e : refelement_f;
+          auto refelement = e_has_hangingnodes ? refelement_e : refelement_f;
           const FlagVector & nodeState = e_has_hangingnodes ? nodeState_e : nodeState_f;
           T & trafo = e_has_hangingnodes ? trafo_e : trafo_f;
 
@@ -360,10 +358,8 @@ namespace Dune {
         auto e = ig.inside();
         auto f = ig.outside();
 
-        const Dune::ReferenceElement<DT,dimension>& refelem_e
-          = Dune::ReferenceElements<DT,dimension>::general(e.type());
-        const Dune::ReferenceElement<DT,dimension>& refelem_f
-          = Dune::ReferenceElements<DT,dimension>::general(f.type());
+        auto refelem_e = referenceElement(e.geometry());
+        auto refelem_f = referenceElement(f.geometry());
 
         // the return values of the hanging node manager
         typedef typename std::vector<typename HangingNodeManager::NodeState> FlagVector;

@@ -59,13 +59,8 @@ namespace Dune {
         const int face = ig.indexInInside();
 
         // find all local indices of this face
-        Dune::GeometryType gt = ig.inside().type();
-        typedef typename IG::ctype DT;
-        const int dim = IG::Entity::dimension;
-        const Dune::ReferenceElement<DT,dim>& refelem = Dune::ReferenceElements<DT,dim>::general(gt);
-
-        const Dune::ReferenceElement<DT,dim-1> &
-          face_refelem = Dune::ReferenceElements<DT,dim-1>::general(ig.geometry().type());
+        auto refelem = referenceElement(ig.inside().geometry());
+        auto face_refelem = referenceElement(ig.geometry());
 
         // empty map means Dirichlet constraint
         typename T::RowType empty;
@@ -119,12 +114,7 @@ namespace Dune {
         // determine face
         const int face = ig.indexInInside();
 
-        // find all local indices of this face
-        Dune::GeometryType gt = ig.inside().type();
-        typedef typename IG::ctype DT;
-        const int dim = IG::Entity::dimension;
-
-        const Dune::ReferenceElement<DT,dim>& refelem = Dune::ReferenceElements<DT,dim>::general(gt);
+        auto refelem = referenceElement(ig.inside().geometry());
 
         // empty map means Dirichlet constraint
         typename T::RowType empty;
@@ -179,7 +169,7 @@ namespace Dune {
         // empty map means Dirichlet constraint
         typename T::RowType empty;
 
-        auto& ref_el = ReferenceElements<typename GV::ctype,GV::dimension>::general(entity.type());
+        auto ref_el = referenceElement(entity.geometry());
 
         // loop over all degrees of freedom and check if it is not owned by this processor
         for (size_t i = 0; i < coeffs.size(); ++i)
@@ -227,8 +217,7 @@ namespace Dune {
           {
             auto entity = *it;
 
-            const ReferenceElement<typename GV::ctype,GV::dimension>& ref_el =
-              ReferenceElements<typename GV::ctype,GV::dimension>::general(entity.type());
+            auto ref_el = referenceElement(entity.geometry());
 
             for (size_t codim = 0; codim <= GV::dimension; ++codim)
               if (gfs.ordering().contains(codim))

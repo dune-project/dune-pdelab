@@ -81,8 +81,7 @@ int main(int argc, char** argv)
       pos[0] = 0; pos[1] = 1; gf.insertVertex(pos);
       //pos[0] = 1; pos[1] = 1; gf.insertVertex(pos);
 
-      Dune::GeometryType type;
-      type.makeTriangle();
+      auto type = Dune::GeometryTypes::triangle;
       std::vector<unsigned int> vid(3);
 
       vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
@@ -123,8 +122,7 @@ int main(int argc, char** argv)
       pos[0] = 0; pos[1] = 1; gf.insertVertex(pos);
       //pos[0] = 1; pos[1] = 1; gf.insertVertex(pos);
 
-      Dune::GeometryType type;
-      type.makeTriangle();
+      auto type = Dune::GeometryTypes::triangle;
       std::vector<unsigned int> vid(3);
 
       vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);

@@ -299,19 +299,19 @@ namespace Dune {
       extract_per_entity_sizes_from_cell_visitor(const ES& es_)
         : es(es_)
         , cell(nullptr)
-        , ref_el(nullptr)
+        , ref_el()
         , gt_sizes(Dune::GlobalGeometryTypeIndex::size(dim),0)
       {}
 
       void set_cell(const Cell& cell_)
       {
         cell = &cell_;
-        ref_el = &(Dune::ReferenceElements<typename ES::Traits::CoordinateField,dim>::general(cell_.type()));
+        ref_el = referenceElement(cell_.geometry());
       }
 
       ES es;
       const Cell* cell;
-      const Dune::ReferenceElement<typename ES::Traits::CoordinateField,dim>* ref_el;
+      Dune::ReferenceElement<typename Cell::Geometry> ref_el;
       std::vector<size_type> gt_sizes;
 
     };

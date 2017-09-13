@@ -110,10 +110,7 @@ namespace Dune {
         // loop over all codim<0> leaf elements of the partially refined grid
         for(const auto& cell : elements(gv)) {
 
-          const Dune::ReferenceElement<double,dim> &
-            reference_element =
-            Dune::ReferenceElements<double,dim>::general(cell.geometry().type());
-
+          auto reference_element = referenceElement(cell.geometry());
 
           // level of this element
           const unsigned short level = cell.level();
@@ -152,9 +149,7 @@ namespace Dune {
           for(const auto& intersection : intersections(gv,cell)) {
             ++intersection_index;
 
-            const Dune::ReferenceElement<double,dim-1> &
-              reference_face_element =
-              Dune::ReferenceElements<double,dim-1>::general(intersection.geometry().type());
+            auto reference_face_element = referenceElement(intersection.geometry());
 
             const int eLocalIndex =  intersection.indexInInside();
             const int e_level = intersection.inside().level();
@@ -228,9 +223,7 @@ namespace Dune {
         const typename GridView::IndexSet& indexSet = grid.leafGridView().indexSet();
         std::vector<NodeState> is_hanging;
 
-        const Dune::ReferenceElement<double,dim> &
-          reference_element =
-          Dune::ReferenceElements<double,dim>::general(e.geometry().type());
+        auto reference_element = referenceElement(e.geometry());
 
         // number of vertices in this element
         const IndexType v_size = reference_element.size(dim);
@@ -290,9 +283,7 @@ namespace Dune {
           // loop over all codim<0> leaf elements of the partially refined grid
           for(const auto& cell : elements(gv)) {
 
-            const Dune::ReferenceElement<double,dim> &
-              reference_element =
-              Dune::ReferenceElements<double,dim>::general(cell.geometry().type());
+            auto reference_element = referenceElement(cell.geometry());
 
             //std::cout << "cell center = " << it->geometry().center() << std::endl;
 
@@ -421,9 +412,7 @@ namespace Dune {
                         //
                         // check for the neighbouring element now...
                         //
-                        const Dune::ReferenceElement<double,dim> &
-                          nb_reference_element =
-                          Dune::ReferenceElements<double,dim>::general( intersection.outside().geometry().type() );
+                        auto nb_reference_element = referenceElement(intersection.outside().geometry());
 
                         // number of vertices in that neigbouring element
                         const IndexType nb_v_size = nb_reference_element.size(dim);
