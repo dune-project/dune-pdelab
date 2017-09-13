@@ -356,7 +356,13 @@ namespace Dune {
           //! Multiplies all entries of the matrix with x.
           LocalMatrix& operator *= (const T& x)
           {
-            std::transform(_container.begin(),_container.end(),_container.begin(),std::bind1st(std::multiplies<T>(),x));
+            using namespace std::placeholders;
+            std::transform(
+              _container.begin(),
+              _container.end(),
+              _container.begin(),
+              std::bind(std::multiplies<T>(),x,_1)
+              );
             return *this;
           }
 

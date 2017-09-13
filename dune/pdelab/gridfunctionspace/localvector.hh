@@ -237,7 +237,13 @@ namespace Dune {
       //! Multiplies all entries by v.
       LocalVector& operator*=(const value_type& v)
       {
-        std::transform(_container.begin(),_container.end(),_container.begin(),std::bind1st(std::multiplies<value_type>(),v));
+        using namespace std::placeholders;
+        std::transform(
+          _container.begin(),
+          _container.end(),
+          _container.begin(),
+          std::bind(std::multiplies<value_type>(),v,_1)
+          );
         return *this;
       }
 
