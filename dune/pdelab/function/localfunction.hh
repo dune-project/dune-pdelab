@@ -4,6 +4,7 @@
 
 #include <type_traits>
 
+#include <dune/common/array.hh>
 #include <dune/pdelab/function/tags.hh>
 #include <dune/pdelab/function/localfunctionhelper.hh>
 #include <dune/pdelab/function/oldinterfaceadapter.hh>
