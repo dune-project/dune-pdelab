@@ -219,7 +219,7 @@ namespace Dune {
       {}
 
       const Cell& cell;
-      const Dune::ReferenceElement<typename Cell::Geometry::ctype,Cell::dimension>& ref_el;
+      Dune::ReferenceElement<typename Cell::Geometry> ref_el;
 
     };
 

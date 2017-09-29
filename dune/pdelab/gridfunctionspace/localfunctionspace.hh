@@ -620,8 +620,7 @@ namespace Dune {
             using EntitySet = typename GFS::Traits::EntitySet;
             auto es = this->gridFunctionSpace().entitySet();
 
-            const Dune::ReferenceElement<double,EntitySet::dimension>& refEl =
-              Dune::ReferenceElements<double,EntitySet::dimension>::general(this->pfe->type());
+            auto refEl = Dune::ReferenceElements<double,EntitySet::dimension>::general(this->pfe->type());
 
             for (std::size_t i = 0; i < std::size_t(coeffs.size()); ++i, ++it)
               {

@@ -573,7 +573,7 @@ namespace Dune {
             if (!Partitions::contains(e.partitionType()))
               continue;
 
-            auto& ref_el = ReferenceElements<typename Base::Traits::CoordinateField,GV::dimension>::general(e.type());
+            auto ref_el = ReferenceElements<typename Base::Traits::CoordinateField,GV::dimension>::general(e.type());
             for (dim_type codim = 0; codim <= Grid::dimension; ++codim)
               {
                 if (!_active_codims.test(codim))
