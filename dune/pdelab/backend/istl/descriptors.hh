@@ -46,13 +46,11 @@ namespace Dune {
       //! Tag describing an ISTL BlockVector backend.
       struct vector_backend_tag {};
 
-      template<Blocking blocking = Blocking::none, std::size_t block_size_ = 1>
+      template<Blocking blocking = Blocking::none, std::size_t block_size_ = 0>
       struct VectorBackend
       {
 
         using tag = vector_backend_tag;
-
-        static_assert((block_size_ > 0),"block size for FieldVector has to be positive");
 
         using size_type = std::size_t;
 

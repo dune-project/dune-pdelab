@@ -32,7 +32,7 @@ namespace Dune {
       VBE* registerDuneFunctionsCompatibleVBE(VBE*);
 
       template<std::size_t block_size>
-      ISTL::SimpleVectorBackend<block_size>* registerDuneFunctionsCompatibleVBE(ISTL::VectorBackend<ISTL::Blocking::none,block_size>*);
+      ISTL::SimpleVectorBackend<(block_size > 0 ? block_size : 1)>* registerDuneFunctionsCompatibleVBE(ISTL::VectorBackend<ISTL::Blocking::none,block_size>*);
 
       template<typename VBE>
       using DuneFunctionsCompatibleVBE = std::decay_t<decltype(*registerDuneFunctionsCompatibleVBE(std::declval<VBE*>()))>;

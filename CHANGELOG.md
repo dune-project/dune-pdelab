@@ -24,6 +24,19 @@ PDELab 2.6
     Existing finite elements should mostly still work in this version (although some features will
     be disabled), and users will be warned about the missing type during normal usage.
 
+-   We now try to extract the "natural" block size from the finite element maps of leaf `GridFunctionSpace`s
+    when constructing a vector for a function space. This means that as long as you are not doing really
+    weird things with your `fixed` blocking (the one that influences the block size of the `FieldVector`),
+    you do not have to specify the block size in the `ISTL::VectorBackend` anymore and PDELab will just do
+    the right thing. If you are using a finite element map from which PDELab cannot extract this natural block
+    size, you will now get a compiler error telling you to manually set the correct block size (but it is more
+    likely that you have an actual bug in your code!). You will also get a compiler error if you try to specify
+    a block size in the vector backend for a `CompositeGridFunctionSpace` or a `PowerGridFunctionSpace`.
+
+    In order for PDELab to extract this information, it needs support from the `FiniteElementMap`. If you have
+    written a custom `FiniteElementMap` with a fixed block size, just make sure that the member function
+    `FEM::size(GeometryType)` is `static` and `constexpr` and can actually be executed in constexpr context
+    (mostly, that means that it doesn't use any run time information).
 
 
 PDELab 2.5
