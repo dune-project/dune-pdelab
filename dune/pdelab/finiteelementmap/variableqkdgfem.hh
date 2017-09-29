@@ -93,12 +93,12 @@ namespace Dune {
         return p;
       }
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return false;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 0;
       }

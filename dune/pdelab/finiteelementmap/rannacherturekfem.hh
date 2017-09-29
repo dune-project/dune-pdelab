@@ -15,25 +15,27 @@ namespace Dune {
       : public SimpleLocalFiniteElementMap<RannacherTurekLocalFiniteElement<D,R,d>,d>
     {
     public:
-      bool fixedSize() const
+
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 1;
       }
 
-      std::size_t size(GeometryType gt) const
+      static constexpr std::size_t size(GeometryType gt)
       {
-        return gt.isLine() ? 1 : 0;
+        return gt == GeometryTypes::line ? 1 : 0;
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return 4;
       }
+
     };
   } // namespace PDELab
 } // namespace Dune
