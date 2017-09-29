@@ -195,7 +195,7 @@ namespace Dune {
 
         _max_local_size = std::max(_max_local_size,coeffs.size());
 
-        const ReferenceElement<typename Traits::GridView::ctype, Traits::GridView::dimension>& ref_el = ReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
+        auto ref_el = ReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
 
         for (std::size_t i = 0; i < coeffs.size(); ++i)
           {
@@ -236,8 +236,7 @@ namespace Dune {
 
         typedef typename Traits::SizeType size_type;
 
-        const ReferenceElement<typename Traits::GridView::ctype,Traits::GridView::dimension>& ref_el =
-          ReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
+        auto ref_el = ReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
 
         for (std::size_t i = 0; i < coeffs.size(); ++i)
           {
