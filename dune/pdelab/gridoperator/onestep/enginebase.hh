@@ -111,6 +111,11 @@ namespace Dune{
         return *lae1;
       }
 
+      auto partition() const
+      {
+        return localAssemblerEngineDT0().partition();
+      }
+
       void setLocalAssemblerEngineDT0(LocalAssemblerEngineDT0& lae0_)
       {
         lae0 = &lae0_;
