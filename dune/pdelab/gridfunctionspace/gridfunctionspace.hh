@@ -191,6 +191,7 @@ namespace Dune {
       typedef typename GV::Traits::template Codim<0>::Entity Element;
       typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
+      DUNE_DEPRECATED
       typedef O SizeTag;
 
       typedef O OrderingTag;
