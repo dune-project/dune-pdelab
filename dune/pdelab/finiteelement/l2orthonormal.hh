@@ -43,119 +43,6 @@ namespace Dune {
 #endif
 
     //=====================================================
-    // TMPs for computing number of basis functions in P_k
-    //=====================================================
-
-    template<int k, int d> struct PkSize;
-
-    template<int j, int k, int d>
-    struct PkSizeHelper
-    {
-      enum{
-        value = PkSizeHelper<j-1,k,d>::value + PkSize<k-j,d-1>::value
-      };
-    };
-
-    template<int k, int d>
-    struct PkSizeHelper<0,k,d>
-    {
-      enum{
-        value = PkSize<k,d-1>::value
-      };
-    };
-
-    // This is the main class
-    // k is the polynomial degree and d is the space dimension
-    // then PkSize<k,d> is the number of polynomials of at most total degree k.
-    template<int k, int d>
-    struct PkSize
-    {
-      enum{
-        value=PkSizeHelper<k,k,d>::value
-      };
-    };
-
-    template<>
-    struct PkSize<0,1>
-    {
-      enum{
-        value=1
-      };
-    };
-
-    template<int k>
-    struct PkSize<k,1>
-    {
-      enum{
-        value=k+1
-      };
-    };
-
-    template<int d>
-    struct PkSize<0,d>
-    {
-      enum{
-        value=1
-      };
-    };
-
-    // number of polynomials of exactly degree k
-    template<int k, int d>
-    struct PkExactSize
-    {
-      enum{
-        value=PkSize<k,d>::value-PkSize<k-1,d>::value
-      };
-    };
-
-    template<int d>
-    struct PkExactSize<0,d>
-    {
-      enum{
-        value=1
-      };
-    };
-
-    //=====================================================
-    // TMPs for computing number of basis functions in Q_k
-    //=====================================================
-
-    // This is the main class
-    // usage: QkSize<2,3>::value
-    // k is the polynomial degree, d is the space dimension
-    template<int k, int d>
-    struct QkSize
-    {
-      enum{
-        value=(k+1)*QkSize<k,d-1>::value
-      };
-    };
-
-    template<>
-    struct QkSize<0,1>
-    {
-      enum{
-        value=1
-      };
-    };
-
-    template<int k>
-    struct QkSize<k,1>
-    {
-      enum{
-        value=k+1
-      };
-    };
-
-    template<int d>
-    struct QkSize<0,d>
-    {
-      enum{
-        value=1
-      };
-    };
-
-    //=====================================================
     // Type to represent a multiindex in d dimensions
     //=====================================================
 
@@ -170,8 +57,8 @@ namespace Dune {
 
     };
 
-    // the number of polynomials of at most degree k in space dimension d (as run-time function)
-    inline int pk_size (int k, int d)
+    // the number of polynomials of at most degree k in space dimension d
+    constexpr int pk_size (int k, int d)
     {
       if (k==0) return 1;
       if (d==1) return k+1;
@@ -189,6 +76,16 @@ namespace Dune {
       else
         return pk_size(k,d)-pk_size(k-1,d);
     }
+
+    // k is the polynomial degree and d is the space dimension
+    // then PkSize<k,d> is the number of polynomials of at most total degree k.
+    template<int k, int d>
+    struct PkSize
+    {
+      enum{
+        value=pk_size(k,d)
+      };
+    };
 
     // enumerate all multiindices of degree k and find the i'th
     template<int d>
@@ -232,7 +129,7 @@ namespace Dune {
     }
 
     // the number of polynomials of at most degree k in space dimension d (as run-time function)
-    inline int qk_size (int k, int d)
+    constexpr int qk_size (int k, int d)
     {
       int n = 1;
       for (int i=0; i<d; ++i)
@@ -267,7 +164,7 @@ namespace Dune {
       struct Size
       {
         enum{
-          value = PkSize<k,d>::value
+          value = pk_size(k,d)
         };
       };
 
@@ -298,7 +195,7 @@ namespace Dune {
       struct Size
       {
         enum{
-          value = QkSize<k,d>::value
+          value = qk_size(k,d)
         };
       };
 
