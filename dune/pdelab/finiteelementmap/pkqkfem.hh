@@ -66,7 +66,7 @@ namespace Dune {
         class PkQkLocalFiniteElementMap
         {
             //! Type of finite element from local functions
-            typedef LocalFiniteElementVirtualInterface<Dune::LocalBasisTraits<D,d,Dune::FieldVector<D,d>,R,1,Dune::FieldVector<R,1>,Dune::FieldMatrix<R,1,d>,0> > FiniteElementType;
+            typedef LocalFiniteElementVirtualInterface<Dune::LocalBasisTraits<D,d,Dune::FieldVector<D,d>,R,1,Dune::FieldVector<R,1>,Dune::FieldMatrix<R,1,d> > > FiniteElementType;
         public:
             typedef FiniteElementMapTraits<FiniteElementType> Traits;
 

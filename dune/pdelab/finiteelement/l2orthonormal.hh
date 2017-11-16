@@ -770,7 +770,7 @@ namespace Dune {
     Dune::GeometryType gt;
 
   public:
-    typedef Dune::LocalBasisTraits<D,d,Dune::FieldVector<D,d>,R,1,Dune::FieldVector<R,1>,Dune::FieldMatrix<R,1,d>, 0> Traits;
+    typedef Dune::LocalBasisTraits<D,d,Dune::FieldVector<D,d>,R,1,Dune::FieldVector<R,1>,Dune::FieldMatrix<R,1,d> > Traits;
     enum{ n = BasisTraits::template Size<k,d>::value };
 
     OPBLocalBasis (int order_) : opb(), gt(bt,d) {}
