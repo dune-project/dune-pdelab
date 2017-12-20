@@ -139,11 +139,16 @@ namespace Dune {
         template<typename Node, typename Child, typename TreePath, typename ChildIndex>
         void afterChild(const Node& node, const Child& child, TreePath treePath, ChildIndex childIndex)
         {
-          for (std::size_t i = 0; i<child.n; ++i)
-            {
-              // update tree path for the DOFIndices of the child
-              (*node._dof_indices)[child.offset+i].treeIndex().push_back(childIndex);
-            }
+          // Just skip the entire function space structure handling in fast mode
+          // This **really** breaks any attempt at using the DOFIndex for anything other
+          // than as input to the FastDGGridOperator machine.
+          // You have been warned!
+          if (not fast)
+            for (std::size_t i = 0; i<child.n; ++i)
+              {
+                // update tree path for the DOFIndices of the child
+                (*node._dof_indices)[child.offset+i].treeIndex().push_back(childIndex);
+              }
         }
 
         FillIndicesVisitor(const Entity& entity)
