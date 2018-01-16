@@ -122,6 +122,11 @@ namespace Dune{
         return local_assembler.doPatternVolumePostSkeleton();
       }
 
+      auto partition() const
+      {
+        return Partitions::all;
+      }
+
       //! @}
 
       //! @}
