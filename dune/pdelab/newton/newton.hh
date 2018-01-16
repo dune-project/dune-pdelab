@@ -12,7 +12,7 @@
 
 #include <math.h>
 
-#include <dune/common/debugstream.hh>
+#include <dune/common/stdstreams.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/ios_state.hh>
 #include <dune/common/timer.hh>
