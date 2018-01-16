@@ -4,6 +4,7 @@
 #ifndef DUNE_PDELAB_FINITEELEMENT_L2ORTHONORMAL_HH
 #define DUNE_PDELAB_FINITEELEMENT_L2ORTHONORMAL_HH
 
+#include<array>
 #include<iostream>
 #include<algorithm>
 #include<memory>
@@ -13,7 +14,6 @@
 #include<dune/common/gmpfield.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/array.hh>
 
 #include<dune/geometry/referenceelements.hh>
 #include<dune/geometry/quadraturerules.hh>

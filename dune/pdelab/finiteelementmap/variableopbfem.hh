@@ -2,12 +2,12 @@
 #ifndef DUNE_PDELAB_FINITEELEMENTMAP_VARIABLEOPBFEM_HH
 #define DUNE_PDELAB_FINITEELEMENTMAP_VARIABLEOPBFEM_HH
 
+#include <array>
 #include <memory>
 
 #include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/virtualwrappers.hh>
-#include <dune/common/array.hh>
 #include <dune/pdelab/finiteelementmap/finiteelementmap.hh>
 #include <dune/pdelab/finiteelement/l2orthonormal.hh>
 #include <dune/pdelab/finiteelementmap/monomfem.hh>

@@ -13,6 +13,7 @@
 
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
+#include<dune/common/filledarray.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/typetraits.hh>
 #include<dune/common/timer.hh>
@@ -493,7 +494,7 @@ int main(int argc, char** argv)
     if (true) {
       const int dim = 2;
       Dune::FieldVector<double,dim> L(1.0);
-      std::array<int,dim> N(Dune::fill_array<int,dim>(n));
+      std::array<int,dim> N(Dune::filledArray<dim, int>(n));
       std::bitset<dim> periodic(false);
       int overlap=o;
       Dune::YaspGrid<dim> grid(L,N,periodic,overlap,helper.getCommunicator());

@@ -8,6 +8,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include<dune/common/filledarray.hh>
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/grid/yaspgrid.hh>
 #include<dune/istl/solvers.hh>
@@ -259,10 +260,9 @@ int main(int argc, char** argv)
     // Create 2D yasp grid
     const int dim = 2;
     Dune::FieldVector<Real,dim> L(1.0);
-    Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
     std::bitset<dim> P(false);
     typedef Dune::YaspGrid<dim> Grid;
-    Grid grid(L,N,P,0);
+    Grid grid(L,Dune::filledArray<dim, int>(1),P,0);
 
     // Refine grid
     grid.globalRefine(3);

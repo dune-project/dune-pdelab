@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 
+#include <dune/common/filledarray.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
 
@@ -240,7 +241,7 @@ int main(int argc, char** argv)
               << "g = " << g << std::endl;
 
     Dune::FieldVector<double,2> L(1); L[0] = szX;
-    std::array<int,2> N(Dune::fill_array<int,2>(1)); N[0] = szX;
+    std::array<int,2> N(Dune::filledArray<2,int>(1)); N[0] = szX;
     Dune::YaspGrid<2> grid(L,N);
     grid.globalRefine(level);
 

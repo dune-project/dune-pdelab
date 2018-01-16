@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_ORDERING_DECORATOR_HH
 #define DUNE_PDELAB_ORDERING_DECORATOR_HH
 
+#include <array>
+
 #include <dune/typetree/typetree.hh>
 
 #include <dune/pdelab/common/typetraits.hh>
@@ -243,13 +245,13 @@ namespace Dune {
         };
 
         template<typename TC>
-        static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<std::shared_ptr<TC>,TypeTree::StaticDegree<GFS>::value>& children)
+        static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const std::array<std::shared_ptr<TC>,TypeTree::StaticDegree<GFS>::value>& children)
         {
           return result<TC>::decorator_descriptor::transform(gfs,t,std::make_shared<typename result<TC>::undecorated_type>(result<TC>::undecorated_descriptor::transform(gfs,t,children)));
         }
 
         template<typename TC>
-        static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs_pointer, const Transformation& t, const array<std::shared_ptr<TC>,TypeTree::StaticDegree<GFS>::value>& children)
+        static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs_pointer, const Transformation& t, const std::array<std::shared_ptr<TC>,TypeTree::StaticDegree<GFS>::value>& children)
         {
           return result<TC>::decorator_descriptor::transform(gfs_pointer,t,result<TC>::undecorated_descriptor::transform_storage(gfs_pointer,t,children));
         }

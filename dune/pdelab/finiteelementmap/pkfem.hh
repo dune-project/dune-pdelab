@@ -3,9 +3,9 @@
 #define DUNE_PDELAB_FINITEELEMENTMAP_PKFEM_HH
 
 #include <algorithm>
+#include <array>
 
 #include <dune/common/deprecated.hh>
-#include <dune/common/array.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/geometry/type.hh>
 #include <dune/localfunctions/lagrange/pk.hh>

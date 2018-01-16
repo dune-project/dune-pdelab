@@ -6,6 +6,7 @@
 
 #include<dune/common/exceptions.hh>
 
+#include<array>
 #include<limits>
 #include<vector>
 #include<map>
@@ -37,7 +38,7 @@ namespace Dune {
 
         // we need an additional entry because we store offsets and we also want the
         // offset after the last leaf for size calculations
-      typedef array<std::size_t,TypeTree::TreeInfo<GFS>::leafCount + 1> LeafOffsets;
+      typedef std::array<std::size_t,TypeTree::TreeInfo<GFS>::leafCount + 1> LeafOffsets;
 
       const LeafOffsets& operator[](GeometryType gt) const
       {

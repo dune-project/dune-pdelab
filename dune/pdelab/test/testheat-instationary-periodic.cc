@@ -3,6 +3,8 @@
 #include "config.h"
 #endif
 
+#include <dune/common/filledarray.hh>
+
 #include <dune/pdelab/boilerplate/pdelab.hh>
 #include <dune/pdelab/localoperator/l2.hh>
 
@@ -228,7 +230,7 @@ int main(int argc, char **argv)
 
     typedef Dune::YaspGrid<dim> GM;
     Dune::FieldVector<double,dim> L(1.0);
-    std::array<int,dim> N(Dune::fill_array<int,dim>(cells));
+    std::array<int,dim> N(Dune::filledArray<dim,int>(cells));
 
     std::bitset<dim> periodic (false);
     periodic[0] = true;

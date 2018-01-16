@@ -2,13 +2,13 @@
 #ifndef DUNE_PDELAB_FINITEELEMENTMAP_VARIABLEMONOMFEM_HH
 #define DUNE_PDELAB_FINITEELEMENTMAP_VARIABLEMONOMFEM_HH
 
+#include <array>
 #include <memory>
 
 #include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/virtualwrappers.hh>
 #include <dune/localfunctions/monomial.hh>
-#include <dune/common/array.hh>
 #include "finiteelementmap.hh"
 
 namespace Dune {

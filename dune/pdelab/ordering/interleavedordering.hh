@@ -3,6 +3,7 @@
 #ifndef DUNE_PDELAB_ORDERING_INTERLEAVEDORDERING_HH
 #define DUNE_PDELAB_ORDERING_INTERLEAVEDORDERING_HH
 
+#include <array>
 #include <string>
 
 #include <dune/typetree/compositenode.hh>
@@ -200,13 +201,13 @@ namespace Dune {
       };
 
       template<typename TC>
-      static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<std::shared_ptr<TC>,TypeTree::StaticDegree<GFS>::value>& children)
+      static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const std::array<std::shared_ptr<TC>,TypeTree::StaticDegree<GFS>::value>& children)
       {
         return typename result<TC>::type(gfs.backend().blocked(gfs),gfs.orderingTag(),children,const_cast<GFS*>(&gfs));
       }
 
       template<typename TC>
-      static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t, const array<std::shared_ptr<TC>,TypeTree::StaticDegree<GFS>::value>& children)
+      static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t, const std::array<std::shared_ptr<TC>,TypeTree::StaticDegree<GFS>::value>& children)
       {
         return std::make_shared<typename result<TC>::type>(gfs->backend().blocked(*gfs),gfs->orderingTag(),children,const_cast<GFS*>(gfs.get()));
       }

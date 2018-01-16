@@ -3,8 +3,9 @@
 #ifndef DUNE_PDELAB_COMMON_DOFINDEX_HH
 #define DUNE_PDELAB_COMMON_DOFINDEX_HH
 
+#include <array>
+
 #include <dune/pdelab/common/multiindex.hh>
-#include <dune/common/array.hh>
 
 namespace Dune {
 

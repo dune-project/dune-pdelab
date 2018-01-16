@@ -2,12 +2,12 @@
 #ifndef DUNE_PDELAB_FINITEELEMENTMAP_VARIABLEQKDGFEM_HH
 #define DUNE_PDELAB_FINITEELEMENTMAP_VARIABLEQKDGFEM_HH
 
+#include <array>
 #include <memory>
 
 #include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/virtualwrappers.hh>
-#include <dune/common/array.hh>
 #include "finiteelementmap.hh"
 #include "qkdg.hh"
 

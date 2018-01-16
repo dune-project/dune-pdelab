@@ -2,9 +2,9 @@
 #ifndef DUNE_PDELAB_FUNCTION_LOCALFUNCTION_HH
 #define DUNE_PDELAB_FUNCTION_LOCALFUNCTION_HH
 
+#include <array>
 #include <type_traits>
 
-#include <dune/common/array.hh>
 #include <dune/pdelab/function/tags.hh>
 #include <dune/pdelab/function/localfunctionhelper.hh>
 #include <dune/pdelab/function/oldinterfaceadapter.hh>
@@ -61,7 +61,7 @@ namespace PDELab {
     }
 
     //! Transformation Constructor, taking the set of new children
-    PowerLocalFunction(const Dune::array<Dune::shared_ptr<F>,k>& children)
+    PowerLocalFunction(const std::array<Dune::shared_ptr<F>,k>& children)
       : NodeType(children)
     {}
 

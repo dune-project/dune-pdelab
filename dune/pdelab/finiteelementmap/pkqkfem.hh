@@ -2,13 +2,13 @@
 #ifndef DUNE_PDELAB_FINITEELEMENTMAP_PKQKFEM_HH
 #define DUNE_PDELAB_FINITEELEMENTMAP_PKQKFEM_HH
 
+#include <array>
 #include <memory>
 
 #include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/virtualwrappers.hh>
 #include <dune/localfunctions/common/virtualinterface.hh>
-#include <dune/common/array.hh>
 #include "finiteelementmap.hh"
 #include "qkfem.hh"
 #include "pkfem.hh"

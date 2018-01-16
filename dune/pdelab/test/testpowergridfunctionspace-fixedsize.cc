@@ -7,6 +7,7 @@
 
 #include <iostream>
 
+#include <dune/common/filledarray.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
 #include <dune/grid/yaspgrid.hh>
@@ -179,8 +180,7 @@ int main(int argc, char **argv) {
     const int dim = 2;
 
     Dune::FieldVector<double, dim> L(1.0);
-    Dune::array<int, dim> N(Dune::fill_array<int, dim>(2));
-    Dune::YaspGrid<dim> grid(L, N);
+    Dune::YaspGrid<dim> grid(L, Dune::filledArray<dim, int>(2));
 
     const int degree = 1;
     const int blockSize = Dune::QkStuff::QkSize<degree, dim>::value;
