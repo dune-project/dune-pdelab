@@ -209,7 +209,7 @@ void testgridviewfunction (const GV& gv)
     // make local functions
     auto localf = localFunction(dgvf);
     // iterate grid and evaluate local function
-    static const int maxDiffOrder = decltype(localf)::maxDiffOrder;
+    static const int maxDiffOrder = 1;
     std::cout << "max diff order: " << maxDiffOrder << std::endl;
     std::cout << "checking for:\n";
     std::cout << "\tevaluate\n";
@@ -234,6 +234,9 @@ void testgridviewfunction (const GV& gv)
             assert(std::abs(jacobian[0][0] - k*pow(gpos[0],k-1)) < 1e-6);
             assert(std::abs(jacobian[0][1]) < 1e-6);
         }
+/* The following block is currently disabled as the tested QkLocalFiniteElementMap
+ * does not implement it and the maxDiffOrder based magic to not have these trigger
+ * compile errors had to be removed because of upstream changes in dune-localfunctions.
         if (maxDiffOrder >= 2) {
             hessian = derivative(derivative(localf))(pos);
             assert(std::abs(hessian[0][0] - k*(k-1)*pow(gpos[0],k-2)) < 1e-6);
@@ -245,6 +248,7 @@ void testgridviewfunction (const GV& gv)
             derivative(
                 derivative(
                     derivative(localf)));
+*/
         localf.unbind();
     }
 }

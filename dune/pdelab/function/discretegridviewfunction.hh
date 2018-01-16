@@ -54,7 +54,7 @@ struct DiscreteGridViewFunctionTraits<Signature,E,D,B,0> :
 /** \brief A discrete function defined over a GridFunctionSpace
 
     This class models the GridViewFunction concept of
-    dune-functions. I represents a global function. The user can
+    dune-functions. It represents a global function. The user can
     obtain a GridViewFunction::LocalFunction via
     localfunction(globalfunction) and use this to evaluate in local
     coordinates.
@@ -90,7 +90,6 @@ public:
   using Basis = GFS;
   using GridFunctionSpace = GFS;
   using Vector = V;
-  enum { maxDiffOrder = LocalBasisTraits::diffOrder - diffOrder };
 
   class LocalFunction
   {
@@ -105,8 +104,6 @@ public:
     using Range = GlobalFunction::Range;
     using Element = GlobalFunction::Element;
     using size_type = std::size_t;
-
-    enum { maxDiffOrder = LocalBasisTraits::diffOrder - diffOrder };
 
     LocalFunction(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
       : pgfs_(gfs)
@@ -185,22 +182,20 @@ public:
     Range
     operator()(const Domain& coord)
     {
-      return evaluate<LocalBasisTraits::diffOrder, diffOrder>(coord);
+      return evaluate<diffOrder>(coord);
     };
 
   private:
-    template<int maxDiffOrder, int dOrder>
-    typename std::enable_if<(dOrder > 2 or dOrder > maxDiffOrder),
+    template<int dOrder>
+    typename std::enable_if<(dOrder > 2),
       Range>::type
     evaluate(const Domain& coord) const
     {
       if (diffOrder > 2) DUNE_THROW(NotImplemented,
         "Derivatives are only implemented up to degree 2");
-      if (diffOrder > maxDiffOrder) DUNE_THROW(NotImplemented,
-        "Derivative of degree " << diffOrder << " is not provided by the local basis");
     };
 
-    template<int maxDiffOrder, int dOrder>
+    template<int dOrder>
     typename std::enable_if<dOrder == 0,
       Range>::type
     evaluate(const Domain& coord) const
@@ -215,8 +210,8 @@ public:
       return r;
     }
 
-    template<int maxDiffOrder, int dOrder>
-    typename std::enable_if<maxDiffOrder >= 1 and dOrder == 1,
+    template<int dOrder>
+    typename std::enable_if<dOrder == 1,
       Range>::type
     evaluate(const Domain& coord) const
     {
@@ -246,8 +241,8 @@ public:
       return r;
     }
 
-    template<int maxDiffOrder, int dOrder>
-    typename std::enable_if<maxDiffOrder >= 2 and dOrder == 2,
+    template<int dOrder>
+    typename std::enable_if<dOrder == 2,
       Range>::type
     evaluate(const Domain& coord) const
     {
