@@ -40,6 +40,10 @@ dune_add_test(SOURCES testheat-instationary-periodic.cc)
 
 dune_add_test(SOURCES testelasticity.cc)
 
+if(SuiteSparse_UMFPACK_FOUND AND ARPACK_FOUND)
+  dune_add_test(SOURCES testgeneo.cc)
+endif(SuiteSparse_UMFPACK_FOUND AND ARPACK_FOUND)
+
 dune_add_test(SOURCES testdglegendre.cc)
 
 dune_add_test(SOURCES testfastdgassembler.cc)
