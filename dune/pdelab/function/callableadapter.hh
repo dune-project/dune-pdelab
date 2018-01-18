@@ -373,7 +373,7 @@ namespace Dune {
                        const Dune::FieldVector<typename I::ctype, I::mydimension> & coord
                        ) const
       {
-        Dune::FieldVector<typename I::ctype, I::dimension> xg = intersection.geometry().global(coord);
+        auto xg = intersection.geometry().global(coord);
         return f(xg);
       }
 
