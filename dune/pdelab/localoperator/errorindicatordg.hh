@@ -175,7 +175,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType;
 
         // Dimension
-        const int dim = IG::dimension;
+        const int dim = IG::Entity::dimension;
 
         // Refererences to inside and outside cells
         const auto& cell_inside = ig.inside();
@@ -301,7 +301,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType;
 
         // dimensions
-        const int dim = IG::dimension;
+        const int dim = IG::Entity::dimension;
 
         // Reference to inside cell
         const auto& cell_inside = ig.inside();

@@ -335,7 +335,7 @@ namespace Dune {
       /** Predicate identifying Dirichlet boundaries for velocity. */
       template<typename I>
       bool isDirichlet(const I & intersection,
-                       const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord) const
+                       const Dune::FieldVector<typename I::ctype, I::mydimension> & coord) const
       {
         StokesBoundaryCondition::Type bctype = prm_.bctype(intersection,coord);
         return (bctype == StokesBoundaryCondition::VelocityDirichlet);
@@ -362,7 +362,7 @@ namespace Dune {
       /** Predicate identifying Dirichlet boundaries for velocity. */
       template<typename I>
       bool isDirichlet(const I & intersection,
-                       const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord) const
+                       const Dune::FieldVector<typename I::ctype, I::mydimension> & coord) const
       { return false; }
     };
 

@@ -35,7 +35,7 @@ namespace Dune {
        * \returns            true iff the given location should have a Dirichlet constraint.
        */
       template<typename I>
-      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::mydimension> & coord) const
       {
         return true;
       }
@@ -53,7 +53,7 @@ namespace Dune {
        * \returns            true iff the given location should have a Neumann constraint.
        */
       template<typename I>
-      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::mydimension> & coord) const
       {
         return false;
       }
@@ -84,7 +84,7 @@ namespace Dune {
        * Predicate implementation that will always return false.
        */
       template<typename I>
-      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::mydimension> & coord) const
       {
         return false;
       }
@@ -93,7 +93,7 @@ namespace Dune {
        * Predicate implementation that will always return true.
        */
       template<typename I>
-      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::mydimension> & coord) const
       {
         return true;
       }
@@ -131,7 +131,7 @@ namespace Dune {
        * \returns            true iff the given location should have a Neumann constraint.
        */
       template<typename I>
-      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::mydimension> & coord) const
       {
         return true;
       }
@@ -161,7 +161,7 @@ namespace Dune {
        * Predicate implementation that will always return false.
        */
       template<typename I>
-      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::mydimension> & coord) const
       {
         return false;
       }
@@ -196,7 +196,7 @@ namespace Dune {
        * Forwards to the underlying DirichletConstraintsParameters implementation.
        */
       template<typename I>
-      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::mydimension> & coord) const
       {
         return _dirichletConstraintsParameters.isDirichlet(intersection,coord);
       }
@@ -205,7 +205,7 @@ namespace Dune {
        * Returns the opposite of isDirichlet().
        */
       template<typename I>
-      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::mydimension> & coord) const
       {
         return !_dirichletConstraintsParameters.isDirichlet(intersection,coord);
       }
@@ -248,7 +248,7 @@ namespace Dune {
        * Returns the opposite of isNeumann().
        */
       template<typename I>
-      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::mydimension> & coord) const
       {
         return !_fluxConstraintsParameters.isNeumann(intersection,coord);
       }
@@ -257,7 +257,7 @@ namespace Dune {
        * Forwards to the underlying FluxConstraintsParameters implementation
        */
       template<typename I>
-      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::mydimension> & coord) const
       {
         return _fluxConstraintsParameters.isNeumann(intersection,coord);
       }

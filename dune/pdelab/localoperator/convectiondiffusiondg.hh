@@ -264,7 +264,7 @@ namespace Dune {
         using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
-        const int dim = IG::dimension;
+        const int dim = IG::Entity::dimension;
         const int order = std::max(
             std::max(lfsu_s.finiteElement().localBasis().order(),
                 lfsu_n.finiteElement().localBasis().order()),
@@ -459,7 +459,7 @@ namespace Dune {
         using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
-        const int dim = IG::dimension;
+        const int dim = IG::Entity::dimension;
         const int order = std::max(
             std::max(lfsu_s.finiteElement().localBasis().order(),
                 lfsu_n.finiteElement().localBasis().order()),
@@ -629,7 +629,7 @@ namespace Dune {
         using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
-        const int dim = IG::dimension;
+        const int dim = IG::Entity::dimension;
         const int order = std::max(
             lfsu_s.finiteElement().localBasis().order(),
             lfsv_s.finiteElement().localBasis().order()
@@ -809,7 +809,7 @@ namespace Dune {
         using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
-        const int dim = IG::dimension;
+        const int dim = IG::Entity::dimension;
         const int order = std::max(
             lfsu_s.finiteElement().localBasis().order(),
             lfsv_s.finiteElement().localBasis().order()

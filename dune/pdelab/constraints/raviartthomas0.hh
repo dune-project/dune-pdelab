@@ -29,11 +29,9 @@ namespace Dune {
       template<typename P, typename IG, typename LFS, typename T>
       void boundary (const P& p, const IG& ig, const LFS& lfs, T& trafo) const
       {
-        typedef typename IG::ctype DT;
-        const int dim = IG::dimension;
         const int face = ig.indexInInside();
         auto face_refelem = referenceElement(ig.geometry());
-        const FieldVector<DT, dim-1> ip = face_refelem.position(0,0);
+        const auto ip = face_refelem.position(0,0);
         if (p.isNeumann(ig,ip)) {
           typename T::RowType empty;              // need not interpolate
           trafo[lfs.dofIndex(face)]=empty;

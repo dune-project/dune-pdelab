@@ -178,7 +178,7 @@ namespace Dune {
 
       template<typename I>
       bool isDirichlet(const I & ig               /*@\label{bcp:name}@*/
-                       , const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                       , const Dune::FieldVector<typename I::ctype, I::mydimension> & coord
                        ) const
       {
         return( t.bctype( ig.intersection(), coord )
@@ -187,7 +187,7 @@ namespace Dune {
 
       template<typename I>
       bool isNeumann(const I & ig,   /*@\label{bcp:name}@*/
-                     const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                     const Dune::FieldVector<typename I::ctype, I::mydimension> & coord
                      ) const
       {
         return !isDirichlet( ig, coord );

@@ -120,7 +120,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType;
 
         // dimensions
-        const auto dim = IG::dimension;
+        const auto dim = IG::Entity::dimension;
 
         // get cell entities from both sides of the intersection
         auto cell_inside = ig.inside();
@@ -200,7 +200,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType;
 
         // dimensions
-        const auto dim = IG::dimension;
+        const auto dim = IG::Entity::dimension;
 
         // get cell entities from both sides of the intersection
         auto cell_inside = ig.inside();
@@ -303,7 +303,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType;
 
         // dimensions
-        const auto dim = IG::dimension;
+        const auto dim = IG::Entity::dimension;
 
         // get cell entities from both sides of the intersection
         auto cell_inside = ig.inside();
@@ -400,7 +400,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType;
 
         // dimensions
-        const auto dim = IG::dimension;
+        const auto dim = IG::Entity::dimension;
 
         // get cell entities from both sides of the intersection
         auto cell_inside = ig.inside();

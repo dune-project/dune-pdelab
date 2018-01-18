@@ -188,16 +188,16 @@ int main(int argc, char **argv) {
     using GV = Dune::YaspGrid<dim>::LeafGridView;
     using FEM = WrappedFiniteElementMap<GV, double, degree, dim>;
     using VBE =
-        Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed,
+        Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,
                                           blockSize>;
     using GFS =
         Dune::PDELab::GridFunctionSpace<GV, FEM, Dune::PDELab::NoConstraints,
                                         VBE>;
-    using PVBE = Dune::PDELab::istl::VectorBackend<>;
+    using PVBE = Dune::PDELab::ISTL::VectorBackend<>;
     using POT =
         Dune::PDELab::ordering::Chunked<Dune::PDELab::EntityBlockedOrderingTag>;
     using PGFS = Dune::PDELab::PowerGridFunctionSpace<
-        GFS, 2, Dune::PDELab::istl::VectorBackend<>, POT>;
+        GFS, 2, Dune::PDELab::ISTL::VectorBackend<>, POT>;
 
     GV gv = grid.leafGridView();
     FEM fem0(gv, 2);

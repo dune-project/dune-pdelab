@@ -370,7 +370,7 @@ namespace Dune {
       //! Test whether boundary is Dirichlet-constrained
       template<typename I>
       bool isDirichlet(const I & intersection,
-                       const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                       const Dune::FieldVector<typename I::ctype, I::mydimension> & coord
                        ) const
       {
         Dune::FieldVector<typename I::ctype, I::dimension> xg = intersection.geometry().global(coord);
@@ -379,7 +379,7 @@ namespace Dune {
 
       template<typename I>
       bool isNeumann(const I & ig,
-                     const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                     const Dune::FieldVector<typename I::ctype, I::mydimension> & coord
                      ) const
       {
         return !isDirichlet( ig, coord );
@@ -402,7 +402,7 @@ namespace Dune {
       {}
 
       template<typename I>
-      bool isDirichlet(const I & ig, const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+      bool isDirichlet(const I & ig, const Dune::FieldVector<typename I::ctype, I::mydimension> & coord
                        ) const
       {
         return(f(ig.intersection(),coord));
@@ -410,7 +410,7 @@ namespace Dune {
 
       template<typename I>
       bool isNeumann(const I & ig,
-                     const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                     const Dune::FieldVector<typename I::ctype, I::mydimension> & coord
                      ) const
       {
         return !isDirichlet( ig, coord );

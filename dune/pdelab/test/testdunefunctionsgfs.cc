@@ -114,7 +114,7 @@ void solvePoissonProblem()
   typedef PDELab::GridOperator<GridFunctionSpace,
                                GridFunctionSpace,
                                LOP,
-                               PDELab::istl::BCRSMatrixBackend<>,
+                               PDELab::ISTL::BCRSMatrixBackend<>,
                                double,double,double,C,C> GO;
   GO go(gfs,constraintsContainer,gfs,constraintsContainer,lop, {9});
 

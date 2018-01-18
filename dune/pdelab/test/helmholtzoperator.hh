@@ -122,12 +122,12 @@ public:
     typedef typename LFSU::Traits::SizeType size_type;
 
     // dimensions
-    const int dim = IG::dimension;
+    const int localdim = IG::mydimension;
 
     Dune::GeometryType gtface = ig.geometryInInside().type();
 
     // select quadrature rule for face
-    const auto& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
+    const auto& rule = Dune::QuadratureRules<DF,localdim>::rule(gtface,intorder);
 
     // loop over quadrature points and integrate normal flux
     for (const auto& qp : rule) {
@@ -136,7 +136,7 @@ public:
         continue;
 
       // position of quadrature point in local coordinates of element
-      Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(qp.position());
+      auto local = ig.geometryInInside().global(qp.position());
 
       // evaluate basis functions at integration point
       std::vector<Range> phi(lfsu_s.size());

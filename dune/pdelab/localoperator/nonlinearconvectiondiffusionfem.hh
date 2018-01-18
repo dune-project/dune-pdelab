@@ -120,7 +120,7 @@ namespace Dune {
       template<typename I>
       bool isDirichlet(
                        const I & intersection,               /*@\label{bcp:name}@*/
-                       const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                       const Dune::FieldVector<typename I::ctype, I::mydimension> & coord
                        ) const
       {
         return asImp().isDirichlet( intersection, coord );
@@ -169,7 +169,7 @@ namespace Dune {
       template<typename I>
       bool isDirichlet(
                        const I & intersection,               /*@\label{bcp:name}@*/
-                       const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                       const Dune::FieldVector<typename I::ctype, I::mydimension> & coord
                        ) const
       {
         return t.isDirichlet( intersection, coord );
@@ -341,9 +341,6 @@ namespace Dune {
         using RangeType = typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType;
         using size_type = typename LFSV::Traits::SizeType;
-
-        // dimensions
-        const int dim = IG::dimension;
 
         // get inside cell entity
         const auto& cell_inside = ig.inside();

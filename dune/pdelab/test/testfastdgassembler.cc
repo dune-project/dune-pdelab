@@ -114,7 +114,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   // Make grid function space
   typedef Dune::PDELab::NoConstraints CON;
   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed,blocksize> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
@@ -126,7 +126,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   LOP lop(problem,m,w,2.0);
 
   // Constraints
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   MBE mbe(9); // number of nonzeroes per row can be cross-checked by patternStatistics().
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;

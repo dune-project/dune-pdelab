@@ -242,7 +242,7 @@ namespace Dune {
         const auto& velocityspace = child(lfsv,_0);
 
         // dimensions
-        const int dim = IG::dimension;
+        const int dim = IG::Entity::dimension;
 
         // References to the inside cell
         const auto& cell_inside = ig.inside();
