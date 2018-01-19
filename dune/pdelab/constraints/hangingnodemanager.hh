@@ -89,8 +89,7 @@ namespace Dune {
       typedef typename Dune::FieldVector<ctype,dim> Point;
       typedef typename Dune::FieldVector<ctype,dim-1> FacePoint;
 
-      typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
-                                                        MCMGElementLayout> CellMapper;
+      typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView> CellMapper;
 
       Grid & grid;
       const BoundaryFunction & boundaryFunction;
@@ -215,7 +214,7 @@ namespace Dune {
       HangingNodeManager(Grid & _grid, const BoundaryFunction & _boundaryFunction)
         : grid(_grid),
           boundaryFunction(_boundaryFunction),
-          cell_mapper(grid.leafGridView())
+          cell_mapper(grid.leafGridView(), mcmgElementLayout())
       { analyzeView(); }
 
       const std::vector<NodeState> hangingNodes(const Cell& e) const
