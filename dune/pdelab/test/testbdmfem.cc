@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 
     {
       using ALUType = Dune::ALUGrid<2, 2, Dune::simplex, Dune::nonconforming>;
-      auto N = std::array<int,2> {{1,1}};
+      auto N = std::array<unsigned int,2> {{1,1}};
       auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), N);
       alugrid->globalRefine(4);
 
