@@ -171,7 +171,7 @@ void solvePoissonProblem()
   // Output result to VTK file
   auto pressureFunction = Functions::makeDiscreteGlobalBasisFunction<double>(*basis,x);
 
-  SubsamplingVTKWriter<GridView> vtkWriter(gridView,2);
+  SubsamplingVTKWriter<GridView> vtkWriter(gridView, refinementLevels(2));
   vtkWriter.addVertexData(pressureFunction, VTK::FieldInfo("pressure", VTK::FieldInfo::Type::scalar, 1));
   vtkWriter.write("testdunefunctionsgfs-poisson");
 

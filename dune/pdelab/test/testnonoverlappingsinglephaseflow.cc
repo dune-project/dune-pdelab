@@ -96,7 +96,7 @@ void driver(PROBLEM& problem, ES es, const FEM& fem,
   slp.apply();
 
   using GV = typename ES::Traits::GridView;
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(es.gridView(),3);
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(es.gridView(), Dune::refinementLevels(3));
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
   vtkwriter.write(filename,Dune::VTK::ascii);
 }

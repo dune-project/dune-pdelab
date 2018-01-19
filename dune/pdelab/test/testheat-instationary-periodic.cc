@@ -178,7 +178,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   Dune::PDELab::OneStepMethod<NumberType,IGO,PDESOLVER,V,V> osm(method,igo,pdesolver);
   osm.setVerbosityLevel(2);
 
-  auto stationaryVTKWriter = std::make_shared<Dune::SubsamplingVTKWriter<typename GM::LeafGridView> >(grid.leafGridView(),degree-1);
+  auto stationaryVTKWriter = std::make_shared<Dune::SubsamplingVTKWriter<typename GM::LeafGridView> >(grid.leafGridView(),Dune::refinementIntervals(degree));
   Dune::VTKSequenceWriter<typename GM::LeafGridView> vtkwriter(stationaryVTKWriter,basename,"","");
   typedef Dune::PDELab::DiscreteGridFunction<FS,V> DGF;
   DGF xdgf(fs,x);

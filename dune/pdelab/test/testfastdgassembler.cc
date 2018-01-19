@@ -166,7 +166,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   std::cout << "l2 error squared: " << l2errorsquared << std::endl;
 
   // write vtk file
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,degree-1);
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,Dune::refinementIntervals(degree));
   vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF>>(udgf,"u_h"));
   vtkwriter.write("testfastdgassembler",Dune::VTK::appendedraw);
 

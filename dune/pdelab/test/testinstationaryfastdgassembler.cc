@@ -201,7 +201,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   Dune::PDELab::OneStepMethod<Real,IGO,PDESOLVER,V,V> osm(method,igo,pdesolver);
   osm.setVerbosityLevel(1);
 
-  auto stationaryVTKWriter = std::make_shared<Dune::SubsamplingVTKWriter<GV> >(gv,degree-1);
+  auto stationaryVTKWriter = std::make_shared<Dune::SubsamplingVTKWriter<GV> >(gv,Dune::refinementIntervals(degree));
   Dune::VTKSequenceWriter<GV> vtkwriter(stationaryVTKWriter,"testinstationaryfastdgassembler","","");
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   DGF xdgf(gfs,x);

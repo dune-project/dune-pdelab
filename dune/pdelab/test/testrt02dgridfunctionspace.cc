@@ -54,7 +54,7 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   typedef Dune::PDELab::DiscreteGridFunctionPiola<GFS,X> DGF;
   DGF dgf(gfs,x);                     // make a grid function
 
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);  // plot result
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv, Dune::refinementLevels(3));  // plot result
   vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(dgf,"rt02d"));
   vtkwriter.write(filename.str(),Dune::VTK::ascii);
 }

@@ -264,7 +264,7 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
   }
 
   //<<<5>>> graphical output
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv, k-1);
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv, Dune::refinementIntervals(k));
 
   gfsr.name("real");
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,reu);

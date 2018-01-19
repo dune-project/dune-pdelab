@@ -155,7 +155,7 @@ void solveProblem(const Grid& grid, FS& fs, typename FS::DOF x, Problem& problem
   // std::cout << m.patternStatistics() << std::endl;
 
   // output grid to VTK file
-  Dune::SubsamplingVTKWriter<typename GM::LeafGridView> vtkwriter(grid->leafGridView(),degree-1);
+  Dune::SubsamplingVTKWriter<typename GM::LeafGridView> vtkwriter(grid->leafGridView(),Dune::refinementIntervals(degree));
   typename FS::DGF xdgf(fs.getGFS(),x);
   vtkwriter.addVertexData(std::make_shared<typename FS::VTKF>(xdgf,"x_h"));
   vtkwriter.write(basename,Dune::VTK::appendedraw);
