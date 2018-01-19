@@ -116,7 +116,7 @@ struct test<2,true> {
 
     P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),{{1,1,1}});
 
-    typedef Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,6> NVBE;
+    typedef Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed> NVBE;
 
     typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,NVBE,Dune::PDELab::InterleavedOrderingTag> PGFS;
     std::vector<std::size_t> p_gfs_block_sizes(2);
