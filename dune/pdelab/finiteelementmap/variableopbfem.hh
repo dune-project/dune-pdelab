@@ -42,8 +42,7 @@ namespace Dune {
     template<class M, class D, class R, int d, typename ComputationFieldType=R, int maxP=6, Dune::GeometryType::BasicType bt=Dune::GeometryType::cube>
     class VariableOPBLocalFiniteElementMap
     {
-      typedef typename FixedOrderLocalBasisTraits<
-        typename MonomialLocalFiniteElement<D,R,d,0>::Traits::LocalBasisType::Traits,0>::Traits T;
+      typedef typename MonomialLocalFiniteElement<D,R,d,0>::Traits::LocalBasisType::Traits T;
       //! Type of finite element from local functions
       typedef LocalFiniteElementVirtualInterface<T> FiniteElementType;
     public:
