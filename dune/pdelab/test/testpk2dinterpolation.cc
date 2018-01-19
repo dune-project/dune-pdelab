@@ -80,7 +80,7 @@ double interpolationerror (const GV& gv, const FEM &fem)
 }
 
 template<int k, typename Grid>
-void run_test(std::shared_ptr<Grid> grid, int &result, unsigned int maxelements, std::string name)
+void run_test(const std::unique_ptr<Grid>& grid, int &result, unsigned int maxelements, std::string name)
 {
   std::cout << std::endl
             << "Testing P" << k << "2D interpolation with " << name << std::endl;
