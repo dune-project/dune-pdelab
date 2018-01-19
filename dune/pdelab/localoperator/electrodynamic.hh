@@ -134,7 +134,7 @@ namespace Dune {
       }
 
     private:
-      ElectrodynamicImpl::ConstRefOrFunctor<Eps> eps_;
+      Eps eps_;
       int qorder_;
     };
 
@@ -236,7 +236,7 @@ namespace Dune {
       }
 
     private:
-      ElectrodynamicImpl::ConstRefOrFunctor<Mu> mu_;
+      Mu mu_;
       int qorder_;
     };
 
