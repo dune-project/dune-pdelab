@@ -50,7 +50,7 @@ namespace Dune {
         return true;
       }
 
-      static constexpr hasDOFs(int codim)
+      static constexpr bool hasDOFs(int codim)
       {
         return Geometry::mydimension - codim == 1;
       }
@@ -62,7 +62,10 @@ namespace Dune {
 
       static constexpr std::size_t maxLocalSize()
       {
-        return Dune::EdgeS0_5Common<Geometry::mydimension>::s;
+        // This is a bit of a hack. It only provides an upper bound which is not
+        // sharp for non-cubes. However, a better compile time guess is hard to
+        // obtain from latest dune-localfunctions...
+        return 2 * dimension;
       }
 
     };
