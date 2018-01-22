@@ -20,7 +20,7 @@ namespace Dune {
   namespace PDELab {
 
     //! Communication descriptor for sending one item of type E per DOF.
-    template<typename E>
+    template<typename E, bool transmit_rank = false>
     struct DOFDataCommunicationDescriptor
     {
 
@@ -31,6 +31,12 @@ namespace Dune {
 
       // Wrap the grid's communication buffer to enable sending leaf ordering sizes along with the data
       static const bool wrap_buffer = true;
+
+      // Determine whether the data handle should send the MPI rank to the receiver
+      static constexpr bool transmitRank()
+      {
+        return transmit_rank;
+      }
 
       // export original data type to fix up size information forwarded to standard gather / scatter functors
       typedef E OriginalDataType;
@@ -50,22 +56,30 @@ namespace Dune {
       template<typename GFS, typename Entity>
       std::size_t size(const GFS& gfs, const Entity& e) const
       {
-        // include size of leaf ordering offsets if necessary
-        return gfs.dataHandleSize(e) * sizeof(E) + (gfs.sendLeafSizes() ? TypeTree::TreeInfo<typename GFS::Ordering>::leafCount * sizeof(size_type) : 0);
+        // include size of leaf ordering offsets and of the rank if necessary
+        return gfs.dataHandleSize(e) * sizeof(E)
+          + (gfs.sendLeafSizes() ? TypeTree::TreeInfo<typename GFS::Ordering>::leafCount * sizeof(size_type) : 0)
+          + (transmitRank() ? sizeof(int) : 0);
       }
 
     };
 
     //! Communication descriptor for sending count items of type E per entity with attached DOFs.
-    template<typename E>
+    template<typename E, bool transmit_rank = false>
     struct EntityDataCommunicationDescriptor
     {
 
-      typedef E DataType;
+      // Data is per entity, so we don' need to send leaf ordering size and thus can avoid wrapping the
+      // grid's communication buffer unless we have to send our rank to the receiver
+      static const bool wrap_buffer = transmit_rank;
 
-      // Data is per entity, so we don't need to send leaf ordering size and thus can avoid wrapping the
-      // grid's communication buffer
-      static const bool wrap_buffer = false;
+      // Determine whether the data handle should send the MPI rank to the receiver
+      static constexpr bool transmitRank()
+      {
+        return transmit_rank;
+      }
+
+      using DataType = std::conditional_t<wrap_buffer,char,E>;
 
       template<typename GFS>
       bool contains(const GFS& gfs, int dim, int codim) const
@@ -82,7 +96,11 @@ namespace Dune {
       template<typename GFS, typename Entity>
       std::size_t size(const GFS& gfs, const Entity& e) const
       {
-        return gfs.dataHandleContains(Entity::codimension) && gfs.entitySet().contains(e) ? _count : 0;
+        if (wrap_buffer)
+          return (gfs.dataHandleContains(Entity::codimension) and gfs.entitySet().contains(e) ? _count * sizeof(E) : 0)
+            + (transmitRank() ? sizeof(int) : 0);
+        else
+          return gfs.dataHandleContains(Entity::codimension) && gfs.entitySet().contains(e) ? _count : 0;
       }
 
       explicit EntityDataCommunicationDescriptor(std::size_t count = 1)
@@ -120,6 +138,7 @@ namespace Dune {
         , _local_view(v)
         , _gather_scatter(gather_scatter)
         , _communication_descriptor(communication_descriptor)
+        , _rank(gfs.gridView().comm().rank())
       {}
 
       //! returns true if data for this codim should be communicated
@@ -151,7 +170,12 @@ namespace Dune {
         >::type
       gather(MessageBuffer& buff, const Entity& e) const
       {
-        PolymorphicBufferWrapper<MessageBuffer> buf_wrapper(buff);
+        PolymorphicBufferWrapper<MessageBuffer> buf_wrapper(
+          buff,
+          PolymorphicBufferWrapper<MessageBuffer>::Mode::send,
+          _rank,
+          _communication_descriptor.transmitRank()
+          );
         _index_cache.update(e);
         _local_view.bind(_index_cache);
         if (_gfs.sendLeafSizes())
@@ -197,7 +221,12 @@ namespace Dune {
         >::type
       scatter(MessageBuffer& buff, const Entity& e, size_type n)
       {
-        PolymorphicBufferWrapper<MessageBuffer> buf_wrapper(buff);
+        PolymorphicBufferWrapper<MessageBuffer> buf_wrapper(
+          buff,
+          PolymorphicBufferWrapper<MessageBuffer>::Mode::receive,
+          _rank,
+          _communication_descriptor.transmitRank()
+          );
         _index_cache.update(e);
         _local_view.bind(_index_cache);
         bool needs_commit = false;
@@ -261,6 +290,7 @@ namespace Dune {
       mutable LocalView _local_view;
       mutable GatherScatter _gather_scatter;
       CommunicationDescriptor _communication_descriptor;
+      int _rank;
 
     };
 
