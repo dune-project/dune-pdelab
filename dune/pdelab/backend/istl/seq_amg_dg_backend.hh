@@ -64,7 +64,7 @@ namespace Dune {
 
         \copydoc Preconditioner::pre(X&,Y&)
       */
-      virtual void pre (X& x, Y& b)
+      virtual void pre (X& x, Y& b) override
       {
         dgprec.pre(x,b);
         CGY cgd(p.M());
@@ -79,7 +79,7 @@ namespace Dune {
 
         \copydoc Preconditioner::apply(X&,const Y&)
       */
-      virtual void apply (X& x, const Y& b)
+      virtual void apply (X& x, const Y& b) override
       {
         // need local copies to store defect and solution
         Y d(b);
@@ -123,7 +123,7 @@ namespace Dune {
 
         \copydoc Preconditioner::post(X&)
       */
-      virtual void post (X& x)
+      virtual void post (X& x) override
       {
         dgprec.post(x);
         CGX cgv(p.M());

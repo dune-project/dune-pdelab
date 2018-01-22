@@ -165,7 +165,7 @@ namespace Dune {
         this->setDelegate(this);
       }
 
-      virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
+      virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const override
       {
         ordering().mapIndex(di,ci);
         std::size_t flat_index = ci.back();

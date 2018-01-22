@@ -43,13 +43,13 @@ namespace Dune {
         : gos(gos_)
       {}
 
-      virtual void apply (const X& x, Y& y) const
+      virtual void apply (const X& x, Y& y) const override
       {
         y = 0.0;
         gos.jacobian_apply(x,y);
       }
 
-      virtual void applyscaleadd (field_type alpha, const X& x, Y& y) const
+      virtual void applyscaleadd (field_type alpha, const X& x, Y& y) const override
       {
         Y temp(y);
         temp = 0.0;

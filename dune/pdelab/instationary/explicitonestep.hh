@@ -48,7 +48,7 @@ namespace Dune {
 
       /*! \brief Return name of the scheme
        */
-      virtual RealType suggestTimestep (RealType time, RealType givendt)
+      virtual RealType suggestTimestep (RealType time, RealType givendt) override
       {
         return givendt;
       }
@@ -79,7 +79,7 @@ namespace Dune {
 
       /*! \brief Return name of the scheme
        */
-      virtual RealType suggestTimestep (RealType time, RealType givendt)
+      virtual RealType suggestTimestep (RealType time, RealType givendt) override
       {
         RealType suggested = cfl*igos.suggestTimestep(givendt);
         if (time+2.0*suggested<target)

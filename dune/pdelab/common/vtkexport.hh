@@ -70,12 +70,12 @@ namespace Dune {
         : t(t_), s(s_), remap(remap_)
       { }
 
-      virtual int ncomps () const
+      virtual int ncomps () const override
       {
         return remap.size();;
       }
 
-      virtual double evaluate (int comp, const Entity& e, const Dune::FieldVector<DF,n>& xi) const
+      virtual double evaluate (int comp, const Entity& e, const Dune::FieldVector<DF,n>& xi) const override
       {
         typename T::Traits::DomainType x;
         typename T::Traits::RangeType y;
@@ -86,7 +86,7 @@ namespace Dune {
         return y[remap[comp]];
       }
 
-      virtual std::string name () const
+      virtual std::string name () const override
       {
         return s;
       }
@@ -184,17 +184,17 @@ namespace Dune {
         : fem(fem_), s(s_)
       {}
 
-      virtual int ncomps () const
+      virtual int ncomps () const override
       {
         return 1;
       }
 
-      virtual double evaluate (int comp, const Entity& e, const Dune::FieldVector<DF,n>& xi) const
+      virtual double evaluate (int comp, const Entity& e, const Dune::FieldVector<DF,n>& xi) const override
       {
         return fem.getOrder(e);
       }
 
-      virtual std::string name () const
+      virtual std::string name () const override
       {
         return s;
       }
