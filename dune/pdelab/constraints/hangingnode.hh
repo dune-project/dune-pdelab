@@ -33,8 +33,6 @@ namespace Dune {
         {
           typedef IG Intersection;
           typedef typename Intersection::Entity Cell;
-          typedef typename Intersection::Geometry FaceGeometry;
-          typedef typename FaceGeometry::ctype DT;
           typedef typename LFS::Traits::SizeType SizeType;
 
           typedef typename LFS::Traits::GridFunctionSpace::Traits::GridView::IndexSet IndexSet;
@@ -198,8 +196,6 @@ namespace Dune {
         {
           typedef IG Intersection;
           typedef typename Intersection::Entity Cell;
-          typedef typename Intersection::Geometry FaceGeometry;
-          typedef typename FaceGeometry::ctype DT;
           typedef typename LFS::Traits::SizeType SizeType;
           typedef typename LFS::Traits::GridFunctionSpace::Traits::GridView::IndexSet IndexSet;
 
@@ -351,10 +347,6 @@ namespace Dune {
                      const LFS& lfs_e, const LFS& lfs_f,
                      T& trafo_e, T& trafo_f) const
       {
-        typedef IG Intersection;
-        typedef typename Intersection::Geometry FaceGeometry;
-        typedef typename FaceGeometry::ctype DT;
-
         auto e = ig.inside();
         auto f = ig.outside();
 

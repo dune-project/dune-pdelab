@@ -133,7 +133,6 @@ public:
 
     // dimensions
     const int localdim = IG::mydimension;
-    const int entitydim = IG::Entity::dimension;
 
     // select quadrature rule for face
     Dune::GeometryType gtface = ig.geometryInInside().type();
