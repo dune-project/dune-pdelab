@@ -256,7 +256,7 @@ namespace Dune {
         using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
-        const int dim = IG::dimension;
+        const int dim = IG::Entity::dimension;
         const int order = std::max(
             std::max(lfsu_s.finiteElement().localBasis().order(),
                 lfsu_n.finiteElement().localBasis().order()),
@@ -445,7 +445,7 @@ namespace Dune {
         using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
-        const int dim = IG::dimension;
+        const int dim = IG::Entity::dimension;
         const int order = std::max(
             std::max(lfsu_s.finiteElement().localBasis().order(),
                 lfsu_n.finiteElement().localBasis().order()),
@@ -621,7 +621,7 @@ namespace Dune {
         using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
-        const int dim = IG::dimension;
+        const int dim = IG::Entity::dimension;
         const int order = std::max(
             lfsu_s.finiteElement().localBasis().order(),
             lfsv_s.finiteElement().localBasis().order()
@@ -804,7 +804,7 @@ namespace Dune {
         using size_type = typename LFSV::Traits::SizeType;
 
         // dimensions
-        const int dim = IG::dimension;
+        const int dim = IG::Entity::dimension;
         const int order = std::max(
             lfsu_s.finiteElement().localBasis().order(),
             lfsv_s.finiteElement().localBasis().order()
@@ -905,17 +905,7 @@ namespace Dune {
             for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
 
             // upwind
-            RF omegaup_s, omegaup_n;
-            if (normalflux>=0.0)
-              {
-                omegaup_s = 1.0;
-                omegaup_n = 0.0;
-              }
-            else
-              {
-                omegaup_s = 0.0;
-                omegaup_n = 1.0;
-              }
+            RF omegaup_s = normalflux>=0.0 ? 1.0 : 0.0;
 
             // convection term
             for (size_type j=0; j<lfsu_s.size(); j++)

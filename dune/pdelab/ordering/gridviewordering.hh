@@ -507,7 +507,7 @@ namespace Dune {
         return this->template child<0>();
       }
 
-      virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
+      virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const override
       {
         mapIndex(di,ci);
       }

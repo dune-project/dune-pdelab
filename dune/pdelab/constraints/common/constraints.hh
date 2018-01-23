@@ -488,7 +488,7 @@ namespace Dune {
       {}
 
       template<typename I>
-      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::mydimension> & coord) const
       {
         typename F::Traits::RangeType bctype;
         _f->evaluate(intersection,coord,bctype);
@@ -496,7 +496,7 @@ namespace Dune {
       }
 
       template<typename I>
-      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::mydimension> & coord) const
       {
         typename F::Traits::RangeType bctype;
         _f->evaluate(intersection,coord,bctype);

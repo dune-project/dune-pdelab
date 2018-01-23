@@ -39,6 +39,7 @@
 
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
+#include<dune/common/filledarray.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/parametertreeparser.hh>
 #include<dune/common/float_cmp.hh>
@@ -263,7 +264,7 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
   }
 
   //<<<5>>> graphical output
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv, k-1);
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv, Dune::refinementIntervals(k));
 
   gfsr.name("real");
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,reu);
@@ -303,7 +304,7 @@ int main(int argc, char** argv)
       typedef std::complex<R> C;
 
       Dune::FieldVector<double,2> L(1.);
-      std::array<int,2> N(Dune::fill_array<int,2>(8));
+      std::array<int,2> N(Dune::filledArray<2,int>(8));
       std::bitset<2> periodic(false);
       int overlap=0;
       Dune::YaspGrid<2> grid(L,N,periodic,overlap);

@@ -406,7 +406,7 @@ namespace Dune {
                            R& r_s, R& r_n) const
       {
         // dimensions
-        const unsigned int dim = IG::dimension;
+        const unsigned int dim = IG::Entity::dimension;
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
@@ -597,7 +597,7 @@ namespace Dune {
                               LocalMatrix& mat_ns, LocalMatrix& mat_nn) const
       {
         // dimensions
-        const unsigned int dim = IG::dimension;
+        const unsigned int dim = IG::Entity::dimension;
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
@@ -800,7 +800,7 @@ namespace Dune {
                            R& r) const
       {
         // dimensions
-        const unsigned int dim = IG::dimension;
+        const unsigned int dim = IG::Entity::dimension;
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces
@@ -944,7 +944,7 @@ namespace Dune {
                               LocalMatrix& mat) const
       {
         // dimensions
-        const unsigned int dim = IG::dimension;
+        const unsigned int dim = IG::Entity::dimension;
         const unsigned int dimw = IG::coorddimension;
 
         // subspaces

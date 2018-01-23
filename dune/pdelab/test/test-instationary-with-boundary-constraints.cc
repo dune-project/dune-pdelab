@@ -169,7 +169,7 @@ bool do_simulation (double T, double dt, GM& grid, std::string basename)
   osm_explicit.setVerbosityLevel(1);
 
   // graphics for initial guess
-  auto stationaryVTKWriter = std::make_shared<Dune::SubsamplingVTKWriter<typename GM::LeafGridView> >(grid.leafGridView(),degree-1);
+  auto stationaryVTKWriter = std::make_shared<Dune::SubsamplingVTKWriter<typename GM::LeafGridView> >(grid.leafGridView(),Dune::refinementIntervals(degree));
   Dune::VTKSequenceWriter<typename GM::LeafGridView> vtkwriter(stationaryVTKWriter,basename,"","");
   typedef Dune::PDELab::DiscreteGridFunction<typename FS::GFS,V> DGF;
   DGF xdgf_implicit(fs.getGFS(),x_implicit);

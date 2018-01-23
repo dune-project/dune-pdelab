@@ -3,6 +3,7 @@
 #ifndef DUNE_PDELAB_FUNCTION_DISCRETEGRIDVIEWFUNCTION_HH
 #define DUNE_PDELAB_FUNCTION_DISCRETEGRIDVIEWFUNCTION_HH
 
+#include <array>
 #include <cstdlib>
 #include <vector>
 #include <memory>
@@ -263,7 +264,7 @@ public:
       //   "Currently the only higher order derivative we support is the Hessian of scalar functions");
 
       // get local hessian of the shape functions
-      array<std::size_t, dim> directions;
+      std::array<std::size_t, dim> directions;
       for(std::size_t i = 0; i < dim; ++i) {
         // evaluate diagonal entries
         directions[i] = 2;

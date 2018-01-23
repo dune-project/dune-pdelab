@@ -3,9 +3,6 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_OVLPISTLSOLVERBACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_OVLPISTLSOLVERBACKEND_HH
 
-// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
-#include "ensureistlinclude.hh"
-
 #include <dune/common/deprecated.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
@@ -56,7 +53,7 @@ namespace Dune {
       {}
 
       //! apply operator to x:  \f$ y = A(x) \f$
-      virtual void apply (const domain_type& x, range_type& y) const
+      virtual void apply (const domain_type& x, range_type& y) const override
       {
         using Backend::native;
         native(_A_).mv(native(x),native(y));
@@ -64,7 +61,7 @@ namespace Dune {
       }
 
       //! apply operator to x, scale and add:  \f$ y = y + \alpha A(x) \f$
-      virtual void applyscaleadd (field_type alpha, const domain_type& x, range_type& y) const
+      virtual void applyscaleadd (field_type alpha, const domain_type& x, range_type& y) const override
       {
         using Backend::native;
         native(_A_).usmv(alpha,native(x),native(y));
@@ -77,7 +74,7 @@ namespace Dune {
       }
 
       //! get matrix via *
-      virtual const M& getmat () const
+      virtual const M& getmat () const override
       {
         return _A_;
       }
@@ -109,7 +106,7 @@ namespace Dune {
         It is assumed that the vectors are consistent on the interior+border
         partition.
       */
-      virtual field_type dot (const X& x, const X& y)
+      virtual field_type dot (const X& x, const X& y) override
       {
         // do local scalar product on unique partition
         field_type sum = helper.disjointDot(x,y);
@@ -121,7 +118,7 @@ namespace Dune {
       /*! \brief Norm of a right-hand side vector.
         The vector must be consistent on the interior+border partition
       */
-      virtual double norm (const X& x)
+      virtual double norm (const X& x) override
       {
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
@@ -157,7 +154,7 @@ namespace Dune {
       /*!
         \brief Prepare the preconditioner.
       */
-      virtual void pre (domain_type& x, range_type& b)
+      virtual void pre (domain_type& x, range_type& b) override
       {
         prec.pre(x,b);
       }
@@ -165,7 +162,7 @@ namespace Dune {
       /*!
         \brief Apply the preconditioner.
       */
-      virtual void apply (domain_type& v, const range_type& d)
+      virtual void apply (domain_type& v, const range_type& d) override
       {
         range_type dd(d);
         set_constrained_dofs(cc,0.0,dd);
@@ -183,7 +180,7 @@ namespace Dune {
       /*!
         \brief Clean up.
       */
-      virtual void post (domain_type& x)
+      virtual void post (domain_type& x) override
       {
         prec.post(Backend::native(x));
       }
@@ -224,12 +221,12 @@ namespace Dune {
       /*!
         \brief Prepare the preconditioner.
       */
-      virtual void pre (X& x, Y& b) {}
+      virtual void pre (X& x, Y& b) override {}
 
       /*!
         \brief Apply the precondioner.
       */
-      virtual void apply (X& v, const Y& d)
+      virtual void apply (X& v, const Y& d) override
       {
         Dune::InverseOperatorResult stat;
         Y b(d); // need copy, since solver overwrites right hand side
@@ -249,7 +246,7 @@ namespace Dune {
       /*!
         \brief Clean up.
       */
-      virtual void post (X& x) {}
+      virtual void post (X& x) override {}
 
     private:
       const GFS& gfs;
@@ -285,12 +282,12 @@ namespace Dune {
       /*!
         \brief Prepare the preconditioner.
       */
-      virtual void pre (X& x, Y& b) {}
+      virtual void pre (X& x, Y& b) override {}
 
       /*!
         \brief Apply the precondioner.
       */
-      virtual void apply (X& v, const Y& d)
+      virtual void apply (X& v, const Y& d) override
       {
         Dune::InverseOperatorResult stat;
         Y b(d); // need copy, since solver overwrites right hand side
@@ -310,7 +307,7 @@ namespace Dune {
       /*!
         \brief Clean up.
       */
-      virtual void post (X& x) {}
+      virtual void post (X& x) override {}
 
     private:
       const GFS& gfs;
@@ -346,12 +343,12 @@ namespace Dune {
       /*!
         \brief Prepare the preconditioner.
       */
-      virtual void pre (X& x, Y& b) {}
+      virtual void pre (X& x, Y& b) override {}
 
       /*!
         \brief Apply the precondioner.
       */
-      virtual void apply (X& v, const Y& d)
+      virtual void apply (X& v, const Y& d) override
       {
         using Backend::native;
         Dune::InverseOperatorResult stat;
@@ -373,7 +370,7 @@ namespace Dune {
       /*!
         \brief Clean up.
       */
-      virtual void post (X& x) {}
+      virtual void post (X& x) override {}
 
     private:
       const GFS& gfs;
@@ -445,12 +442,12 @@ namespace Dune {
         : implementation(implementation_)
       {}
 
-      virtual typename X::Container::field_type dot(const X& x, const X& y)
+      virtual typename X::Container::field_type dot(const X& x, const X& y) override
       {
         return implementation.dot(x,y);
       }
 
-      virtual typename X::Container::field_type norm (const X& x)
+      virtual typename X::Container::field_type norm (const X& x) override
       {
         using namespace std;
         return sqrt(static_cast<double>(this->dot(x,x)));

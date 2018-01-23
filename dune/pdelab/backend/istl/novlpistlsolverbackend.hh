@@ -3,9 +3,6 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_NOVLPISTLSOLVERBACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_NOVLPISTLSOLVERBACKEND_HH
 
-// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
-#include "ensureistlinclude.hh"
-
 #include <cstddef>
 
 #include <dune/common/deprecated.hh>
@@ -87,7 +84,7 @@ namespace Dune {
        * corresponding entries of y on the different processes and store the
        * result back in y on each process).
        */
-      virtual void apply (const X& x, Y& y) const
+      virtual void apply (const X& x, Y& y) const override
       {
         using Backend::native;
         // apply local operator; now we have sum y_p = sequential y
@@ -105,7 +102,7 @@ namespace Dune {
        * (sum up corresponding entries of y on the different processes and
        * store the result back in y on each process).
        */
-      virtual void applyscaleadd (field_type alpha, const X& x, Y& y) const
+      virtual void applyscaleadd (field_type alpha, const X& x, Y& y) const override
       {
         using Backend::native;
         // apply local operator; now we have sum y_p = sequential y
@@ -123,7 +120,7 @@ namespace Dune {
       }
 
       //! extract the matrix
-      virtual const M& getmat () const
+      virtual const M& getmat () const override
       {
         return _A_;
       }
@@ -157,7 +154,7 @@ namespace Dune {
         It is assumed that the vectors are consistent on the interior+border
         partition.
       */
-      virtual field_type dot (const X& x, const X& y)
+      virtual field_type dot (const X& x, const X& y) override
       {
         // do local scalar product on unique partition
         field_type sum = helper.disjointDot(x,y);
@@ -169,7 +166,7 @@ namespace Dune {
       /*! \brief Norm of a right-hand side vector.
         The vector must be consistent on the interior+border partition
       */
-      virtual double norm (const X& x)
+      virtual double norm (const X& x) override
       {
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
@@ -215,12 +212,12 @@ namespace Dune {
       /*!
         \brief Prepare the preconditioner.
       */
-      virtual void pre (X& x, Y& b) {}
+      virtual void pre (X& x, Y& b) override {}
 
       /*!
         \brief Apply the precondioner.
       */
-      virtual void apply (X& v, const Y& d)
+      virtual void apply (X& v, const Y& d) override
       {
         v = d;
       }
@@ -228,7 +225,7 @@ namespace Dune {
       /*!
         \brief Clean up.
       */
-      virtual void post (X& x) {}
+      virtual void post (X& x) override {}
 
     private:
       const GFS& gfs;
@@ -307,7 +304,7 @@ namespace Dune {
       }
 
       //! Prepare the preconditioner.
-      virtual void pre (X& x, Y& b) {}
+      virtual void pre (X& x, Y& b) override {}
 
       //! Apply the precondioner.
       /*
@@ -315,13 +312,13 @@ namespace Dune {
        * inconsistent vectors: if d is consistent, v will be consistent, if d
        * is inconsistent, v will be inconsistent.
        */
-      virtual void apply (X& v, const Y& d)
+      virtual void apply (X& v, const Y& d) override
       {
         _inverse_diagonal.mv(d,v);
       }
 
       //! Clean up.
-      virtual void post (X& x) {}
+      virtual void post (X& x) override {}
     };
 
     //! \addtogroup PDELab_novlpsolvers Nonoverlapping Solvers

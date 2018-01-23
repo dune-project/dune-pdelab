@@ -2,12 +2,12 @@
 #ifndef DUNE_PDELAB_FINITEELEMENTMAP_VARIABLEQKDGFEM_HH
 #define DUNE_PDELAB_FINITEELEMENTMAP_VARIABLEQKDGFEM_HH
 
+#include <array>
 #include <memory>
 
 #include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/virtualwrappers.hh>
-#include <dune/common/array.hh>
 #include "finiteelementmap.hh"
 #include "qkdg.hh"
 
@@ -41,8 +41,7 @@ namespace Dune {
     template<class M, class D, class R, int d, int maxP=6>
     class VariableQkDGLocalFiniteElementMap
     {
-      typedef typename FixedOrderLocalBasisTraits<
-      typename QkDGLocalFiniteElement<D,R,0,d>::Traits::LocalBasisType::Traits,0>::Traits T;
+      typedef typename QkDGLocalFiniteElement<D,R,0,d>::Traits::LocalBasisType::Traits T;
       //! Type of finite element from local functions
       typedef LocalFiniteElementVirtualInterface<T> FiniteElementType;
     public:

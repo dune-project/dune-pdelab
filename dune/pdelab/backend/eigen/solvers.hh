@@ -3,7 +3,6 @@
 #ifndef DUNE_PDELAB_BACKEND_EIGEN_SOLVERS_HH
 #define DUNE_PDELAB_BACKEND_EIGEN_SOLVERS_HH
 
-#include <dune/common/deprecated.hh>
 #include <dune/common/timer.hh>
 #include <dune/common/parallel/mpihelper.hh>
 

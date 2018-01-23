@@ -8,6 +8,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include<dune/common/filledarray.hh>
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/grid/yaspgrid.hh>
 #include<dune/istl/solvers.hh>
@@ -133,7 +134,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   // Make grid function space
   typedef Dune::PDELab::NoConstraints CON;
   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed,blocksize> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,blocksize> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
 
@@ -156,7 +157,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   MLOP mlop(2*degree);
 
   // Constraints
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   MBE mbe(9); // number of nonzeroes per row can be cross-checked by patternStatistics().
   typedef typename GFS::template ConstraintsContainer<Real>::Type CC;
   CC cc;
@@ -200,7 +201,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   Dune::PDELab::OneStepMethod<Real,IGO,PDESOLVER,V,V> osm(method,igo,pdesolver);
   osm.setVerbosityLevel(1);
 
-  auto stationaryVTKWriter = std::make_shared<Dune::SubsamplingVTKWriter<GV> >(gv,degree-1);
+  auto stationaryVTKWriter = std::make_shared<Dune::SubsamplingVTKWriter<GV> >(gv,Dune::refinementIntervals(degree));
   Dune::VTKSequenceWriter<GV> vtkwriter(stationaryVTKWriter,"testinstationaryfastdgassembler","","");
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   DGF xdgf(gfs,x);
@@ -259,10 +260,9 @@ int main(int argc, char** argv)
     // Create 2D yasp grid
     const int dim = 2;
     Dune::FieldVector<Real,dim> L(1.0);
-    Dune::array<int,dim> N(Dune::fill_array<int,dim>(1));
     std::bitset<dim> P(false);
     typedef Dune::YaspGrid<dim> Grid;
-    Grid grid(L,N,P,0);
+    Grid grid(L,Dune::filledArray<dim, int>(1),P,0);
 
     // Refine grid
     grid.globalRefine(3);

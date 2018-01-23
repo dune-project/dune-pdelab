@@ -3,9 +3,6 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_PARALLELHELPER_HH
 #define DUNE_PDELAB_BACKEND_ISTL_PARALLELHELPER_HH
 
-// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
-#include "ensureistlinclude.hh"
-
 #include <limits>
 
 #include <dune/common/parallel/mpihelper.hh>

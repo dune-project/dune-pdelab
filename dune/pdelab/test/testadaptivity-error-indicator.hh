@@ -51,28 +51,28 @@ namespace Dune {
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
         typedef typename LFSU::Traits::SizeType size_type;
 
-        // dimensions
-        const int dim = IG::dimension;
-
         // make copy of inside and outside w.r.t. the intersection
         auto inside_cell = ig.inside();
         auto outside_cell = ig.outside();
 
+        const int localdim = IG::mydimension;
+        const int entitydim = IG::Entity::dimension;
+
         // select quadrature rule
         const int intorder = 2*lfsu_s.finiteElement().localBasis().order();
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
+        const auto& rule = Dune::QuadratureRules<DF,localdim>::rule(gtface,intorder);
 
         // tensor times normal
-        const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
+        auto n_F = ig.centerUnitOuterNormal();
 
         // loop over quadrature points and integrate normal flux
         RF sum(0.0);
         for (const auto& ip : rule)
           {
             // position of quadrature point in local coordinates of elements
-            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(ip.position());
-            Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(ip.position());
+            auto iplocal_s = ig.geometryInInside().global(ip.position());
+            auto iplocal_n = ig.geometryInOutside().global(ip.position());
 
             // evaluate gradient of basis functions
             std::vector<JacobianType> gradphi_s(lfsu_s.size());
@@ -81,18 +81,20 @@ namespace Dune {
             lfsu_n.finiteElement().localBasis().evaluateJacobian(iplocal_n,gradphi_n);
 
             // transform gradients of shape functions to real element
-            Dune::FieldMatrix<DF,dim,dim> jac = inside_cell.geometry().jacobianInverseTransposed(iplocal_s);
-            std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
-            for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
+            auto jac = inside_cell.geometry().jacobianInverseTransposed(iplocal_s);
+            std::vector<Dune::FieldVector<RF,entitydim> > tgradphi_s(lfsu_s.size());
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              jac.mv(gradphi_s[i][0],tgradphi_s[i]);
             jac = outside_cell.geometry().jacobianInverseTransposed(iplocal_n);
-            std::vector<Dune::FieldVector<RF,dim> > tgradphi_n(lfsu_n.size());
-            for (size_type i=0; i<lfsu_n.size(); i++) jac.mv(gradphi_n[i][0],tgradphi_n[i]);
+            std::vector<Dune::FieldVector<RF,entitydim> > tgradphi_n(lfsu_n.size());
+            for (size_type i=0; i<lfsu_n.size(); i++)
+              jac.mv(gradphi_n[i][0],tgradphi_n[i]);
 
             // compute gradient of u
-            Dune::FieldVector<RF,dim> gradu_s(0.0);
+            Dune::FieldVector<RF,entitydim> gradu_s(0.0);
             for (size_type i=0; i<lfsu_s.size(); i++)
               gradu_s.axpy(x_s(lfsu_s,i),tgradphi_s[i]);
-            Dune::FieldVector<RF,dim> gradu_n(0.0);
+            Dune::FieldVector<RF,entitydim> gradu_n(0.0);
             for (size_type i=0; i<lfsu_n.size(); i++)
               gradu_n.axpy(x_n(lfsu_n,i),tgradphi_n[i]);
 

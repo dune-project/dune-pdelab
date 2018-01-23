@@ -3,9 +3,6 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_VECTORHELPERS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_VECTORHELPERS_HH
 
-// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
-#include "ensureistlinclude.hh"
-
 #include <dune/common/typetraits.hh>
 
 #include <dune/istl/bvector.hh>

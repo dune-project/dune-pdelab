@@ -7,6 +7,7 @@
 
 #include <iostream>
 
+#include <dune/common/filledarray.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
 #include <dune/grid/yaspgrid.hh>
@@ -179,8 +180,7 @@ int main(int argc, char **argv) {
     const int dim = 2;
 
     Dune::FieldVector<double, dim> L(1.0);
-    Dune::array<int, dim> N(Dune::fill_array<int, dim>(2));
-    Dune::YaspGrid<dim> grid(L, N);
+    Dune::YaspGrid<dim> grid(L, Dune::filledArray<dim, int>(2));
 
     const int degree = 1;
     const int blockSize = Dune::QkStuff::QkSize<degree, dim>::value;
@@ -188,16 +188,16 @@ int main(int argc, char **argv) {
     using GV = Dune::YaspGrid<dim>::LeafGridView;
     using FEM = WrappedFiniteElementMap<GV, double, degree, dim>;
     using VBE =
-        Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed,
+        Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,
                                           blockSize>;
     using GFS =
         Dune::PDELab::GridFunctionSpace<GV, FEM, Dune::PDELab::NoConstraints,
                                         VBE>;
-    using PVBE = Dune::PDELab::istl::VectorBackend<>;
+    using PVBE = Dune::PDELab::ISTL::VectorBackend<>;
     using POT =
         Dune::PDELab::ordering::Chunked<Dune::PDELab::EntityBlockedOrderingTag>;
     using PGFS = Dune::PDELab::PowerGridFunctionSpace<
-        GFS, 2, Dune::PDELab::istl::VectorBackend<>, POT>;
+        GFS, 2, Dune::PDELab::ISTL::VectorBackend<>, POT>;
 
     GV gv = grid.leafGridView();
     FEM fem0(gv, 2);

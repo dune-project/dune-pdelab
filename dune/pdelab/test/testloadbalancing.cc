@@ -110,7 +110,7 @@ int main(int argc, char** argv)
     }
 
     // Visualization
-    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,0);
+    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv, Dune::refinementLevels(0));
     Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
     vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<AF> >(u,"u"));
     vtkwriter.write("before_refinement",Dune::VTK::ascii);
@@ -201,7 +201,7 @@ int main(int argc, char** argv)
 
     // Visualization
     AF uNew(gfs.gridView());
-    Dune::SubsamplingVTKWriter<GV> vtkwriterNew(gfs.gridView(),0);
+    Dune::SubsamplingVTKWriter<GV> vtkwriterNew(gfs.gridView(), Dune::refinementLevels(0));
     vtkwriterNew.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<AF> >(uNew,"u"));
     Dune::PDELab::addSolutionToVTKWriter(vtkwriterNew,gfs,x);
     vtkwriterNew.write("after_load_balance",Dune::VTK::ascii);

@@ -54,7 +54,7 @@ namespace Dune {
         typedef FiniteElementInterfaceSwitch<
         typename LFS::Traits::FiniteElementType
           > FESwitch;
-        typedef FieldVector<typename IG::ctype, IG::dimension-1> FaceCoord;
+        typedef FieldVector<typename IG::ctype, IG::mydimension> FaceCoord;
 
         const int face = ig.indexInInside();
 

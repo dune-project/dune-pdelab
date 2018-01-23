@@ -9,6 +9,7 @@
 #include <memory>
 
 #include <dune/common/exceptions.hh>
+#include <dune/common/filledarray.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
@@ -115,7 +116,7 @@ struct test<2,true> {
 
     P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),{{1,1,1}});
 
-    typedef Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,6> NVBE;
+    typedef Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed> NVBE;
 
     typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,NVBE,Dune::PDELab::InterleavedOrderingTag> PGFS;
     std::vector<std::size_t> p_gfs_block_sizes(2);
@@ -248,7 +249,7 @@ int main(int argc, char** argv)
       std::cout << "3D tests" << std::endl;
       // need a grid in order to test grid functions
       Dune::FieldVector<double,3> L(1.0);
-      std::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::array<int,3> N(Dune::filledArray<3,int>(1));
       Dune::YaspGrid<3> grid(L,N);
       grid.globalRefine(1);
 

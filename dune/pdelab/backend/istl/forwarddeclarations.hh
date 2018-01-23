@@ -3,9 +3,6 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_FORWARDDECLARATIONS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_FORWARDDECLARATIONS_HH
 
-// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
-#include "ensureistlinclude.hh"
-
 #ifndef DOXYGEN // These forward declarations are of no concern to Doxygen
 
 #include <dune/common/version.hh>

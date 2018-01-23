@@ -364,7 +364,7 @@ namespace Dune {
                            R& r_s, R& r_n) const
       {
         // dimensions
-        const unsigned int dim = IG::dimension;
+        const unsigned int dim = IG::Entity::dimension;
 
         // subspaces
         using namespace Indices;
@@ -563,7 +563,7 @@ namespace Dune {
                               LocalMatrix& mat_ns, LocalMatrix& mat_nn) const
       {
         // dimensions
-        const unsigned int dim = IG::dimension;
+        const unsigned int dim = IG::Entity::dimension;
 
         // subspaces
         using namespace Indices;
@@ -772,7 +772,7 @@ namespace Dune {
                            R& r) const
       {
         // dimensions
-        const unsigned int dim = IG::dimension;
+        const unsigned int dim = IG::Entity::dimension;
 
         // subspaces
         using namespace Indices;
@@ -957,7 +957,7 @@ namespace Dune {
                               LocalMatrix& mat) const
       {
         // dimensions
-        const unsigned int dim = IG::dimension;
+        const unsigned int dim = IG::Entity::dimension;
 
         // subspaces
         using namespace Indices;
@@ -1231,7 +1231,7 @@ namespace Dune {
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
       {
         // dimensions
-        static const unsigned int dim = IG::dimension;
+        static const unsigned int dim = IG::Entity::dimension;
 
         // subspaces
         using namespace Indices;

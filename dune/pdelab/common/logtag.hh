@@ -91,7 +91,7 @@ int main() {
       /**
        * This calls formatFunc(s) to write the tag.
        */
-      virtual void writeTag(std::ostream &s) const { formatFunc(s); }
+      virtual void writeTag(std::ostream &s) const override { formatFunc(s); }
     };
     //! Convenience function to create a GeneralLogtagFormatter
     template<class FormatFunc>

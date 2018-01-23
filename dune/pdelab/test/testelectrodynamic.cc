@@ -147,7 +147,7 @@ public:
   template <typename IG>
   bool isDirichlet(const IG& intersection,
                    const Dune::FieldVector<typename IG::ctype,
-                                           IG::dimension - 1>&) const
+                                           IG::mydimension>&) const
   {
     // see note in MeshInfo
     int boundarySegmentIndex =

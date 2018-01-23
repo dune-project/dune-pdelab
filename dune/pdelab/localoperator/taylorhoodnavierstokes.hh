@@ -316,7 +316,7 @@ namespace Dune {
         const unsigned int vsize = lfsv_v_pfs.child(0).size();
 
         // dimensions
-        static const unsigned int dim = IG::dimension;
+        static const unsigned int dim = IG::Entity::dimension;
 
         // get geometry
         auto geo = ig.geometry();

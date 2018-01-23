@@ -83,14 +83,14 @@ namespace Dune {
 
       /*! \brief Return true if method is implicit
        */
-      virtual bool implicit () const
+      virtual bool implicit () const override
       {
         return (theta > 0.0);
       }
 
       /*! \brief Return number of stages s of the method
        */
-      virtual unsigned s () const
+      virtual unsigned s () const override
       {
         return 1;
       }
@@ -98,7 +98,7 @@ namespace Dune {
       /*! \brief Return entries of the A matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R a (int r, int i) const
+      virtual R a (int r, int i) const override
       {
         return A[r-1][i];
       }
@@ -106,7 +106,7 @@ namespace Dune {
       /*! \brief Return entries of the B matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R b (int r, int i) const
+      virtual R b (int r, int i) const override
       {
         return B[r-1][i];
       }
@@ -114,14 +114,14 @@ namespace Dune {
       /*! \brief Return entries of the d Vector
         \note that i ∈ 0,...,s
       */
-      virtual R d (int i) const
+      virtual R d (int i) const override
       {
         return D[i];
       }
 
       /*! \brief Return name of the scheme
        */
-      virtual std::string name () const
+      virtual std::string name () const override
       {
         return std::string("one step theta");
       }
@@ -151,7 +151,7 @@ namespace Dune {
 
       /*! \brief Return name of the scheme
        */
-      virtual std::string name () const
+      virtual std::string name () const override
       {
         return std::string("explicit Euler");
       }
@@ -176,7 +176,7 @@ namespace Dune {
 
      /*! \brief Return name of the scheme
       */
-     virtual std::string name () const
+     virtual std::string name () const override
      {
        return std::string("implicit Euler");
      }
@@ -208,14 +208,14 @@ namespace Dune {
 
       /*! \brief Return true if method is implicit
        */
-      virtual bool implicit () const
+      virtual bool implicit () const override
       {
         return false;
       }
 
       /*! \brief Return number of stages s of the method
        */
-      virtual unsigned s () const
+      virtual unsigned s () const override
       {
         return 2;
       }
@@ -223,7 +223,7 @@ namespace Dune {
       /*! \brief Return entries of the A matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R a (int r, int i) const
+      virtual R a (int r, int i) const override
       {
         return A[r-1][i];
       }
@@ -231,7 +231,7 @@ namespace Dune {
       /*! \brief Return entries of the B matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R b (int r, int i) const
+      virtual R b (int r, int i) const override
       {
         return B[r-1][i];
       }
@@ -239,14 +239,14 @@ namespace Dune {
       /*! \brief Return entries of the d Vector
         \note that i ∈ 0,...,s
       */
-      virtual R d (int i) const
+      virtual R d (int i) const override
       {
         return D[i];
       }
 
       /*! \brief Return name of the scheme
        */
-      virtual std::string name () const
+      virtual std::string name () const override
       {
         return std::string("Heun");
       }
@@ -284,14 +284,14 @@ namespace Dune {
 
       /*! \brief Return true if method is implicit
        */
-      virtual bool implicit () const
+      virtual bool implicit () const override
       {
         return false;
       }
 
       /*! \brief Return number of stages s of the method
        */
-      virtual unsigned s () const
+      virtual unsigned s () const override
       {
         return 3;
       }
@@ -299,7 +299,7 @@ namespace Dune {
       /*! \brief Return entries of the A matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R a (int r, int i) const
+      virtual R a (int r, int i) const override
       {
         return A[r-1][i];
       }
@@ -307,7 +307,7 @@ namespace Dune {
       /*! \brief Return entries of the B matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R b (int r, int i) const
+      virtual R b (int r, int i) const override
       {
         return B[r-1][i];
       }
@@ -315,14 +315,14 @@ namespace Dune {
       /*! \brief Return entries of the d Vector
         \note that i ∈ 0,...,s
       */
-      virtual R d (int i) const
+      virtual R d (int i) const override
       {
         return D[i];
       }
 
       /*! \brief Return name of the scheme
        */
-      virtual std::string name () const
+      virtual std::string name () const override
       {
         return std::string("Shu's third order method");
       }
@@ -363,14 +363,14 @@ namespace Dune {
 
       /*! \brief Return true if method is implicit
        */
-      virtual bool implicit () const
+      virtual bool implicit () const override
       {
         return false;
       }
 
       /*! \brief Return number of stages s of the method
        */
-      virtual unsigned s () const
+      virtual unsigned s () const override
       {
         return 4;
       }
@@ -378,7 +378,7 @@ namespace Dune {
       /*! \brief Return entries of the A matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R a (int r, int i) const
+      virtual R a (int r, int i) const override
       {
         return A[r-1][i];
       }
@@ -386,7 +386,7 @@ namespace Dune {
       /*! \brief Return entries of the B matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R b (int r, int i) const
+      virtual R b (int r, int i) const override
       {
         return B[r-1][i];
       }
@@ -394,14 +394,14 @@ namespace Dune {
       /*! \brief Return entries of the d Vector
         \note that i ∈ 0,...,s
       */
-      virtual R d (int i) const
+      virtual R d (int i) const override
       {
         return D[i];
       }
 
       /*! \brief Return name of the scheme
        */
-      virtual std::string name () const
+      virtual std::string name () const override
       {
         return std::string("RK4");
       }
@@ -441,14 +441,14 @@ namespace Dune {
 
       /*! \brief Return true if method is implicit
        */
-      virtual bool implicit () const
+      virtual bool implicit () const override
       {
         return true;
       }
 
       /*! \brief Return number of stages s of the method
        */
-      virtual unsigned s () const
+      virtual unsigned s () const override
       {
         return 2;
       }
@@ -456,7 +456,7 @@ namespace Dune {
       /*! \brief Return entries of the A matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R a (int r, int i) const
+      virtual R a (int r, int i) const override
       {
         return A[r-1][i];
       }
@@ -464,7 +464,7 @@ namespace Dune {
       /*! \brief Return entries of the B matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R b (int r, int i) const
+      virtual R b (int r, int i) const override
       {
         return B[r-1][i];
       }
@@ -472,14 +472,14 @@ namespace Dune {
       /*! \brief Return entries of the d Vector
         \note that i ∈ 0,...,s
       */
-      virtual R d (int i) const
+      virtual R d (int i) const override
       {
         return D[i];
       }
 
       /*! \brief Return name of the scheme
        */
-      virtual std::string name () const
+      virtual std::string name () const override
       {
         return std::string("Alexander (order 2)");
       }
@@ -523,14 +523,14 @@ namespace Dune {
 
       /*! \brief Return true if method is implicit
        */
-      virtual bool implicit () const
+      virtual bool implicit () const override
       {
         return true;
       }
 
       /*! \brief Return number of stages s of the method
        */
-      virtual unsigned s () const
+      virtual unsigned s () const override
       {
         return 3;
       }
@@ -538,7 +538,7 @@ namespace Dune {
       /*! \brief Return entries of the A matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R a (int r, int i) const
+      virtual R a (int r, int i) const override
       {
         return A[r-1][i];
       }
@@ -546,7 +546,7 @@ namespace Dune {
       /*! \brief Return entries of the B matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R b (int r, int i) const
+      virtual R b (int r, int i) const override
       {
         return B[r-1][i];
       }
@@ -554,14 +554,14 @@ namespace Dune {
       /*! \brief Return entries of the d Vector
         \note that i ∈ 0,...,s
       */
-      virtual R d (int i) const
+      virtual R d (int i) const override
       {
         return D[i];
       }
 
       /*! \brief Return name of the scheme
        */
-      virtual std::string name () const
+      virtual std::string name () const override
       {
         return std::string("Fractional step theta");
       }
@@ -621,14 +621,14 @@ namespace Dune {
 
       /*! \brief Return true if method is implicit
        */
-      virtual bool implicit () const
+      virtual bool implicit () const override
       {
         return true;
       }
 
       /*! \brief Return number of stages s of the method
        */
-      virtual unsigned s () const
+      virtual unsigned s () const override
       {
         return 3;
       }
@@ -636,7 +636,7 @@ namespace Dune {
       /*! \brief Return entries of the A matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R a (int r, int i) const
+      virtual R a (int r, int i) const override
       {
         return A[r-1][i];
       }
@@ -644,7 +644,7 @@ namespace Dune {
       /*! \brief Return entries of the B matrix
         \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
-      virtual R b (int r, int i) const
+      virtual R b (int r, int i) const override
       {
         return B[r-1][i];
       }
@@ -652,14 +652,14 @@ namespace Dune {
       /*! \brief Return entries of the d Vector
         \note that i ∈ 0,...,s
       */
-      virtual R d (int i) const
+      virtual R d (int i) const override
       {
         return D[i];
       }
 
       /*! \brief Return name of the scheme
        */
-      virtual std::string name () const
+      virtual std::string name () const override
       {
         return std::string("Alexander (claims order 3)");
       }

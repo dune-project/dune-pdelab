@@ -6,7 +6,9 @@
 #include<iostream>
 #include<vector>
 
+#include <dune/common/filledarray.hh>
 #include <dune/common/parallel/mpihelper.hh>
+#include <dune/common/std/make_array.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 
@@ -133,7 +135,7 @@ int main(int argc, char** argv)
     if (false)
     {
       Dune::FieldVector<double,2> L(1.0);
-      std::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::array<int,2> N(Dune::filledArray<2,int>(1));
       Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(5);
       testrt0(grid.leafGridView());
@@ -154,7 +156,7 @@ int main(int argc, char** argv)
 
 #if HAVE_DUNE_ALUGRID
     using ALUType = Dune::ALUGrid<2, 2, Dune::simplex, Dune::nonconforming>;
-    auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::make_array(1u, 1u));
+    auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::Std::make_array(1u, 1u));
     alugrid->globalRefine(5);
     testrt0(alugrid->leafGridView());
 #endif

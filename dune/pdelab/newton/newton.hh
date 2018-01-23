@@ -202,7 +202,7 @@ namespace Dune
       }
 
     protected:
-      virtual void defect(TestVector& r)
+      virtual void defect(TestVector& r) override
       {
         r = 0.0;
         this->gridoperator_.residual(*this->u_, r);
@@ -459,7 +459,7 @@ namespace Dune
         this->abs_limit_ = abs_limit_;
       }
 
-      virtual bool terminate()
+      virtual bool terminate() override
       {
         if (force_iteration_ && this->res_.iterations == 0)
           return false;
@@ -532,7 +532,7 @@ namespace Dune
         reassemble_threshold_ = reassemble_threshold;
       }
 
-      virtual void prepare_step(Matrix& A, TstV& )
+      virtual void prepare_step(Matrix& A, TstV& ) override
       {
         this->reassembled_ = false;
         if (this->res_.defect/this->prev_defect_ > reassemble_threshold_)
@@ -639,7 +639,7 @@ namespace Dune
         damping_factor_ = damping_factor;
       }
 
-      virtual void line_search(TrialVector& z, TestVector& r)
+      virtual void line_search(TrialVector& z, TestVector& r) override
       {
         if (strategy_ == noLineSearch)
           {

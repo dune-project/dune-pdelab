@@ -7,6 +7,7 @@
 
 #include <iostream>
 
+#include <dune/common/filledarray.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
 #include <dune/grid/yaspgrid.hh>
@@ -250,7 +251,7 @@ int main(int argc, char** argv)
       // need a grid in order to test grid functions
       Dune::FieldVector<double,2> L(1.0);
       L[0] *= 5;
-      std::array<int,2> N(Dune::fill_array<int,2>(2));
+      std::array<int,2> N(Dune::filledArray<2, int>(2));
       N[0] = 10;
       std::bitset<2> B(false);
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,1);
@@ -265,7 +266,7 @@ int main(int argc, char** argv)
       std::cout << "3D tests" << std::endl;
       // need a grid in order to test grid functions
       Dune::FieldVector<double,3> L(1.0);
-      std::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::array<int,3> N(Dune::filledArray<3,int>(1));
       std::bitset<3> B(false);
       Dune::YaspGrid<3> grid(L,N,B,1);
       grid.globalRefine(1);

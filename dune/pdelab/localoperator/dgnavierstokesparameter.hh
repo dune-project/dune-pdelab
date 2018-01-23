@@ -75,16 +75,6 @@ namespace Dune {
       //! Traits class
       typedef typename Base::Traits Traits;
 
-      //! Constructor
-      DUNE_DEPRECATED_MSG("This constructor is deprecated. Use the parameter tree version instead!")
-      DGNavierStokesParameters(const std::string& method, const RF mu, const RF rho,
-                               F& f, B& b, V& v, J& j, IP& ip) :
-        Base(mu,rho,f,b,v,j) ,
-        _ip(ip)
-      {
-        initFromString(method);
-      }
-
       /** \brief Constructor that parses values from parameter tree.
 
           In order to parse the values correctly

@@ -2,7 +2,8 @@
 #ifndef DUNE_PDELAB_CONSTRAINTS_INTERIORNODE_HH
 #define DUNE_PDELAB_CONSTRAINTS_INTERIORNODE_HH
 
-#include <dune/common/array.hh>
+#include <array>
+
 #include <dune/grid/common/gridenums.hh>
 #include <dune/geometry/referenceelements.hh>
 #include <dune/localfunctions/common/interfaceswitch.hh>

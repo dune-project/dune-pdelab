@@ -3,6 +3,8 @@
 #include "config.h"
 #endif
 
+#include <dune/common/filledarray.hh>
+
 #include <dune/pdelab/boilerplate/pdelab.hh>
 #include <dune/pdelab/localoperator/l2.hh>
 
@@ -176,7 +178,7 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   Dune::PDELab::OneStepMethod<NumberType,IGO,PDESOLVER,V,V> osm(method,igo,pdesolver);
   osm.setVerbosityLevel(2);
 
-  auto stationaryVTKWriter = std::make_shared<Dune::SubsamplingVTKWriter<typename GM::LeafGridView> >(grid.leafGridView(),degree-1);
+  auto stationaryVTKWriter = std::make_shared<Dune::SubsamplingVTKWriter<typename GM::LeafGridView> >(grid.leafGridView(),Dune::refinementIntervals(degree));
   Dune::VTKSequenceWriter<typename GM::LeafGridView> vtkwriter(stationaryVTKWriter,basename,"","");
   typedef Dune::PDELab::DiscreteGridFunction<FS,V> DGF;
   DGF xdgf(fs,x);
@@ -228,7 +230,7 @@ int main(int argc, char **argv)
 
     typedef Dune::YaspGrid<dim> GM;
     Dune::FieldVector<double,dim> L(1.0);
-    std::array<int,dim> N(Dune::fill_array<int,dim>(cells));
+    std::array<int,dim> N(Dune::filledArray<dim,int>(cells));
 
     std::bitset<dim> periodic (false);
     periodic[0] = true;

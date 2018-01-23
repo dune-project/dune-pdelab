@@ -3,7 +3,8 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_ENTITYINDEXCACHE_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_ENTITYINDEXCACHE_HH
 
-#include <dune/common/array.hh>
+#include <array>
+
 #include <dune/typetree/utility.hh>
 
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>

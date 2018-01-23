@@ -132,15 +132,14 @@ public:
     typedef typename LFSU::Traits::SizeType size_type;
 
     // dimensions
-    const int dim = IG::dimension;
+    const int localdim = IG::mydimension;
 
     // select quadrature rule for face
     Dune::GeometryType gtface = ig.geometryInInside().type();
-    const Dune::QuadratureRule<DF,dim-1>&
-      rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
+    const auto& rule = Dune::QuadratureRules<DF,localdim>::rule(gtface,intorder);
 
     // loop over quadrature points and integrate normal flux
-    for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin();
+    for (typename Dune::QuadratureRule<DF,localdim>::const_iterator it=rule.begin();
          it!=rule.end(); ++it)
       {
         // skip rest if we are on Dirichlet boundary
@@ -148,7 +147,7 @@ public:
           continue;
 
         // position of quadrature point in local coordinates of element
-        Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
+        auto local = ig.geometryInInside().global(it->position());
 
         // evaluate basis functions at integration point
         std::vector<Range> phi(lfsu_s.size());
@@ -160,8 +159,7 @@ public:
           u += x_s(lfsu_s,i)*phi[i];
 
         // evaluate flux boundary condition
-        Dune::FieldVector<RF,dim>
-          globalpos = ig.geometry().global(it->position());
+        auto globalpos = ig.geometry().global(it->position());
         RF j;
         if (globalpos[1]<0.5)
           j = 1.0;

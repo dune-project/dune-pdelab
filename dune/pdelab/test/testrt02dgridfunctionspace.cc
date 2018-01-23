@@ -8,6 +8,7 @@
 #include <sstream>
 
 #include <dune/common/parallel/mpihelper.hh>
+#include <dune/common/std/make_array.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 #if HAVE_ALBERTA
@@ -53,7 +54,7 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   typedef Dune::PDELab::DiscreteGridFunctionPiola<GFS,X> DGF;
   DGF dgf(gfs,x);                     // make a grid function
 
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);  // plot result
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv, Dune::refinementLevels(3));  // plot result
   vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(dgf,"rt02d"));
   vtkwriter.write(filename.str(),Dune::VTK::ascii);
 }
@@ -102,7 +103,7 @@ int main(int argc, char** argv)
     std::cout << "ALU" << std::endl;
     {
       using ALUType = Dune::ALUGrid<2, 2, Dune::simplex, Dune::nonconforming>;
-      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::make_array(1u, 1u));
+      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::Std::make_array(1u, 1u));
       alugrid->globalRefine(4);
 
       rt02DGridFunctionSpace(alugrid->leafGridView(), "alu");

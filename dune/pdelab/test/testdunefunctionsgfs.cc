@@ -114,7 +114,7 @@ void solvePoissonProblem()
   typedef PDELab::GridOperator<GridFunctionSpace,
                                GridFunctionSpace,
                                LOP,
-                               PDELab::istl::BCRSMatrixBackend<>,
+                               PDELab::ISTL::BCRSMatrixBackend<>,
                                double,double,double,C,C> GO;
   GO go(gfs,constraintsContainer,gfs,constraintsContainer,lop, {9});
 
@@ -171,7 +171,7 @@ void solvePoissonProblem()
   // Output result to VTK file
   auto pressureFunction = Functions::makeDiscreteGlobalBasisFunction<double>(*basis,x);
 
-  SubsamplingVTKWriter<GridView> vtkWriter(gridView,2);
+  SubsamplingVTKWriter<GridView> vtkWriter(gridView, refinementLevels(2));
   vtkWriter.addVertexData(pressureFunction, VTK::FieldInfo("pressure", VTK::FieldInfo::Type::scalar, 1));
   vtkWriter.write("testdunefunctionsgfs-poisson");
 

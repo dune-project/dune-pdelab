@@ -5,10 +5,9 @@
 #define DUNE_PDELAB_ORDERING_SUBORDERING_HH
 
 #include <algorithm>
+#include <array>
 #include <iterator>
 #include <memory>
-
-#include <dune/common/array.hh>
 
 #include <dune/typetree/treepath.hh>
 #include <dune/typetree/proxynode.hh>

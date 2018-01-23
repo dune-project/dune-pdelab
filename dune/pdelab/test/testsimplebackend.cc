@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 
+#include <dune/common/filledarray.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/istl/solvers.hh>
@@ -255,7 +256,7 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      std::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::array<int,2> N(Dune::filledArray<2,int>(1));
       Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 
@@ -281,7 +282,7 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      std::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::array<int,2> N(Dune::filledArray<2,int>(1));
       Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 

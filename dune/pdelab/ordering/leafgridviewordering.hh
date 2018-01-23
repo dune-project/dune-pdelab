@@ -52,7 +52,7 @@ namespace Dune {
 
 #endif // DOXYGEN
 
-      virtual void update()
+      virtual void update() override
       {
         LocalOrdering& lo = this->localOrdering();
         lo.update_a_priori_fixed_size();

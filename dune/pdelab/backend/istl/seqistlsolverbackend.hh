@@ -3,9 +3,6 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_SEQISTLSOLVERBACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_SEQISTLSOLVERBACKEND_HH
 
-// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
-#include "ensureistlinclude.hh"
-
 #include <dune/common/deprecated.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
@@ -46,13 +43,13 @@ namespace Dune {
         : gos(gos_)
       {}
 
-      virtual void apply (const X& x, Y& y) const
+      virtual void apply (const X& x, Y& y) const override
       {
         y = 0.0;
         gos.jacobian_apply(x,y);
       }
 
-      virtual void applyscaleadd (field_type alpha, const X& x, Y& y) const
+      virtual void applyscaleadd (field_type alpha, const X& x, Y& y) const override
       {
         Y temp(y);
         temp = 0.0;

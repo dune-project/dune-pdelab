@@ -430,7 +430,7 @@ namespace Dune {
         using size_type = typename LFSU::Traits::SizeType;
 
         // dimensions
-        const int dim = IG::dimension;
+        const int dim = IG::Entity::dimension;
 
         // References to inside and outside cells
         const auto& cell_inside = ig.inside();
@@ -527,7 +527,7 @@ namespace Dune {
         using size_type = typename LFSU::Traits::SizeType;
 
         // dimensions
-        const int dim = IG::dimension;
+        const int dim = IG::Entity::dimension;
 
         // References to the inside cell
         const auto& cell_inside = ig.inside();

@@ -60,10 +60,6 @@ namespace Dune {
 
         size_type avg_nz_per_row;
 
-        DUNE_DEPRECATED_MSG("Please us the constructor taking the avg non-zeros")
-        MatrixBackend() : avg_nz_per_row(0)
-        {}
-
         MatrixBackend(size_type avg_nz_per_row_) : avg_nz_per_row(avg_nz_per_row_)
         {}
 
@@ -79,19 +75,6 @@ namespace Dune {
       };
 
     } // namespace Eigen
-
-    /** \brief For backward compatibility: access to Eigen::VectorBackend by its old name
-     * \deprecated Use Eigen::VectorBackend instead!
-     */
-    using EigenVectorBackend DUNE_DEPRECATED_MSG("Use Eigen::VectorBackend instead of EigenVectorBackend")
-        = Eigen::VectorBackend;
-
-    /** \brief For backward compatibility: access to Eigen::MatrixBackend by its old name
-     * \deprecated Use Eigen::MatrixBackend instead!
-     */
-    template<int _Options = ::Eigen::RowMajor>
-    using EigenMatrixBackend DUNE_DEPRECATED_MSG("Use Eigen::MatrixBackend instead of EigenMatrixBackend")
-        = Eigen::MatrixBackend<_Options>;
 
   } // namespace PDELab
 } // namespace Dune

@@ -8,6 +8,7 @@
 #include <sstream>
 
 #include <dune/common/parallel/mpihelper.hh>
+#include <dune/common/std/make_array.hh>
 
 #include <dune/geometry/type.hh>
 #include <dune/geometry/quadraturerules.hh>
@@ -79,7 +80,7 @@ double interpolationerror (const GV& gv, const FEM &fem)
 }
 
 template<int k, typename Grid>
-void run_test(std::shared_ptr<Grid> grid, int &result, unsigned int maxelements, std::string name)
+void run_test(const std::unique_ptr<Grid>& grid, int &result, unsigned int maxelements, std::string name)
 {
   std::cout << std::endl
             << "Testing P" << k << "2D interpolation with " << name << std::endl;
@@ -150,7 +151,7 @@ int main(int argc, char** argv)
 
 #if HAVE_DUNE_ALUGRID
     using ALUType = Dune::ALUGrid<2, 2, Dune::simplex, Dune::nonconforming>;
-    auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::make_array(1u, 1u));
+    auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::Std::make_array(1u, 1u));
     run_test<1>(alugrid, result, 25000, "alu-triangle");
     run_test<2>(alugrid, result, 25000, "alu-triangle");
     run_test<3>(alugrid, result, 25000, "alu-triangle");

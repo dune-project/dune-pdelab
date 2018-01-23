@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 
     // output grid to VTK file
     typedef typename ES::Traits::GridView GV;
-    Dune::SubsamplingVTKWriter<GV> vtkwriter(es.gridView(),3);
+    Dune::SubsamplingVTKWriter<GV> vtkwriter(es.gridView(), Dune::refinementLevels(3));
     Dune::PDELab::addSolutionToVTKWriter(vtkwriter,fs.getGFS(),x);
     vtkwriter.write("advection_stationary",Dune::VTK::ascii);
 

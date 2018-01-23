@@ -14,6 +14,7 @@
 */
 
 // first of all we include a lot of dune grids and pdelab files
+#include <array>
 #include <iostream>
 #include <memory>
 
@@ -21,6 +22,7 @@
 #include <dune/common/parametertreeparser.hh>
 #include <dune/common/classname.hh>
 #include <dune/common/exceptions.hh>
+#include <dune/common/filledarray.hh>
 #include <dune/common/fvector.hh>
 
 #include <dune/geometry/type.hh>
@@ -98,7 +100,7 @@ namespace Dune {
             {
                 FieldVector<ctype,dimworld> lowerLeft(0.0);
                 FieldVector<ctype,dimworld> upperRight(1.0);
-                array<unsigned int,dim> elements; elements.fill(cells);
+                std::array<unsigned int,dim> elements; elements.fill(cells);
 
                 StructuredGridFactory<T> factory;
 
@@ -115,12 +117,12 @@ namespace Dune {
 
 
             StructuredGrid (Dune::GeometryType::BasicType meshtype,
-                            array<double,dimworld> lower_left, array<double,dimworld> upper_right,
-                            array<unsigned int,dim> cells)
+                            std::array<double,dimworld> lower_left, std::array<double,dimworld> upper_right,
+                            std::array<unsigned int,dim> cells)
             {
                 FieldVector<ctype,dimworld> lowerLeft;
                 FieldVector<ctype,dimworld> upperRight;
-                array<unsigned int,dim> elements;
+                std::array<unsigned int,dim> elements;
 
                 // copy data to correct types for StructuredGridFactory
                 for (size_t i=0; i<dimworld; i++)
@@ -209,7 +211,7 @@ namespace Dune {
 
                 // copy data to correct types for YaspGrid
                 Dune::FieldVector<double,dimworld> L(1.0);
-                std::array<int,dimworld> N(Dune::fill_array<int,dimworld>(cells));
+                std::array<int,dimworld> N(Dune::filledArray<dimworld, int>(cells));
                 std::bitset<dimworld> B(false);
 
                 // instantiate the grid
@@ -218,8 +220,8 @@ namespace Dune {
 
             // constructor with sizes given
             StructuredGrid (Dune::GeometryType::BasicType meshtype,
-                            array<double,dimworld> lower_left, array<double,dimworld> upper_right,
-                            array<unsigned int,dim> cells, int overlap=1)
+                            std::array<double,dimworld> lower_left, std::array<double,dimworld> upper_right,
+                            std::array<unsigned int,dim> cells, int overlap=1)
             {
                 // check that lower right corner is the origin
                 for(int d = 0; d < dimworld; ++d)
@@ -248,8 +250,8 @@ namespace Dune {
 
             // constructor with periodicity argument
             StructuredGrid (Dune::GeometryType::BasicType meshtype,
-                            array<double,dimworld> lower_left, array<double,dimworld> upper_right,
-                            array<unsigned int,dim> cells, array<bool,dim> periodic, int overlap=1)
+                            std::array<double,dimworld> lower_left, std::array<double,dimworld> upper_right,
+                            std::array<unsigned int,dim> cells, std::array<bool,dim> periodic, int overlap=1)
             {
                 // check that lower right corner is the origin
                 for(int d = 0; d < dimworld; ++d)

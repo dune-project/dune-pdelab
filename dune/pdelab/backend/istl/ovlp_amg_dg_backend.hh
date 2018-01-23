@@ -1,9 +1,6 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_OVLP_AMG_DG_BACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_OVLP_AMG_DG_BACKEND_HH
 
-// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
-#include "ensureistlinclude.hh"
-
 #include <dune/common/parametertree.hh>
 #include <dune/common/power.hh>
 
@@ -352,7 +349,7 @@ namespace Dune {
 
       \copydoc Preconditioner::pre(X&,Y&)
     */
-    virtual void pre (V& x, W& b)
+    virtual void pre (V& x, W& b) override
     {
       using Backend::native;
       dgprec.pre(native(x),native(b));
@@ -366,7 +363,7 @@ namespace Dune {
 
       \copydoc Preconditioner::apply(X&,const Y&)
     */
-    virtual void apply (V& x, const W& b)
+    virtual void apply (V& x, const W& b) override
     {
       using Backend::native;
       // need local copies to store defect and solution
@@ -428,7 +425,7 @@ namespace Dune {
 
       \copydoc Preconditioner::post(X&)
     */
-    virtual void post (V& x)
+    virtual void post (V& x) override
     {
       dgprec.post(Backend::native(x));
       CGV cgv(cggfs,0.0);
