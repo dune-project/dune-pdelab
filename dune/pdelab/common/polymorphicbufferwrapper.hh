@@ -86,6 +86,7 @@ namespace Dune {
 
       int senderRank() const
       {
+        assert(_sender_rank >= 0);
         return _sender_rank;
       }
 
