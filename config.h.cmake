@@ -41,10 +41,14 @@
 
 /* This is only true if PETSc was found by configure _and_ if the application
    uses the UG_CPPFLAGS */
+#ifndef HAVE_PETSC
 #cmakedefine HAVE_PETSC ENABLE_PETSC
+#endif
 
 /* This is only true if Eigen3 was found by configure */
+#ifndef HAVE_EIGEN
 #cmakedefine HAVE_EIGEN ENABLE_EIGEN
+#endif
 
 /* Define to 1 if sequential UG has been found */
 #cmakedefine PDELAB_SEQUENTIAL_UG 1
