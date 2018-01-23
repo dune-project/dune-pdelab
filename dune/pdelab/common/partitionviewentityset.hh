@@ -368,7 +368,7 @@ namespace Dune {
             auto range = std::equal_range(
               _geometry_types.begin(),
               _geometry_types.end(),
-              GeometryType(GeometryType::none,GV::dimension - codim),
+              GeometryTypes::none(GV::dimension - codim),
               [](const GeometryType& x, const GeometryType& y)
               {
                 // reverse order because we store in ascending order with regard to the codim, not the dim
