@@ -129,7 +129,13 @@ int main(int argc, char** argv)
         std::exit(77);
       }
 
-    auto grid = Dune::YaspGrid<2>({{1.0,1.0}},{{16,16}},0,1);
+    constexpr int dim = 2;
+
+    Dune::FieldVector<double,dim> L = {{1.0,1.0}};
+    std::array<int,dim> N = {{16,16}};
+    std::bitset<dim> periodic = 0;
+    int overlap = 1;
+    auto grid = Dune::YaspGrid<dim>(L,N,periodic,overlap);
     auto gv = grid.leafGridView();
     using GV = decltype(gv);
     using F = GV::ctype;
