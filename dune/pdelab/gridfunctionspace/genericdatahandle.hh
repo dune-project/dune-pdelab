@@ -249,7 +249,14 @@ namespace Dune {
         else
           {
             // call standard version of scatter - make sure to fix the reported communication size
-            needs_commit = _gather_scatter.scatter(buf_wrapper,n / sizeof(typename CommunicationDescriptor::OriginalDataType),e,_local_view);
+            size_type size = n;
+            if (_communication_descriptor.transmitRank())
+              {
+                // this takes care of the rank transmission done inside the buffer
+                size -= sizeof(int);
+              }
+            size /= sizeof(typename CommunicationDescriptor::OriginalDataType);
+            needs_commit = _gather_scatter.scatter(buf_wrapper,size,e,_local_view);
           }
 
         if (needs_commit)
