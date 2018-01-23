@@ -156,6 +156,12 @@ if(UG_FOUND)
                 TIMEOUT 300)
 endif()
 
+
+dune_add_test(SOURCES testranktransmission.cc
+              MPI_RANKS 2
+              TIMEOUT 300)
+
+
 exclude_from_headercheck(
   gridexamples.hh
   helmholtzoperator.hh

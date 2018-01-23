@@ -171,7 +171,7 @@ namespace Dune {
         {
           // Communicate different things than char.
           using Buf = Dune::PDELab::PolymorphicBufferWrapper<MessageBuffer>;
-          Buf bufWrapper(buff);
+          Buf bufWrapper(buff,Dune::PDELab::PolymorphicBufferWrapper<MessageBuffer>::Mode::send);
 
           // Call gather for all vectors using tmp
           gatherTMP<0> (bufWrapper,e);
@@ -226,7 +226,7 @@ namespace Dune {
         {
           // Communicate different things than char.
           using Buf = Dune::PDELab::PolymorphicBufferWrapper<MessageBuffer>;
-          Buf bufWrapper(buff);
+          Buf bufWrapper(buff,Dune::PDELab::PolymorphicBufferWrapper<MessageBuffer>::Mode::receive);
 
           // Call scatter for all vectors using tmp
           scatterTMP<0> (bufWrapper, e);
