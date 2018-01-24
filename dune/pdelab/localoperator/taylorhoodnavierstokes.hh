@@ -46,11 +46,6 @@ namespace Dune {
 
       \tparam P A suitable parameter class with the interface of
       TaylorHoodNavierStokesDefaultParameters
-
-        \tparam navier May be set to false, to avoid assembling of
-        navier term in case rho=0.
-
-        \tparam q Quadrature order.
     */
 
     template<typename P>
@@ -197,7 +192,7 @@ namespace Dune {
 
               for (size_t i=0; i<vsize; i++){
 
-                // integrate grad u * grad phi_i
+                // integrate mu * grad u * grad phi_i
                 r.accumulate(lfsu_v,i, mu * (jacu[d] * gradphi[i]) * factor);
 
                 // integrate (grad u)^T * grad phi_i
