@@ -194,7 +194,7 @@ namespace Dune {
       bctype(const IG& is,
              const typename Traits::IntersectionDomain& x) const
       {
-        typename B::Traits::RangeType y;
+        typename B::Traits::BoundaryCondition::Type y;
         _b.evaluate(is,x,y);
         return y;
       }
