@@ -19,6 +19,9 @@ namespace Dune {
 
   /** \brief Define the Pk Lagrange basis functions in 1d on the reference interval
    *
+   * Unlike the corresponding implementation in dune-localfunctions, the order k
+   * is a run-time parameter here!
+   *
    *  \tparam D Type to represent domain.
    *  \tparam R Type to represent range.
    */
