@@ -15,7 +15,7 @@ namespace Dune {
 
     /** \brief FiniteElementMap for the Pk basis in 1d
      *
-     *  \note k is a runtime varbiable.
+     *  \note k is a runtime variable.
      *
      *  \tparam D Type to represent domain.
      *  \tparam R Type to represent range.
