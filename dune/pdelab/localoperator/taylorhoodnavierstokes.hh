@@ -484,9 +484,7 @@ namespace Dune {
                     for(size_t j=0; j< lfsu_v.size(); ++j)
                       mat.accumulate(lfsv_v,i,lfsu_v,j, pre_factor * phi[j]);
                   } // k
-                }
 
-                if(navier){
                   const auto pre_factor = factor * rho *  phi[i];
                   for(size_t j=0; j< lfsu_v.size(); ++j)
                     mat.accumulate(lfsv_v,i,lfsu_v,j,  pre_factor * (vu * gradphi[j]));
