@@ -116,7 +116,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
   typedef Dune::YaspGrid<dim> GM;
 
   Dune::FieldVector<double,dim> L(1.0);
-  Dune::array<int,dim> N(Dune::fill_array<int,dim>(cells));
+  std::array<int,dim> N = {cells, cells};
   std::bitset<dim> B(false);
 
   typedef Dune::YaspFixedSizePartitioner<dim> YP;
@@ -144,7 +144,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
   typedef typename FEMB::FEM FEM;
   typedef typename CONB::CON CON;
-  typedef Dune::PDELab::istl::VectorBackend<> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
 
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   auto gv = grid->levelGridView(grid->maxLevel());
@@ -170,7 +170,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
   Dune::PDELab::constraints(bctype,gfs,cc);
   Dune::PDELab::constraints_exterior(bctype,gfs,cc_exterior);
 
-  Dune::PDELab::PureNeumannBoundaryCondition pnbc;
+  Dune::PDELab::NoDirichletConstraintsParameters pnbc;
   Dune::PDELab::constraints(pnbc,gfs,cc_bnd_neu_int_dir);
 
   // set initial guess
@@ -184,7 +184,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
   typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
   LOP lop(problem);
 
-  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
   auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
 
@@ -201,7 +201,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
   go.jacobian(x,AF); // assemble fine grid matrix
   typedef Dune::PDELab::OverlappingOperator<CC,M,V,V> POP;
   auto popf = std::make_shared<POP>(cc,AF);
-  typedef Dune::PDELab::istl::ParallelHelper<GFS> PIH;
+  typedef Dune::PDELab::ISTL::ParallelHelper<GFS> PIH;
   PIH pihf(gfs);
   typedef Dune::PDELab::OverlappingScalarProduct<GFS,V> OSP;
   OSP ospf(gfs,pihf);
