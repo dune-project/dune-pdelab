@@ -80,8 +80,8 @@ namespace Dune {
 
           } else {
 
-            MPI_Barrier(gfs.gridView().comm());
-            Dune::Timer timer_setup;
+            gfs.gridView().comm().barrier();
+            Dune::Timer timer_coarse_solve;
 
             // coarse defect
             auto coarse_defect = coarse_space_->restrict_defect (d);
@@ -95,7 +95,7 @@ namespace Dune {
             auto coarse_correction = coarse_space_->prolongate_defect (v0);
             v += *coarse_correction;
 
-            coarse_time += timer_setup.elapsed();
+            coarse_time += timer_coarse_solve.elapsed();
             apply_calls++;
 
             Dune::PDELab::AddDataHandle<GFS,X> result_addh(gfs,v);
