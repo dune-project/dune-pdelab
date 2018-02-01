@@ -10,7 +10,6 @@
 #include <dune/pdelab/preconditioner/geneo/localoperator_ovlp_region.hh>
 
 #include <dune/pdelab/preconditioner/geneo/conbase_exterior.hh>
-#include <dune/pdelab/preconditioner/geneo/neumann_boundary_condition.hh>
 
 #include <dune/pdelab/preconditioner/geneo/geneobasis.hh>
 #include <dune/pdelab/preconditioner/geneo/liptonbabuskabasis.hh>
