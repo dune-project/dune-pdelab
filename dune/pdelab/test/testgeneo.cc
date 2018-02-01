@@ -250,7 +250,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
 
   auto partunityspace = std::make_shared<Dune::PDELab::SubdomainProjectedCoarseSpace<GFS,M,V,1> >(gfs, AF_exterior, subdomain_basis, verb);
-  auto prec = std::make_shared<Dune::PDELab::TwoLevelOverlappingAdditiveSchwarz<GFS,M,V,V>>(gfs, AF, partunityspace);
+  auto prec = std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,V,V>>(gfs, AF, partunityspace);
 
 
   // now solve defect equation A*v = d
