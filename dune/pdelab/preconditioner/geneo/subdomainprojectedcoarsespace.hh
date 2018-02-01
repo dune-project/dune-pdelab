@@ -103,7 +103,7 @@ namespace Dune {
           native(*(local_basis[i])) *= 1.0 / (native(*(local_basis[i])) * native(*(local_basis[i])));
         }
 
-        MPI_Barrier(gfs.gridView().comm());
+        gfs.gridView().comm().barrier();
         if (my_rank == 0) std::cout << "Matrix setup" << std::endl;
         Dune::Timer timer_setup;
 
