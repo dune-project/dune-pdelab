@@ -125,12 +125,7 @@ namespace Dune {
 
         if (my_rank == 0) std::cout << "Global basis size B=" << global_basis_size << std::endl;
 
-        int max_local_basis_size = 0;
-        for (int rank = 0; rank < ranks; rank++) {
-          if (local_basis_sizes[rank] > max_local_basis_size)
-            max_local_basis_size = local_basis_sizes[rank];
-        }
-
+        int max_local_basis_size = *std::max_element(local_basis_sizes.begin(),local_basis_sizes.end());
 
         coarse_system = std::make_shared<COARSE_M>(global_basis_size, global_basis_size, COARSE_M::row_wise);
 
