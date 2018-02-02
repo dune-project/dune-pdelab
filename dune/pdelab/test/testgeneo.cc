@@ -244,13 +244,13 @@ void driver(std::string basis_type, std::string part_unity_type) {
   else if (basis_type == "lipton_babuska")
     subdomain_basis = std::make_shared<Dune::PDELab::LiptonBabuskaBasis<GFS,M,V,V,1> >(gfs, AF_exterior, AF_ovlp, -1, *part_unity, nev, nev_arpack);
   else if (basis_type == "part_unity") // We can't test this one, it does not lead to sufficient error reduction. Let's instantiate it anyway for test's sake.
-    subdomain_basis = std::make_shared<Dune::PDELab::OneDimensionalSubdomainBasis<V> >(*part_unity);
+    subdomain_basis = std::make_shared<Dune::PDELab::SubdomainBasis<V> >(*part_unity);
   else
     DUNE_THROW(Dune::Exception, "Unkown selection in test driver!");
 
 
   auto partunityspace = std::make_shared<Dune::PDELab::SubdomainProjectedCoarseSpace<GFS,M,V> >(gfs, AF_exterior, subdomain_basis, verb);
-  auto prec = std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,V,V>>(gfs, AF, partunityspace);
+  auto prec = std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,V,V>>(gfs, AF, partunityspace, true, verb);
 
 
   // now solve defect equation A*v = d
