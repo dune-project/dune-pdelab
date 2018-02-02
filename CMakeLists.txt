@@ -42,7 +42,7 @@ dune_register_package_flags(LIBRARIES dunepdelab)
 dune_enable_all_packages()
 
 add_subdirectory(doc)
-add_subdirectory(dune)
+add_subdirectory(dune/pdelab)
 add_subdirectory(cmake/modules)
 add_subdirectory(lib)
 
