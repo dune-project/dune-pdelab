@@ -13,7 +13,6 @@
 
 #include <dune/pdelab/preconditioner/geneo/geneobasis.hh>
 #include <dune/pdelab/preconditioner/geneo/liptonbabuskabasis.hh>
-#include <dune/pdelab/preconditioner/geneo/onedimsubdomainbasis.hh>
 
 
 #endif // DUNE_GENEO_HH
