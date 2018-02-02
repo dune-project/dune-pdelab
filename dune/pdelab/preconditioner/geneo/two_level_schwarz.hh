@@ -39,13 +39,13 @@ namespace Dune {
           \param n The number of iterations to perform.
           \param w The relaxation factor.
         */
-        TwoLevelOverlappingAdditiveSchwarz (const GFS& gfs_, const M& AF, std::shared_ptr<CoarseSpace<M,X> > coarse_space, bool coarse_space_active = true)
-          : gfs(gfs_),
-            solverf(Dune::PDELab::Backend::native(AF),false),
-            my_rank(gfs.gridView().comm().rank()),
+        TwoLevelOverlappingAdditiveSchwarz (const GFS& gfs, const M& AF, std::shared_ptr<CoarseSpace<M,X> > coarse_space, bool coarse_space_active = true, int verbosity = 0)
+          : gfs_(gfs),
+            solverf_(Dune::PDELab::Backend::native(AF),false),
             coarse_space_(coarse_space),
             coarse_solver_ (*coarse_space_->get_coarse_system()),
-            coarse_space_active(coarse_space_active)
+            coarse_space_active_(coarse_space_active),
+            verbosity_(verbosity)
         { }
 
         /*!
@@ -61,29 +61,24 @@ namespace Dune {
 
           \copydoc Preconditioner::apply(X&,const Y&)
         */
-        double coarse_time = 0.0;
-        int apply_calls = 0;
-        bool coarse_space_active = true;
-
         virtual void apply (X& v, const Y& d)
         {
           // first the subdomain solves
           Y b(d); // need copy, since solver overwrites right hand side
           Dune::InverseOperatorResult result;
-          solverf.apply(v,b,result);
+          solverf_.apply(v,b,result);
 
-          if (!coarse_space_active) {
+          if (!coarse_space_active_) {
 
-            Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,v);
+            Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs_,v);
             // Just add local results and return in 1-level Schwarz case
-            gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
+            gfs_.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
 
           } else {
 
-            gfs.gridView().comm().barrier();
+            gfs_.gridView().comm().barrier();
             Dune::Timer timer_coarse_solve;
 
-            // coarse defect
             auto coarse_defect = coarse_space_->restrict_defect (d);
 
             // Solve coarse system
@@ -95,11 +90,11 @@ namespace Dune {
             auto coarse_correction = coarse_space_->prolongate_defect (v0);
             v += *coarse_correction;
 
-            coarse_time += timer_coarse_solve.elapsed();
-            apply_calls++;
+            coarse_time_ += timer_coarse_solve.elapsed();
+            apply_calls_++;
 
-            Dune::PDELab::AddDataHandle<GFS,X> result_addh(gfs,v);
-            gfs.gridView().communicate(result_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
+            Dune::PDELab::AddDataHandle<GFS,X> result_addh(gfs_,v);
+            gfs_.gridView().communicate(result_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
           }
         }
 
@@ -109,18 +104,21 @@ namespace Dune {
           \copydoc Preconditioner::post(X&)
         */
         virtual void post (X& x) {
-          if (my_rank == 0) std::cout << "Coarse time CT=" << coarse_time << std::endl;
-          if (my_rank == 0) std::cout << "Coarse time per apply CTA=" << coarse_time / (double)apply_calls << std::endl;
+          if (verbosity_ > 0) std::cout << "Coarse time CT=" << coarse_time_ << std::endl;
+          if (verbosity_ > 0) std::cout << "Coarse time per apply CTA=" << coarse_time_ / apply_calls_ << std::endl;
         }
 
       private:
+        int verbosity_;
+        bool coarse_space_active_ = true;
 
-        const GFS& gfs;
-        Dune::UMFPack<ISTLM> solverf;
+        double coarse_time_ = 0.0;
+        int apply_calls_ = 0;
+
+        const GFS& gfs_;
+        Dune::UMFPack<ISTLM> solverf_;
         std::shared_ptr<CoarseSpace<M,X> > coarse_space_;
         Dune::UMFPack<COARSE_M> coarse_solver_;
-
-        int my_rank;
       };
     }
   }
