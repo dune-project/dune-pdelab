@@ -69,6 +69,9 @@ namespace Dune {
     struct EntityDataCommunicationDescriptor
     {
 
+      //! size type to use if communicating leaf ordering sizes
+      typedef std::size_t size_type;
+
       // Data is per entity, so we don' need to send leaf ordering size and thus can avoid wrapping the
       // grid's communication buffer unless we have to send our rank to the receiver
       static const bool wrap_buffer = transmit_rank;
@@ -78,6 +81,9 @@ namespace Dune {
       {
         return transmit_rank;
       }
+
+      // export original data type to fix up size information forwarded to standard gather / scatter functors
+      typedef E OriginalDataType;
 
       using DataType = std::conditional_t<wrap_buffer,char,E>;
 
