@@ -25,7 +25,7 @@ namespace Dune {
     * across all processes. In the process, the per-subdomain basis functions are
     * extended by zeros, resulting in a sparse system.
     */
-    template<class GFS, class M, class X, int dim>
+    template<class GFS, class M, class X>
     class SubdomainProjectedCoarseSpace : public CoarseSpace<M,X>
     {
 
@@ -147,11 +147,11 @@ namespace Dune {
           }
 
           if (basis_index_remote < local_basis_sizes[my_rank]) {
-            Dune::MultiCommDataHandle<GFS,X,int,dim> commdh(gfs, *local_basis[basis_index_remote], neighbor_basis, neighbor_ranks);
+            Dune::PDELab::MultiCommDataHandle<GFS,X,int> commdh(gfs, *local_basis[basis_index_remote], neighbor_basis, neighbor_ranks);
             gfs.gridView().communicate(commdh,Dune::All_All_Interface,Dune::ForwardCommunication);
           } else {
             X dummy(gfs, 0.0);
-            Dune::MultiCommDataHandle<GFS,X,int,dim> commdh(gfs, dummy, neighbor_basis, neighbor_ranks);
+            Dune::PDELab::MultiCommDataHandle<GFS,X,int> commdh(gfs, dummy, neighbor_basis, neighbor_ranks);
             gfs.gridView().communicate(commdh,Dune::All_All_Interface,Dune::ForwardCommunication);
           }
 
