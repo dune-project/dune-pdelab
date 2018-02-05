@@ -66,7 +66,7 @@ namespace Dune {
         ParallelHelper (const GFS& gfs, int verbose = 1)
           : _gfs(gfs)
           , _rank(gfs.gridView().comm().rank())
-          , _ranks(gfs,_rank)
+          , _rank_partition(gfs,_rank)
           , _ghosts(gfs,false)
           , _verbose(verbose)
         {
@@ -99,12 +99,26 @@ namespace Dune {
 
               // create disjoint DOF partitioning
               //            GFSDataHandle<GFS,RankVector,DisjointPartitioningGatherScatter<RankIndex> >
-              //  ibdh(_gfs,_ranks,DisjointPartitioningGatherScatter<RankIndex>(_rank));
-              DisjointPartitioningDataHandle<GFS,RankVector> pdh(_gfs,_ranks);
+              //  ibdh(_gfs,_rank_partition,DisjointPartitioningGatherScatter<RankIndex>(_rank));
+              DisjointPartitioningDataHandle<GFS,RankVector> pdh(_gfs,_rank_partition);
               _gfs.gridView().communicate(pdh,_interiorBorder_all_interface,Dune::ForwardCommunication);
 
             }
 
+          // Generate list of neighbors' ranks
+          std::set<RankIndex> rank_set;
+          for (RankIndex rank : _rank_partition)
+            if (rank != _rank)
+              rank_set.insert(rank);
+
+          for (RankIndex rank : rank_set)
+            _neighbor_ranks.push_back(rank);
+        }
+
+        //! Returns a sorted list of the ranks of all neighboring processes
+        const std::vector<RankIndex>& getNeighborRanks() const
+        {
+          return _neighbor_ranks;
         }
 
         //! Mask out all DOFs not owned by the current process with 0.
@@ -113,7 +127,7 @@ namespace Dune {
         {
           using Backend::native;
           // dispatch to implementation.
-          maskForeignDOFs(ISTL::container_tag(native(x)),native(x),native(_ranks));
+          maskForeignDOFs(ISTL::container_tag(native(x)),native(x),native(_rank_partition));
         }
 
       private:
@@ -147,7 +161,7 @@ namespace Dune {
         //! Tests whether the given index is owned by this process.
         bool owned(const ContainerIndex& i) const
         {
-          return _ranks[i] == _rank;
+          return _rank_partition[i] == _rank;
         }
 
         //! Tests whether the given index belongs to a ghost DOF.
@@ -168,7 +182,7 @@ namespace Dune {
           return disjointDot(ISTL::container_tag(native(x)),
                              native(x),
                              native(y),
-                             native(_ranks)
+                             native(_rank_partition)
                              );
         }
 
@@ -265,7 +279,7 @@ namespace Dune {
         // restricted to a single DOF.
         bool owned_for_amg(std::size_t i) const
         {
-          return Backend::native(_ranks)[i][0] == _rank;
+          return Backend::native(_rank_partition)[i][0] == _rank;
         }
 
 #endif // HAVE_MPI
@@ -274,7 +288,8 @@ namespace Dune {
 
         const GFS& _gfs;
         const RankIndex _rank;
-        RankVector _ranks; // vector to identify unique decomposition
+        RankVector _rank_partition; // vector to identify unique decomposition
+        std::vector<RankIndex> _neighbor_ranks; // list of neighbors' ranks
         GhostVector _ghosts; //vector to identify ghost dofs
         int _verbose; //verbosity
 
