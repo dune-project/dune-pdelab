@@ -115,7 +115,7 @@ namespace Dune {
             _neighbor_ranks.push_back(rank);
         }
 
-        //! Returns the ranks of all neighboring processes
+        //! Returns a sorted list of the ranks of all neighboring processes
         const std::vector<RankIndex>& getNeighborRanks() const
         {
           return _neighbor_ranks;
