@@ -124,7 +124,7 @@ bool do_simulation (double T, double dt, GM& grid, std::string basename)
   typedef Dune::PDELab::GalerkinGlobalAssembler<FS,LOP,solvertype> SASS;
   SASS sass(fs,lop,6);
   typedef Dune::PDELab::L2 MLOP;
-  MLOP mlop(2*degree);
+  MLOP mlop;
   typedef Dune::PDELab::GalerkinGlobalAssembler<FS,MLOP,solvertype> TASS;
   TASS tass(fs,mlop,6);
   typedef Dune::PDELab::OneStepGlobalAssembler<SASS,TASS> ASSEMBLER_IMPLICIT;
