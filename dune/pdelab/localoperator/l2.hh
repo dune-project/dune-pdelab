@@ -35,7 +35,7 @@ namespace Dune {
         // Residual assembly flags
         enum { doAlphaVolume = true };
 
-        ScalarL2 (int intorderadd = 2,double scaling = 1.0)
+        ScalarL2 (int intorderadd, double scaling)
           : _intorderadd(intorderadd)
           , _scaling(scaling)
         {}
