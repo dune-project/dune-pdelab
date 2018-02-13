@@ -185,6 +185,7 @@ namespace Dune {
       // Residual assembly flags
       enum { doAlphaVolume = true };
 
+      DUNE_DEPRECATED_MSG("PowerL2 is deprecated in PDELab 2.6 and will be removed after this release. The standard L2 operator now works on nested spaces, please use that instead.")
       PowerL2 (int intorderadd = 2)
         : scalar_operator(intorderadd)
       {}
