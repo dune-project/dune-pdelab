@@ -1,4 +1,5 @@
-install(FILES callswitch.hh
+install(FILES blockdiagonal.hh
+              callswitch.hh
               convectiondiffusionccfv.hh
               convectiondiffusiondg.hh
               convectiondiffusionfem.hh
