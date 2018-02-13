@@ -166,8 +166,8 @@ namespace Dune {
                           (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
-          static_assert(TypeTree::StaticDegree<LFS>::value == Range::dimension,
-                        "Number of children and dimension of range type " \
+          static_assert(TypeTree::TreeInfo<LFS>::leafCount == Range::dimension,
+                        "Number of leaves and dimension of range type " \
                         "must match for automatic interpolation of "    \
                         "vector-valued function");
 

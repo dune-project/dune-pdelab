@@ -38,6 +38,26 @@ PDELab 2.6
     `FEM::size(GeometryType)` is `static` and `constexpr` and can actually be executed in constexpr context
     (mostly, that means that it doesn't use any run time information).
 
+-   Function space interpolation now supports interpolating vector-valued functions into function
+    space trees of arbitrary shape. Previously, it was only possible to interpolate vector-valued
+    functions into a function space tree of exactly depth 1. This makes it possible to e.g. directly
+    specify the initial value for a Taylor-Hood space, which has the structure
+    `Composite(Power(P2,dim),P1)`. In this case, you can simply create a function for the initial
+    value like this:
+
+    ```c++
+    auto f = Dune::Functions::makeAnalyticGridViewFunction(
+      [](auto x)
+      {
+        Dune::FieldVector<double,dim+1> r;
+        r[0] = velocity_x;
+        // ...
+        r[dim] = pressure;
+      },
+      gv);
+    ```
+
+
 
 PDELab 2.5
 ----------
