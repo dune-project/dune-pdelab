@@ -161,6 +161,7 @@ dune_add_test(SOURCES testranktransmission.cc
               MPI_RANKS 2
               TIMEOUT 300)
 
+dune_add_test(SOURCES testl2.cc)
 
 exclude_from_headercheck(
   gridexamples.hh

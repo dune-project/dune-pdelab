@@ -57,6 +57,15 @@ PDELab 2.6
       gv);
     ```
 
+-   The `L2` local operator now works for systems as well as scalar spaces. The `PowerL2` has been
+    deprecated and will be removed after this release, just switch to the standard `L2` operator.
+
+-   The `L2` local operator now calculates a reasonable default for the integration order, using the
+    same formula as most other operators (`2*lfsu.finiteElement().localBasis().order()`). As a
+    consequence, the meaning of the first constructor parameter has changed: It now designates an
+    overintegration order that gets added to the base integration order. Unfortunately, it is
+    difficult to issue a compile warning for this behavior change. **Please make sure to update your
+    code accordingly, otherwise you might experience severe slowdowns when using this operator!**
 
 
 PDELab 2.5
