@@ -61,7 +61,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
 
     // Preparation: Define types for the computation of the error estimate eta.
     typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,Real,dim> P0FEM;
-    P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
+    P0FEM p0fem(Dune::GeometryTypes::simplex(dim));
     typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,Dune::PDELab::NoConstraints,VBE> P0GFS;
     typedef Dune::PDELab::ExampleErrorEstimator ESTLOP;
     typedef Dune::PDELab::EmptyTransformation NoTrafo;

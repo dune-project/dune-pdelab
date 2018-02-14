@@ -325,7 +325,7 @@ namespace Dune
 
     public:
 
-      DGLegendreLocalInterpolation () : gt(Dune::GeometryType::cube,d)
+      DGLegendreLocalInterpolation () : gt(GeometryTypes::cube(d))
       {}
 
       //! \brief Local interpolation of a function
