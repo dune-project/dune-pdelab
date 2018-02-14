@@ -782,6 +782,8 @@ DUNE_NO_DEPRECATED_END
                                            OPBLocalCoefficients<k,d,basisType>,
                                            OPBLocalInterpolation<OPBLocalBasis<D,R,k,d,bt,ComputationFieldType,basisType> > > Traits;
 
+DUNE_NO_DEPRECATED_BEGIN
+
     OPBLocalFiniteElement ()
       : gt(bt,d), basis(k), coefficients(k), interpolation(basis,k)
     {}
@@ -790,6 +792,8 @@ DUNE_NO_DEPRECATED_END
     explicit OPBLocalFiniteElement (const LFE & lfe)
       : gt(bt,d), basis(k, lfe), coefficients(k), interpolation(basis,k)
     {}
+
+DUNE_NO_DEPRECATED_END
 
     OPBLocalFiniteElement (const OPBLocalFiniteElement & other)
       : gt(other.gt), basis(other.basis), coefficients(other.coefficients), interpolation(basis,k)
