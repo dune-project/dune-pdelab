@@ -177,7 +177,7 @@ int main(int argc, char** argv)
                 corners[1] = (nx+1)*j       + i + 1;
                 corners[2] = (nx+1)*(j + 1) + i;
                 corners[3] = (nx+1)*(j + 1) + i + 1;
-                factory.insertElement(Dune::GeometryType(Dune::GeometryType::cube,2),corners);
+                factory.insertElement(Dune::GeometryTypes::square,corners);
               }
         }
 
