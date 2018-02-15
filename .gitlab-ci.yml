@@ -1,11 +1,11 @@
 ---
 debian:10--gcc:
-  image: docker.io/duneci/dune-pdelab-deps:git
+  image: docker.io/duneci/dune-pdelab-deps:2.6
   script: duneci-standard-test
   tags: [duneci]
 
 debian:10--clang:
-  image: docker.io/duneci/dune-pdelab-deps:git
+  image: docker.io/duneci/dune-pdelab-deps:2.6
   script: duneci-standard-test
   variables: {DUNECI_OPTS: /duneci/opts.clang}
   tags: [duneci]
