@@ -9,6 +9,7 @@
 #include <set>
 #include <vector>
 
+#include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/stdstreams.hh>
@@ -158,22 +159,18 @@ namespace Dune {
      *  \tparam FEM  Type implementing FiniteElementMapInterface
      *  \tparam CE   Type for constraints assembler
      *  \tparam B    Backend type
-     *  \tparam P    Parameter type. Possible types are
-     * \link GridFunctionGeneralMapper \endlink (arbitrary number of unknowns per
-     * entity) or \link GridFunctionRestrictedMapper \endlink (fixed number of unknowns per
-     * entity) or \link GridFunctionStaticSize \endlink (number of unknowns per
-     * entity, known at compile-time)
+     *  \tparam O    Ordering tag
      */
     template<typename GV, typename FEM, typename CE=NoConstraints,
-             typename B=ISTL::VectorBackend<>, typename P=DefaultLeafOrderingTag>
+             typename B=ISTL::VectorBackend<>, typename O=DefaultLeafOrderingTag>
     class GridFunctionSpace
       : public TypeTree::LeafNode
       , public GridFunctionSpaceBase<
-                 GridFunctionSpace<GV,FEM,CE,B,P>,
-                 GridFunctionSpaceTraits<GV,FEM,CE,B,P>
+                 GridFunctionSpace<GV,FEM,CE,B,O>,
+                 GridFunctionSpaceTraits<GV,FEM,CE,B,O>
                  >
       , public GridFunctionOutputParameters
-      , public DataHandleProvider<GridFunctionSpace<GV,FEM,CE,B,P> >
+      , public DataHandleProvider<GridFunctionSpace<GV,FEM,CE,B,O> >
     {
 
       typedef TypeTree::TransformTree<GridFunctionSpace,gfs_to_ordering<GridFunctionSpace> > ordering_transformation;
@@ -183,7 +180,7 @@ namespace Dune {
 
     public:
       //! export Traits class
-      typedef GridFunctionSpaceTraits<GV,FEM,CE,B,P> Traits;
+      typedef GridFunctionSpaceTraits<GV,FEM,CE,B,O> Traits;
 
     private:
 
@@ -194,9 +191,10 @@ namespace Dune {
       typedef typename GV::Traits::template Codim<0>::Entity Element;
       typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
-      typedef P SizeTag;
+      DUNE_DEPRECATED
+      typedef O SizeTag;
 
-      typedef P OrderingTag;
+      typedef O OrderingTag;
 
       typedef LeafGridFunctionSpaceTag ImplementationTag;
 
