@@ -137,6 +137,7 @@ namespace Dune {
           using Range = typename Functions::SignatureTraits<F>::Range;
           using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Dune::Function<Domain,Range> >;
           LocalFunction lf(f);
+          lf.bind(e);
           ib.interpolate(lfs.finiteElement(), lf, xl);
           // write coefficients into local vector
           xg.write_sub_container(lfs,xl);
@@ -154,6 +155,7 @@ namespace Dune {
           using Domain = typename Functions::SignatureTraits<F>::Domain;
           using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Dune::Function<Domain,Range> >;
           LocalFunction lf(f);
+          lf.bind(e);
           TypeTree::applyToTree(lfs,InterpolateLeafFromScalarVisitor<IB,LocalFunction,XG>(ib,lf,xg));
 
         }
