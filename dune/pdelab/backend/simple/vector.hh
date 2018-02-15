@@ -194,18 +194,25 @@ namespace Dune {
 
         typename Dune::template FieldTraits<E>::real_type one_norm() const
         {
-          using namespace std::placeholders;
           typedef typename Dune::template FieldTraits<E>::real_type Real;
-          return std::accumulate(_container->begin(),_container->end(),Real(0),std::bind(std::plus<Real>(),_1,std::bind(std::abs<E>,_2)));
+          return std::accumulate(_container->begin(),_container->end(),Real(0),
+                                 [](const auto& n, const auto& e) {
+                                   using std::abs;
+                                   return n + abs(e);
+                                 });
         }
 
         typename Dune::template FieldTraits<E>::real_type infinity_norm() const
         {
           if (_container->size() == 0)
             return 0;
-          using namespace std::placeholders;
+          using std::abs;
           typedef typename Dune::template FieldTraits<E>::real_type Real;
-          return *std::max_element(_container->begin(),_container->end(),std::bind(std::less<Real>(),std::bind(std::abs<E>,_1),std::bind(std::abs<E>,_2)));
+          return abs(*std::max_element(_container->begin(),_container->end(),
+                                       [](const auto& a, const auto& b) {
+                                         using std::abs;
+                                         return abs(a) < abs(b);
+                                       }));
         }
 
         E operator*(const VectorContainer& y) const
