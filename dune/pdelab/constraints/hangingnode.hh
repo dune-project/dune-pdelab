@@ -39,7 +39,7 @@ namespace Dune {
           auto e = ig.inside();
           auto f = ! ig.boundary() ? ig.outside() : ig.inside();
 
-          const std::size_t dimension = Intersection::dimension;
+          const std::size_t dimension = Intersection::mydimension;
 
           auto refelement_e = referenceElement(e.geometry());
           auto refelement_f = referenceElement(f.geometry());
@@ -202,7 +202,7 @@ namespace Dune {
           auto e = ig.inside();
           auto f = ! ig.boundary() ? ig.outside() : ig.inside();
 
-          const std::size_t dimension = Intersection::dimension;
+          const std::size_t dimension = Intersection::mydimension;
 
           auto refelement_e = referenceElement(e.geometry());
           auto refelement_f = referenceElement(f.geometry());
