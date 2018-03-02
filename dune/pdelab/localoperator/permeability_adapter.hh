@@ -29,6 +29,7 @@ public:
             const typename Traits::DomainType& x,
             typename Traits::RangeType& y) const
   {
+    using namespace std;
     y = log(t.A(e,x)[0][0]);
   }
 
@@ -73,8 +74,9 @@ public:
             const typename Traits::DomainType& x,
             typename Traits::RangeType& y) const
   {
+    using namespace std;
     for (int i=0; i<T::Traits::dimDomain; i++)
-      y[i] = log10(t.A(e,x)[i][i]);
+      y[i] = log(t.A(e,x)[i][i]);
   }
 
   inline const typename Traits::GridViewType& getGridView () const
