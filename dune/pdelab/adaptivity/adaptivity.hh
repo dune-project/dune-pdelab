@@ -233,13 +233,13 @@ namespace Dune {
         using Range = typename LFSLeaf::Traits::GridFunctionSpace::Traits::FiniteElementMap::
           Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType;
 
-        auto& inverse_mass_matrix = _projection.inverseMassMatrices(_element)[_leaf_index];
-
         auto coarse_phi = std::vector<Range>{};
         auto fine_phi = std::vector<Range>{};
 
         auto fine_geometry = _current.geometry();
         auto coarse_geometry = _ancestor.geometry();
+
+        auto& inverse_mass_matrix = _projection.inverseMassMatrices(_ancestor)[_leaf_index];
 
         // iterate over quadrature points
         for (const auto& ip : QuadratureRules<DF,dim>::rule(_current.type(),_int_order))
@@ -259,6 +259,7 @@ namespace Dune {
                 val.axpy(_u_fine[fine_offset + i],fine_phi[i]);
               }
 
+            assert(inverse_mass_matrix.M()==coarse_phi.size());
             for (size_type i = 0; i < coarse_phi.size(); ++i)
               {
                 auto x = Range{0.0};
