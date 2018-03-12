@@ -301,6 +301,8 @@ namespace Dune {
             // don't project more than once
             if (_u_coarse->size() > 0)
               continue;
+
+            _leaf_offset_cache.update(_ancestor);
             _u_coarse->resize(_leaf_offset_cache[_ancestor.type()].back());
             std::fill(_u_coarse->begin(),_u_coarse->end(),RF(0));
 
