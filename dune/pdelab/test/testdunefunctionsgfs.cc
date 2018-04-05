@@ -123,6 +123,9 @@ void solvePoissonProblem()
   VectorContainer x0(gfs);
   x0 = 0.0;              // set all entries to zero
 
+  // Make a grid function out of it, just to check that this compiles
+  PDELab::DiscreteGridFunction<GridFunctionSpace,VectorContainer> xDiscreteGridFunction(gfs,x0);
+
   // represent operator as a matrix
   typedef typename GO::Jacobian MatrixContainer;
   MatrixContainer m(go,stiffnessMatrix);    // Use the stiffnessMatrix object for the actual storage
