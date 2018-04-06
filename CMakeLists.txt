@@ -32,12 +32,11 @@ set(DUNE_TEST_MAGIC OFF)
 
 if(NOT MINGW)
   set(clock_cc "dune/pdelab/common/clock.cc")
-  set(hostname_cc "dune/pdelab/common/hostname.cc")
 endif()
 
 dune_add_library(dunepdelab
   ${clock_cc}
-  ${hostname_cc}
+  dune/pdelab/common/hostname.cc
   dune/pdelab/common/logtag.cc
   )
 dune_target_enable_all_packages(dunepdelab)
