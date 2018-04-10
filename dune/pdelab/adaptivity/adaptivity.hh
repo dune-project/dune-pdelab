@@ -389,6 +389,12 @@ namespace Dune {
       {
         using Range = typename FiniteElement::Traits::LocalBasisType::Traits::RangeType;
 
+        //! Traits class containing decayed types
+        struct Traits
+        {
+          using RangeType = std::decay_t<Range>;
+        };
+
         template<typename X, typename Y>
         void evaluate(const X& x, Y& y) const
         {
