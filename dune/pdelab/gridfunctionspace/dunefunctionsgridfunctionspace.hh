@@ -166,7 +166,7 @@ namespace Dune {
 
           size_type maxLocalSize() const
           {
-            return _gfs.basis().maxLocalSize();
+            return _gfs.basis().localView().maxSize();
           }
 
           ContainerIndex mapIndex(const DOFIndex& di) const
