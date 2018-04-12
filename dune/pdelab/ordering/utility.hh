@@ -235,6 +235,7 @@ namespace Dune {
       typedef OrderingTraits<DI,CI> Traits;
 
       VirtualOrderingBase() {}
+      virtual ~VirtualOrderingBase() = default;
 
       virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const = 0;
     };
