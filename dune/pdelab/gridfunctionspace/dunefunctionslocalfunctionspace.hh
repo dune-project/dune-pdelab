@@ -76,7 +76,7 @@ namespace Dune {
 
         LocalFunctionSpace(std::shared_ptr<const GFS> gfs, TreePath tree_path = TreePath(), size_type offset = 0)
           : _gfs(gfs)
-          , _local_view(gfs->basis())
+          , _local_view(gfs->basis().localView())
           , _tree_path(tree_path)
           , _tree(TypeTree::child(_local_view.tree(),tree_path))
           , _local_index_set(gfs->basis().localIndexSet())
