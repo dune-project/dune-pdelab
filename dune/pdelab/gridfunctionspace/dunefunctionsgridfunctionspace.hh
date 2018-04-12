@@ -66,11 +66,14 @@ namespace Dune {
         struct Traits {
 
           using GridView  = Dune::PDELab::impl::GridView<typename DFBasis::GridView>;
+          using GridViewType = GridView;    // DiscreteGridFunction wants this
           using EntitySet = Dune::PDELab::impl::EntitySet<typename DFBasis::GridView>;
 
           using size_type = std::size_t;
           using SizeType  = size_type;
           using ConstraintsType = CE;
+
+          using FiniteElementType = typename DFBasis::LocalView::Tree::FiniteElement;  // DiscreteGridFunction wants this
 
           using Basis = DFBasis;
 
