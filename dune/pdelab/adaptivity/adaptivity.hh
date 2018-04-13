@@ -233,7 +233,7 @@ namespace Dune {
         using Range = typename LFSLeaf::Traits::GridFunctionSpace::Traits::FiniteElementMap::
           Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType;
 
-        auto& inverse_mass_matrix = _projection.inverseMassMatrices(_element)[_leaf_index];
+        auto& inverse_mass_matrix = _projection.inverseMassMatrices(_ancestor)[_leaf_index];
 
         auto coarse_phi = std::vector<Range>{};
         auto fine_phi = std::vector<Range>{};
@@ -259,6 +259,7 @@ namespace Dune {
                 val.axpy(_u_fine[fine_offset + i],fine_phi[i]);
               }
 
+            assert(inverse_mass_matrix.M()==coarse_phi.size());
             for (size_type i = 0; i < coarse_phi.size(); ++i)
               {
                 auto x = Range{0.0};
@@ -300,6 +301,8 @@ namespace Dune {
             // don't project more than once
             if (_u_coarse->size() > 0)
               continue;
+
+            _leaf_offset_cache.update(_ancestor);
             _u_coarse->resize(_leaf_offset_cache[_ancestor.type()].back());
             std::fill(_u_coarse->begin(),_u_coarse->end(),RF(0));
 
