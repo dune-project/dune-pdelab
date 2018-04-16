@@ -70,16 +70,17 @@ namespace Dune {
      *
      * A parameter class for the linear convection-diffusion equation
      * \f{align*}{
-     *   -\nabla\cdot(A(x) \nabla u) + b(x)\cdot \nabla u + c(x)u &=& f \mbox{ in } \Omega,  \\
-     *                                                          u &=& g \mbox{ on } \partial\Omega_D \\
-     *                            (b(x,u) - A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_N \\
-     *                                    -(A(x)\nabla u) \cdot n &=& o \mbox{ on } \partial\Omega_O
+     *   \nabla\cdot(-A(x) \nabla u + b(x) u) + c(x)u &=& f \mbox{ in } \Omega,  \\
+     *                                              u &=& g \mbox{ on } \partial\Omega_D \\
+     *                (b(x) u - A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_N \\
+     *                        -(A(x)\nabla u) \cdot n &=& o \mbox{ on } \partial\Omega_O
      * \f}
      * Note:
      *  - This formulation is valid for velocity fields which are non-divergence free.
      *  - Outflow boundary conditions should only be set on the outflow boundary
      *
-     * \tparam T a traits class defining the necessary types
+     * \tparam GV The GridView type
+     * \tparam RF The range field type
      */
     template<typename GV, typename RF>
     class ConvectionDiffusionModelProblem
