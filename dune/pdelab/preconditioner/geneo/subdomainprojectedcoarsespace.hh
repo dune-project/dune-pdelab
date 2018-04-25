@@ -41,12 +41,13 @@ namespace Dune {
       * \param subdomainbasis Per-subdomain coarse basis.
       * \param verbosity Verbosity.
       */
-      SubdomainProjectedCoarseSpace (const GFS& gfs, const M& AF_exterior_, std::shared_ptr<SubdomainBasis<X> > subdomainbasis, const PIH& parallelhelper)
+      SubdomainProjectedCoarseSpace (const GFS& gfs, const M& AF_exterior_, std::shared_ptr<SubdomainBasis<X> > subdomainbasis, const PIH& parallelhelper, int verbosity = 1)
        : gfs_(gfs), AF_exterior_(AF_exterior_),
           ranks_(gfs.gridView().comm().size()),
           my_rank_(gfs.gridView().comm().rank()),
           subdomainbasis_(subdomainbasis),
-          parallelhelper_(parallelhelper)
+          parallelhelper_(parallelhelper),
+          verbosity_(verbosity)
       {
         neighbor_ranks_ = parallelhelper.getNeighborRanks();
 
@@ -57,8 +58,9 @@ namespace Dune {
       void setup_coarse_system() {
         using Dune::PDELab::Backend::native;
 
+        // Barrier for proper time measurement
         gfs_.gridView().comm().barrier();
-        if (my_rank_ == 0) std::cout << "Matrix setup" << std::endl;
+        if (my_rank_ == 0 && verbosity_ > 0) std::cout << "Matrix setup" << std::endl;
         Dune::Timer timer_setup;
 
         // Communicate local coarse space dimensions
@@ -71,29 +73,31 @@ namespace Dune {
         for (rank_type n : local_basis_sizes_) {
           global_basis_size_ += n;
         }
-        my_basis_array_offset_ = 0;
-        for (rank_type i = 0; i < my_rank_; i++) {
-          my_basis_array_offset_ += local_basis_sizes_[i];
-        }
-
-        if (my_rank_ == 0) std::cout << "Global basis size B=" << global_basis_size_ << std::endl;
-
+        my_basis_array_offset_ = basis_array_offset(my_rank_);
         rank_type max_local_basis_size = *std::max_element(local_basis_sizes_.begin(),local_basis_sizes_.end());
+
+        if (my_rank_ == 0 && verbosity_ > 0) std::cout << "Global basis size B=" << global_basis_size_ << std::endl;
+
 
         coarse_system_ = std::make_shared<COARSE_M>(global_basis_size_, global_basis_size_, COARSE_M::row_wise);
 
+        // Set up container for storing rows of coarse matrix associated with current rank
+        // Hierarchy: Own basis functions -> Current other basis function from each neighbor -> Actual entries
         std::vector<std::vector<std::vector<field_type> > > local_rows(local_basis_sizes_[my_rank_]);
         for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
           local_rows[basis_index].resize(neighbor_ranks_.size()+1);
         }
 
+        // Container for neighbors' basis functions
+        std::vector<std::shared_ptr<X> > neighbor_basis(neighbor_ranks_.size());
+        for (rank_type i = 0; i < neighbor_basis.size(); i++) {
+          neighbor_basis[i] = std::make_shared<X>(gfs_, 0.0);
+        }
+
+        // Assemble local section of coarse matrix
         for (rank_type basis_index_remote = 0; basis_index_remote < max_local_basis_size; basis_index_remote++) {
 
-          std::vector<std::shared_ptr<X> > neighbor_basis(neighbor_ranks_.size()); // Local coarse space basis
-          for (rank_type i = 0; i < neighbor_basis.size(); i++) {
-            neighbor_basis[i] = std::make_shared<X>(gfs_, 0.0);
-          }
-
+          // Communicate one basis function of every subdomain to all of its neighbors in one go
           if (basis_index_remote < local_basis_sizes_[my_rank_]) {
             Dune::PDELab::MultiCommDataHandle<GFS,X,rank_type> commdh(gfs_, *subdomainbasis_->get_basis_vector(basis_index_remote), neighbor_basis, neighbor_ranks_);
             gfs_.gridView().communicate(commdh,Dune::All_All_Interface,Dune::ForwardCommunication);
@@ -102,7 +106,6 @@ namespace Dune {
             Dune::PDELab::MultiCommDataHandle<GFS,X,rank_type> commdh(gfs_, dummy, neighbor_basis, neighbor_ranks_);
             gfs_.gridView().communicate(commdh,Dune::All_All_Interface,Dune::ForwardCommunication);
           }
-
 
           if (basis_index_remote < local_basis_sizes_[my_rank_]) {
             auto basis_vector = *subdomainbasis_->get_basis_vector(basis_index_remote);
@@ -131,6 +134,7 @@ namespace Dune {
 
         }
 
+        // Construct coarse matrix from local sections
         auto setup_row = coarse_system_->createbegin();
         rank_type row_id = 0;
         for (rank_type rank = 0; rank < ranks_; rank++) {
@@ -197,9 +201,11 @@ namespace Dune {
         }
 
 
-        if (my_rank_ == 0) std::cout << "Matrix setup finished: M=" << timer_setup.elapsed() << std::endl;
+        if (my_rank_ == 0 && verbosity_ > 0) std::cout << "Matrix setup finished: M=" << timer_setup.elapsed() << std::endl;
       }
 
+      /*! \brief Returns the offset of the block of local coarse basis functions w.r.t. global ordering
+       */
       rank_type basis_array_offset (rank_type rank) {
         rank_type offset = 0;
         for (rank_type i = 0; i < rank; i++) {
@@ -266,6 +272,8 @@ namespace Dune {
       const GFS& gfs_;
       const M& AF_exterior_;
       const PIH& parallelhelper_;
+
+      int verbosity_;
 
       std::vector<rank_type> neighbor_ranks_;
 
