@@ -85,6 +85,11 @@ namespace Dune {
           }
         }
 
+        // Normalize basis vectors
+        for (int i = 0; i < this->local_basis.size(); i++) {
+          native(*(this->local_basis[i])) *= 1.0 / (native(*(this->local_basis[i])) * native(*(this->local_basis[i])));
+        }
+
         // Optionally add partition of unity to eigenvectors
         // Only if there is no near-zero eigenvalue (that usually already corresponds to a partition of unity!)
         if (add_part_unity && eigenvalues[0] > 1E-10) {
