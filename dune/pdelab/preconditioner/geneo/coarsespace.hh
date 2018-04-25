@@ -2,10 +2,9 @@
 #define DUNE_GENEO_COARSESPACE_HH
 
 /*! \brief Representation of a coarse space intended for two-level Schwarz preconditioners.
- * \tparam M Matrix type on the subdomain
  * \tparam X Vector type on the subdomain
  */
-template <class M, class X>
+template <class X>
 class CoarseSpace {
 
 public:
@@ -16,13 +15,13 @@ public:
    * \param[in] d The subdomain space vector to be restricted
    * \return The restriction in coarse space
    */
-  virtual std::shared_ptr<COARSE_V> restrict_defect (const X& d) const = 0;
+  virtual std::shared_ptr<COARSE_V> restrict (const X& d) const = 0;
 
   /*! \brief Prolongates a vector defined on the coarse space to the subdomain
    * \param[in] v The coarse space vector to be prolongated
    * \return The prolongation in subdomain space
    */
-  virtual std::shared_ptr<X> prolongate_defect (const COARSE_V& v) const = 0;
+  virtual X prolongate (const COARSE_V& v) const = 0;
 
   /*! \brief Returns the matrix representing the coarse basis
    * \return The coarse matrix

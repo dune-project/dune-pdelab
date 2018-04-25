@@ -39,7 +39,7 @@ namespace Dune {
           \param n The number of iterations to perform.
           \param w The relaxation factor.
         */
-        TwoLevelOverlappingAdditiveSchwarz (const GFS& gfs, const M& AF, std::shared_ptr<CoarseSpace<M,X> > coarse_space, bool coarse_space_active = true, int verbosity = 0)
+        TwoLevelOverlappingAdditiveSchwarz (const GFS& gfs, const M& AF, std::shared_ptr<CoarseSpace<X> > coarse_space, bool coarse_space_active = true, int verbosity = 0)
           : gfs_(gfs),
             solverf_(Dune::PDELab::Backend::native(AF),false),
             coarse_space_(coarse_space),
@@ -79,7 +79,7 @@ namespace Dune {
             gfs_.gridView().comm().barrier();
             Dune::Timer timer_coarse_solve;
 
-            auto coarse_defect = coarse_space_->restrict_defect (d);
+            auto coarse_defect = coarse_space_->restrict (d);
 
             // Solve coarse system
             Dune::InverseOperatorResult result;
@@ -87,8 +87,7 @@ namespace Dune {
             coarse_solver_.apply(v0, *coarse_defect, result);
 
             // Prolongate coarse solution on local domain
-            auto coarse_correction = coarse_space_->prolongate_defect (v0);
-            v += *coarse_correction;
+            v += coarse_space_->prolongate(v0);
 
             coarse_time_ += timer_coarse_solve.elapsed();
             apply_calls_++;
@@ -117,7 +116,7 @@ namespace Dune {
 
         const GFS& gfs_;
         Dune::UMFPack<ISTLM> solverf_;
-        std::shared_ptr<CoarseSpace<M,X> > coarse_space_;
+        std::shared_ptr<CoarseSpace<X> > coarse_space_;
         Dune::UMFPack<COARSE_M> coarse_solver_;
       };
     }
