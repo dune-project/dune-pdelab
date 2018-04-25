@@ -57,21 +57,13 @@ namespace Dune {
       void setup_coarse_system() {
         using Dune::PDELab::Backend::native;
 
-        // Get local basis vectors
-        auto local_basis = subdomainbasis_->local_basis;
-
-        // Normalize basis vectors
-        for (rank_type i = 0; i < local_basis.size(); i++) {
-          native(*(local_basis[i])) *= 1.0 / (native(*(local_basis[i])) * native(*(local_basis[i])));
-        }
-
         gfs_.gridView().comm().barrier();
         if (my_rank_ == 0) std::cout << "Matrix setup" << std::endl;
         Dune::Timer timer_setup;
 
         // Communicate local coarse space dimensions
         local_basis_sizes_.resize(ranks_);
-        rank_type local_size = local_basis.size();
+        rank_type local_size = subdomainbasis_->basis_size();
         MPI_Allgather(&local_size, 1, MPITraits<rank_type>::getType(), local_basis_sizes_.data(), 1, MPITraits<rank_type>::getType(), gfs_.gridView().comm());
 
         // Count coarse space dimensions
@@ -103,7 +95,7 @@ namespace Dune {
           }
 
           if (basis_index_remote < local_basis_sizes_[my_rank_]) {
-            Dune::PDELab::MultiCommDataHandle<GFS,X,rank_type> commdh(gfs_, *local_basis[basis_index_remote], neighbor_basis, neighbor_ranks_);
+            Dune::PDELab::MultiCommDataHandle<GFS,X,rank_type> commdh(gfs_, *subdomainbasis_->get_basis_vector(basis_index_remote), neighbor_basis, neighbor_ranks_);
             gfs_.gridView().communicate(commdh,Dune::All_All_Interface,Dune::ForwardCommunication);
           } else {
             X dummy(gfs_, 0.0);
@@ -113,11 +105,11 @@ namespace Dune {
 
 
           if (basis_index_remote < local_basis_sizes_[my_rank_]) {
-            auto basis_vector = *local_basis[basis_index_remote];
+            auto basis_vector = *subdomainbasis_->get_basis_vector(basis_index_remote);
             X Atimesv(gfs_,0.0);
             native(AF_exterior_).mv(native(basis_vector), native(Atimesv));
             for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
-              field_type entry = *local_basis[basis_index]*Atimesv;
+              field_type entry = *subdomainbasis_->get_basis_vector(basis_index)*Atimesv;
               local_rows[basis_index][neighbor_ranks_.size()].push_back(entry);
             }
           }
@@ -132,7 +124,7 @@ namespace Dune {
 
             for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
 
-              field_type entry = *local_basis[basis_index]*Atimesv;
+              field_type entry = *subdomainbasis_->get_basis_vector(basis_index)*Atimesv;
               local_rows[basis_index][neighbor_id].push_back(entry);
             }
           }
@@ -222,8 +214,6 @@ namespace Dune {
 
         using Dune::PDELab::Backend::native;
 
-        auto local_basis = subdomainbasis_->local_basis;
-
         rank_type recvcounts[ranks_];
         rank_type displs[ranks_];
         for (rank_type rank = 0; rank < ranks_; rank++) {
@@ -241,7 +231,7 @@ namespace Dune {
         for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
           buf_defect_local[basis_index] = 0.0;
           for (rank_type i = 0; i < native(fine).N(); i++)
-            buf_defect_local[basis_index] += native(*local_basis[basis_index])[i] * native(fine)[i];
+            buf_defect_local[basis_index] += native(*subdomainbasis_->get_basis_vector(basis_index))[i] * native(fine)[i];
         }
 
         MPI_Allgatherv(&buf_defect_local, local_basis_sizes_[my_rank_], MPITraits<field_type>::getType(), &buf_defect, recvcounts, displs, MPITraits<field_type>::getType(), gfs_.gridView().comm());
@@ -251,15 +241,13 @@ namespace Dune {
       }
 
       void prolongate (const COARSE_V& coarse, X& prolongated) const override {
-        auto local_basis = subdomainbasis_->local_basis;
-
         using Dune::PDELab::Backend::native;
 
         prolongated = 0.0;
 
         // Prolongate result
         for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
-          X local_result(*local_basis[basis_index]);
+          X local_result(*subdomainbasis_->get_basis_vector(basis_index));
           native(local_result) *= coarse[my_basis_array_offset_ + basis_index];
           prolongated += local_result;
         }

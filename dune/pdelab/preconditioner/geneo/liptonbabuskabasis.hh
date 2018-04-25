@@ -77,6 +77,11 @@ namespace Dune {
           }
         }
 
+        // Normalize basis vectors
+        for (int i = 0; i < this->local_basis.size(); i++) {
+          native(*(this->local_basis[i])) *= 1.0 / (native(*(this->local_basis[i])) * native(*(this->local_basis[i])));
+        }
+
         if (add_part_unity && eigenvalues[0] > 1E-10) {
           this->local_basis.insert (this->local_basis.begin(), std::make_shared<X>(part_unity));
           this->local_basis.pop_back();

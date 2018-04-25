@@ -14,6 +14,8 @@ namespace Dune {
     public:
       SubdomainBasis() {}
 
+      typedef X VectorType;
+
       /*!
        * \brief Constructor creating a basis with only one basis function per subdomain.
        *
@@ -23,6 +25,21 @@ namespace Dune {
         this->local_basis[0] = std::make_shared<X>(basis_function);
       }
 
+      /*!
+       * \brief Returns basis vector i
+       */
+      std::shared_ptr<X> get_basis_vector(int i) {
+        return local_basis[i];
+      }
+
+      /*!
+       * \brief Size of the local basis
+       */
+      int basis_size() {
+        return local_basis.size();
+      }
+
+    protected:
       std::vector<std::shared_ptr<X> > local_basis;
 
     };
