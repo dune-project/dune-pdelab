@@ -13,15 +13,15 @@ public:
 
   /*! \brief Restricts a vector defined on a subdomain to the coarse space
    * \param[in] d The subdomain space vector to be restricted
-   * \return The restriction in coarse space
+   * \param[out] restricted Resulting restriction in coarse space. Must be of size given by basis_size().
    */
-  virtual std::shared_ptr<COARSE_V> restrict (const X& d) const = 0;
+  virtual void restrict (const X& fine, COARSE_V& restricted) const = 0;
 
   /*! \brief Prolongates a vector defined on the coarse space to the subdomain
    * \param[in] v The coarse space vector to be prolongated
-   * \return The prolongation in subdomain space
+   * \param[out] prolongated The prolongation in subdomain space.
    */
-  virtual X prolongate (const COARSE_V& v) const = 0;
+  virtual void prolongate (const COARSE_V& coarse, X& prolongated) const = 0;
 
   /*! \brief Returns the matrix representing the coarse basis
    * \return The coarse matrix
