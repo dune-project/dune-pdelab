@@ -229,9 +229,9 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
   std::shared_ptr<V> part_unity;
   if (part_unity_type == "standard")
-    part_unity = standardPartitionOfUnity<V>(gfs, lfs, cc_bnd_neu_int_dir);
+    part_unity = std::make_shared<V>(standardPartitionOfUnity<V>(gfs, lfs, cc_bnd_neu_int_dir));
   else if (part_unity_type == "sarkis")
-    part_unity = sarkisPartitionOfUnity<V>(gfs, lfs, cc_bnd_neu_int_dir, cells, cells, overlap, yasppartitions[0], yasppartitions[1]);
+    part_unity = std::make_shared<V>(sarkisPartitionOfUnity<V>(gfs, lfs, cc_bnd_neu_int_dir, cells, cells, overlap, yasppartitions[0], yasppartitions[1]));
   else
     DUNE_THROW(Dune::Exception, "Unkown selection in test driver!");
 
