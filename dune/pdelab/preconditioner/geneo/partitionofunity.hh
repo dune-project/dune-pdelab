@@ -15,18 +15,18 @@
  * \return A vector representing the partition of unity.
  */
 template<class X, class GFS,  class LFS, class CC>
-std::shared_ptr<X> standardPartitionOfUnity(const GFS& gfs, LFS& lfs, const CC& cc) {
+X standardPartitionOfUnity(const GFS& gfs, LFS& lfs, const CC& cc) {
 
-  auto part_unity = std::make_shared<X>(gfs, 1);
+  X part_unity(gfs, 1);
 
-  Dune::PDELab::set_constrained_dofs(cc,0.0,*part_unity); // Zero on subdomain boundary
+  Dune::PDELab::set_constrained_dofs(cc,0.0,part_unity); // Zero on subdomain boundary
 
-  Dune::PDELab::AddDataHandle<GFS,X> parth(gfs,*part_unity);
+  Dune::PDELab::AddDataHandle<GFS,X> parth(gfs,part_unity);
   gfs.gridView().communicate(parth,Dune::All_All_Interface,Dune::ForwardCommunication);
 
-  Dune::PDELab::set_constrained_dofs(cc,0.0,*part_unity); // Zero on subdomain boundary (Need that a 2nd time due to add comm before!)
+  Dune::PDELab::set_constrained_dofs(cc,0.0,part_unity); // Zero on subdomain boundary (Need that a 2nd time due to add comm before!)
 
-  for (auto iter = part_unity->begin(); iter != part_unity->end(); iter++) {
+  for (auto iter = part_unity.begin(); iter != part_unity.end(); iter++) {
     if (*iter > 0)
       *iter = 1.0 / *iter;
   }
@@ -53,13 +53,13 @@ std::shared_ptr<X> standardPartitionOfUnity(const GFS& gfs, LFS& lfs, const CC& 
  * \return A vector representing the partition of unity.
  */
 template<class X, class GFS,  class LFS, class CC>
-std::shared_ptr<X> sarkisPartitionOfUnity(const GFS& gfs, LFS& lfs, const CC& cc, int cells_x, int cells_y, int overlap, int partition_x, int partition_y) {
+X sarkisPartitionOfUnity(const GFS& gfs, LFS& lfs, const CC& cc, int cells_x, int cells_y, int overlap, int partition_x, int partition_y) {
   using Dune::PDELab::Backend::native;
 
   int my_rank = gfs.gridView().comm().rank();
   const int dim = 2;
 
-  auto part_unity = std::make_shared<X>(gfs, 1);
+  X part_unity(gfs, 1);
 
   for (auto it = gfs.gridView().template begin<0>(); it != gfs.gridView().template end<0>(); ++it) {
 
@@ -98,23 +98,22 @@ std::shared_ptr<X> sarkisPartitionOfUnity(const GFS& gfs, LFS& lfs, const CC& cc
       if (col == 0) dx2 = 2*Hx;
       if (col == partition_x - 1) dx1 = 2*Hx;
 
-      native(*part_unity)[subindex] = std::min(std::min(std::min(dx1, dx2), dy1), dy2);
+      native(part_unity)[subindex] = std::min(std::min(std::min(dx1, dx2), dy1), dy2);
     }
   }
 
-  X sum_dists(gfs, 0.0);
-  sum_dists = *part_unity;
+  X sum_dists(part_unity);
   Dune::PDELab::AddDataHandle<GFS,X> addh_dists(gfs,sum_dists);
   gfs.gridView().communicate(addh_dists,Dune::All_All_Interface,Dune::ForwardCommunication);
 
   auto iter_sum = sum_dists.begin();
-  for (auto iter = part_unity->begin(); iter != part_unity->end(); iter++) {
+  for (auto iter = part_unity.begin(); iter != part_unity.end(); iter++) {
     if (*iter > 0)
       *iter *= 1.0 / *iter_sum;
     iter_sum++;
   }
 
-  Dune::PDELab::set_constrained_dofs(cc,0.0,*part_unity); // Zero on Dirichlet domain boundary
+  Dune::PDELab::set_constrained_dofs(cc,0.0,part_unity); // Zero on Dirichlet domain boundary
 
   return part_unity;
 }
