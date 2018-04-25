@@ -249,7 +249,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
     DUNE_THROW(Dune::Exception, "Unkown selection in test driver!");
 
 
-  auto partunityspace = std::make_shared<Dune::PDELab::SubdomainProjectedCoarseSpace<GFS,M,V> >(gfs, AF_exterior, subdomain_basis, verb);
+  auto partunityspace = std::make_shared<Dune::PDELab::SubdomainProjectedCoarseSpace<GFS,M,V,PIH> >(gfs, AF_exterior, subdomain_basis, pihf);
   auto prec = std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,V,V>>(gfs, AF, partunityspace, true, verb);
 
 

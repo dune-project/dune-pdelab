@@ -25,218 +25,179 @@ namespace Dune {
     * across all processes. In the process, the per-subdomain basis functions are
     * extended by zeros, resulting in a sparse system.
     */
-    template<class GFS, class M, class X>
-    class SubdomainProjectedCoarseSpace : public CoarseSpace<M,X>
+    template<class GFS, class M, class X, class PIH>
+    class SubdomainProjectedCoarseSpace : public CoarseSpace<X>
     {
 
+      typedef int rank_type;
     public:
-      typedef typename CoarseSpace<M,X>::COARSE_V COARSE_V;
-      typedef typename CoarseSpace<M,X>::COARSE_M COARSE_M;
+      typedef typename CoarseSpace<X>::COARSE_V COARSE_V;
+      typedef typename CoarseSpace<X>::COARSE_M COARSE_M;
+      typedef typename COARSE_M::field_type field_type;
 
       /*! \brief Constructor.
-      * \param gfs_ Grid function space.
-      * \param AF_exterior Stiffness matrix of the problem to be solved.
+      * \param gfs Grid function space.
+      * \param AF_exterior_ Stiffness matrix of the problem to be solved.
       * \param subdomainbasis Per-subdomain coarse basis.
       * \param verbosity Verbosity.
       */
-      SubdomainProjectedCoarseSpace (const GFS& gfs_, const M& AF_exterior, std::shared_ptr<SubdomainBasis<X> > subdomainbasis, int verbosity = 0)
-       : gfs(gfs_), AF_exterior(AF_exterior),
-          ranks(gfs.gridView().comm().size()),
-          my_rank(gfs.gridView().comm().rank()),
+      SubdomainProjectedCoarseSpace (const GFS& gfs, const M& AF_exterior_, std::shared_ptr<SubdomainBasis<X> > subdomainbasis, const PIH& parallelhelper)
+       : gfs_(gfs), AF_exterior_(AF_exterior_),
+          ranks_(gfs.gridView().comm().size()),
+          my_rank_(gfs.gridView().comm().rank()),
           subdomainbasis_(subdomainbasis),
-          _verbosity(verbosity)
+          parallelhelper_(parallelhelper)
       {
-
-        // Find neighbors (based on parallelhelper.hh in PDELab)
-
-        using RankVector = Dune::PDELab::Backend::Vector<GFS,int>;
-        RankVector rank_partition(gfs, my_rank); // vector to identify unique decomposition
-        //! Type for storing rank values.
-
-        //! Type used to store owner rank values of all DOFs.
-
-        Dune::InterfaceType _interiorBorder_all_interface;
-
-        //! The actual communication interface used when algorithm requires All_All_Interface.
-        Dune::InterfaceType _all_all_interface;
-
-        // TODO: The following shortcut may never be fulfilled because we have no overlap?
-        // Let's try to be clever and reduce the communication overhead by picking the smallest
-        // possible communication interface depending on the overlap structure of the GFS.
-        // FIXME: Switch to simple comparison as soon as dune-grid:1b3e83ec0 is reliably available!
-        if (gfs.entitySet().partitions().value == Dune::Partitions::interiorBorder.value)
-          {
-            // The GFS only spans the interior and border partitions, so we can skip sending or
-            // receiving anything else.
-            _interiorBorder_all_interface = Dune::InteriorBorder_InteriorBorder_Interface;
-            _all_all_interface = Dune::InteriorBorder_InteriorBorder_Interface;
-          }
-        else
-          {
-            // In general, we have to transmit more.
-            _interiorBorder_all_interface = Dune::InteriorBorder_All_Interface;
-            _all_all_interface = Dune::All_All_Interface;
-          }
-        Dune::PDELab::DisjointPartitioningDataHandle<GFS,RankVector> pdh(gfs,rank_partition);
-        gfs.gridView().communicate(pdh,_interiorBorder_all_interface,Dune::ForwardCommunication);
-
-        std::set<int> rank_set;
-        for (int rank : rank_partition)
-          if (rank != my_rank)
-            rank_set.insert(rank);
-
-        for (int rank : rank_set)
-          neighbor_ranks.push_back(rank);
+        neighbor_ranks_ = parallelhelper.getNeighborRanks();
 
         setup_coarse_system();
       }
 
     private:
-      void setup_coarse_system () {
+      void setup_coarse_system() {
         using Dune::PDELab::Backend::native;
 
         // Get local basis vectors
         auto local_basis = subdomainbasis_->local_basis;
 
         // Normalize basis vectors
-        for (int i = 0; i < local_basis.size(); i++) {
+        for (rank_type i = 0; i < local_basis.size(); i++) {
           native(*(local_basis[i])) *= 1.0 / (native(*(local_basis[i])) * native(*(local_basis[i])));
         }
 
-        gfs.gridView().comm().barrier();
-        if (my_rank == 0) std::cout << "Matrix setup" << std::endl;
+        gfs_.gridView().comm().barrier();
+        if (my_rank_ == 0) std::cout << "Matrix setup" << std::endl;
         Dune::Timer timer_setup;
 
         // Communicate local coarse space dimensions
-        int buf_basis_sizes[ranks];
-        int local_size = local_basis.size();
-        MPI_Allgather(&local_size, 1, MPI_INT, &buf_basis_sizes, 1, MPI_INT, gfs.gridView().comm());
-        local_basis_sizes = std::vector<int>(buf_basis_sizes, buf_basis_sizes + ranks);
+        local_basis_sizes_.resize(ranks_);
+        rank_type local_size = local_basis.size();
+        MPI_Allgather(&local_size, 1, MPITraits<rank_type>::getType(), local_basis_sizes_.data(), 1, MPITraits<rank_type>::getType(), gfs_.gridView().comm());
 
         // Count coarse space dimensions
-        global_basis_size = 0;
-        for (int n : local_basis_sizes) {
-          global_basis_size += n;
+        global_basis_size_ = 0;
+        for (rank_type n : local_basis_sizes_) {
+          global_basis_size_ += n;
         }
-        my_basis_array_offset = 0;
-        for (int i = 0; i < my_rank; i++) {
-          my_basis_array_offset += local_basis_sizes[i];
-        }
-
-        if (my_rank == 0) std::cout << "Global basis size B=" << global_basis_size << std::endl;
-
-        int max_local_basis_size = *std::max_element(local_basis_sizes.begin(),local_basis_sizes.end());
-
-        coarse_system = std::make_shared<COARSE_M>(global_basis_size, global_basis_size, COARSE_M::row_wise);
-
-        std::vector<std::vector<std::vector<double> > > local_rows(local_basis_sizes[my_rank]);
-        for (int basis_index = 0; basis_index < local_basis_sizes[my_rank]; basis_index++) {
-          local_rows[basis_index].resize(neighbor_ranks.size()+1);
+        my_basis_array_offset_ = 0;
+        for (rank_type i = 0; i < my_rank_; i++) {
+          my_basis_array_offset_ += local_basis_sizes_[i];
         }
 
-        for (int basis_index_remote = 0; basis_index_remote < max_local_basis_size; basis_index_remote++) {
+        if (my_rank_ == 0) std::cout << "Global basis size B=" << global_basis_size_ << std::endl;
 
-          std::vector<std::shared_ptr<X> > neighbor_basis(neighbor_ranks.size()); // Local coarse space basis
-          for (int i = 0; i < neighbor_basis.size(); i++) {
-            neighbor_basis[i] = std::make_shared<X>(gfs, 0.0);
+        rank_type max_local_basis_size = *std::max_element(local_basis_sizes_.begin(),local_basis_sizes_.end());
+
+        coarse_system_ = std::make_shared<COARSE_M>(global_basis_size_, global_basis_size_, COARSE_M::row_wise);
+
+        std::vector<std::vector<std::vector<field_type> > > local_rows(local_basis_sizes_[my_rank_]);
+        for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
+          local_rows[basis_index].resize(neighbor_ranks_.size()+1);
+        }
+
+        for (rank_type basis_index_remote = 0; basis_index_remote < max_local_basis_size; basis_index_remote++) {
+
+          std::vector<std::shared_ptr<X> > neighbor_basis(neighbor_ranks_.size()); // Local coarse space basis
+          for (rank_type i = 0; i < neighbor_basis.size(); i++) {
+            neighbor_basis[i] = std::make_shared<X>(gfs_, 0.0);
           }
 
-          if (basis_index_remote < local_basis_sizes[my_rank]) {
-            Dune::PDELab::MultiCommDataHandle<GFS,X,int> commdh(gfs, *local_basis[basis_index_remote], neighbor_basis, neighbor_ranks);
-            gfs.gridView().communicate(commdh,Dune::All_All_Interface,Dune::ForwardCommunication);
+          if (basis_index_remote < local_basis_sizes_[my_rank_]) {
+            Dune::PDELab::MultiCommDataHandle<GFS,X,rank_type> commdh(gfs_, *local_basis[basis_index_remote], neighbor_basis, neighbor_ranks_);
+            gfs_.gridView().communicate(commdh,Dune::All_All_Interface,Dune::ForwardCommunication);
           } else {
-            X dummy(gfs, 0.0);
-            Dune::PDELab::MultiCommDataHandle<GFS,X,int> commdh(gfs, dummy, neighbor_basis, neighbor_ranks);
-            gfs.gridView().communicate(commdh,Dune::All_All_Interface,Dune::ForwardCommunication);
+            X dummy(gfs_, 0.0);
+            Dune::PDELab::MultiCommDataHandle<GFS,X,rank_type> commdh(gfs_, dummy, neighbor_basis, neighbor_ranks_);
+            gfs_.gridView().communicate(commdh,Dune::All_All_Interface,Dune::ForwardCommunication);
           }
 
 
-          if (basis_index_remote < local_basis_sizes[my_rank]) {
+          if (basis_index_remote < local_basis_sizes_[my_rank_]) {
             auto basis_vector = *local_basis[basis_index_remote];
-            X Atimesv(gfs,0.0);
-            native(AF_exterior).mv(native(basis_vector), native(Atimesv));
-            for (int basis_index = 0; basis_index < local_basis_sizes[my_rank]; basis_index++) {
-              double entry = *local_basis[basis_index]*Atimesv;
-              local_rows[basis_index][neighbor_ranks.size()].push_back(entry);
+            X Atimesv(gfs_,0.0);
+            native(AF_exterior_).mv(native(basis_vector), native(Atimesv));
+            for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
+              field_type entry = *local_basis[basis_index]*Atimesv;
+              local_rows[basis_index][neighbor_ranks_.size()].push_back(entry);
             }
           }
 
-          for (int neighbor_id = 0; neighbor_id < neighbor_ranks.size(); neighbor_id++) {
-            if (basis_index_remote >= local_basis_sizes[neighbor_ranks[neighbor_id]])
+          for (rank_type neighbor_id = 0; neighbor_id < neighbor_ranks_.size(); neighbor_id++) {
+            if (basis_index_remote >= local_basis_sizes_[neighbor_ranks_[neighbor_id]])
               continue;
 
             auto basis_vector = *neighbor_basis[neighbor_id];
-            X Atimesv(gfs,0.0);
-            native(AF_exterior).mv(native(basis_vector), native(Atimesv));
+            X Atimesv(gfs_,0.0);
+            native(AF_exterior_).mv(native(basis_vector), native(Atimesv));
 
-            for (int basis_index = 0; basis_index < local_basis_sizes[my_rank]; basis_index++) {
+            for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
 
-              double entry = *local_basis[basis_index]*Atimesv;
+              field_type entry = *local_basis[basis_index]*Atimesv;
               local_rows[basis_index][neighbor_id].push_back(entry);
             }
           }
 
         }
 
-        auto setup_row = coarse_system->createbegin();
-        int row_id = 0;
-        for (int rank = 0; rank < ranks; rank++) {
-          for (int basis_index = 0; basis_index < local_basis_sizes[rank]; basis_index++) {
+        auto setup_row = coarse_system_->createbegin();
+        rank_type row_id = 0;
+        for (rank_type rank = 0; rank < ranks_; rank++) {
+          for (rank_type basis_index = 0; basis_index < local_basis_sizes_[rank]; basis_index++) {
 
             // Communicate number of entries in this row
-            int couplings = 0;
-            if (rank == my_rank) {
-              couplings = local_basis_sizes[my_rank];
-              for (int neighbor_id : neighbor_ranks) {
-                couplings += local_basis_sizes[neighbor_id];
+            rank_type couplings = 0;
+            if (rank == my_rank_) {
+              couplings = local_basis_sizes_[my_rank_];
+              for (rank_type neighbor_id : neighbor_ranks_) {
+                couplings += local_basis_sizes_[neighbor_id];
               }
             }
-            MPI_Bcast(&couplings, 1, MPI_INT, rank, gfs.gridView().comm());
+            MPI_Bcast(&couplings, 1, MPITraits<rank_type>::getType(), rank, gfs_.gridView().comm());
 
             // Communicate row's pattern
-            int entries_pos[couplings];
-            if (rank == my_rank) {
-              int cnt = 0;
-              for (int basis_index2 = 0; basis_index2 < local_basis_sizes[my_rank]; basis_index2++) {
-                entries_pos[cnt] = my_basis_array_offset + basis_index2;
+            rank_type entries_pos[couplings];
+            if (rank == my_rank_) {
+              rank_type cnt = 0;
+              for (rank_type basis_index2 = 0; basis_index2 < local_basis_sizes_[my_rank_]; basis_index2++) {
+                entries_pos[cnt] = my_basis_array_offset_ + basis_index2;
                 cnt++;
               }
-              for (int neighbor_id = 0; neighbor_id < neighbor_ranks.size(); neighbor_id++) {
-                int neighbor_offset = basis_array_offset (neighbor_ranks[neighbor_id]);
-                for (int basis_index2 = 0; basis_index2 < local_basis_sizes[neighbor_ranks[neighbor_id]]; basis_index2++) {
+              for (rank_type neighbor_id = 0; neighbor_id < neighbor_ranks_.size(); neighbor_id++) {
+                rank_type neighbor_offset = basis_array_offset (neighbor_ranks_[neighbor_id]);
+                for (rank_type basis_index2 = 0; basis_index2 < local_basis_sizes_[neighbor_ranks_[neighbor_id]]; basis_index2++) {
                   entries_pos[cnt] = neighbor_offset + basis_index2;
                   cnt++;
                 }
               }
             }
-            MPI_Bcast(&entries_pos, couplings, MPI_INT, rank, gfs.gridView().comm());
+            MPI_Bcast(&entries_pos, couplings, MPITraits<rank_type>::getType(), rank, gfs_.gridView().comm());
 
             // Communicate actual entries
-            double entries[couplings];
-            if (rank == my_rank) {
-              int cnt = 0;
-              for (int basis_index2 = 0; basis_index2 < local_basis_sizes[my_rank]; basis_index2++) {
-                entries[cnt] = local_rows[basis_index][neighbor_ranks.size()][basis_index2];
+            field_type entries[couplings];
+            if (rank == my_rank_) {
+              rank_type cnt = 0;
+              for (rank_type basis_index2 = 0; basis_index2 < local_basis_sizes_[my_rank_]; basis_index2++) {
+                entries[cnt] = local_rows[basis_index][neighbor_ranks_.size()][basis_index2];
                 cnt++;
               }
-              for (int neighbor_id = 0; neighbor_id < neighbor_ranks.size(); neighbor_id++) {
-                int neighbor_offset = basis_array_offset (neighbor_ranks[neighbor_id]);
-                for (int basis_index2 = 0; basis_index2 < local_basis_sizes[neighbor_ranks[neighbor_id]]; basis_index2++) {
+              for (rank_type neighbor_id = 0; neighbor_id < neighbor_ranks_.size(); neighbor_id++) {
+                rank_type neighbor_offset = basis_array_offset (neighbor_ranks_[neighbor_id]);
+                for (rank_type basis_index2 = 0; basis_index2 < local_basis_sizes_[neighbor_ranks_[neighbor_id]]; basis_index2++) {
                   entries[cnt] = local_rows[basis_index][neighbor_id][basis_index2];
                   cnt++;
                 }
               }
             }
-            MPI_Bcast(&entries, couplings, MPI_DOUBLE, rank, gfs.gridView().comm());
+            MPI_Bcast(&entries, couplings, MPITraits<field_type>::getType(), rank, gfs_.gridView().comm());
 
             // Build matrix row based on pattern
-            for (int i = 0; i < couplings; i++)
+            for (rank_type i = 0; i < couplings; i++)
               setup_row.insert(entries_pos[i]);
             ++setup_row;
 
             // Set matrix entries
-            for (int i = 0; i < couplings; i++) {
-              (*coarse_system)[row_id][entries_pos[i]] = entries[i];
+            for (rank_type i = 0; i < couplings; i++) {
+              (*coarse_system_)[row_id][entries_pos[i]] = entries[i];
             }
 
             row_id++;
@@ -244,95 +205,93 @@ namespace Dune {
         }
 
 
-        if (my_rank == 0) std::cout << "Matrix setup finished: M=" << timer_setup.elapsed() << std::endl;
+        if (my_rank_ == 0) std::cout << "Matrix setup finished: M=" << timer_setup.elapsed() << std::endl;
       }
 
-      double coarse_time = 0.0;
-
-      int basis_array_offset (int rank) {
-        int offset = 0;
-        for (int i = 0; i < rank; i++) {
-          offset += local_basis_sizes[i];
+      rank_type basis_array_offset (rank_type rank) {
+        rank_type offset = 0;
+        for (rank_type i = 0; i < rank; i++) {
+          offset += local_basis_sizes_[i];
         }
         return offset;
       }
 
     public:
 
-      std::shared_ptr<COARSE_V> restrict_defect (const X& d) const override {
+      std::shared_ptr<COARSE_V> restrict (const X& d) const override {
 
         auto local_basis = subdomainbasis_->local_basis;
 
         using Dune::PDELab::Backend::native;
-        std::shared_ptr<COARSE_V> coarse_defect = std::make_shared<COARSE_V>(global_basis_size,global_basis_size);
+        std::shared_ptr<COARSE_V> coarse_defect = std::make_shared<COARSE_V>(global_basis_size_,global_basis_size_);
 
-        int recvcounts[ranks];
-        int displs[ranks];
-        for (int rank = 0; rank < ranks; rank++) {
+        rank_type recvcounts[ranks_];
+        rank_type displs[ranks_];
+        for (rank_type rank = 0; rank < ranks_; rank++) {
           displs[rank] = 0;
         }
-        for (int rank = 0; rank < ranks; rank++) {
-          recvcounts[rank] = local_basis_sizes[rank];
-          for (int i = rank+1; i < ranks; i++)
-            displs[i] += local_basis_sizes[rank];
+        for (rank_type rank = 0; rank < ranks_; rank++) {
+          recvcounts[rank] = local_basis_sizes_[rank];
+          for (rank_type i = rank+1; i < ranks_; i++)
+            displs[i] += local_basis_sizes_[rank];
         }
 
-        double buf_defect[global_basis_size];
-        double buf_defect_local[local_basis_sizes[my_rank]];
+        field_type buf_defect[global_basis_size_];
+        field_type buf_defect_local[local_basis_sizes_[my_rank_]];
 
-        for (int basis_index = 0; basis_index < local_basis_sizes[my_rank]; basis_index++) {
+        for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
           buf_defect_local[basis_index] = 0.0;
-          for (int i = 0; i < native(d).N(); i++)
+          for (rank_type i = 0; i < native(d).N(); i++)
             buf_defect_local[basis_index] += native(*local_basis[basis_index])[i] * native(d)[i];
         }
 
-        MPI_Allgatherv(&buf_defect_local, local_basis_sizes[my_rank], MPI_DOUBLE, &buf_defect, recvcounts, displs, MPI_DOUBLE, gfs.gridView().comm());
-        for (int basis_index = 0; basis_index < global_basis_size; basis_index++) {
+        MPI_Allgatherv(&buf_defect_local, local_basis_sizes_[my_rank_], MPITraits<field_type>::getType(), &buf_defect, recvcounts, displs, MPITraits<field_type>::getType(), gfs_.gridView().comm());
+        for (rank_type basis_index = 0; basis_index < global_basis_size_; basis_index++) {
           (*coarse_defect)[basis_index] = buf_defect[basis_index];
         }
         return coarse_defect;
       }
 
-      std::shared_ptr<X> prolongate_defect (const COARSE_V& v0) const override {
+      X prolongate (const COARSE_V& v0) const override {
         auto local_basis = subdomainbasis_->local_basis;
 
         using Dune::PDELab::Backend::native;
-        auto v = std::make_shared<X>(gfs, 0.0);
+        X v(gfs_, 0.0);
 
         // Prolongate result
-        for (int basis_index = 0; basis_index < local_basis_sizes[my_rank]; basis_index++) {
+        for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
           X local_result(*local_basis[basis_index]);
-          native(local_result) *= v0[my_basis_array_offset + basis_index];
-          *v += local_result;
+          native(local_result) *= v0[my_basis_array_offset_ + basis_index];
+          v += local_result;
         }
         return v;
       }
 
       std::shared_ptr<COARSE_M> get_coarse_system () override {
-        return coarse_system;
+        return coarse_system_;
       }
 
-      int basis_size() override {
-        return global_basis_size;
+      rank_type basis_size() override {
+        return global_basis_size_;
       }
 
     private:
 
-      const GFS& gfs;
-      const M& AF_exterior;
+      const GFS& gfs_;
+      const M& AF_exterior_;
+      const PIH& parallelhelper_;
 
-      std::vector<int> neighbor_ranks;
+      std::vector<rank_type> neighbor_ranks_;
 
       std::shared_ptr<SubdomainBasis<X> > subdomainbasis_;
 
-      int ranks, my_rank;
-      int _verbosity;
+      rank_type ranks_, my_rank_;
 
-      std::vector<int> local_basis_sizes; // Dimensions of local coarse space per subdomain
-      int my_basis_array_offset; // Start of local basis functions in a consecutive global ordering
-      int global_basis_size; // Dimension of entire coarse space
+      std::vector<rank_type> local_basis_sizes_; // Dimensions of local coarse space per subdomain
+      rank_type my_basis_array_offset_; // Start of local basis functions in a consecutive global ordering
+      rank_type global_basis_size_; // Dimension of entire coarse space
 
-      std::shared_ptr<COARSE_M> coarse_system; // Coarse space matrix
+      std::shared_ptr<COARSE_M> coarse_system_; // Coarse space matrix
     };
   }
 }

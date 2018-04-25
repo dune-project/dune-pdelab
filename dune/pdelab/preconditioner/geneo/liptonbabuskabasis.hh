@@ -78,9 +78,7 @@ namespace Dune {
         }
 
         if (add_part_unity && eigenvalues[0] > 1E-10) {
-          auto part_unity_basis = std::make_shared<X>(gfs,0.0);
-          *part_unity_basis = part_unity;
-          this->local_basis.insert (this->local_basis.begin(), part_unity_basis);
+          this->local_basis.insert (this->local_basis.begin(), std::make_shared<X>(part_unity));
           this->local_basis.pop_back();
         }
       }
