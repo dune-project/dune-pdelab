@@ -78,7 +78,6 @@ namespace Dune {
       template<typename MassMatrices,typename Cell>
       struct inverse_mass_matrix_calculator
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         static const int dim  = Cell::Geometry::mydimension;
@@ -199,7 +198,6 @@ namespace Dune {
     template<typename GFS, typename DOFVector, typename TransferMap>
     struct backup_visitor
       : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
     {
 
       typedef LocalFunctionSpace<GFS> LFS;
@@ -369,7 +367,6 @@ namespace Dune {
     template<typename GFS, typename DOFVector, typename CountVector>
     struct replay_visitor
       : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
     {
 
       typedef LocalFunctionSpace<GFS> LFS;

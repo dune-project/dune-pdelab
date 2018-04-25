@@ -66,7 +66,6 @@ namespace Dune {
       template <typename R>
       class ComputeCG2DGVisitor :
         public TypeTree::DefaultPairVisitor,
-        public TypeTree::DynamicTraversal,
         public TypeTree::VisitTree
       {
         LocalMatrix<R>& _mat;

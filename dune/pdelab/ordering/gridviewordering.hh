@@ -22,7 +22,6 @@ namespace Dune {
     template<typename Codims>
     struct collect_used_codims
       : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
     {
 
       template<typename Node, typename TreePath>
@@ -42,7 +41,6 @@ namespace Dune {
 
     struct collect_a_priori_fixed_size
       : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
     {
 
       template<typename Node, typename TreePath>
@@ -79,7 +77,6 @@ namespace Dune {
     template<typename ES>
     struct update_fixed_size
       : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
     {
 
       template<typename Node, typename TreePath>
@@ -170,7 +167,6 @@ namespace Dune {
 
     struct pre_collect_used_geometry_types
       : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
     {
 
       template<typename Node, typename TreePath>
@@ -203,7 +199,6 @@ namespace Dune {
     template<typename Cell>
     struct collect_used_geometry_types_from_cell_visitor
       : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
     {
 
       template<typename Node, typename TreePath>
@@ -227,7 +222,6 @@ namespace Dune {
     template<typename ES>
     struct post_collect_used_geometry_types
       : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
     {
 
       template<typename Node, typename TreePath>
@@ -282,7 +276,6 @@ namespace Dune {
     template<typename ES>
     struct extract_per_entity_sizes_from_cell_visitor
       : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
     {
 
       static const std::size_t dim = ES::dimension;
@@ -320,7 +313,6 @@ namespace Dune {
     template<typename ES>
     struct post_extract_per_entity_sizes
       : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
     {
 
       typedef std::vector<GeometryType> GTVector;

@@ -35,7 +35,6 @@ namespace Dune {
       template<typename = int>
       struct PropagateGlobalStorageVisitor
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename LFS, typename Child, typename TreePath, typename ChildIndex>
@@ -51,7 +50,6 @@ namespace Dune {
       template<typename = int>
       struct ClearSizeVisitor
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename Node, typename TreePath>
@@ -79,7 +77,6 @@ namespace Dune {
       template<typename Entity, bool fast>
       struct ComputeSizeVisitor
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename Node, typename TreePath>
@@ -126,7 +123,6 @@ namespace Dune {
       template<typename Entity, bool fast>
       struct FillIndicesVisitor
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename Node, typename TreePath>

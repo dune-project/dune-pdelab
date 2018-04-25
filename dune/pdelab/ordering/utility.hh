@@ -35,7 +35,6 @@ namespace Dune {
       // This is an implementation detail of the composite orderings, no need to confuse our users!
       struct update_direct_children
         : public TypeTree::DirectChildrenVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename GFS, typename Child, typename TreePath, typename ChildIndex>
@@ -244,7 +243,6 @@ namespace Dune {
     template<typename child_type>
     struct extract_child_bases
       : public TypeTree::DirectChildrenVisitor
-      , public TypeTree::DynamicTraversal
     {
 
       template<typename Node, typename Child, typename TreePath, typename ChildIndex>

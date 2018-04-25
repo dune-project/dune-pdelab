@@ -13,7 +13,7 @@ namespace Imp
 
   template<typename Entity>
   struct PowerCompositeBindVisitor
-    : public TypeTree::TreeVisitor, public TypeTree::DynamicTraversal
+    : public TypeTree::TreeVisitor
   {
     PowerCompositeBindVisitor(const Entity & e) : e_(e) {}
     template<typename LeafNode, typename TreePath>
@@ -25,7 +25,7 @@ namespace Imp
   };
 
   struct PowerCompositeUnbindVisitor
-    : public TypeTree::TreeVisitor, public TypeTree::DynamicTraversal
+    : public TypeTree::TreeVisitor
   {
     template<typename LeafNode, typename TreePath>
     void leaf(LeafNode& node, TreePath treePath) const

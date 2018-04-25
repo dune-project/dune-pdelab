@@ -22,7 +22,6 @@ namespace Dune {
       template<typename LFSV, typename Operation>
       struct ApplyBlockOperation
         : public TypeTree::TreeVisitor
-        , public TypeTree::StaticTraversal
       {
 
         template<typename LeafLFSU, typename TreePath>

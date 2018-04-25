@@ -124,7 +124,6 @@ namespace Dune {
       template<typename P, typename IG, typename CL>
       struct BoundaryConstraintsForParametersLeaf
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename LFS, typename TreePath>
@@ -154,7 +153,6 @@ namespace Dune {
       template<typename IG, typename CL>
       struct BoundaryConstraints
         : public ParameterizedConstraintsBase
-        , public TypeTree::DynamicTraversal
       {
 
         // standard case - leaf in both trees
@@ -193,7 +191,6 @@ namespace Dune {
       template<typename IG, typename CL>
       struct ProcessorConstraints
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename LFS, typename TreePath>
@@ -221,7 +218,6 @@ namespace Dune {
       template<typename IG, typename CL>
       struct SkeletonConstraints
         : public TypeTree::TreePairVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename LFS, typename TreePath>
@@ -256,7 +252,6 @@ namespace Dune {
       template<typename P, typename EG, typename CL>
       struct VolumeConstraintsForParametersLeaf
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename LFS, typename TreePath>
@@ -287,7 +282,6 @@ namespace Dune {
       template<typename EG, typename CL>
       struct VolumeConstraints
         : public ParameterizedConstraintsBase
-        , public TypeTree::DynamicTraversal
       {
 
         // standard case - leaf in both trees

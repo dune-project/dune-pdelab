@@ -25,7 +25,6 @@ namespace Dune {
 
       struct reset_root_space_flag
         : public TypeTree::DirectChildrenVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename GFS, typename Child, typename TreePath, typename ChildIndex>
@@ -79,7 +78,6 @@ namespace Dune {
       template<typename size_type>
       struct update_ordering_data
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         typedef GridFunctionSpaceOrderingData<size_type> Data;

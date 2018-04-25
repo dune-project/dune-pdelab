@@ -45,7 +45,6 @@ namespace Dune {
       template<typename IB, typename LF, typename XG>
       struct InterpolateLeafFromScalarVisitor
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename LFS, typename TreePath>
@@ -76,7 +75,6 @@ namespace Dune {
       template<typename IB, typename LF, typename XG>
       struct InterpolateLeafFromVectorVisitor
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
         using Domain = typename Functions::SignatureTraits<LF>::Domain;
         using Range = typename Functions::SignatureTraits<LF>::Range;
@@ -124,7 +122,6 @@ namespace Dune {
       template<typename IB, typename E, typename XG>
       struct InterpolateVisitor
         : public TypeTree::TreePairVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename F, typename LFS, typename TreePath>

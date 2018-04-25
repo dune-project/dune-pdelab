@@ -20,7 +20,6 @@ namespace Dune {
       template<typename EntityIndex>
       struct get_size_for_entity
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename Ordering, typename TreePath>
@@ -50,7 +49,6 @@ namespace Dune {
       template<typename EntityIndex, typename OffsetIterator>
       struct get_leaf_offsets_for_entity
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         template<typename Ordering, typename TreePath>
@@ -81,7 +79,6 @@ namespace Dune {
       template<typename DOFIndex, typename ContainerIndex, std::size_t tree_depth, bool map_dof_indices = false>
       struct indices_for_entity
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         typedef std::size_t size_type;

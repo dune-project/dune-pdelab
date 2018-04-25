@@ -143,7 +143,6 @@ namespace Dune {
     template<typename Iterator>
     struct extract_lfs_leaf_size_visitor
       : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
     {
 
       template<typename LeafLFS, typename TreePath>
@@ -177,7 +176,6 @@ namespace Dune {
              bool fast>
     struct map_dof_indices_to_container_indices
       : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
     {
 
       template<typename Ordering, typename TreePath>

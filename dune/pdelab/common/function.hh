@@ -341,7 +341,7 @@ namespace Dune {
     */
     template<typename TT>
     struct PowerCompositeSetTimeVisitor
-      : public TypeTree::TreeVisitor, public TypeTree::DynamicTraversal
+      : public TypeTree::TreeVisitor
     {
       TT time;
       PowerCompositeSetTimeVisitor(const TT time_) : time(time_) {}
@@ -823,7 +823,6 @@ namespace Dune {
       template<typename VTKWriter>
       struct AddGridFunctionsToVTKWriter
         : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
       {
 
         VTKWriter& w;

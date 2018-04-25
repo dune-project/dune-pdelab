@@ -408,7 +408,6 @@ namespace Dune {
       template<typename VTKWriter, typename Data, typename NameGenerator>
       struct add_solution_to_vtk_writer_visitor
         : public TypeTree::DefaultVisitor
-        , public TypeTree::DynamicTraversal
       {
 
 
