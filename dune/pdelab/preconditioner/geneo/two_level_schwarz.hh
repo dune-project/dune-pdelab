@@ -45,7 +45,9 @@ namespace Dune {
             coarse_space_(coarse_space),
             coarse_solver_ (*coarse_space_->get_coarse_system()),
             coarse_space_active_(coarse_space_active),
-            verbosity_(verbosity)
+            verbosity_(verbosity),
+            coarse_defect_(coarse_space_->basis_size(), coarse_space_->basis_size()),
+            prolongated_(gfs_, 0.0)
         { }
 
         /*!
@@ -79,15 +81,16 @@ namespace Dune {
             gfs_.gridView().comm().barrier();
             Dune::Timer timer_coarse_solve;
 
-            auto coarse_defect = coarse_space_->restrict (d);
+            coarse_space_->restrict (d, coarse_defect_);
 
             // Solve coarse system
             Dune::InverseOperatorResult result;
             COARSE_V v0(coarse_space_->basis_size(),coarse_space_->basis_size());
-            coarse_solver_.apply(v0, *coarse_defect, result);
+            coarse_solver_.apply(v0, coarse_defect_, result);
 
             // Prolongate coarse solution on local domain
-            v += coarse_space_->prolongate(v0);
+            coarse_space_->prolongate(v0, prolongated_);
+            v += prolongated_;
 
             coarse_time_ += timer_coarse_solve.elapsed();
             apply_calls_++;
@@ -118,6 +121,9 @@ namespace Dune {
         Dune::UMFPack<ISTLM> solverf_;
         std::shared_ptr<CoarseSpace<X> > coarse_space_;
         Dune::UMFPack<COARSE_M> coarse_solver_;
+
+        typename CoarseSpace<X>::COARSE_V coarse_defect_;
+        X prolongated_;
       };
     }
   }

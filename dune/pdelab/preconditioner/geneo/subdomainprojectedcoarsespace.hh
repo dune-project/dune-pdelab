@@ -218,12 +218,11 @@ namespace Dune {
 
     public:
 
-      std::shared_ptr<COARSE_V> restrict (const X& d) const override {
-
-        auto local_basis = subdomainbasis_->local_basis;
+      void restrict (const X& fine, COARSE_V& restricted) const override {
 
         using Dune::PDELab::Backend::native;
-        std::shared_ptr<COARSE_V> coarse_defect = std::make_shared<COARSE_V>(global_basis_size_,global_basis_size_);
+
+        auto local_basis = subdomainbasis_->local_basis;
 
         rank_type recvcounts[ranks_];
         rank_type displs[ranks_];
@@ -241,30 +240,29 @@ namespace Dune {
 
         for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
           buf_defect_local[basis_index] = 0.0;
-          for (rank_type i = 0; i < native(d).N(); i++)
-            buf_defect_local[basis_index] += native(*local_basis[basis_index])[i] * native(d)[i];
+          for (rank_type i = 0; i < native(fine).N(); i++)
+            buf_defect_local[basis_index] += native(*local_basis[basis_index])[i] * native(fine)[i];
         }
 
         MPI_Allgatherv(&buf_defect_local, local_basis_sizes_[my_rank_], MPITraits<field_type>::getType(), &buf_defect, recvcounts, displs, MPITraits<field_type>::getType(), gfs_.gridView().comm());
         for (rank_type basis_index = 0; basis_index < global_basis_size_; basis_index++) {
-          (*coarse_defect)[basis_index] = buf_defect[basis_index];
+          restricted[basis_index] = buf_defect[basis_index];
         }
-        return coarse_defect;
       }
 
-      X prolongate (const COARSE_V& v0) const override {
+      void prolongate (const COARSE_V& coarse, X& prolongated) const override {
         auto local_basis = subdomainbasis_->local_basis;
 
         using Dune::PDELab::Backend::native;
-        X v(gfs_, 0.0);
+
+        prolongated = 0.0;
 
         // Prolongate result
         for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
           X local_result(*local_basis[basis_index]);
-          native(local_result) *= v0[my_basis_array_offset_ + basis_index];
-          v += local_result;
+          native(local_result) *= coarse[my_basis_array_offset_ + basis_index];
+          prolongated += local_result;
         }
-        return v;
       }
 
       std::shared_ptr<COARSE_M> get_coarse_system () override {
