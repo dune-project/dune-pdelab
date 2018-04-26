@@ -38,6 +38,17 @@ PDELab 2.6
     `FEM::size(GeometryType)` is `static` and `constexpr` and can actually be executed in constexpr context
     (mostly, that means that it doesn't use any run time information).
 
+-   An implementation of the GenEO (Generalized Eigenproblems in the Overlap) spectral coarse space
+    (see Spillane et al., 2014) is introduced. It can be applied as an extremely robust two-level additive
+    Schwarz method or as an efficient coarse model. This implementation has been shown to scale well up to
+    2048 processor cores (see Reinarz et al., 2018), solving a highly heterogeneous and anisotropic
+    linear elasticity problem with 170 mio DOFs at around two minutes. Its structure allows to
+    easily introduce other coarse spaces, both global and defined per-subdomain.
+
+    Applying this coarse space requires two particular matrices to be set up for the generalized eigenproblems.
+    One is defined as the discretization matrix with Neumann conditions at processor boundaries; the other
+    is the same, however zeroed out away from the overlap region. Tools are provided to easily reuse the usual
+    discretization matrix assembly. For an example, see the GenEO unit test included in PDELab.
 
 PDELab 2.5
 ----------
