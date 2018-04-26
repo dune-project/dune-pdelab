@@ -3,8 +3,6 @@
 
 #if HAVE_ARPACKPP && HAVE_SUITESPARSE_UMFPACK
 
-#include <dune/pdelab/boilerplate/pdelab.hh>
-
 #include <dune/common/timer.hh>
 
 #include "coarsespace.hh"

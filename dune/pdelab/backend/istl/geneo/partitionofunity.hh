@@ -1,5 +1,5 @@
-#ifndef DUNE_GENEO_PARTITIONOFUNITY_HH
-#define DUNE_GENEO_PARTITIONOFUNITY_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_PARTITIONOFUNITY_HH
+#define DUNE_PDELAB_BACKEND_ISTL_GENEO_PARTITIONOFUNITY_HH
 
 /*!
  * \brief Compute a simple partition of unity.
@@ -119,4 +119,4 @@ X sarkisPartitionOfUnity(const GFS& gfs, LFS& lfs, const CC& cc, int cells_x, in
 }
 
 
-#endif //DUNE_GENEO_PARTITIONOFUNITY_HH
+#endif //DUNE_PDELAB_BACKEND_ISTL_GENEO_PARTITIONOFUNITY_HH

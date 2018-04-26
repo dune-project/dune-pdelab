@@ -1,8 +1,10 @@
-#ifndef DUNE_GENEO_GENEOBASIS_HH
-#define DUNE_GENEO_GENEOBASIS_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_GENEOBASIS_HH
+#define DUNE_PDELAB_BACKEND_ISTL_GENEO_GENEOBASIS_HH
 
-#include <dune/pdelab/preconditioner/geneo/subdomainbasis.hh>
-#include <dune/pdelab/preconditioner/geneo/arpackpp_geneo.hh>
+#include <dune/pdelab/backend/istl/geneo/subdomainbasis.hh>
+#include <dune/pdelab/backend/istl/geneo/arpackpp_geneo.hh>
+
+#if HAVE_ARPACKPP
 
 namespace Dune {
   namespace PDELab {
@@ -102,4 +104,7 @@ namespace Dune {
 
   }
 }
-#endif //DUNE_GENEO_GENEOBASIS_HH
+
+#endif
+
+#endif //DUNE_PDELAB_BACKEND_ISTL_GENEO_GENEOBASIS_HH

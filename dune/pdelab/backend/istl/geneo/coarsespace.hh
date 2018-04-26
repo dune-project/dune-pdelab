@@ -1,5 +1,5 @@
-#ifndef DUNE_GENEO_COARSESPACE_HH
-#define DUNE_GENEO_COARSESPACE_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_COARSESPACE_HH
+#define DUNE_PDELAB_BACKEND_ISTL_GENEO_COARSESPACE_HH
 
 /*! \brief Representation of a coarse space intended for two-level Schwarz preconditioners.
  * \tparam X Vector type on the subdomain
@@ -34,4 +34,4 @@ public:
   virtual int basis_size() = 0;
 };
 
-#endif //DUNE_GENEO_COARSESPACE_HH
+#endif //DUNE_PDELAB_BACKEND_ISTL_GENEO_COARSESPACE_HH

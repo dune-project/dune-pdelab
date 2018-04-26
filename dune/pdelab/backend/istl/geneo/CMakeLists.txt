@@ -16,4 +16,4 @@ install(FILES
   two_level_schwarz.hh
   zembasis.hh
 
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/preconditioner/geneo)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/backend/istl/geneo)
