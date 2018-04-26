@@ -1,18 +1,16 @@
 
-#ifndef DUNE_GENEO_SUBDOMAINPROJECTEDCOARSESPACE_HH
-#define DUNE_GENEO_SUBDOMAINPROJECTEDCOARSESPACE_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_SUBDOMAINPROJECTEDCOARSESPACE_HH
+#define DUNE_PDELAB_BACKEND_ISTL_GENEO_SUBDOMAINPROJECTEDCOARSESPACE_HH
 
-
-#if HAVE_ARPACKPP
 
 #include <dune/pdelab/boilerplate/pdelab.hh>
 
 #include <dune/common/timer.hh>
 
-#include <dune/pdelab/preconditioner/geneo/multicommdatahandle.hh>
+#include <dune/pdelab/backend/istl/geneo/multicommdatahandle.hh>
 
-#include <dune/pdelab/preconditioner/geneo/coarsespace.hh>
-#include <dune/pdelab/preconditioner/geneo/subdomainbasis.hh>
+#include <dune/pdelab/backend/istl/geneo/coarsespace.hh>
+#include <dune/pdelab/backend/istl/geneo/subdomainbasis.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -292,6 +290,5 @@ namespace Dune {
     };
   }
 }
-#endif
 
-#endif //DUNE_GENEO_SUBDOMAINPROJECTEDCOARSESPACE_HH
+#endif //DUNE_PDELAB_BACKEND_ISTL_GENEO_SUBDOMAINPROJECTEDCOARSESPACE_HH

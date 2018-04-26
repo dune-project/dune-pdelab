@@ -7,7 +7,7 @@
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
 
-#include <dune/pdelab/preconditioner/geneo/geneo.hh>
+#include <dune/pdelab/backend/istl/geneo/geneo.hh>
 
 /*
  * Defining a Darcy problem with alternating layers of permeability and a high contrast
