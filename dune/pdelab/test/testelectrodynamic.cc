@@ -163,6 +163,18 @@ public:
 };
 
 int main(int argc, char** argv) {
+
+  // We disable this test for dune-localfunctions 2.6.1 because a mismerge during backporting caused
+  // breakage in the FiniteElementSwitch for this test
+  //
+  // FIXME: Check if still needed once dune-localfunctions 2.6.1 releases
+#if DUNE_VERSION_GTE_REV(DUNE_LOCALFUNCTIONS,2,6,0) and DUNE_VERSION_LT_REV(DUNE_LOCALFUNCTIONS,2,6,1)
+
+  std::cerr << "Test disabled due to a bug in dune-localfunctions 2.6.0 !" std::endl;
+  return 77;
+
+#else
+
   // Maybe initialize Mpi
   Dune::MPIHelper::instance(argc, argv);
 
@@ -292,4 +304,7 @@ int main(int argc, char** argv) {
 
   // Don't handle exceptions, that would prevent typical C++ libraries from
   // printing a meaningful backtrace
+
+#endif // test disabling for 2.6.0
+
 }
