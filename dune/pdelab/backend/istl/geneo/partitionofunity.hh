@@ -10,12 +10,11 @@
  *
  * \tparam X Vector type
  * \param gfs Grid function space.
- * \param lsf Local function space.
  * \param cc Constraints container of the problem to be solved.
  * \return A vector representing the partition of unity.
  */
-template<class X, class GFS,  class LFS, class CC>
-X standardPartitionOfUnity(const GFS& gfs, LFS& lfs, const CC& cc) {
+template<class X, class GFS, class CC>
+X standardPartitionOfUnity(const GFS& gfs, const CC& cc) {
 
   X part_unity(gfs, 1);
 

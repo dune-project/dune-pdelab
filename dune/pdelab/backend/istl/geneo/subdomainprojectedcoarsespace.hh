@@ -44,7 +44,6 @@ namespace Dune {
           ranks_(gfs.gridView().comm().size()),
           my_rank_(gfs.gridView().comm().rank()),
           subdomainbasis_(subdomainbasis),
-          parallelhelper_(parallelhelper),
           verbosity_(verbosity)
       {
         neighbor_ranks_ = parallelhelper.getNeighborRanks();
@@ -272,7 +271,6 @@ namespace Dune {
 
       const GFS& gfs_;
       const M& AF_exterior_;
-      const PIH& parallelhelper_;
 
       int verbosity_;
 
