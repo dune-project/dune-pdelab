@@ -170,7 +170,7 @@ int main(int argc, char** argv) {
   // FIXME: Check if still needed once dune-localfunctions 2.6.1 releases
 #if DUNE_VERSION_GTE_REV(DUNE_LOCALFUNCTIONS,2,6,0) and DUNE_VERSION_LT_REV(DUNE_LOCALFUNCTIONS,2,6,1)
 
-  std::cerr << "Test disabled due to a bug in dune-localfunctions 2.6.0 !" std::endl;
+  std::cerr << "Test disabled due to a bug in dune-localfunctions 2.6.0 !" << std::endl;
   return 77;
 
 #else
