@@ -138,55 +138,87 @@ void driver(std::string basis_type, std::string part_unity_type) {
   typedef typename GM::ctype ctype;
   static const int dimworld = GM::dimensionworld;
 
-
-  typedef Dune::PDELab::CGFEMBase<GV,ctype,NumberType,degree,dim,elemtype> FEMB;
-  typedef Dune::PDELab::CGCONBase<GM,degree,elemtype,meshtype,solvertype,BCType> CONB;
-
-  typedef typename FEMB::FEM FEM;
-  typedef typename CONB::CON CON;
-  typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
-
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   auto gv = grid->levelGridView(grid->maxLevel());
-  auto fem = FEMB(gv);
-  auto con = CONB(*grid, bctype);
-  auto gfs = GFS(gv, fem.getFEM(), con.getCON()); gfs.name("Solution");
-  con.postGFSHook(gfs);
+
+
+  typedef typename GV::Grid::ctype DF;
+  // instantiate finite element maps
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
+  FEM fem(gv);
+
+  // make function space, with overlapping constraints as usual for overlapping Schwarz methods
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
+                                          Dune::PDELab::OverlappingConformingDirichletConstraints,
+                                          Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>
+                                          > GFS;
+  GFS gfs(gv,fem);
+
+
+  // and a second function space with no constraints on processor boundaries, needed for the GenEO eigenproblem
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
+                                          Dune::PDELab::ConformingDirichletConstraints,
+                                          Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>
+                                          > GFS_EXTERIOR;
+  GFS_EXTERIOR gfs_exterior(gv,fem);
+
 
   // make a degree of freedom vector on fine grid and initialize it with interpolation of Dirichlet condition
   typedef Dune::PDELab::Backend::Vector<GFS,NumberType> V;
   V x(gfs,0.0);
+
+  // also create a wrapper using the same data based on the GFS without processor boundary constraints
+  typedef Dune::PDELab::Backend::Vector<GFS_EXTERIOR,NumberType> V_EXTERIOR;
+  V_EXTERIOR x_exterior(gfs_exterior, Dune::PDELab::Backend::unattached_container());
+  x_exterior.attach(x.storage());
+
+  // Extract domain boundary constraints from problem definition, apply trace to solution vector
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
   G g(grid->levelGridView(grid->maxLevel()),problem);
   Dune::PDELab::interpolate(g,gfs,x);
 
+
   // Set up constraints containers
+  //  - with boundary constraints and processor constraints as usual
+  //  - with boundary constraints, but without processor constraints for the eigenprobleme
+  //  - with only Neumann boundary constraints, but with processor constraints as needed for the partition of unity
   typedef typename GFS::template ConstraintsContainer<NumberType>::Type CC;
   auto cc = CC();
-  auto cc_exterior = CC();
+  typedef typename GFS_EXTERIOR::template ConstraintsContainer<NumberType>::Type CC_EXTERIOR;
+  auto cc_exterior = CC_EXTERIOR();
   auto cc_bnd_neu_int_dir = CC();
 
   // assemble constraints
   Dune::PDELab::constraints(bctype,gfs,cc);
-  Dune::PDELab::constraints_exterior(bctype,gfs,cc_exterior);
+  Dune::PDELab::constraints(bctype,gfs_exterior,cc_exterior);
 
   Dune::PDELab::NoDirichletConstraintsParameters pnbc;
   Dune::PDELab::constraints(pnbc,gfs,cc_bnd_neu_int_dir);
 
   // set initial guess
   V x0(gfs,0.0);
-  {
-    Dune::PDELab::copy_nonconstrained_dofs(cc,x0,x);
-    con.make_consistent(gfs,x);
-  }
+  Dune::PDELab::copy_nonconstrained_dofs(cc,x0,x);
 
-  // assembler for finite element problem
+
+  // LocalOperator for given problem
   typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
   LOP lop(problem);
 
+  // LocalOperator wrapper zeroing out subdomains' interiors in order to set up overlap matrix
+  typedef Dune::PDELab::LocalOperatorOvlpRegion<LOP, GFS> LOP_OVLP;
+  LOP_OVLP lop_ovlp(lop, gfs);
+
   typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
+
+
+  // Construct GridOperators from LocalOperators
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
   auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
+
+  typedef Dune::PDELab::GridOperator<GFS_EXTERIOR,GFS_EXTERIOR,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO_EXTERIOR;
+  auto go_exterior = GO_EXTERIOR(gfs_exterior,cc_exterior,gfs_exterior,cc_exterior,lop,MBE(nonzeros));
+
+  typedef Dune::PDELab::GridOperator<GFS_EXTERIOR,GFS_EXTERIOR,LOP_OVLP,MBE,NumberType,NumberType,NumberType,CC,CC> GO_OVLP;
+  auto go_overlap = GO_OVLP(gfs_exterior,cc_exterior,gfs_exterior,cc_exterior,lop_ovlp,MBE(nonzeros));
 
   // set up and assemble right hand side w.r.t. l(v)-a(u_g,v)
   V d(gfs,0.0);
@@ -195,10 +227,11 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
   // types
   typedef GO::Jacobian M;
+  typedef GO_EXTERIOR::Jacobian M_EXTERIOR;
 
   // fine grid objects
   M AF(go);
-  go.jacobian(x,AF); // assemble fine grid matrix
+  go.jacobian(x,AF);
   typedef Dune::PDELab::OverlappingOperator<CC,M,V,V> POP;
   auto popf = std::make_shared<POP>(cc,AF);
   typedef Dune::PDELab::ISTL::ParallelHelper<GFS> PIH;
@@ -206,54 +239,65 @@ void driver(std::string basis_type, std::string part_unity_type) {
   typedef Dune::PDELab::OverlappingScalarProduct<GFS,V> OSP;
   OSP ospf(gfs,pihf);
 
-  // Compute system
-  auto go_exterior = GO(gfs,cc_exterior,gfs,cc_exterior,lop,MBE(nonzeros));
-  M AF_exterior(go_exterior);
-  go_exterior.jacobian(x,AF_exterior); // assemble fine grid matrix
+  // Assemble fine grid matrix defined without processor constraints
+  M_EXTERIOR AF_exterior(go_exterior);
+  go_exterior.jacobian(x_exterior,AF_exterior);
 
-  // Compute overlap system using a wrapper for the LocalOperator
-  typedef Dune::PDELab::LocalOperatorOvlpRegion<LOP, GFS> LOP_OVLP;
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP_OVLP,MBE,NumberType,NumberType,NumberType,CC,CC> GO_OVLP;
-  LOP_OVLP lop_ovlp(lop, gfs);
-  auto go_overlap = GO_OVLP(gfs,cc_exterior,gfs,cc_exterior,lop_ovlp,MBE(nonzeros));
-  M AF_ovlp(go_overlap);
-  go_overlap.jacobian(x,AF_ovlp); // assemble fine grid matrix
+  // Assemble fine grid matrix defined only on overlap region
+  M_EXTERIOR AF_ovlp(go_overlap);
+  go_overlap.jacobian(x_exterior,AF_ovlp);
 
-  // Choose an eigenvalue threshold according to Spillane et al., 2014
+
+  // Choose an eigenvalue threshold according to Spillane et al., 2014.
+  // This particular choice is a heuristic working very well for Darcy problems.
+  // Theoretically, any value delivers robustness; practically, you may need to
+  // choose another value to achieve a good balance between condition bound and
+  // global basis size
   double eigenvalue_threshold = (double)overlap / (cells + overlap);
 
   int verb=0;
   if (gfs.gridView().comm().rank()==0) verb=2;
+
+  // Create a local function space needed for the Sarkis partition of unity only
   typedef Dune::PDELab::LocalFunctionSpace<GFS, Dune::PDELab::AnySpaceTag> LFS;
   LFS lfs(gfs);
 
+
+  // Generate a partition of unity
   std::shared_ptr<V> part_unity;
   if (part_unity_type == "standard")
-    part_unity = std::make_shared<V>(standardPartitionOfUnity<V>(gfs, lfs, cc_bnd_neu_int_dir));
+    part_unity = std::make_shared<V>(standardPartitionOfUnity<V>(gfs, cc_bnd_neu_int_dir));
   else if (part_unity_type == "sarkis")
     part_unity = std::make_shared<V>(sarkisPartitionOfUnity<V>(gfs, lfs, cc_bnd_neu_int_dir, cells, cells, overlap, yasppartitions[0], yasppartitions[1]));
   else
     DUNE_THROW(Dune::Exception, "Unkown selection in test driver!");
 
+
+  // Choose how many eigenvalues to compute
   int nev = 10;
   int nev_arpack = 10;
 
+  // Construct per-subdomain basis functions
   std::shared_ptr<Dune::PDELab::SubdomainBasis<V> > subdomain_basis;
   if (basis_type == "geneo")
-    subdomain_basis = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack);
+    subdomain_basis = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb);
   else if (basis_type == "lipton_babuska")
-    subdomain_basis = std::make_shared<Dune::PDELab::LiptonBabuskaBasis<GFS,M,V,V,1> >(gfs, AF_exterior, AF_ovlp, -1, *part_unity, nev, nev_arpack);
+    subdomain_basis = std::make_shared<Dune::PDELab::LiptonBabuskaBasis<GFS,M_EXTERIOR,V,V,1> >(gfs, AF_exterior, AF_ovlp, -1, *part_unity, nev, nev_arpack);
   else if (basis_type == "part_unity") // We can't test this one, it does not lead to sufficient error reduction. Let's instantiate it anyway for test's sake.
     subdomain_basis = std::make_shared<Dune::PDELab::SubdomainBasis<V> >(*part_unity);
   else
     DUNE_THROW(Dune::Exception, "Unkown selection in test driver!");
 
 
-  auto partunityspace = std::make_shared<Dune::PDELab::SubdomainProjectedCoarseSpace<GFS,M,V,PIH> >(gfs, AF_exterior, subdomain_basis, pihf);
-  auto prec = std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,V,V>>(gfs, AF, partunityspace, true, verb);
+  // Fuse per-subdomain basis functions to a global coarse space
+  auto coarse_space = std::make_shared<Dune::PDELab::SubdomainProjectedCoarseSpace<GFS,M_EXTERIOR,V,PIH> >(gfs, AF_exterior, subdomain_basis, pihf);
 
 
-  // now solve defect equation A*v = d
+  // Plug coarse basis into actual preconditioner
+  auto prec = std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,V,V>>(gfs, AF, coarse_space, true, verb);
+
+
+  // now solve defect equation A*v = d using a CG solver with our shiny preconditioner
   V v(gfs,0.0);
   auto solver_ref = std::make_shared<Dune::CGSolver<V> >(*popf,ospf,*prec,1E-6,1000,verb,true);
   Dune::InverseOperatorResult result;
@@ -268,7 +312,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
   typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
   auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
   vtkwriter.addVertexData(adapt);
-  vtkwriter.write("basis_" + basis_type + "_part_unity_" + part_unity_type);
+  vtkwriter.write("testgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type);
 }
 
 
