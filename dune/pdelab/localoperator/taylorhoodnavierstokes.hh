@@ -106,9 +106,9 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType;
 
         // extract local function spaces
-        const auto& lfsu_v_pfs = child(lfsu,_0);
+        const auto& lfsu_v_pfs = child(lfsu,std::placeholders::_0);
         const unsigned int vsize = lfsu_v_pfs.child(0).size();
-        const auto& lfsu_p = child(lfsu,_1);
+        const auto& lfsu_p = child(lfsu,std::placeholders::_1);
         const unsigned int psize = lfsu_p.size();
 
         // dimensions
@@ -235,9 +235,9 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType;
 
         // extract local function spaces
-        const auto& lfsv_v_pfs = child(lfsv,_0);
+        const auto& lfsv_v_pfs = child(lfsv,std::placeholders::_0);
         const unsigned int vsize = lfsv_v_pfs.child(0).size();
-        const auto& lfsv_p = child(lfsv,_1);
+        const auto& lfsv_p = child(lfsv,std::placeholders::_1);
         const unsigned int psize = lfsv_p.size();
 
         // dimensions
@@ -307,7 +307,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType;
 
         // extract local velocity function spaces
-        const auto& lfsv_v_pfs = child(lfsv,_0);
+        const auto& lfsv_v_pfs = child(lfsv,std::placeholders::_0);
         const unsigned int vsize = lfsv_v_pfs.child(0).size();
 
         // dimensions
@@ -384,9 +384,9 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType;
 
         // extract local function spaces
-        const auto& lfsu_v_pfs = child(lfsu,_0);
+        const auto& lfsu_v_pfs = child(lfsu,std::placeholders::_0);
         const unsigned int vsize = lfsu_v_pfs.child(0).size();
-        const auto& lfsu_p = child(lfsu,_1);
+        const auto& lfsu_p = child(lfsu,std::placeholders::_1);
         const unsigned int psize = lfsu_p.size();
 
         // dimensions

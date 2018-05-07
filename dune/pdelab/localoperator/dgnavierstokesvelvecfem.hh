@@ -166,12 +166,12 @@ namespace Dune {
         // subspaces
         using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
-        const auto& lfsv_v = child(lfsv,_0);
-        const auto& lfsu_v = child(lfsu,_0);
+        const auto& lfsv_v = child(lfsv,std::placeholders::_0);
+        const auto& lfsu_v = child(lfsu,std::placeholders::_0);
 
         using LFSV_P = TypeTree::Child<LFSV,_1>;
-        const auto& lfsv_p = child(lfsv,_1);
-        const auto& lfsu_p = child(lfsu,_1);
+        const auto& lfsv_p = child(lfsv,std::placeholders::_1);
+        const auto& lfsu_p = child(lfsu,std::placeholders::_1);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
@@ -288,12 +288,12 @@ namespace Dune {
         // subspaces
         using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
-        const auto& lfsv_v = child(lfsv,_0);
-        const auto& lfsu_v = child(lfsu,_0);
+        const auto& lfsv_v = child(lfsv,std::placeholders::_0);
+        const auto& lfsu_v = child(lfsu,std::placeholders::_0);
 
         using LFSV_P = TypeTree::Child<LFSV,_1>;
-        const auto& lfsv_p = child(lfsv,_1);
-        const auto& lfsu_p = child(lfsu,_1);
+        const auto& lfsv_p = child(lfsv,std::placeholders::_1);
+        const auto& lfsu_p = child(lfsu,std::placeholders::_1);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
@@ -412,16 +412,16 @@ namespace Dune {
         // subspaces
         using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
-        const auto& lfsv_v_s = child(lfsv_s,_0);
-        const auto& lfsu_v_s = child(lfsu_s,_0);
-        const auto& lfsv_v_n = child(lfsv_n,_0);
-        const auto& lfsu_v_n = child(lfsu_n,_0);
+        const auto& lfsv_v_s = child(lfsv_s,std::placeholders::_0);
+        const auto& lfsu_v_s = child(lfsu_s,std::placeholders::_0);
+        const auto& lfsv_v_n = child(lfsv_n,std::placeholders::_0);
+        const auto& lfsu_v_n = child(lfsu_n,std::placeholders::_0);
 
         using LFSV_P = TypeTree::Child<LFSV,_1>;
-        const auto& lfsv_p_s = child(lfsv_s,_1);
-        const auto& lfsu_p_s = child(lfsu_s,_1);
-        const auto& lfsv_p_n = child(lfsv_n,_1);
-        const auto& lfsu_p_n = child(lfsu_n,_1);
+        const auto& lfsv_p_s = child(lfsv_s,std::placeholders::_1);
+        const auto& lfsu_p_s = child(lfsu_s,std::placeholders::_1);
+        const auto& lfsv_p_n = child(lfsv_n,std::placeholders::_1);
+        const auto& lfsu_p_n = child(lfsu_n,std::placeholders::_1);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
@@ -603,16 +603,16 @@ namespace Dune {
         // subspaces
         using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
-        const auto& lfsv_v_s = child(lfsv_s,_0);
-        const auto& lfsu_v_s = child(lfsu_s,_0);
-        const auto& lfsv_v_n = child(lfsv_n,_0);
-        const auto& lfsu_v_n = child(lfsu_n,_0);
+        const auto& lfsv_v_s = child(lfsv_s,std::placeholders::_0);
+        const auto& lfsu_v_s = child(lfsu_s,std::placeholders::_0);
+        const auto& lfsv_v_n = child(lfsv_n,std::placeholders::_0);
+        const auto& lfsu_v_n = child(lfsu_n,std::placeholders::_0);
 
         using LFSV_P = TypeTree::Child<LFSV,_1>;
-        const auto& lfsv_p_s = child(lfsv_s,_1);
-        const auto& lfsu_p_s = child(lfsu_s,_1);
-        const auto& lfsv_p_n = child(lfsv_n,_1);
-        const auto& lfsu_p_n = child(lfsu_n,_1);
+        const auto& lfsv_p_s = child(lfsv_s,std::placeholders::_1);
+        const auto& lfsu_p_s = child(lfsu_s,std::placeholders::_1);
+        const auto& lfsv_p_n = child(lfsv_n,std::placeholders::_1);
+        const auto& lfsu_p_n = child(lfsu_n,std::placeholders::_1);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
@@ -806,12 +806,12 @@ namespace Dune {
         // subspaces
         using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
-        const auto& lfsv_v = child(lfsv,_0);
-        const auto& lfsu_v = child(lfsu,_0);
+        const auto& lfsv_v = child(lfsv,std::placeholders::_0);
+        const auto& lfsu_v = child(lfsu,std::placeholders::_0);
 
         using LFSV_P = TypeTree::Child<LFSV,_1>;
-        const auto& lfsv_p = child(lfsv,_1);
-        const auto& lfsu_p = child(lfsu,_1);
+        const auto& lfsv_p = child(lfsv,std::placeholders::_1);
+        const auto& lfsu_p = child(lfsu,std::placeholders::_1);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
@@ -950,12 +950,12 @@ namespace Dune {
         // subspaces
         using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
-        const auto& lfsv_v = child(lfsv,_0);
-        const auto& lfsu_v = child(lfsu,_0);
+        const auto& lfsv_v = child(lfsv,std::placeholders::_0);
+        const auto& lfsu_v = child(lfsu,std::placeholders::_0);
 
         using LFSV_P = TypeTree::Child<LFSV,_1>;
-        const auto& lfsv_p = child(lfsv,_1);
-        const auto& lfsu_p = child(lfsu,_1);
+        const auto& lfsv_p = child(lfsv,std::placeholders::_1);
+        const auto& lfsu_p = child(lfsu,std::placeholders::_1);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
@@ -1071,7 +1071,7 @@ namespace Dune {
         // subspaces
         using namespace Indices;
         using LFSV_V = TypeTree::Child<LFSV,_0>;
-        const auto& lfsv_v = child(lfsv,_0);
+        const auto& lfsv_v = child(lfsv,std::placeholders::_0);
 
         // domain and range field type
         using FESwitch_V = FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType >;
