@@ -361,7 +361,7 @@ namespace Dune {
               _container.begin(),
               _container.end(),
               _container.begin(),
-              std::bind(std::multiplies<T>(),x,_1)
+              std::bind(std::multiplies<T>(),x,std::placeholders::_1)
               );
             return *this;
           }

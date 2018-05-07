@@ -242,7 +242,7 @@ namespace Dune {
           _container.begin(),
           _container.end(),
           _container.begin(),
-          std::bind(std::multiplies<value_type>(),v,_1)
+          std::bind(std::multiplies<value_type>(),v,std::placeholders::_1)
           );
         return *this;
       }

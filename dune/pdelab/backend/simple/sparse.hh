@@ -189,7 +189,7 @@ namespace Dune {
         SparseMatrixContainer& operator*=(const ElementType& e)
         {
           using namespace std::placeholders;
-          std::transform(_container->_data.begin(),_container->_data.end(),_container->_data.begin(),std::bind(std::multiplies<ET>(),e,_1));
+          std::transform(_container->_data.begin(),_container->_data.end(),_container->_data.begin(),std::bind(std::multiplies<ET>(),e,std::placeholders::_1));
           return *this;
         }
 

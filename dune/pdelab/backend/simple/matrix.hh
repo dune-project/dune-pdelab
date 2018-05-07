@@ -139,7 +139,7 @@ namespace Dune {
         MatrixContainer& operator*=(const E& e)
         {
           using namespace std::placeholders;
-          std::transform(_container->begin(),_container->end(),_container->begin(),std::bind(std::multiplies<E>(),e,_1));
+          std::transform(_container->begin(),_container->end(),_container->begin(),std::bind(std::multiplies<E>(),e,std::placeholders::_1));
           return *this;
         }
 
