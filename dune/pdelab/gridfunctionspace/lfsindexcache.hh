@@ -17,6 +17,8 @@
 
 #include <dune/pdelab/constraints/common/constraintstransformation.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
+#include <dune/geometry/referenceelements.hh>
+#include <dune/pdelab/common/globalVariable.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -309,32 +311,44 @@ namespace Dune {
           _container_indices[0][1] = LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(_lfs.dofIndex(0));
         }
         else {
+          if (evilGlobalVariable){
 
-          // clear out existing state
-          _container_index_map.clear();
-          for (typename CIVector::iterator it = _container_indices.begin(); it != _container_indices.end(); ++it)
-            it->clear();
+            auto refEl = Dune::ReferenceElements<double,2>::general(Dune::GeometryTypes::cube(2));
 
-          _inverse_map.clear();
-          _inverse_cache_built = false;
+            for (int c = 0; c < refEl.dimension + 1; ++c) {
+              _container_indices_sc[c].resize(refEl.size(c));
+              for (int s = 0; s < refEl.size(c); ++s) {
+                // evaluate consecutive index of subentity
+                _container_indices_sc[c][s].clear();
+                _lfs.gridFunctionSpace().ordering().mapIndex(_lfs._dof_indices_sc[c][s].view(), _container_indices_sc[c][s]);
+              }
+            }
+          } else {
+            // clear out existing state
+            _container_index_map.clear();
+            for (typename CIVector::iterator it = _container_indices.begin(); it != _container_indices.end(); ++it)
+              it->clear();
 
-          // extract size for all leaf spaces (into a flat list)
-          typedef ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount> LeafSizeVector;
-          LeafSizeVector leaf_sizes;
-          leaf_sizes.resize(TypeTree::TreeInfo<LFS>::leafCount);
-          extract_lfs_leaf_sizes(_lfs,leaf_sizes.begin());
+            _inverse_map.clear();
+            _inverse_cache_built = false;
 
-          // perform the actual mapping
-          map_dof_indices_to_container_indices<
-            typename LFS::Traits::DOFIndexContainer::const_iterator,
-            typename CIVector::iterator,
-            typename LeafSizeVector::const_iterator,
-            TypeTree::TreeInfo<Ordering>::depth,
-            fast
+            // extract size for all leaf spaces (into a flat list)
+            typedef ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount> LeafSizeVector;
+            LeafSizeVector leaf_sizes;
+            leaf_sizes.resize(TypeTree::TreeInfo<LFS>::leafCount);
+            extract_lfs_leaf_sizes(_lfs,leaf_sizes.begin());
+
+            // perform the actual mapping
+            map_dof_indices_to_container_indices<
+                typename LFS::Traits::DOFIndexContainer::const_iterator,
+                typename CIVector::iterator,
+                typename LeafSizeVector::const_iterator,
+                TypeTree::TreeInfo<Ordering>::depth,
+                fast
             > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs.subSpaceDepth());
-          TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
+            TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
 
-          if (_enable_constraints_caching)
+            if (_enable_constraints_caching)
             {
               _constraints.resize(0);
               std::vector<std::pair<size_type,typename C::const_iterator> > non_dirichlet_constrained_dofs;
@@ -381,6 +395,7 @@ namespace Dune {
                     }
                 }
             }
+          }
         }
       }
 
@@ -392,6 +407,11 @@ namespace Dune {
       const CI& containerIndex(size_type i) const
       {
         return _container_indices[i];
+      }
+
+      const CI& containerIndex(size_type s, size_type c) const
+      {
+        return _container_indices_sc[c][s];
       }
 
       const CI& containerIndex(const DI& i) const
@@ -534,6 +554,7 @@ namespace Dune {
       const LFS& _lfs;
       const bool _enable_constraints_caching;
       CIVector _container_indices;
+      std::array<CIVector, 3> _container_indices_sc;
       std::vector<unsigned char> _dof_flags;
       std::vector<std::pair<ConstraintsIterator,ConstraintsIterator> > _constraints_iterators;
       mutable CIMap _container_index_map;
@@ -608,7 +629,19 @@ namespace Dune {
           _container_indices[0][1] = LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(_lfs.dofIndex(0));
         }
         else {
+          if (evilGlobalVariable){
 
+            auto refEl = Dune::ReferenceElements<double,2>::general(Dune::GeometryTypes::cube(2));
+
+            for (int c = 0; c < refEl.dimension + 1; ++c) {
+              _container_indices_sc[c].resize(refEl.size(c));
+              for (int s = 0; s < refEl.size(c); ++s) {
+                // evaluate consecutive index of subentity
+                _container_indices_sc[c][s].clear();
+                _lfs.gridFunctionSpace().ordering().mapIndex(_lfs._dof_indices_sc[c][s].view(), _container_indices_sc[c][s]);
+              }
+            }
+          } else {
           // clear out existing state
           _container_index_map.clear();
           for (typename CIVector::iterator it = _container_indices.begin(); it != _container_indices.end(); ++it)
@@ -629,6 +662,7 @@ namespace Dune {
             fast
             > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs.subSpaceDepth());
           TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
+          }
         }
       }
 
@@ -640,6 +674,11 @@ namespace Dune {
       const CI& containerIndex(size_type i) const
       {
         return _container_indices[i];
+      }
+
+      const CI& containerIndex(size_type s, size_type c) const
+      {
+        return _container_indices_sc[c][s];
       }
 
       const CI& containerIndex(const DI& i) const
@@ -694,6 +733,7 @@ namespace Dune {
 
       const LFS& _lfs;
       CIVector _container_indices;
+      std::array<CIVector, 3> _container_indices_sc;
       mutable CIMap _container_index_map;
       const ConstraintsVector _constraints;
 

@@ -5,6 +5,9 @@
 
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
+#include <dune/localfunctions/common/localkey.hh>
+#include <dune/geometry/referenceelements.hh>
+#include <dune/pdelab/common/globalVariable.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -60,10 +63,35 @@ namespace Dune {
       template<typename LC>
       void read(LC& local_container) const
       {
-        for (size_type i = 0; i < size(); ++i)
+        if (evilGlobalVariable) {
+
+          auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
+
+          auto& coeffs = cache().localFunctionSpace().finiteElement().localCoefficients();
+
+          for (int c = 0; c < refEl.dimension + 1; ++c) {
+            for (int s = 0; s < refEl.size(c); ++s) {
+              // evaluate consecutive index of subentity
+              auto container_index = cache().containerIndex(s, c);
+              auto local_index = coeffs.localDOF(Dune::LocalKey(s, c, 0));
+              auto stride = coeffs.stride(s, c);
+              auto chunk_size = coeffs.chunk_size(s, c);
+              for (int i = 0, j = 0; i < coeffs.size_index(s, c); i+=chunk_size) {
+                for (; j < chunk_size; ++j) {
+                  // store data
+                  accessBaseContainer(local_container)[local_index++] = container()[container_index];
+                  container_index[0]++;
+                }
+                local_index += stride - 1;
+              }
+            }
+          }
+        } else {
+          for (size_type i = 0; i < size(); ++i)
           {
             accessBaseContainer(local_container)[i] = container()[cache().containerIndex(i)];
           }
+        }
       }
 
       template<typename ChildLFS, typename LC>
@@ -169,7 +197,31 @@ namespace Dune {
       template<typename LC>
       void add(const LC& local_container)
       {
-        for (size_type i = 0; i < size(); ++i)
+        if (evilGlobalVariable) {
+
+          auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
+
+          auto& coeffs = cache().localFunctionSpace().finiteElement().localCoefficients();
+
+          for (int c = 0; c < refEl.dimension + 1; ++c) {
+            for (int s = 0; s < refEl.size(c); ++s) {
+              // evaluate consecutive index of subentity
+              auto container_index = cache().containerIndex(s, c);
+              auto local_index = coeffs.localDOF(Dune::LocalKey(s, c, 0));
+              auto stride = coeffs.stride(s, c);
+              auto chunk_size = coeffs.chunk_size(s, c);
+              for (int i = 0, j = 0; i < coeffs.size_index(s, c); i+=chunk_size) {
+                for (; j < chunk_size; ++j) {
+                  // store data
+                  container()[container_index] += accessBaseContainer(local_container)[local_index++];
+                  container_index[0]++;
+                }
+                local_index += stride - 1;
+              }
+            }
+          }
+        } else
+          for (size_type i = 0; i < size(); ++i)
           {
             container()[cache().containerIndex(i)] += accessBaseContainer(local_container)[i];
           }
