@@ -182,29 +182,23 @@ namespace Dune{
       //! Assembler jacobian
       void jacobian(const Domain & x, Jacobian & a) const
       {
-        evilGlobalVariable = true;
         typedef typename LocalAssembler::LocalJacobianAssemblerEngine JacobianEngine;
         JacobianEngine & jacobian_engine = local_assembler.localJacobianAssemblerEngine(a,x);
         global_assembler.assemble(jacobian_engine);
-        evilGlobalVariable = false;
       }
 
       //! Apply jacobian matrix without explicitly assembling it
       void jacobian_apply(const Domain & z, Range & r) const
       {
-        evilGlobalVariable = true;
         typedef typename LocalAssembler::LocalJacobianApplyAssemblerEngine JacobianApplyEngine;
         JacobianApplyEngine & jacobian_apply_engine = local_assembler.localJacobianApplyAssemblerEngine(r,z);
         global_assembler.assemble(jacobian_apply_engine);
-        evilGlobalVariable = false;
       }
 
       //! Apply jacobian matrix without explicitly assembling it
       void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r) const
       {
-        evilGlobalVariable = true;
         global_assembler.assemble(local_assembler.localNonlinearJacobianApplyAssemblerEngine(r,x,z));
-        evilGlobalVariable = false;
       }
 
 
