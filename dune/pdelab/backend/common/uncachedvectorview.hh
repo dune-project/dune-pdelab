@@ -76,13 +76,13 @@ namespace Dune {
               auto local_index = coeffs.localDOF(Dune::LocalKey(s, c, 0));
               auto stride = coeffs.stride(s, c);
               auto chunk_size = coeffs.chunk_size(s, c);
-              for (int i = 0, j = 0; i < coeffs.size_index(s, c); i+=chunk_size) {
-                for (; j < chunk_size; ++j) {
+              for (int i = 0; i < coeffs.size_index(s, c); i+=chunk_size) {
+                for (int j = 0; j < chunk_size; ++j) {
                   // store data
-                  accessBaseContainer(local_container)[local_index++] = container()[container_index];
+                  accessBaseContainer(local_container)[local_index + j] = container()[container_index];
                   container_index[0]++;
                 }
-                local_index += stride - 1;
+                local_index += stride;
               }
             }
           }
@@ -210,13 +210,13 @@ namespace Dune {
               auto local_index = coeffs.localDOF(Dune::LocalKey(s, c, 0));
               auto stride = coeffs.stride(s, c);
               auto chunk_size = coeffs.chunk_size(s, c);
-              for (int i = 0, j = 0; i < coeffs.size_index(s, c); i+=chunk_size) {
-                for (; j < chunk_size; ++j) {
+              for (int i = 0; i < coeffs.size_index(s, c); i+=chunk_size) {
+                for (int j = 0; j < chunk_size; ++j) {
                   // store data
-                  container()[container_index] += accessBaseContainer(local_container)[local_index++];
+                  container()[container_index] += accessBaseContainer(local_container)[local_index + j];
                   container_index[0]++;
                 }
-                local_index += stride - 1;
+                local_index += stride;
               }
             }
           }
