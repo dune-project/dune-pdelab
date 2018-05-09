@@ -54,7 +54,9 @@ namespace Dune {
         using Basis = typename GFS::Basis;
         using LocalView = typename Basis::LocalView;
         using Tree = TypeTree::ChildForTreePath<typename LocalView::Tree,TreePath>;
+#if DUNE_VERSION_LT(DUNE_FUNCTIONS,2,7)
         using LocalIndexSet = typename Basis::LocalIndexSet;
+#endif
         using DOFIndex = typename Basis::MultiIndex;
 
         template<typename LFS, typename C, typename Tag, bool fast>
@@ -79,7 +81,9 @@ namespace Dune {
           , _local_view(gfs->basis().localView())
           , _tree_path(tree_path)
           , _tree(TypeTree::child(_local_view.tree(),tree_path))
+#if DUNE_VERSION_LT(DUNE_FUNCTIONS,2,7)
           , _local_index_set(gfs->basis().localIndexSet())
+#endif
         {}
 
         size_type subSpaceDepth() const
@@ -107,7 +111,11 @@ namespace Dune {
 
         DOFIndex dofIndex(size_type index) const
         {
+#if DUNE_VERSION_LT(DUNE_FUNCTIONS,2,7)
           return _local_index_set.index(_tree.localIndex(index));
+#else
+          return _local_view.index(_tree.localIndex(index));
+#endif
         }
 
         //! Returns the GridFunctionSpace underlying this LocalFunctionSpace.
@@ -119,7 +127,9 @@ namespace Dune {
         void bind(const typename GFS::Traits::EntitySet::template Codim<0>::Entity& e)
         {
           _local_view.bind(e);
+#if DUNE_VERSION_LT(DUNE_FUNCTIONS,2,7)
           _local_index_set.bind(_local_view);
+#endif
         }
 
         const typename Traits::ConstraintsType& constraints() const
@@ -138,7 +148,9 @@ namespace Dune {
         LocalView _local_view;
         TreePath _tree_path;
         const Tree& _tree;
+#if DUNE_VERSION_LT(DUNE_FUNCTIONS,2,7)
         LocalIndexSet _local_index_set;
+#endif
 
       };
 
