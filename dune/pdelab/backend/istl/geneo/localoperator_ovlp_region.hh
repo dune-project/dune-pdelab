@@ -1,6 +1,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_LOCALOPERATOR_OVLP_REGION_HH
 #define DUNE_PDELAB_BACKEND_ISTL_GENEO_LOCALOPERATOR_OVLP_REGION_HH
 
+#include <dune/pdelab/backend/interface.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -165,13 +168,13 @@ namespace Dune {
 
       template <typename LFS>
       bool entity_is_interior (const LFS& lfs) const {
-        using Dune::PDELab::Backend::native;
-        for (int i = 0; i < lfs.size(); i++) {
-            auto dofindex = lfs.dofIndex(i);
-            auto element_index = subdomain_sum.gridFunctionSpace().ordering().mapIndex(dofindex);
-            if (native(subdomain_sum)[element_index.back()][0] < 2)
+        LFSIndexCache<LFS> cache(lfs);
+        cache.update();
+        for (std::size_t i = 0; i < cache.size(); i++)
+          {
+            if (subdomain_sum[cache.containerIndex(i)] < 2)
               return true;
-        }
+          }
         return false;
       }
 
