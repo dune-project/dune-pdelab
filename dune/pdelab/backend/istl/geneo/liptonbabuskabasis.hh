@@ -34,11 +34,10 @@ namespace Dune {
         ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, X> arpack(native(AF_exterior));
         double eps = .0001;
 
-        std::vector<double> eigenvalues;
-        std::vector<X> eigenvectors;
-        eigenvectors.resize(nev_arpack,X(gfs,0.0));
+        std::vector<double> eigenvalues(nev_arpack,0.0);
+        std::vector<X> eigenvectors(nev_arpack,X(gfs,0.0));
 
-        arpack.computeGenNonSymMinMagnitude(native(AF_interior), eps, nev_arpack, eigenvectors, eigenvalues, shift);
+        arpack.computeGenNonSymMinMagnitude(native(AF_interior), eps, eigenvectors, eigenvalues, shift);
 
         // Count eigenvectors below threshold
         int cnt = -1;

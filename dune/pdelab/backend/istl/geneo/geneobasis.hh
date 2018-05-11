@@ -40,7 +40,7 @@ namespace Dune {
         if (nev_arpack == -1)
           nev_arpack = std::max(nev, 2);
         if (nev_arpack < nev)
-          DUNE_THROW(Dune::Exception,"eigenvectors_compute is less then eigenvectors or not specified!");
+          DUNE_THROW(Dune::Exception,"nev_arpack is less then nev!");
 
         // X * A_0 * X
         M ovlp_mat(AF_ovlp);
@@ -54,10 +54,10 @@ namespace Dune {
         ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, X> arpack(native(AF_exterior));
         double eps = 0.0;
 
-        std::vector<double> eigenvalues;
+        std::vector<double> eigenvalues(nev_arpack,0.0);
         std::vector<X> eigenvectors(nev_arpack,X(gfs,0.0));
 
-        arpack.computeGenNonSymMinMagnitude(native(ovlp_mat), eps, nev_arpack, eigenvectors, eigenvalues, shift);
+        arpack.computeGenNonSymMinMagnitude(native(ovlp_mat), eps, eigenvectors, eigenvalues, shift);
 
         // Count eigenvectors below threshold
         int cnt = -1;

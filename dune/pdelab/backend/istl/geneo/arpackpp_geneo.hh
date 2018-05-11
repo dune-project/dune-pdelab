@@ -260,8 +260,8 @@ namespace ArpackGeneo
     {}
 
 
-    inline void computeGenNonSymMinMagnitude (const BCRSMatrix& b_, const Real& epsilon, int& nev,
-                                        std::vector<BlockVectorWrapper>& x, std::vector<Real>& lambda, Real sigma) const
+    inline void computeGenNonSymMinMagnitude (const BCRSMatrix& b_, const Real& epsilon,
+                                              std::vector<BlockVectorWrapper>& x, std::vector<Real>& lambda, Real sigma) const
     {
       // print verbosity information
       if (verbosity_level_ > 0)
@@ -272,12 +272,12 @@ namespace ArpackGeneo
 
 
       // allocate memory for variables, set parameters
-      //const int nev = 1;                     // Number of eigenvalues to compute
-      const int ncv = 0;                    // Number of Arnoldi vectors generated at each iteration (0 == auto)
+      const int nev = x.size();              // Number of eigenvalues to compute
+      const int ncv = 0;                     // Number of Arnoldi vectors generated at each iteration (0 == auto)
       const Real tol = epsilon;              // Stopping tolerance (relative accuracy of Ritz values) (0 == machine precision)
       const int maxit = nIterationsMax_*nev; // Maximum number of Arnoldi update iterations allowed   (0 == 100*nev)
-      auto ev = std::vector<Real>(nev);              // Computed eigenvalues of A
-      auto ev_imag = std::vector<Real>(nev);              // Computed eigenvalues of A
+      auto ev = std::vector<Real>(nev);      // Computed generalized eigenvalues
+      auto ev_imag = std::vector<Real>(nev); // Computed generalized eigenvalues
       const bool ivec = true;                // Flag deciding if eigenvectors shall be determined
 
       BCRSMatrix ashiftb(a_);
@@ -326,10 +326,7 @@ namespace ArpackGeneo
           }
       );
 
-      // obtain approximated least dominant eigenvalue of A
-      lambda.resize(nev);
-      // obtain associated approximated eigenvector of A
-      //x.resize(nev); // FIXME: I disabled this line, as it seems broken! (Steffen)
+      // Unshift eigenpairs
       for (int i = 0; i < nev; i++) {
         lambda[i] = sigma+1./ev[index[i]];
         Real* x_raw = dprob.RawEigenvector(index[i]);
