@@ -1,3 +1,5 @@
+add_subdirectory(blockstructured)
+
 install(FILES compositegridfunctionspace.hh
               dunefunctionsgridfunctionspace.hh
               dunefunctionslfsindexcache.hh

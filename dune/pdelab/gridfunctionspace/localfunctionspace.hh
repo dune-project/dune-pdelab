@@ -619,50 +619,26 @@ namespace Dune {
           }
         else
           {
-            if(evilGlobalVariable){
+            // get layout of entity
+            const typename FESwitch::Coefficients &coeffs =
+                FESwitch::coefficients(*pfe);
 
-              // get layout of entity
-              const typename FESwitch::Coefficients &coeffs =
-                  FESwitch::coefficients(*pfe);
+            using EntitySet = typename GFS::Traits::EntitySet;
+            auto es = this->gridFunctionSpace().entitySet();
 
-              using EntitySet = typename GFS::Traits::EntitySet;
-              auto es = this->gridFunctionSpace().entitySet();
+            auto refEl = Dune::ReferenceElements<double, EntitySet::dimension>::general(this->pfe->type());
 
-              auto refEl = Dune::ReferenceElements<double,EntitySet::dimension>::general(this->pfe->type());
+            for (int c = 0; c < refEl.dimension + 1; ++c){
+              for (int s = 0; s < refEl.size(c); ++s){
+                // get geometry type of subentity
+                auto gt = refEl.type(s, c);
 
-              for (int c = 0; c < refEl.dimension + 1; ++c) {
-                _dof_indices_sc[c].resize(refEl.size(c));
-                for (int s = 0; s < refEl.size(c); ++s) {
-                  // get geometry type of subentity
-                  auto gt = refEl.type(s, c);
-
-                  // evaluate consecutive index of subentity
-                  auto index = es.indexSet().subIndex(e, s, c);
-                  GFS::Ordering::Traits::DOFIndexAccessor::store(_dof_indices_sc[c][s], gt, index, 0);
-                }
-              }
-            } else {
-              // get layout of entity
-              const typename FESwitch::Coefficients &coeffs =
-                  FESwitch::coefficients(*pfe);
-
-              using EntitySet = typename GFS::Traits::EntitySet;
-              auto es = this->gridFunctionSpace().entitySet();
-
-              auto refEl = Dune::ReferenceElements<double, EntitySet::dimension>::general(this->pfe->type());
-
-              for (int c = 0; c < refEl.dimension + 1; ++c){
-                for (int s = 0; s < refEl.size(c); ++s){
-                  // get geometry type of subentity
-                  auto gt = refEl.type(s, c);
-
-                  // evaluate consecutive index of subentity
-                  auto index = es.indexSet().subIndex(e, s, c);
-                  for (int i = 0; i < coeffs.size_index(s, c); ++i) {
-                    // store data
-                    const auto dof = coeffs.localDOF(LocalKey(s, c, i));
-                    GFS::Ordering::Traits::DOFIndexAccessor::store(it[dof], gt, index, i);
-                  }
+                // evaluate consecutive index of subentity
+                auto index = es.indexSet().subIndex(e, s, c);
+                for (int i = 0; i < coeffs.size_index(s, c); ++i) {
+                  // store data
+                  const auto dof = coeffs.localDOF(LocalKey(s, c, i));
+                  GFS::Ordering::Traits::DOFIndexAccessor::store(it[dof], gt, index, i);
                 }
               }
             }
