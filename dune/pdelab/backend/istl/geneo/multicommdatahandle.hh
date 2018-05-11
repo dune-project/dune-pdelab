@@ -161,7 +161,10 @@ namespace Dune {
       MultiCommGatherScatter(const GFS& gfs, RankIndex rank,
                              std::vector<std::shared_ptr<V> > target_vectors,
                              std::vector<RankIndex> neighbor_ranks)
-       : _rank(rank), _target_vectors(target_vectors), _neighbor_ranks(neighbor_ranks), _index_cache(gfs)
+        : _index_cache(gfs)
+        , _rank(rank)
+        , _target_vectors(target_vectors)
+        , _neighbor_ranks(neighbor_ranks)
       {}
 
     private:

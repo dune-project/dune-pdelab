@@ -41,10 +41,10 @@ namespace Dune {
       */
       SubdomainProjectedCoarseSpace (const GFS& gfs, const M& AF_exterior_, std::shared_ptr<SubdomainBasis<X> > subdomainbasis, const PIH& parallelhelper, int verbosity = 1)
        : gfs_(gfs), AF_exterior_(AF_exterior_),
-          ranks_(gfs.gridView().comm().size()),
-          my_rank_(gfs.gridView().comm().rank()),
-          subdomainbasis_(subdomainbasis),
-          verbosity_(verbosity)
+         verbosity_(verbosity),
+         ranks_(gfs.gridView().comm().size()),
+         my_rank_(gfs.gridView().comm().rank()),
+         subdomainbasis_(subdomainbasis)
       {
         neighbor_ranks_ = parallelhelper.getNeighborRanks();
 
@@ -276,9 +276,9 @@ namespace Dune {
 
       std::vector<rank_type> neighbor_ranks_;
 
-      std::shared_ptr<SubdomainBasis<X> > subdomainbasis_;
-
       rank_type ranks_, my_rank_;
+
+      std::shared_ptr<SubdomainBasis<X> > subdomainbasis_;
 
       std::vector<rank_type> local_basis_sizes_; // Dimensions of local coarse space per subdomain
       rank_type my_basis_array_offset_; // Start of local basis functions in a consecutive global ordering

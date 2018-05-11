@@ -38,12 +38,12 @@ namespace Dune {
           \param w The relaxation factor.
         */
         TwoLevelOverlappingAdditiveSchwarz (const GFS& gfs, const M& AF, std::shared_ptr<CoarseSpace<X> > coarse_space, bool coarse_space_active = true, int verbosity = 0)
-          : gfs_(gfs),
+          : verbosity_(verbosity),
+            coarse_space_active_(coarse_space_active),
+            gfs_(gfs),
             solverf_(Dune::PDELab::Backend::native(AF),false),
             coarse_space_(coarse_space),
             coarse_solver_ (*coarse_space_->get_coarse_system()),
-            coarse_space_active_(coarse_space_active),
-            verbosity_(verbosity),
             coarse_defect_(coarse_space_->basis_size(), coarse_space_->basis_size()),
             prolongated_(gfs_, 0.0)
         { }
@@ -110,7 +110,7 @@ namespace Dune {
 
       private:
         int verbosity_;
-        bool coarse_space_active_ = true;
+        bool coarse_space_active_;
 
         double coarse_time_ = 0.0;
         int apply_calls_ = 0;
