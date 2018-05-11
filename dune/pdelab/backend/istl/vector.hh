@@ -66,6 +66,11 @@ namespace Dune {
           (*_container) = rhs.native();
         }
 
+        BlockVector(BlockVector&& rhs)
+          : _gfs(rhs._gfs)
+          , _container(std::move(rhs._container))
+        {}
+
         BlockVector (const GFS& gfs, Backend::attached_container = Backend::attached_container())
           : _gfs(gfs)
           , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
@@ -200,6 +205,11 @@ namespace Dune {
         const E& operator[](const ContainerIndex& ci) const
         {
           return ISTL::access_vector_element(ISTL::container_tag(*_container),*_container,ci,ci.size()-1);
+        }
+
+        typename Dune::template FieldTraits<E>::real_type two_norm2() const
+        {
+          return _container->two_norm2();
         }
 
         typename Dune::template FieldTraits<E>::real_type two_norm() const
