@@ -13,6 +13,7 @@
 #include <iostream>  // provides std::cout, std::endl
 #include <string>    // provides std::string
 
+#include <algorithm>
 #include <numeric>
 #include <vector>
 
@@ -22,6 +23,8 @@
 #include <dune/istl/bvector.hh>        // provides Dune::BlockVector
 #include <dune/istl/istlexception.hh>  // provides Dune::ISTLError
 #include <dune/istl/io.hh>             // provides Dune::printvector(...)
+
+#include <dune/pdelab/backend/interface.hh>
 
 #ifdef Status
 #undef Status        // prevent preprocessor from damaging the ARPACK++
@@ -168,6 +171,12 @@ namespace ArpackGeneo
           dbv[block][iBlock] = v[block*dbvBlockSize + iBlock];
     }
 
+    template<typename Vector>
+    static inline void arrayToVector(const Real* data, Vector& v)
+    {
+      std::copy(data,data + v.flatsize(),v.begin());
+    }
+
     //! Get vector v as a block vector object which is compatible to
     //! matrix columns
     static inline void arrayToRangeBlockVector (const Real* v,
@@ -213,10 +222,12 @@ namespace ArpackGeneo
    *
    * \author Sebastian Westerheide.
    */
-  template <typename BCRSMatrix, typename BlockVector>
+  template <typename BCRSMatrix, typename BlockVectorWrapper>
   class ArPackPlusPlus_Algorithms
   {
   public:
+
+    using BlockVector = Dune::PDELab::Backend::Native<BlockVectorWrapper>;
     typedef typename BlockVector::field_type Real;
 
   public:
@@ -250,7 +261,7 @@ namespace ArpackGeneo
 
 
     inline void computeGenNonSymMinMagnitude (const BCRSMatrix& b_, const Real& epsilon, int& nev,
-                                        std::vector<BlockVector>& x, std::vector<Real>& lambda, Real sigma) const
+                                        std::vector<BlockVectorWrapper>& x, std::vector<Real>& lambda, Real sigma) const
     {
       // print verbosity information
       if (verbosity_level_ > 0)
@@ -322,7 +333,7 @@ namespace ArpackGeneo
       for (int i = 0; i < nev; i++) {
         lambda[i] = sigma+1./ev[index[i]];
         Real* x_raw = dprob.RawEigenvector(index[i]);
-        WrappedMatrix::arrayToDomainBlockVector(x_raw,x[i]);
+        WrappedMatrix::arrayToVector(x_raw,x[i]);
       }
 
       // obtain number of Arnoldi update iterations actually taken

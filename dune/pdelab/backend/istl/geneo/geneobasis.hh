@@ -1,6 +1,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_GENEOBASIS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_GENEO_GENEOBASIS_HH
 
+#include <algorithm>
+#include <functional>
+
 #include <dune/pdelab/backend/istl/geneo/subdomainbasis.hh>
 #include <dune/pdelab/backend/istl/geneo/arpackpp_geneo.hh>
 
@@ -48,15 +51,11 @@ namespace Dune {
         }
 
         // Setup Arpack for solving generalized eigenproblem
-        ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, ISTLX> arpack(native(AF_exterior));
+        ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, X> arpack(native(AF_exterior));
         double eps = 0.0;
 
         std::vector<double> eigenvalues;
-        std::vector<ISTLX> eigenvectors;
-        eigenvectors.resize(nev_arpack);
-        for (int i = 0; i < nev_arpack; i++) {
-          eigenvectors[i] = native(X(gfs,0.0));
-        }
+        std::vector<X> eigenvectors(nev_arpack,X(gfs,0.0));
 
         arpack.computeGenNonSymMinMagnitude(native(ovlp_mat), eps, nev_arpack, eigenvectors, eigenvalues, shift);
 
@@ -81,10 +80,13 @@ namespace Dune {
         this->local_basis.resize(cnt);
         for (int base_id = 0; base_id < cnt; base_id++) {
           this->local_basis[base_id] = std::make_shared<X>(part_unity);
-          for (int it = 0; it < native(eigenvectors[base_id]).N(); it++) {
-            for(int j = 0; j < dim; j++)
-              native(*this->local_basis[base_id])[it][j] *= eigenvectors[base_id][it][j];
-          }
+          // scale partition of unity with eigenvector
+          std::transform(
+            this->local_basis[base_id]->begin(),this->local_basis[base_id]->end(),
+            eigenvectors[base_id].begin(),
+            this->local_basis[base_id]->begin(),
+            std::multiplies<>()
+            );
         }
 
         // Normalize basis vectors
