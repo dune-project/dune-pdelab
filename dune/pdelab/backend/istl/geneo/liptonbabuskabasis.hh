@@ -80,8 +80,8 @@ namespace Dune {
         }
 
         // Normalize basis vectors
-        for (int i = 0; i < this->local_basis.size(); i++) {
-          native(*(this->local_basis[i])) *= 1.0 / (native(*(this->local_basis[i])) * native(*(this->local_basis[i])));
+        for (auto& v : this->local_basis) {
+          *v *= 1.0 / v->two_norm2();
         }
 
         if (add_part_unity && eigenvalues[0] > 1E-10) {
