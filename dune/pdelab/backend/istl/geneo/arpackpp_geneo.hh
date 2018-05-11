@@ -13,6 +13,8 @@
 #include <iostream>  // provides std::cout, std::endl
 #include <string>    // provides std::string
 
+#include <numeric>
+
 #include <dune/common/fvector.hh>     // provides Dune::FieldVector
 #include <dune/common/exceptions.hh>  // provides DUNE_THROW(...)
 
@@ -301,9 +303,8 @@ namespace ArpackGeneo
 
       // Get sorting permutation for un-shifted eigenvalues
       std::vector<int> index(nev, 0);
-      for (int i = 0 ; i != index.size() ; i++) {
-        index[i] = i;
-      }
+      std::iota(index.begin(),index.end(),0);
+
       std::sort(index.begin(), index.end(),
           [&](const int& a, const int& b) {
             return (sigma+1./ev[a] < sigma+1./ev[b]);
