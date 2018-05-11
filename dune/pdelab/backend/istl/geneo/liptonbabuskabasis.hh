@@ -40,18 +40,6 @@ namespace Dune {
 
         arpack.computeGenNonSymMinMagnitude(native(AF_interior), eps, nev_arpack, eigenvectors, eigenvalues, shift);
 
-
-        /*for(int i = 0; i < nev_arpack; i++){
-            auto check = eigenvectors[i];
-            native(AF_exterior).mv(eigenvectors[i],check);
-            auto check2 = eigenvectors[i];
-            native(ovlp_mat).mv(eigenvectors[i],check2);
-            check2 *= eigenvalues[i];
-            check -= check2;
-            if(native(check).infinity_norm() > 1e-6) std::cout << "Rank " << gfs.gridView().comm().rank() << " Error in EV calculation " << native(check).infinity_norm() << std::endl;
-        }*/
-
-
         // Count eigenvectors below threshold
         int cnt = -1;
         if (eigenvalue_threshold >= 0) {
