@@ -16,7 +16,6 @@
 
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
-#include <dune/pdelab/common/globalVariable.hh>
 
 namespace Dune {
   namespace PDELab {

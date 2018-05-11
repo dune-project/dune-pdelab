@@ -18,7 +18,6 @@
 #include <dune/pdelab/constraints/common/constraintstransformation.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/geometry/referenceelements.hh>
-#include <dune/pdelab/common/globalVariable.hh>
 
 namespace Dune {
   namespace PDELab {

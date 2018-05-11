@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_BACKEND_COMMON_UNCACHEDVECTORVIEW_HH
-#define DUNE_PDELAB_BACKEND_COMMON_UNCACHEDVECTORVIEW_HH
+#ifndef DUNE_PDELAB_BACKEND_COMMON_BLOCKSTRUCTURED_UNCACHEDVECTORVIEW_HH
+#define DUNE_PDELAB_BACKEND_COMMON_BLOCKSTRUCTURED_UNCACHEDVECTORVIEW_HH
 
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
@@ -9,11 +9,11 @@
 #include <dune/geometry/referenceelements.hh>
 
 namespace Dune {
-  namespace PDELab {
+  namespace Blockstructured {
 
 
     template<typename V, typename LFSC>
-    struct ConstUncachedVectorView
+    struct BlockstructuredConstUncachedVectorView
     {
 
       typedef typename std::remove_const<V>::type Container;
@@ -25,12 +25,12 @@ namespace Dune {
       typedef typename LFSCache::ContainerIndex ContainerIndex;
 
 
-      ConstUncachedVectorView()
+      BlockstructuredConstUncachedVectorView()
         : _container(nullptr)
         , _lfs_cache(nullptr)
       {}
 
-      ConstUncachedVectorView(V& container)
+      BlockstructuredConstUncachedVectorView(V& container)
         : _container(&container)
         , _lfs_cache(nullptr)
       {}
@@ -62,9 +62,26 @@ namespace Dune {
       template<typename LC>
       void read(LC& local_container) const
       {
-        for (size_type i = 0; i < size(); ++i)
-        {
-          accessBaseContainer(local_container)[i] = container()[cache().containerIndex(i)];
+        auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
+
+        auto& coeffs = cache().localFunctionSpace().finiteElement().localCoefficients();
+
+        for (int c = 0; c < refEl.dimension + 1; ++c) {
+          for (int s = 0; s < refEl.size(c); ++s) {
+            // evaluate consecutive index of subentity
+            auto container_index = cache().containerIndex(s, c);
+            auto local_index = coeffs.localDOF(Dune::LocalKey(s, c, 0));
+            auto stride = coeffs.stride(s, c);
+            auto chunk_size = coeffs.chunk_size(s, c);
+            for (int i = 0; i < coeffs.size_index(s, c); i+=chunk_size) {
+              for (int j = 0; j < chunk_size; ++j) {
+                // store data
+                Dune::PDELab::accessBaseContainer(local_container)[local_index + j] = container()[container_index];
+                container_index[0]++;
+              }
+              local_index += stride;
+            }
+          }
         }
       }
 
@@ -74,7 +91,7 @@ namespace Dune {
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
-            accessBaseContainer(local_container)[local_index] = container()[cache().containerIndex(local_index)];
+            Dune::PDELab::accessBaseContainer(local_container)[local_index] = container()[cache().containerIndex(local_index)];
           }
       }
 
@@ -84,7 +101,7 @@ namespace Dune {
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
-            accessBaseContainer(local_container)[i] = container()[cache().containerIndex(local_index)];
+            Dune::PDELab::accessBaseContainer(local_container)[i] = container()[cache().containerIndex(local_index)];
           }
       }
 
@@ -133,8 +150,8 @@ namespace Dune {
 
 
     template<typename V, typename LFSC>
-    struct UncachedVectorView
-      : public ConstUncachedVectorView<V,LFSC>
+    struct BlockstructuredUncachedVectorView
+      : public BlockstructuredConstUncachedVectorView<V,LFSC>
     {
 
       typedef V Container;
@@ -145,18 +162,18 @@ namespace Dune {
       typedef typename LFSCache::DOFIndex DOFIndex;
       typedef typename LFSCache::ContainerIndex ContainerIndex;
 
-      using ConstUncachedVectorView<V,LFSC>::cache;
-      using ConstUncachedVectorView<V,LFSC>::size;
+      using BlockstructuredConstUncachedVectorView<V,LFSC>::cache;
+      using BlockstructuredConstUncachedVectorView<V,LFSC>::size;
 
       // Explicitly pull in operator[] from the base class to work around a problem
       // with clang not finding the const overloads of the operator from the base class.
-      using ConstUncachedVectorView<V,LFSC>::operator[];
+      using BlockstructuredConstUncachedVectorView<V,LFSC>::operator[];
 
-      UncachedVectorView()
+      BlockstructuredUncachedVectorView()
       {}
 
-      UncachedVectorView(Container& container)
-        : ConstUncachedVectorView<V,LFSC>(container)
+      BlockstructuredUncachedVectorView(Container& container)
+        : BlockstructuredConstUncachedVectorView<V,LFSC>(container)
       {}
 
       template<typename LC>
@@ -164,19 +181,35 @@ namespace Dune {
       {
         for (size_type i = 0; i < size(); ++i)
           {
-            container()[cache().containerIndex(i)] = accessBaseContainer(local_container)[i];
+            container()[cache().containerIndex(i)] = Dune::PDELab::accessBaseContainer(local_container)[i];
           }
       }
 
       template<typename LC>
       void add(const LC& local_container)
       {
-        for (size_type i = 0; i < size(); ++i)
-        {
-          container()[cache().containerIndex(i)] += accessBaseContainer(local_container)[i];
+        auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
+
+        auto& coeffs = cache().localFunctionSpace().finiteElement().localCoefficients();
+
+        for (int c = 0; c < refEl.dimension + 1; ++c) {
+          for (int s = 0; s < refEl.size(c); ++s) {
+            // evaluate consecutive index of subentity
+            auto container_index = cache().containerIndex(s, c);
+            auto local_index = coeffs.localDOF(Dune::LocalKey(s, c, 0));
+            auto stride = coeffs.stride(s, c);
+            auto chunk_size = coeffs.chunk_size(s, c);
+            for (int i = 0; i < coeffs.size_index(s, c); i+=chunk_size) {
+              for (int j = 0; j < chunk_size; ++j) {
+                // store data
+                container()[container_index] += Dune::PDELab::accessBaseContainer(local_container)[local_index + j];
+                container_index[0]++;
+              }
+              local_index += stride;
+            }
+          }
         }
       }
-
 
 
       template<typename ChildLFS, typename LC>
@@ -185,7 +218,7 @@ namespace Dune {
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
-            container()[cache().containerIndex(local_index)] = accessBaseContainer(local_container)[local_index];
+            container()[cache().containerIndex(local_index)] = Dune::PDELab::accessBaseContainer(local_container)[local_index];
           }
       }
 
@@ -195,7 +228,7 @@ namespace Dune {
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
-            container()[cache().containerIndex(local_index)] += accessBaseContainer(local_container)[local_index];
+            container()[cache().containerIndex(local_index)] += Dune::PDELab::accessBaseContainer(local_container)[local_index];
           }
       }
 
@@ -208,7 +241,7 @@ namespace Dune {
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
-            container()[cache().containerIndex(local_index)] = accessBaseContainer(local_container)[i];
+            container()[cache().containerIndex(local_index)] = Dune::PDELab::accessBaseContainer(local_container)[i];
           }
       }
 
@@ -218,7 +251,7 @@ namespace Dune {
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
-            container()[cache().containerIndex(local_index)] += accessBaseContainer(local_container)[i];
+            container()[cache().containerIndex(local_index)] += Dune::PDELab::accessBaseContainer(local_container)[i];
           }
       }
 

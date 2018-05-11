@@ -10,7 +10,6 @@
 #include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
 #include <dune/pdelab/gridoperator/default/assembler.hh>
 #include <dune/pdelab/gridoperator/default/localassembler.hh>
-#include <dune/pdelab/common/globalVariable.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -172,11 +171,9 @@ namespace Dune{
       //! Assemble residual
       void residual(const Domain & x, Range & r) const
       {
-        evilGlobalVariable = true;
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
         ResidualEngine & residual_engine = local_assembler.localResidualAssemblerEngine(r,x);
         global_assembler.assemble(residual_engine);
-        evilGlobalVariable = false;
       }
 
       //! Assembler jacobian

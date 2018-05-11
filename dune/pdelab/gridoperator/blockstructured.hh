@@ -62,10 +62,15 @@ namespace Dune{
       //! Assemble residual
       void residual(const typename Base::Domain & x, typename Base::Range & r) const
       {
-        evilGlobalVariable = true;
         auto & residual_engine = local_assembler.localResidualAssemblerEngine(r,x);
         global_assembler.assemble(residual_engine);
-        evilGlobalVariable = false;
+      }
+
+      //! Apply jacobian matrix without explicitly assembling it
+      void jacobian_apply(const typename Base::Domain & z, typename Base::Range & r) const
+      {
+        auto & jacobian_apply_engine = local_assembler.localJacobianApplyAssemblerEngine(r,z);
+        global_assembler.assemble(jacobian_apply_engine);
       }
 
     private:
