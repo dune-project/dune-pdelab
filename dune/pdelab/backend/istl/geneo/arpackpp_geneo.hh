@@ -329,7 +329,7 @@ namespace ArpackGeneo
       // obtain approximated least dominant eigenvalue of A
       lambda.resize(nev);
       // obtain associated approximated eigenvector of A
-      x.resize(nev);
+      //x.resize(nev); // FIXME: I disabled this line, as it seems broken! (Steffen)
       for (int i = 0; i < nev; i++) {
         lambda[i] = sigma+1./ev[index[i]];
         Real* x_raw = dprob.RawEigenvector(index[i]);
