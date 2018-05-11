@@ -14,6 +14,7 @@
 #include <string>    // provides std::string
 
 #include <numeric>
+#include <vector>
 
 #include <dune/common/fvector.hh>     // provides Dune::FieldVector
 #include <dune/common/exceptions.hh>  // provides DUNE_THROW(...)
@@ -264,8 +265,8 @@ namespace ArpackGeneo
       const int ncv = 0;                    // Number of Arnoldi vectors generated at each iteration (0 == auto)
       const Real tol = epsilon;              // Stopping tolerance (relative accuracy of Ritz values) (0 == machine precision)
       const int maxit = nIterationsMax_*nev; // Maximum number of Arnoldi update iterations allowed   (0 == 100*nev)
-      Real* ev = new Real[nev];              // Computed eigenvalues of A
-      Real* ev_imag = new Real[nev];              // Computed eigenvalues of A
+      auto ev = std::vector<Real>(nev);              // Computed eigenvalues of A
+      auto ev_imag = std::vector<Real>(nev);              // Computed eigenvalues of A
       const bool ivec = true;                // Flag deciding if eigenvectors shall be determined
 
       BCRSMatrix ashiftb(a_);
@@ -299,7 +300,10 @@ namespace ArpackGeneo
       if (verbosity_level_ > 3) dprob.Trace();
 
       // find eigenvalues and eigenvectors of A
-      nconv = dprob.Eigenvalues(ev,ev_imag,ivec);
+      // The broken interface of ARPACK++ actually wants a reference to a pointer...
+      auto ev_data = ev.data();
+      auto ev_imag_data = ev_imag.data();
+      dprob.Eigenvalues(ev_data,ev_imag_data,ivec);
 
       // Get sorting permutation for un-shifted eigenvalues
       std::vector<int> index(nev, 0);
@@ -324,8 +328,6 @@ namespace ArpackGeneo
       // obtain number of Arnoldi update iterations actually taken
       nIterations_ = dprob.GetIter();
 
-      // free dynamically allocated memory
-      delete[] ev;
     }
 
     /**
