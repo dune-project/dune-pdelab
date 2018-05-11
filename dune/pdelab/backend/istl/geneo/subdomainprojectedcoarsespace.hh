@@ -177,7 +177,6 @@ namespace Dune {
                 cnt++;
               }
               for (rank_type neighbor_id = 0; neighbor_id < neighbor_ranks_.size(); neighbor_id++) {
-                rank_type neighbor_offset = basis_array_offset (neighbor_ranks_[neighbor_id]);
                 for (rank_type basis_index2 = 0; basis_index2 < local_basis_sizes_[neighbor_ranks_[neighbor_id]]; basis_index2++) {
                   entries[cnt] = local_rows[basis_index][neighbor_id][basis_index2];
                   cnt++;

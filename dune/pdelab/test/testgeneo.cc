@@ -107,9 +107,6 @@ void driver(std::string basis_type, std::string part_unity_type) {
   const unsigned int dim = 2;
   const unsigned int degree = 1;
   const std::size_t nonzeros = std::pow(2*degree+1,dim);
-  const Dune::GeometryType::BasicType elemtype = Dune::GeometryType::cube;
-  const Dune::PDELab::MeshType meshtype = Dune::PDELab::MeshType::conforming;
-  const Dune::SolverCategory::Category solvertype = Dune::SolverCategory::overlapping;
   typedef double NumberType;
 
   // build a grid
@@ -135,8 +132,6 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
   // make a finite element space
   typedef typename GM::LevelGridView GV;
-  typedef typename GM::ctype ctype;
-  static const int dimworld = GM::dimensionworld;
 
   auto gv = grid->levelGridView(grid->maxLevel());
 
@@ -322,7 +317,7 @@ int main(int argc, char **argv)
 
   try{
     // initialize MPI, finalize is done automatically on exit
-    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc,argv);
+    Dune::MPIHelper::instance(argc,argv);
 
     driver("geneo", "standard");
     driver("geneo", "sarkis");

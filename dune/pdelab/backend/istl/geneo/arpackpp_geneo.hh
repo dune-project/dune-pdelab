@@ -265,8 +265,6 @@ namespace ArpackGeneo
       Real* ev = new Real[nev];              // Computed eigenvalues of A
       Real* ev_imag = new Real[nev];              // Computed eigenvalues of A
       const bool ivec = true;                // Flag deciding if eigenvectors shall be determined
-      int nconv;                             // Number of converged eigenvalues
-      char invertmodep = 'S';
 
       BCRSMatrix ashiftb(a_);
       ashiftb.axpy(-sigma,b_);
