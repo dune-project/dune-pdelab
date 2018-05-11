@@ -31,7 +31,13 @@ namespace Dune {
        * \param gfs Grid function space.
        * \param AF_exterior Stiffness matrix with boundary conditions from problem definition and Neumann on processor boundaries.
        * \param AF_ovlp The same matrix as AF_exterior, but only assembled on overlap region (where more than 1 subdomain exists).
-       *
+       * \param eigenvalue_threshold Threshold up to which eigenvalue an eigenpair should be included in the basis. If negative, no thresholding.
+       * \param part_unity Partition of unity to construct the basis with.
+       * \param nev With thresholding, returns number of eigenvectors below threshold. Else, prescribes how many to use.
+       * \param nev_arpack How many eigenpairs ARPACK is supposed to compute. Larger numbers may increase its stability. -1 for default.
+       * \param shift The shift to be used in ARPACK's shift invert solver mode. May need to be adjusted for extreme eigenvalue distributions.
+       * \param add_part_unity Whether to explicitly add the partition of unity itself in the coarse basis.
+       * \param verbose Verbosity value.
        */
       GenEOBasis(const GFS& gfs, const M& AF_exterior, const M& AF_ovlp, const double eigenvalue_threshold, X& part_unity,
                 int& nev, int nev_arpack = -1, double shift = 0.001, bool add_part_unity = false, int verbose = 0) {

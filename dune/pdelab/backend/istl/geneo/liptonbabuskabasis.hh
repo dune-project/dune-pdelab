@@ -12,6 +12,10 @@
 namespace Dune {
   namespace PDELab {
 
+    /*!
+     * \brief Experimental implementation of a basis according to Babuska and Lipton
+     * 'Optimal Local Approximation Spaces for Generalized Finite Elmente Methods with Application to Multiscale Problems' (2011)
+     */
     template<class GFS, class M, class X, class Y, int dim>
     class LiptonBabuskaBasis : public SubdomainBasis<X>
     {
