@@ -87,8 +87,8 @@ namespace Dune {
 
         // Container for neighbors' basis functions
         std::vector<std::shared_ptr<X> > neighbor_basis(neighbor_ranks_.size());
-        for (rank_type i = 0; i < neighbor_basis.size(); i++) {
-          neighbor_basis[i] = std::make_shared<X>(gfs_, 0.0);
+        for (auto& basis : neighbor_basis) {
+          basis = std::make_shared<X>(gfs_, 0.0);
         }
 
         // Assemble local section of coarse matrix
@@ -117,7 +117,7 @@ namespace Dune {
           }
 
           // Compute products of discretization matrix with local and remote vectors
-          for (rank_type neighbor_id = 0; neighbor_id < neighbor_ranks_.size(); neighbor_id++) {
+          for (std::size_t neighbor_id = 0; neighbor_id < neighbor_ranks_.size(); neighbor_id++) {
             if (basis_index_remote >= local_basis_sizes_[neighbor_ranks_[neighbor_id]])
               continue;
 
@@ -158,7 +158,7 @@ namespace Dune {
                 entries_pos[cnt] = my_basis_array_offset_ + basis_index2;
                 cnt++;
               }
-              for (rank_type neighbor_id = 0; neighbor_id < neighbor_ranks_.size(); neighbor_id++) {
+              for (std::size_t neighbor_id = 0; neighbor_id < neighbor_ranks_.size(); neighbor_id++) {
                 rank_type neighbor_offset = basis_array_offset (neighbor_ranks_[neighbor_id]);
                 for (rank_type basis_index2 = 0; basis_index2 < local_basis_sizes_[neighbor_ranks_[neighbor_id]]; basis_index2++) {
                   entries_pos[cnt] = neighbor_offset + basis_index2;
@@ -176,7 +176,7 @@ namespace Dune {
                 entries[cnt] = local_rows[basis_index][neighbor_ranks_.size()][basis_index2];
                 cnt++;
               }
-              for (rank_type neighbor_id = 0; neighbor_id < neighbor_ranks_.size(); neighbor_id++) {
+              for (std::size_t neighbor_id = 0; neighbor_id < neighbor_ranks_.size(); neighbor_id++) {
                 for (rank_type basis_index2 = 0; basis_index2 < local_basis_sizes_[neighbor_ranks_[neighbor_id]]; basis_index2++) {
                   entries[cnt] = local_rows[basis_index][neighbor_id][basis_index2];
                   cnt++;
@@ -235,7 +235,7 @@ namespace Dune {
 
         for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
           buf_defect_local[basis_index] = 0.0;
-          for (rank_type i = 0; i < native(fine).N(); i++)
+          for (std::size_t i = 0; i < native(fine).N(); i++)
             buf_defect_local[basis_index] += native(*subdomainbasis_->get_basis_vector(basis_index))[i] * native(fine)[i];
         }
 

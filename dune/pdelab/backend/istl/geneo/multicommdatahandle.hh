@@ -38,7 +38,7 @@ namespace Dune {
 
         // Get neighbor index from rank
         int remote_index = std::distance(std::find(_neighbor_ranks.begin(), _neighbor_ranks.end(), remote_rank), _neighbor_ranks.begin());
-        if (remote_index == _neighbor_ranks.size())
+        if (remote_index == static_cast<RankIndex>(_neighbor_ranks.size()))
           DUNE_THROW(Exception,"Received remote rank " << remote_rank << ", but it's not in the given neighbor set!");
 
         // Get values
@@ -91,7 +91,7 @@ namespace Dune {
 
           // Get neighbor index from rank
           int remote_index = std::distance(std::find(_neighbor_ranks.begin(), _neighbor_ranks.end(), remote_rank), _neighbor_ranks.begin());
-          if (remote_index == _neighbor_ranks.size())
+          if (remote_index == static_cast<RankIndex>(_neighbor_ranks.size()))
             DUNE_THROW(Exception,"Received remote rank " << remote_rank << ", but it's not in the given neighbor set!");
 
           // Get values
