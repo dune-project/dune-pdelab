@@ -207,6 +207,11 @@ namespace Dune {
           return ISTL::access_vector_element(ISTL::container_tag(*_container),*_container,ci,ci.size()-1);
         }
 
+        typename Dune::template FieldTraits<E>::real_type two_norm2() const
+        {
+          return _container->two_norm2();
+        }
+
         typename Dune::template FieldTraits<E>::real_type two_norm() const
         {
           return _container->two_norm();
