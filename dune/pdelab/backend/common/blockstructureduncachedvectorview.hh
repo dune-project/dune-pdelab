@@ -7,6 +7,7 @@
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 #include <dune/localfunctions/common/localkey.hh>
 #include <dune/geometry/referenceelements.hh>
+#include <dune/pdelab/gridfunctionspace/blockstructured/lfsindexcache.hh>
 
 namespace Dune {
   namespace Blockstructured {
@@ -59,8 +60,9 @@ namespace Dune {
         return cache().size();
       }
 
-      template<typename LC>
-      void read(LC& local_container) const
+      template<typename LC, typename EnableReturnType=void>
+      typename std::enable_if<std::is_base_of<BlockstructuredLFSCBase, LFSC>::value, EnableReturnType>::type
+      read(LC& local_container) const
       {
         auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
 
@@ -85,10 +87,21 @@ namespace Dune {
         }
       }
 
+      template<typename LC, typename EnableReturnType=void>
+      typename std::enable_if<!std::is_base_of<BlockstructuredLFSCBase, LFSC>::value, EnableReturnType>::type
+      read(LC& local_container) const
+      {
+        for (size_type i = 0; i < size(); ++i)
+        {
+          Dune::PDELab::accessBaseContainer(local_container)[i] = container()[cache().containerIndex(i)];
+        }
+      }
+
+
       template<typename ChildLFS, typename LC>
       void read(const ChildLFS& child_lfs, LC& local_container) const
       {
-        DUNE_THROW(Dune::NotImplemented, "");
+        this->throwIfBlockstructuredLFSC();
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
@@ -99,7 +112,7 @@ namespace Dune {
       template<typename ChildLFS, typename LC>
       void read_sub_container(const ChildLFS& child_lfs, LC& local_container) const
       {
-        DUNE_THROW(Dune::NotImplemented, "");
+        this->throwIfBlockstructuredLFSC();
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
@@ -110,7 +123,7 @@ namespace Dune {
 
       const ElementType& operator[](size_type i) const
       {
-        DUNE_THROW(Dune::NotImplemented, "");
+        this->throwIfBlockstructuredLFSC();
         return container()[cache().containerIndex(i)];
       }
 
@@ -124,14 +137,13 @@ namespace Dune {
         >
       operator[](const DI& di) const
       {
-        DUNE_THROW(Dune::NotImplemented, "");
+        this->throwIfBlockstructuredLFSC();
         return container()[cache().containerIndex(di)];
       }
 
 
       const ElementType& operator[](const ContainerIndex& ci) const
       {
-        DUNE_THROW(Dune::NotImplemented, "");
         return container()[ci];
       }
 
@@ -144,6 +156,13 @@ namespace Dune {
       const LFSCache& cache() const
       {
         return *_lfs_cache;
+      }
+
+
+      void throwIfBlockstructuredLFSC() const
+      {
+        if(std::is_base_of<BlockstructuredLFSCBase, LFSC>::value)
+          DUNE_THROW(NotImplemented, "Not implemented for blockstructured LFSC");
       }
 
     protected:
@@ -184,15 +203,16 @@ namespace Dune {
       template<typename LC>
       void write(const LC& local_container)
       {
-        DUNE_THROW(Dune::NotImplemented, "");
+        this->throwIfBlockstructuredLFSC();
         for (size_type i = 0; i < size(); ++i)
           {
             container()[cache().containerIndex(i)] = Dune::PDELab::accessBaseContainer(local_container)[i];
           }
       }
 
-      template<typename LC>
-      void add(const LC& local_container)
+      template<typename LC, typename EnableReturnType=void>
+      typename std::enable_if<std::is_base_of<BlockstructuredLFSCBase, LFSC>::value, EnableReturnType>::type
+      add(const LC& local_container)
       {
         auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
 
@@ -217,11 +237,20 @@ namespace Dune {
         }
       }
 
+      template<typename LC, typename EnableReturnType=void>
+      typename std::enable_if<!std::is_base_of<BlockstructuredLFSCBase, LFSC>::value, EnableReturnType>::type
+      add(const LC& local_container)
+      {
+        for (size_type i = 0; i < size(); ++i)
+        {
+          container()[cache().containerIndex(i)] += Dune::PDELab::accessBaseContainer(local_container)[i];
+        }
+      }
 
       template<typename ChildLFS, typename LC>
       void write(const ChildLFS& child_lfs, const LC& local_container)
       {
-        DUNE_THROW(Dune::NotImplemented, "");
+        this->throwIfBlockstructuredLFSC();
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
@@ -232,7 +261,7 @@ namespace Dune {
       template<typename ChildLFS, typename LC>
       void add(const ChildLFS& child_lfs, const LC& local_container)
       {
-        DUNE_THROW(Dune::NotImplemented, "");
+        this->throwIfBlockstructuredLFSC();
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
@@ -246,7 +275,7 @@ namespace Dune {
       template<typename ChildLFS, typename LC>
       void write_sub_container(const ChildLFS& child_lfs, const LC& local_container)
       {
-        DUNE_THROW(Dune::NotImplemented, "");
+        this->throwIfBlockstructuredLFSC();
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
@@ -257,7 +286,7 @@ namespace Dune {
       template<typename ChildLFS, typename LC>
       void add_sub_container(const ChildLFS& child_lfs, const LC& local_container)
       {
-        DUNE_THROW(Dune::NotImplemented, "");
+        this->throwIfBlockstructuredLFSC();
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
@@ -272,7 +301,7 @@ namespace Dune {
 
       ElementType& operator[](size_type i)
       {
-        DUNE_THROW(Dune::NotImplemented, "");
+        this->throwIfBlockstructuredLFSC();
         return container()[cache().containerIndex(i)];
       }
 
@@ -285,14 +314,13 @@ namespace Dune {
         >
       operator[](const DOFIndex& di)
       {
-        DUNE_THROW(Dune::NotImplemented, "");
+        this->throwIfBlockstructuredLFSC();
         return container()[cache().containerIndex(di)];
       }
 
 
       ElementType& operator[](const ContainerIndex& ci)
       {
-        DUNE_THROW(Dune::NotImplemented, "");
         return container()[ci];
       }
 

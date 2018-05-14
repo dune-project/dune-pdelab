@@ -10,9 +10,13 @@
 namespace Dune{
   namespace Blockstructured{
 
+    class BlockstructuredLFSCBase{};
+
+
     template<typename LFS, typename C>
     class LFSIndexCache
-        : public Dune::PDELab::LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag,false>
+        : public Dune::PDELab::LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag,false>,
+            public BlockstructuredLFSCBase
     {
     public:
 
