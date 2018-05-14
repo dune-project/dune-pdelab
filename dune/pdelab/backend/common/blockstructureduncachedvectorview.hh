@@ -88,6 +88,7 @@ namespace Dune {
       template<typename ChildLFS, typename LC>
       void read(const ChildLFS& child_lfs, LC& local_container) const
       {
+        DUNE_THROW(Dune::NotImplemented, "");
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
@@ -98,6 +99,7 @@ namespace Dune {
       template<typename ChildLFS, typename LC>
       void read_sub_container(const ChildLFS& child_lfs, LC& local_container) const
       {
+        DUNE_THROW(Dune::NotImplemented, "");
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
@@ -108,6 +110,7 @@ namespace Dune {
 
       const ElementType& operator[](size_type i) const
       {
+        DUNE_THROW(Dune::NotImplemented, "");
         return container()[cache().containerIndex(i)];
       }
 
@@ -121,12 +124,14 @@ namespace Dune {
         >
       operator[](const DI& di) const
       {
+        DUNE_THROW(Dune::NotImplemented, "");
         return container()[cache().containerIndex(di)];
       }
 
 
       const ElementType& operator[](const ContainerIndex& ci) const
       {
+        DUNE_THROW(Dune::NotImplemented, "");
         return container()[ci];
       }
 
@@ -179,6 +184,7 @@ namespace Dune {
       template<typename LC>
       void write(const LC& local_container)
       {
+        DUNE_THROW(Dune::NotImplemented, "");
         for (size_type i = 0; i < size(); ++i)
           {
             container()[cache().containerIndex(i)] = Dune::PDELab::accessBaseContainer(local_container)[i];
@@ -215,6 +221,7 @@ namespace Dune {
       template<typename ChildLFS, typename LC>
       void write(const ChildLFS& child_lfs, const LC& local_container)
       {
+        DUNE_THROW(Dune::NotImplemented, "");
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
@@ -225,6 +232,7 @@ namespace Dune {
       template<typename ChildLFS, typename LC>
       void add(const ChildLFS& child_lfs, const LC& local_container)
       {
+        DUNE_THROW(Dune::NotImplemented, "");
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
@@ -238,6 +246,7 @@ namespace Dune {
       template<typename ChildLFS, typename LC>
       void write_sub_container(const ChildLFS& child_lfs, const LC& local_container)
       {
+        DUNE_THROW(Dune::NotImplemented, "");
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
@@ -248,6 +257,7 @@ namespace Dune {
       template<typename ChildLFS, typename LC>
       void add_sub_container(const ChildLFS& child_lfs, const LC& local_container)
       {
+        DUNE_THROW(Dune::NotImplemented, "");
         for (size_type i = 0; i < child_lfs.size(); ++i)
           {
             const size_type local_index = child_lfs.localIndex(i);
@@ -262,6 +272,7 @@ namespace Dune {
 
       ElementType& operator[](size_type i)
       {
+        DUNE_THROW(Dune::NotImplemented, "");
         return container()[cache().containerIndex(i)];
       }
 
@@ -274,12 +285,14 @@ namespace Dune {
         >
       operator[](const DOFIndex& di)
       {
+        DUNE_THROW(Dune::NotImplemented, "");
         return container()[cache().containerIndex(di)];
       }
 
 
       ElementType& operator[](const ContainerIndex& ci)
       {
+        DUNE_THROW(Dune::NotImplemented, "");
         return container()[ci];
       }
 
