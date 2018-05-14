@@ -81,11 +81,6 @@ namespace Dune{
         return ISTL_CONTAINER::axpy(a, y);
       }
     };
-
-    template<typename B, typename GFS, typename E>
-    struct VectorBackendWrapperSelectorHelper
-    {
-    };
   }
 
   namespace PDELab{
