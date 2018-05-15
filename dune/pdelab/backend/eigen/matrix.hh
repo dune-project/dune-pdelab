@@ -1,3 +1,5 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// vi: set et ts=4 sw=2 sts=2:
 #ifndef DUNE_PDELAB_BACKEND_EIGEN_MATRIX_HH
 #define DUNE_PDELAB_BACKEND_EIGEN_MATRIX_HH
 
@@ -260,5 +262,3 @@ namespace Dune
 #endif /* HAVE_EIGEN */
 
 #endif // DUNE_PDELAB_BACKEND_EIGEN_MATRIX_HH
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
-// vi: set et ts=4 sw=2 sts=2:
