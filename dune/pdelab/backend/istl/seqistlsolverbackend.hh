@@ -151,7 +151,7 @@ namespace Dune {
         Dune::MatrixAdapter<Native<M>,
                             Native<V>,
                             Native<W>> opa(native(A));
-        Dune::SeqILU0<Native<M>,
+        Dune::SeqILU<Native<M>,
                       Native<V>,
                       Native<W>
                       > ilu0(native(A), 1.0);
@@ -199,10 +199,10 @@ namespace Dune {
                             Native<V>,
                             Native<W>
                             > opa(native(A));
-        Dune::SeqILUn<Native<M>,
+        Dune::SeqILU<Native<M>,
                       Native<V>,
                       Native<W>
-                      > ilun(native(A), n_, w_);
+                      > ilun(native(A), n_, w_, false);
         Solver<Native<V>> solver(opa, ilun, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
         solver.apply(native(z), native(r), stat);
@@ -856,7 +856,7 @@ namespace Dune {
           Native<V>,
           Native<W>
           > opa(native(A));
-        Dune::SeqILU0<
+        Dune::SeqILU<
           Native<M>,
           Native<V>,
           Native<W>

@@ -555,7 +555,7 @@ namespace Dune {
         POP pop(c,A);
         typedef OVLPScalarProduct<GFS,V> PSP;
         PSP psp(*this);
-        typedef SeqILU0<
+        typedef SeqILU<
           Native<M>,
           Native<V>,
           Native<W>,
@@ -618,7 +618,7 @@ namespace Dune {
         POP pop(c,A);
         typedef OVLPScalarProduct<GFS,V> PSP;
         PSP psp(*this);
-        typedef SeqILUn<
+        typedef SeqILU<
           Native<M>,
           Native<V>,
           Native<W>,
@@ -778,7 +778,7 @@ namespace Dune {
         POP pop(cc,A);
         typedef OVLPScalarProduct<GFS,V> PSP;
         PSP psp(*this);
-        typedef SeqILU0<
+        typedef SeqILU<
           Native<M>,
           Native<V>,
           Native<W>,
@@ -1312,7 +1312,7 @@ namespace Dune {
      */
     template<class GO, int s=96>
     class ISTLBackend_BCGS_AMG_ILU0
-      : public ISTLBackend_AMG<GO, s, Dune::SeqILU0, Dune::BiCGSTABSolver>
+      : public ISTLBackend_AMG<GO, s, Dune::SeqILU, Dune::BiCGSTABSolver>
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
     public:
@@ -1328,7 +1328,7 @@ namespace Dune {
       ISTLBackend_BCGS_AMG_ILU0(const GFS& gfs_, unsigned maxiter_=5000,
                                 int verbose_=1, bool reuse_=false,
                                 bool usesuperlu_=true)
-        : ISTLBackend_AMG<GO, s, Dune::SeqILU0, Dune::BiCGSTABSolver>
+        : ISTLBackend_AMG<GO, s, Dune::SeqILU, Dune::BiCGSTABSolver>
           (gfs_, maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
