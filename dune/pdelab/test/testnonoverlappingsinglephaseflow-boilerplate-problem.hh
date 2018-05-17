@@ -17,6 +17,12 @@ public:
 
   std::string name() const {return "A";};
 
+  //! tensor diffusion constant per cell? return false if you want more than one evaluation of A per cell.
+  static constexpr bool permeabilityIsConstantPerCell()
+  {
+    return true;
+  }
+
   //! tensor diffusion coefficient
   typename Traits::PermTensorType
   A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
