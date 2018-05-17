@@ -534,7 +534,6 @@ namespace Dune {
       const LFS& _lfs;
       const bool _enable_constraints_caching;
       CIVector _container_indices;
-      std::array<CIVector, 3> _container_indices_sc;
       std::vector<unsigned char> _dof_flags;
       std::vector<std::pair<ConstraintsIterator,ConstraintsIterator> > _constraints_iterators;
       mutable CIMap _container_index_map;
@@ -694,7 +693,6 @@ namespace Dune {
 
       const LFS& _lfs;
       CIVector _container_indices;
-      std::array<CIVector, 3> _container_indices_sc;
       mutable CIMap _container_index_map;
       const ConstraintsVector _constraints;
 

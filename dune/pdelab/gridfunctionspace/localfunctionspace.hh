@@ -16,6 +16,7 @@
 
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
+#include <dune/pdelab/gridfunctionspace/blockstructured/indexWrapper.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -186,6 +187,9 @@ namespace Dune {
       //! \brief Type of container to store multiindices.
       typedef typename std::vector<DI> DOFIndexContainer;
 
+      using DOFIndexSubentityWise = Dune::Blockstructured::SubentityWiseIndexWrapper<DI>;
+      using DOFIndexSubentityWiseContainer = std::vector<DOFIndexSubentityWise>;
+
     };
 
     template <typename GFS, typename DOFIndex>
@@ -213,6 +217,8 @@ namespace Dune {
         : pgfs(gfs)
         , _dof_index_storage()
         , _dof_indices(&_dof_index_storage)
+        , _dof_index_storage_subentity_wise()
+        , _dof_index_storage_subentity_wise_ptr(&_dof_index_storage_subentity_wise)
         , n(0)
       {}
 
@@ -293,6 +299,10 @@ namespace Dune {
       typename Traits::DOFIndexContainer* _dof_indices;
       typename Traits::IndexContainer::size_type n;
       typename Traits::IndexContainer::size_type offset;
+      typename Traits::IndexContainer::size_type nLeafs;
+      typename Traits::IndexContainer::size_type offsetLeafs;
+      typename Traits::DOFIndexSubentityWiseContainer _dof_index_storage_subentity_wise;
+      typename Traits::DOFIndexSubentityWiseContainer* _dof_index_storage_subentity_wise_ptr;
     };
 
     //! traits for local function space on a gridview
@@ -676,7 +686,6 @@ namespace Dune {
 
       //    private:
       typename FESwitch::Store pfe;
-      std::array<std::vector<typename BaseT::Traits::DOFIndex>,3> _dof_indices_sc;
     };
 
     // Register LeafGFS -> LocalFunctionSpace transformation

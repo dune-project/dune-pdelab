@@ -6,6 +6,7 @@
 #define DUNE_PDELAB_LFSINDEXCACHE_HH
 
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
+#include <dune/pdelab/gridfunctionspace/blockstructured/indexWrapper.hh>
 
 namespace Dune{
   namespace Blockstructured{
@@ -43,39 +44,45 @@ namespace Dune{
       {
         auto refEl = Dune::ReferenceElements<double,2>::general(Dune::GeometryTypes::cube(2));
 
-        for (int c = 0; c < refEl.dimension + 1; ++c) {
-          _container_indices_sc[c].resize(refEl.size(c));
-          for (int s = 0; s < refEl.size(c); ++s) {
-            // evaluate consecutive index of subentity
-            _container_indices_sc[c][s].clear();
-            _lfs.gridFunctionSpace().ordering().mapIndex(_lfs._dof_indices_sc[c][s].view(), _container_indices_sc[c][s]);
-          }
-        }
+        _container_index_storage_subentity_wise.clear();
+        _container_index_storage_subentity_wise.resize((*_lfs._dof_index_storage_subentity_wise_ptr).size());
+
+        for (int leaf = 0; leaf < _container_index_storage_subentity_wise.size(); ++leaf)
+          for (int c = 0; c < refEl.dimension + 1; ++c)
+            for (int s = 0; s < refEl.size(c); ++s)
+              // evaluate consecutive index of subentity
+              _lfs.gridFunctionSpace().ordering().mapIndex((*_lfs._dof_index_storage_subentity_wise_ptr)[leaf].indexView(s, c),
+                                                           _container_index_storage_subentity_wise[leaf].index(s, c));
       }
 
-      const CI& containerIndex(size_type s, size_type c) const
+      const CI& containerIndex(size_type leaf, size_type s, size_type c) const
       {
-        return _container_indices_sc[c][s];
+        return _container_index_storage_subentity_wise[leaf].index(s, c);
       }
 
 
       const CI& containerIndex(size_type i) const
       {
-        DUNE_THROW(Dune::NotImplemented, "");
+        DUNE_THROW(Dune::NotImplemented, "Use this index cache in a structured way, by iterating over the reference element subentities");
         return CI();
       }
 
 
       const CI& containerIndex(const DI& i) const
       {
-        DUNE_THROW(Dune::NotImplemented, "");
+        DUNE_THROW(Dune::NotImplemented, "Use this index cache in a structured way, by iterating over the reference element subentities");
         return CI();
+      }
+
+      size_type numberOfLeafs() const
+      {
+        return _container_index_storage_subentity_wise.size();
       }
 
     private:
 
       const LFS& _lfs;
-      std::array<CIVector, 3> _container_indices_sc;
+      std::vector<SubentityWiseIndexWrapper<CI>> _container_index_storage_subentity_wise;
 
     };
   }
