@@ -74,11 +74,6 @@ namespace Dune{
         return CI();
       }
 
-      size_type numberOfLeafs() const
-      {
-        return _container_index_storage_subentity_wise.size();
-      }
-
     private:
 
       const LFS& _lfs;

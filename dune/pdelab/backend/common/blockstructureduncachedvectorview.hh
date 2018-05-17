@@ -66,10 +66,8 @@ namespace Dune {
       {
         auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
 
-        int leaf = 0;
-
         TypeTree::forEachLeafNode(cache().localFunctionSpace(),
-                                  [this,&leaf,&refEl,&local_container] (auto& Node, auto& TreePath)
+                                  [this,&refEl,&local_container] (auto& Node, auto& TreePath)
                                   {
                                     auto& coeffs = Node.finiteElement().localCoefficients();
 
@@ -91,7 +89,6 @@ namespace Dune {
                                         }
                                       }
                                     }
-                                    leaf++;
                                   }
         );
       }
@@ -225,10 +222,8 @@ namespace Dune {
       {
         auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
 
-        int leaf = 0;
-
         TypeTree::forEachLeafNode(cache().localFunctionSpace(),
-                                  [this,&leaf,&refEl,&local_container] (auto& Node, auto& TreePath)
+                                  [this,&refEl,&local_container] (auto& Node, auto& TreePath)
                                   {
                                     auto& coeffs = Node.finiteElement().localCoefficients();
 
@@ -250,7 +245,6 @@ namespace Dune {
                                         }
                                       }
                                     }
-                                    leaf++;
                                   }
         );
       }
