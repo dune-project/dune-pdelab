@@ -19,52 +19,6 @@
 namespace Dune {
   namespace PDELab {
 
-#ifndef DOXYGEN
-
-    // helper construct for backwards-compatible addition of hasPermeabilityIsConstantPerCell()
-
-    namespace Impl {
-
-      template<typename P, typename = void>
-      struct hasPermeabilityIsConstantPerCell
-        : public std::false_type
-      {};
-
-      template<typename P>
-      struct hasPermeabilityIsConstantPerCell<
-        P,
-        std::void_t<decltype(std::declval<P>().permeabilityIsConstantPerCell())>
-        >
-        : public std::true_type
-      {};
-
-      template<typename P>
-      DUNE_DEPRECATED_MSG("Starting from PDELab 2.8, parameter classes must have a method `bool permeabilityIsConstantPerCell()`. For now, we assume a default value of false.")
-      constexpr
-      std::enable_if_t<
-        not hasPermeabilityIsConstantPerCell<P>::value,
-        bool
-        >
-      permeabilityIsConstantPerCell(const P& p)
-      {
-        return false;
-      }
-
-      template<typename P>
-      constexpr
-      std::enable_if_t<
-        hasPermeabilityIsConstantPerCell<P>::value,
-        bool
-        >
-      permeabilityIsConstantPerCell(const P& p)
-      {
-        return p.hasPermeabilityIsConstantPerCell();
-      }
-
-    } // namespace Impl
-
-#endif // DOXYGEN
-
     /** \brief Traits class for convection diffusion parameters
      *
      * A class supplying parameters to a convection-diffusion local
