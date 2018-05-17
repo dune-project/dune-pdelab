@@ -78,6 +78,7 @@ namespace Dune {
      * Note:
      *  - This formulation is valid for velocity fields which are non-divergence free.
      *  - Outflow boundary conditions should only be set on the outflow boundary
+     *  - A is evaluated cell-wise by default. If you want more evaluations per cell, set permeabilityIsConstantPerCell() to false.
      *
      * \tparam GV The GridView type
      * \tparam RF The range field type
@@ -91,7 +92,7 @@ namespace Dune {
       typedef ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
       //! tensor diffusion constant per cell? return false if you want more than one evaluation of A per cell.
-      static bool permeabilityIsConstantPerCell()
+      static constexpr bool permeabilityIsConstantPerCell()
       {
         return true;
       }
