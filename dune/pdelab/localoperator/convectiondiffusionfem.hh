@@ -90,6 +90,12 @@ namespace Dune {
         auto intorder = intorderadd+2*lfsu.finiteElement().localBasis().order();
         for (const auto& ip : quadratureRule(geo,intorder))
           {
+            // update all variables dependent on A if A is not cell-wise constant
+            if (!T::permeabilityIsConstantPerCell())
+            {
+              tensor = param.A(cell, ip.position());
+            }
+
             // evaluate basis functions
             auto& phi = cache.evaluateFunction(ip.position(),lfsu.finiteElement().localBasis());
 
@@ -161,6 +167,12 @@ namespace Dune {
         auto intorder = intorderadd+2*lfsu.finiteElement().localBasis().order();
         for (const auto& ip : quadratureRule(geo,intorder))
           {
+            // update all variables dependent on A if A is not cell-wise constant
+            if (!T::permeabilityIsConstantPerCell())
+            {
+              tensor = param.A(cell, ip.position());
+            }
+
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             auto& js = cache.evaluateJacobian(ip.position(),lfsu.finiteElement().localBasis());
 
@@ -476,6 +488,15 @@ namespace Dune {
         auto intorder = 2*lfsu_s.finiteElement().localBasis().order();
         for (const auto& ip : quadratureRule(geo,intorder))
           {
+            // update all variables dependent on A if A is not cell-wise constant
+            if (!T::permeabilityIsConstantPerCell())
+            {
+              A_s = param.A(cell_inside,geo_in_inside.global(ip.position()));
+              A_n = param.A(cell_outside,geo_in_outside.global(ip.position()));
+              A_s.mv(n_F,An_F_s);
+              A_n.mv(n_F,An_F_n);
+            }
+
             // position of quadrature point in local coordinates of elements
             auto iplocal_s = geo_in_inside.global(ip.position());
             auto iplocal_n = geo_in_outside.global(ip.position());
@@ -569,6 +590,13 @@ namespace Dune {
         auto intorder = 2*lfsu_s.finiteElement().localBasis().order();
         for (const auto& ip : quadratureRule(geo,intorder))
           {
+            // update all variables dependent on A if A is not cell-wise constant
+            if (!T::permeabilityIsConstantPerCell())
+            {
+              A_s = param.A(cell_inside,geo_in_inside.global(ip.position()));
+              A_s.mv(n_F,An_F_s);
+            }
+
             // position of quadrature point in local coordinates of elements
             auto iplocal_s = geo_in_inside.global(ip.position());
 
