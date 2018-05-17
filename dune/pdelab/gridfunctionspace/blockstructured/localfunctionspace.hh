@@ -142,8 +142,8 @@ namespace Dune{
       using Base::Base;
 
       //! Calculates the multiindices associated with the given entity.
-      template<typename Entity>
-      void dofIndices(const Entity& e, int offsetLeafs)
+      template<typename Entity, typename DOFIndexIterator>
+      void dofIndices(const Entity& e, DOFIndexIterator /*it*/, DOFIndexIterator /*endit*/, std::integral_constant<bool,false>)
       {
 
         const typename FESwitch::Coefficients &coeffs =
@@ -267,6 +267,7 @@ namespace Dune{
       void setup()
       {
         this->_dof_index_storage_subentity_wise_ptr->resize(Dune::TypeTree::TreeInfo<GFS>::leafCount);
+        TypeTree::applyToTree(*this, PropagateGlobalStorageVisitor<>());
         BaseT::setup(*this);
       }
 
