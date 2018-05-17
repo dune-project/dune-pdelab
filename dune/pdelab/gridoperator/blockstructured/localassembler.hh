@@ -22,8 +22,8 @@ namespace Dune{
       using CU = typename Base::CU;
       using CV = typename Base::CV;
 
-      using LFSU = BlockstructuredLocalFunctionSpace<typename Base::GFSU>;
-      using LFSV = BlockstructuredLocalFunctionSpace<typename Base::GFSV>;
+      using LFSU = LocalFunctionSpace<typename Base::GFSU>;
+      using LFSV = LocalFunctionSpace<typename Base::GFSV>;
 
       using LFSUCache = LFSIndexCache<LFSU, CU>;
       using LFSVCache = LFSIndexCache<LFSV, CV>;

@@ -296,8 +296,8 @@ namespace Dune{
       >::type cv;
 
       /* local function spaces */
-      typedef BlockstructuredLocalFunctionSpace<GFSU, Dune::PDELab::TrialSpaceTag> LFSU;
-      typedef BlockstructuredLocalFunctionSpace<GFSV, Dune::PDELab::TestSpaceTag> LFSV;
+      typedef LocalFunctionSpace<GFSU, Dune::PDELab::TrialSpaceTag> LFSU;
+      typedef LocalFunctionSpace<GFSV, Dune::PDELab::TestSpaceTag> LFSV;
       // local function spaces in local cell
       mutable LFSU lfsu;
       mutable LFSV lfsv;

@@ -126,7 +126,7 @@ namespace Dune{
 
     //! single component local function space
     template<typename GFS, typename DOFIndex>
-    class BlockstructuredLeafLocalFunctionSpaceNode
+    class LeafLocalFunctionSpaceNode
         : public Dune::PDELab::LeafLocalFunctionSpaceNode<GFS, DOFIndex>
     {
       using Base = Dune::PDELab::LeafLocalFunctionSpaceNode<GFS, DOFIndex>;
@@ -186,11 +186,12 @@ namespace Dune{
                                Dune::PDELab::LeafGridFunctionSpaceTag* tag);
 
 
-
     template <typename GFS, typename TAG=Dune::PDELab::AnySpaceTag>
-    class BlockstructuredLocalFunctionSpace :
+    class LocalFunctionSpace:
         public TypeTree::TransformTree<GFS,gfs_to_blockstructured_lfs<GFS> >::Type
     {
+      static_assert(std::is_same<TAG, Dune::PDELab::AnySpaceTag>::value, "Use this LFS only with AnySpaceTag");
+
       typedef typename TypeTree::TransformTree<GFS,gfs_to_blockstructured_lfs<GFS> >::Type BaseT;
       typedef typename BaseT::Traits::IndexContainer::size_type I;
       typedef typename BaseT::Traits::IndexContainer::size_type LocalIndex;
@@ -209,7 +210,7 @@ namespace Dune{
 
     public:
 
-      BlockstructuredLocalFunctionSpace(const GFS & gfs)
+      LocalFunctionSpace(const GFS & gfs)
           : BaseT(TypeTree::TransformTree<GFS,gfs_to_blockstructured_lfs<GFS> >::transform(gfs))
           , maxLocalSize(gfs.ordering().maxLocalSize())
       {
@@ -218,7 +219,7 @@ namespace Dune{
         this->setup();
       }
 
-      BlockstructuredLocalFunctionSpace(std::shared_ptr<const GFS> pgfs)
+      LocalFunctionSpace(std::shared_ptr<const GFS> pgfs)
       : BaseT(*TypeTree::TransformTree<GFS,gfs_to_blockstructured_lfs<GFS> >::transform_storage(pgfs))
       , maxLocalSize(pgfs->ordering().maxLocalSize())
       {
@@ -227,7 +228,7 @@ namespace Dune{
         this->setup();
       }
 
-      BlockstructuredLocalFunctionSpace(const BlockstructuredLocalFunctionSpace & lfs)
+      LocalFunctionSpace(const LocalFunctionSpace & lfs)
           : BaseT(lfs)
           , maxLocalSize(lfs.maxSize())
       {
