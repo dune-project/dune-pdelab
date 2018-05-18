@@ -11,6 +11,9 @@
 namespace Dune{
   namespace Blockstructured{
 
+    template<int d>
+    using SubentityWiseLocalIndexContainer = std::array<std::vector<std::vector<std::size_t>>, d + 1>;
+
     class BlockstructuredLFSCBase{};
 
 
@@ -44,15 +47,36 @@ namespace Dune{
       {
         auto refEl = Dune::ReferenceElements<double,2>::general(Dune::GeometryTypes::cube(2));
 
-        _container_index_storage_subentity_wise.clear();
-        _container_index_storage_subentity_wise.resize((*_lfs._dof_index_storage_subentity_wise_ptr).size());
+        const std::size_t nLeafs = (*_lfs._dof_index_storage_subentity_wise_ptr).size();
 
-        for (int leaf = 0; leaf < _container_index_storage_subentity_wise.size(); ++leaf)
+        _container_index_storage_subentity_wise.clear();
+        _container_index_storage_subentity_wise.resize(nLeafs);
+
+        _local_index_storage_subentity_wise.clear();
+        _local_index_storage_subentity_wise.resize(nLeafs);
+
+        offset.resize(nLeafs);
+
+
+        TypeTree::forEachLeafNode(_lfs, [this,&refEl] (auto& Node, auto& TreePath){
+          const auto leaf = Node.offsetLeafs;
+
+          this->offset[leaf] = Node.offset;
+
+          this->_local_index_storage_subentity_wise[leaf] = &Node.finiteElement().localCoefficients().getLocalIndexContainer();
           for (int c = 0; c < refEl.dimension + 1; ++c)
             for (int s = 0; s < refEl.size(c); ++s)
               // evaluate consecutive index of subentity
-              _lfs.gridFunctionSpace().ordering().mapIndex((*_lfs._dof_index_storage_subentity_wise_ptr)[leaf].indexView(s, c),
-                                                           _container_index_storage_subentity_wise[leaf].index(s, c));
+              this->_lfs.gridFunctionSpace().ordering().mapIndex((*this->_lfs._dof_index_storage_subentity_wise_ptr)[leaf].indexView(s, c),
+                                                           this->_container_index_storage_subentity_wise[leaf].index(s, c));
+        });
+
+//        for (int leaf = 0; leaf < _container_index_storage_subentity_wise.size(); ++leaf)
+//          for (int c = 0; c < refEl.dimension + 1; ++c)
+//            for (int s = 0; s < refEl.size(c); ++s)
+//               evaluate consecutive index of subentity
+//              _lfs.gridFunctionSpace().ordering().mapIndex((*_lfs._dof_index_storage_subentity_wise_ptr)[leaf].indexView(s, c),
+//                                                           _container_index_storage_subentity_wise[leaf].index(s, c));
       }
 
       const CI& containerIndex(size_type leaf, size_type s, size_type c) const
@@ -63,21 +87,39 @@ namespace Dune{
 
       const CI& containerIndex(size_type i) const
       {
-        DUNE_THROW(Dune::NotImplemented, "Use this index cache in a structured way, by iterating over the reference element subentities");
-        return CI();
+        DUNE_THROW(Dune::NotImplemented, "Use this index cache by iterating over the reference element subentities");
+        return {};
       }
 
 
       const CI& containerIndex(const DI& i) const
       {
-        DUNE_THROW(Dune::NotImplemented, "Use this index cache in a structured way, by iterating over the reference element subentities");
-        return CI();
+        DUNE_THROW(Dune::NotImplemented, "Use this index cache by iterating over the reference element subentities");
+        return {};
+      }
+
+      std::size_t numberOfLeafs() const
+      {
+        return _container_index_storage_subentity_wise.size();
+      }
+
+      std::size_t sizeOfLocalDOFs(size_type leaf, size_type s, size_type c) const
+      {
+        return (*_local_index_storage_subentity_wise[leaf])[c][s].size();
+      }
+
+      std::size_t localIndex(size_type leaf, size_type s, size_type c, size_type i) const
+      {
+        return (*_local_index_storage_subentity_wise[leaf])[c][s][i] + offset[leaf];
       }
 
     private:
 
       const LFS& _lfs;
-      std::vector<SubentityWiseIndexWrapper<CI>> _container_index_storage_subentity_wise;
+      std::vector<Dune::Blockstructured::SubentityWiseIndexWrapper<CI>> _container_index_storage_subentity_wise;
+      std::vector<std::size_t> offset;
+      std::vector<const Dune::Blockstructured::SubentityWiseLocalIndexContainer<GFS::Traits::GridView::dimension>*>
+          _local_index_storage_subentity_wise;
 
     };
   }

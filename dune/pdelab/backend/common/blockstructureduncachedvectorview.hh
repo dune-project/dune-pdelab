@@ -66,31 +66,19 @@ namespace Dune {
       {
         auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
 
-        TypeTree::forEachLeafNode(cache().localFunctionSpace(),
-                                  [this,&refEl,&local_container] (auto& Node, auto& TreePath)
-                                  {
-                                    auto& coeffs = Node.finiteElement().localCoefficients();
-
-                                    for (int c = 0; c < refEl.dimension + 1; ++c) {
-                                      for (int s = 0; s < refEl.size(c); ++s) {
-                                        // evaluate consecutive index of subentity
-                                        auto container_index = this->cache().containerIndex(Node.offsetLeafs, s, c);
-                                        auto local_index = Node.offset + coeffs.localDOF(Dune::LocalKey(s, c, 0));
-                                        auto stride = coeffs.stride(s, c);
-                                        auto chunk_size = coeffs.chunk_size(s, c);
-                                        for (int i = 0; i < coeffs.size_index(s, c); i+=chunk_size) {
-                                          for (int j = 0; j < chunk_size; ++j) {
-                                            // store data
-                                            Dune::PDELab::accessBaseContainer(local_container)[local_index + j] =
-                                                this->container()[container_index];
-                                            container_index[0]++;
-                                          }
-                                          local_index += stride;
-                                        }
-                                      }
-                                    }
-                                  }
-        );
+        for (int leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
+          for (int c = 0; c < refEl.dimension + 1; ++c) {
+            for (int s = 0; s < refEl.size(c); ++s) {
+              // evaluate consecutive index of subentity
+              auto container_index = this->cache().containerIndex(leaf, s, c);
+              for (int i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
+                Dune::PDELab::accessBaseContainer(local_container)[cache().localIndex(leaf, s, c, i)] =
+                    this->container()[container_index];
+                container_index[0]++;
+              }
+            }
+          }
+        }
       }
 
       template<typename LC, typename EnableReturnType=void>
@@ -222,31 +210,19 @@ namespace Dune {
       {
         auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
 
-        TypeTree::forEachLeafNode(cache().localFunctionSpace(),
-                                  [this,&refEl,&local_container] (auto& Node, auto& TreePath)
-                                  {
-                                    auto& coeffs = Node.finiteElement().localCoefficients();
-
-                                    for (int c = 0; c < refEl.dimension + 1; ++c) {
-                                      for (int s = 0; s < refEl.size(c); ++s) {
-                                        // evaluate consecutive index of subentity
-                                        auto container_index = this->cache().containerIndex(Node.offsetLeafs, s, c);
-                                        auto local_index = Node.offset + coeffs.localDOF(Dune::LocalKey(s, c, 0));
-                                        auto stride = coeffs.stride(s, c);
-                                        auto chunk_size = coeffs.chunk_size(s, c);
-                                        for (int i = 0; i < coeffs.size_index(s, c); i+=chunk_size) {
-                                          for (int j = 0; j < chunk_size; ++j) {
-                                            // store data
-                                            this->container()[container_index] +=
-                                                Dune::PDELab::accessBaseContainer(local_container)[local_index + j];
-                                            container_index[0]++;
-                                          }
-                                          local_index += stride;
-                                        }
-                                      }
-                                    }
-                                  }
-        );
+        for (int leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
+          for (int c = 0; c < refEl.dimension + 1; ++c) {
+            for (int s = 0; s < refEl.size(c); ++s) {
+              // evaluate consecutive index of subentity
+              auto container_index = this->cache().containerIndex(leaf, s, c);
+              for (int i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
+                this->container()[container_index] +=
+                    Dune::PDELab::accessBaseContainer(local_container)[cache().localIndex(leaf, s, c, i)];
+                container_index[0]++;
+              }
+            }
+          }
+        }
       }
 
       template<typename LC, typename EnableReturnType=void>
