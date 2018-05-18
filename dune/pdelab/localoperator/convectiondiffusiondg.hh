@@ -137,7 +137,7 @@ namespace Dune {
         for (const auto& ip : quadratureRule(geo,intorder))
           {
             // update all variables dependent on A if A is not cell-wise constant
-            if (Impl::permeabilityIsConstantPerCell<T>(param))
+            if (!Impl::permeabilityIsConstantPerCell<T>(param))
             {
               A = param.A(cell, ip.position());
             }
@@ -229,7 +229,7 @@ namespace Dune {
         for (const auto& ip : quadratureRule(geo,intorder))
           {
             // update all variables dependent on A if A is not cell-wise constant
-            if (Impl::permeabilityIsConstantPerCell<T>(param))
+            if (!Impl::permeabilityIsConstantPerCell<T>(param))
             {
               A = param.A(cell, ip.position());
             }
@@ -358,7 +358,7 @@ namespace Dune {
         for (const auto& ip : quadratureRule(geo,intorder))
           {
             // update all variables dependent on A if A is not cell-wise constant
-            if (Impl::permeabilityIsConstantPerCell<T>(param))
+            if (!Impl::permeabilityIsConstantPerCell<T>(param))
             {
               A_s = param.A(cell_inside,geo_in_inside.global(ip.position()));
               A_n = param.A(cell_outside,geo_in_outside.global(ip.position()));
@@ -567,7 +567,7 @@ namespace Dune {
         for (const auto& ip : quadratureRule(geo,intorder))
           {
             // update all variables dependent on A if A is not cell-wise constant
-            if (Impl::permeabilityIsConstantPerCell<T>(param))
+            if (!Impl::permeabilityIsConstantPerCell<T>(param))
             {
               A_s = param.A(cell_inside,geo_in_inside.global(ip.position()));
               A_n = param.A(cell_outside,geo_in_outside.global(ip.position()));
@@ -732,7 +732,7 @@ namespace Dune {
         for (const auto& ip : quadratureRule(geo,intorder))
           {
             // update all variables dependent on A if A is not cell-wise constant
-            if (Impl::permeabilityIsConstantPerCell<T>(param))
+            if (!Impl::permeabilityIsConstantPerCell<T>(param))
             {
               A_s = param.A(cell_inside,geo_in_inside.global(ip.position()));
               A_s.mv(n_F,An_F_s);
@@ -922,7 +922,7 @@ namespace Dune {
         for (const auto& ip : quadratureRule(geo,intorder))
           {
             // update all variables dependent on A if A is not cell-wise constant
-            if (Impl::permeabilityIsConstantPerCell<T>(param))
+            if (!Impl::permeabilityIsConstantPerCell<T>(param))
             {
               A_s = param.A(cell_inside,geo_in_inside.global(ip.position()));
               A_s.mv(n_F,An_F_s);
