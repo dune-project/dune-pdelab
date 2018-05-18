@@ -62,7 +62,7 @@ namespace Dune {
           std::vector<RangeType> phi(lfsu.size());
 
           // determine integration order
-          auto intorder = 2*lfsu.finiteElement().localBasis().order() + _intorderadd;
+          auto intorder = 2*FESwitch::basis(lfsu.finiteElement()).order() + _intorderadd;
 
           // Loop over quadrature points
           for (const auto& qp : quadratureRule(geo,intorder))
@@ -110,7 +110,7 @@ namespace Dune {
           std::vector<RangeType> phi(lfsu.size());
 
           // determine integration order
-          auto intorder = 2*lfsu.finiteElement().localBasis().order() + _intorderadd;
+          auto intorder = 2*FESwitch::basis(lfsu.finiteElement()).order() + _intorderadd;
 
           // Loop over quadrature points
           for (const auto& qp : quadratureRule(geo,intorder))
