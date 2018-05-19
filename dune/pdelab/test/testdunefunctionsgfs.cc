@@ -180,51 +180,6 @@ void solvePoissonProblem()
 
 }
 
-template <class GridView>
-class StVenantKirchhoffParameters
-  : public Dune::PDELab::LinearElasticityParameterInterface<
-  Dune::PDELab::LinearElasticityParameterTraits<GridView, double>,
-  StVenantKirchhoffParameters<GridView> >
-{
-public:
-  typedef Dune::PDELab::LinearElasticityParameterTraits<GridView, double> Traits;
-
-  StVenantKirchhoffParameters(typename Traits::RangeFieldType l,
-                              typename Traits::RangeFieldType m) :
-    lambda_(l), mu_(m)
-  {}
-
-  void f (const typename Traits::ElementType& e,
-          const typename Traits::DomainType& x,
-          typename Traits::RangeType & y) const
-  {
-    std::fill(y.begin(), y.end(), 1e5);
-  }
-
-  template<typename I>
-  bool isDirichlet(const I & ig,
-                   const typename Traits::IntersectionDomainType & coord) const
-  {
-    return true;
-  }
-
-  typename Traits::RangeFieldType
-  lambda (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    return lambda_;
-  }
-
-  typename Traits::RangeFieldType
-  mu (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    return mu_;
-  }
-
-private:
-  typename Traits::RangeFieldType lambda_;
-  typename Traits::RangeFieldType mu_;
-};
-
 
 int main(int argc, char** argv) try
 {
