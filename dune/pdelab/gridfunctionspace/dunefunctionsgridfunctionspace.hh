@@ -179,6 +179,14 @@ namespace Dune {
             ci = di;
           }
 
+          /** \brief Returns true if there is at least one entity of the given codim
+           *         for which data needs to be communicated.
+           */
+          bool contains(typename Traits::SizeType codim) const
+          {
+            DUNE_THROW(NotImplemented, "!");
+          }
+
           void update()
           {}
 
