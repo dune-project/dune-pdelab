@@ -158,6 +158,12 @@ namespace Dune {
             return _gfs.basis().size();
           }
 
+          /** \brief Number of degrees of freedom per entity */
+          size_type size(const typename DOFIndex::EntityIndex&) const
+          {
+            DUNE_THROW(NotImplemented, "!");
+          }
+
           /** \brief Same as size(), because block size is always 1
            */
           size_type blockCount() const
