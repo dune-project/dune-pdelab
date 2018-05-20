@@ -130,7 +130,9 @@ namespace Dune {
 
         using Basis          = DFBasis;
 
-        struct Ordering {
+        struct Ordering
+          : public TypeTree::LeafNode
+        {
 
           struct Traits {
 
