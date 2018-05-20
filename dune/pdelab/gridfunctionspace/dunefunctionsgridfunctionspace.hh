@@ -160,6 +160,12 @@ namespace Dune {
             return _gfs.basis().size();
           }
 
+          // TODO: Use proper argument type
+          size_type size(const std::array<std::size_t,2>&) const
+          {
+            DUNE_THROW(NotImplemented, "!");
+          }
+
           /** \brief Same as size(), because block size is always 1
            */
           size_type blockCount() const
