@@ -9,6 +9,9 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/typetraits.hh>
 
+#include <dune/typetree/leafnode.hh>
+#include <dune/typetree/compositenode.hh>
+
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/dunefunctionslocalfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/dunefunctionslfsindexcache.hh>
@@ -130,11 +133,28 @@ namespace Dune {
 
         using Basis          = DFBasis;
 
-        struct Ordering {
+        /** \brief The actual Ordering object of the grid function space
+         *
+         * This class is the leaf in the ordering tree of the dune-functions grid function space.
+         * It is the class that implements that actual ordering.  PDELab requires orderings to be
+         * trees with at least two nodes even if the basis itself is represented by a tree with
+         * a single node only.
+         */
+        struct LeafOrdering
+          : public TypeTree::LeafNode
+        {
 
           struct Traits {
 
+            /** \brief A DOF index that is independent of any ordering */
             using DOFIndex       = PDELab::DOFIndex<std::size_t,1,2>;
+
+            /** \brief The index to access containers with
+             *
+             * The implementation does not support blocking or other forms of multi-indices yet.
+             * Therefore the container index type is always a multi-index with one digit,
+             * i.e., an integer.
+             */
             using ContainerIndex = PDELab::MultiIndex<std::size_t,1>;
             using size_type      = std::size_t;
             using SizeType       = size_type;
@@ -146,10 +166,7 @@ namespace Dune {
           using ContainerIndex = typename Traits::ContainerIndex;
           using size_type      = std::size_t;
 
-          using CacheTag       = DuneFunctionsCacheTag;
-          using ContainerAllocationTag = FlatContainerAllocationTag;
-
-          Ordering(const GridFunctionSpace& gfs)
+          LeafOrdering(const GridFunctionSpace& gfs)
             : _gfs(gfs)
           {}
 
@@ -164,26 +181,66 @@ namespace Dune {
             DUNE_THROW(NotImplemented, "!");
           }
 
-          /** \brief Same as size(), because block size is always 1
-           */
-          size_type blockCount() const
-          {
-            return size();
-          }
-
           size_type maxLocalSize() const
           {
             return _gfs.basis().localView().maxSize();
           }
 
-          ContainerIndex mapIndex(const DOFIndex& di) const
+          // child_index: Steffen sagt: unklar, im Zweifel einfach ignorieren
+          template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
+          typename Traits::SizeType
+          extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& ei,
+                                 typename Traits::SizeType child_index,
+                                 CIOutIterator ci_out, const CIOutIterator ci_end,
+                                 DIOutIterator dummy) const
           {
-            return di;
+            DUNE_THROW(NotImplemented, "!");
           }
 
-          void mapIndex(const DOFIndex& di, ContainerIndex& ci) const
+        private:
+
+          const GridFunctionSpace& _gfs;
+        };
+
+        /** \brief Root of the ordering tree
+         *
+         * PDELab requires ordering trees to have at least two nodes even if the corresponding
+         * basis tree consists of a single node only.  So here is an artificial root node to
+         * please PDELab.  All it does is forward all method calls to its single child.
+         */
+        struct Ordering
+          : public TypeTree::CompositeNode<LeafOrdering>
+        {
+          using Traits = typename LeafOrdering::Traits;
+
+          static const bool consume_tree_index = false;
+
+          using DOFIndex       = typename Traits::DOFIndex;
+          using ContainerIndex = typename Traits::ContainerIndex;
+          using size_type      = std::size_t;
+
+          using CacheTag       = DuneFunctionsCacheTag;
+          using ContainerAllocationTag = FlatContainerAllocationTag;
+
+          Ordering(const GridFunctionSpace& gfs)
+            : _leafOrdering(gfs)
+          {}
+
+          size_type size() const
           {
-            ci = di;
+            return _leafOrdering.size();
+          }
+
+          /** \brief Same as size(), because block size is always 1
+           */
+          size_type blockCount() const
+          {
+            return _leafOrdering.size();
+          }
+
+          size_type maxLocalSize() const
+          {
+            return _leafOrdering.maxLocalSize();
           }
 
           /** \brief Returns true if there is at least one entity of the given codim
@@ -201,21 +258,19 @@ namespace Dune {
             DUNE_THROW(NotImplemented, "!");
           }
 
-          void update()
-          {}
-
           template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
           typename Traits::SizeType
           extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& ei,
                                  typename Traits::SizeType child_index,
                                  CIOutIterator ci_out, const CIOutIterator ci_end) const
           {
-            DUNE_THROW(NotImplemented, "!");
+            DIOutIterator dummy;
+            return _leafOrdering.extract_entity_indices(ei, child_index, ci_out, ci_end, dummy);
           }
 
         private:
 
-          const GridFunctionSpace& _gfs;
+          const LeafOrdering _leafOrdering;
 
         };
 
