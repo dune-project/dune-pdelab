@@ -139,6 +139,7 @@ namespace Dune {
             using size_type      = std::size_t;
             using SizeType       = size_type;
 
+            using DOFIndexAccessor = Dune::PDELab::DefaultDOFIndexAccessor;
           };
 
           using DOFIndex       = typename Traits::DOFIndex;
