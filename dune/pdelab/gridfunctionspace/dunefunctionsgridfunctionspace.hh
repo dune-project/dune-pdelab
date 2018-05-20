@@ -187,6 +187,13 @@ namespace Dune {
             DUNE_THROW(NotImplemented, "!");
           }
 
+          /** \brief True if for all entities of the given codim the same number of data items has to be communicated
+           */
+          bool fixedSize(typename Traits::SizeType codim) const
+          {
+            DUNE_THROW(NotImplemented, "!");
+          }
+
           void update()
           {}
 
