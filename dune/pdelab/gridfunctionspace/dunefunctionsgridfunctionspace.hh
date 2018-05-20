@@ -136,15 +136,15 @@ namespace Dune {
 
           struct Traits {
 
-            using DOFIndex       = typename DFBasis::MultiIndex;
-            using ContainerIndex = DOFIndex;
+            using DOFIndex       = PDELab::DOFIndex<std::size_t,1,2>;
+            using ContainerIndex = PDELab::MultiIndex<std::size_t,1>;
             using size_type      = std::size_t;
             using SizeType       = size_type;
 
           };
 
-          using DOFIndex       = typename DFBasis::MultiIndex;
-          using ContainerIndex = DOFIndex;
+          using DOFIndex       = typename Traits::DOFIndex;
+          using ContainerIndex = typename Traits::ContainerIndex;
           using size_type      = std::size_t;
 
           using CacheTag       = DuneFunctionsCacheTag;

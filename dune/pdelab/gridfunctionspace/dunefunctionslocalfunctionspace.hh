@@ -54,7 +54,7 @@ namespace Dune {
         using Basis = typename GFS::Basis;
         using LocalView = typename Basis::LocalView;
         using Tree = TypeTree::ChildForTreePath<typename LocalView::Tree,TreePath>;
-        using DOFIndex = typename Basis::MultiIndex;
+        using DOFIndex = typename GFS::Ordering::Traits::DOFIndex;
 
         template<typename LFS, typename C, typename Tag, bool fast>
         friend class LFSIndexCacheBase;
@@ -66,7 +66,7 @@ namespace Dune {
           using GridFunctionSpace = GFS;
           using GridView          = typename GFS::Traits::GridView;
           using SizeType          = std::size_t;
-          using DOFIndex          = typename Basis::MultiIndex;
+          using DOFIndex          = typename GFS::Ordering::Traits::DOFIndex;
           using ConstraintsType   = typename GFS::Traits::ConstraintsType;
 
         };
@@ -105,7 +105,18 @@ namespace Dune {
 
         DOFIndex dofIndex(size_type index) const
         {
-          return _local_view.index(_tree.localIndex(index));
+          DOFIndex result;
+          result.entityIndex()[0] = 0;
+          result.treeIndex().resize(1);
+          result.treeIndex()[0] = index;
+          return result;
+        }
+
+        auto containerIndex(size_type index) const
+        {
+          MultiIndex<std::size_t,1> result;
+          result[0] = _local_view.index(_tree.localIndex(index));
+          return result;
         }
 
         //! Returns the GridFunctionSpace underlying this LocalFunctionSpace.
