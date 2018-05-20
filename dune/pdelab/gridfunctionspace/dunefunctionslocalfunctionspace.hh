@@ -54,7 +54,7 @@ namespace Dune {
         using Basis = typename GFS::Basis;
         using LocalView = typename Basis::LocalView;
         using Tree = TypeTree::ChildForTreePath<typename LocalView::Tree,TreePath>;
-        using DOFIndex = typename Basis::MultiIndex;
+        using DOFIndex = typename GFS::Ordering::Traits::DOFIndex;
 
         template<typename LFS, typename C, typename Tag, bool fast>
         friend class LFSIndexCacheBase;
@@ -66,7 +66,7 @@ namespace Dune {
           using GridFunctionSpace = GFS;
           using GridView          = typename GFS::Traits::GridView;
           using SizeType          = std::size_t;
-          using DOFIndex          = typename Basis::MultiIndex;
+          using DOFIndex          = typename GFS::Ordering::Traits::DOFIndex;
           using ConstraintsType   = typename GFS::Traits::ConstraintsType;
 
         };
@@ -103,9 +103,35 @@ namespace Dune {
           return _tree.localIndex(index);
         }
 
+        // index: local dof index for the given element
         DOFIndex dofIndex(size_type index) const
         {
-          return _local_view.index(_tree.localIndex(index));
+          auto refElement = Dune::ReferenceElements<double,Basis::GridView::dimension>::general(_local_view.element().type());
+
+          auto localKey = _local_view.tree().finiteElement().localCoefficients().localKey(index);
+
+          const auto& indexSet = _gfs->basis().gridView().indexSet();
+
+          // get geometry type of subentity
+          auto gt = refElement.type(localKey.subEntity(), localKey.codim());
+
+          // evaluate consecutive index of subentity
+          auto indexOnEntity = indexSet.subIndex(_local_view.element(),
+                                                 localKey.subEntity(),
+                                                 localKey.codim());
+
+
+          DOFIndex result;
+          GFS::Ordering::Traits::DOFIndexAccessor::store(result,gt,indexOnEntity,localKey.index());
+          return result;
+        }
+
+        // index: local dof index for the given element
+        auto containerIndex(size_type index) const
+        {
+          MultiIndex<std::size_t,1> result;
+          result.set({_local_view.index(_tree.localIndex(index))});
+          return result;
         }
 
         //! Returns the GridFunctionSpace underlying this LocalFunctionSpace.

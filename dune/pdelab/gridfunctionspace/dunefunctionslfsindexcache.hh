@@ -79,7 +79,7 @@ namespace Dune {
 
       CI containerIndex(size_type i) const
       {
-        return _lfs.dofIndex(i);
+        return _lfs.containerIndex(i);
       }
 
       CI containerIndex(const DI& i) const
@@ -195,12 +195,12 @@ namespace Dune {
 
       CI containerIndex(size_type i) const
       {
-        return _lfs.dofIndex(i);
+        return _lfs.containerIndex(i);
       }
 
       CI containerIndex(const DI& i) const
       {
-        return i;
+        DUNE_THROW(NotImplemented, "containerIndex");
       }
 
       bool isConstrained(size_type i) const
