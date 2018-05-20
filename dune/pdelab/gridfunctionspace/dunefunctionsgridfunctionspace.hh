@@ -53,7 +53,7 @@ namespace Dune {
       class GridFunctionSpace
         : public TypeTree::LeafNode
         , public GridFunctionOutputParameters
-        //        , public DataHandleProvider<DuneFunctionsGridFunctionSpace<DFBasis,CE,B,P> >
+        , public DataHandleProvider<GridFunctionSpace<DFBasis,VBE,CE> >
       {
         using GV = typename DFBasis::GridView;
 
