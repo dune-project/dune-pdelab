@@ -3,6 +3,9 @@
 #include <iostream>
 #include <vector>
 
+#include <dune/geometry/referenceelements.hh>
+#include <dune/geometry/quadraturerules.hh>
+
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 
@@ -22,7 +25,22 @@
 #include <dune/pdelab/localoperator/linearelasticity.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 
-#include<dune/pdelab/finiteelementmap/qkfem.hh>
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab/finiteelement/localbasiscache.hh>
+#include <dune/pdelab/common/quadraturerules.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab/constraints/common/constraintsparameters.hh>
+#include <dune/pdelab/constraints/conforming.hh>
+#include <dune/pdelab/function/callableadapter.hh>
+#include <dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/pdelab/localoperator/defaultimp.hh>
+#include <dune/pdelab/localoperator/pattern.hh>
+#include <dune/pdelab/localoperator/flags.hh>
+#include <dune/pdelab/localoperator/variablefactories.hh>
+#include <dune/pdelab/stationary/linearproblem.hh>
+#include <dune/pdelab/newton/newton.hh>
+
 
 using namespace Dune;
 
@@ -180,6 +198,332 @@ void solvePoissonProblem()
 
 }
 
+/** a local operator for solving the nonlinear Poisson equation with conforming FEM
+ *
+ * \f{align*}{
+ *   -\Delta u(x) + q(u(x)) &=& f(x) x\in\Omega,  \\
+ *                     u(x) &=& g(x) x\in\partial\Omega_D \\
+ *  -\nabla u(x) \cdot n(x) &=& j(x) x\in\partial\Omega_N \\
+ * \f}
+ *
+ */
+template<typename Param, typename FEM>
+class NonlinearPoissonFEM :
+  public Dune::PDELab::
+    NumericalJacobianVolume<NonlinearPoissonFEM<Param,FEM> >,
+  public Dune::PDELab::
+    NumericalJacobianApplyVolume<NonlinearPoissonFEM<Param,FEM> >,
+  public Dune::PDELab::FullVolumePattern,
+  public Dune::PDELab::LocalOperatorDefaultFlags
+{
+  typedef typename FEM::Traits::FiniteElementType::
+     Traits::LocalBasisType LocalBasis;
+  Dune::PDELab::LocalBasisCache<LocalBasis> cache;
+  Param& param; // parameter functions
+  int incrementorder; // increase of integration order
+
+public:
+  // pattern assembly flags
+  enum { doPatternVolume = true };
+
+  // residual assembly flags
+  enum { doLambdaVolume = true };
+  enum { doLambdaBoundary = true };
+  enum { doAlphaVolume = true };
+
+  //! constructor stores a copy of the parameter object
+  NonlinearPoissonFEM (Param& param_, int incrementorder_=0)
+    : param(param_), incrementorder(incrementorder_)
+  {}
+
+  //! right hand side integral
+  template<typename EG, typename LFSV, typename R>
+  void lambda_volume (const EG& eg, const LFSV& lfsv,
+                      R& r) const
+  {
+    // select quadrature rule
+    auto geo = eg.geometry();
+    const int order = incrementorder+
+      2*lfsv.finiteElement().localBasis().order();
+    auto rule = Dune::PDELab::quadratureRule(geo,order);
+
+    // loop over quadrature points
+    for (const auto& ip : rule)
+      {
+        // evaluate basis functions
+        auto& phihat = cache.evaluateFunction(ip.position(),
+                             lfsv.finiteElement().localBasis());
+
+        // integrate -f*phi_i
+        decltype(ip.weight()) factor = ip.weight()*
+          geo.integrationElement(ip.position());
+        auto f=param.f(eg.entity(),ip.position());
+        for (size_t i=0; i<lfsv.size(); i++)
+          r.accumulate(lfsv,i,-f*phihat[i]*factor);
+      }
+  }
+
+  // Neumann boundary integral
+  template<typename IG, typename LFSV, typename R>
+  void lambda_boundary (const IG& ig, const LFSV& lfsv,
+                        R& r) const
+  {
+    // evaluate boundary condition type
+    auto localgeo = ig.geometryInInside();
+    auto facecenterlocal =
+      referenceElement(localgeo).position(0,0);
+    bool isdirichlet=param.b(ig.intersection(),facecenterlocal);
+
+    // skip rest if we are on Dirichlet boundary
+    if (isdirichlet) return;
+
+    // select quadrature rule
+    auto globalgeo = ig.geometry();
+    const int order = incrementorder+
+      2*lfsv.finiteElement().localBasis().order();
+    auto rule = Dune::PDELab::quadratureRule(globalgeo,order);
+
+    // loop over quadrature points and integrate normal flux
+    for (const auto& ip : rule)
+      {
+        // quadrature point in local coordinates of element
+        auto local = localgeo.global(ip.position());
+
+        // evaluate shape functions (assume Galerkin method)
+        auto& phihat = cache.evaluateFunction(local,
+                             lfsv.finiteElement().localBasis());
+
+        // integrate j
+        decltype(ip.weight()) factor = ip.weight()*
+          globalgeo.integrationElement(ip.position());
+        auto j = param.j(ig.intersection(),ip.position());
+        for (size_t i=0; i<lfsv.size(); i++)
+          r.accumulate(lfsv,i,j*phihat[i]*factor);
+      }
+  }
+
+  //! volume integral depending on test and ansatz functions
+  template<typename EG, typename LFSU, typename X,
+           typename LFSV, typename R>
+  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x,
+                     const LFSV& lfsv, R& r) const
+  {
+    // types & dimension
+    const int dim = EG::Entity::dimension;
+    typedef decltype(Dune::PDELab::
+                     makeZeroBasisFieldValue(lfsu)) RF;
+
+    // select quadrature rule
+    auto geo = eg.geometry();
+    const int order = incrementorder+
+      2*lfsu.finiteElement().localBasis().order();
+    auto rule = Dune::PDELab::quadratureRule(geo,order);
+
+    // loop over quadrature points
+    for (const auto& ip : rule)
+      {
+        // evaluate basis functions
+        auto& phihat = cache.evaluateFunction(ip.position(),
+                             lfsu.finiteElement().localBasis());
+
+        // evaluate u
+        RF u=0.0;
+        for (size_t i=0; i<lfsu.size(); i++)
+          u += x(lfsu,i)*phihat[i];
+
+        // evaluate gradient of shape functions
+        auto& gradphihat = cache.evaluateJacobian(ip.position(),
+                             lfsu.finiteElement().localBasis());
+
+        // transform gradients of shape functions to real element
+        const auto S = geo.jacobianInverseTransposed(ip.position());
+        auto gradphi = makeJacobianContainer(lfsu);
+        for (size_t i=0; i<lfsu.size(); i++)
+          S.mv(gradphihat[i][0],gradphi[i][0]);
+
+        // compute gradient of u
+        Dune::FieldVector<RF,dim> gradu(0.0);
+        for (size_t i=0; i<lfsu.size(); i++)
+          gradu.axpy(x(lfsu,i),gradphi[i][0]);
+
+        // integrate (grad u)*grad phi_i + q(u)*phi_i
+        auto factor = ip.weight()*
+          geo.integrationElement(ip.position());
+        auto q = param.q(u);
+        for (size_t i=0; i<lfsu.size(); i++)
+          r.accumulate(lfsu,i,(gradu*gradphi[i][0]+
+                               q*phihat[i])*factor);
+      }
+  }
+};
+
+
+template<typename Number>
+class Problem
+{
+  Number eta;
+public:
+  typedef Number value_type;
+
+  //! Constructor without arg sets nonlinear term to zero
+  Problem () : eta(0.0) {}
+
+  //! Constructor takes lambda parameter
+  Problem (const Number& eta_) : eta(eta_) {}
+
+  //! nonlinearity
+  Number q (Number u) const
+  {
+    return eta*u*u;
+  }
+
+  //! derivative of nonlinearity
+  Number qprime (Number u) const
+  {
+    return 2*eta*u;
+  }
+
+  //! right hand side
+  template<typename E, typename X>
+  Number f (const E& e, const X& x) const
+  {
+    return -2.0*x.size();
+  }
+
+  //! boundary condition type function (true = Dirichlet)
+  template<typename I, typename X>
+  bool b (const I& i, const X& x) const
+  {
+    return true;
+  }
+
+  //! Dirichlet extension
+  template<typename E, typename X>
+  Number g (const E& e, const X& x) const
+  {
+    auto global = e.geometry().global(x);
+    Number s=0.0;
+    for (std::size_t i=0; i<global.size(); i++) s+=global[i]*global[i];
+    return s;
+  }
+
+  //! Neumann boundary condition
+  template<typename I, typename X>
+  Number j (const I& i, const X& x) const
+  {
+    return 0.0;
+  }
+};
+
+
+void solveParallelPoissonProblem()
+{
+  // read ini file
+  const int dim = 2;
+  const int refinement = 3;
+  const int degree = 1;
+
+  // YaspGrid section
+  typedef YaspGrid<dim> GridType;
+  typedef GridType::ctype DF;
+  FieldVector<DF,dim> L = {1.0, 1.0};
+  std::array<int,dim> N = {16, 16};
+  std::bitset<dim> B(false);
+  int overlap=1;
+  GridType grid(L,N,B,overlap,MPIHelper::getCollectiveCommunication());
+  grid.refineOptions(false); // keep overlap in cells
+  grid.globalRefine(refinement);
+  using GV = GridType::LeafGridView;
+  GV gv=grid.leafGridView();
+
+  // make user functions
+  double eta = 2.0;
+  Problem<double> problem(eta);
+  auto glambda = [&](const auto& e, const auto& x){return problem.g(e,x);};
+  auto g = PDELab::makeGridFunctionFromCallable(gv,glambda);
+  auto blambda = [&](const auto& i, const auto& x){return problem.b(i,x);};
+  auto b = PDELab::makeBoundaryConditionFromCallable(gv,blambda);
+
+  // Make grid function space
+  typedef PDELab::OverlappingConformingDirichletConstraints CON; // NEW IN PARALLEL
+  typedef PDELab::ISTL::VectorBackend<> VBE;
+
+  using Basis = Functions::PQkNodalBasis<GV,degree>;
+  auto basis = std::make_shared<Basis>(gv);
+
+  typedef PDELab::Experimental::GridFunctionSpace<Basis,
+                                                  VBE,
+                                                  CON> GridFunctionSpace;
+  GridFunctionSpace gridFunctionSpace(basis);
+
+  using FEM = GridFunctionSpace::Traits::FEM;
+
+  gridFunctionSpace.name("Vh");
+
+  // Assemble constraints
+  typedef typename GridFunctionSpace::template
+    ConstraintsContainer<double>::Type CC;
+  CC cc;
+  PDELab::constraints(b,gridFunctionSpace,cc); // assemble constraints
+
+  // A coefficient vector
+  using Z = PDELab::Backend::Vector<GridFunctionSpace,double>;
+  Z z(gridFunctionSpace); // initial value
+
+  // Make a grid function out of it
+  typedef PDELab::DiscreteGridFunction<GridFunctionSpace,Z> ZDGF;
+  ZDGF zdgf(gridFunctionSpace,z);
+
+  // Fill the coefficient vector
+  PDELab::interpolate(g,gridFunctionSpace,z);
+
+  // make vector consistent NEW IN PARALLEL
+  PDELab::ISTL::ParallelHelper<GridFunctionSpace> helper(gridFunctionSpace);
+  helper.maskForeignDOFs(z);
+  PDELab::AddDataHandle<GridFunctionSpace,Z> adddh(gridFunctionSpace,z);
+  if (gridFunctionSpace.gridView().comm().size()>1)
+    gridFunctionSpace.gridView().communicate(adddh,InteriorBorder_All_Interface,ForwardCommunication);
+
+  // Make a local operator
+  typedef NonlinearPoissonFEM<Problem<double>,FEM> LOP;
+  LOP lop(problem);
+
+  // Make a global operator
+  typedef PDELab::ISTL::BCRSMatrixBackend<> MBE;
+  MBE mbe((int)pow(1+2*degree,dim));
+  typedef PDELab::GridOperator<
+    GridFunctionSpace,  /* ansatz space */
+    GridFunctionSpace,  /* test space */
+    LOP,      /* local operator */
+    MBE,      /* matrix backend */
+    double,double,double, /* domain, range, jacobian field type*/
+    CC,CC     /* constraints for ansatz and test space */
+    > GO;
+  GO go(gridFunctionSpace,cc,gridFunctionSpace,cc,lop,mbe);
+
+  // Select a linear solver backend NEW IN PARALLEL
+  typedef PDELab::ISTLBackend_CG_AMG_SSOR<GO> LS;
+  int verbose = 0;
+  LS ls(gridFunctionSpace,100,verbose);
+
+  // solve nonlinear problem
+  PDELab::Newton<GO,LS,Z> newton(go,z,ls);
+  newton.setReassembleThreshold(0.0);
+  newton.setVerbosityLevel(2);
+  newton.setReduction(1e-10);
+  newton.setMinLinearReduction(1e-4);
+  newton.setMaxIterations(25);
+  newton.setLineSearchMaxIterations(10);
+  newton.apply();
+
+  // Write VTK output file
+  SubsamplingVTKWriter<GV> vtkwriter(gv,refinementIntervals(1));
+  typedef PDELab::VTKGridFunctionAdapter<ZDGF> VTKF;
+  vtkwriter.addVertexData(std::shared_ptr<VTKF>(new
+                                         VTKF(zdgf,"fesol")));
+  vtkwriter.write("pdelab-p-laplace-parallel-amd-result",
+                  VTK::appendedraw);
+}
 
 int main(int argc, char** argv) try
 {
@@ -189,6 +533,9 @@ int main(int argc, char** argv) try
   // Test simple scalar spaces
   solvePoissonProblem<1>();
   solvePoissonProblem<2>();
+
+  // Test with a parallel setup
+  solveParallelPoissonProblem();
 
   return 0;
 }
