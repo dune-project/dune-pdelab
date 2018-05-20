@@ -3,6 +3,9 @@
 #include <iostream>
 #include <vector>
 
+#include <dune/geometry/referenceelements.hh>
+#include <dune/geometry/quadraturerules.hh>
+
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 
@@ -22,7 +25,22 @@
 #include <dune/pdelab/localoperator/linearelasticity.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 
-#include<dune/pdelab/finiteelementmap/qkfem.hh>
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab/finiteelement/localbasiscache.hh>
+#include <dune/pdelab/common/quadraturerules.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab/constraints/common/constraintsparameters.hh>
+#include <dune/pdelab/constraints/conforming.hh>
+#include <dune/pdelab/function/callableadapter.hh>
+#include <dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/pdelab/localoperator/defaultimp.hh>
+#include <dune/pdelab/localoperator/pattern.hh>
+#include <dune/pdelab/localoperator/flags.hh>
+#include <dune/pdelab/localoperator/variablefactories.hh>
+#include <dune/pdelab/stationary/linearproblem.hh>
+#include <dune/pdelab/newton/newton.hh>
+
 
 using namespace Dune;
 
@@ -51,6 +69,43 @@ public:
   auto bctype(const Element& element, const Coord& x) const
   {
     return PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
+  }
+
+  //! Constructor without arg sets nonlinear term to zero
+  PoissonProblem () : eta(0.0) {}
+
+  double eta;
+
+  //! Constructor takes lambda parameter
+  PoissonProblem (const RangeType& eta_) : eta(eta_) {}
+
+  //! nonlinearity
+  RangeType q (RangeType u) const
+  {
+    return eta*u*u;
+  }
+
+  //! derivative of nonlinearity
+  RangeType qprime (RangeType u) const
+  {
+    return 2*eta*u;
+  }
+
+  //! Dirichlet extension
+  template<typename E, typename X>
+  RangeType g (const E& e, const X& x) const
+  {
+    auto global = e.geometry().global(x);
+    RangeType s=0.0;
+    for (std::size_t i=0; i<global.size(); i++) s+=global[i]*global[i];
+    return s;
+  }
+
+  //! Neumann boundary condition
+  template<typename I, typename X>
+  RangeType j (const I& i, const X& x) const
+  {
+    return 0.0;
   }
 };
 
@@ -180,6 +235,114 @@ void solvePoissonProblem()
 
 }
 
+void solveParallelPoissonProblem()
+{
+  // read ini file
+  const int dim = 2;
+  const int refinement = 3;
+  const int degree = 1;
+
+  // YaspGrid section
+  typedef YaspGrid<dim> GridType;
+  typedef GridType::ctype DF;
+  FieldVector<DF,dim> L = {1.0, 1.0};
+  std::array<int,dim> N = {16, 16};
+  std::bitset<dim> B(false);
+  int overlap=1;
+  GridType grid(L,N,B,overlap,MPIHelper::getCollectiveCommunication());
+  grid.refineOptions(false); // keep overlap in cells
+  grid.globalRefine(refinement);
+  using GV = GridType::LeafGridView;
+  GV gv=grid.leafGridView();
+
+  // make user functions
+  double eta = 2.0;
+  PoissonProblem<GV,double> problem(eta);
+  auto glambda = [&](const auto& e, const auto& x){return problem.g(e,x);};
+  auto g = PDELab::makeGridFunctionFromCallable(gv,glambda);
+  auto blambda = [&](const auto& i, const auto& x){return problem.bctype(i,x);};
+  auto b = PDELab::makeBoundaryConditionFromCallable(gv,blambda);
+
+  // Make grid function space
+  typedef PDELab::OverlappingConformingDirichletConstraints CON; // NEW IN PARALLEL
+  typedef PDELab::ISTL::VectorBackend<> VBE;
+
+  using Basis = Functions::LagrangeBasis<GV,degree>;
+  auto basis = std::make_shared<Basis>(gv);
+
+  typedef PDELab::Experimental::GridFunctionSpace<Basis,
+                                                  VBE,
+                                                  CON> GridFunctionSpace;
+  GridFunctionSpace gridFunctionSpace(basis);
+
+  using FEM = GridFunctionSpace::Traits::FEM;
+
+  gridFunctionSpace.name("Vh");
+
+  // Assemble constraints
+  typedef typename GridFunctionSpace::template
+    ConstraintsContainer<double>::Type CC;
+  CC cc;
+  PDELab::constraints(b,gridFunctionSpace,cc); // assemble constraints
+
+  // A coefficient vector
+  using Z = PDELab::Backend::Vector<GridFunctionSpace,double>;
+  Z z(gridFunctionSpace); // initial value
+
+  // Make a grid function out of it
+  typedef PDELab::DiscreteGridFunction<GridFunctionSpace,Z> ZDGF;
+  ZDGF zdgf(gridFunctionSpace,z);
+
+  // Fill the coefficient vector
+  PDELab::interpolate(g,gridFunctionSpace,z);
+
+  // make vector consistent NEW IN PARALLEL
+  PDELab::ISTL::ParallelHelper<GridFunctionSpace> helper(gridFunctionSpace);
+  helper.maskForeignDOFs(z);
+  PDELab::AddDataHandle<GridFunctionSpace,Z> adddh(gridFunctionSpace,z);
+  if (gridFunctionSpace.gridView().comm().size()>1)
+    gridFunctionSpace.gridView().communicate(adddh,InteriorBorder_All_Interface,ForwardCommunication);
+
+  // Make a local operator
+  typedef PDELab::ConvectionDiffusionFEM<decltype(problem),typename GridFunctionSpace::Traits::FiniteElementMap> LOP;
+  LOP lop(problem);
+
+  // Make a global operator
+  typedef PDELab::ISTL::BCRSMatrixBackend<> MBE;
+  MBE mbe((int)pow(1+2*degree,dim));
+  typedef PDELab::GridOperator<
+    GridFunctionSpace,  /* ansatz space */
+    GridFunctionSpace,  /* test space */
+    LOP,      /* local operator */
+    MBE,      /* matrix backend */
+    double,double,double, /* domain, range, jacobian field type*/
+    CC,CC     /* constraints for ansatz and test space */
+    > GO;
+  GO go(gridFunctionSpace,cc,gridFunctionSpace,cc,lop,mbe);
+
+  // Select a linear solver backend NEW IN PARALLEL
+  typedef PDELab::ISTLBackend_CG_AMG_SSOR<GO> LS;
+  int verbose = 0;
+  LS ls(gridFunctionSpace,100,verbose);
+
+  // solve nonlinear problem
+  PDELab::Newton<GO,LS,Z> newton(go,z,ls);
+  newton.setReassembleThreshold(0.0);
+  newton.setVerbosityLevel(2);
+  newton.setReduction(1e-10);
+  newton.setMinLinearReduction(1e-4);
+  newton.setMaxIterations(25);
+  newton.setLineSearchMaxIterations(10);
+  newton.apply();
+
+  // Write VTK output file
+  SubsamplingVTKWriter<GV> vtkwriter(gv,refinementIntervals(1));
+  typedef PDELab::VTKGridFunctionAdapter<ZDGF> VTKF;
+  vtkwriter.addVertexData(std::shared_ptr<VTKF>(new
+                                         VTKF(zdgf,"fesol")));
+  vtkwriter.write("pdelab-p-laplace-parallel-amd-result",
+                  VTK::appendedraw);
+}
 
 int main(int argc, char** argv) try
 {
@@ -189,6 +352,9 @@ int main(int argc, char** argv) try
   // Test simple scalar spaces
   solvePoissonProblem<1>();
   solvePoissonProblem<2>();
+
+  // Test with a parallel setup
+  solveParallelPoissonProblem();
 
   return 0;
 }
