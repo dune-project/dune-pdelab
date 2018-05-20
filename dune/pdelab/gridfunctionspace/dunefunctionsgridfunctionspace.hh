@@ -181,6 +181,11 @@ namespace Dune {
             ci = di;
           }
 
+          bool contains(typename Traits::SizeType codim) const
+          {
+            DUNE_THROW(NotImplemented, "!");
+          }
+
           void update()
           {}
 
