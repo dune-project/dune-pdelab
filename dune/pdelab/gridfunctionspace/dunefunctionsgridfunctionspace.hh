@@ -194,6 +194,15 @@ namespace Dune {
           void update()
           {}
 
+          template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
+          typename Traits::SizeType
+          extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& ei,
+                                 typename Traits::SizeType child_index,
+                                 CIOutIterator ci_out, const CIOutIterator ci_end) const
+          {
+            DUNE_THROW(NotImplemented, "!");
+          }
+
         private:
 
           const GridFunctionSpace& _gfs;
