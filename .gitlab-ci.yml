@@ -1,4 +1,7 @@
 ---
+variables:
+  DUNECI_PARALLEL: 4
+
 debian:10--gcc:
   image: docker.io/duneci/dune-pdelab-deps:git
   script: duneci-standard-test
