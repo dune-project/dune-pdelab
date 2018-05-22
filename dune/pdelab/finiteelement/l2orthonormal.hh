@@ -8,6 +8,7 @@
 #include<iostream>
 #include<algorithm>
 #include<memory>
+#include<numeric>
 
 #include<dune/common/fvector.hh>
 #include<dune/common/fmatrix.hh>
@@ -696,6 +697,18 @@ DUNE_NO_DEPRECATED_END
       opb.evaluateJacobian(in,out);
     }
 
+    //! \brief Evaluate partial derivative of all shape functions
+    void partial(const std::array<unsigned int, Traits::dimDomain>& DUNE_UNUSED(order),
+                 const typename Traits::DomainType& DUNE_UNUSED(in),
+                 std::vector<typename Traits::RangeType>& DUNE_UNUSED(out)) const {
+      auto totalOrder = std::accumulate(order.begin(), order.end(), 0);
+      if (totalOrder == 0) {
+        evaluateFunction(in, out);
+      } else {
+        DUNE_THROW(NotImplemented, "Desired derivative order is not implemented");
+      }
+    }
+
     //! \brief Polynomial order of the shape functions
     unsigned int order () const  {
       return BasisTraits::template Order<k,d>::value;
@@ -812,6 +825,13 @@ DUNE_NO_DEPRECATED_END
     const typename Traits::LocalInterpolationType& localInterpolation () const
     {
       return interpolation;
+    }
+
+    /** \todo Please doc me !
+     */
+    std::size_t size() const
+    {
+      return basis.size();
     }
 
     Dune::GeometryType type () const { return gt; }
