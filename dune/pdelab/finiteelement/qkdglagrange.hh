@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_FINITEELEMENT_QKDGLAGRANGE_HH
 #define DUNE_PDELAB_FINITEELEMENT_QKDGLAGRANGE_HH
 
+#include <numeric>
+
 #include <dune/localfunctions/common/localbasis.hh>
 #include <dune/localfunctions/common/localkey.hh>
 #include <dune/localfunctions/common/localfiniteelementtraits.hh>
@@ -197,6 +199,19 @@ namespace Dune
           }
       }
 
+      //! \brief Evaluate partial derivative of all shape functions
+      void partial(const std::array<unsigned int,Traits::dimDomain>& DUNE_UNUSED(order),
+                   const typename Traits::DomainType& DUNE_UNUSED(in),
+                   std::vector<typename Traits::RangeType>& DUNE_UNUSED(out)) const
+      {
+        auto totalOrder = std::accumulate(order.begin(), order.end(), 0);
+        if (totalOrder == 0) {
+          evaluateFunction(in, out);
+        } else {
+          DUNE_THROW(NotImplemented, "Desired derivative order is not implemented");
+        }
+      }
+
       //! \brief Polynomial order of the shape functions
       unsigned int order () const
       {
@@ -327,6 +342,13 @@ namespace Dune
     const typename Traits::LocalInterpolationType& localInterpolation () const
     {
       return interpolation;
+    }
+
+    /** \todo Please doc me !
+     */
+    std::size_t size() const
+    {
+      return basis.size();
     }
 
     /** \todo Please doc me !
