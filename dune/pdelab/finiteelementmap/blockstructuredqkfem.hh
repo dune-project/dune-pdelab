@@ -5,23 +5,23 @@
 #define DUNE_MYPOISSON_QKFEM_REORDER_HH
 
 #include <dune/pdelab/finiteelementmap/finiteelementmap.hh>
-#include <dune/pdelab/finiteelementmap/blockstructured/qk.hh>
+#include <dune/localfunctions/blockstructuredqk.hh>
 
 namespace Dune {
-  namespace Blockstructured {
+  namespace PDELab {
 
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
     template<typename GV, typename D, typename R, std::size_t k, std::size_t blocks>
-    class QkLocalFiniteElementMap
-        : public Dune::PDELab::SimpleLocalFiniteElementMap
-            <QkLocalFiniteElement<D, R, GV::dimension, k, blocks>, GV::dimension> {
+    class BlockstructuredQkLocalFiniteElementMap
+        : public SimpleLocalFiniteElementMap
+            <BlockstructuredQkLocalFiniteElement<D, R, GV::dimension, k, blocks>, GV::dimension> {
 
       static constexpr std::size_t DOFs1d = k * blocks + 1;
 
     public:
 
-      QkLocalFiniteElementMap(const GV &gv) {}
+      BlockstructuredQkLocalFiniteElementMap(const GV &gv) {}
 
       bool fixedSize() const {
         return true;

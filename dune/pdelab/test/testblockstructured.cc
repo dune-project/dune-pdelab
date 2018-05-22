@@ -8,28 +8,22 @@
 #include <vector>
 
 #include <dune/grid/yaspgrid.hh>
-#include <dune/pdelab/finiteelementmap/blockstructured/qkfem.hh>
+#include <dune/pdelab/finiteelementmap/blockstructuredqkfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/blockstructured/localfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/blockstructured/lfsindexcache.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-#include <dune/pdelab/backend/simple/descriptors.hh>
 #include <dune/pdelab/backend/simple/vector.hh>
 #include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/blockstructuredwrapper.hh>
 #include <dune/pdelab/gridoperator/blockstructured.hh>
 #include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/gridfunctionspace/subspace.hh>
-#include <dune/istl/io.hh>
-
 
 template<typename Backend>
 struct TestData{
   using Grid = Dune::YaspGrid<2>;
   using GV = Grid::LeafGridView;
-  using FEM = Dune::Blockstructured::QkLocalFiniteElementMap<GV, double, double, 1, 2>;
+  using FEM = Dune::PDELab::BlockstructuredQkLocalFiniteElementMap<GV, double, double, 1, 2>;
   using LeafGFS = Dune::PDELab::GridFunctionSpace<GV, FEM, Dune::PDELab::NoConstraints, Backend>;
   using PowerGFS = Dune::PDELab::PowerGridFunctionSpace<LeafGFS, 2, Backend, Dune::PDELab::LexicographicOrderingTag>;
   using CompositeGFS = Dune::PDELab::CompositeGridFunctionSpace<Backend, Dune::PDELab::LexicographicOrderingTag, PowerGFS, LeafGFS>;
@@ -87,7 +81,6 @@ auto createAndBindLFS(PGFS pgfs){
   plfs->bind(element);
   return plfs;
 }
-
 
 template<typename PGFS>
 auto setupBlockstructuredLFS(PGFS pgfs){
