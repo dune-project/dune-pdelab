@@ -70,13 +70,6 @@ namespace Dune{
               this->_lfs.gridFunctionSpace().ordering().mapIndex((*this->_lfs._dof_index_storage_subentity_wise_ptr)[leaf].indexView(s, c),
                                                            this->_container_index_storage_subentity_wise[leaf].index(s, c));
         });
-
-//        for (int leaf = 0; leaf < _container_index_storage_subentity_wise.size(); ++leaf)
-//          for (int c = 0; c < refEl.dimension + 1; ++c)
-//            for (int s = 0; s < refEl.size(c); ++s)
-//               evaluate consecutive index of subentity
-//              _lfs.gridFunctionSpace().ordering().mapIndex((*_lfs._dof_index_storage_subentity_wise_ptr)[leaf].indexView(s, c),
-//                                                           _container_index_storage_subentity_wise[leaf].index(s, c));
       }
 
       const CI& containerIndex(size_type leaf, size_type s, size_type c) const
