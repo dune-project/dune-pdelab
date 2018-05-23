@@ -136,6 +136,12 @@ namespace Dune {
         auto intorder = intorderadd + quadrature_factor * order;
         for (const auto& ip : quadratureRule(geo,intorder))
           {
+            // update all variables dependent on A if A is not cell-wise constant
+            if (!Impl::permeabilityIsConstantPerCell<T>(param))
+            {
+              A = param.A(cell, ip.position());
+            }
+
             // evaluate basis functions
             auto& phi = cache[order].evaluateFunction(ip.position(),lfsu.finiteElement().localBasis());
             auto& psi = cache[order].evaluateFunction(ip.position(),lfsv.finiteElement().localBasis());
@@ -222,6 +228,12 @@ namespace Dune {
         auto intorder = intorderadd + quadrature_factor * order;
         for (const auto& ip : quadratureRule(geo,intorder))
           {
+            // update all variables dependent on A if A is not cell-wise constant
+            if (!Impl::permeabilityIsConstantPerCell<T>(param))
+            {
+              A = param.A(cell, ip.position());
+            }
+
             // evaluate basis functions
             auto& phi = cache[order].evaluateFunction(ip.position(),lfsu.finiteElement().localBasis());
 
@@ -345,6 +357,24 @@ namespace Dune {
         auto intorder = intorderadd+quadrature_factor*order;
         for (const auto& ip : quadratureRule(geo,intorder))
           {
+            // update all variables dependent on A if A is not cell-wise constant
+            if (!Impl::permeabilityIsConstantPerCell<T>(param))
+            {
+              A_s = param.A(cell_inside,geo_in_inside.global(ip.position()));
+              A_n = param.A(cell_outside,geo_in_outside.global(ip.position()));
+              A_s.mv(n_F,An_F_s);
+              A_n.mv(n_F,An_F_n);
+              if (weights==ConvectionDiffusionDGWeights::weightsOn)
+                {
+                  RF delta_s = (An_F_s*n_F);
+                  RF delta_n = (An_F_n*n_F);
+                  omega_s = delta_n/(delta_s+delta_n+1e-20);
+                  omega_n = delta_s/(delta_s+delta_n+1e-20);
+                  harmonic_average = 2.0*delta_s*delta_n/(delta_s+delta_n+1e-20);
+                  penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
+                }
+            }
+
             // exact normal
             auto n_F_local = ig.unitOuterNormal(ip.position());
 
@@ -536,6 +566,24 @@ namespace Dune {
         const int intorder = intorderadd+quadrature_factor*order;
         for (const auto& ip : quadratureRule(geo,intorder))
           {
+            // update all variables dependent on A if A is not cell-wise constant
+            if (!Impl::permeabilityIsConstantPerCell<T>(param))
+            {
+              A_s = param.A(cell_inside,geo_in_inside.global(ip.position()));
+              A_n = param.A(cell_outside,geo_in_outside.global(ip.position()));
+              A_s.mv(n_F,An_F_s);
+              A_n.mv(n_F,An_F_n);
+              if (weights==ConvectionDiffusionDGWeights::weightsOn)
+                {
+                  RF delta_s = (An_F_s*n_F);
+                  RF delta_n = (An_F_n*n_F);
+                  omega_s = delta_n/(delta_s+delta_n+1e-20);
+                  omega_n = delta_s/(delta_s+delta_n+1e-20);
+                  harmonic_average = 2.0*delta_s*delta_n/(delta_s+delta_n+1e-20);
+                  penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
+                }
+            }
+
             // exact normal
             auto n_F_local = ig.unitOuterNormal(ip.position());
 
@@ -683,6 +731,18 @@ namespace Dune {
         auto intorder = intorderadd+quadrature_factor*order;
         for (const auto& ip : quadratureRule(geo,intorder))
           {
+            // update all variables dependent on A if A is not cell-wise constant
+            if (!Impl::permeabilityIsConstantPerCell<T>(param))
+            {
+              A_s = param.A(cell_inside,geo_in_inside.global(ip.position()));
+              A_s.mv(n_F,An_F_s);
+              if (weights==ConvectionDiffusionDGWeights::weightsOn)
+                {
+                  harmonic_average = An_F_s*n_F;
+                  penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
+                }
+            }
+
             auto bctype = param.bctype(ig.intersection(),ip.position());
 
             if (bctype == ConvectionDiffusionBoundaryConditions::None)
@@ -861,6 +921,18 @@ namespace Dune {
         auto intorder = intorderadd+quadrature_factor*order;
         for (const auto& ip : quadratureRule(geo,intorder))
           {
+            // update all variables dependent on A if A is not cell-wise constant
+            if (!Impl::permeabilityIsConstantPerCell<T>(param))
+            {
+              A_s = param.A(cell_inside,geo_in_inside.global(ip.position()));
+              A_s.mv(n_F,An_F_s);
+              if (weights==ConvectionDiffusionDGWeights::weightsOn)
+                {
+                  harmonic_average = An_F_s*n_F;
+                  penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
+                }
+            }
+
             auto bctype = param.bctype(ig.intersection(),ip.position());
 
             if (bctype == ConvectionDiffusionBoundaryConditions::None ||
