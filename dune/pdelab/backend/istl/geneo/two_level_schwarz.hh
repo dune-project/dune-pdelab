@@ -1,7 +1,7 @@
 #ifndef TWO_LEVEL_SCHWARZ_HH
 #define TWO_LEVEL_SCHWARZ_HH
 
-#if HAVE_ARPACKPP && HAVE_SUITESPARSE_UMFPACK
+#if HAVE_SUITESPARSE_UMFPACK
 
 #include <dune/common/timer.hh>
 
