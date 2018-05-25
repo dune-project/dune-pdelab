@@ -6,8 +6,19 @@
 
 #include <dune/pdelab/finiteelementmap/finiteelementmap.hh>
 #include <dune/localfunctions/blockstructuredqk.hh>
+#include <dune/localfunctions/lagrange/qk.hh>
 
 namespace Dune {
+  namespace Blockstructured {
+
+    template<typename D, typename R, int d, int k_, int blocks_>
+    struct QklocalFiniteElementWrapper
+        : public Dune::BlockstructuredQkLocalFiniteElement<D, R, d, k_, blocks_> {
+      static constexpr int k = k_;
+      static constexpr int blocks = blocks_;
+    };
+  }
+
   namespace PDELab {
 
     //! wrap up element from local functions
@@ -15,7 +26,7 @@ namespace Dune {
     template<typename GV, typename D, typename R, std::size_t k, std::size_t blocks>
     class BlockstructuredQkLocalFiniteElementMap
         : public SimpleLocalFiniteElementMap
-            <BlockstructuredQkLocalFiniteElement<D, R, GV::dimension, k, blocks>, GV::dimension> {
+            <Blockstructured::QklocalFiniteElementWrapper<D, R, GV::dimension, k, blocks>, GV::dimension> {
 
       static constexpr std::size_t DOFs1d = k * blocks + 1;
 
