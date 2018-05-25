@@ -58,7 +58,6 @@ namespace Dune{
       LFSIndexCache(const LFS& lfs, const C& constraints, bool enable_constraints_caching)
           : Base(lfs, constraints, enable_constraints_caching)
           ,_lfs(lfs)
-          , globalContainerIndices(Dune::TypeTree::TreeInfo<LFS>::leafCount)
           , localDOFsOffset(Dune::TypeTree::TreeInfo<LFS>::leafCount)
           , qkDescriptors(Dune::TypeTree::TreeInfo<LFS>::leafCount)
       {
@@ -72,9 +71,8 @@ namespace Dune{
 
         auto& subentityWiseDOFs = *_lfs._dof_index_storage_subentity_wise_ptr;
 
-        const std::size_t nLeafs = subentityWiseDOFs.size();
-
         globalContainerIndices.clear();
+        globalContainerIndices.resize(numberOfLeafs());
 
         TypeTree::forEachLeafNode(_lfs, [this,&refEl,&subentityWiseDOFs] (auto& Node, auto& TreePath){
           const auto leaf = Node.offsetLeafs;
