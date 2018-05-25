@@ -170,7 +170,7 @@ void testBlockstructuredLFSC(const TestData& td){
 
 template<typename TestData>
 void testBlockstructuredUncachedVectorView(const TestData& td){
-  auto [_, plfsc] = setupPDELabLFSAndLFSC(td.pCompositeGFS);
+  auto [_, plfsc] = setupBlockstructuredLFSAndLFSC(td.pCompositeGFS);
 
   std::vector<int> local_write_to(plfsc->size(), 0);
   std::vector<int> local_read_from(plfsc->size());
@@ -181,7 +181,7 @@ void testBlockstructuredUncachedVectorView(const TestData& td){
   using Container = Dune::PDELab::Simple::VectorContainer<typename TestData::CompositeGFS, std::vector<int>> ;
   Container container(*td.pCompositeGFS, 0);
 
-  Dune::Blockstructured::BlockstructuredUncachedVectorView<Container, typename decltype(plfsc)::element_type> vectorView;
+  Dune::PDELab::UncachedVectorView<Container, typename decltype(plfsc)::element_type> vectorView;
 
   vectorView.attach(container);
   vectorView.bind(*plfsc);
@@ -220,9 +220,7 @@ int main(int argc, char** argv){
     Dune::MPIHelper::instance(argc, argv);
 
     using Backend = Dune::PDELab::ISTL::VectorBackend<>;
-    using BackendWrapper = Dune::Blockstructured::VectorBackendWrapper<Backend>;
     TestData<Backend> td_istl;
-    TestData<BackendWrapper> td_wrapper;
 
     testBlockstructuredLeafLFS(td_istl);
     testBlockstructuredTreeLFS(td_istl);
@@ -231,7 +229,7 @@ int main(int argc, char** argv){
 
     testBlockstructuredUncachedVectorView(td_istl);
 
-    testBlockstructuredGridOperator(td_wrapper);
+    testBlockstructuredGridOperator(td_istl);
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
