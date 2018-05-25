@@ -14,13 +14,9 @@ namespace Dune{
     template<int d>
     using SubentityWiseLocalIndexContainer = std::array<std::vector<std::vector<std::size_t>>, d + 1>;
 
-    class BlockstructuredLFSCBase{};
-
-
     template<typename LFS, typename C>
     class LFSIndexCache
-        : public Dune::PDELab::LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag,false>,
-            public BlockstructuredLFSCBase
+        : public Dune::PDELab::LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag,false>
     {
     public:
 
