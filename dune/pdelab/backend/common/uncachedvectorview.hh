@@ -63,9 +63,9 @@ namespace Dune {
       void read(LC& local_container) const
       {
         for (size_type i = 0; i < size(); ++i)
-        {
-          accessBaseContainer(local_container)[i] = container()[cache().containerIndex(i)];
-        }
+          {
+            accessBaseContainer(local_container)[i] = container()[cache().containerIndex(i)];
+          }
       }
 
       template<typename ChildLFS, typename LC>
@@ -172,9 +172,9 @@ namespace Dune {
       void add(const LC& local_container)
       {
         for (size_type i = 0; i < size(); ++i)
-        {
-          container()[cache().containerIndex(i)] += accessBaseContainer(local_container)[i];
-        }
+          {
+            container()[cache().containerIndex(i)] += accessBaseContainer(local_container)[i];
+          }
       }
 
 
@@ -430,7 +430,10 @@ namespace Dune {
       {
         return *(this->_container);
       }
+
+
     };
+
   } // namespace PDELab
 } // namespace Dune
 
