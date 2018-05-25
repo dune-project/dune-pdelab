@@ -146,7 +146,9 @@ namespace Dune{
 
         auto refEl = Dune::ReferenceElements<double,EntitySet::dimension>::general(this->pfe->type());
 
-        (*this->_dof_index_storage_subentity_wise_ptr)[this->offsetLeafs].clear();
+        auto& subentityWiseDOFs = *this->_dof_index_storage_subentity_wise_ptr;
+
+        subentityWiseDOFs[this->offsetLeafs].clear();
         for (int c = 0; c < refEl.dimension + 1; ++c) {
           for (int s = 0; s < refEl.size(c); ++s) {
             // get geometry type of subentity
@@ -155,8 +157,7 @@ namespace Dune{
             // evaluate consecutive index of subentity
             auto index = es.indexSet().subIndex(e, s, c);
             using DOFIndexAccessor = typename GFS::Ordering::Traits::DOFIndexAccessor;
-            DOFIndexAccessor::store((*this->_dof_index_storage_subentity_wise_ptr)[this->offsetLeafs].index(s, c),
-                                    gt, index, 0);
+            DOFIndexAccessor::store(subentityWiseDOFs[this->offsetLeafs].index(s, c), gt, index, 0);
           }
         }
       }

@@ -47,7 +47,9 @@ namespace Dune{
       {
         auto refEl = Dune::ReferenceElements<double,2>::general(Dune::GeometryTypes::cube(2));
 
-        const std::size_t nLeafs = (*_lfs._dof_index_storage_subentity_wise_ptr).size();
+        auto& subentityWiseDOFs = *_lfs._dof_index_storage_subentity_wise_ptr;
+
+        const std::size_t nLeafs = subentityWiseDOFs.size();
 
         _container_index_storage_subentity_wise.clear();
         _container_index_storage_subentity_wise.resize(nLeafs);
@@ -57,7 +59,7 @@ namespace Dune{
 
         offset.resize(nLeafs);
 
-        TypeTree::forEachLeafNode(_lfs, [this,&refEl] (auto& Node, auto& TreePath){
+        TypeTree::forEachLeafNode(_lfs, [this,&refEl,&subentityWiseDOFs] (auto& Node, auto& TreePath){
           const auto leaf = Node.offsetLeafs;
 
           this->offset[leaf] = Node.offset;
@@ -66,8 +68,8 @@ namespace Dune{
           for (int c = 0; c < refEl.dimension + 1; ++c)
             for (int s = 0; s < refEl.size(c); ++s)
               // evaluate consecutive index of subentity
-              this->_lfs.gridFunctionSpace().ordering().mapIndex((*this->_lfs._dof_index_storage_subentity_wise_ptr)[leaf].indexView(s, c),
-                                                           this->_container_index_storage_subentity_wise[leaf].index(s, c));
+              this->_lfs.gridFunctionSpace().ordering().mapIndex(subentityWiseDOFs[leaf].indexView(s, c),
+                                                                 this->_container_index_storage_subentity_wise[leaf].index(s, c));
         });
       }
 
