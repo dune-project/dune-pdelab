@@ -20,7 +20,7 @@ namespace Dune{
       void beforeChild(const LFS& lfs, Child& child, TreePath treePath, ChildIndex childIndex) const
       {
         Dune::PDELab::PropagateGlobalStorageVisitor<int>::beforeChild(lfs, child, treePath, childIndex);
-        child._dof_index_storage_subentity_wise_ptr = lfs._dof_index_storage_subentity_wise_ptr;
+        child._subentityWiseDOFs_ptr = lfs._subentityWiseDOFs_ptr;
       }
     };
 
@@ -70,7 +70,7 @@ namespace Dune{
       void afterChild(const Node& node, const Child& child, TreePath treePath, ChildIndex childIndex)
       {
         for (int i = 0; i < child.nLeafs; ++i)
-          for (auto &codim: (*node._dof_index_storage_subentity_wise_ptr)[child.offsetLeafs + i])
+          for (auto &codim: (*node._subentityWiseDOFs_ptr)[child.offsetLeafs + i])
             for (auto &subentity: codim)
               subentity.treeIndex().push_back(childIndex);
       }

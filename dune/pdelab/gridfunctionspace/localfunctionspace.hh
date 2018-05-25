@@ -217,8 +217,8 @@ namespace Dune {
         : pgfs(gfs)
         , _dof_index_storage()
         , _dof_indices(&_dof_index_storage)
-        , _dof_index_storage_subentity_wise()
-        , _dof_index_storage_subentity_wise_ptr(&_dof_index_storage_subentity_wise)
+        , _subentityWiseDOFs()
+        , _subentityWiseDOFs_ptr(&_subentityWiseDOFs)
         , n(0)
       {}
 
@@ -301,8 +301,8 @@ namespace Dune {
       typename Traits::IndexContainer::size_type offset;
       typename Traits::IndexContainer::size_type nLeafs;
       typename Traits::IndexContainer::size_type offsetLeafs;
-      typename Traits::DOFIndexSubentityWiseContainer _dof_index_storage_subentity_wise;
-      typename Traits::DOFIndexSubentityWiseContainer* _dof_index_storage_subentity_wise_ptr;
+      typename Traits::DOFIndexSubentityWiseContainer _subentityWiseDOFs;
+      typename Traits::DOFIndexSubentityWiseContainer* _subentityWiseDOFs_ptr;
     };
 
     //! traits for local function space on a gridview

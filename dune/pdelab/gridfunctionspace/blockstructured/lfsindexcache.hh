@@ -65,7 +65,7 @@ namespace Dune{
 
         auto refEl = Dune::ReferenceElements<double,2>::general(Dune::GeometryTypes::cube(2));
 
-        auto& subentityWiseDOFs = *_lfs._dof_index_storage_subentity_wise_ptr;
+        auto& subentityWiseDOFs = *_lfs._subentityWiseDOFs_ptr;
 
         globalContainerIndices.clear();
         globalContainerIndices.resize(numberOfLeafs());

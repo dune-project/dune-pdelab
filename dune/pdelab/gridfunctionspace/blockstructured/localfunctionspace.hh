@@ -146,7 +146,7 @@ namespace Dune{
 
         auto refEl = Dune::ReferenceElements<double,EntitySet::dimension>::general(this->pfe->type());
 
-        auto& subentityWiseDOFs = *this->_dof_index_storage_subentity_wise_ptr;
+        auto& subentityWiseDOFs = *this->_subentityWiseDOFs_ptr;
 
         subentityWiseDOFs[this->offsetLeafs].clear();
         for (int c = 0; c < refEl.dimension + 1; ++c) {
@@ -208,7 +208,7 @@ namespace Dune{
           , maxLocalSize(gfs.ordering().maxLocalSize())
       {
         this->_dof_indices = &(this->_dof_index_storage);
-        this->_dof_index_storage_subentity_wise_ptr = &(this->_dof_index_storage_subentity_wise);
+        this->_subentityWiseDOFs_ptr = &(this->_subentityWiseDOFs);
         this->setup();
       }
 
@@ -217,7 +217,7 @@ namespace Dune{
       , maxLocalSize(pgfs->ordering().maxLocalSize())
       {
         this->_dof_indices = &(this->_dof_index_storage);
-        this->_dof_index_storage_subentity_wise_ptr = &(this->_dof_index_storage_subentity_wise);
+        this->_subentityWiseDOFs_ptr = &(this->_subentityWiseDOFs);
         this->setup();
       }
 
@@ -229,7 +229,7 @@ namespace Dune{
         // as they are still pointing to the _dof_index_storage of the
         // old tree.
         this->_dof_indices = &(this->_dof_index_storage);
-        this->_dof_index_storage_subentity_wise_ptr = &(this->_dof_index_storage_subentity_wise);
+        this->_subentityWiseDOFs_ptr = &(this->_subentityWiseDOFs);
         this->setup();
       }
 
@@ -259,7 +259,7 @@ namespace Dune{
 
       void setup()
       {
-        this->_dof_index_storage_subentity_wise_ptr->resize(Dune::TypeTree::TreeInfo<GFS>::leafCount);
+        this->_subentityWiseDOFs_ptr->resize(Dune::TypeTree::TreeInfo<GFS>::leafCount);
         TypeTree::applyToTree(*this, PropagateGlobalStorageVisitor<>());
         BaseT::setup(*this);
       }

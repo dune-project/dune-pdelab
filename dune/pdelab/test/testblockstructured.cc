@@ -98,7 +98,7 @@ template<typename TestData>
 void testBlockstructuredLeafLFS(const TestData &td) {
   auto plfs = setupBlockstructuredLFS(td.pLeafGFS);
 
-  auto lfs_indices = *plfs->_dof_index_storage_subentity_wise_ptr;
+  auto lfs_indices = *plfs->_subentityWiseDOFs_ptr;
   assert(lfs_indices.size() == 1);
 
   auto pcompareLFS = setupPDELabLFS(td.pLeafGFS);
@@ -115,7 +115,7 @@ template<typename TestData>
 void testBlockstructuredTreeLFS(const TestData &td) {
   auto lfs_ptr = setupBlockstructuredLFS(td.pCompositeGFS);
 
-  const auto& lfs_indices = *lfs_ptr->_dof_index_storage_subentity_wise_ptr;
+  const auto& lfs_indices = *lfs_ptr->_subentityWiseDOFs_ptr;
   assert(lfs_indices.size() == 3);
 
   auto compareLFS_ptr = setupPDELabLFS(td.pCompositeGFS);
