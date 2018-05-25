@@ -15,7 +15,6 @@
 #include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include <dune/pdelab/backend/simple/vector.hh>
 #include <dune/pdelab/backend/istl/vector.hh>
-#include <dune/pdelab/backend/blockstructuredwrapper.hh>
 #include <dune/pdelab/gridoperator/blockstructured.hh>
 #include <dune/pdelab/constraints/conforming.hh>
 

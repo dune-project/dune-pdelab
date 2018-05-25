@@ -10,15 +10,13 @@
 #include <dune/pdelab/gridfunctionspace/blockstructured/lfsindexcache.hh>
 
 namespace Dune {
-  namespace Blockstructured {
+  namespace PDELab {
 
-
-    template<typename V, typename LFSC>
-    struct BlockstructuredConstUncachedVectorView
-    {
+    template<typename V, typename LFS, typename C>
+    struct ConstUncachedVectorView<V, Dune::Blockstructured::LFSIndexCache<LFS,C>>{
 
       typedef typename std::remove_const<V>::type Container;
-      typedef LFSC LFSCache;
+      typedef Dune::Blockstructured::LFSIndexCache<LFS,C> LFSCache;
 
       typedef typename Container::E ElementType;
       typedef typename Container::size_type size_type;
@@ -26,12 +24,12 @@ namespace Dune {
       typedef typename LFSCache::ContainerIndex ContainerIndex;
 
 
-      BlockstructuredConstUncachedVectorView()
+      ConstUncachedVectorView()
         : _container(nullptr)
         , _lfs_cache(nullptr)
       {}
 
-      BlockstructuredConstUncachedVectorView(V& container)
+      ConstUncachedVectorView(V& container)
         : _container(&container)
         , _lfs_cache(nullptr)
       {}
@@ -60,9 +58,8 @@ namespace Dune {
         return cache().size();
       }
 
-      template<typename LC, typename EnableReturnType=void>
-      typename std::enable_if<std::is_base_of<BlockstructuredLFSCBase, LFSC>::value, EnableReturnType>::type
-      read(LC& local_container) const
+      template<typename LC>
+      void read(LC& local_container) const
       {
         auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
 
@@ -80,17 +77,6 @@ namespace Dune {
           }
         }
       }
-
-      template<typename LC, typename EnableReturnType=void>
-      typename std::enable_if<!std::is_base_of<BlockstructuredLFSCBase, LFSC>::value, EnableReturnType>::type
-      read(LC& local_container) const
-      {
-        for (size_type i = 0; i < size(); ++i)
-        {
-          Dune::PDELab::accessBaseContainer(local_container)[i] = container()[cache().containerIndex(i)];
-        }
-      }
-
 
       template<typename ChildLFS, typename LC>
       void read(const ChildLFS& child_lfs, LC& local_container) const
@@ -155,7 +141,7 @@ namespace Dune {
 
       void throwIfBlockstructuredLFSC() const
       {
-        if(std::is_base_of<BlockstructuredLFSCBase, LFSC>::value)
+        if(std::is_base_of<Dune::Blockstructured::BlockstructuredLFSCBase, LFSCache>::value)
           DUNE_THROW(NotImplemented, "Not implemented for blockstructured LFSC");
       }
 
@@ -167,31 +153,31 @@ namespace Dune {
     };
 
 
-    template<typename V, typename LFSC>
-    struct BlockstructuredUncachedVectorView
-      : public BlockstructuredConstUncachedVectorView<V,LFSC>
+    template<typename V, typename LFS, typename C>
+    struct UncachedVectorView<V, Dune::Blockstructured::LFSIndexCache<LFS,C>>
+        : public ConstUncachedVectorView<V, Dune::Blockstructured::LFSIndexCache<LFS,C>>
     {
 
       typedef V Container;
       typedef typename Container::ElementType ElementType;
       typedef typename Container::size_type size_type;
 
-      typedef LFSC LFSCache;
+      typedef Dune::Blockstructured::LFSIndexCache<LFS,C> LFSCache;
       typedef typename LFSCache::DOFIndex DOFIndex;
       typedef typename LFSCache::ContainerIndex ContainerIndex;
 
-      using BlockstructuredConstUncachedVectorView<V,LFSC>::cache;
-      using BlockstructuredConstUncachedVectorView<V,LFSC>::size;
+      using ConstUncachedVectorView<V,LFSCache>::cache;
+      using ConstUncachedVectorView<V,LFSCache>::size;
 
       // Explicitly pull in operator[] from the base class to work around a problem
       // with clang not finding the const overloads of the operator from the base class.
-      using BlockstructuredConstUncachedVectorView<V,LFSC>::operator[];
+      using ConstUncachedVectorView<V,LFSCache>::operator[];
 
-      BlockstructuredUncachedVectorView()
+      UncachedVectorView()
       {}
 
-      BlockstructuredUncachedVectorView(Container& container)
-        : BlockstructuredConstUncachedVectorView<V,LFSC>(container)
+      UncachedVectorView(Container& container)
+        : ConstUncachedVectorView<V,LFSCache>(container)
       {}
 
       template<typename LC>
@@ -204,9 +190,8 @@ namespace Dune {
           }
       }
 
-      template<typename LC, typename EnableReturnType=void>
-      typename std::enable_if<std::is_base_of<BlockstructuredLFSCBase, LFSC>::value, EnableReturnType>::type
-      add(const LC& local_container)
+      template<typename LC>
+      void add(const LC& local_container)
       {
         auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
 
@@ -222,16 +207,6 @@ namespace Dune {
               }
             }
           }
-        }
-      }
-
-      template<typename LC, typename EnableReturnType=void>
-      typename std::enable_if<!std::is_base_of<BlockstructuredLFSCBase, LFSC>::value, EnableReturnType>::type
-      add(const LC& local_container)
-      {
-        for (size_type i = 0; i < size(); ++i)
-        {
-          container()[cache().containerIndex(i)] += Dune::PDELab::accessBaseContainer(local_container)[i];
         }
       }
 
@@ -256,9 +231,6 @@ namespace Dune {
             container()[cache().containerIndex(local_index)] += Dune::PDELab::accessBaseContainer(local_container)[local_index];
           }
       }
-
-
-
 
       template<typename ChildLFS, typename LC>
       void write_sub_container(const ChildLFS& child_lfs, const LC& local_container)
