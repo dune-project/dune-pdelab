@@ -13,7 +13,7 @@ namespace Dune {
 
     template<typename D, typename R, int d, int k_, int blocks_>
     struct QklocalFiniteElementWrapper
-        : public Dune::BlockstructuredQkLocalFiniteElement<D, R, d, k_, blocks_> {
+        : public Dune::QkLocalFiniteElement<D, R, d, k_ * blocks_> {
       static constexpr int k = k_;
       static constexpr int blocks = blocks_;
     };
