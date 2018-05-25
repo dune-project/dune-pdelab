@@ -5,8 +5,8 @@
 
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
-#include <dune/localfunctions/common/localkey.hh>
 #include <dune/geometry/referenceelements.hh>
+#include <dune/pdelab/gridfunctionspace/blockstructured/lfsindexcache.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -259,6 +259,178 @@ namespace Dune {
 
     };
 
+
+    template<typename V, typename LFS, typename C>
+    struct ConstUncachedVectorView<V, Dune::Blockstructured::LFSIndexCache<LFS,C>>
+    {
+
+      typedef typename std::remove_const<V>::type Container;
+      typedef Dune::Blockstructured::LFSIndexCache<LFS,C> LFSCache;
+
+      typedef typename Container::E ElementType;
+      typedef typename Container::size_type size_type;
+      typedef typename LFSCache::DOFIndex DOFIndex;
+      typedef typename LFSCache::ContainerIndex ContainerIndex;
+
+
+      ConstUncachedVectorView()
+          : _container(nullptr)
+          , _lfs_cache(nullptr)
+      {}
+
+      ConstUncachedVectorView(V& container)
+          : _container(&container)
+          , _lfs_cache(nullptr)
+      {}
+
+      void attach(V& container)
+      {
+        _container = &container;
+      }
+
+      void detach()
+      {
+        _container = nullptr;
+      }
+
+      void bind(const LFSCache& lfs_cache)
+      {
+        _lfs_cache = &lfs_cache;
+      }
+
+      void unbind()
+      {
+      }
+
+      size_type size() const
+      {
+        return cache().size();
+      }
+
+      template<typename LC>
+      void read(LC& local_container) const
+      {
+        auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
+
+        for (int leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
+          for (int c = 0; c < refEl.dimension + 1; ++c) {
+            for (int s = 0; s < refEl.size(c); ++s) {
+              // evaluate consecutive index of subentity
+              auto container_index = this->cache().containerIndex(leaf, s, c);
+              for (int i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
+                Dune::PDELab::accessBaseContainer(local_container)[cache().localIndex(leaf, s, c, i)] =
+                    this->container()[container_index];
+                container_index[0]++;
+              }
+            }
+          }
+        }
+      }
+
+      const ElementType& operator[](const ContainerIndex& ci) const
+      {
+        return container()[ci];
+      }
+
+      const Container& container() const
+      {
+        return *_container;
+      }
+
+      const LFSCache& cache() const
+      {
+        return *_lfs_cache;
+      }
+
+    protected:
+
+      V* _container;
+      const LFSCache* _lfs_cache;
+
+    };
+
+
+    template<typename V, typename LFS, typename C>
+    struct UncachedVectorView<V, Dune::Blockstructured::LFSIndexCache<LFS,C>>
+        : public ConstUncachedVectorView<V, Dune::Blockstructured::LFSIndexCache<LFS,C>>
+    {
+
+      typedef V Container;
+      typedef typename Container::ElementType ElementType;
+      typedef typename Container::size_type size_type;
+
+      typedef Dune::Blockstructured::LFSIndexCache<LFS,C> LFSCache;
+      typedef typename LFSCache::DOFIndex DOFIndex;
+      typedef typename LFSCache::ContainerIndex ContainerIndex;
+
+      using ConstUncachedVectorView<V,LFSCache>::cache;
+      using ConstUncachedVectorView<V,LFSCache>::size;
+
+      // Explicitly pull in operator[] from the base class to work around a problem
+      // with clang not finding the const overloads of the operator from the base class.
+      using ConstUncachedVectorView<V,LFSCache>::operator[];
+
+      UncachedVectorView()
+      {}
+
+      UncachedVectorView(Container& container)
+          : ConstUncachedVectorView<V,LFSCache>(container)
+      {}
+
+      template<typename LC>
+      void write(const LC& local_container)
+      {
+        auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
+
+        for (int leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
+          for (int c = 0; c < refEl.dimension + 1; ++c) {
+            for (int s = 0; s < refEl.size(c); ++s) {
+              // evaluate consecutive index of subentity
+              auto container_index = this->cache().containerIndex(leaf, s, c);
+              for (int i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
+                this->container()[container_index] =
+                    Dune::PDELab::accessBaseContainer(local_container)[cache().localIndex(leaf, s, c, i)];
+                container_index[0]++;
+              }
+            }
+          }
+        }
+      }
+
+      template<typename LC>
+      void add(const LC& local_container)
+      {
+        auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
+
+        for (int leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
+          for (int c = 0; c < refEl.dimension + 1; ++c) {
+            for (int s = 0; s < refEl.size(c); ++s) {
+              // evaluate consecutive index of subentity
+              auto container_index = this->cache().containerIndex(leaf, s, c);
+              for (int i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
+                this->container()[container_index] +=
+                    Dune::PDELab::accessBaseContainer(local_container)[cache().localIndex(leaf, s, c, i)];
+                container_index[0]++;
+              }
+            }
+          }
+        }
+      }
+
+      void commit()
+      {
+      }
+
+      ElementType& operator[](const ContainerIndex& ci)
+      {
+        return container()[ci];
+      }
+
+      Container& container()
+      {
+        return *(this->_container);
+      }
+    };
   } // namespace PDELab
 } // namespace Dune
 
