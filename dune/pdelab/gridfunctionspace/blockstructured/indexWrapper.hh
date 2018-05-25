@@ -15,15 +15,13 @@ namespace Dune{
     template <typename Index>
     class SubentityWiseIndexWrapper{
     public:
-      constexpr static std::size_t dim = 2;
 
       SubentityWiseIndexWrapper()
           : storage()
       {
-        // 2D case
-        auto refEl = Dune::ReferenceElements<double,dim>::general(Dune::GeometryTypes::cube(dim));
+        auto refEl = Dune::ReferenceElements<double,d>::general(Dune::GeometryTypes::cube(d));
 
-        for (int c = 0; c < dim + 1; ++c) {
+        for (int c = 0; c < d + 1; ++c) {
           storage[c].resize(refEl.size(c));
         }
       }

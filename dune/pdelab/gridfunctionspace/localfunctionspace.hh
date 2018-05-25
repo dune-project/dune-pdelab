@@ -187,7 +187,7 @@ namespace Dune {
       //! \brief Type of container to store multiindices.
       typedef typename std::vector<DI> DOFIndexContainer;
 
-      using DOFIndexSubentityWise = Dune::Blockstructured::SubentityWiseIndexWrapper<DI>;
+      using DOFIndexSubentityWise = Dune::Blockstructured::SubentityWiseIndexWrapper<DI, GFS::Traits::GridView::dimension>;
       using DOFIndexSubentityWiseContainer = std::vector<DOFIndexSubentityWise>;
 
     };

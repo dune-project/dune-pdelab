@@ -130,7 +130,7 @@ namespace Dune{
       }
 
       const LFS& _lfs;
-      std::vector<Dune::Blockstructured::SubentityWiseIndexWrapper<CI>> globalContainerIndices;
+      std::vector<Dune::Blockstructured::SubentityWiseIndexWrapper<CI, GFS::Traits::GridView::dimension>> globalContainerIndices;
       std::map<BlockstructuredQkDescriptor, InverseQkLocalCoefficients<GFS::Traits::GridView::dimension>> inverseLocalCoefficientsMap;
       std::vector<std::size_t> localDOFsOffset;
       std::vector<BlockstructuredQkDescriptor> qkDescriptors;
