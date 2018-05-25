@@ -12,7 +12,7 @@
 namespace Dune{
   namespace Blockstructured{
 
-    template <typename Index>
+    template <typename ContainerOrDOFIndex, int d>
     class SubentityWiseIndexWrapper{
     public:
 
@@ -26,17 +26,17 @@ namespace Dune{
         }
       }
 
-      const Index& index(const int s, const int c) const
+      const ContainerOrDOFIndex& index(const int s, const int c) const
       {
         return storage[c][s];
       }
 
-      Index& index(const int s, const int c)
+      ContainerOrDOFIndex& index(const int s, const int c)
       {
         return storage[c][s];
       }
 
-      typename Index::View indexView(const int s, const int c) const
+      typename ContainerOrDOFIndex::View indexView(const int s, const int c) const
       {
         return storage[c][s].view();
       }
@@ -67,7 +67,7 @@ namespace Dune{
       }
 
     private:
-      std::array<std::vector<Index>,3> storage;
+      std::array<std::vector<ContainerOrDOFIndex>,3> storage;
     };
   }
 }
