@@ -87,9 +87,8 @@ namespace Dune{
       template<class LocalAssemblerEngine>
       void assemble(LocalAssemblerEngine & assembler_engine) const
       {
-        typedef typename LocalAssemblerEngine::LFSUCache LFSUCache;
-
-        typedef typename LocalAssemblerEngine::LFSUCache LFSVCache;
+        using LFSUCache = Dune::Blockstructured::LFSIndexCache<LFSU, CU>;
+        using LFSVCache = Dune::Blockstructured::LFSIndexCache<LFSV, CV>;
 
         const bool needs_constraints_caching = assembler_engine.needsConstraintsCaching(cu,cv);
 
