@@ -57,7 +57,6 @@ namespace Dune{
 
         offset.resize(nLeafs);
 
-
         TypeTree::forEachLeafNode(_lfs, [this,&refEl] (auto& Node, auto& TreePath){
           const auto leaf = Node.offsetLeafs;
 

@@ -77,7 +77,6 @@ namespace Dune{
                                Dune::PDELab::PowerGridFunctionSpaceTag* tag);
 
 
-
     // local function space for a power grid function space
     template<typename GFS, typename DOFIndex, typename... Children>
     class CompositeLocalFunctionSpaceNode
@@ -121,9 +120,6 @@ namespace Dune{
                                Dune::PDELab::CompositeGridFunctionSpaceTag* tag);
 
 
-
-
-
     //! single component local function space
     template<typename GFS, typename DOFIndex>
     class LeafLocalFunctionSpaceNode
@@ -145,10 +141,6 @@ namespace Dune{
       template<typename Entity, typename DOFIndexIterator>
       void dofIndices(const Entity& e, DOFIndexIterator /*it*/, DOFIndexIterator /*endit*/, std::integral_constant<bool,false>)
       {
-
-        const typename FESwitch::Coefficients &coeffs =
-            FESwitch::coefficients(this->finiteElement());
-
         using EntitySet = typename GFS::Traits::EntitySet;
         auto es = this->gridFunctionSpace().entitySet();
 
