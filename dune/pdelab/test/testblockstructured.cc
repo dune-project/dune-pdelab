@@ -19,38 +19,41 @@
 #include <dune/pdelab/constraints/conforming.hh>
 
 template<typename Backend>
-struct TestData{
+struct TestData {
   using Grid = Dune::YaspGrid<2>;
   using GV = Grid::LeafGridView;
-  using FEM = Dune::PDELab::BlockstructuredQkLocalFiniteElementMap<GV, double, double, 1, 2>;
-  using LeafGFS = Dune::PDELab::GridFunctionSpace<GV, FEM, Dune::PDELab::NoConstraints, Backend>;
-  using PowerGFS = Dune::PDELab::PowerGridFunctionSpace<LeafGFS, 2, Backend, Dune::PDELab::LexicographicOrderingTag>;
-  using CompositeGFS = Dune::PDELab::CompositeGridFunctionSpace<Backend, Dune::PDELab::LexicographicOrderingTag, PowerGFS, LeafGFS>;
+  using Q1_FEM = Dune::PDELab::BlockstructuredQkLocalFiniteElementMap<GV, double, double, 1, 2>;
+  using Q2_FEM = Dune::PDELab::BlockstructuredQkLocalFiniteElementMap<GV, double, double, 2, 2>;
+  using Q1_LeafGFS = Dune::PDELab::GridFunctionSpace<GV, Q1_FEM, Dune::PDELab::NoConstraints, Backend>;
+  using Q2_LeafGFS = Dune::PDELab::GridFunctionSpace<GV, Q2_FEM, Dune::PDELab::NoConstraints, Backend>;
+  using PowerGFS = Dune::PDELab::PowerGridFunctionSpace<Q1_LeafGFS, 2, Backend, Dune::PDELab::LexicographicOrderingTag>;
+  using CompositeGFS = Dune::PDELab::CompositeGridFunctionSpace<Backend, Dune::PDELab::LexicographicOrderingTag, PowerGFS, Q2_LeafGFS>;
 
   Grid grid;
   GV gv;
-  FEM fem;
-  std::shared_ptr<LeafGFS> pLeafGFS;
-  LeafGFS _gfs;
+  Q1_FEM fem;
+  Q2_FEM _q2_fem;
+  std::shared_ptr<Q1_LeafGFS> pLeafGFS;
+  Q1_LeafGFS _q1_gfs;
+  Q2_LeafGFS _q2_gfs;
   PowerGFS _pgfs;
   std::shared_ptr<CompositeGFS> pCompositeGFS;
 
   TestData()
-      : grid({1,1}, {1,1}), gv(grid.leafGridView()), fem(gv), pLeafGFS(std::make_shared<LeafGFS>(gv, fem)),
-        _gfs(gv, fem), _pgfs(_gfs), pCompositeGFS(std::make_shared<CompositeGFS>(_pgfs, _gfs))
-  {}
+      : grid({1, 1}, {1, 1}), gv(grid.leafGridView()), fem(gv), _q2_fem(gv),
+        pLeafGFS(std::make_shared<Q1_LeafGFS>(gv, fem)), _q1_gfs(gv, fem), _q2_gfs(gv, _q2_fem), _pgfs(_q1_gfs),
+        pCompositeGFS(std::make_shared<CompositeGFS>(_pgfs, _q2_gfs)) {}
 };
 
 class LocalOperator
-    : public Dune::PDELab::LocalOperatorDefaultFlags
-{
+    : public Dune::PDELab::LocalOperatorDefaultFlags {
 public:
-  enum {doAlphaVolume=true};
-
+  enum {
+    doAlphaVolume = true
+  };
 
   template<typename LFSU, typename R, typename LFSV, typename X, typename EG>
-  void alpha_volume(const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
-  {
+  void alpha_volume(const EG &eg, const LFSU &lfsu, const X &x, const LFSV &lfsv, R &r) const {
     using namespace Dune::Indices;
 
     auto lfsu_0 = child(lfsu, _0);
@@ -68,33 +71,31 @@ public:
     for (int i = 0; i < lfsu_1.size(); ++i) {
       r.accumulate(lfsu_1, i, 2);
     }
-
   }
-
 };
 
 template<typename LFS, typename PGFS>
-auto createAndBindLFS(PGFS pgfs){
-  const auto& element = *pgfs->gridView().template begin<0>();
+auto createAndBindLFS(PGFS pgfs) {
+  const auto &element = *pgfs->gridView().template begin<0>();
   auto plfs = std::make_shared<LFS>(pgfs);
   plfs->bind(element);
   return plfs;
 }
 
 template<typename PGFS>
-auto setupBlockstructuredLFS(PGFS pgfs){
+auto setupBlockstructuredLFS(PGFS pgfs) {
   using LFS = Dune::Blockstructured::LocalFunctionSpace<typename PGFS::element_type>;
   return createAndBindLFS<LFS>(pgfs);
 }
 
 template<typename PGFS>
-auto setupPDELabLFS(PGFS pgfs){
+auto setupPDELabLFS(PGFS pgfs) {
   using LFS = Dune::PDELab::LocalFunctionSpace<typename PGFS::element_type>;
   return createAndBindLFS<LFS>(pgfs);
 }
 
 template<typename TestData>
-void testBlockstructuredLeafLFS(const TestData& td){
+void testBlockstructuredLeafLFS(const TestData &td) {
   auto plfs = setupBlockstructuredLFS(td.pLeafGFS);
 
   auto lfs_indices = *plfs->_dof_index_storage_subentity_wise_ptr;
@@ -111,22 +112,27 @@ void testBlockstructuredLeafLFS(const TestData& td){
 }
 
 template<typename TestData>
-void testBlockstructuredTreeLFS(const TestData& td){
+void testBlockstructuredTreeLFS(const TestData &td) {
   auto lfs_ptr = setupBlockstructuredLFS(td.pCompositeGFS);
 
-  auto lfs_indices = *lfs_ptr->_dof_index_storage_subentity_wise_ptr;
+  const auto& lfs_indices = *lfs_ptr->_dof_index_storage_subentity_wise_ptr;
   assert(lfs_indices.size() == 3);
 
   auto compareLFS_ptr = setupPDELabLFS(td.pCompositeGFS);
 
-  auto coeffs = td.fem.find(0).localCoefficients();
-  for (int i = 0; i < compareLFS_ptr->size(); ++i) {
-    auto localKey = coeffs.localKey(i % coeffs.size());
-    assert(localKey.index() == 0);
+  Dune::TypeTree::forEachLeafNode(*compareLFS_ptr, [lfs_ptr, lfs_indices] (auto& Node, auto& TreePath)
+  {
+    auto coeffs = Node.finiteElement().localCoefficients();
 
-    std::size_t currentLeaf = i/coeffs.size();
-    assert(lfs_indices[currentLeaf].index(localKey.subEntity(), localKey.codim()) == compareLFS_ptr->dofIndex(i));
-  }
+    int leaf = Dune::TypeTree::child(*lfs_ptr, TreePath).offsetLeafs;
+
+    for (int i = 0; i < coeffs.size(); ++i) {
+      auto localKey = coeffs.localKey(i);
+
+      if(localKey.index() == 0)
+        assert(lfs_indices[leaf].index(localKey.subEntity(), localKey.codim()) == Node.dofIndex(i));
+    }
+  });
 }
 
 
@@ -151,33 +157,41 @@ auto setupPDELabLFSAndLFSC(PGFS pgfs) {
 }
 
 template<typename TestData>
-void testBlockstructuredLFSC(const TestData& td){
-  auto [plfs, plfsc] = setupBlockstructuredLFSAndLFSC(td.pCompositeGFS);
-  auto [compare_plfs, compare_plfsc] = setupPDELabLFSAndLFSC(td.pCompositeGFS);
+void testBlockstructuredLFSC(const TestData &td) {
+  auto[plfs, plfsc] = setupBlockstructuredLFSAndLFSC(td.pCompositeGFS);
+  auto[compare_plfs, compare_plfsc] = setupPDELabLFSAndLFSC(td.pCompositeGFS);
 
-  auto coeffs = td.fem.find(0).localCoefficients();
-  for (int i = 0; i < compare_plfs->size(); ++i) {
-    auto localKey = coeffs.localKey(i % coeffs.size());
-    assert(localKey.index() == 0);
+  Dune::TypeTree::forEachLeafNode(*compare_plfs, [compare_plfsc, plfs, plfsc] (auto& Node, auto& TreePath)
+  {
+    auto coeffs = Node.finiteElement().localCoefficients();
 
-    std::size_t currentLeaf = i/coeffs.size();
-    assert(plfsc->containerIndex(currentLeaf, localKey.subEntity(), localKey.codim()) == compare_plfsc->containerIndex(i));
+    int leaf = Dune::TypeTree::child(*plfs, TreePath).offsetLeafs;
 
-    assert(plfsc->localIndex(currentLeaf, localKey.subEntity(), localKey.codim(), 0) == i);
-  }
+    for (int i = 0; i < coeffs.size(); ++i) {
+      auto localKey = coeffs.localKey(i);
+
+      if(localKey.index() == 0) {
+        assert(
+            plfsc->containerIndex(leaf, localKey.subEntity(), localKey.codim()) ==
+            compare_plfsc->containerIndex(Node.offset + i));
+      }
+
+      assert(plfsc->localIndex(leaf, localKey.subEntity(), localKey.codim(), localKey.index()) == Node.offset + i);
+    }
+  });
 }
 
 template<typename TestData>
-void testBlockstructuredUncachedVectorView(const TestData& td){
-  auto [_, plfsc] = setupBlockstructuredLFSAndLFSC(td.pCompositeGFS);
+void testBlockstructuredUncachedVectorView(const TestData &td) {
+  auto[_, plfsc] = setupBlockstructuredLFSAndLFSC(td.pCompositeGFS);
 
   std::vector<int> local_write_to(plfsc->size(), 0);
   std::vector<int> local_read_from(plfsc->size());
 
-  for(auto& i: local_read_from)
+  for (auto &i: local_read_from)
     i = std::rand();
 
-  using Container = Dune::PDELab::Simple::VectorContainer<typename TestData::CompositeGFS, std::vector<int>> ;
+  using Container = Dune::PDELab::Simple::VectorContainer<typename TestData::CompositeGFS, std::vector<int>>;
   Container container(*td.pCompositeGFS, 0);
 
   Dune::PDELab::UncachedVectorView<Container, typename decltype(plfsc)::element_type> vectorView;
@@ -193,7 +207,7 @@ void testBlockstructuredUncachedVectorView(const TestData& td){
 }
 
 template<typename TestData>
-void testBlockstructuredGridOperator(const TestData& td){
+void testBlockstructuredGridOperator(const TestData &td) {
   using MatrixBackend = Dune::PDELab::ISTL::BCRSMatrixBackend<>;
   using GO = Dune::Blockstructured::BlockstructuredGridOperator<
       typename TestData::CompositeGFS, typename TestData::CompositeGFS,
@@ -214,27 +228,27 @@ void testBlockstructuredGridOperator(const TestData& td){
       assert((*r.storage())[leaf * 9 + i] == leaf);
 }
 
-int main(int argc, char** argv){
+int main(int argc, char **argv) {
   try {
     Dune::MPIHelper::instance(argc, argv);
 
     using Backend = Dune::PDELab::ISTL::VectorBackend<>;
-    TestData<Backend> td_istl;
+    TestData<Backend> td;
 
-    testBlockstructuredLeafLFS(td_istl);
-    testBlockstructuredTreeLFS(td_istl);
+    testBlockstructuredLeafLFS(td);
+    testBlockstructuredTreeLFS(td);
 
-    testBlockstructuredLFSC(td_istl);
+    testBlockstructuredLFSC(td);
 
-    testBlockstructuredUncachedVectorView(td_istl);
+    testBlockstructuredUncachedVectorView(td);
 
-    testBlockstructuredGridOperator(td_istl);
+    testBlockstructuredGridOperator(td);
   }
-  catch (Dune::Exception &e){
+  catch (Dune::Exception &e) {
     std::cerr << "Dune reported error: " << e << std::endl;
     return 1;
   }
-  catch (...){
+  catch (...) {
     std::cerr << "Unknown exception thrown!" << std::endl;
     return 1;
   }
