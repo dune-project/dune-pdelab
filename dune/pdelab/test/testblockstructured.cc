@@ -72,7 +72,7 @@ public:
 
 template<typename LFS, typename PGFS>
 auto createAndBindLFS(PGFS pgfs) {
-  const auto &element = *pgfs->gridView().template begin<0>();
+  const auto element = *pgfs->gridView().template begin<0>();
   auto plfs = std::make_shared<LFS>(pgfs);
   plfs->bind(element);
   return plfs;
