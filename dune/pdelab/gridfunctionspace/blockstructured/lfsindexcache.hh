@@ -62,9 +62,9 @@ namespace Dune{
 
       void update()
       {
-        initializeInverseLocalCoefficientsMap();
+        initializeLocalCoefficients();
 
-        auto refEl = Dune::ReferenceElements<double,2>::general(Dune::GeometryTypes::cube(2));
+        auto refEl = Dune::ReferenceElements<double, d>::general(Dune::GeometryTypes::cube(d));
 
         auto& subentityWiseDOFs = *_lfs._subentityWiseDOFs_ptr;
 
@@ -89,23 +89,20 @@ namespace Dune{
         return globalContainerIndices[leaf].index(s, c);
       }
 
-
-      const CI& containerIndex(size_type i) const
-      {
-        DUNE_THROW(Dune::NotImplemented, "Use this index cache by iterating over the reference element subentities");
-        return {};
-      }
-
-
-      const CI& containerIndex(const DI& i) const
-      {
-        DUNE_THROW(Dune::NotImplemented, "Use this index cache by iterating over the reference element subentities");
-        return {};
-      }
-
       constexpr std::size_t numberOfLeafs() const
       {
         return Dune::TypeTree::TreeInfo<LFS>::leafCount;
+      }
+
+      constexpr std::size_t codims() const
+      {
+        return d + 1;
+      }
+
+      std::size_t subentities(std::size_t codim) const
+      {
+        const auto refEl = Dune::ReferenceElements<double, d>::general(Dune::GeometryTypes::cube(d));
+        return refEl.size(codim);
       }
 
       std::size_t sizeOfLocalDOFs(size_type leaf, size_type s, size_type c) const
@@ -120,7 +117,7 @@ namespace Dune{
 
     private:
 
-      void initializeInverseLocalCoefficientsMap()
+      void initializeLocalCoefficients()
       {
         TypeTree::forEachLeafNode(_lfs, [this] (auto& Node, auto& TreePath){
           const auto& fe = Node.finiteElement();
@@ -135,11 +132,13 @@ namespace Dune{
         });
       }
 
+      constexpr static std::size_t d = GFS::Traits::GridView::dimension;
+
       const LFS& _lfs;
-      std::vector<Dune::Blockstructured::SubentityWiseIndexWrapper<CI, GFS::Traits::GridView::dimension>> globalContainerIndices;
-      std::map<BlockstructuredQkDescriptor, InverseQkLocalCoefficients<GFS::Traits::GridView::dimension>> inverseLocalCoefficientsMap;
+      std::vector<Dune::Blockstructured::SubentityWiseIndexWrapper<CI, d>> globalContainerIndices;
+      std::map<BlockstructuredQkDescriptor, InverseQkLocalCoefficients<d>> inverseLocalCoefficientsMap;
       std::vector<std::size_t> localDOFsOffset;
-      std::vector<const InverseQkLocalCoefficients<GFS::Traits::GridView::dimension>*> localCoefficients;
+      std::vector<const InverseQkLocalCoefficients<d>*> localCoefficients;
     };
   }
 }

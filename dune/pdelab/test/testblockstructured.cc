@@ -18,19 +18,16 @@
 #include <dune/pdelab/gridoperator/blockstructured.hh>
 #include <dune/pdelab/constraints/conforming.hh>
 
-template<typename Backend>
+template<typename GV>
 struct TestData {
-  using Grid = Dune::YaspGrid<2>;
-  using GV = Grid::LeafGridView;
-  using Q1_FEM = Dune::PDELab::BlockstructuredQkLocalFiniteElementMap<GV, double, double, 1, 2>;
-  using Q2_FEM = Dune::PDELab::BlockstructuredQkLocalFiniteElementMap<GV, double, double, 2, 2>;
+  using Q1_FEM = Dune::PDELab::BlockstructuredQkLocalFiniteElementMap<GV, double, double, 1, 4>;
+  using Q2_FEM = Dune::PDELab::BlockstructuredQkLocalFiniteElementMap<GV, double, double, 2, 4>;
+  using Backend = Dune::PDELab::ISTL::VectorBackend<>;
   using Q1_LeafGFS = Dune::PDELab::GridFunctionSpace<GV, Q1_FEM, Dune::PDELab::NoConstraints, Backend>;
   using Q2_LeafGFS = Dune::PDELab::GridFunctionSpace<GV, Q2_FEM, Dune::PDELab::NoConstraints, Backend>;
   using PowerGFS = Dune::PDELab::PowerGridFunctionSpace<Q1_LeafGFS, 2, Backend, Dune::PDELab::LexicographicOrderingTag>;
   using CompositeGFS = Dune::PDELab::CompositeGridFunctionSpace<Backend, Dune::PDELab::LexicographicOrderingTag, PowerGFS, Q2_LeafGFS>;
 
-  Grid grid;
-  GV gv;
   Q1_FEM fem;
   Q2_FEM _q2_fem;
   std::shared_ptr<Q1_LeafGFS> pLeafGFS;
@@ -39,10 +36,9 @@ struct TestData {
   PowerGFS _pgfs;
   std::shared_ptr<CompositeGFS> pCompositeGFS;
 
-  TestData()
-      : grid({1, 1}, {1, 1}), gv(grid.leafGridView()), fem(gv), _q2_fem(gv),
-        pLeafGFS(std::make_shared<Q1_LeafGFS>(gv, fem)), _q1_gfs(gv, fem), _q2_gfs(gv, _q2_fem), _pgfs(_q1_gfs),
-        pCompositeGFS(std::make_shared<CompositeGFS>(_pgfs, _q2_gfs)) {}
+  TestData(const GV& gv)
+      : fem(gv), _q2_fem(gv), pLeafGFS(std::make_shared<Q1_LeafGFS>(gv, fem)), _q1_gfs(gv, fem), _q2_gfs(gv, _q2_fem),
+        _pgfs(_q1_gfs), pCompositeGFS(std::make_shared<CompositeGFS>(_pgfs, _q2_gfs)) {}
 };
 
 class LocalOperator
@@ -106,8 +102,9 @@ void testBlockstructuredLeafLFS(const TestData &td) {
   auto coeffs = plfs->finiteElement().localCoefficients();
   for (int i = 0; i < pcompareLFS->size(); ++i) {
     auto localKey = coeffs.localKey(i);
-    assert(localKey.index() == 0);
-    assert(lfs_indices[0].index(localKey.subEntity(), localKey.codim()) == pcompareLFS->dofIndex(i));
+    if(localKey.index() == 0) {
+      assert(lfs_indices[0].index(localKey.subEntity(), localKey.codim()) == pcompareLFS->dofIndex(i));
+    }
   }
 }
 
@@ -212,37 +209,52 @@ void testBlockstructuredGridOperator(const TestData &td) {
   using GO = Dune::Blockstructured::BlockstructuredGridOperator<
       typename TestData::CompositeGFS, typename TestData::CompositeGFS,
       LocalOperator, MatrixBackend, double, double, double>;
+  using GO_Compare = Dune::PDELab::GridOperator<
+      typename TestData::CompositeGFS, typename TestData::CompositeGFS,
+      LocalOperator, MatrixBackend, double, double, double>;
 
   LocalOperator lop;
   MatrixBackend mb(1);
 
   GO go(*td.pCompositeGFS, *td.pCompositeGFS, lop, mb);
+  GO_Compare go_compare(*td.pCompositeGFS, *td.pCompositeGFS, lop, mb);
 
   Dune::PDELab::Backend::Vector<typename TestData::CompositeGFS, double> x(*td.pCompositeGFS, 0);
   Dune::PDELab::Backend::Vector<typename TestData::CompositeGFS, double> r(*td.pCompositeGFS, 0);
+  Dune::PDELab::Backend::Vector<typename TestData::CompositeGFS, double> r_compare(*td.pCompositeGFS, 0);
 
   go.residual(x, r);
+  go_compare.residual(x, r_compare);
 
-  for (int leaf = 0; leaf < 3; ++leaf)
-    for (int i = 0; i < 9; ++i)
-      assert((*r.storage())[leaf * 9 + i] == leaf);
+  for (int i = 0; i < r.N(); ++i) {
+    assert((*r.storage())[i] == (*r_compare.storage())[i]);
+  }
+}
+
+template<typename TestData>
+void runAllTests(const TestData& td){
+  testBlockstructuredLeafLFS(td);
+  testBlockstructuredTreeLFS(td);
+
+  testBlockstructuredLFSC(td);
+
+  testBlockstructuredUncachedVectorView(td);
+
+  testBlockstructuredGridOperator(td);
 }
 
 int main(int argc, char **argv) {
   try {
     Dune::MPIHelper::instance(argc, argv);
 
-    using Backend = Dune::PDELab::ISTL::VectorBackend<>;
-    TestData<Backend> td;
+    Dune::YaspGrid<2> grid2({1, 1}, {1, 1});
+    Dune::YaspGrid<3> grid3({1, 1, 1}, {1, 1, 1});
 
-    testBlockstructuredLeafLFS(td);
-    testBlockstructuredTreeLFS(td);
+    TestData td2(grid2.leafGridView());
+    TestData td3(grid3.leafGridView());
 
-    testBlockstructuredLFSC(td);
-
-    testBlockstructuredUncachedVectorView(td);
-
-    testBlockstructuredGridOperator(td);
+    runAllTests(td2);
+    runAllTests(td3);
   }
   catch (Dune::Exception &e) {
     std::cerr << "Dune reported error: " << e << std::endl;

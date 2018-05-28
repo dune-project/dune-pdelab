@@ -67,7 +67,7 @@ namespace Dune{
       }
 
     private:
-      std::array<std::vector<ContainerOrDOFIndex>,3> storage;
+      std::array<std::vector<ContainerOrDOFIndex>, d + 1> storage;
     };
   }
 }

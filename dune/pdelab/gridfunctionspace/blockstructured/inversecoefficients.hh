@@ -77,14 +77,14 @@ namespace Dune{
 
       void setupFaces() {
         if (d > 2) {
-          for (int i = 0; i < container[1].size(); ++i) {
+          for (int i = 0; i < container[d - 2].size(); ++i) {
             container[d - 2][i].resize(Dune::Power<d - 1>::eval(k * blocks - 1));
           }
         }
       }
       void setupEdges() {
         if (d > 1){
-          for (int i = 0; i < container[1].size(); ++i) {
+          for (int i = 0; i < container[d - 1].size(); ++i) {
             container[d - 1][i].resize(k * blocks - 1);
           }
         }

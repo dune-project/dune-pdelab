@@ -310,11 +310,9 @@ namespace Dune {
       template<typename LC>
       void read(LC& local_container) const
       {
-        auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
-
         for (int leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
-          for (int c = 0; c < refEl.dimension + 1; ++c) {
-            for (int s = 0; s < refEl.size(c); ++s) {
+          for (int c = 0; c < cache().codims(); ++c) {
+            for (int s = 0; s < cache().subentities(c); ++s) {
               // evaluate consecutive index of subentity
               auto container_index = this->cache().containerIndex(leaf, s, c);
               for (int i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
@@ -380,11 +378,9 @@ namespace Dune {
       template<typename LC>
       void write(const LC& local_container)
       {
-        auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
-
         for (int leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
-          for (int c = 0; c < refEl.dimension + 1; ++c) {
-            for (int s = 0; s < refEl.size(c); ++s) {
+          for (int c = 0; c < cache().codims(); ++c) {
+            for (int s = 0; s < cache().subentities(c); ++s) {
               // evaluate consecutive index of subentity
               auto container_index = this->cache().containerIndex(leaf, s, c);
               for (int i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
@@ -400,11 +396,9 @@ namespace Dune {
       template<typename LC>
       void add(const LC& local_container)
       {
-        auto refEl = Dune::ReferenceElements<double, 2>::general(Dune::GeometryTypes::cube(2));
-
         for (int leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
-          for (int c = 0; c < refEl.dimension + 1; ++c) {
-            for (int s = 0; s < refEl.size(c); ++s) {
+          for (int c = 0; c < cache().codims(); ++c) {
+            for (int s = 0; s < cache().subentities(c); ++s) {
               // evaluate consecutive index of subentity
               auto container_index = this->cache().containerIndex(leaf, s, c);
               for (int i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
