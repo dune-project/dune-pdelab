@@ -33,12 +33,6 @@ namespace Dune{
         }
       }
 
-      unsigned long localIndex(const Dune::LocalKey& l) const
-      {
-        return container[l.codim()][l.subEntity()][l.index()];
-      }
-
-
     private:
       void setupCodims() {
         switch (d){
