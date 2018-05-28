@@ -22,14 +22,13 @@ namespace Dune{
     template<typename NodeType>
     void bind(NodeType &node, const typename NodeType::Traits::Element &e) {
       typedef typename NodeType::Traits::Element Element;
-      constexpr bool fast = false;
       // compute sizes
-      ComputeSizeVisitor<Element, fast> csv(e);
+      ComputeSizeVisitor<Element> csv(e);
       TypeTree::applyToTree(node, csv);
 
 
       // initialize iterators and fill indices
-      FillIndicesVisitor<Element, fast> fiv(e);
+      FillIndicesVisitor<Element> fiv(e);
       TypeTree::applyToTree(node, fiv);
     }
 
@@ -51,7 +50,6 @@ namespace Dune{
         // call method on base class, this avoid the barton neckman trick
         Dune::Blockstructured::bind(*this,e);
       }
-
     };
 
 
@@ -95,7 +93,6 @@ namespace Dune{
         // call method on base class, this avoid the barton neckman trick
         Dune::Blockstructured::bind(*this,e);
       }
-
     };
 
     // transformation template, we need a custom template in order to inject the MultiIndex type into the LocalFunctionSpace

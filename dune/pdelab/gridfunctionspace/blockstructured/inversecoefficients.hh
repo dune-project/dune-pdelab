@@ -15,8 +15,8 @@ namespace Dune{
     struct InverseQkLocalCoefficients
     {
       std::array<std::vector<std::vector<unsigned long>>, d + 1> container;
-      const int k;
-      const int blocks;
+      int k;
+      int blocks;
 
       template <typename FE>
       InverseQkLocalCoefficients(const FE& fe)

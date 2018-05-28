@@ -6,12 +6,11 @@
 #define DUNE_PDELAB_VISITORS_HH
 
 #include <dune/typetree/visitor.hh>
+#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 
 namespace Dune{
   namespace Blockstructured{
 
-    // the bogus template parameter is necessary to make GCC honor the friend declaration
-    // in the LocalFunctionSpace (probably a GCC bug)
     template<typename = int>
     struct PropagateGlobalStorageVisitor
         : public Dune::PDELab::PropagateGlobalStorageVisitor<int>
@@ -24,7 +23,7 @@ namespace Dune{
       }
     };
 
-    template<typename Entity, bool fast>
+    template<typename Entity>
     struct ComputeSizeVisitor
         : Dune::PDELab::ComputeSizeVisitor<Entity, false>
     {
@@ -62,7 +61,7 @@ namespace Dune{
     };
 
 
-    template<typename Entity, bool fast>
+    template<typename Entity>
     struct FillIndicesVisitor
         : public Dune::PDELab::FillIndicesVisitor<Entity, false>
     {
