@@ -5,7 +5,6 @@
 #define DUNE_MYPOISSON_QKFEM_REORDER_HH
 
 #include <dune/pdelab/finiteelementmap/finiteelementmap.hh>
-#include <dune/localfunctions/blockstructuredqk.hh>
 #include <dune/localfunctions/lagrange/qk.hh>
 
 namespace Dune {
