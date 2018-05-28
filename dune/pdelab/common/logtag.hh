@@ -69,6 +69,9 @@ int main() {
        * caller.
        */
       virtual void writeTag(std::ostream &s) const = 0;
+
+      virtual ~LogtagFormatterBase() = default;
+
     };
 
     //! A log tag formatter that wraps a unary formatting function or functor

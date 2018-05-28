@@ -220,7 +220,7 @@ namespace Dune
           std::cout << "      Solving linear system..." << std::endl;
         z = 0.0;
         // If possible tell solver backend to reuse linear system when we did not reassemble.
-        Impl::setLinearSystemReuse(this->solver_, this->reassembled_);
+        Impl::setLinearSystemReuse(this->solver_, !this->reassembled_);
         this->solver_.apply(A, z, r, this->linear_reduction_);
 
         ios_base_all_saver restorer(std::cout); // store old ios flags

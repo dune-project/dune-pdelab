@@ -40,7 +40,6 @@ class PoissonProblem
 : public PDELab::ConvectionDiffusionModelProblem<GridView,RangeType>
 {
 public:
-
   template<typename Element, typename Coord>
   auto f(const Element& element, const Coord& x) const
   {
@@ -122,6 +121,9 @@ void solvePoissonProblem()
   typedef typename GO::Traits::Domain VectorContainer;
   VectorContainer x0(gfs);
   x0 = 0.0;              // set all entries to zero
+
+  // Make a grid function out of it, just to check that this compiles
+  PDELab::DiscreteGridFunction<GridFunctionSpace,VectorContainer> xDiscreteGridFunction(gfs,x0);
 
   // represent operator as a matrix
   typedef typename GO::Jacobian MatrixContainer;

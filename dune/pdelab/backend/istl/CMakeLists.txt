@@ -1,3 +1,5 @@
+add_subdirectory(geneo)
+
 install(FILES
   bcrsmatrix.hh
   bcrsmatrixbackend.hh

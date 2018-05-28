@@ -175,7 +175,7 @@ namespace Dune {
       template<typename... TC>
       static typename result<TC...>::storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t, std::shared_ptr<TC>... children)
       {
-        return std::make_shared<typename result<TC...>::type>(gfs.backend().blocked(*gfs),children...);
+        return std::make_shared<typename result<TC...>::type>(gfs->backend().blocked(*gfs),children...);
       }
 
     };
@@ -201,7 +201,7 @@ namespace Dune {
 
       static transformed_storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        transformed_storage_type r(std::make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked(*gfs)),const_cast<GFS*>(gfs.get()));
+        transformed_storage_type r(std::make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked(*gfs),const_cast<GFS*>(gfs.get())));
         return std::move(r);
       }
 

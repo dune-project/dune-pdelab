@@ -207,7 +207,6 @@ namespace Dune {
           if (_container->size() == 0)
             return 0;
           using std::abs;
-          typedef typename Dune::template FieldTraits<E>::real_type Real;
           return abs(*std::max_element(_container->begin(),_container->end(),
                                        [](const auto& a, const auto& b) {
                                          using std::abs;

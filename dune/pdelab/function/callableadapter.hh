@@ -454,11 +454,11 @@ namespace Dune {
     auto makeBoundaryConditionFromCallable (const GV& gv, const F& f)
       -> typename std::enable_if<
         AlwaysTrue <
-          decltype(f(
-                     std::declval<typename GV::template Codim<0>::Entity>(),
-                     std::declval<typename GV::template Codim<0>::Entity::Geometry::LocalCoordinate>()
+          decltype(f(std::declval<typename GV::Intersection>(),
+                     std::declval<typename GV::Intersection::Geometry::LocalCoordinate>()
                      ))
-      >::value,
+        >::value
+      ,
         LocalCallableToBoundaryConditionAdapter<F>
         >::type
     {

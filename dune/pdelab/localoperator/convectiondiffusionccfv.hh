@@ -27,6 +27,7 @@ namespace Dune {
      *                        -(A(x)\nabla u) \cdot n &=& o \mbox{ on } \partial\Omega_O
      * \f}
      * Note:
+     *  - Works only on a grid that is parallel to the coordinate axes.
      *  - This formulation is valid for velocity fields which are non-divergence free.
      *  - Assumes that the tensor is diagonal !
      *  - Outflow boundary conditions should only be set on the outflow boundary

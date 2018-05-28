@@ -3,7 +3,9 @@
 #define DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONPARAMETER_HH
 
 #include<vector>
+#include<type_traits>
 
+#include<dune/common/deprecated.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/geometry/type.hh>
@@ -16,6 +18,52 @@
 
 namespace Dune {
   namespace PDELab {
+
+  #ifndef DOXYGEN
+
+    // helper construct for backwards-compatible addition of hasPermeabilityIsConstantPerCell()
+
+    namespace Impl {
+
+      template<typename T, typename = void>
+      struct hasPermeabilityIsConstantPerCell
+        : public std::false_type
+      {};
+
+      template<typename T>
+      struct hasPermeabilityIsConstantPerCell<
+        T,
+        void_t<decltype(std::declval<T>().permeabilityIsConstantPerCell())>
+        >
+        : public std::true_type
+      {};
+
+      template<typename T>
+      DUNE_DEPRECATED_MSG("Starting from PDELab 2.6, parameter classes must have a method `bool permeabilityIsConstantPerCell()`. For now, we assume a default value of true.")
+      constexpr
+      std::enable_if_t<
+        not hasPermeabilityIsConstantPerCell<T>::value,
+        bool
+        >
+      permeabilityIsConstantPerCell(const T& param)
+      {
+        return true;
+      }
+
+      template<typename T>
+      constexpr
+      std::enable_if_t<
+        hasPermeabilityIsConstantPerCell<T>::value,
+        bool
+        >
+      permeabilityIsConstantPerCell(const T& param)
+      {
+        return param.permeabilityIsConstantPerCell();
+      }
+
+    } // namespace Impl
+
+  #endif // DOXYGEN
 
     /** \brief Traits class for convection diffusion parameters
      *
@@ -70,16 +118,18 @@ namespace Dune {
      *
      * A parameter class for the linear convection-diffusion equation
      * \f{align*}{
-     *   -\nabla\cdot(A(x) \nabla u) + b(x)\cdot \nabla u + c(x)u &=& f \mbox{ in } \Omega,  \\
-     *                                                          u &=& g \mbox{ on } \partial\Omega_D \\
-     *                            (b(x,u) - A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_N \\
-     *                                    -(A(x)\nabla u) \cdot n &=& o \mbox{ on } \partial\Omega_O
+     *   \nabla\cdot(-A(x) \nabla u + b(x) u) + c(x)u &=& f \mbox{ in } \Omega,  \\
+     *                                              u &=& g \mbox{ on } \partial\Omega_D \\
+     *                (b(x) u - A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_N \\
+     *                        -(A(x)\nabla u) \cdot n &=& o \mbox{ on } \partial\Omega_O
      * \f}
      * Note:
      *  - This formulation is valid for velocity fields which are non-divergence free.
      *  - Outflow boundary conditions should only be set on the outflow boundary
+     *  - A is evaluated cell-wise by default. If you want more evaluations per cell, set permeabilityIsConstantPerCell() to false.
      *
-     * \tparam T a traits class defining the necessary types
+     * \tparam GV The GridView type
+     * \tparam RF The range field type
      */
     template<typename GV, typename RF>
     class ConvectionDiffusionModelProblem
@@ -88,6 +138,12 @@ namespace Dune {
 
     public:
       typedef ConvectionDiffusionParameterTraits<GV,RF> Traits;
+
+      //! tensor diffusion constant per cell? return false if you want more than one evaluation of A per cell.
+      static constexpr bool permeabilityIsConstantPerCell()
+      {
+        return true;
+      }
 
       //! tensor diffusion coefficient
       typename Traits::PermTensorType

@@ -1,15 +1,10 @@
 PDELab
 ======
 
-This is the 2.6.0 version of PDELab, a PDE discretization toolkit built
-on top of the [DUNE][] framework. It is intended to be used with the 2.5
+This is the 2.7-git version of PDELab, a PDE discretization toolkit built
+on top of the [DUNE][] framework. It is intended to be used with the 2.7
 release of the Dune core modules. License information can be found in the file
 [LICENSE.md][].
-
-PDELab 2.6 is mainly a bugfix and cleanup release. There is one notable exception: The release
-introduces a first step of our transition to use [dune-functions][]. For that reason,
-*dune-functions is a hard requirement of dune-pdelab* from this release forward.
-For details and an overview of the bug fixes in this release, see the changelog below.
 
 If you need help, please ask on our [mailing list][]. Bugs can also be submitted
 to the [PDELab bugtracker][] instead.
@@ -17,8 +12,15 @@ to the [PDELab bugtracker][] instead.
 Changes
 =======
 
+PDELab 2.7
+----------
+
+
 PDELab 2.6
 ----------
+
+-   This release introduces a first step of our transition to use [dune-functions][]. For that reason,
+    *dune-functions is now a hard requirement of dune-pdelab*.
 
 -   Finite element maps must now export their dimension as a nested `static constexpr int dimension`.
     Existing finite elements should mostly still work in this version (although some features will
@@ -66,6 +68,18 @@ PDELab 2.6
     overintegration order that gets added to the base integration order. Unfortunately, it is
     difficult to issue a compile warning for this behavior change. **Please make sure to update your
     code accordingly, otherwise you might experience severe slowdowns when using this operator!**
+
+-   An implementation of the GenEO (Generalized Eigenproblems in the Overlap) spectral coarse space
+    (see Spillane et al., 2014) is introduced. It can be applied as an extremely robust two-level additive
+    Schwarz method or as an efficient coarse model. This implementation has been shown to scale well up to
+    2048 processor cores (see Reinarz et al., 2018), solving a highly heterogeneous and anisotropic
+    linear elasticity problem with 170 mio DOFs at around two minutes. Its structure allows to
+    easily introduce other coarse spaces, both global and defined per-subdomain.
+
+    Applying this coarse space requires two particular matrices to be set up for the generalized eigenproblems.
+    One is defined as the discretization matrix with Neumann conditions at processor boundaries; the other
+    is the same, however zeroed out away from the overlap region. Tools are provided to easily reuse the usual
+    discretization matrix assembly. For an example, see the GenEO unit test included in PDELab.
 
 
 PDELab 2.5
