@@ -1,7 +1,7 @@
 PDELab
 ======
 
-This is the 2.6.0 version of PDELab, a PDE discretization toolkit built
+This is the 2.6.0-rc1 version of PDELab, a PDE discretization toolkit built
 on top of the [DUNE][] framework. It is intended to be used with the 2.5
 release of the Dune core modules. License information can be found in the file
 [LICENSE.md][].
