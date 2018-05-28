@@ -1,8 +1,8 @@
 # dune module information file
 
 Module: dune-pdelab
-Version: 2.5-dev
+Version: 2.6.0-rc1
 Maintainer: dune-pdelab@lists.dune-project.org
-Depends: dune-grid (>= 2.5) dune-localfunctions (>= 2.5) dune-istl (>= 2.5) dune-typetree (>= 2.5) dune-functions (>= 2.5)
+Depends: dune-grid (>= 2.6) dune-localfunctions (>= 2.6) dune-istl (>= 2.6) dune-typetree (>= 2.6) dune-functions (>= 2.6)
 Suggests: dune-alugrid
 Whitespace-Hook: Yes
