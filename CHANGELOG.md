@@ -1,15 +1,10 @@
 PDELab
 ======
 
-This is the 2.6.0 version of PDELab, a PDE discretization toolkit built
-on top of the [DUNE][] framework. It is intended to be used with the 2.5
+This is the 2.7-git version of PDELab, a PDE discretization toolkit built
+on top of the [DUNE][] framework. It is intended to be used with the 2.7
 release of the Dune core modules. License information can be found in the file
 [LICENSE.md][].
-
-PDELab 2.6 is mainly a bugfix and cleanup release. There is one notable exception: The release
-introduces a first step of our transition to use [dune-functions][]. For that reason,
-*dune-functions is a hard requirement of dune-pdelab* from this release forward.
-For details and an overview of the bug fixes in this release, see the changelog below.
 
 If you need help, please ask on our [mailing list][]. Bugs can also be submitted
 to the [PDELab bugtracker][] instead.
@@ -17,8 +12,15 @@ to the [PDELab bugtracker][] instead.
 Changes
 =======
 
+PDELab 2.7
+----------
+
+
 PDELab 2.6
 ----------
+
+-   This release introduces a first step of our transition to use [dune-functions][]. For that reason,
+    *dune-functions is now a hard requirement of dune-pdelab*.
 
 -   Finite element maps must now export their dimension as a nested `static constexpr int dimension`.
     Existing finite elements should mostly still work in this version (although some features will
