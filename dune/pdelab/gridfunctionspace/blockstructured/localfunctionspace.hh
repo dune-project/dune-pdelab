@@ -189,18 +189,6 @@ namespace Dune{
       typedef typename BaseT::Traits::IndexContainer::size_type I;
       typedef typename BaseT::Traits::IndexContainer::size_type LocalIndex;
 
-      template<typename>
-      friend struct PropagateGlobalStorageVisitor;
-
-      template<typename>
-      friend struct ClearSizeVisitor;
-
-      template<typename,bool>
-      friend struct ComputeSizeVisitor;
-
-      template<typename,bool>
-      friend struct FillIndicesVisitor;
-
     public:
 
       LocalFunctionSpace(const GFS & gfs)
