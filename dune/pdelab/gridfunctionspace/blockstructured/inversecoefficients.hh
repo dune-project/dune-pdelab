@@ -27,7 +27,7 @@ namespace Dune{
 
         const auto& coeffs = fe.localCoefficients();
 
-        for (int i = 0; i < coeffs.size(); ++i) {
+        for (std::size_t i = 0; i < coeffs.size(); ++i) {
           const auto& l = coeffs.localKey(i);
           container[l.codim()][l.subEntity()][l.index()] = i;
         }
@@ -77,20 +77,20 @@ namespace Dune{
 
       void setupFaces() {
         if (d > 2) {
-          for (int i = 0; i < container[d - 2].size(); ++i) {
+          for (std::size_t i = 0; i < container[d - 2].size(); ++i) {
             container[d - 2][i].resize(Dune::Power<d - 1>::eval(k * blocks - 1));
           }
         }
       }
       void setupEdges() {
         if (d > 1){
-          for (int i = 0; i < container[d - 1].size(); ++i) {
+          for (std::size_t i = 0; i < container[d - 1].size(); ++i) {
             container[d - 1][i].resize(k * blocks - 1);
           }
         }
       }
       void setupVertices() {
-        for (int i = 0; i < container[d].size(); ++i) {
+        for (std::size_t i = 0; i < container[d].size(); ++i) {
           container[d][i].resize(1);
         }
       }

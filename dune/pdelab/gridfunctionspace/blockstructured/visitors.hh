@@ -68,7 +68,7 @@ namespace Dune{
       template<typename Node, typename Child, typename TreePath, typename ChildIndex>
       void afterChild(const Node& node, const Child& child, TreePath treePath, ChildIndex childIndex)
       {
-        for (int i = 0; i < child.nLeafs; ++i)
+        for (std::size_t i = 0; i < child.nLeafs; ++i)
           for (auto &codim: (*node._subentityWiseDOFs_ptr)[child.offsetLeafs + i])
             for (auto &subentity: codim)
               subentity.treeIndex().push_back(childIndex);

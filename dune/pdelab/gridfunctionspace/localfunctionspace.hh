@@ -298,12 +298,12 @@ namespace Dune {
       std::shared_ptr<GFS const> pgfs;
       typename Traits::DOFIndexContainer _dof_index_storage;
       typename Traits::DOFIndexContainer* _dof_indices;
+      typename Traits::DOFIndexSubentityWiseContainer _subentityWiseDOFs;
+      typename Traits::DOFIndexSubentityWiseContainer* _subentityWiseDOFs_ptr;
       typename Traits::IndexContainer::size_type n;
       typename Traits::IndexContainer::size_type offset;
       typename Traits::IndexContainer::size_type nLeafs;
       typename Traits::IndexContainer::size_type offsetLeafs;
-      typename Traits::DOFIndexSubentityWiseContainer _subentityWiseDOFs;
-      typename Traits::DOFIndexSubentityWiseContainer* _subentityWiseDOFs_ptr;
     };
 
     //! traits for local function space on a gridview

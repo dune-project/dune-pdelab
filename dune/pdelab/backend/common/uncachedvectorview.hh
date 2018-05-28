@@ -309,12 +309,12 @@ namespace Dune {
       template<typename LC>
       void read(LC& local_container) const
       {
-        for (int leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
-          for (int c = 0; c < cache().codims(); ++c) {
-            for (int s = 0; s < cache().subentities(c); ++s) {
+        for (std::size_t leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
+          for (std::size_t c = 0; c < cache().codims(); ++c) {
+            for (std::size_t s = 0; s < cache().subentities(c); ++s) {
               // evaluate consecutive index of subentity
               auto container_index = this->cache().containerIndex(leaf, s, c);
-              for (int i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
+              for (std::size_t i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
                 Dune::PDELab::accessBaseContainer(local_container)[cache().localIndex(leaf, s, c, i)] =
                     this->container()[container_index];
                 container_index[0]++;
@@ -377,12 +377,12 @@ namespace Dune {
       template<typename LC>
       void write(const LC& local_container)
       {
-        for (int leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
-          for (int c = 0; c < cache().codims(); ++c) {
-            for (int s = 0; s < cache().subentities(c); ++s) {
+        for (std::size_t leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
+          for (std::size_t c = 0; c < cache().codims(); ++c) {
+            for (std::size_t s = 0; s < cache().subentities(c); ++s) {
               // evaluate consecutive index of subentity
               auto container_index = this->cache().containerIndex(leaf, s, c);
-              for (int i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
+              for (std::size_t i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
                 this->container()[container_index] =
                     Dune::PDELab::accessBaseContainer(local_container)[cache().localIndex(leaf, s, c, i)];
                 container_index[0]++;
@@ -395,12 +395,12 @@ namespace Dune {
       template<typename LC>
       void add(const LC& local_container)
       {
-        for (int leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
-          for (int c = 0; c < cache().codims(); ++c) {
-            for (int s = 0; s < cache().subentities(c); ++s) {
+        for (std::size_t leaf = 0; leaf < cache().numberOfLeafs(); ++leaf) {
+          for (std::size_t c = 0; c < cache().codims(); ++c) {
+            for (std::size_t s = 0; s < cache().subentities(c); ++s) {
               // evaluate consecutive index of subentity
               auto container_index = this->cache().containerIndex(leaf, s, c);
-              for (int i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
+              for (std::size_t i = 0; i < cache().sizeOfLocalDOFs(leaf, s, c); ++i) {
                 this->container()[container_index] +=
                     Dune::PDELab::accessBaseContainer(local_container)[cache().localIndex(leaf, s, c, i)];
                 container_index[0]++;

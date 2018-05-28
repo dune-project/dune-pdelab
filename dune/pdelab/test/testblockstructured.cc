@@ -58,13 +58,13 @@ public:
 
     auto lfsu_1 = child(lfsu, _1);
 
-    for (int i = 0; i < lfsu_0_0.size(); ++i) {
+    for (std::size_t i = 0; i < lfsu_0_0.size(); ++i) {
       r.accumulate(lfsu_0_0, i, 0);
     }
-    for (int i = 0; i < lfsu_0_1.size(); ++i) {
+    for (std::size_t i = 0; i < lfsu_0_1.size(); ++i) {
       r.accumulate(lfsu_0_1, i, 1);
     }
-    for (int i = 0; i < lfsu_1.size(); ++i) {
+    for (std::size_t i = 0; i < lfsu_1.size(); ++i) {
       r.accumulate(lfsu_1, i, 2);
     }
   }
@@ -100,7 +100,7 @@ void testBlockstructuredLeafLFS(const TestData &td) {
   auto pcompareLFS = setupPDELabLFS(td.pLeafGFS);
 
   auto coeffs = plfs->finiteElement().localCoefficients();
-  for (int i = 0; i < pcompareLFS->size(); ++i) {
+  for (std::size_t i = 0; i < pcompareLFS->size(); ++i) {
     auto localKey = coeffs.localKey(i);
     if(localKey.index() == 0) {
       assert(lfs_indices[0].index(localKey.subEntity(), localKey.codim()) == pcompareLFS->dofIndex(i));
@@ -123,7 +123,7 @@ void testBlockstructuredTreeLFS(const TestData &td) {
 
     int leaf = Dune::TypeTree::child(*lfs_ptr, TreePath).offsetLeafs;
 
-    for (int i = 0; i < coeffs.size(); ++i) {
+    for (std::size_t i = 0; i < coeffs.size(); ++i) {
       auto localKey = coeffs.localKey(i);
 
       if(localKey.index() == 0)
@@ -164,7 +164,7 @@ void testBlockstructuredLFSC(const TestData &td) {
 
     int leaf = Dune::TypeTree::child(*plfs, TreePath).offsetLeafs;
 
-    for (int i = 0; i < coeffs.size(); ++i) {
+    for (std::size_t i = 0; i < coeffs.size(); ++i) {
       auto localKey = coeffs.localKey(i);
 
       if(localKey.index() == 0) {
@@ -199,7 +199,7 @@ void testBlockstructuredUncachedVectorView(const TestData &td) {
   vectorView.add(local_read_from);
   vectorView.read(local_write_to);
 
-  for (int i = 0; i < vectorView.size(); ++i)
+  for (std::size_t i = 0; i < vectorView.size(); ++i)
     assert(local_write_to[i] == local_read_from[i]);
 }
 
@@ -226,7 +226,7 @@ void testBlockstructuredGridOperator(const TestData &td) {
   go.residual(x, r);
   go_compare.residual(x, r_compare);
 
-  for (int i = 0; i < r.N(); ++i) {
+  for (std::size_t i = 0; i < r.N(); ++i) {
     assert((*r.storage())[i] == (*r_compare.storage())[i]);
   }
 }
