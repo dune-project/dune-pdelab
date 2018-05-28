@@ -73,13 +73,13 @@ namespace Dune{
         TypeTree::forEachLeafNode(_lfs, [this,&refEl,&subentityWiseDOFs] (auto& Node, auto& TreePath){
           const auto leaf = Node.offsetLeafs;
 
-          this->localDOFsOffset[leaf] = Node.offset;
+          localDOFsOffset[leaf] = Node.offset;
 
           for (int c = 0; c < refEl.dimension + 1; ++c)
             for (int s = 0; s < refEl.size(c); ++s)
               // evaluate consecutive index of subentity
-              this->_lfs.gridFunctionSpace().ordering().mapIndex(subentityWiseDOFs[leaf].indexView(s, c),
-                                                                 this->globalContainerIndices[leaf].index(s, c));
+              _lfs.gridFunctionSpace().ordering().mapIndex(subentityWiseDOFs[leaf].indexView(s, c),
+                                                           globalContainerIndices[leaf].index(s, c));
         });
       }
 
