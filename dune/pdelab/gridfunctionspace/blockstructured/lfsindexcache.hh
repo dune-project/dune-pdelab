@@ -8,6 +8,7 @@
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/blockstructured/indexWrapper.hh>
 #include <dune/common/power.hh>
+#include <map>
 #include "inversecoefficients.hh"
 
 namespace Dune{
@@ -55,7 +56,7 @@ namespace Dune{
           : Base(lfs, constraints, enable_constraints_caching)
           ,_lfs(lfs)
           , localDOFsOffset(Dune::TypeTree::TreeInfo<LFS>::leafCount)
-          , qkDescriptors(Dune::TypeTree::TreeInfo<LFS>::leafCount)
+          , localCoefficients(Dune::TypeTree::TreeInfo<LFS>::leafCount)
       {
       }
 
@@ -102,19 +103,19 @@ namespace Dune{
         return {};
       }
 
-      std::size_t numberOfLeafs() const
+      constexpr std::size_t numberOfLeafs() const
       {
         return Dune::TypeTree::TreeInfo<LFS>::leafCount;
       }
 
       std::size_t sizeOfLocalDOFs(size_type leaf, size_type s, size_type c) const
       {
-        return inverseLocalCoefficientsMap.at(qkDescriptors[leaf]).container[c][s].size();
+        return localCoefficients[leaf]->container[c][s].size();
       }
 
       std::size_t localIndex(size_type leaf, size_type s, size_type c, size_type i) const
       {
-        return inverseLocalCoefficientsMap.at(qkDescriptors[leaf]).container[c][s][i] + localDOFsOffset[leaf];
+        return localCoefficients[leaf]->container[c][s][i] + localDOFsOffset[leaf];
       }
 
     private:
@@ -123,9 +124,14 @@ namespace Dune{
       {
         TypeTree::forEachLeafNode(_lfs, [this] (auto& Node, auto& TreePath){
           const auto& fe = Node.finiteElement();
-          this->qkDescriptors[Node.offsetLeafs] = BlockstructuredQkDescriptor(fe);
+          const auto qkDescriptor = BlockstructuredQkDescriptor(fe);
+          inverseLocalCoefficientsMap.try_emplace(qkDescriptor, fe);
+        });
 
-          inverseLocalCoefficientsMap.try_emplace(this->qkDescriptors[Node.offsetLeafs], fe);
+        TypeTree::forEachLeafNode(_lfs, [this] (auto& Node, auto& TreePath){
+          const auto& fe = Node.finiteElement();
+          const auto qkDescriptor = BlockstructuredQkDescriptor(fe);
+          localCoefficients[Node.offsetLeafs] = &inverseLocalCoefficientsMap.at(qkDescriptor);
         });
       }
 
@@ -133,7 +139,7 @@ namespace Dune{
       std::vector<Dune::Blockstructured::SubentityWiseIndexWrapper<CI, GFS::Traits::GridView::dimension>> globalContainerIndices;
       std::map<BlockstructuredQkDescriptor, InverseQkLocalCoefficients<GFS::Traits::GridView::dimension>> inverseLocalCoefficientsMap;
       std::vector<std::size_t> localDOFsOffset;
-      std::vector<BlockstructuredQkDescriptor> qkDescriptors;
+      std::vector<const InverseQkLocalCoefficients<GFS::Traits::GridView::dimension>*> localCoefficients;
     };
   }
 }
