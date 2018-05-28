@@ -60,7 +60,7 @@ namespace Dune {
         >::type
       store(DOFIndex& dof_index, const GeometryType& gt, SizeType entity_index, IndexType tree_index)
       {
-        dof_index.treeIndex().clear();
+        dof_index.clear();
         dof_index.entityIndex()[0] = GlobalGeometryTypeIndex::index(gt);
         dof_index.entityIndex()[1] = entity_index;
         dof_index.treeIndex().push_back(tree_index);
