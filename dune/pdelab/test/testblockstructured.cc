@@ -132,31 +132,33 @@ void testBlockstructuredTreeLFS(const TestData &td) {
   });
 }
 
-
-template<typename PGFS>
-auto setupBlockstructuredLFSAndLFSC(PGFS pgfs) {
-  auto plfs = setupBlockstructuredLFS(pgfs);
-  using LFS = typename decltype(plfs)::element_type;
-  using LFSC = Dune::Blockstructured::LFSIndexCache<LFS, Dune::PDELab::EmptyTransformation>;
-  auto plfsc = std::make_shared<LFSC>(*plfs, Dune::PDELab::EmptyTransformation(), false);
+template<typename LFSC, typename LFS>
+auto createAndUpdateLFSC(const LFS& lfs)
+{
+  auto plfsc = std::make_shared<LFSC>(lfs, Dune::PDELab::EmptyTransformation(), false);
   plfsc->update();
-  return std::make_pair(plfs, plfsc);
+  return plfsc;
 }
 
-template<typename PGFS>
-auto setupPDELabLFSAndLFSC(PGFS pgfs) {
-  auto plfs = setupPDELabLFS(pgfs);
-  using LFS = typename decltype(plfs)::element_type;
+template<typename LFS>
+auto setupBlockstructutredLFSC(const LFS& lfs){
+  using LFSC = Dune::Blockstructured::LFSIndexCache<LFS, Dune::PDELab::EmptyTransformation>;
+  return createAndUpdateLFSC<LFSC>(lfs);
+}
+
+template<typename LFS>
+auto setupPDELabLFSC(const LFS& lfs){
   using LFSC = Dune::PDELab::LFSIndexCache<LFS, Dune::PDELab::EmptyTransformation>;
-  auto plfsc = std::make_shared<LFSC>(*plfs, Dune::PDELab::EmptyTransformation(), false);
-  plfsc->update();
-  return std::make_pair(plfs, plfsc);
+  return createAndUpdateLFSC<LFSC>(lfs);
 }
 
 template<typename TestData>
 void testBlockstructuredLFSC(const TestData &td) {
-  auto[plfs, plfsc] = setupBlockstructuredLFSAndLFSC(td.pCompositeGFS);
-  auto[compare_plfs, compare_plfsc] = setupPDELabLFSAndLFSC(td.pCompositeGFS);
+  auto plfs = setupBlockstructuredLFS(td.pCompositeGFS);
+  auto plfsc = setupBlockstructutredLFSC(*plfs);
+
+  auto compare_plfs = setupPDELabLFS(td.pCompositeGFS);
+  auto compare_plfsc = setupPDELabLFSC(*compare_plfs);
 
   Dune::TypeTree::forEachLeafNode(*compare_plfs, [compare_plfsc, plfs, plfsc] (auto& Node, auto& TreePath)
   {
@@ -180,7 +182,8 @@ void testBlockstructuredLFSC(const TestData &td) {
 
 template<typename TestData>
 void testBlockstructuredUncachedVectorView(const TestData &td) {
-  auto[_, plfsc] = setupBlockstructuredLFSAndLFSC(td.pCompositeGFS);
+  auto plfs = setupBlockstructuredLFS(td.pCompositeGFS);
+  auto plfsc = setupBlockstructutredLFSC(*plfs);
 
   std::vector<int> local_write_to(plfsc->size(), 0);
   std::vector<int> local_read_from(plfsc->size());
