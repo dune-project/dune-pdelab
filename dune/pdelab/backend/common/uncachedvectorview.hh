@@ -5,7 +5,6 @@
 
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
-#include <dune/geometry/referenceelements.hh>
 #include <dune/pdelab/gridfunctionspace/blockstructured/lfsindexcache.hh>
 
 namespace Dune {
