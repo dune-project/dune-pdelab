@@ -33,11 +33,11 @@ namespace Dune {
 
       BlockstructuredQkLocalFiniteElementMap(const GV &gv) {}
 
-      bool fixedSize() const {
+      static constexpr bool fixedSize() {
         return true;
       }
 
-      bool hasDOFs(int codim) const {
+      static constexpr bool hasDOFs(int codim) {
         if (DOFs1d == 1)
           return codim == 0;
         else if (DOFs1d == 2)
@@ -46,14 +46,14 @@ namespace Dune {
           return 1;
       }
 
-      std::size_t size(GeometryType gt) const {
+      static constexpr std::size_t size(GeometryType gt) {
         std::size_t acc = 1;
         for (std::size_t i = 0; i < gt.dim(); ++i)
           acc *= DOFs1d - 2;
         return acc;
       }
 
-      std::size_t maxLocalSize() const {
+      static constexpr std::size_t maxLocalSize() {
         return Dune::StaticPower<DOFs1d, GV::dimension>::power;
       }
 
