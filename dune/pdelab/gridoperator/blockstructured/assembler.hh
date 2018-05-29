@@ -2,8 +2,8 @@
 // Created by marckoch on 09/05/18.
 //
 
-#ifndef DUNE_PDELAB_ASSEMBLER_HH
-#define DUNE_PDELAB_ASSEMBLER_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_BLOCKSTRUCTURED_ASSEMBLER_HH
+#define DUNE_PDELAB_GRIDOPERATOR_BLOCKSTRUCTURED_ASSEMBLER_HH
 
 #include <dune/pdelab/constraints/common/constraintstransformation.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspacetags.hh>
@@ -309,4 +309,4 @@ namespace Dune{
 }
 
 
-#endif //DUNE_PDELAB_ASSEMBLER_HH
+#endif //DUNE_PDELAB_GRIDOPERATOR_BLOCKSTRUCTURED_ASSEMBLER_HH

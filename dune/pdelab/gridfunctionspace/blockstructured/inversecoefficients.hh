@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_INVERSECOEFFICIENTS_HH
-#define DUNE_PDELAB_INVERSECOEFFICIENTS_HH
+#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_INVERSECOEFFICIENTS_HH
+#define DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_INVERSECOEFFICIENTS_HH
 
 #include <dune/localfunctions/common/localkey.hh>
 #include <dune/common/power.hh>
@@ -98,4 +98,4 @@ namespace Dune{
   }
 }
 
-#endif //DUNE_PDELAB_INVERSECOEFFICIENTS_HH
+#endif //DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_INVERSECOEFFICIENTS_HH

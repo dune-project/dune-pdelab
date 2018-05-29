@@ -2,8 +2,8 @@
 // Created by marckoch on 09/05/18.
 //
 
-#ifndef DUNE_PDELAB_LFSINDEXCACHE_HH
-#define DUNE_PDELAB_LFSINDEXCACHE_HH
+#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_LFSINDEXCACHE_HH
+#define DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_LFSINDEXCACHE_HH
 
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/blockstructured/indexWrapper.hh>
@@ -144,4 +144,4 @@ namespace Dune{
 }
 
 
-#endif //DUNE_PDELAB_LFSINDEXCACHE_HH
+#endif //DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_LFSINDEXCACHE_HH

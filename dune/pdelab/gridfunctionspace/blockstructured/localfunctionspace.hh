@@ -2,8 +2,8 @@
 // Created by marckoch on 09/05/18.
 //
 
-#ifndef DUNE_PDELAB_LOCALFUNCTIONSPACE_HH
-#define DUNE_PDELAB_LOCALFUNCTIONSPACE_HH
+#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_LOCALFUNCTIONSPACE_HH
+#define DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_LOCALFUNCTIONSPACE_HH
 
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/blockstructured/visitors.hh>
@@ -256,4 +256,4 @@ namespace Dune{
   }
 }
 
-#endif //DUNE_PDELAB_LOCALFUNCTIONSPACE_HH
+#endif //DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_LOCALFUNCTIONSPACE_HH

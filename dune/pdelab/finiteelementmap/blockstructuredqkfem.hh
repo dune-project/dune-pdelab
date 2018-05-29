@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-#ifndef DUNE_MYPOISSON_QKFEM_REORDER_HH
-#define DUNE_MYPOISSON_QKFEM_REORDER_HH
+#ifndef DUNE_PDELAB_FINITEELEMENTMAP_BLOCKSTRUCTUREDQKFEM_HH
+#define DUNE_PDELAB_FINITEELEMENTMAP_BLOCKSTRUCTUREDQKFEM_HH
 
 #include <dune/pdelab/finiteelementmap/finiteelementmap.hh>
 #include <dune/localfunctions/lagrange/qk.hh>
@@ -61,4 +61,4 @@ namespace Dune {
 
   }
 }
-#endif //DUNE_MYPOISSON_QKFEM_HH
+#endif //DUNE_PDELAB_FINITEELEMENTMAP_BLOCKSTRUCTUREDQKFEM_HH

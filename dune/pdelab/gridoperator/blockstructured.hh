@@ -2,8 +2,8 @@
 // Created by marckoch on 09/05/18.
 //
 
-#ifndef DUNE_PDELAB_BLOCKSTRUCTURED_HH
-#define DUNE_PDELAB_BLOCKSTRUCTURED_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_BLOCKSTRUCTURED_HH
+#define DUNE_PDELAB_GRIDOPERATOR_BLOCKSTRUCTURED_HH
 
 #include <dune/pdelab/gridoperator/blockstructured/localassembler.hh>
 #include <dune/pdelab/gridoperator/blockstructured/assembler.hh>
@@ -83,4 +83,4 @@ namespace Dune{
   }
 }
 
-#endif //DUNE_PDELAB_BLOCKSTRUCTURED_HH
+#endif //DUNE_PDELAB_GRIDOPERATOR_BLOCKSTRUCTURED_HH

@@ -2,8 +2,8 @@
 // Created by marckoch on 14/05/18.
 //
 
-#ifndef DUNE_PDELAB_VISITORS_HH
-#define DUNE_PDELAB_VISITORS_HH
+#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_VISITORS_HH
+#define DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_VISITORS_HH
 
 #include <dune/typetree/visitor.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
@@ -82,4 +82,4 @@ namespace Dune{
   }
 }
 
-#endif //DUNE_PDELAB_VISITORS_HH
+#endif //DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_VISITORS_HH

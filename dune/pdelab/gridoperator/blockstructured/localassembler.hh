@@ -2,8 +2,8 @@
 // Created by marckoch on 09/05/18.
 //
 
-#ifndef DUNE_BLOCKSTRUCTURED_LOCALASSEMBLER_HH
-#define DUNE_BLOCKSTRUCTURED_LOCALASSEMBLER_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_BLOCKSTRUCTURED_LOCALASSEMBLER_HH
+#define DUNE_PDELAB_GRIDOPERATOR_BLOCKSTRUCTURED_LOCALASSEMBLER_HH
 
 #include <dune/pdelab/gridoperator/default/localassembler.hh>
 #include <dune/pdelab/gridfunctionspace/blockstructured/localfunctionspace.hh>
@@ -70,4 +70,4 @@ namespace Dune{
 }
 
 
-#endif //DUNE_PDELAB_LOCALASSEMBLER_HH
+#endif //DUNE_PDELAB_GRIDOPERATOR_BLOCKSTRUCTURED_LOCALASSEMBLER_HH
