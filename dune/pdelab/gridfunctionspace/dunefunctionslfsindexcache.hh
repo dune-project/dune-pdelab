@@ -200,7 +200,7 @@ namespace Dune {
 
       CI containerIndex(const DI& i) const
       {
-        DUNE_THROW(NotImplemented, "containerIndex");
+        return _lfs.containerIndex(i);
       }
 
       bool isConstrained(size_type i) const
