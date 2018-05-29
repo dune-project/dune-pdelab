@@ -39,6 +39,7 @@ Copyright holders
 | 2014--2018 | Oliver Sander              |
 | 2015       | Linus Seelinger            |
 | 2017       | Felix Schindler            |
+| 2018       | Sophie Schrader            |
 | 2016       | Liesel Schumacher          |
 | 2012       | Nicolas Schwenck           |
 | 2013       | Bård Skaflestad            |
