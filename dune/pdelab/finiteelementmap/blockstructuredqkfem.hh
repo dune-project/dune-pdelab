@@ -8,18 +8,16 @@
 #include <dune/localfunctions/lagrange/qk.hh>
 
 namespace Dune {
-  namespace Blockstructured {
-
-    template<typename D, typename R, int d, int k_, int blocks_>
-    struct QklocalFiniteElementWrapper
-        : public Dune::QkLocalFiniteElement<D, R, d, k_ * blocks_> {
-      static constexpr int k = k_;
-      static constexpr int blocks = blocks_;
-    };
-  }
-
   namespace PDELab {
+    namespace Blockstructured {
 
+      template<typename D, typename R, int d, int k_, int blocks_>
+      struct QklocalFiniteElementWrapper
+          : public Dune::QkLocalFiniteElement<D, R, d, k_ * blocks_> {
+        static constexpr int k = k_;
+        static constexpr int blocks = blocks_;
+      };
+    }
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
     template<typename GV, typename D, typename R, std::size_t k, std::size_t blocks>

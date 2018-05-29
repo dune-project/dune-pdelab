@@ -260,11 +260,11 @@ namespace Dune {
 
 
     template<typename V, typename LFS, typename C>
-    struct ConstUncachedVectorView<V, Dune::Blockstructured::LFSIndexCache<LFS,C>>
+    struct ConstUncachedVectorView<V, Dune::PDELab::Blockstructured::LFSIndexCache<LFS,C>>
     {
 
       typedef typename std::remove_const<V>::type Container;
-      typedef Dune::Blockstructured::LFSIndexCache<LFS,C> LFSCache;
+      typedef Dune::PDELab::Blockstructured::LFSIndexCache<LFS,C> LFSCache;
 
       typedef typename Container::E ElementType;
       typedef typename Container::size_type size_type;
@@ -348,15 +348,15 @@ namespace Dune {
 
 
     template<typename V, typename LFS, typename C>
-    struct UncachedVectorView<V, Dune::Blockstructured::LFSIndexCache<LFS,C>>
-        : public ConstUncachedVectorView<V, Dune::Blockstructured::LFSIndexCache<LFS,C>>
+    struct UncachedVectorView<V, Dune::PDELab::Blockstructured::LFSIndexCache<LFS,C>>
+        : public ConstUncachedVectorView<V, Dune::PDELab::Blockstructured::LFSIndexCache<LFS,C>>
     {
 
       typedef V Container;
       typedef typename Container::ElementType ElementType;
       typedef typename Container::size_type size_type;
 
-      typedef Dune::Blockstructured::LFSIndexCache<LFS,C> LFSCache;
+      typedef Dune::PDELab::Blockstructured::LFSIndexCache<LFS,C> LFSCache;
       typedef typename LFSCache::DOFIndex DOFIndex;
       typedef typename LFSCache::ContainerIndex ContainerIndex;
 

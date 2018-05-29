@@ -80,7 +80,7 @@ auto createAndBindLFS(PGFS pgfs) {
 
 template<typename PGFS>
 auto setupBlockstructuredLFS(PGFS pgfs) {
-  using LFS = Dune::Blockstructured::LocalFunctionSpace<typename PGFS::element_type>;
+  using LFS = Dune::PDELab::Blockstructured::LocalFunctionSpace<typename PGFS::element_type>;
   return createAndBindLFS<LFS>(pgfs);
 }
 
@@ -142,7 +142,7 @@ auto createAndUpdateLFSC(const LFS& lfs)
 
 template<typename LFS>
 auto setupBlockstructuredLFSC(const LFS &lfs){
-  using LFSC = Dune::Blockstructured::LFSIndexCache<LFS, Dune::PDELab::EmptyTransformation>;
+  using LFSC = Dune::PDELab::Blockstructured::LFSIndexCache<LFS, Dune::PDELab::EmptyTransformation>;
   return createAndUpdateLFSC<LFSC>(lfs);
 }
 
@@ -209,7 +209,7 @@ void testBlockstructuredUncachedVectorView(const TestData &td) {
 template<typename TestData>
 void testBlockstructuredGridOperator(const TestData &td) {
   using MatrixBackend = Dune::PDELab::ISTL::BCRSMatrixBackend<>;
-  using GO = Dune::Blockstructured::BlockstructuredGridOperator<
+  using GO = Dune::PDELab::Blockstructured::BlockstructuredGridOperator<
       typename TestData::CompositeGFS, typename TestData::CompositeGFS,
       LocalOperator, MatrixBackend, double, double, double>;
   using GO_Compare = Dune::PDELab::GridOperator<
