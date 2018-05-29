@@ -250,6 +250,7 @@ namespace Dune {
 
       void clear()
       {
+        std::fill(_entity_index.begin(),_entity_index.end(),0);
         _tree_index.clear();
       }
 
