@@ -168,7 +168,78 @@ namespace Dune {
 
           LeafOrdering(const GridFunctionSpace& gfs)
             : _gfs(gfs)
-          {}
+          {
+            constexpr auto dim = GV::dimension;
+            const auto  gridView = _gfs.gridView();
+            const auto& indexSet = gridView.indexSet();
+
+            // Count how many dofs there are for each individual entity
+            std::vector<std::vector<size_type> > dofsPerEntity(GlobalGeometryTypeIndex::size(dim));
+            for (size_type codim=0; codim<=dim; codim++)
+              for (auto&& type : indexSet.types(codim))
+              {
+                dofsPerEntity[GlobalGeometryTypeIndex::index(type)].resize(gridView.size(type));
+                std::fill(dofsPerEntity[GlobalGeometryTypeIndex::index(type)].begin(),
+                          dofsPerEntity[GlobalGeometryTypeIndex::index(type)].end(), 0);
+              }
+
+            typename DFBasis::LocalView localView = _gfs.basis().localView();
+            for (auto&& element : elements(gridView))
+            {
+              localView.bind(element);
+              const auto refElement = ReferenceElements<typename GV::ctype,dim>::general(element.type());
+
+              const auto& localFiniteElement = localView.tree().finiteElement();
+
+              for (size_type i=0; i<localFiniteElement.size(); i++)
+              {
+                const auto& localKey = localFiniteElement.localCoefficients().localKey(i);
+
+                // Type of the entity that the current local dof is attached to
+                auto subentityTypeIndex = GlobalGeometryTypeIndex::index(refElement.type(localKey.subEntity(), localKey.codim()));
+
+                // Global index of the entity that the current local dof is attached to
+                auto subentityIndex = indexSet.subIndex(element, localKey.subEntity(), localKey.codim());
+
+                dofsPerEntity[subentityTypeIndex][subentityIndex]
+                  = std::max(dofsPerEntity[subentityTypeIndex][subentityIndex], (size_type)localKey.index()+1);
+              }
+            }
+
+            // Set up the nested container for the container indices
+            _containerIndices.resize(GlobalGeometryTypeIndex::size(dim));
+
+            for (size_type codim=0; codim<=dim; codim++)
+              for (auto&& type : indexSet.types(codim))
+              {
+                _containerIndices[GlobalGeometryTypeIndex::index(type)].resize(gridView.size(type));
+                for (size_type i=0; i<_containerIndices[GlobalGeometryTypeIndex::index(type)].size(); i++)
+                  _containerIndices[GlobalGeometryTypeIndex::index(type)][i].resize(dofsPerEntity[GlobalGeometryTypeIndex::index(type)][i]);
+              }
+
+            // Actually set the container indices for all dofs on all entities
+            for (auto&& element : elements(gridView))
+            {
+              localView.bind(element);
+              const auto refElement = ReferenceElements<typename GV::ctype,dim>::general(element.type());
+
+              const auto& localFiniteElement = localView.tree().finiteElement();
+
+              for (size_type i=0; i<localFiniteElement.size(); i++)
+              {
+                const auto& localKey = localFiniteElement.localCoefficients().localKey(i);
+
+                // Type of the entity that the current local dof is attached to
+                GeometryType subentityType = refElement.type(localKey.subEntity(), localKey.codim());
+
+                // Global index of the entity that the current local dof is attached to
+                auto subentityIndex = indexSet.subIndex(element, localKey.subEntity(), localKey.codim());
+
+                _containerIndices[GlobalGeometryTypeIndex::index(subentityType)][subentityIndex][localKey.index()].set({localView.index(i)});
+              }
+
+            }
+          }
 
           size_type size() const
           {
@@ -176,9 +247,9 @@ namespace Dune {
           }
 
           /** \brief Number of degrees of freedom per entity */
-          size_type size(const typename DOFIndex::EntityIndex&) const
+          size_type size(const typename DOFIndex::EntityIndex& entity) const
           {
-            DUNE_THROW(NotImplemented, "!");
+            return _containerIndices[entity[0]][entity[1]].size();
           }
 
           size_type maxLocalSize() const
@@ -197,9 +268,17 @@ namespace Dune {
             DUNE_THROW(NotImplemented, "!");
           }
 
+          ContainerIndex containerIndex(const DOFIndex& i) const
+          {
+            return _containerIndices[i.entityIndex()[0]][i.entityIndex()[1]][i.treeIndex()[0]];
+          }
+
         private:
 
           const GridFunctionSpace& _gfs;
+
+          // Container that contains the ContainerIndices for all dofs, accessible by entities
+          std::vector<std::vector<std::vector<ContainerIndex> > > _containerIndices;
         };
 
         /** \brief Root of the ordering tree
@@ -211,6 +290,8 @@ namespace Dune {
         struct Ordering
           : public TypeTree::CompositeNode<LeafOrdering>
         {
+          friend class LocalFunctionSpace<GridFunctionSpace>;
+
           using Traits = typename LeafOrdering::Traits;
 
           static const bool consume_tree_index = false;
@@ -269,6 +350,11 @@ namespace Dune {
           }
 
         private:
+
+          ContainerIndex containerIndex(const DOFIndex& i) const
+          {
+            return _leafOrdering.containerIndex(i);
+          }
 
           const LeafOrdering _leafOrdering;
 

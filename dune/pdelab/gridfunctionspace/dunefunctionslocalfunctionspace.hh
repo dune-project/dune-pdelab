@@ -157,6 +157,11 @@ namespace Dune {
 
       private:
 
+        typename GFS::Ordering::Traits::ContainerIndex containerIndex(const DOFIndex& i) const
+        {
+          return _gfs->ordering().containerIndex(i);
+        }
+
         std::shared_ptr<const GFS> _gfs;
         LocalView _local_view;
         TreePath _tree_path;
