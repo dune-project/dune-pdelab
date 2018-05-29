@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <map>
+#include <bitset>
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/typetraits.hh>
@@ -239,6 +240,30 @@ namespace Dune {
               }
 
             }
+
+            // Precompute for each codimension whether there is at least one entity with degrees of freedom,
+            // and whether all entities have the same number of dofs
+            for (size_type codim=0; codim<=dim; codim++)
+            {
+              _contains[codim] = false;
+              _contains[codim] = true;
+              for (auto&& type : indexSet.types(codim))
+              {
+                const auto& dofs = dofsPerEntity[GlobalGeometryTypeIndex::index(type)];
+
+                if (dofs[0] > 0)
+                  _contains[codim] = true;
+
+                for (size_type i=1; i<dofs.size(); i++)
+                {
+                  if (dofs[i] > 0)
+                    _contains[codim] = true;
+
+                  if (dofs[i-1] != dofs[i])
+                    _fixedSize[codim] = false;
+                }
+              }
+            }
           }
 
           size_type size() const
@@ -255,6 +280,20 @@ namespace Dune {
           size_type maxLocalSize() const
           {
             return _gfs.basis().localView().maxSize();
+          }
+
+          /** \brief True if there is at least one entity of the given codim that has a dof
+           */
+          bool contains(typename Traits::SizeType codim) const
+          {
+            return _contains[codim];
+          }
+
+          /** \brief True if all entities of the given codimension have the same number of dofs
+           */
+          bool fixedSize(typename Traits::SizeType codim) const
+          {
+            return _fixedSize[codim];
           }
 
           // child_index: Steffen sagt: unklar, im Zweifel einfach ignorieren
@@ -279,6 +318,15 @@ namespace Dune {
 
           // Container that contains the ContainerIndices for all dofs, accessible by entities
           std::vector<std::vector<std::vector<ContainerIndex> > > _containerIndices;
+
+          /** \brief True if there is at least one entity of the given codim
+           *         that has degrees of freedom
+           */
+          std::bitset<GV::dimension+1> _contains;
+
+          /** \brief True if all entities of the given codim have the same number of dofs
+           */
+          std::bitset<GV::dimension+1> _fixedSize;
         };
 
         /** \brief Root of the ordering tree
@@ -329,14 +377,14 @@ namespace Dune {
            */
           bool contains(typename Traits::SizeType codim) const
           {
-            DUNE_THROW(NotImplemented, "!");
+            return _leafOrdering.contains(codim);
           }
 
           /** \brief True if for all entities of the given codim the same number of data items has to be communicated
            */
           bool fixedSize(typename Traits::SizeType codim) const
           {
-            DUNE_THROW(NotImplemented, "!");
+            return _leafOrdering.fixedSize(codim);
           }
 
           template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
