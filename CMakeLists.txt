@@ -29,8 +29,13 @@ set(DUNE_TEST_MAGIC OFF)
 # libraries need to be added before the call to dune_enable_all_packages()
 # With cmake 3.1, one would use the MODULE_LIBRARIES argument of
 # dune_enable_all_packages() instead.
+
+if(NOT MINGW)
+  set(clock_cc "dune/pdelab/common/clock.cc")
+endif()
+
 dune_add_library(dunepdelab
-  dune/pdelab/common/clock.cc
+  ${clock_cc}
   dune/pdelab/common/hostname.cc
   dune/pdelab/common/logtag.cc
   )

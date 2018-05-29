@@ -1,6 +1,10 @@
+if(NOT MINGW)
+  set(clock_hh "clock.hh")
+endif()
+
 install(FILES benchmarkhelper.hh
               borderindexidcache.hh
-              clock.hh
+              ${clock_hh}
               crossproduct.hh
               dofindex.hh
               elementmapper.hh
