@@ -299,12 +299,20 @@ namespace Dune {
           // child_index: Steffen sagt: unklar, im Zweifel einfach ignorieren
           template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
           typename Traits::SizeType
-          extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& ei,
+          extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& entityIndex,
                                  typename Traits::SizeType child_index,
                                  CIOutIterator ci_out, const CIOutIterator ci_end,
                                  DIOutIterator dummy) const
           {
-            DUNE_THROW(NotImplemented, "!");
+            for (size_type i=0; i<_containerIndices[entityIndex[0]][entityIndex[1]].size(); i++)
+            {
+              *ci_out = _containerIndices[entityIndex[0]][entityIndex[1]][i];
+              ci_out++;
+            }
+
+            assert(ci_out==ci_end);
+
+            return _containerIndices[entityIndex[0]][entityIndex[1]].size();
           }
 
           ContainerIndex containerIndex(const DOFIndex& i) const
