@@ -141,7 +141,7 @@ auto createAndUpdateLFSC(const LFS& lfs)
 }
 
 template<typename LFS>
-auto setupBlockstructutredLFSC(const LFS& lfs){
+auto setupBlockstructuredLFSC(const LFS &lfs){
   using LFSC = Dune::Blockstructured::LFSIndexCache<LFS, Dune::PDELab::EmptyTransformation>;
   return createAndUpdateLFSC<LFSC>(lfs);
 }
@@ -155,7 +155,7 @@ auto setupPDELabLFSC(const LFS& lfs){
 template<typename TestData>
 void testBlockstructuredLFSC(const TestData &td) {
   auto plfs = setupBlockstructuredLFS(td.pCompositeGFS);
-  auto plfsc = setupBlockstructutredLFSC(*plfs);
+  auto plfsc = setupBlockstructuredLFSC(*plfs);
 
   auto compare_plfs = setupPDELabLFS(td.pCompositeGFS);
   auto compare_plfsc = setupPDELabLFSC(*compare_plfs);
@@ -183,7 +183,7 @@ void testBlockstructuredLFSC(const TestData &td) {
 template<typename TestData>
 void testBlockstructuredUncachedVectorView(const TestData &td) {
   auto plfs = setupBlockstructuredLFS(td.pCompositeGFS);
-  auto plfsc = setupBlockstructutredLFSC(*plfs);
+  auto plfsc = setupBlockstructuredLFSC(*plfs);
 
   std::vector<int> local_write_to(plfsc->size(), 0);
   std::vector<int> local_read_from(plfsc->size());
