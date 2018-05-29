@@ -152,7 +152,7 @@ void solvePoissonProblem()
   MatrixAdapter<MatrixType,VectorType,VectorType> op(stiffnessMatrix);
 
   // A preconditioner
-  SeqILU0<MatrixType,VectorType,VectorType> ilu0(stiffnessMatrix,1.0);
+  SeqILU<MatrixType,VectorType,VectorType> ilu0(stiffnessMatrix,1.0);
 
   // A preconditioned conjugate-gradient solver
   CGSolver<VectorType> cg(op,ilu0,1E-4,
