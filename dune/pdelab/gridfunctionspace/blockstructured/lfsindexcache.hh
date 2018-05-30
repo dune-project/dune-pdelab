@@ -64,8 +64,9 @@ namespace Dune{
 
           auto &subentityWiseDOFs = *lfs._subentityWiseDOFs_ptr;
 
-          globalContainerIndices.clear();
           globalContainerIndices.resize(numberOfLeafs());
+          for(auto& containerIndices: globalContainerIndices)
+            containerIndices.clear();
 
           TypeTree::forEachLeafNode(lfs, [this, &lfs, &refEl, &subentityWiseDOFs](auto &Node, auto &TreePath) {
             const auto leaf = Node.offsetLeafs;
