@@ -13,7 +13,7 @@ namespace Dune{
     namespace Blockstructured {
 
       template<typename GO, typename LOP, bool nonoverlapping_mode = false>
-      class BlockstructuredLocalAssembler :
+      class LocalAssembler :
           public Dune::PDELab::DefaultLocalAssembler<GO, LOP, nonoverlapping_mode> {
       public:
 
@@ -28,15 +28,15 @@ namespace Dune{
         using LFSUCache = LFSIndexCache<LFSU, CU>;
         using LFSVCache = LFSIndexCache<LFSV, CV>;
 
-        using LocalResidualAssemblerEngine = Dune::PDELab::DefaultLocalResidualAssemblerEngine<BlockstructuredLocalAssembler>;
-        using LocalJacobianApplyAssemblerEngine = Dune::PDELab::DefaultLocalJacobianApplyAssemblerEngine<BlockstructuredLocalAssembler>;
+        using LocalResidualAssemblerEngine = Dune::PDELab::DefaultLocalResidualAssemblerEngine<LocalAssembler>;
+        using LocalJacobianApplyAssemblerEngine = Dune::PDELab::DefaultLocalJacobianApplyAssemblerEngine<LocalAssembler>;
 
         //! Constructor with empty constraints
-        BlockstructuredLocalAssembler(LOP &lop, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
+        LocalAssembler(LOP &lop, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
             : Base(lop, border_dof_exchanger), residual_engine(*this), jacobian_apply_engine(*this) {}
 
         //! Constructor for non trivial constraints
-        BlockstructuredLocalAssembler(LOP &lop, const typename Base::CU &cu, const typename Base::CV &cv,
+        LocalAssembler(LOP &lop, const typename Base::CU &cu, const typename Base::CV &cv,
                                       shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
             : Base(lop, cu, cv, border_dof_exchanger), residual_engine(*this), jacobian_apply_engine(*this) {}
 

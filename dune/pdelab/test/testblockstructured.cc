@@ -209,7 +209,7 @@ void testBlockstructuredUncachedVectorView(const TestData &td) {
 template<typename TestData>
 void testBlockstructuredGridOperator(const TestData &td) {
   using MatrixBackend = Dune::PDELab::ISTL::BCRSMatrixBackend<>;
-  using GO = Dune::PDELab::Blockstructured::BlockstructuredGridOperator<
+  using GO = Dune::PDELab::BlockstructuredGridOperator<
       typename TestData::CompositeGFS, typename TestData::CompositeGFS,
       LocalOperator, MatrixBackend, double, double, double>;
   using GO_Compare = Dune::PDELab::GridOperator<

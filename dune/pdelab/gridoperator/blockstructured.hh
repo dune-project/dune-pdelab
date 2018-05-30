@@ -9,8 +9,7 @@
 #include "gridoperator.hh"
 
 namespace Dune{
-  namespace PDELab {
-    namespace Blockstructured {
+    namespace PDELab {
       /**
      \brief Standard grid operator implementation
 
@@ -36,10 +35,10 @@ namespace Dune{
         using Base = Dune::PDELab::GridOperator<GFSU, GFSV, LOP, MB, DF, RF, JF, CU, CV>;
 
         //! The global assembler type
-        using Assembler = BlockstructuredAssembler<GFSU, GFSV, CU, CV>;
+        using Assembler = Blockstructured::Assembler<GFSU, GFSV, CU, CV>;
 
         //! The global assembler type
-        using LocalAssembler = BlockstructuredLocalAssembler<BlockstructuredGridOperator, LOP,
+        using LocalAssembler = Blockstructured::LocalAssembler<BlockstructuredGridOperator, LOP,
             GFSU::Traits::EntitySet::Partitions::partitionIterator() == InteriorBorder_Partition>;
 
 
@@ -77,7 +76,6 @@ namespace Dune{
 
       };
     }
-  }
 }
 
 #endif //DUNE_PDELAB_GRIDOPERATOR_BLOCKSTRUCTURED_HH

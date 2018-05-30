@@ -22,7 +22,7 @@ namespace Dune{
          */
 
       template<typename GFSU, typename GFSV, typename CU, typename CV>
-      class BlockstructuredAssembler {
+      class Assembler {
       public:
 
         //! Types related to current grid view
@@ -44,10 +44,10 @@ namespace Dune{
         //! Static check on whether this is a Galerkin method
         static const bool isGalerkinMethod = std::is_same<GFSU, GFSV>::value;
 
-        BlockstructuredAssembler(const GFSU &gfsu_, const GFSV &gfsv_, const CU &cu_, const CV &cv_)
+        Assembler(const GFSU &gfsu_, const GFSV &gfsv_, const CU &cu_, const CV &cv_)
             : gfsu(gfsu_), gfsv(gfsv_), cu(cu_), cv(cv_), lfsu(gfsu_), lfsv(gfsv_), lfsun(gfsu_), lfsvn(gfsv_) {}
 
-        BlockstructuredAssembler(const GFSU &gfsu_, const GFSV &gfsv_)
+        Assembler(const GFSU &gfsu_, const GFSV &gfsv_)
             : gfsu(gfsu_), gfsv(gfsv_), cu(), cv(), lfsu(gfsu_), lfsv(gfsv_), lfsun(gfsu_), lfsvn(gfsv_) {}
 
         //! Get the trial grid function space
