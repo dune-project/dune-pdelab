@@ -50,7 +50,7 @@ namespace Dune{
 
 
         LFSIndexCache(const LFS &lfs, const C &constraints, bool enable_constraints_caching)
-            : Base(lfs, constraints, enable_constraints_caching), _lfs(lfs),
+            : Base(lfs, constraints, enable_constraints_caching),
               localDOFsOffset(Dune::TypeTree::TreeInfo<LFS>::leafCount),
               localCoefficients(Dune::TypeTree::TreeInfo<LFS>::leafCount) {
         }
@@ -60,12 +60,14 @@ namespace Dune{
 
           auto refEl = Dune::ReferenceElements<double, d>::general(Dune::GeometryTypes::cube(d));
 
-          auto &subentityWiseDOFs = *_lfs._subentityWiseDOFs_ptr;
+          const auto& lfs = Base::localFunctionSpace();
+
+          auto &subentityWiseDOFs = *lfs._subentityWiseDOFs_ptr;
 
           globalContainerIndices.clear();
           globalContainerIndices.resize(numberOfLeafs());
 
-          TypeTree::forEachLeafNode(_lfs, [this, &refEl, &subentityWiseDOFs](auto &Node, auto &TreePath) {
+          TypeTree::forEachLeafNode(lfs, [this, &lfs, &refEl, &subentityWiseDOFs](auto &Node, auto &TreePath) {
             const auto leaf = Node.offsetLeafs;
 
             localDOFsOffset[leaf] = Node.offset;
@@ -73,7 +75,7 @@ namespace Dune{
             for (int c = 0; c < refEl.dimension + 1; ++c)
               for (int s = 0; s < refEl.size(c); ++s)
                 // evaluate consecutive index of subentity
-                _lfs.gridFunctionSpace().ordering().mapIndex(subentityWiseDOFs[leaf].indexView(s, c),
+                lfs.gridFunctionSpace().ordering().mapIndex(subentityWiseDOFs[leaf].indexView(s, c),
                                                              globalContainerIndices[leaf].index(s, c));
           });
         }
@@ -106,13 +108,13 @@ namespace Dune{
       private:
 
         void initializeLocalCoefficients() {
-          TypeTree::forEachLeafNode(_lfs, [this](auto &Node, auto &TreePath) {
+          TypeTree::forEachLeafNode(Base::localFunctionSpace(), [this](auto &Node, auto &TreePath) {
             const auto &fe = Node.finiteElement();
             const auto qkDescriptor = BlockstructuredQkDescriptor(fe);
             inverseLocalCoefficientsMap.try_emplace(qkDescriptor, fe);
           });
 
-          TypeTree::forEachLeafNode(_lfs, [this](auto &Node, auto &TreePath) {
+          TypeTree::forEachLeafNode(Base::localFunctionSpace(), [this](auto &Node, auto &TreePath) {
             const auto &fe = Node.finiteElement();
             const auto qkDescriptor = BlockstructuredQkDescriptor(fe);
             localCoefficients[Node.offsetLeafs] = &inverseLocalCoefficientsMap.at(qkDescriptor);
@@ -121,7 +123,6 @@ namespace Dune{
 
         constexpr static std::size_t d = GFS::Traits::GridView::dimension;
 
-        const LFS &_lfs;
         std::vector<SubentityWiseIndexWrapper<CI, d>> globalContainerIndices;
         std::map<BlockstructuredQkDescriptor, InverseQkLocalCoefficients<d>> inverseLocalCoefficientsMap;
         std::vector<std::size_t> localDOFsOffset;
