@@ -78,8 +78,8 @@ namespace Dune{
 
         void setupFaces() {
           if (d > 2) {
-            for (std::size_t i = 0; i < container[d - 2].size(); ++i) {
-              container[d - 2][i].resize(Dune::Power<d - 1>::eval(k * blocks - 1));
+            for (std::size_t i = 0; i < container[1].size(); ++i) {
+              container[1][i].resize(Dune::Power<d - 1>::eval(k * blocks - 1));
             }
           }
         }
