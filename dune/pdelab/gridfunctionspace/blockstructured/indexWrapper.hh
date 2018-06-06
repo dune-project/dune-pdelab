@@ -18,13 +18,19 @@ namespace Dune{
 
         SubentityIndexWrapper()
             : storage(), codimOffset(), numberOfUsedSubentities(0)
+        { }
+
+        template<typename FEM>
+        void setup(const FEM& fem, const Dune::GeometryType gt)
         {
-          auto refEl = Dune::ReferenceElements<double,d>::general(Dune::GeometryTypes::cube(d));
+          auto refEl = Dune::ReferenceElements<double,d>::general(gt);
 
           std::size_t offset = 0;
           for (int c = 0; c < d + 1; ++c) {
-            codimOffset[c] = offset;
-            offset += refEl.size(c);
+            if(fem.hasDOFs(c)) {
+              codimOffset[c] = offset;
+              offset += refEl.size(c);
+            }
           }
           numberOfUsedSubentities = offset;
         }
@@ -48,6 +54,7 @@ namespace Dune{
         {
           for(auto& index: *this)
               index.clear();
+          numberOfUsedSubentities = 0;
         }
 
         auto begin()

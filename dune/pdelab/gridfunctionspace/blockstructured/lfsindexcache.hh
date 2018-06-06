@@ -46,21 +46,24 @@ namespace Dune{
           auto &subentityWiseDOFs = *lfs.subentityWiseDOFs_ptr;
 
           globalContainerIndices.resize(numberOfLeafs());
-          for(auto& containerIndices: globalContainerIndices)
-            containerIndices.clear();
 
           TypeTree::forEachLeafNode(lfs, [this, &lfs, &subentityWiseDOFs](auto &Node, auto &TreePath) {
             auto refEl = Dune::ReferenceElements<double, d>::general(Node.finiteElement().type());
 
             const auto leaf = Node.offsetLeafs;
 
+            globalContainerIndices[leaf].clear();
+            globalContainerIndices[leaf].setup(Node.gridFunctionSpace().finiteElementMap(), Node.finiteElement().type());
+
             localDOFsOffset[leaf] = Node.offset;
 
             for (int c = 0; c < refEl.dimension + 1; ++c)
-              for (int s = 0; s < refEl.size(c); ++s)
-                // evaluate consecutive index of subentity
-                lfs.gridFunctionSpace().ordering().mapIndex(subentityWiseDOFs[leaf].indexView(s, c),
-                                                             globalContainerIndices[leaf].index(s, c));
+              if(Node.gridFunctionSpace().finiteElementMap().hasDOFs(c)) {
+                for (int s = 0; s < refEl.size(c); ++s)
+                  // evaluate consecutive index of subentity
+                  lfs.gridFunctionSpace().ordering().mapIndex(subentityWiseDOFs[leaf].indexView(s, c),
+                                                              globalContainerIndices[leaf].index(s, c));
+              }
           });
         }
 

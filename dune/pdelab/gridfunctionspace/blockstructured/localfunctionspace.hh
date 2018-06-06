@@ -146,20 +146,27 @@ namespace Dune{
           using EntitySet = typename GFS::Traits::EntitySet;
           auto es = this->gridFunctionSpace().entitySet();
 
-          auto refEl = Dune::ReferenceElements<double, EntitySet::dimension>::general(this->pfe->type());
+          const auto fem = this->pgfs->finiteElementMap();
+          const auto fe = *this->pfe;
+
+          auto refEl = Dune::ReferenceElements<double, EntitySet::dimension>::general(fe.type());
 
           auto &subentityWiseDOFs = *this->subentityWiseDOFs_ptr;
 
           subentityWiseDOFs[this->offsetLeafs].clear();
-          for (int c = 0; c < refEl.dimension + 1; ++c) {
-            for (int s = 0; s < refEl.size(c); ++s) {
-              // get geometry type of subentity
-              auto gt = refEl.type(s, c);
+          subentityWiseDOFs[this->offsetLeafs].setup(fem, fe.type());
 
-              // evaluate consecutive index of subentity
-              auto index = es.indexSet().subIndex(e, s, c);
-              using DOFIndexAccessor = typename GFS::Ordering::Traits::DOFIndexAccessor;
-              DOFIndexAccessor::store(subentityWiseDOFs[this->offsetLeafs].index(s, c), gt, index, 0);
+          for (int c = 0; c < refEl.dimension + 1; ++c) {
+            if(fem.hasDOFs(c)) {
+              for (int s = 0; s < refEl.size(c); ++s) {
+                // get geometry type of subentity
+                auto gt = refEl.type(s, c);
+
+                // evaluate consecutive index of subentity
+                auto index = es.indexSet().subIndex(e, s, c);
+                using DOFIndexAccessor = typename GFS::Ordering::Traits::DOFIndexAccessor;
+                DOFIndexAccessor::store(subentityWiseDOFs[this->offsetLeafs].index(s, c), gt, index, 0);
+              }
             }
           }
         }
