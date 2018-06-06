@@ -77,8 +77,8 @@ namespace Dune{
         }
 
         std::size_t subentities(std::size_t codim) const {
-          const auto refEl = Dune::ReferenceElements<double, d>::general(Dune::GeometryTypes::cube(d));
-          return refEl.size(codim);
+          // all leafs *should* have the same geometry, therefore we can use the first one
+          return localCoefficients[0]->container[codim].size();
         }
 
         std::size_t sizeOfLocalDOFs(size_type leaf, size_type s, size_type c) const {
