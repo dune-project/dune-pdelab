@@ -250,15 +250,19 @@ int main(int argc, char **argv) {
   try {
     Dune::MPIHelper::instance(argc, argv);
 
+    using Grid1d = Dune::YaspGrid<1>;
     using Grid2d = Dune::YaspGrid<2>;
     using Grid3d = Dune::YaspGrid<3>;
 
+    Grid1d grid1({1}, {1});
     Grid2d grid2({1, 1}, {1, 1});
     Grid3d grid3({1, 1, 1}, {1, 1, 1});
 
-    TestData<typename Grid2d::LeafGridView> td2(grid2.leafGridView());
-    TestData<typename Grid3d::LeafGridView> td3(grid3.leafGridView());
+    TestData td1(grid1.leafGridView());
+    TestData td2(grid2.leafGridView());
+    TestData td3(grid3.leafGridView());
 
+    runAllTests(td1);
     runAllTests(td2);
     runAllTests(td3);
   }
