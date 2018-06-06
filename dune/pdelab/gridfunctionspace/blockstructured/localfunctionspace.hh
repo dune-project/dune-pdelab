@@ -144,10 +144,10 @@ namespace Dune{
         void dofIndices(const Entity &e, DOFIndexIterator /*it*/, DOFIndexIterator /*endit*/,
                         std::integral_constant<bool, false>) {
           using EntitySet = typename GFS::Traits::EntitySet;
-          auto es = this->gridFunctionSpace().entitySet();
+          const auto& es = this->gridFunctionSpace().entitySet();
 
-          const auto fem = this->pgfs->finiteElementMap();
-          const auto fe = *this->pfe;
+          const auto& fem = this->pgfs->finiteElementMap();
+          const auto& fe = *this->pfe;
 
           auto refEl = Dune::ReferenceElements<double, EntitySet::dimension>::general(fe.type());
 
