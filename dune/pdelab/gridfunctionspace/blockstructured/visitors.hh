@@ -17,7 +17,7 @@ namespace Dune{
         template<typename LFS, typename Child, typename TreePath, typename ChildIndex>
         void beforeChild(const LFS &lfs, Child &child, TreePath treePath, ChildIndex childIndex) const {
           Dune::PDELab::PropagateGlobalStorageVisitor<int>::beforeChild(lfs, child, treePath, childIndex);
-          child._subentityWiseDOFs_ptr = lfs._subentityWiseDOFs_ptr;
+          child.subentityWiseDOFs_ptr = lfs.subentityWiseDOFs_ptr;
         }
       };
 
@@ -60,7 +60,7 @@ namespace Dune{
         template<typename Node, typename Child, typename TreePath, typename ChildIndex>
         void afterChild(const Node &node, const Child &child, TreePath treePath, ChildIndex childIndex) {
           for (std::size_t i = 0; i < child.nLeafs; ++i)
-            for (auto &codim: (*node._subentityWiseDOFs_ptr)[child.offsetLeafs + i])
+            for (auto &codim: (*node.subentityWiseDOFs_ptr)[child.offsetLeafs + i])
               for (auto &subentity: codim)
                 subentity.treeIndex().push_back(childIndex);
         }

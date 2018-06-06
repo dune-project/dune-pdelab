@@ -186,11 +186,6 @@ namespace Dune {
 
       //! \brief Type of container to store multiindices.
       typedef typename std::vector<DI> DOFIndexContainer;
-
-      //! \brief Type of container to store only the first index per subentity
-      using DOFIndexSubentityWise = Dune::PDELab::Blockstructured::SubentityWiseIndexWrapper<DI, GFS::Traits::GridView::dimension>;
-      using DOFIndexSubentityWiseContainer = std::vector<DOFIndexSubentityWise>;
-
     };
 
     template <typename GFS, typename DOFIndex>
@@ -218,8 +213,6 @@ namespace Dune {
         : pgfs(gfs)
         , _dof_index_storage()
         , _dof_indices(&_dof_index_storage)
-        , _subentityWiseDOFs()
-        , _subentityWiseDOFs_ptr(&_subentityWiseDOFs)
         , n(0)
       {}
 
@@ -298,12 +291,8 @@ namespace Dune {
       std::shared_ptr<GFS const> pgfs;
       typename Traits::DOFIndexContainer _dof_index_storage;
       typename Traits::DOFIndexContainer* _dof_indices;
-      typename Traits::DOFIndexSubentityWiseContainer _subentityWiseDOFs;
-      typename Traits::DOFIndexSubentityWiseContainer* _subentityWiseDOFs_ptr;
       typename Traits::IndexContainer::size_type n;
       typename Traits::IndexContainer::size_type offset;
-      typename Traits::IndexContainer::size_type nLeafs;
-      typename Traits::IndexContainer::size_type offsetLeafs;
     };
 
     //! traits for local function space on a gridview

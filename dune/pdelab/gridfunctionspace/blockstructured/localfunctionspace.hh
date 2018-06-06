@@ -32,10 +32,25 @@ namespace Dune{
         TypeTree::applyToTree(node, fiv);
       }
 
+      // Has additional information, which is needed to use subentity wise dof numbering
+      template<typename GFS, typename DOFIndex>
+      struct SubentityWiseDOFsMixin{
+        //! \brief Type of container to store only the first index per subentity
+        using DOFIndexSubentityWise = SubentityWiseIndexWrapper<DOFIndex, GFS::Traits::GridView::dimension>;
+        using DOFIndexSubentityWiseContainer = std::vector<DOFIndexSubentityWise>;
+
+        std::size_t nLeafs;
+        std::size_t offsetLeafs;
+        DOFIndexSubentityWiseContainer subentityWiseDOFs;
+        DOFIndexSubentityWiseContainer* subentityWiseDOFs_ptr;
+      };
+
+
       // local function space for a power grid function space
       template<typename GFS, typename DOFIndex, typename ChildLFS, std::size_t k>
       class PowerLocalFunctionSpaceNode :
-          public Dune::PDELab::PowerLocalFunctionSpaceNode<GFS, DOFIndex, ChildLFS, k> {
+          public Dune::PDELab::PowerLocalFunctionSpaceNode<GFS, DOFIndex, ChildLFS, k>,
+          public SubentityWiseDOFsMixin<GFS, DOFIndex> {
         using Base = Dune::PDELab::PowerLocalFunctionSpaceNode<GFS, DOFIndex, ChildLFS, k>;
 
       public:
@@ -43,9 +58,7 @@ namespace Dune{
 
         using Base::Base;
 
-        //! \brief bind local function space to entity
         void bind(const typename Traits::Element &e) {
-          // call method on base class, this avoid the barton neckman trick
           blockstructuredBind(*this, e);
         }
       };
@@ -74,7 +87,8 @@ namespace Dune{
       // local function space for a power grid function space
       template<typename GFS, typename DOFIndex, typename... Children>
       class CompositeLocalFunctionSpaceNode
-          : public Dune::PDELab::CompositeLocalFunctionSpaceNode<GFS, DOFIndex, Children...> {
+          : public Dune::PDELab::CompositeLocalFunctionSpaceNode<GFS, DOFIndex, Children...>,
+            public SubentityWiseDOFsMixin<GFS, DOFIndex> {
         using Base = Dune::PDELab::CompositeLocalFunctionSpaceNode<GFS, DOFIndex, Children...>;
 
       public:
@@ -82,9 +96,7 @@ namespace Dune{
 
         using Base::Base;
 
-        //! \brief bind local function space to entity
         void bind(const typename Traits::Element &e) {
-          // call method on base class, this avoid the barton neckman trick
           blockstructuredBind(*this, e);
         }
       };
@@ -112,7 +124,9 @@ namespace Dune{
       //! single component local function space
       template<typename GFS, typename DOFIndex>
       class LeafLocalFunctionSpaceNode
-          : public Dune::PDELab::LeafLocalFunctionSpaceNode<GFS, DOFIndex> {
+          : public Dune::PDELab::LeafLocalFunctionSpaceNode<GFS, DOFIndex>,
+            public SubentityWiseDOFsMixin<GFS, DOFIndex>
+      {
         using Base = Dune::PDELab::LeafLocalFunctionSpaceNode<GFS, DOFIndex>;
 
       public:
@@ -134,7 +148,7 @@ namespace Dune{
 
           auto refEl = Dune::ReferenceElements<double, EntitySet::dimension>::general(this->pfe->type());
 
-          auto &subentityWiseDOFs = *this->_subentityWiseDOFs_ptr;
+          auto &subentityWiseDOFs = *this->subentityWiseDOFs_ptr;
 
           subentityWiseDOFs[this->offsetLeafs].clear();
           for (int c = 0; c < refEl.dimension + 1; ++c) {
@@ -181,7 +195,7 @@ namespace Dune{
             : BaseT(TypeTree::TransformTree<GFS, gfs_to_blockstructured_lfs<GFS> >::transform(gfs)),
               maxLocalSize(gfs.ordering().maxLocalSize()) {
           this->_dof_indices = &(this->_dof_index_storage);
-          this->_subentityWiseDOFs_ptr = &(this->_subentityWiseDOFs);
+          this->subentityWiseDOFs_ptr = &(this->subentityWiseDOFs);
           this->setup();
         }
 
@@ -189,7 +203,7 @@ namespace Dune{
             : BaseT(*TypeTree::TransformTree<GFS, gfs_to_blockstructured_lfs<GFS> >::transform_storage(pgfs)),
               maxLocalSize(pgfs->ordering().maxLocalSize()) {
           this->_dof_indices = &(this->_dof_index_storage);
-          this->_subentityWiseDOFs_ptr = &(this->_subentityWiseDOFs);
+          this->subentityWiseDOFs_ptr = &(this->subentityWiseDOFs);
           this->setup();
         }
 
@@ -199,7 +213,7 @@ namespace Dune{
           // as they are still pointing to the _dof_index_storage of the
           // old tree.
           this->_dof_indices = &(this->_dof_index_storage);
-          this->_subentityWiseDOFs_ptr = &(this->_subentityWiseDOFs);
+          this->subentityWiseDOFs_ptr = &(this->subentityWiseDOFs);
           this->setup();
         }
 
@@ -225,7 +239,7 @@ namespace Dune{
         }
 
         void setup() {
-          this->_subentityWiseDOFs_ptr->resize(Dune::TypeTree::TreeInfo<GFS>::leafCount);
+          this->subentityWiseDOFs_ptr->resize(Dune::TypeTree::TreeInfo<GFS>::leafCount);
           TypeTree::applyToTree(*this, PropagateGlobalStorageVisitor<>());
           BaseT::setup(*this);
         }

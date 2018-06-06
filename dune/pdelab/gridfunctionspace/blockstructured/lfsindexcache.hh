@@ -43,7 +43,7 @@ namespace Dune{
 
           const auto& lfs = Base::localFunctionSpace();
 
-          auto &subentityWiseDOFs = *lfs._subentityWiseDOFs_ptr;
+          auto &subentityWiseDOFs = *lfs.subentityWiseDOFs_ptr;
 
           globalContainerIndices.resize(numberOfLeafs());
           for(auto& containerIndices: globalContainerIndices)
