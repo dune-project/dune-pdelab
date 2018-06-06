@@ -17,6 +17,12 @@
 #include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/gridoperator/blockstructured.hh>
 #include <dune/pdelab/constraints/conforming.hh>
+#include <dune/pdelab/finiteelementmap/pkfem.hh>
+
+#if HAVE_DUNE_ALUGRID
+#include <dune/alugrid/grid.hh>
+#include <dune/alugrid/dgf.hh>
+#endif
 
 template<typename GV>
 struct TestData {
@@ -39,6 +45,29 @@ struct TestData {
   TestData(const GV& gv)
       : fem(gv), _q2_fem(gv), pLeafGFS(std::make_shared<Q1_LeafGFS>(gv, fem)), _q1_gfs(gv, fem), _q2_gfs(gv, _q2_fem),
         _pgfs(_q1_gfs), pCompositeGFS(std::make_shared<CompositeGFS>(_pgfs, _q2_gfs)) {}
+};
+
+template<typename GV>
+struct TestDataPk {
+  using P1_FEM = Dune::PDELab::PkLocalFiniteElementMap<GV, double, double, 4>;
+  using P2_FEM = Dune::PDELab::PkLocalFiniteElementMap<GV, double, double, 8>;
+  using Backend = Dune::PDELab::ISTL::VectorBackend<>;
+  using P1_LeafGFS = Dune::PDELab::GridFunctionSpace<GV, P1_FEM, Dune::PDELab::NoConstraints, Backend>;
+  using P2_LeafGFS = Dune::PDELab::GridFunctionSpace<GV, P2_FEM, Dune::PDELab::NoConstraints, Backend>;
+  using PowerGFS = Dune::PDELab::PowerGridFunctionSpace<P1_LeafGFS, 2, Backend, Dune::PDELab::LexicographicOrderingTag>;
+  using CompositeGFS = Dune::PDELab::CompositeGridFunctionSpace<Backend, Dune::PDELab::LexicographicOrderingTag, PowerGFS, P2_LeafGFS>;
+
+  P1_FEM fem;
+  P2_FEM _p2_fem;
+  std::shared_ptr<P1_LeafGFS> pLeafGFS;
+  P1_LeafGFS _p1_gfs;
+  P2_LeafGFS _p2_gfs;
+  PowerGFS _pgfs;
+  std::shared_ptr<CompositeGFS> pCompositeGFS;
+
+  TestDataPk(const GV& gv)
+      : fem(gv), _p2_fem(gv), pLeafGFS(std::make_shared<P1_LeafGFS>(gv, fem)), _p1_gfs(gv, fem), _p2_gfs(gv, _p2_fem),
+        _pgfs(_p1_gfs), pCompositeGFS(std::make_shared<CompositeGFS>(_pgfs, _p2_gfs)) {}
 };
 
 class LocalOperator
@@ -246,6 +275,7 @@ void runAllTests(const TestData& td){
   testBlockstructuredGridOperator(td);
 }
 
+
 int main(int argc, char **argv) {
   try {
     Dune::MPIHelper::instance(argc, argv);
@@ -265,6 +295,20 @@ int main(int argc, char **argv) {
     runAllTests(td1);
     runAllTests(td2);
     runAllTests(td3);
+
+#if HAVE_DUNE_ALUGRID
+    using GridPk2d = Dune::ALUGrid<2, 2, Dune::simplex, Dune::conforming, Dune::ALUGridMPIComm>;
+    using GridPk3d = Dune::ALUGrid<3, 3, Dune::simplex, Dune::conforming, Dune::ALUGridMPIComm>;
+    std::shared_ptr<GridPk2d> gridPk2d(Dune::StructuredGridFactory<GridPk2d>::createSimplexGrid({0,0}, {1,1}, std::array<int,2>{1,1}));
+    std::shared_ptr<GridPk3d> gridPk3d(Dune::StructuredGridFactory<GridPk3d>::createSimplexGrid({0,0,0}, {1,1,1}, std::array<int,3>{1,1,1}));
+
+    TestDataPk tdPk2d(gridPk2d->leafGridView());
+    TestDataPk tdPk3d(gridPk3d->leafGridView());
+
+    runAllTests(tdPk2d);
+    runAllTests(tdPk3d);
+
+#endif
   }
   catch (Dune::Exception &e) {
     std::cerr << "Dune reported error: " << e << std::endl;
