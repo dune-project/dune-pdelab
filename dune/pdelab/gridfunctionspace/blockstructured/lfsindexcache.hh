@@ -12,6 +12,7 @@
 
 namespace Dune{
   namespace PDELab {
+    namespace Blockstructured{
 
       template<typename LFS, typename C>
       class LFSIndexCache
@@ -40,8 +41,6 @@ namespace Dune{
         void update() {
           initializeLocalCoefficients();
 
-          auto refEl = Dune::ReferenceElements<double, d>::general(Dune::GeometryTypes::cube(d));
-
           const auto& lfs = Base::localFunctionSpace();
 
           auto &subentityWiseDOFs = *lfs._subentityWiseDOFs_ptr;
@@ -50,7 +49,9 @@ namespace Dune{
           for(auto& containerIndices: globalContainerIndices)
             containerIndices.clear();
 
-          TypeTree::forEachLeafNode(lfs, [this, &lfs, &refEl, &subentityWiseDOFs](auto &Node, auto &TreePath) {
+          TypeTree::forEachLeafNode(lfs, [this, &lfs, &subentityWiseDOFs](auto &Node, auto &TreePath) {
+            auto refEl = Dune::ReferenceElements<double, d>::general(Node.finiteElement().type());
+
             const auto leaf = Node.offsetLeafs;
 
             localDOFsOffset[leaf] = Node.offset;

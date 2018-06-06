@@ -4,9 +4,10 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_INVERSECOEFFICIENTS_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_BLOCKSTRUCTURED_INVERSECOEFFICIENTS_HH
 
+#include <vector>
 #include <dune/localfunctions/common/localkey.hh>
 #include <dune/common/power.hh>
-#include <vector>
+#include <dune/geometry/referenceelements.hh>
 
 namespace Dune{
   namespace PDELab {
@@ -15,14 +16,11 @@ namespace Dune{
       template<int d>
       struct InverseQkLocalCoefficients {
         std::array<std::vector<std::vector<unsigned long>>, d + 1> container;
-        int k;
-        int blocks;
 
         template<typename FE>
-        InverseQkLocalCoefficients(const FE &fe)
-            : k(FE::k), blocks(FE::blocks) {
+        explicit InverseQkLocalCoefficients(const FE &fe) {
           setupCodims(fe.type());
-          setupSubentities();
+          setupSubentities(fe.localCoefficients());
 
           const auto &coeffs = fe.localCoefficients();
 
@@ -33,47 +31,30 @@ namespace Dune{
         }
 
       private:
-
         void setupCodims(const Dune::GeometryType gt) {
           const auto refEl = Dune::ReferenceElements<double, d>::general(gt);
 
           for (int c = 0; c < d + 1; ++c) {
             container[c].resize(refEl.size(c));
+            subentitySizes[c].resize(refEl.size(c));
           }
         }
 
-        void setupSubentities() {
-          if (k == 0) {
-            container[0][0].resize(Dune::Power<d>::eval(blocks));
-          } else {
-            container[0][0].resize(Dune::Power<d>::eval(k * blocks - 1));
-            setupFaces();
-            setupEdges();
-            setupVertices();
+        template<typename Coeffs>
+        void setupSubentities(const Coeffs& coeffs) {
+          for (std::size_t i = 0; i < coeffs.size(); ++i) {
+            const auto &l = coeffs.localKey(i);
+            subentitySizes[l.codim()][l.subEntity()]++;
           }
-        }
 
-        void setupFaces() {
-          if (d > 2) {
-            for (std::size_t i = 0; i < container[1].size(); ++i) {
-              container[1][i].resize(Dune::Power<d - 1>::eval(k * blocks - 1));
+          for (int c = 0; c < d + 1; ++c) {
+            for (int s = 0; s < container[c].size(); ++s) {
+              container[c][s].resize(subentitySizes[c][s]);
             }
           }
         }
 
-        void setupEdges() {
-          if (d > 1) {
-            for (std::size_t i = 0; i < container[d - 1].size(); ++i) {
-              container[d - 1][i].resize(k * blocks - 1);
-            }
-          }
-        }
-
-        void setupVertices() {
-          for (std::size_t i = 0; i < container[d].size(); ++i) {
-            container[d][i].resize(1);
-          }
-        }
+        std::array<std::vector<std::size_t>, d + 1> subentitySizes;
       };
     }
   }
