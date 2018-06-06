@@ -12,24 +12,6 @@
 
 namespace Dune{
   namespace PDELab {
-    namespace Blockstructured {
-
-      struct BlockstructuredQkDescriptor {
-        int k;
-        int blocks;
-
-        BlockstructuredQkDescriptor() = default;
-
-        template<typename FE>
-        BlockstructuredQkDescriptor(const FE &)
-            : k(FE::k), blocks(FE::blocks) {}
-
-        bool operator<(const BlockstructuredQkDescriptor &rhs) const {
-          return (k < rhs.k) or ((k == rhs.k) and (blocks < rhs.blocks));
-        }
-
-      };
-
 
       template<typename LFS, typename C>
       class LFSIndexCache
@@ -111,21 +93,19 @@ namespace Dune{
         void initializeLocalCoefficients() {
           TypeTree::forEachLeafNode(Base::localFunctionSpace(), [this](auto &Node, auto &TreePath) {
             const auto &fe = Node.finiteElement();
-            const auto qkDescriptor = BlockstructuredQkDescriptor(fe);
-            inverseLocalCoefficientsMap.try_emplace(qkDescriptor, fe);
+            inverseLocalCoefficientsMap.try_emplace(fe.size(), fe);
           });
 
           TypeTree::forEachLeafNode(Base::localFunctionSpace(), [this](auto &Node, auto &TreePath) {
             const auto &fe = Node.finiteElement();
-            const auto qkDescriptor = BlockstructuredQkDescriptor(fe);
-            localCoefficients[Node.offsetLeafs] = &inverseLocalCoefficientsMap.at(qkDescriptor);
+            localCoefficients[Node.offsetLeafs] = &inverseLocalCoefficientsMap.at(fe.size());
           });
         }
 
         constexpr static std::size_t d = GFS::Traits::GridView::dimension;
 
         std::vector<SubentityWiseIndexWrapper<CI, d>> globalContainerIndices;
-        std::map<BlockstructuredQkDescriptor, InverseQkLocalCoefficients<d>> inverseLocalCoefficientsMap;
+        std::map<std::size_t, InverseQkLocalCoefficients<d>> inverseLocalCoefficientsMap;
         std::vector<std::size_t> localDOFsOffset;
         std::vector<const InverseQkLocalCoefficients<d> *> localCoefficients;
       };
