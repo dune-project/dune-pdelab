@@ -14,6 +14,67 @@ namespace Dune{
   namespace PDELab {
     namespace Blockstructured{
 
+      template<typename DOFLeafIterator,
+          typename ContainerLeafIterator,
+          std::size_t tree_depth>
+      struct map_dof_indices_to_container_indices
+          : public TypeTree::TreeVisitor
+              , public TypeTree::DynamicTraversal
+      {
+
+        template<typename Ordering, typename TreePath>
+        void leaf(const Ordering& ordering, TreePath tp)
+        {
+          ordering.map_lfs_indices(dof_leaf->cbegin(), dof_leaf->cend(), container_leaf->begin());
+          dof_leaf++;
+          container_leaf++;
+        }
+
+        template<typename Ordering, typename TreePath>
+        void post(const Ordering& ordering, TreePath tp)
+        {
+          if (Ordering::consume_tree_index)
+          {
+            dof_tail_size--;
+          }
+          while (dof_stack.top() != dof_leaf) {
+            Dune::PDELab::DOFIndexViewIterator dof_pos(dof_stack.top()->cbegin(), dof_tail_size);
+            Dune::PDELab::DOFIndexViewIterator dof_end(dof_stack.top()->cend(), dof_tail_size);
+            ordering.map_lfs_indices(dof_pos, dof_end, container_stack.top()->begin());
+            dof_stack.top()++;
+            container_stack.top()++;
+          }
+          dof_stack.pop();
+          container_stack.pop();
+        }
+
+        template<typename Ordering, typename TreePath>
+        void pre(const Ordering& ordering, TreePath tp)
+        {
+          dof_stack.push(dof_leaf);
+          container_stack.push(container_leaf);
+          if (Ordering::consume_tree_index)
+          {
+            dof_tail_size++;
+          }
+        }
+
+        map_dof_indices_to_container_indices(DOFLeafIterator dof_leaf_begin,
+                                             ContainerLeafIterator container_leaf_begin,
+                                             std::size_t dof_index_tail_length = 0)
+            : dof_leaf(dof_leaf_begin)
+            , container_leaf(container_leaf_begin), dof_tail_size(0)
+        {}
+
+
+        DOFLeafIterator dof_leaf;
+        std::size_t dof_tail_size;
+        ContainerLeafIterator container_leaf;
+        std::stack<DOFLeafIterator,ReservedVector<DOFLeafIterator,tree_depth> > dof_stack;
+        std::stack<ContainerLeafIterator,ReservedVector<ContainerLeafIterator,tree_depth> > container_stack;
+
+      };
+
       template<typename LFS, typename C>
       class LFSIndexCache
           : public Dune::PDELab::LFSIndexCacheBase<LFS, C, typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag, false> {
@@ -48,23 +109,19 @@ namespace Dune{
           globalContainerIndices.resize(numberOfLeafs());
 
           TypeTree::forEachLeafNode(lfs, [this, &lfs, &subentityWiseDOFs](auto &Node, auto &TreePath) {
-            auto refEl = Dune::ReferenceElements<double, d>::general(Node.finiteElement().type());
-
             const auto leaf = Node.offsetLeafs;
+            localDOFsOffset[leaf] = Node.offset;
 
             globalContainerIndices[leaf].clear();
             globalContainerIndices[leaf].setup(Node.gridFunctionSpace().finiteElementMap(), Node.finiteElement().type());
-
-            localDOFsOffset[leaf] = Node.offset;
-
-            for (int c = 0; c < refEl.dimension + 1; ++c)
-              if(Node.gridFunctionSpace().finiteElementMap().hasDOFs(c)) {
-                for (int s = 0; s < refEl.size(c); ++s)
-                  // evaluate consecutive index of subentity
-                  lfs.gridFunctionSpace().ordering().mapIndex(subentityWiseDOFs[leaf].indexView(s, c),
-                                                              globalContainerIndices[leaf].index(s, c));
-              }
           });
+
+          map_dof_indices_to_container_indices<
+              typename LFS::DOFIndexSubentityWiseContainer::const_iterator,
+              typename decltype(globalContainerIndices)::iterator,
+              TypeTree::TreeInfo<Ordering>::depth
+          > index_mapper(subentityWiseDOFs.begin(), globalContainerIndices.begin(), lfs.subSpaceDepth());
+          TypeTree::applyToTree(lfs.gridFunctionSpace().ordering(),index_mapper);
         }
 
         const CI &containerIndex(size_type leaf, size_type s, size_type c) const {
