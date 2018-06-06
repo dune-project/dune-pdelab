@@ -105,7 +105,7 @@ namespace Dune{
 
         constexpr static std::size_t d = GFS::Traits::GridView::dimension;
 
-        std::vector<SubentityWiseIndexWrapper<CI, d>> globalContainerIndices;
+        std::vector<SubentityIndexWrapper<CI, d>> globalContainerIndices;
         std::map<std::size_t, InverseQkLocalCoefficients<d>> inverseLocalCoefficientsMap;
         std::vector<std::size_t> localDOFsOffset;
         std::vector<const InverseQkLocalCoefficients<d> *> localCoefficients;

@@ -13,39 +13,41 @@ namespace Dune{
     namespace Blockstructured{
 
       template <typename ContainerOrDOFIndex, int d>
-      class SubentityWiseIndexWrapper{
+      class SubentityIndexWrapper{
       public:
 
-        SubentityWiseIndexWrapper()
-            : storage()
+        SubentityIndexWrapper()
+            : storage(), codimOffset(), numberOfUsedSubentities(0)
         {
           auto refEl = Dune::ReferenceElements<double,d>::general(Dune::GeometryTypes::cube(d));
 
+          std::size_t offset = 0;
           for (int c = 0; c < d + 1; ++c) {
-            storage[c].resize(refEl.size(c));
+            codimOffset[c] = offset;
+            offset += refEl.size(c);
           }
+          numberOfUsedSubentities = offset;
         }
 
         const ContainerOrDOFIndex& index(const int s, const int c) const
         {
-          return storage[c][s];
+          return storage[codimOffset[c] + s];
         }
 
         ContainerOrDOFIndex& index(const int s, const int c)
         {
-          return storage[c][s];
+          return storage[codimOffset[c] + s];
         }
 
         typename ContainerOrDOFIndex::View indexView(const int s, const int c) const
         {
-          return storage[c][s].view();
+          return storage[codimOffset[c] + s].view();
         }
 
         void clear()
         {
-          for(auto& codim: storage)
-            for(auto& subentity: codim)
-              subentity.clear();
+          for(auto& index: *this)
+              index.clear();
         }
 
         auto begin()
@@ -59,15 +61,19 @@ namespace Dune{
 
         auto end()
         {
-          return storage.end();
+          return begin() + numberOfUsedSubentities;
         }
         auto cend() const
         {
-          return storage.cend();
+          return cbegin() + numberOfUsedSubentities;
         }
 
       private:
-        std::array<std::vector<ContainerOrDOFIndex>, d + 1> storage;
+        constexpr static std::size_t maxNumberOfSubentities = 27; // Number of subentities for a hexahedron
+
+        std::array<ContainerOrDOFIndex, maxNumberOfSubentities> storage;
+        std::array<std::size_t, d + 1> codimOffset;
+        std::size_t numberOfUsedSubentities;
       };
     }
   }

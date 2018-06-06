@@ -36,7 +36,7 @@ namespace Dune{
       template<typename GFS, typename DOFIndex>
       struct SubentityWiseDOFsMixin{
         //! \brief Type of container to store only the first index per subentity
-        using DOFIndexSubentityWise = SubentityWiseIndexWrapper<DOFIndex, GFS::Traits::GridView::dimension>;
+        using DOFIndexSubentityWise = SubentityIndexWrapper<DOFIndex, GFS::Traits::GridView::dimension>;
         using DOFIndexSubentityWiseContainer = std::vector<DOFIndexSubentityWise>;
 
         std::size_t nLeafs;
