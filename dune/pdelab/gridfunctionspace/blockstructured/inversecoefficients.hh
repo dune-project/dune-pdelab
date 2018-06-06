@@ -21,7 +21,7 @@ namespace Dune{
         template<typename FE>
         InverseQkLocalCoefficients(const FE &fe)
             : k(FE::k), blocks(FE::blocks) {
-          setupCodims();
+          setupCodims(fe.type());
           setupSubentities();
 
           const auto &coeffs = fe.localCoefficients();
@@ -33,17 +33,12 @@ namespace Dune{
         }
 
       private:
-        void setupCodims() {
-          switch (d) {
-            case 1:
-              setupCodims1d();
-              break;
-            case 2:
-              setupCodims2d();
-              break;
-            case 3:
-              setupCodims3d();
-              break;
+
+        void setupCodims(const Dune::GeometryType gt) {
+          const auto refEl = Dune::ReferenceElements<double, d>::general(gt);
+
+          for (int c = 0; c < d + 1; ++c) {
+            container[c].resize(refEl.size(c));
           }
         }
 
@@ -56,24 +51,6 @@ namespace Dune{
             setupEdges();
             setupVertices();
           }
-        }
-
-        void setupCodims1d() {
-          container[0].resize(1);
-          container[1].resize(2);
-        }
-
-        void setupCodims2d() {
-          container[0].resize(1);
-          container[1].resize(4);
-          container[2].resize(4);
-        }
-
-        void setupCodims3d() {
-          container[0].resize(1);
-          container[1].resize(6);
-          container[2].resize(12);
-          container[3].resize(8);
         }
 
         void setupFaces() {
