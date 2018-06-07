@@ -138,15 +138,15 @@ namespace Dune{
 
         std::size_t subentities(std::size_t codim) const {
           // all leafs *should* have the same geometry, therefore we can use the first one
-          return localCoefficients[0]->container[codim].size();
+          return localCoefficients[0]->size(codim);
         }
 
         std::size_t sizeOfLocalDOFs(size_type leaf, size_type s, size_type c) const {
-          return localCoefficients[leaf]->container[c][s].size();
+          return localCoefficients[leaf]->size(s, c);
         }
 
         std::size_t localIndex(size_type leaf, size_type s, size_type c, size_type i) const {
-          return localCoefficients[leaf]->container[c][s][i] + localDOFsOffset[leaf];
+          return localCoefficients[leaf]->localDOF(Dune::LocalKey(s, c, i)) + localDOFsOffset[leaf];
         }
 
       private:
