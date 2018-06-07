@@ -57,7 +57,7 @@ namespace Dune {
         using DOFIndex = typename GFS::Ordering::Traits::DOFIndex;
 
         template<typename LFS, typename C, typename Tag, bool fast>
-        friend class LFSIndexCacheBase;
+        friend class Dune::PDELab::LFSIndexCacheBase;
 
         struct Traits
           : public LeafLFSMixin<LocalFunctionSpace<GFS,TreePath>>::template Traits<Tree>
