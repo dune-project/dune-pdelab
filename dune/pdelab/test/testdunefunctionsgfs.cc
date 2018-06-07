@@ -72,6 +72,63 @@ public:
   }
 };
 
+template <class GridView, class RangeType>
+class Problem
+{
+  RangeType eta;
+public:
+  typedef RangeType value_type;
+
+  //! Constructor without arg sets nonlinear term to zero
+  Problem () : eta(0.0) {}
+
+  //! Constructor takes lambda parameter
+  Problem (const RangeType& eta_) : eta(eta_) {}
+
+  //! nonlinearity
+  RangeType q (RangeType u) const
+  {
+    return eta*u*u;
+  }
+
+  //! derivative of nonlinearity
+  RangeType qprime (RangeType u) const
+  {
+    return 2*eta*u;
+  }
+
+  //! right hand side
+  template<typename E, typename X>
+  RangeType f (const E& e, const X& x) const
+  {
+    return -2.0*x.size();
+  }
+
+  //! boundary condition type function (true = Dirichlet)
+  template<typename I, typename X>
+  bool b (const I& i, const X& x) const
+  {
+    return true;
+  }
+
+  //! Dirichlet extension
+  template<typename E, typename X>
+  RangeType g (const E& e, const X& x) const
+  {
+    auto global = e.geometry().global(x);
+    RangeType s=0.0;
+    for (std::size_t i=0; i<global.size(); i++) s+=global[i]*global[i];
+    return s;
+  }
+
+  //! Neumann boundary condition
+  template<typename I, typename X>
+  RangeType j (const I& i, const X& x) const
+  {
+    return 0.0;
+  }
+};
+
 template <int order>
 void solvePoissonProblem()
 {
@@ -358,64 +415,6 @@ public:
 };
 
 
-template<typename Number>
-class Problem
-{
-  Number eta;
-public:
-  typedef Number value_type;
-
-  //! Constructor without arg sets nonlinear term to zero
-  Problem () : eta(0.0) {}
-
-  //! Constructor takes lambda parameter
-  Problem (const Number& eta_) : eta(eta_) {}
-
-  //! nonlinearity
-  Number q (Number u) const
-  {
-    return eta*u*u;
-  }
-
-  //! derivative of nonlinearity
-  Number qprime (Number u) const
-  {
-    return 2*eta*u;
-  }
-
-  //! right hand side
-  template<typename E, typename X>
-  Number f (const E& e, const X& x) const
-  {
-    return -2.0*x.size();
-  }
-
-  //! boundary condition type function (true = Dirichlet)
-  template<typename I, typename X>
-  bool b (const I& i, const X& x) const
-  {
-    return true;
-  }
-
-  //! Dirichlet extension
-  template<typename E, typename X>
-  Number g (const E& e, const X& x) const
-  {
-    auto global = e.geometry().global(x);
-    Number s=0.0;
-    for (std::size_t i=0; i<global.size(); i++) s+=global[i]*global[i];
-    return s;
-  }
-
-  //! Neumann boundary condition
-  template<typename I, typename X>
-  Number j (const I& i, const X& x) const
-  {
-    return 0.0;
-  }
-};
-
-
 void solveParallelPoissonProblem()
 {
   // read ini file
@@ -438,7 +437,7 @@ void solveParallelPoissonProblem()
 
   // make user functions
   double eta = 2.0;
-  Problem<double> problem(eta);
+  Problem<GV,double> problem(eta);
   auto glambda = [&](const auto& e, const auto& x){return problem.g(e,x);};
   auto g = PDELab::makeGridFunctionFromCallable(gv,glambda);
   auto blambda = [&](const auto& i, const auto& x){return problem.b(i,x);};
@@ -485,7 +484,7 @@ void solveParallelPoissonProblem()
     gridFunctionSpace.gridView().communicate(adddh,InteriorBorder_All_Interface,ForwardCommunication);
 
   // Make a local operator
-  typedef NonlinearPoissonFEM<Problem<double>,FEM> LOP;
+  typedef NonlinearPoissonFEM<Problem<GV,double>,FEM> LOP;
   LOP lop(problem);
 
   // Make a global operator
