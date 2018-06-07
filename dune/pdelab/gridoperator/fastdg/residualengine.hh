@@ -256,6 +256,7 @@ namespace Dune{
 
       void postAssembly(const GFSU& gfsu, const GFSV& gfsv)
       {
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP, LOP::doPostAssembly>::post_assembly(lop);
         if(local_assembler.doPostProcessing())
           Dune::PDELab::constrain_residual(local_assembler.testConstraints(),
                                            global_rl_view.container());

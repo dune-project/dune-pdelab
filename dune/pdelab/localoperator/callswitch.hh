@@ -196,6 +196,10 @@ namespace Dune {
         M & mat_ss)
       {
       }
+
+      static void post_assembly()
+      {
+      }
     };
     template<typename LA>
     struct LocalAssemblerCallSwitch<LA,true>
@@ -387,6 +391,11 @@ namespace Dune {
         M & mat_ss)
       {
         la.jacobian_boundary(ig,lfsu_s,x_s,lfsv_s,mat_ss);
+      }
+
+      static void post_assembly(const LA& la)
+      {
+        la.post_assembly();
       }
     };
 

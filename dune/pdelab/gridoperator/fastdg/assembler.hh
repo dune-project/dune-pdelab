@@ -290,7 +290,7 @@ namespace Dune{
           } // it
 
         // Notify assembler engine that assembly is finished
-        assembler_engine.postAssembly(gfsu,gfsv);
+        //assembler_engine.postAssembly(gfsu,gfsv);
 
       }
 

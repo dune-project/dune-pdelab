@@ -99,6 +99,7 @@ namespace Dune {
       static const bool doLambdaVolumePostSkeleton = true;
       static const bool doLambdaSkeleton = true;
       static const bool doLambdaBoundary = true;
+      static const bool doPostAssembly = false;
 
       //////////////////////////////////////////////////////////////////////
       //
