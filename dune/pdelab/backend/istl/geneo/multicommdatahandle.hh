@@ -37,8 +37,8 @@ namespace Dune {
         RankIndex remote_rank = buff.senderRank();
 
         // Get neighbor index from rank
-        int remote_index = std::distance(std::find(_neighbor_ranks.begin(), _neighbor_ranks.end(), remote_rank), _neighbor_ranks.begin());
-        if (remote_index == static_cast<RankIndex>(_neighbor_ranks.size()))
+        int remote_index = std::distance(_neighbor_ranks.begin(), std::find(_neighbor_ranks.begin(), _neighbor_ranks.end(), remote_rank));
+        if (remote_index < 0 || remote_index >= static_cast<RankIndex>(_neighbor_ranks.size()))
           DUNE_THROW(Exception,"Received remote rank " << remote_rank << ", but it's not in the given neighbor set!");
 
         // Get values
@@ -90,8 +90,8 @@ namespace Dune {
           RankIndex remote_rank = buff.senderRank();
 
           // Get neighbor index from rank
-          int remote_index = std::distance(std::find(_neighbor_ranks.begin(), _neighbor_ranks.end(), remote_rank), _neighbor_ranks.begin());
-          if (remote_index == static_cast<RankIndex>(_neighbor_ranks.size()))
+          int remote_index = std::distance(_neighbor_ranks.begin(), std::find(_neighbor_ranks.begin(), _neighbor_ranks.end(), remote_rank));
+          if (remote_index < 0 || remote_index >= static_cast<RankIndex>(_neighbor_ranks.size()))
             DUNE_THROW(Exception,"Received remote rank " << remote_rank << ", but it's not in the given neighbor set!");
 
           // Get values
