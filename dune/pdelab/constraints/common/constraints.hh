@@ -295,9 +295,6 @@ namespace Dune {
         typename std::enable_if<P::isLeaf && LFS::isLeaf>::type
         leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
-          // allocate local constraints map
-          CL cl;
-
           // extract constraints type
           typedef typename LFS::Traits::ConstraintsType C;
           const C & c = lfs.constraints();
