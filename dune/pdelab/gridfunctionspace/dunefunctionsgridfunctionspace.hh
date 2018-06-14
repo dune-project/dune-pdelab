@@ -360,24 +360,24 @@ namespace Dune {
           using ContainerAllocationTag = FlatContainerAllocationTag;
 
           Ordering(const GridFunctionSpace& gfs)
-            : _leafOrdering(gfs)
+            : TypeTree::CompositeNode<LeafOrdering>(LeafOrdering(gfs))
           {}
 
           size_type size() const
           {
-            return _leafOrdering.size();
+            return this->child(Indices::_0).size();
           }
 
           /** \brief Same as size(), because block size is always 1
            */
           size_type blockCount() const
           {
-            return _leafOrdering.size();
+            return this->child(Indices::_0).size();
           }
 
           size_type maxLocalSize() const
           {
-            return _leafOrdering.maxLocalSize();
+            return this->child(Indices::_0).maxLocalSize();
           }
 
           /** \brief Returns true if there is at least one entity of the given codim
@@ -385,14 +385,14 @@ namespace Dune {
            */
           bool contains(typename Traits::SizeType codim) const
           {
-            return _leafOrdering.contains(codim);
+            return this->child(Indices::_0).contains(codim);
           }
 
           /** \brief True if for all entities of the given codim the same number of data items has to be communicated
            */
           bool fixedSize(typename Traits::SizeType codim) const
           {
-            return _leafOrdering.fixedSize(codim);
+            return this->child(Indices::_0).fixedSize(codim);
           }
 
           template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
@@ -402,17 +402,15 @@ namespace Dune {
                                  CIOutIterator ci_out, const CIOutIterator ci_end) const
           {
             DIOutIterator dummy;
-            return _leafOrdering.extract_entity_indices(ei, child_index, ci_out, ci_end, dummy);
+            return this->child(Indices::_0).extract_entity_indices(ei, child_index, ci_out, ci_end, dummy);
           }
 
         private:
 
           ContainerIndex containerIndex(const DOFIndex& i) const
           {
-            return _leafOrdering.containerIndex(i);
+            return this->child(Indices::_0).containerIndex(i);
           }
-
-          const LeafOrdering _leafOrdering;
 
         };
 
