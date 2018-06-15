@@ -170,6 +170,8 @@ dune_add_test(SOURCES testranktransmission.cc
 
 dune_add_test(SOURCES testl2.cc)
 
+dune_add_test(SOURCES test-blocked-istl-ordering.cc)
+
 exclude_from_headercheck(
   gridexamples.hh
   helmholtzoperator.hh
