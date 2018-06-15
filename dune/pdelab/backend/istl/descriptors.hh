@@ -74,7 +74,9 @@ namespace Dune {
           // and matrix accesses.
           // To work around that problem, we override the user and just turn off
           // blocking internally.
-          return Traits::blocked && (blocking != Blocking::fixed || !GFS::isLeaf || block_size_ > 1);
+          // A bock size of 0 also needs special handling, as it is actually a marker for
+          // automatic block size deduction
+          return Traits::blocked && (blocking != Blocking::fixed || !GFS::isLeaf || block_size_ > 1 || block_size_ == 0);
         }
 
       };
