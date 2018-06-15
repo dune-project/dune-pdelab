@@ -28,6 +28,8 @@ namespace Dune {
 
     public:
 
+      using value_type = typename QR::value_type;
+
       //! The coordinate type of the local coordinates of the rule.
       using CoordType = typename QR::CoordType;
 
