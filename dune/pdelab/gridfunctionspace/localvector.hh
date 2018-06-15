@@ -187,6 +187,9 @@ namespace Dune {
       //! The const reference type of this container.
       typedef typename BaseContainer::const_reference const_reference;
 
+      using iterator = typename BaseContainer::iterator;
+      using const_iterator = typename BaseContainer::const_iterator;
+
       //! The weight type of this container.
       /**
        * A value of this type will be used to assign a weight to contributions in
@@ -201,6 +204,26 @@ namespace Dune {
       WeightedAccumulationView weightedAccumulationView(weight_type weight)
       {
         return WeightedAccumulationView(*this,weight);
+      }
+
+      iterator begin()
+      {
+        return _container.begin();
+      }
+
+      iterator end()
+      {
+        return _container.end();
+      }
+
+      const_iterator begin() const
+      {
+        return _container.begin();
+      }
+
+      const_iterator end() const
+      {
+        return _container.end();
       }
 
       //! Access the value in this container associated with the i-th degree of freedom of the LocalFunctionSpace lfs.
