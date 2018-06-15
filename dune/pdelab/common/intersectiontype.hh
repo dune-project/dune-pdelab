@@ -17,7 +17,8 @@ namespace Dune {
       processor = 0, //!< processor boundary intersection (neighbor() == false && boundary() == false) or outside entity not in EntitySet
       skeleton = 1,  //!< skeleton intersection (neighbor() == true && boundary() == false)
       boundary = 2,  //!< domain boundary intersection (neighbor() == false && boundary() == true)
-      periodic = 3   //!< periodic boundary intersection (neighbor() == true && boundary() == true)
+      periodic = 3,  //!< periodic boundary intersection (neighbor() == true && boundary() == true)
+      invalid  = 127
 
     };
 
