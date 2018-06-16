@@ -15,35 +15,6 @@
 namespace Dune {
   namespace PDELab {
 
-    template<bool is_galerkin = true>
-    struct ResidualEngineAssemblyFlags
-    {
-      static constexpr bool skipVariablePart()
-      {
-        return false;
-      }
-
-      static constexpr bool skipConstantPart()
-      {
-        return false;
-      }
-
-      static constexpr bool skipOffDiagonalSkeletonPart()
-      {
-        return false;
-      }
-
-      static constexpr bool skipDiagonalSkeletonPart()
-      {
-        return true;
-      }
-
-      static constexpr std::bool_constant<is_galerkin> isGalerkin()
-      {
-        return {};
-      }
-    };
-
     enum class Galerkin { disable, enable, automatic };
 
     static constexpr auto enableGalerkin = std::integral_constant<Galerkin,Galerkin::enable>{};
@@ -59,12 +30,14 @@ namespace Dune {
       using TestSpace       = typename TestVector::GridFunctionSpace;
       using TestLocalSpace  = LocalFunctionSpace<TestSpace>;
       using TestLFS         = LocalFunctionSpace<TestSpace>;
-      using TestLFSCache    = LFSIndexCache<TestLFS>;
+      using TestSpaceCache  = LFSIndexCache<TestLFS>;
 
       using TrialSpace      = typename TrialVector::GridFunctionSpace;
       using TrialLocalSpace = LocalFunctionSpace<TrialSpace>;
       using TrialLFS        = LocalFunctionSpace<TrialSpace>;
-      using TrialLFSCache   = LFSIndexCache<TrialLFS>;
+      using TrialSpaceCache = LFSIndexCache<TrialLFS>;
+
+      using EntitySet       = typename TestSpace::Traits::EntitySet;
 
       static constexpr std::bool_constant<galerkin == Galerkin::automatic ?
                                           std::is_same<TrialSpace,TestSpace>::value : bool(galerkin)> isGalerkin()
@@ -80,6 +53,56 @@ namespace Dune {
       TestVector* _test_vector;
 
     public:
+
+      template<typename CellFlavor>
+      struct Data
+        : public Context::RootContext
+      {
+
+        using Flavor = CellFlavor;
+        using Engine = ResidualEngine;
+        using EntitySet = typename Engine::EntitySet;
+
+        static constexpr bool skipVariablePart()
+        {
+          return false;
+        }
+
+        static constexpr bool skipConstantPart()
+        {
+          return false;
+        }
+
+        static constexpr bool skipOffDiagonalSkeletonPart()
+        {
+          return false;
+        }
+
+        static constexpr bool skipDiagonalSkeletonPart()
+        {
+          return true;
+        }
+
+        static constexpr auto isGalerkin()
+        {
+          return ResidualEngine::isGalerkin();
+        }
+
+        Data(Engine& engine)
+          : _engine(engine)
+        {}
+
+        Engine& engine()
+        {
+          return _engine;
+        }
+
+      private:
+
+        Engine& _engine;
+
+      };
+
 
       static constexpr bool intersectionsTwoSided()
       {
@@ -128,36 +151,53 @@ namespace Dune {
         return _test_vector->gridFunctionSpace();
       }
 
+      TestSpaceCache makeTestSpaceCache() const
+      {
+        return TestSpaceCache();
+      }
+
       const TrialSpace& trialSpace() const
       {
         return _trial_vector->gridFunctionSpace();
       }
 
+      TrialSpaceCache makeTrialSpaceCache() const
+      {
+        return TrialSpaceCache();
+      }
+
       template<typename Assembler>
       auto context(const Assembler& assembler)
       {
-        return makeContext(
-          insideCell(
-            assembler.entitySet(),
-            cellGridData(assembler.entitySet()),
-            trialSpaceData<TrialLFS,TrialLFSCache>(isGalerkin(),testSpaceData<TestLFS,TestLFSCache,CellType::Inside>(testSpace()),trialSpace()),
-            cellArgumentData(CachedVectorData<UncachedVectorView<TestVector,TestLFSCache>,LocalViewDataMode::read>()),
-            cellResidualData(CachedVectorData<UncachedVectorView<TestVector,TestLFSCache>,LocalViewDataMode::accumulate>()),
-            extractCellContext<CellDataHolder>(*this,*_lop)
-            ),
-          outsideCell(
-            assembler.entitySet(),
-            cellGridData(assembler.entitySet()),
-            trialSpaceData<TrialLFS,TrialLFSCache>(isGalerkin(),testSpaceData<TestLFS,TestLFSCache,CellType::Outside>(testSpace()),trialSpace()),
-            cellArgumentData(CachedVectorData<UncachedVectorView<TestVector,TestLFSCache>,LocalViewDataMode::read>()),
-            cellResidualData(CachedVectorData<UncachedVectorView<TestVector,TestLFSCache>,LocalViewDataMode::accumulate>()),
-            extractCellContext<CellDataHolder>(*this,*_lop)
-            ),
-          cellDomainData(assembler.entitySet()),
-          intersectionDomainData(assembler.entitySet()),
-          ResidualEngineAssemblyFlags<isGalerkin()>(),
-          extractContext<GlobalDataHolder>(*this,*_lop)
-          );
+        return
+          extractContext(
+            *_lop,
+            intersectionDomainData(
+              cellDomainData(
+                outsideCell(
+                  extractCellContext(
+                    *_lop,
+                    cellResidualData(
+                      cachedVectorData<UncachedVectorView<TestVector,TestSpaceCache>,LocalViewDataMode::accumulate>(
+                        cellArgumentData(
+                          cachedVectorData<UncachedVectorView<TrialVector,TrialSpaceCache>,LocalViewDataMode::read>(
+                            trialSpaceData(
+                              testSpaceData(
+                                cellGridData(
+                                  Data<CellFlavor::Outside>(*this)
+                                  )))))))),
+                  insideCell(
+                    extractCellContext(
+                      *_lop,
+                      cellResidualData(
+                        cachedVectorData<UncachedVectorView<TestVector,TestSpaceCache>,LocalViewDataMode::accumulate>(
+                          cellArgumentData(
+                            cachedVectorData<UncachedVectorView<TrialVector,TrialSpaceCache>,LocalViewDataMode::read>(
+                              trialSpaceData(
+                                testSpaceData(
+                                  cellGridData(
+                                    Data<CellFlavor::Inside>(*this)
+                                    )))))))))))));
       }
 
       template<typename Context>

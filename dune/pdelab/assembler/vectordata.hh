@@ -19,11 +19,14 @@ namespace Dune {
 
     enum class LocalViewDataMode { read, write, accumulate, readWrite, readAccumulate };
 
-    template<typename LV, LocalViewDataMode _mode>
+    template<typename Context, typename LV, LocalViewDataMode _mode>
     class CachedVectorData
+      : public Context
     {
 
     protected:
+
+      using Context_ = Context;
 
       struct Traits
       {
@@ -40,14 +43,16 @@ namespace Dune {
         _weight = weight;
       }
 
-      template<typename Context, typename CellContext, typename Engine>
-      void setup(Context& ctx, CellContext& cell_ctx, Engine& engine, typename Traits::Vector& vector)
+      void setup(typename Traits::Vector& vector)
       {
         _local_view.attach(vector);
       }
 
-      template<typename Context, typename CellContext, typename LFSCache>
-      void bind(Context& ctx, CellContext& cell_ctx, const LFSCache& lfs_cache)
+      using Context::bind;
+      using Context::unbind;
+
+      template<typename LFSCache>
+      void bind(const LFSCache& lfs_cache)
       {
         _local_view.bind(lfs_cache);
 
@@ -62,25 +67,8 @@ namespace Dune {
           }
       }
 
-      typename Traits::AccumulationView accumulationView()
-      {
-        return _container.weightedAccumulationView(_weight);
-      }
-
-      const typename Traits::Container& readOnlyView()
-      {
-        return _container;
-      }
-
-    public:
-
-      CachedVectorData(typename Traits::value_type initial = typename Traits::value_type(0))
-        : _weight(1.0)
-        , _initial(initial)
-      {}
-
-      template<typename Context, typename CellContext, typename Entity, typename Index>
-      void unbind(Context& ctx, CellContext& cell_ctx, const Entity&, Index, Index)
+      template<typename LFSCache>
+      void unbind(const LFSCache& lfs_cache)
       {
         if constexpr (_mode == LocalViewDataMode::write or _mode == LocalViewDataMode::readWrite)
           {
@@ -96,6 +84,24 @@ namespace Dune {
         _local_view.unbind();
       }
 
+      typename Traits::AccumulationView accumulationView()
+      {
+        return _container.weightedAccumulationView(_weight);
+      }
+
+      const typename Traits::Container& readOnlyView()
+      {
+        return _container;
+      }
+
+    public:
+
+      CachedVectorData(Context&& ctx, typename Traits::value_type initial = typename Traits::value_type(0))
+        : Context(std::move(ctx))
+        , _weight(1.0)
+        , _initial(initial)
+      {}
+
     private:
 
       typename Traits::LocalView _local_view;
@@ -106,10 +112,24 @@ namespace Dune {
     };
 
 
+    template<typename LV, LocalViewDataMode _mode, typename Context>
+    auto cachedVectorData(typename LV::value_type initial, Context&& ctx)
+    {
+      return CachedVectorData<Context,LV,_mode>{std::move(ctx),initial};
+    }
+
+    template<typename LV, LocalViewDataMode _mode, typename Context>
+    auto cachedVectorData(Context&& ctx)
+    {
+      return CachedVectorData<Context,LV,_mode>{std::move(ctx)};
+    }
+
     template<typename Implementation>
     struct CellResidualData
       : public Implementation
     {
+
+      using Context_ = typename Implementation::Context_;
 
       using Residual = typename Implementation::Traits;
 
@@ -118,16 +138,25 @@ namespace Dune {
         return Implementation::accumulationView();
       }
 
-      template<typename Context, typename CellContext, typename Engine>
-      void setup(Context& ctx, CellContext& cell_ctx, Engine& engine)
+      Context_* setup()
       {
-        Implementation::setup(ctx,cell_ctx,engine,engine.residual());
+        Implementation::setup(Context_::engine().residual());
+        return this;
       }
 
-      template<typename Context, typename CellContext, typename Entity, typename Index>
-      void bind(Context& ctx, CellContext& cell_ctx, const Entity&, Index, Index)
+      using Context_::bind;
+      using Context_::unbind;
+
+      Context_* bind(const typename Context_::Entity&, typename Context_::Index, typename Context_::Index)
       {
-        Implementation::bind(ctx,cell_ctx,cell_ctx.test().cache());
+        Implementation::bind(Context_::test().cache());
+        return this;
+      }
+
+      Context_* unbind(const typename Context_::Entity&, typename Context_::Index, typename Context_::Index)
+      {
+        Implementation::unbind(Context_::test().cache());
+        return this;
       }
 
       CellResidualData(Implementation&& implementation)
@@ -139,13 +168,15 @@ namespace Dune {
     template<typename Implementation>
     auto cellResidualData(Implementation&& implementation)
     {
-      return CellResidualData<Implementation>(std::forward<Implementation>(implementation));
+      return CellResidualData<Implementation>(std::move(implementation));
     }
 
     template<typename Implementation>
     struct CellArgumentData
       : public Implementation
     {
+
+      using Context_ = typename Implementation::Context_;
 
       using Argument = typename Implementation::Traits;
 
@@ -154,16 +185,25 @@ namespace Dune {
         return Implementation::readOnlyView();
       }
 
-      template<typename Context, typename CellContext, typename Engine>
-      void setup(Context& ctx, CellContext& cell_ctx, Engine& engine)
+      Context_* setup()
       {
-        Implementation::setup(ctx,cell_ctx,engine,engine.argument());
+        Implementation::setup(Context_::engine().argument());
+        return this;
       }
 
-      template<typename Context, typename CellContext, typename Entity, typename Index>
-      void bind(Context& ctx, CellContext& cell_ctx, const Entity&, Index, Index)
+      using Context_::bind;
+      using Context_::unbind;
+
+      Context_* bind(const typename Context_::Entity&, typename Context_::Index, typename Context_::Index)
       {
-        Implementation::bind(ctx,cell_ctx,cell_ctx.trial().cache());
+        Implementation::bind(Context_::trial().cache());
+        return this;
+      }
+
+      Context_* unbind(const typename Context_::Entity&, typename Context_::Index, typename Context_::Index)
+      {
+        Implementation::unbind(Context_::trial().cache());
+        return this;
       }
 
       CellArgumentData(Implementation&& implementation)
@@ -175,7 +215,7 @@ namespace Dune {
     template<typename Implementation>
     auto cellArgumentData(Implementation&& implementation)
     {
-      return CellArgumentData<Implementation>(std::forward<Implementation>(implementation));
+      return CellArgumentData<Implementation>(std::move(implementation));
     }
 
   } // namespace PDELab

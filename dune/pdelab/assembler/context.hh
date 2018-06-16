@@ -10,146 +10,177 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename... Components>
-    class ContextBase
-      : public Components...
-    {
+    namespace Context {
 
-    public:
+      struct RootContext
+      {
 
-      ContextBase(Components&&... components)
-        : Components(std::forward<Components>(components))...
+        constexpr RootContext* setup()
+        {
+          return this;
+        }
+
+        template<typename... Args>
+        constexpr RootContext* bind(Args&&... args)
+        {
+          return this;
+        }
+
+        template<typename... Args>
+        constexpr RootContext* unbind(Args&&... args)
+        {
+          return this;
+        }
+
+      };
+
+
+      template<typename Context>
+      std::enable_if_t<std::is_same<Context,RootContext>::value> setup(Context& ctx)
       {}
 
-      template<typename Engine>
-      void setup(Engine& engine)
+      template<typename Context>
+      std::enable_if_t<not std::is_same<Context,RootContext>::value> setup(Context& ctx)
       {
-        auto setup = [&](auto&& c)
-          -> decltype(c.setup(*this,engine))
-          { return c.setup(*this,engine); };
-        applyToVariadicArguments{invoke_if_possible_discard_return(setup,static_cast<Components&>(*this))...};
+        setup(static_cast<decltype(*ctx.setup())>(ctx));
+        ctx.setup();
       }
 
-      template<typename... Args>
-      void bind(Args&&... args)
-      {
-        auto bind = [&](auto&& c)
-          -> decltype(c.bind(*this,std::forward<Args>(args)...))
-          { return c.bind(*this,std::forward<Args>(args)...); };
-        applyToVariadicArguments{invoke_if_possible_discard_return(bind,static_cast<Components&>(*this))...};
-      }
-
-      template<typename... Args>
-      void unbind(Args&&... args)
-      {
-        auto unbind = [&](auto&& c)
-          -> decltype(c.unbind(*this,std::forward<Args>(args)...))
-          { return c.unbind(*this,std::forward<Args>(args)...); };
-        auto apply = [&](auto&& c) { return invoke_if_possible_discard_return(unbind,std::forward<decltype(c)>(c)); };
-        applyToVariadicArgumentsWithOrder(apply,std::forward_as_tuple(static_cast<Components&>(*this)...),reverse_index_sequence_for<Components...>{});
-      }
-
-    };
-
-    template<typename... Components>
-    class CellContext
-      : public ContextBase<Components...>
-    {
-
-      using Base = ContextBase<Components...>;
-
-    public:
-
-      using Domain = typename Base::CellDomain;
-
-      Domain& domain()
-      {
-        return Base::cellDomain();
-      }
-
-      const Domain& domain() const
-      {
-        return Base::cellDomain();
-      }
-
-      CellContext(Components&&... components)
-        : Base(std::forward<Components>(components)...)
+      template<typename Context, typename... Args>
+      std::enable_if_t<std::is_same<Context,RootContext>::value> bind(Context& ctx, Args&&... args)
       {}
 
-      CellContext& cellContext()
+      template<typename Context, typename... Args>
+      std::enable_if_t<not std::is_same<Context,RootContext>::value> bind(Context& ctx, Args&&... args)
       {
-        return *this;
+        bind(static_cast<decltype(*ctx.bind(std::forward<Args>(args)...))>(ctx),std::forward<Args>(args)...);
+        ctx.bind(std::forward<Args>(args)...);
       }
 
-      const CellContext& cellContext() const
-      {
-        return *this;
-      }
-
-    };
-
-    template<typename... Components>
-    class IntersectionContext
-      : public CellContext<Components...>
-    {
-
-      using Base = CellContext<Components...>;
-
-    public:
-
-      using Domain = typename Base::IntersectionDomain;
-
-      Domain& domain()
-      {
-        return Base::intersectionDomain();
-      }
-
-      const Domain& domain() const
-      {
-        return Base::intersectionDomain();
-      }
-
-      IntersectionContext(Components&&... components)
-        : Base(std::forward<Components>(components)...)
+      template<typename Context, typename... Args>
+      std::enable_if_t<std::is_same<Context,RootContext>::value> unbind(Context& ctx, Args&&... args)
       {}
 
-      IntersectionContext& intersectionContext()
+      template<typename Context, typename... Args>
+      std::enable_if_t<not std::is_same<Context,RootContext>::value> unbind(Context& ctx, Args&&... args)
       {
-        return *this;
+        unbind(*ctx.unbind(std::forward<Args>(args)...),std::forward<Args>(args)...);
       }
 
-      const IntersectionContext& intersectionContext() const
+      template<typename Context>
+      class CellContext
+        : public Context
       {
-        return *this;
+
+      public:
+
+        using Domain = typename Context::CellDomain;
+
+        Domain domain() const
+        {
+          return Context::cellDomain();
+        }
+
+        CellContext(Context&& ctx)
+          : Context(std::move(ctx))
+        {}
+
+        CellContext& cellContext()
+        {
+          return *this;
+        }
+
+        const CellContext& cellContext() const
+        {
+          return *this;
+        }
+
+      };
+
+      template<typename Context>
+      class IntersectionContext
+        : public Context
+      {
+
+      public:
+
+        using Domain = typename Context::IntersectionDomain;
+
+        Domain domain() const
+        {
+          return Context::intersectionDomain();
+        }
+
+        IntersectionContext(Context&& ctx)
+          : Context(std::move(ctx))
+        {}
+
+        IntersectionContext& intersectionContext()
+        {
+          return *this;
+        }
+
+        const IntersectionContext& intersectionContext() const
+        {
+          return *this;
+        }
+
+      };
+
+      template<typename Base>
+      class Context
+        : public Base
+      {
+
+        using Domain = int;
+
+      public:
+
+        Domain& domain() = delete;
+        const Domain& domain() const = delete;
+
+        Context(Base&& base)
+          : Base(std::move(base))
+        {}
+
+        void setup()
+        {
+          Dune::PDELab::Context::setup(*static_cast<Base*>(this));
+        }
+
+        template<typename... Args>
+        std::enable_if_t<sizeof...(Args) != 6> bind(Args&&... args)
+        {
+          Dune::PDELab::Context::bind(*static_cast<Base*>(this),std::forward<Args>(args)...);
+        }
+
+        template<typename IntersectionType, typename Intersection, typename Index, typename Entity>
+        void bind(IntersectionType type, const Intersection& is, Index intersection_index, const Entity& entity, Index entity_index, Index unique_index)
+        {
+          Dune::PDELab::Context::bind(*static_cast<Base*>(this),type,is,intersection_index,entity,entity_index,unique_index);
+        }
+
+        template<typename... Args>
+        std::enable_if_t<sizeof...(Args) != 6> unbind(Args&&... args)
+        {
+          Dune::PDELab::Context::unbind(*static_cast<Base*>(this),std::forward<Args>(args)...);
+        }
+
+        template<typename IntersectionType, typename Intersection, typename Index, typename Entity>
+        void unbind(IntersectionType type, const Intersection& is, Index intersection_index, const Entity& entity, Index entity_index, Index unique_index)
+        {
+          Dune::PDELab::Context::unbind(*static_cast<Base*>(this),type,is,intersection_index,entity,entity_index,unique_index);
+        }
+
+      };
+
+      template<typename Context_>
+      auto makeContext(Context_&& ctx)
+      {
+        return Context<IntersectionContext<CellContext<Context_>>>{{{std::move(ctx)}}};
       }
 
-    };
-
-    template<typename... Components>
-    class Context
-      : public IntersectionContext<Components...>
-    {
-
-      using Base = IntersectionContext<Components...>;
-      using Domain = int;
-
-    public:
-
-      Domain& domain() = delete;
-      const Domain& domain() const = delete;
-
-      Context(Components&&... components)
-        : Base(std::forward<Components>(components)...)
-      {}
-
-    };
-
-    template<typename... Components>
-    auto makeContext(Components&&... components)
-    {
-      return Context<std::decay_t<Components>...>{std::forward<Components>(components)...};
     }
-
 
   } // namespace PDELab
 } // namespace Dune
