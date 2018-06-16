@@ -20,7 +20,7 @@
 namespace Dune {
   namespace PDELab {
 
-    namespace CellType {
+    namespace CellFlavor {
 
       struct Inside
       {
@@ -42,29 +42,43 @@ namespace Dune {
 
     }
 
-    template<typename ES>
+    template<typename Context>
     class CellGridData
+      : public Context
     {
 
     public:
 
-      using EntitySet = ES;
-      using Entity    = typename ES::template Codim<0>::Entity;
-      using Index     = typename ES::IndexSet::Index;
+      using Cell = CellGridData;
+
+      using EntitySet = typename Context::EntitySet;
+      using Entity    = typename EntitySet::template Codim<0>::Entity;
+      using Index     = typename EntitySet::IndexSet::Index;
       using Geometry  = typename Entity::Geometry;
 
       const Entity& entity() const
       {
-        assert(_entity);
+        assert(bound());
         return *_entity;
       }
 
       Index entityIndex() const {
+        assert(bound());
         return _entity_index;
       }
 
       Index uniqueIndex() const {
+        assert(bound());
         return _unique_index;
+      }
+
+      const Geometry& geometry() const
+      {
+        assert(bound());
+        if (not _geometry)
+          return _geometry.emplace(entity().geometry());
+        else
+          return *_geometry;
       }
 
       bool bound() const
@@ -72,26 +86,36 @@ namespace Dune {
         return _entity;
       }
 
-      template<typename Context, typename CellContext>
-      void bind(Context& ctx, CellContext& cell_ctx, const Entity& entity, Index entity_index, Index unique_index)
+      CellGridData& cell()
+      {
+        return *this;
+      }
+
+      using Context::bind;
+      using Context::unbind;
+
+      Context* bind(const Entity& entity, Index entity_index, Index unique_index)
       {
         _entity = &entity;
         _entity_index = entity_index;
         _unique_index = unique_index;
+        return this;
       }
 
-      template<typename Context, typename CellContext>
-      void unbind(Context& ctx, CellContext& cell_ctx, const Entity& entity, Index entity_index, Index unique_index)
+      Context* unbind(const Entity& entity, Index entity_index, Index unique_index)
       {
         _entity = nullptr;
-        _entity_index = ES::IndexSet::invalidIndex();
-        _unique_index = ES::IndexSet::invalidIndex();
+        _entity_index = EntitySet::IndexSet::invalidIndex();
+        _unique_index = EntitySet::IndexSet::invalidIndex();
+        _geometry.reset();
+        return this;
       }
 
-      CellGridData()
-        : _entity(nullptr)
-        , _entity_index(ES::IndexSet::invalidIndex())
-        , _unique_index(ES::IndexSet::invalidIndex())
+      CellGridData(Context&& ctx)
+        : Context(std::move(ctx))
+        , _entity(nullptr)
+        , _entity_index(EntitySet::IndexSet::invalidIndex())
+        , _unique_index(EntitySet::IndexSet::invalidIndex())
       {}
 
     private:
@@ -99,18 +123,20 @@ namespace Dune {
       const Entity* _entity;
       Index _entity_index;
       Index _unique_index;
+      mutable std::optional<Geometry> _geometry;
 
     };
 
-    template<typename ES>
-    auto cellGridData(const ES&)
+    template<typename Context>
+    auto cellGridData(Context&& ctx)
     {
-      return CellGridData<ES>{};
+      return CellGridData<Context>{std::move(ctx)};
     }
 
 
-    template<typename ES>
+    template<typename Context>
     class CellDomainData
+      : public Context
     {
 
     public:
@@ -122,8 +148,9 @@ namespace Dune {
 
       public:
 
-        using EntitySet = ES;
-        using Entity    = typename ES::template Codim<0>::Entity;
+        using EntitySet = typename Context::EntitySet;
+        using Entity    = typename EntitySet::template Codim<0>::Entity;
+        using Field     = typename EntitySet::ctype;
 
       private:
 
@@ -134,16 +161,16 @@ namespace Dune {
         struct Embedding {
 
           using Global  = typename Entity::Geometry;
-          using Local   = IdentityGeometry<typename ES::ctype,ES::dimension>;
+          using Local   = IdentityGeometry<Field,EntitySet::dimension>;
 
           Global global() const
           {
-            return _entity->geometry();
+            return _data.inside().geometry();
           }
 
           Local local() const
           {
-            return Local(_entity->type());
+            return Local(_data.inside().entity().type());
           }
 
           Local inside() const
@@ -155,29 +182,27 @@ namespace Dune {
 
           friend class CellDomain;
 
-          Embedding(const Entity& e)
-            : _entity(&e)
+          Embedding(const CellDomainData& data)
+            : _data(data)
           {}
 
-          const Entity* _entity;
+          const CellDomainData& _data;
 
         };
 
         Embedding embedding() const
         {
-          assert(_entity);
-          return {*_entity};
+          return {_data};
         }
 
         const Entity& entity() const
         {
-          assert(_entity);
-          return *_entity;
+          return _data.inside().entity();
         }
 
         bool bound() const
         {
-          return _entity;
+          return _data.inside().bound();
         }
 
         auto quadratureRule(std::size_t order, QuadratureType::Enum quadrature_type = QuadratureType::GaussLegendre) const
@@ -186,73 +211,37 @@ namespace Dune {
           return QuadratureRule(rule,embedding());
         }
 
-        CellDomain()
-          : _entity(nullptr)
+        CellDomain(const CellDomainData& data)
+          : _data(data)
         {}
 
       private:
 
-        const Entity* _entity;
+        const CellDomainData& _data;
 
       };
 
-      CellDomain& cellDomain()
+      CellDomain cellDomain() const
       {
-        return _cell_domain;
+        return {*this};
       }
 
-      const CellDomain& cellDomain() const
-      {
-        return _cell_domain;
-      }
-
-      CellDomain& domain()
-      {
-        return _cell_domain;
-      }
-
-      const CellDomain& domain() const
-      {
-        return _cell_domain;
-      }
-
-      template<typename Context>
-      void bind(
-        Context& ctx,
-        const typename CellDomain::Entity& entity,
-        typename CellDomain::Index entity_index,
-        typename CellDomain::Index unique_index
-        )
-      {
-        _cell_domain._entity = &entity;
-      }
-
-      template<typename Context>
-      void unbind(
-        Context& ctx,
-        const typename CellDomain::Entity& entity,
-        typename CellDomain::Index entity_index,
-        typename CellDomain::Index unique_index
-        )
-      {
-        _cell_domain._entity = nullptr;
-      }
-
-    private:
-
-      CellDomain _cell_domain;
+      CellDomainData(Context&& ctx)
+        : Context(std::move(ctx))
+      {}
 
     };
 
-    template<typename ES>
-    auto cellDomainData(const ES&)
+    template<typename Context>
+    auto cellDomainData(Context&& ctx)
     {
-      return CellDomainData<ES>{};
+      return CellDomainData<Context>{std::move(ctx)};
     }
 
 
-    template<typename ES>
+    template<typename Context>
     class IntersectionDomainData
+      : public Context
     {
 
     public:
@@ -264,13 +253,12 @@ namespace Dune {
 
       public:
 
-        using EntitySet    = ES;
-        using Entity       = typename ES::template Codim<0>::Entity;
-        using Intersection = typename ES::Intersection;
+        using EntitySet    = typename Context::EntitySet;
+        using Entity       = typename EntitySet::template Codim<0>::Entity;
+        using Intersection = typename EntitySet::Intersection;
 
       private:
 
-        using Cell  = typename ES::template Codim<0>::Entity;
         using Index = typename EntitySet::IndexSet::Index;
         static constexpr Index invalid_index = EntitySet::IndexSet::invalidIndex();
         static constexpr auto invalid_type   = IntersectionType::invalid;
@@ -279,47 +267,46 @@ namespace Dune {
 
         struct Embedding {
 
+          friend class IntersectionDomain;
+
           using Global  = typename Intersection::Geometry;
           using Inside  = typename Intersection::LocalGeometry;
           using Outside = typename Intersection::LocalGeometry;
 
           Global global() const
           {
-            return _intersection->geometry();
+            return _data.intersectionGeometry();
           }
 
           Inside inside() const
           {
-            return _intersection->geometryInInside();
+            return _data.intersectionGeometryInInside();
           }
 
           Outside outside() const
           {
-            return _intersection->geometryInOutside();
+            return _data.intersectionGeometryInOutside();
           }
 
         private:
 
-          friend class IntersectionDomain;
-
-          Embedding(const Intersection& intersection)
-            : _intersection(&intersection)
+          Embedding(const IntersectionDomainData& data)
+            : _data(data)
           {}
 
-          const Intersection* _intersection;
+          const IntersectionDomainData& _data;
 
         };
 
         Embedding embedding() const
         {
           assert(bound());
-          return {*_intersection};
+          return {_data};
         }
 
         const Intersection& intersection() const
         {
-          assert(bound());
-          return *_intersection;
+          return _data.intersection();
         }
 
         const Intersection& entity() const
@@ -329,109 +316,161 @@ namespace Dune {
 
         Index index() const
         {
-          assert(bound());
-          return _index;
+          return _data.intersectionIndex();
         }
 
         bool bound() const
         {
-          return _intersection;
+          return _data._intersection;
         }
 
         auto quadratureRule(std::size_t order, QuadratureType::Enum quadrature_type = QuadratureType::GaussLegendre) const
         {
-          assert(bound());
           auto& rule = QuadratureRules<typename Embedding::Geometry::ctype,Embedding::Geometry::mydimension>::rule(embedding().global().type(),order,quadrature_type);
           return QuadratureRule(rule,embedding());
         }
 
-        IntersectionDomain()
-          : _intersection(nullptr)
-          , _index(invalid_index)
-          , _type(invalid_type)
+        IntersectionDomain(const IntersectionDomainData& data)
+          : _data(data)
         {}
 
       private:
 
-        const Intersection* _intersection;
-        Index _index;
-        IntersectionType _type;
+        const IntersectionDomainData& _data;
 
       };
 
-      IntersectionDomain& intersectionDomain()
+      IntersectionDomain intersectionDomain() const
       {
-        return _intersection_domain;
+        return {*this};
       }
 
-      const IntersectionDomain& intersectionDomain() const
+      const typename IntersectionDomain::Intersection& intersection() const
       {
-        return _intersection_domain;
+        assert(_intersection);
+        return *_intersection;
       }
 
-      template<typename Context, typename IntersectionType>
-      void bind(
-        Context& ctx,
+      IntersectionType intersectionType() const
+      {
+        assert(_intersection);
+        return _intersection_type;
+      }
+
+      typename IntersectionDomain::Index intersectionIndex() const
+      {
+        assert(_intersection);
+        return _intersection_index;
+      }
+
+      using Context::bind;
+      using Context::unbind;
+
+      template<typename IntersectionType>
+      Context* bind(
         IntersectionType type,
         const typename IntersectionDomain::Intersection& intersection,
         typename IntersectionDomain::Index index,
-        const typename IntersectionDomain::Cell&,
+        const typename IntersectionDomain::Entity&,
         typename IntersectionDomain::Index,
         typename IntersectionDomain::Index
         )
       {
-        _intersection_domain._intersection = &intersection;
-        _intersection_domain._index = index;
-        _intersection_domain._type = type;
+        _intersection = &intersection;
+        _intersection_index = index;
+        _intersection_type = type;
+        return this;
       }
 
-      template<typename Context, typename IntersectionType>
-      void unbind(
-        Context& ctx,
+      template<typename IntersectionType>
+      Context* unbind(
         IntersectionType type,
         const typename IntersectionDomain::Intersection& intersection,
         typename IntersectionDomain::Index index,
-        const typename IntersectionDomain::Cell&,
+        const typename IntersectionDomain::Entity&,
         typename IntersectionDomain::Index,
         typename IntersectionDomain::Index
         )
       {
-        _intersection_domain._intersection = nullptr;
-        _intersection_domain._index = IntersectionDomain::invalid_index;
-        _intersection_domain._type = IntersectionDomain::invalid_type;
+        _intersection = nullptr;
+        _intersection_index = IntersectionDomain::invalid_index;
+        _intersection_type = IntersectionDomain::invalid_type;
+        _geometry.reset();
+        _geometry_in_inside.reset();
+        _geometry_in_outside.reset();
+        return this;
+      }
+
+      IntersectionDomainData(Context&& ctx)
+        : Context(std::move(ctx))
+        , _intersection(nullptr)
+        , _intersection_index(IntersectionDomain::invalid_index)
+        , _intersection_type(IntersectionDomain::invalid_type)
+      {}
+
+      const typename IntersectionDomain::Embedding::Global& intersectionGeometry() const
+      {
+        assert(_intersection);
+        if (not _geometry)
+          return _geometry.emplace(_intersection->geometry());
+        else
+          return *_geometry;
+      }
+
+      const typename IntersectionDomain::Embedding::Inside& intersectionGeometryInInside() const
+      {
+        assert(_intersection);
+        if (not _geometry_in_inside)
+          return _geometry_in_inside.emplace(_intersection->geometryInInside());
+        else
+          return *_geometry_in_inside;
+      }
+
+      const typename IntersectionDomain::Embedding::Outside& intersectionGeometryInOutside() const
+      {
+        assert(_intersection);
+        if (not _geometry_in_outside)
+          return _geometry_in_outside.emplace(_intersection->geometryInOutside());
+        else
+          return *_geometry_in_outside;
       }
 
     private:
 
-      IntersectionDomain _intersection_domain;
+      const typename IntersectionDomain::Intersection* _intersection;
+      typename IntersectionDomain::Index _intersection_index;
+      IntersectionType _intersection_type;
+      mutable std::optional<typename IntersectionDomain::Embedding::Global> _geometry;
+      mutable std::optional<typename IntersectionDomain::Embedding::Inside> _geometry_in_inside;
+      mutable std::optional<typename IntersectionDomain::Embedding::Outside> _geometry_in_outside;
 
     };
 
-    template<typename ES>
-    auto intersectionDomainData(const ES&)
+    template<typename Context>
+    auto intersectionDomainData(Context&& ctx)
     {
-      return IntersectionDomainData<ES>{};
+      return IntersectionDomainData<Context>{std::move(ctx)};
     }
 
 
-    template<typename ES, typename... Components>
+    template<typename Context>
     class InsideCell
-      : public Components...
+      : public Context
     {
 
       struct InsideTraits
       {
-        using EntitySet = ES;
-        using Element   = typename ES::template Codim<0>::Entity;
-        using Index     = typename ES::IndexSet::Index;
+        using EntitySet = typename Context::EntitySet;
+        using Element   = typename EntitySet::template Codim<0>::Entity;
+        using Index     = typename EntitySet::IndexSet::Index;
       };
 
     public:
 
       using Inside    = InsideCell;
 
-      InsideCell(Components&&... components)
-        : Components(std::forward<Components>(components))...
+      InsideCell(Context&& ctx)
+        : Context(std::move(ctx))
       {}
 
       Inside& inside()
@@ -444,92 +483,37 @@ namespace Dune {
         return *this;
       }
 
-      template<typename Context, typename Engine>
-      void setup(Context& ctx, Engine& engine)
-      {
-        auto setup = [&](auto&& c)
-          -> decltype(c.setup(ctx,*this,engine))
-          { return c.setup(ctx,*this,engine); };
-        applyToVariadicArguments{invoke_if_possible_discard_return(setup,static_cast<Components&>(*this))...};
-      }
-
-      template<typename Context>
-      void bind(Context& ctx, const typename InsideTraits::Element& element, typename InsideTraits::Index entity_index, typename InsideTraits::Index unique_index)
-      {
-        auto bind = [&](auto&& c)
-          -> decltype(c.bind(ctx,*this,element,entity_index,unique_index))
-          { return c.bind(ctx,*this,element,entity_index,unique_index); };
-        applyToVariadicArguments{invoke_if_possible_discard_return(bind,static_cast<Components&>(*this))...};
-      }
-
-      template<typename Context>
-      void unbind(Context& ctx, const typename InsideTraits::Element& element, typename InsideTraits::Index entity_index, typename InsideTraits::Index unique_index)
-      {
-        auto unbind = [&](auto&& c)
-          -> decltype(c.unbind(ctx,*this,element,entity_index,unique_index))
-          { return c.unbind(ctx,*this,element,entity_index,unique_index); };
-        auto apply = [&](auto&& c) { return invoke_if_possible_discard_return(unbind,std::forward<decltype(c)>(c)); };
-        applyToVariadicArgumentsWithOrder(apply,std::forward_as_tuple(static_cast<Components&>(*this)...),reverse_index_sequence_for<Components...>{});
-      }
-
     };
 
-    template<typename EntitySet, typename... Components>
-    auto insideCell(const EntitySet&, Components&&... components)
+    template<typename Context>
+    auto insideCell(Context&& ctx)
     {
-      return InsideCell<EntitySet,std::decay_t<Components>...>{std::forward<Components>(components)...};
+      return InsideCell<Context>{std::move(ctx)};
     }
 
 
-    template<typename ES, typename... Components>
+    template<typename Context, typename CellContext>
     class OutsideCell
+      : public Context
     {
 
       struct OutsideTraits
       {
-        using EntitySet    = ES;
-        using Element      = typename ES::template Codim<0>::Entity;
-        using Intersection = typename ES::Intersection;
-        using Index        = typename ES::IndexSet::Index;
+        using EntitySet    = typename CellContext::EntitySet;
+        using Entity       = typename EntitySet::template Codim<0>::Entity;
+        using Intersection = typename EntitySet::Intersection;
+        using Index        = typename EntitySet::IndexSet::Index;
       };
 
-    private:
-
-      struct Outside
-        : public Components...
-      {
-
-        Outside(Components&&... components)
-          : Components(std::forward<Components>(components))...
-        {}
-
-      };
+      using Outside = CellContext;
 
       Outside _outside;
 
-      template<typename Context>
-      void doBind(Context& ctx, const typename OutsideTraits::Element& outside_element, typename OutsideTraits::Index outside_entity_index, typename OutsideTraits::Index outside_unique_index)
-      {
-        auto bind = [&](auto&& c)
-          -> decltype(c.bind(ctx,_outside,outside_element,outside_entity_index,outside_unique_index))
-          { return c.bind(ctx,_outside,outside_element,outside_entity_index,outside_unique_index); };
-        applyToVariadicArguments{invoke_if_possible_discard_return(bind,static_cast<Components&>(_outside))...};
-      }
-
-      template<typename Context>
-      void doUnbind(Context& ctx, const typename OutsideTraits::Element& outside_element, typename OutsideTraits::Index outside_entity_index, typename OutsideTraits::Index outside_unique_index)
-      {
-        auto unbind = [&](auto&& c)
-          -> decltype(c.unbind(ctx,_outside,outside_element,outside_entity_index,outside_unique_index))
-          { return c.unbind(ctx,_outside,outside_element,outside_entity_index,outside_unique_index); };
-        auto apply = [&](auto&& c) { return invoke_if_possible_discard_return(unbind,std::forward<decltype(c)>(c)); };
-        applyToVariadicArgumentsWithOrder(apply,std::forward_as_tuple(static_cast<Components&>(_outside)...),reverse_index_sequence_for<Components...>{});
-      }
-
     public:
 
-      OutsideCell(Components&&... components)
-        : _outside(std::forward<Components>(components)...)
+      OutsideCell(Context&& ctx, CellContext&& cell_ctx)
+        : Context(std::move(ctx))
+        , _outside(std::move(cell_ctx))
       {}
 
       Outside& outside()
@@ -542,65 +526,109 @@ namespace Dune {
         return _outside;
       }
 
-      template<typename Context, typename Engine>
-      void setup(Context& ctx, Engine& engine)
+      Context* setup()
       {
-        auto setup = [&](auto&& c)
-          -> decltype(c.setup(ctx,_outside,engine))
-          { return c.setup(ctx,_outside,engine); };
-        applyToVariadicArguments{invoke_if_possible_discard_return(setup,static_cast<Components&>(_outside))...};
+        Dune::PDELab::Context::setup(_outside);
+        return this;
       }
 
-      template<typename Context>
-      void bind(
-        Context& ctx,
+      using Context::bind;
+      using Context::unbind;
+
+      template<typename IntersectionType>
+      Context* bind(
+        IntersectionType type,
+        const typename OutsideTraits::Intersection&,
+        typename OutsideTraits::Index,
+        const typename OutsideTraits::Entity& entity,
+        typename OutsideTraits::Index entity_index,
+        typename OutsideTraits::Index unique_index
+        )
+      {
+        doBind(type,entity,entity_index,unique_index);
+        return this;
+      }
+
+      template<typename IntersectionType>
+      Context* unbind(
+        IntersectionType type,
+        const typename OutsideTraits::Intersection&,
+        typename OutsideTraits::Index,
+        const typename OutsideTraits::Entity& entity,
+        typename OutsideTraits::Index entity_index,
+        typename OutsideTraits::Index unique_index
+        )
+      {
+        doUnbind(type,entity,entity_index,unique_index);
+        return this;
+      }
+
+    private:
+
+      template<typename IntersectionType>
+      void doBind(
+        IntersectionType,
+        const typename OutsideTraits::Entity& outside_element,
+        typename OutsideTraits::Index outside_entity_index,
+        typename OutsideTraits::Index outside_unique_index
+        )
+      {}
+
+      void doBind(
         std::integral_constant<IntersectionType,IntersectionType::skeleton>,
-        const typename OutsideTraits::Intersection&, typename OutsideTraits::Index,
-        const typename OutsideTraits::Element& outside_element, typename OutsideTraits::Index outside_entity_index, typename OutsideTraits::Index outside_unique_index
+        const typename OutsideTraits::Entity& outside_element,
+        typename OutsideTraits::Index outside_entity_index,
+        typename OutsideTraits::Index outside_unique_index
         )
       {
-        doBind(ctx,outside_element,outside_entity_index,outside_unique_index);
+        Dune::PDELab::Context::bind(_outside,outside_element,outside_entity_index,outside_unique_index);
       }
 
-      template<typename Context>
-      void bind(
-        Context& ctx,
+      void doBind(
         std::integral_constant<IntersectionType,IntersectionType::periodic>,
-        const typename OutsideTraits::Intersection&, typename OutsideTraits::Index,
-        const typename OutsideTraits::Element& outside_element, typename OutsideTraits::Index outside_entity_index, typename OutsideTraits::Index outside_unique_index
+        const typename OutsideTraits::Entity& outside_element,
+        typename OutsideTraits::Index outside_entity_index,
+        typename OutsideTraits::Index outside_unique_index
         )
       {
-        doBind(ctx,outside_element,outside_entity_index,outside_unique_index);
+        Dune::PDELab::Context::bind(_outside,outside_element,outside_entity_index,outside_unique_index);
       }
 
-      template<typename Context>
-      void unbind(
-        Context& ctx,
+      template<typename IntersectionType>
+      void doUnbind(
+        IntersectionType,
+        const typename OutsideTraits::Entity& outside_element,
+        typename OutsideTraits::Index outside_entity_index,
+        typename OutsideTraits::Index outside_unique_index
+        )
+      {}
+
+      void doUnbind(
         std::integral_constant<IntersectionType,IntersectionType::skeleton>,
-        const typename OutsideTraits::Intersection&, typename OutsideTraits::Index,
-        const typename OutsideTraits::Element& outside_element, typename OutsideTraits::Index outside_entity_index, typename OutsideTraits::Index outside_unique_index
+        const typename OutsideTraits::Entity& outside_element,
+        typename OutsideTraits::Index outside_entity_index,
+        typename OutsideTraits::Index outside_unique_index
         )
       {
-        doUnbind(ctx,outside_element,outside_entity_index,outside_unique_index);
+        Dune::PDELab::Context::unbind(_outside,outside_element,outside_entity_index,outside_unique_index);
       }
 
-      template<typename Context>
-      void unbind(
-        Context& ctx,
+      void doUnbind(
         std::integral_constant<IntersectionType,IntersectionType::periodic>,
-        const typename OutsideTraits::Intersection&, typename OutsideTraits::Index,
-        const typename OutsideTraits::Element& outside_element, typename OutsideTraits::Index outside_entity_index, typename OutsideTraits::Index outside_unique_index
+        const typename OutsideTraits::Entity& outside_element,
+        typename OutsideTraits::Index outside_entity_index,
+        typename OutsideTraits::Index outside_unique_index
         )
       {
-        doUnbind(ctx,outside_element,outside_entity_index,outside_unique_index);
+        Dune::PDELab::Context::unbind(_outside,outside_element,outside_entity_index,outside_unique_index);
       }
 
     };
 
-    template<typename EntitySet, typename... Components>
-    auto outsideCell(const EntitySet&, Components&&... components)
+    template<typename CellContext, typename Context>
+    auto outsideCell(CellContext&& cell_ctx, Context&& ctx)
     {
-      return OutsideCell<EntitySet,std::decay_t<Components>...>{std::forward<Components>(components)...};
+      return OutsideCell<Context,CellContext>{std::move(ctx),std::move(cell_ctx)};
     }
 
   } // namespace PDELab

@@ -11,12 +11,13 @@ namespace Dune {
   namespace PDELab {
 
 
-    template<typename Rule>
+    template<typename Rule_>
     class QuadraturePoint
     {
 
     public:
 
+      using Rule             = Rule_;
       using Native           = typename Rule::Native::value_type;
       using LocalCoordinate  = typename Rule::LocalCoordinate;
       using CellCoordinate   = typename Rule::CellCoordinate;
@@ -71,6 +72,11 @@ namespace Dune {
           return _global.emplace(_rule.global(local()));
         else
           return *_global;
+      }
+
+      const Rule& rule() const
+      {
+        return _rule;
       }
 
       QuadraturePoint(const Native& qp, Index index, const Rule& rule)

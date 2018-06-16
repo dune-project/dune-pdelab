@@ -19,47 +19,48 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename Cell>
+    template<typename Context>
     struct lfs_to_finite_elements
     {};
 
-    template<typename PowerLocalFunctionSpace, typename Cell>
+    template<typename PowerLocalFunctionSpace, typename Context>
     TypeTree::SimplePowerNodeTransformation<
       PowerLocalFunctionSpace,
-      lfs_to_finite_elements<Cell>,
+      lfs_to_finite_elements<Context>,
       TypeTree::PowerNode
       >
-    registerNodeTransformation(PowerLocalFunctionSpace* plfs, lfs_to_finite_elements<Cell>* t, PowerLocalFunctionSpaceTag* tag);
+    registerNodeTransformation(PowerLocalFunctionSpace* plfs, lfs_to_finite_elements<Context>* t, PowerLocalFunctionSpaceTag* tag);
 
-    template<typename CompositeLocalFunctionSpace, typename Cell>
+    template<typename CompositeLocalFunctionSpace, typename Context>
     TypeTree::SimpleCompositeNodeTransformation<
       CompositeLocalFunctionSpace,
-      lfs_to_finite_elements<Cell>,
+      lfs_to_finite_elements<Context>,
       TypeTree::CompositeNode
       >
-    registerNodeTransformation(CompositeLocalFunctionSpace* plfs, lfs_to_finite_elements<Cell>* t, CompositeLocalFunctionSpaceTag* tag);
+    registerNodeTransformation(CompositeLocalFunctionSpace* plfs, lfs_to_finite_elements<Context>* t, CompositeLocalFunctionSpaceTag* tag);
 
-    template<typename LocalFunctionSpace, typename Cell>
+    template<typename LocalFunctionSpace, typename Context>
     TypeTree::SimpleLeafNodeTransformation<
       LocalFunctionSpace,
-      lfs_to_finite_elements<Cell>,
-      FiniteElementWrapper<typename LocalFunctionSpace::Traits::FiniteElement,Cell>
+      lfs_to_finite_elements<Context>,
+      FiniteElementWrapper<typename LocalFunctionSpace::Traits::FiniteElement,Context>
       >
-    registerNodeTransformation(LocalFunctionSpace* plfs, lfs_to_finite_elements<Cell>* t, LeafLocalFunctionSpaceTag* tag);
+    registerNodeTransformation(LocalFunctionSpace* plfs, lfs_to_finite_elements<Context>* t, LeafLocalFunctionSpaceTag* tag);
 
 
-    template<typename LFS, typename LFSCache, typename Cell>
+    template<typename Context, typename LFS, typename LFSCache>
     struct FunctionSpaceData
+      : public Context
     {
 
       using FunctionSpace      = LFS;
       using FunctionSpaceCache = LFSCache;
       using Cache              = LFSCache;
-      using CellType           = Cell;
 
     private:
 
-      using FiniteElements = typename TypeTree::TransformTree<LFS,lfs_to_finite_elements<Cell>>::transformed_type;
+      using fe_transformation = TypeTree::TransformTree<LFS,lfs_to_finite_elements<typename Context::Cell>>;
+      using FiniteElements    = typename fe_transformation::transformed_type;
 
     public:
 
@@ -72,12 +73,14 @@ namespace Dune {
       template<std::size_t... I>
       using Basis = typename FiniteElement<I...>::Basis;
 
-      template<typename Context, typename CellContext, typename Element, typename Index>
-      void bind(Context&, CellContext&, const Element& element, Index, Index)
+      using Context::bind;
+
+      Context* bind(const typename Context::Entity& element, typename Context::Index, typename Context::Index)
       {
         _function_space.bind(element);
         TypeTree::applyToTreePair(_function_space,_finite_elements,set_finite_elements{});
         _function_space_cache.update();
+        return this;
       }
 
       template<typename... Indices>
@@ -89,8 +92,6 @@ namespace Dune {
       template<typename... Indices>
       auto& finiteElement(Indices... indices)
       {
-        //using FiniteElement = std::decay_t<decltype(child(_function_space,indices...).finiteElement())>;
-        //return FiniteElementWrapper<FiniteElement>(child(_function_space,indices...).finiteElement());
         return TypeTree::child(_finite_elements,indices...);
       }
 
@@ -110,17 +111,18 @@ namespace Dune {
         return _function_space_cache;
       }
 
-      template<typename GFS, typename... Args>
-      FunctionSpaceData(const GFS& gfs, Args&&... args)
-        : _function_space(gfs)
-        , _function_space_cache(_function_space,std::forward<Args>(args)...)
-        , _finite_elements(TypeTree::TransformTree<LFS,lfs_to_finite_elements<Cell>>::transform(_function_space))
+      FunctionSpaceData(Context&& ctx, const typename LFS::Traits::GridFunctionSpace& gfs, LFSCache&& cache)
+        : Context(std::move(ctx))
+        , _function_space(gfs)
+        , _function_space_cache(std::move(cache))
+        , _finite_elements(fe_transformation::transform(_function_space))
       {}
 
-      template<typename Context, typename CellContext, typename Engine>
-      void setup(Context&, CellContext&, Engine&)
+      Context* setup()
       {
-        _function_space_cache.setLocalFunctionSpace(_function_space);
+        _function_space_cache.attach(_function_space);
+        TypeTree::applyToTree(_finite_elements,set_context<typename Context::Cell>(*this));
+        return this;
       }
 
     private:
@@ -132,110 +134,93 @@ namespace Dune {
     };
 
 
-    template<typename LFS, typename LFSCache, typename Cell>
+    template<typename Context>
     struct TestSpaceData
-      : public FunctionSpaceData<LFS,LFSCache,Cell>
+      : public FunctionSpaceData<Context,typename Context::Engine::TestLocalSpace,typename Context::Engine::TestSpaceCache>
     {
 
-      using Test = FunctionSpaceData<LFS,LFSCache,Cell>;
+      // avoid introducing name Context_, otherwise mayhem may occur
+      using Context_ = FunctionSpaceData<Context,typename Context::Engine::TestLocalSpace,typename Context::Engine::TestSpaceCache>;
+
+      using Test = Context_;
 
       Test& test()
       {
         return *this;
       }
 
-      template<typename GFS, typename... Args>
-      TestSpaceData(const GFS& gfs, Args&&... args)
-        : Test(gfs,std::forward<Args>(args)...)
+      TestSpaceData(Context&& ctx)
+        : Context_(std::move(ctx),ctx.engine().testSpace(),ctx.engine().makeTestSpaceCache())
       {}
 
     };
 
-    template<typename LFS, typename LFSCache, typename Cell, typename... Args>
-    auto testSpaceData(const typename LFS::Traits::GridFunctionSpace& gfs, Args&&... args)
+    template<typename Context>
+    auto testSpaceData(Context&& ctx)
     {
-      return TestSpaceData<LFS,LFSCache,Cell>(gfs,std::forward<Args>(args)...);
+      return TestSpaceData<Context>(std::move(ctx));
     }
 
-
-    template<typename TestSpaceData>
+    template<typename Context>
     struct GalerkinTrialSpaceData
-      : public TestSpaceData
+      : public Context
     {
 
-      using Trial = typename TestSpaceData::Test;
+      using Trial = typename Context::Test;
 
       Trial& trial()
       {
         return *this;
       }
 
-      GalerkinTrialSpaceData(TestSpaceData&& test_space_data)
-        : TestSpaceData(std::move(test_space_data))
+      GalerkinTrialSpaceData(Context&& ctx)
+        : Context(std::move(ctx))
       {}
 
     };
 
-    template<typename TestSpaceData>
-    auto galerkinTrialSpaceData(TestSpaceData&& testSpaceData)
+    template<typename Context>
+    auto galerkinTrialSpaceData(Context&& ctx)
     {
-      return GalerkinTrialSpaceData<TestSpaceData>(std::forward<TestSpaceData>(testSpaceData));
+      return GalerkinTrialSpaceData<Context>(std::move(ctx));
     }
 
-    template<typename TestSpaceData, typename LFS, typename LFSCache>
+    template<typename Context>
     struct NonGalerkinTrialSpaceData
-      : public TestSpaceData
+      : public FunctionSpaceData<Context,typename Context::Engine::TrialLocalSpace,typename Context::Engine::TrialSpaceCache>
     {
 
-      using Trial = FunctionSpaceData<LFS,LFSCache,typename TestSpaceData::CellType>;
+      using Context_ = FunctionSpaceData<Context,typename Context::Engine::TrialLocalSpace,typename Context::Engine::TrialSpaceCache>;
+
+      using Trial = Context_;
 
       Trial& trial()
       {
-        return _trial;
+        return *this;
       }
 
-      template<typename Context, typename CellContext, typename Element, typename Index>
-      void bind(Context& ctx, CellContext& cell_ctx, const Element& element, Index entity_index, Index unique_index)
-      {
-        TestSpaceData::bind(ctx,cell_ctx,element,entity_index,unique_index);
-        _trial.bind(ctx,cell_ctx,element,entity_index,unique_index);
-      }
-
-      template<typename Context, typename CellContext, typename Engine>
-      void setup(Context& ctx, CellContext& cell_ctx, Engine& engine)
-      {
-        TestSpaceData::setup(ctx,cell_ctx,engine);
-        _trial.setup(ctx,cell_ctx,engine);
-      }
-
-      template<typename GFS, typename... Args>
-      NonGalerkinTrialSpaceData(TestSpaceData&& test_space_data, const GFS& gfs, Args&&... args)
-        : TestSpaceData(std::move(test_space_data))
-        , _trial(gfs,std::forward<Args>(args)...)
+      NonGalerkinTrialSpaceData(Context&& ctx)
+        : Context_(std::move(ctx),ctx.engine().trialSpace(),ctx.engine().makeTrialSpaceCache())
       {}
-
-    private:
-
-      Trial _trial;
 
     };
 
-    template<typename LFS, typename LFSCache, typename TestSpaceData, typename... Args>
-    auto nonGalerkinTrialSpaceData(TestSpaceData&& testSpaceData, const typename LFS::Traits::GridFunctionSpace& gfs, Args&&... args)
+    template<typename Context>
+    auto nonGalerkinTrialSpaceData(Context&& ctx)
     {
-      return NonGalerkinTrialSpaceData<TestSpaceData,LFS,LFSCache>(std::forward<TestSpaceData>(testSpaceData),gfs,std::forward<Args>(args)...);
+      return NonGalerkinTrialSpaceData<Context>(std::move(ctx));
     }
 
-    template<typename LFS, typename LFSCache, typename TestSpaceData, typename... Args>
-    auto trialSpaceData(std::true_type, TestSpaceData&& testSpaceData, const typename LFS::Traits::GridFunctionSpace& gfs, Args&&... args)
+    template<typename Context>
+    auto trialSpaceData(Context&& ctx, std::enable_if_t<Context::isGalerkin(),int> = 0)
     {
-      return GalerkinTrialSpaceData<TestSpaceData>(std::forward<TestSpaceData>(testSpaceData));
+      return GalerkinTrialSpaceData<Context>(std::move(ctx));
     }
 
-    template<typename LFS, typename LFSCache, typename TestSpaceData, typename... Args>
-    auto trialSpaceData(std::false_type, TestSpaceData&& testSpaceData, const typename LFS::Traits::GridFunctionSpace& gfs, Args&&... args)
+    template<typename Context>
+    auto trialSpaceData(Context&& ctx, std::enable_if_t<not Context::isGalerkin(),int> = 0)
     {
-      return NonGalerkinTrialSpaceData<TestSpaceData,LFS,LFSCache>(std::forward<TestSpaceData>(testSpaceData),gfs,std::forward<Args>(args)...);
+      return NonGalerkinTrialSpaceData<Context>(std::move(ctx));
     }
 
   } // namespace PDELab

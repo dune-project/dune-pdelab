@@ -24,6 +24,12 @@ namespace Dune {
         : _es(es)
       {}
 
+      template<typename T>
+      static constexpr const T& make_const_ref(const T& t)
+      {
+        return t;
+      }
+
       template<typename Engine>
       decltype(auto) assemble(Engine& engine) const
       {
@@ -38,14 +44,17 @@ namespace Dune {
           visit_processor_intersections;
         constexpr bool intersections_two_sided [[maybe_unused]] = engine.intersectionsTwoSided();
 
+        using Index = typename EntitySet::IndexSet::Index;
+
         auto &entity_set = _es;
         auto &index_set = _es.indexSet();
 
-        typename EntitySet::template Codim<0>::Entity invalid_element;
+        auto invalid_element_storage = typename EntitySet::template Codim<0>::Entity{};
+        const typename EntitySet::template Codim<0>::Entity& invalid_element = invalid_element_storage;
         constexpr auto invalid_index [[maybe_unused]] = index_set.invalidIndex();
 
-        auto ctx = engine.context(*this);
-        ctx.setup(engine);
+        auto ctx = makeContext(engine.context(*this));
+        ctx.setup();
 
         engine.start(ctx);
 
@@ -68,7 +77,7 @@ namespace Dune {
                   {
                     engine.startIntersections(ctx);
 
-                    std::size_t intersection_index = 0;
+                    Index intersection_index = 0;
 
                     for (const auto& intersection : intersections(_es,element))
                       {
@@ -147,7 +156,7 @@ namespace Dune {
                                   std::integral_constant<IntersectionType,IntersectionType::boundary>{},
                                   intersection,
                                   intersection_index,
-                                  invalid_element,
+                                  element,
                                   invalid_index,
                                   invalid_index
                                   );

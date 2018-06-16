@@ -112,170 +112,56 @@ namespace Dune {
       applyToVariadicArguments{f(std::get<indices>(std::forward<Tuple>(tuple)))...};
     }
 
-
-    template<typename Data>
-    struct DataHolder
-    {
-
-    protected:
-
-      DataHolder(Data&& data)
-        : _data(std::move(data))
-      {}
-
-      Data& data()
-      {
-        return _data;
-      }
-
-    private:
-
-      Data _data;
-
-    };
-
-    template<typename Data_>
-    struct CellDataHolder
-      : public DataHolder<Data_>
-    {
-
-      using Base = DataHolder<Data_>;
-
-    public:
-
-      using Data = Data_;
-
-      CellDataHolder(Data&& data)
-        : Base(std::forward<Data>(data))
-      {}
-
-      Data& data()
-      {
-        return Base::data();
-      }
-
-    };
-
-    struct CellDataPlaceHolder
-    {};
-
-    template<typename Data>
-    struct GlobalDataHolder
-      : public DataHolder<Data>
-    {
-
-      using Base = DataHolder<Data>;
-
-    public:
-
-      using Global = Data;
-
-      GlobalDataHolder(Data&& data)
-        : Base(std::forward<Data>(data))
-      {}
-
-      Global& global()
-      {
-        return Base::data();
-      }
-
-    };
-
-    struct GlobalDataPlaceHolder
-    {};
-
     struct PlaceHolder
     {};
 
     namespace Impl {
 
-      template<template<typename> typename Holder, typename Engine, typename Target>
-      auto extractCellContext(PriorityTag<5>, const Engine& engine, Target& target)
-        -> decltype(Holder<typename Target::template CellContext<Engine>>(typename Target::template CellContext<Engine>(engine,target)))
+      template<typename Target, typename Context>
+      auto extractCellContext(PriorityTag<2>, Target& target, Context&& ctx)
+        -> decltype(typename Target::template CellContext<Context>(std::move(ctx)))
       {
-        return Holder<typename Target::template CellContext<Engine>>(typename Target::template CellContext<Engine>(engine,target));
+        return typename Target::template CellContext<Context>(std::move(ctx));
       }
 
-      template<template<typename> typename Holder, typename Engine, typename Target>
-      auto extractCellContext(PriorityTag<4>, const Engine& engine, Target& target)
-        -> decltype(Holder<typename Target::template CellContext<Engine>>(typename Target::template CellContext<Engine>(engine)))
+      template<typename Target, typename Context>
+      auto extractCellContext(PriorityTag<1>, Target& target, Context&& ctx)
+        -> Context&&
       {
-        return Holder<typename Target::template CellContext<Engine>>(typename Target::template CellContext<Engine>(engine));
-      }
-
-      template<template<typename> typename Holder, typename Engine, typename Target>
-      auto extractCellContext(PriorityTag<3>, const Engine& engine, Target& target)
-        -> decltype(Holder<typename Target::template CellContext<Engine>>(typename Target::template CellContext<Engine>(target)))
-      {
-        return Holder<typename Target::template CellContext<Engine>>(typename Target::template CellContext<Engine>(target));
-      }
-
-      template<template<typename> typename Holder, typename Engine, typename Target>
-      auto extractCellContext(PriorityTag<2>, const Engine& engine, Target& target)
-        -> decltype(Holder<typename Target::template CellContext<Engine>>(typename Target::template CellContext<Engine>()))
-      {
-        return Holder<typename Target::template CellContext<Engine>>(typename Target::template CellContext<Engine>());
-      }
-
-      template<template<typename> typename Holder, typename Engine, typename Target>
-      auto extractCellContext(PriorityTag<1>, const Engine& engine, Target& target)
-        -> CellDataPlaceHolder
-      {
-        return {};
+        return std::move(ctx);
       }
 
     }
 
-    template<template<typename> class Holder, typename Engine, typename Target>
-    auto extractCellContext(const Engine& engine, Target& target)
+    template<typename Target, typename Context>
+    auto extractCellContext(Target& target, Context&& ctx)
     {
-      return Impl::extractCellContext<Holder>(PriorityTag<5>{},engine,target);
+      return Impl::extractCellContext(PriorityTag<2>{},target, std::move(ctx));
     }
 
 
     namespace Impl {
 
-      template<template<typename> typename Holder, typename Engine, typename Target>
-      auto extractContext(PriorityTag<5>, const Engine& engine, Target& target)
-        -> decltype(Holder<typename Target::template Context<Engine>>(typename Target::template Context<Engine>(engine,target)))
+      template<typename Target, typename Context>
+      auto extractContext(PriorityTag<2>, Target& target, Context&& ctx)
+        -> decltype(typename Target::template Context<Context>(std::move(ctx)))
       {
-        return Holder<typename Target::template Context<Engine>>(typename Target::template Context<Engine>(engine,target));
+        return typename Target::template Context<Context>(std::move(ctx));
       }
 
-      template<template<typename> typename Holder, typename Engine, typename Target>
-      auto extractContext(PriorityTag<4>, const Engine& engine, Target& target)
-        -> decltype(Holder<typename Target::template Context<Engine>>(typename Target::template Context<Engine>(engine)))
+      template<typename Target, typename Context>
+      auto extractContext(PriorityTag<1>, Target& target, Context&& ctx)
+        -> Context&&
       {
-        return Holder<typename Target::template Context<Engine>>(typename Target::template Context<Engine>(engine));
-      }
-
-      template<template<typename> typename Holder, typename Engine, typename Target>
-      auto extractContext(PriorityTag<3>, const Engine& engine, Target& target)
-        -> decltype(Holder<typename Target::template Context<Engine>>(typename Target::template Context<Engine>(target)))
-      {
-        return Holder<typename Target::template Context<Engine>>(typename Target::template Context<Engine>(target));
-      }
-
-      template<template<typename> typename Holder, typename Engine, typename Target>
-      auto extractContext(PriorityTag<2>, const Engine& engine, Target& target)
-        -> decltype(Holder<typename Target::template Context<Engine>>(typename Target::template Context<Engine>()))
-      {
-        return Holder<typename Target::template Context<Engine>>(typename Target::template Context<Engine>());
-      }
-
-      template<template<typename> typename Holder, typename Engine, typename Target>
-      auto extractContext(PriorityTag<1>, const Engine& engine, Target& target)
-        -> GlobalDataPlaceHolder
-      {
-        return {};
+        return std::move(ctx);
       }
 
     }
 
-    template<template<typename> class Holder, typename Engine, typename Target>
-    auto extractContext(const Engine& engine, Target& target)
+    template<typename Target, typename Context>
+    auto extractContext(Target& target, Context&& ctx)
     {
-      return Impl::extractContext<Holder>(PriorityTag<5>{},engine,target);
+      return Impl::extractContext(PriorityTag<2>{},target, std::move(ctx));
     }
 
   } // namespace PDELab
