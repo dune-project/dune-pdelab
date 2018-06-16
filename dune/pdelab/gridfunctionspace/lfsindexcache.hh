@@ -290,20 +290,37 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
-      LFSIndexCacheBase(const LFS& lfs, const C& constraints, bool enable_constraints_caching)
-        : _lfs(&lfs)
+      LFSIndexCacheBase(const C& constraints, bool enable_constraints_caching)
+        : _lfs(nullptr)
         , _enable_constraints_caching(enable_constraints_caching)
-        , _container_indices(lfs.maxSize())
-        , _dof_flags(lfs.maxSize(),0)
-        , _constraints_iterators(lfs.maxSize())
         , _inverse_cache_built(false)
         , _gfs_constraints(&constraints)
+      {}
+
+      LFSIndexCacheBase(const LFS& lfs, const C& constraints, bool enable_constraints_caching)
+        : LFSIndexCacheBase(constraints,enable_constraints_caching)
       {
+        attach(lfs);
       }
 
-      void setLocalFunctionSpace(const LFS& lfs)
+      void attach(const LFS& lfs)
       {
+        assert(not attached());
+        _container_indices.resize(lfs.maxSize());
+        _dof_flags.assign(lfs.maxSize(),0);
+        _constraints_iterators.resize(lfs.maxSize());
         _lfs = &lfs;
+      }
+
+      void detach()
+      {
+        assert(attached());
+        _lfs = nullptr;
+      }
+
+      bool attached() const
+      {
+        return _lfs;
       }
 
       void update()
@@ -591,22 +608,34 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
-      explicit LFSIndexCacheBase(const LFS& lfs)
-        : _lfs(&lfs)
-        , _container_indices(lfs.maxSize())
+      template<typename C = int>
+      LFSIndexCacheBase(const C& = 0, bool = false)
+        : _lfs(nullptr)
+      {}
+
+      template<typename C = int>
+      explicit LFSIndexCacheBase(const LFS& lfs, const C& = 0, bool = false)
+        : LFSIndexCacheBase()
       {
+        attach(lfs);
       }
 
-      template<typename C>
-      LFSIndexCacheBase(const LFS& lfs, const C& c, bool enable_constraints_caching)
-        : _lfs(&lfs)
-        , _container_indices(lfs.maxSize())
+      void attach(const LFS& lfs)
       {
-      }
-
-      void setLocalFunctionSpace(const LFS& lfs)
-      {
+        assert(not attached());
+        _container_indices.resize(lfs.maxSize());
         _lfs = &lfs;
+      }
+
+      void detach()
+      {
+        assert(attached());
+        _lfs = nullptr;
+      }
+
+      bool attached() const
+      {
+        return _lfs;
       }
 
       void update()
@@ -754,17 +783,34 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
-      LFSIndexCacheBase(const LFS& lfs, const C& constraints)
-        : _lfs(&lfs)
-        , _dof_flags(lfs.maxSize())
-        , _constraints_iterators(lfs.maxSize())
+      LFSIndexCacheBase(const C& constraints)
+        : _lfs(nullptr)
         , _gfs_constraints(&constraints)
+      {}
+
+      LFSIndexCacheBase(const LFS& lfs, const C& constraints)
+        : LFSIndexCacheBase(constraints)
       {
+        attach(lfs);
       }
 
-      void setLocalFunctionSpace(const LFS& lfs)
+      bool attached() const
       {
+        return _lfs;
+      }
+
+      void attach(const LFS& lfs)
+      {
+        assert(not attached());
+        _dof_flags.assign(lfs.maxSize(),0);
+        _constraints_iterators.resize(lfs.maxSize());
         _lfs = &lfs;
+      }
+
+      void detach()
+      {
+        assert(attached());
+        _lfs = nullptr;
       }
 
       void update()
@@ -921,20 +967,33 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
-      explicit LFSIndexCacheBase(const LFS& lfs)
-        : _lfs(&lfs)
+      template<typename C = int>
+      explicit LFSIndexCacheBase(const C& = 0)
+        : _lfs(nullptr)
+      {}
+
+      template<typename C = int>
+      explicit LFSIndexCacheBase(const LFS& lfs, const C& = 0)
+        : LFSIndexCacheBase()
       {
+        attach(lfs);
       }
 
-      template<typename C>
-      LFSIndexCacheBase(const LFS& lfs, const C& c)
-        : _lfs(&lfs)
+      bool attached() const
       {
+        return _lfs;
       }
 
-      void setLocalFunctionSpace(const LFS& lfs)
+      void attach(const LFS& lfs)
       {
+        assert(not attached());
         _lfs = &lfs;
+      }
+
+      void detach()
+      {
+        assert(attached());
+        _lfs = nullptr;
       }
 
       void update()
@@ -998,16 +1057,15 @@ namespace Dune {
 
     public:
 
-      template<typename CC>
-      LFSIndexCache(const LFS& lfs, const CC& c, bool enable_constraints_caching = !std::is_same<C,EmptyTransformation>::value)
+      template<typename CC = int>
+      explicit LFSIndexCache(const LFS& lfs, const CC& c = 0, bool enable_constraints_caching = !std::is_same<C,EmptyTransformation>::value)
         : LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag,fast>(lfs,c,enable_constraints_caching)
-      {
-      }
+      {}
 
-      explicit LFSIndexCache(const LFS& lfs)
-        : LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag,fast>(lfs)
-      {
-      }
+      template<typename CC = int>
+      explicit LFSIndexCache(const CC& c = 0, bool enable_constraints_caching = !std::is_same<C,EmptyTransformation>::value)
+        : LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag,fast>(c,enable_constraints_caching)
+      {}
 
     };
 
