@@ -549,52 +549,6 @@ namespace Dune {
 
     } // namespace Experimental
 
-    /** \brief Dummy data handle -- does nothing
-     *
-     * The pdelab adaptivity code requires such a handle, even when the simulation is purely sequential.
-     * Therefore this data handle exists, but it doesn't actually do anything.
-     */
-    template <typename DFBasis, typename V, typename CE, typename U>
-    class AddDataHandle<Experimental::GridFunctionSpace<DFBasis,V,CE>,U>
-    : public CommDataHandleIF<AddDataHandle<Experimental::GridFunctionSpace<DFBasis,V,CE>,U>, typename U::field_type>
-    {
-      using DataType = typename U::field_type;
-
-      //! constructor
-    public:
-      AddDataHandle(const Experimental::GridFunctionSpace<DFBasis,V,CE>& gfs,
-                    const U& u)
-      {}
-
-      //! returns true if data for this codim should be communicated
-      bool contains (int dim, int codim) const
-      {
-        return false;
-      }
-
-      //! returns true if size per entity of given dim and codim is a constant
-      bool fixedsize (int dim, int codim) const
-      {
-        return true;
-      }
-
-      // How many objects of type DataType have to be sent for a given entity
-      template<class EntityType>
-      size_t size (const EntityType& e) const
-      {
-        return 0;
-      }
-
-      // Pack data from user to message buffer
-      template<class MessageBuffer, class EntityType>
-      void gather(MessageBuffer& buffer, const EntityType& entity) const
-      {}
-
-      // Unpack data from message buffer to user
-      template<class MessageBuffer, class EntityType>
-      void scatter(MessageBuffer& buffer, const EntityType& entity, size_t n)
-      {}
-    };
   } // namespace PDELab
 } // namespace Dune
 
