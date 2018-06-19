@@ -13,23 +13,45 @@ namespace Dune {
     namespace Impl {
 
       template<typename F, typename... Args>
-      constexpr decltype(auto) invoke_if_possible(std::true_type,F&& f, Args&&... args)
+      decltype(auto) invoke_if_possible(std::true_type,F&& f, Args&&... args)
       {
         return std::invoke(std::forward<F>(f),std::forward<Args>(args)...);
       }
 
       template<typename F, typename... Args>
-      constexpr void invoke_if_possible(std::false_type,F&& f, Args&&... args)
+      void invoke_if_possible(std::false_type,F&& f, Args&&... args)
       {}
 
       template<typename F, typename R, typename... Args>
-      constexpr decltype(auto) invoke_or(std::true_type,F&& f, R&& r, Args&&... args)
+      decltype(auto) invoke_or(std::true_type,F&& f, R&& r, Args&&... args)
       {
         return std::invoke(std::forward<F>(f),std::forward<Args>(args)...);
       }
 
       template<typename F, typename R, typename... Args>
-      constexpr decltype(auto) invoke_or(std::false_type,F&& f, R&& r, Args&&... args)
+      decltype(auto) invoke_or(std::false_type,F&& f, R&& r, Args&&... args)
+      {
+        return std::forward<R>(r);
+      }
+
+      template<typename F, typename... Args>
+      constexpr decltype(auto) constexpr_invoke_if_possible(std::true_type,F&& f, Args&&... args)
+      {
+        return f(std::forward<Args>(args)...);
+      }
+
+      template<typename F, typename... Args>
+      constexpr void constexpr_invoke_if_possible(std::false_type,F&& f, Args&&... args)
+      {}
+
+      template<typename F, typename R, typename... Args>
+      constexpr decltype(auto) constexpr_invoke_or(std::true_type,F&& f, R&& r, Args&&... args)
+      {
+        return f(std::forward<Args>(args)...);
+      }
+
+      template<typename F, typename R, typename... Args>
+      constexpr decltype(auto) constexpr_invoke_or(std::false_type,F&& f, R&& r, Args&&... args)
       {
         return std::forward<R>(r);
       }
@@ -53,6 +75,25 @@ namespace Dune {
     constexpr decltype(auto) invoke_or(F&& f, R&& r, Args&&... args)
     {
       return Impl::invoke_or(std::is_invocable<F,decltype(std::forward<Args>(args))...>{},std::forward<F>(f),std::forward<R>(r),std::forward<Args>(args)...);
+    }
+
+    template<typename F, typename... Args>
+    constexpr decltype(auto) constexpr_invoke_if_possible(F&& f, Args&&... args)
+    {
+      return Impl::constexpr_invoke_if_possible(std::is_invocable<F,decltype(std::forward<Args>(args))...>{},std::forward<F>(f),std::forward<Args>(args)...);
+    }
+
+    template<typename F, typename... Args>
+    constexpr int constexpr_invoke_if_possible_discard_return(F&& f, Args&&... args)
+    {
+      constexpr_invoke_if_possible(std::forward<F>(f),std::forward<Args>(args)...);
+      return 0;
+    }
+
+    template<typename F, typename R, typename... Args>
+    constexpr decltype(auto) constexpr_invoke_or(F&& f, R&& r, Args&&... args)
+    {
+      return Impl::constexpr_invoke_or(std::is_invocable<F,decltype(std::forward<Args>(args))...>{},std::forward<F>(f),std::forward<R>(r),std::forward<Args>(args)...);
     }
 
     struct applyToVariadicArguments
