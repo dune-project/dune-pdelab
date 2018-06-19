@@ -49,12 +49,12 @@ namespace Dune {
 
     public:
 
-      using Cell = CellGridData;
-
       using EntitySet = typename Context::EntitySet;
       using Entity    = typename EntitySet::template Codim<0>::Entity;
       using Index     = typename EntitySet::IndexSet::Index;
       using Geometry  = typename Entity::Geometry;
+      using Embedding = CellEmbedding<Geometry>;
+      static constexpr int dimWorld = Geometry::coorddimension;
 
       const Entity& entity() const
       {
@@ -81,14 +81,36 @@ namespace Dune {
           return *_geometry;
       }
 
+      typename Embedding::GlobalCoordinate global(const typename Embedding::LocalCoordinate& local) const
+      {
+        return geometry().global(local);
+      }
+
+      template<typename P>
+      auto global(const P& p) const
+      {
+        return p.global();
+      }
+
       bool bound() const
       {
         return _entity;
       }
 
-      CellGridData& cell()
+      Embedding embedding() const
       {
-        return *this;
+        return {geometry()};
+      }
+
+      typename EntitySet::Field volume() const
+      {
+        return geometry().volume();
+      }
+
+      EmbeddedPoint<Embedding> centroid() const
+      {
+        auto ref_el = referenceElement(geometry());
+        return {ref_el.position(0,0),embedding()};
       }
 
       using Context::bind;
@@ -158,46 +180,27 @@ namespace Dune {
 
       public:
 
-        struct Embedding {
-
-          using Global  = typename Entity::Geometry;
-          using Local   = IdentityGeometry<Field,EntitySet::dimension>;
-
-          Global global() const
-          {
-            return _data.inside().geometry();
-          }
-
-          Local local() const
-          {
-            return Local(_data.inside().entity().type());
-          }
-
-          Local inside() const
-          {
-            return local();
-          }
-
-        private:
-
-          friend class CellDomain;
-
-          Embedding(const CellDomainData& data)
-            : _data(data)
-          {}
-
-          const CellDomainData& _data;
-
-        };
+        // re-use the cell embedding
+        using Embedding = typename Context::Embedding;
 
         Embedding embedding() const
         {
-          return {_data};
+          return {_data.embedding()};
+        }
+
+        auto centroid() const
+        {
+          return _data.centroid();
         }
 
         const Entity& entity() const
         {
           return _data.inside().entity();
+        }
+
+        Field volume() const
+        {
+          return _data.inside().volume();
         }
 
         bool bound() const
@@ -256,6 +259,7 @@ namespace Dune {
         using EntitySet    = typename Context::EntitySet;
         using Entity       = typename EntitySet::template Codim<0>::Entity;
         using Intersection = typename EntitySet::Intersection;
+        using Field        = typename EntitySet::Field;
 
       private:
 
@@ -269,21 +273,26 @@ namespace Dune {
 
           friend class IntersectionDomain;
 
+          using Field   = typename IntersectionDomain::Field;
           using Global  = typename Intersection::Geometry;
+          using Cell    = typename Intersection::LocalGeometry;
           using Inside  = typename Intersection::LocalGeometry;
           using Outside = typename Intersection::LocalGeometry;
+          using LocalCoordinate = typename Global::LocalCoordinate;
+          using GlobalCoordinate = typename Global::GlobalCoordinate;
+          using CellCoordinate = typename Inside::GlobalCoordinate;
 
-          Global global() const
+          const Global& global() const
           {
             return _data.intersectionGeometry();
           }
 
-          Inside inside() const
+          const Inside& inside() const
           {
             return _data.intersectionGeometryInInside();
           }
 
-          Outside outside() const
+          const Outside& outside() const
           {
             return _data.intersectionGeometryInOutside();
           }
@@ -304,9 +313,25 @@ namespace Dune {
           return {_data};
         }
 
+        EmbeddedPoint<Embedding> centroid() const
+        {
+          auto ref_el = referenceElement(embedding().global());
+          return {ref_el.position(0,0),embedding()};
+        }
+
         const Intersection& intersection() const
         {
           return _data.intersection();
+        }
+
+        typename Context::Inside& inside()
+        {
+          return _data.inside();
+        }
+
+        typename Context::Outside& outside()
+        {
+          return _data.outside();
         }
 
         const Intersection& entity() const
@@ -319,6 +344,27 @@ namespace Dune {
           return _data.intersectionIndex();
         }
 
+        IntersectionType type() const
+        {
+          return _data.intersectionType();
+        }
+
+        Field volume() const
+        {
+          return embedding().global().volume();
+        }
+
+        typename Embedding::GlobalCoordinate centerUnitOuterNormal() const
+        {
+          return intersection().centerUnitOuterNormal();
+        }
+
+        template<typename P>
+        typename Embedding::GlobalCoordinate unitOuterNormal(const P& p) const
+        {
+          return intersection().unitOuterNormal(p.local());
+        }
+
         bool bound() const
         {
           return _data._intersection;
@@ -326,7 +372,7 @@ namespace Dune {
 
         auto quadratureRule(std::size_t order, QuadratureType::Enum quadrature_type = QuadratureType::GaussLegendre) const
         {
-          auto& rule = QuadratureRules<typename Embedding::Geometry::ctype,Embedding::Geometry::mydimension>::rule(embedding().global().type(),order,quadrature_type);
+          auto& rule = QuadratureRules<typename Embedding::Global::ctype,Embedding::Global::mydimension>::rule(embedding().global().type(),order,quadrature_type);
           return QuadratureRule(rule,embedding());
         }
 
@@ -340,7 +386,14 @@ namespace Dune {
 
       };
 
+      using Domain = IntersectionDomain;
+
       IntersectionDomain intersectionDomain() const
+      {
+        return {*this};
+      }
+
+      Domain domain() const
       {
         return {*this};
       }
@@ -468,10 +521,16 @@ namespace Dune {
     public:
 
       using Inside    = InsideCell;
+      using Cell      = InsideCell;
 
       InsideCell(Context&& ctx)
         : Context(std::move(ctx))
       {}
+
+      Cell& cell()
+      {
+        return *this;
+      }
 
       Inside& inside()
       {
@@ -505,7 +564,11 @@ namespace Dune {
         using Index        = typename EntitySet::IndexSet::Index;
       };
 
+    public:
+
       using Outside = CellContext;
+
+    private:
 
       Outside _outside;
 

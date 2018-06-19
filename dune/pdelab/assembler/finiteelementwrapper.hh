@@ -132,7 +132,8 @@ namespace Dune {
 
         Proxy& operator=(const Proxy& proxy) noexcept
         {
-          swap(*this,Proxy(proxy));
+          Proxy tmp(proxy);
+          swap(*this,tmp);
           return *this;
         }
 
@@ -208,7 +209,15 @@ namespace Dune {
       using size_type = std::size_t;
       using Jacobian = typename Native::Traits::JacobianType;
       using ReferenceGradient = typename ReferenceGradientType<Basis_>::type;
-      using Gradient = FieldMatrix<RangeField,dimRange,Context::Geometry::coorddimension>;
+      using Gradient = std::conditional_t<
+        dimRange == 1,
+        FieldVector<RangeField,Context::Geometry::coorddimension>,
+        FieldMatrix<RangeField,dimRange,Context::Geometry::coorddimension>
+        >;
+
+      using Values = typename ExclusiveRangeHolder<std::vector<Range>>::Proxy;
+      using ReferenceGradients = typename ExclusiveRangeHolder<std::vector<ReferenceGradient>>::Proxy;
+      using Gradients = typename ExclusiveRangeHolder<std::vector<Gradient>>::Proxy;
 
       const Basis& native() const
       {
@@ -232,65 +241,82 @@ namespace Dune {
       }
 
       template<typename QP>
-      typename ExclusiveRangeHolder<std::vector<Range>>::Proxy operator()(const QP& qp)
+      Values operator()(const QP& qp)
       {
-        _values.container().resize(size());
-        _basis->evaluateFunction(Context::Flavor::quadratureCoordinate(qp),_values.container());
+        if (qp.index() != _values_qp_index)
+          {
+            _values.container().resize(size());
+            _basis->evaluateFunction(Context::Flavor::quadratureCoordinate(qp),_values.container());
+            _values_qp_index = qp.index();
+          }
         return _values.proxy();
       }
 
       template<typename QP>
       std::enable_if_t<
         models<Concept::LocalBasis,Native>() and Std::to_true_type<QP>(),
-        typename ExclusiveRangeHolder<std::vector<ReferenceGradient>>::Proxy
+        ReferenceGradients
         >
       referenceGradients(const QP& qp)
       {
-        _reference_gradients.container().resize(size());
-        _basis->evaluateJacobian(Context::Flavor::quadratureCoordinate(qp),_reference_gradients.container());
+        if (qp.index() != _reference_gradients_qp_index)
+          {
+            _reference_gradients.container().resize(size());
+            _basis->evaluateJacobian(Context::Flavor::quadratureCoordinate(qp),_reference_gradients.container());
+            _reference_gradients_qp_index = qp.index();
+          }
         return _reference_gradients.proxy();
       }
 
       template<typename QP>
       std::enable_if_t<
         models<Concept::LocalBasis,Native>() and dimRange == 1 and Std::to_true_type<QP>(),
-        typename ExclusiveRangeHolder<std::vector<Gradient>>::Proxy
+        Gradients
         >
       gradients(const QP& qp)
       {
-        size_type size = this->size();
-        auto& gradients = _gradients.container();
-        gradients.resize(size);
+        if (qp.index() != _gradients_qp_index)
+          {
+            size_type size = this->size();
+            auto& gradients = _gradients.container();
+            gradients.resize(size);
 
-        auto reference_gradients = referenceGradients(qp);
+            auto reference_gradients = referenceGradients(qp);
 
-        auto jac = _ctx->geometry().jacobianInverseTransposed(Context::Flavor::quadratureCoordinate(qp));
+            auto jac = _ctx->geometry().jacobianInverseTransposed(Context::Flavor::quadratureCoordinate(qp));
 
-        for(std::size_t i = 0 ; i < size ; ++i)
-          jac.mv(reference_gradients[i][0],gradients[i][0]);
+            for(std::size_t i = 0 ; i < size ; ++i)
+              jac.mv(reference_gradients[i][0],gradients[i]);
 
+            _gradients_qp_index = qp.index();
+          }
         return _gradients.proxy();
       }
 
       template<typename QP>
       std::enable_if_t<
         not models<Concept::LocalBasis,Native>() and Std::to_true_type<QP>(),
-        typename ExclusiveRangeHolder<std::vector<Gradient>>::Proxy
+        Gradients
         >
       gradients(const QP& qp)
       {
-        size_type size = this->size();
-        auto& gradients = _gradients.container();
-        gradients.resize(size);
+        if (qp.index() != _gradients_qp_index)
+          {
+            auto& gradients = _gradients.container();
+            gradients.resize(size());
+            _basis->evaluateJacobian(Context::Flavor::quadratureCoordinate(qp),gradients);
+            _gradients_qp_index = qp.index();
 
-        _basis->evaluateJacobian(Context::Flavor::quadratureCoordinate(qp),gradients);
-
+          }
         return _gradients.proxy();
       }
 
       BasisWrapper() noexcept
         : _basis(nullptr)
         , _ctx(nullptr)
+        , _values_qp_index(invalid_index)
+        , _gradients_qp_index(invalid_index)
+        , _reference_gradients_qp_index(invalid_index)
       {}
 
     private:
@@ -303,13 +329,21 @@ namespace Dune {
       void setBasis(const Native& basis)
       {
         _basis = &basis;
+        _values_qp_index = invalid_index;
+        _gradients_qp_index = invalid_index;
+        _reference_gradients_qp_index = invalid_index;
       }
+
+      static constexpr size_type invalid_index = ~size_type(0);
 
       const Basis* _basis;
       Context* _ctx;
       ExclusiveRangeHolder<std::vector<Range>> _values;
       ExclusiveRangeHolder<std::vector<Gradient>> _gradients;
       ExclusiveRangeHolder<std::vector<ReferenceGradient>> _reference_gradients;
+      size_type _values_qp_index;
+      size_type _gradients_qp_index;
+      size_type _reference_gradients_qp_index;
 
     };
 

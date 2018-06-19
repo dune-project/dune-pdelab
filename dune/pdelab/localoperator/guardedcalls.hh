@@ -8,6 +8,7 @@
 
 #include <dune/pdelab/assembler/context.hh>
 #include <dune/pdelab/assembler/utility.hh>
+#include <dune/pdelab/assembler/finiteelementwrapper.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -17,20 +18,20 @@ namespace Dune {
       namespace Impl {
 
         template<typename LFS, typename = void>
-        struct extract_basis_traits
+        struct extract_finite_element_traits
         {
-          using type = typename LFS::Traits::FiniteElement::Traits::LocalBasisType::Traits;
+          using type = typename LFS::Traits::FiniteElement;
         };
 
         template<typename LFS>
-        struct extract_basis_traits<LFS,std::void_t<TypeTree::Child<LFS,0>>>
-          : public extract_basis_traits<TypeTree::Child<LFS,0>>
+        struct extract_finite_element_traits<LFS,std::void_t<TypeTree::Child<LFS,0>>>
+          : public extract_finite_element_traits<TypeTree::Child<LFS,0>>
         {};
 
         template<typename T>
         struct extract_local_test_space
         {
-          using type = typename T::TestLocalSpace;
+          using type = typename T::Test::FunctionSpace;
         };
 
         template<typename Ctx>
@@ -57,10 +58,22 @@ namespace Dune {
       using TestSpace = typename Impl::extract_local_test_space<T>::type;
 
       template<typename T, std::size_t... I>
-      using Range = typename Impl::extract_basis_traits<TypeTree::Child<TestSpace<T>,I...>>::type::RangeType;
+      using Range = typename FiniteElementWrapper<typename Impl::extract_finite_element_traits<TypeTree::Child<TestSpace<T>,I...>>::type,T>::Basis::Range;
 
       template<typename T, std::size_t... I>
-      using RangeField = typename Impl::extract_basis_traits<TypeTree::Child<TestSpace<T>,I...>>::type::RangeFieldType;
+      using RangeField = typename FiniteElementWrapper<typename Impl::extract_finite_element_traits<TypeTree::Child<TestSpace<T>,I...>>::type,T>::Basis::RangeField;
+
+      template<typename T, std::size_t... I>
+      using Gradient = typename FiniteElementWrapper<typename Impl::extract_finite_element_traits<TypeTree::Child<TestSpace<T>,I...>>::type,T>::Basis::Gradient;
+
+      template<typename T, std::size_t... I>
+      using Values = typename FiniteElementWrapper<typename Impl::extract_finite_element_traits<TypeTree::Child<TestSpace<T>,I...>>::type,T>::Basis::Values;
+
+      template<typename T, std::size_t... I>
+      using Gradients = typename FiniteElementWrapper<typename Impl::extract_finite_element_traits<TypeTree::Child<TestSpace<T>,I...>>::type,T>::Basis::Gradients;
+
+      template<typename T, std::size_t... I>
+      using ReferenceGradients = typename FiniteElementWrapper<typename Impl::extract_finite_element_traits<TypeTree::Child<TestSpace<T>,I...>>::type,T>::Basis::ReferenceGradients;
 
       inline constexpr auto start()
       {

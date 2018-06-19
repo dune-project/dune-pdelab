@@ -15,6 +15,7 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/constraints/common/constraintsparameters.hh>
+#include<dune/pdelab/localoperator/guardedcalls.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -112,6 +113,23 @@ namespace Dune {
     {
       enum Type { Dirichlet=1, Neumann=-1, Outflow=-2, None=-3 }; // BC requiring constraints must be >0 if
       // constraints assembler coming with PDELab is used
+    };
+
+    template<typename Context>
+    struct NewConvectionDiffusionParameterTraits
+    {
+
+      //! \brief Export type for range field
+      using RangeField = LocalOperator::RangeField<Context>;
+      using Range      = LocalOperator::Range<Context>;
+
+      //! \brief permeability tensor type
+      using PermeabilityTensor = FieldMatrix<RangeField,Context::Embedding::dimWorld,Context::Embedding::dimWorld>;
+
+      using Velocity = FieldVector<RangeField,Context::Embedding::dimWorld>;
+
+      using BoundaryCondition = Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type;
+
     };
 
     /** \brief Parameter class for solving the linear convection-diffusion equation
