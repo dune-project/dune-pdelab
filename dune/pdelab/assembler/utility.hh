@@ -103,6 +103,15 @@ namespace Dune {
       {}
     };
 
+    template<typename T, typename U>
+    struct deduce_to_first
+    {
+      using type = T;
+    };
+
+    template<typename T, typename U>
+    using deduce_to_first_t = typename deduce_to_first<T,U>::type;
+
     namespace Impl {
 
       template<typename T, T i, T end, T increment, T... sequence>

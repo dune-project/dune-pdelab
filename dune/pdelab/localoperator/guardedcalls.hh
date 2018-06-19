@@ -155,10 +155,10 @@ namespace Dune {
       template<typename LOP>
       inline constexpr auto intersectionsTwoSided()
       {
-        auto call = [&](const auto* lop) -> decltype(lop->intersectionsTwoSided()) {
-          return std::remove_pointer_t<std::decay_t<decltype(lop)>>::intersectionsTwoSided();
+        auto call = [&](auto h) -> decltype(deduce_to_first_t<LOP,decltype(h)>::intersectionsTwoSided()) {
+          return deduce_to_first_t<LOP,decltype(h)>::intersectionsTwoSided();
         };
-        return invoke_or(call,false,nullptr);
+        return constexpr_invoke_or(call,false,0);
       }
 
       template<typename LOP>
@@ -166,6 +166,22 @@ namespace Dune {
       {
         return intersectionsTwoSided<LOP>();
       }
+
+      template<typename LOP>
+      inline constexpr auto disableFunctionSpaceFlavors()
+      {
+        constexpr auto call = [&](auto h) -> decltype(deduce_to_first_t<LOP,decltype(h)>::disableFunctionSpaceFlavors()) {
+          return deduce_to_first_t<LOP,decltype(h)>::disableFunctionSpaceFlavors();
+        };
+        return constexpr_invoke_or(call,false,0);
+      }
+
+      template<typename LOP>
+      inline constexpr auto disableFunctionSpaceFlavors(const LOP&)
+      {
+        return disableFunctionSpaceFlavors<LOP>();
+      }
+
 
     }
 
