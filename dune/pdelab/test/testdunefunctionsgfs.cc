@@ -71,42 +71,17 @@ public:
     return PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
 
-  //! Constructor without arg sets nonlinear term to zero
-  PoissonProblem () : eta(0.0) {}
-
-  double eta;
-
-  //! Constructor takes lambda parameter
-  PoissonProblem (const RangeType& eta_) : eta(eta_) {}
-
-  //! nonlinearity
-  RangeType q (RangeType u) const
-  {
-    return eta*u*u;
-  }
-
-  //! derivative of nonlinearity
-  RangeType qprime (RangeType u) const
-  {
-    return 2*eta*u;
-  }
-
   //! Dirichlet extension
   template<typename E, typename X>
   RangeType g (const E& e, const X& x) const
   {
     auto global = e.geometry().global(x);
     RangeType s=0.0;
-    for (std::size_t i=0; i<global.size(); i++) s+=global[i]*global[i];
+    for (std::size_t i=0; i<global.size(); i++)
+      s+=global[i]*global[i];
     return s;
   }
 
-  //! Neumann boundary condition
-  template<typename I, typename X>
-  RangeType j (const I& i, const X& x) const
-  {
-    return 0.0;
-  }
 };
 
 template <int order>
@@ -256,8 +231,7 @@ void solveParallelPoissonProblem()
   GV gv=grid.leafGridView();
 
   // make user functions
-  double eta = 2.0;
-  PoissonProblem<GV,double> problem(eta);
+  PoissonProblem<GV,double> problem;
   auto glambda = [&](const auto& e, const auto& x){return problem.g(e,x);};
   auto g = PDELab::makeGridFunctionFromCallable(gv,glambda);
   auto blambda = [&](const auto& i, const auto& x){return problem.bctype(i,x);};
