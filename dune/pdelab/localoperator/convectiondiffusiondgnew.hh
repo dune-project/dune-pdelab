@@ -755,7 +755,7 @@ namespace Dune {
         // loop over quadrature points
         for (auto ip : domain.quadratureRule(intorder))
           {
-            auto bctype = param.bctype(ig.intersection(),ip.position());
+            auto bctype = ctx.bctype(ip);
 
             if (bctype == ConvectionDiffusionBoundaryConditions::None ||
                 bctype == ConvectionDiffusionBoundaryConditions::Neumann)
@@ -791,11 +791,11 @@ namespace Dune {
                 if (normalflux<-1e-30)
                   DUNE_THROW(Dune::Exception,
                     "Outflow boundary condition on inflow! [b("
-                    << geo.global(ip.position()) << ") = "
+                    << ip.global() << ") = "
                     << b << ")" << n_F_local << " " << normalflux);
 
                 for (auto [dof,i,j] : mat_ss)
-                  dof += phi_s[j] * normalflux * factor * psi_s[i];
+                  dof += phi_s[j] * normalflux * ip.weight() * psi_s[i];
 
                 continue;
               }
@@ -819,11 +819,10 @@ namespace Dune {
                 dof += phi_s[j] * ip.weight() * theta * (An_F_s*gradpsi_s[i]);
 
                 // standard IP term
-                dof += penalty_factor * phi_s[j] * psi_s[i] * factor;
+                dof += penalty_factor * phi_s[j] * psi_s[i] * ip.weight();
               }
           }
       }
-      */
 
       //! set time in parameter class
       /*
