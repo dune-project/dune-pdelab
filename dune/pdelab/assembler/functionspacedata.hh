@@ -113,7 +113,9 @@ namespace Dune {
         return _function_space_cache;
       }
 
-      const Cache& cache() const
+      using Context::cache;
+
+      Cache& cache()
       {
         return _function_space_cache;
       }
@@ -143,11 +145,11 @@ namespace Dune {
 
     template<typename Context>
     struct TestSpaceData
-      : public FunctionSpaceData<Context,typename Context::Engine::TestLocalSpace,typename Context::Engine::TestSpaceCache>
+      : public FunctionSpaceData<Context,CellFlavor::TestLocalSpace<Context>,CellFlavor::TestSpaceCache<Context>>
     {
 
       // avoid introducing name Context_, otherwise mayhem may occur
-      using Context_ = FunctionSpaceData<Context,typename Context::Engine::TestLocalSpace,typename Context::Engine::TestSpaceCache>;
+      using Context_ = FunctionSpaceData<Context,CellFlavor::TestLocalSpace<Context>,CellFlavor::TestSpaceCache<Context>>;
 
       using Test = Context_;
 
@@ -156,8 +158,15 @@ namespace Dune {
         return *this;
       }
 
+      using Context_::cache;
+
+      typename Context_::Cache& cache(Flavor::Test)
+      {
+        return Context_::cache();
+      }
+
       TestSpaceData(Context&& ctx)
-        : Context_(std::move(ctx),ctx.engine().testSpace(),ctx.engine().makeTestSpaceCache())
+        : Context_(std::move(ctx),ctx.engine().testSpace(),ctx.engine().makeTestSpaceCache(typename Context::Flavor::Test{}))
       {}
 
     };
@@ -184,6 +193,13 @@ namespace Dune {
         : Context(std::move(ctx))
       {}
 
+      using Context::cache;
+
+      typename Context::Cache& cache(Flavor::Trial)
+      {
+        return Context::cache();
+      }
+
     };
 
     template<typename Context>
@@ -194,10 +210,10 @@ namespace Dune {
 
     template<typename Context>
     struct NonGalerkinTrialSpaceData
-      : public FunctionSpaceData<Context,typename Context::Engine::TrialLocalSpace,typename Context::Engine::TrialSpaceCache>
+      : public FunctionSpaceData<Context,CellFlavor::TrialLocalSpace<Context>,CellFlavor::TrialSpaceCache<Context>>
     {
 
-      using Context_ = FunctionSpaceData<Context,typename Context::Engine::TrialLocalSpace,typename Context::Engine::TrialSpaceCache>;
+      using Context_ = FunctionSpaceData<Context,CellFlavor::TrialLocalSpace<Context>,CellFlavor::TrialSpaceCache<Context>>;
 
       using Trial = Context_;
 
@@ -206,8 +222,15 @@ namespace Dune {
         return *this;
       }
 
+      using Context_::cache;
+
+      typename Context_::Cache& cache(Flavor::Trial)
+      {
+        return Context_::cache();
+      }
+
       NonGalerkinTrialSpaceData(Context&& ctx)
-        : Context_(std::move(ctx),ctx.engine().trialSpace(),ctx.engine().makeTrialSpaceCache())
+        : Context_(std::move(ctx),ctx.engine().trialSpace(),ctx.engine().makeTrialSpaceCache(typename Context::Flavor::Trial{}))
       {}
 
     };

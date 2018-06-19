@@ -11,6 +11,7 @@
 #include <dune/pdelab/assembler/functionspacedata.hh>
 #include <dune/pdelab/assembler/vectordata.hh>
 #include <dune/pdelab/localoperator/guardedcalls.hh>
+#include <dune/pdelab/gridfunctionspace/flavor.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -21,26 +22,97 @@ namespace Dune {
     static constexpr auto disableGalerkin = std::integral_constant<Galerkin,Galerkin::disable>{};
     static constexpr auto automaticGalerkin = std::integral_constant<Galerkin,Galerkin::automatic>{};
 
+    template<typename TestSpace_, typename TrialSpace_, bool enable_flavors>
+    struct LocalFunctionSpaceTypes;
+
+    template<typename TestSpace_, typename TrialSpace_>
+    struct LocalFunctionSpaceTypes<TestSpace_,TrialSpace_,true>
+    {
+
+      using TestSpace       = TestSpace_;
+
+      template<typename Flavor = Flavor::Generic>
+      using TestLocalSpace  = LocalFunctionSpace<TestSpace,Flavor>;
+
+      template<typename Flavor = Flavor::Generic>
+      using TestSpaceCache  = LFSIndexCache<TestLocalSpace<Flavor>>;
+
+
+      using TrialSpace      = TrialSpace_;
+
+      template<typename Flavor = Flavor::Generic>
+      using TrialLocalSpace = LocalFunctionSpace<TrialSpace,Flavor>;
+
+      template<typename Flavor = Flavor::Generic>
+      using TrialSpaceCache = LFSIndexCache<TrialLocalSpace<Flavor>>;
+
+    };
+
+    template<typename TestSpace_, typename TrialSpace_>
+    struct LocalFunctionSpaceTypes<TestSpace_,TrialSpace_,false>
+    {
+
+      using TestSpace       = TestSpace_;
+
+      template<typename = Flavor::Generic>
+      using TestLocalSpace  = LocalFunctionSpace<TestSpace,Flavor::Generic>;
+
+      template<typename = Flavor::Generic>
+      using TestSpaceCache  = LFSIndexCache<TestLocalSpace<Flavor::Generic>>;
+
+
+      using TrialSpace      = TrialSpace_;
+
+      template<typename = Flavor::Generic>
+      using TrialLocalSpace = LocalFunctionSpace<TrialSpace,Flavor::Generic>;
+
+      template<typename = Flavor::Generic>
+      using TrialSpaceCache = LFSIndexCache<TrialLocalSpace<Flavor::Generic>>;
+
+    };
+
+
     template<typename TrialVector, typename TestVector, typename LOP, Galerkin galerkin = Galerkin::automatic>
     class ResidualEngine
     {
 
+      static constexpr bool enable_flavors = not LocalOperator::disableFunctionSpaceFlavors<LOP>();
+
+      using Types = LocalFunctionSpaceTypes<
+        typename TestVector::GridFunctionSpace,
+        typename TrialVector::GridFunctionSpace,
+        enable_flavors
+        >;
+
     public:
 
-      using TestSpace       = typename TestVector::GridFunctionSpace;
-      using TestLocalSpace  = LocalFunctionSpace<TestSpace>;
-      using TestLFS         = LocalFunctionSpace<TestSpace>;
-      using TestSpaceCache  = LFSIndexCache<TestLFS>;
+      using TestSpace       = typename Types::TestSpace;
 
-      using TrialSpace      = typename TrialVector::GridFunctionSpace;
-      using TrialLocalSpace = LocalFunctionSpace<TrialSpace>;
-      using TrialLFS        = LocalFunctionSpace<TrialSpace>;
-      using TrialSpaceCache = LFSIndexCache<TrialLFS>;
+      template<typename Flavor = Flavor::Generic>
+      using TestLocalSpace  = typename Types::template TestLocalSpace<Flavor>;
+
+      template<typename Flavor = Flavor::Generic>
+      using TestSpaceCache  = typename Types::template TestSpaceCache<Flavor>;
+
+
+      using TrialSpace      = typename Types::TrialSpace;
+
+      template<typename Flavor = Flavor::Generic>
+      using TrialLocalSpace = typename Types::template TrialLocalSpace<Flavor>;
+
+      template<typename Flavor = Flavor::Generic>
+      using TrialSpaceCache = typename Types::template TrialSpaceCache<Flavor>;
+
 
       using EntitySet       = typename TestSpace::Traits::EntitySet;
 
-      static constexpr std::bool_constant<galerkin == Galerkin::automatic ?
-                                          std::is_same<TrialSpace,TestSpace>::value : bool(galerkin)> isGalerkin()
+      static constexpr
+      std::bool_constant<
+        galerkin == Galerkin::automatic ?
+        std::is_same<TrialSpace,TestSpace>::value
+        : bool(galerkin)
+        >
+      isGalerkin()
       {
         return {};
       }
@@ -156,9 +228,24 @@ namespace Dune {
         return _test_vector->gridFunctionSpace();
       }
 
-      TestSpaceCache makeTestSpaceCache() const
+      template<typename Flavor_>
+      std::enable_if_t<
+        Std::to_true_type<Flavor_>::value and enable_flavors,
+        TestSpaceCache<Flavor_>
+        >
+      makeTestSpaceCache(Flavor_) const
       {
-        return TestSpaceCache();
+        return TestSpaceCache<Flavor_>();
+      }
+
+      template<typename Flavor_>
+      std::enable_if_t<
+        Std::to_true_type<Flavor_>::value and not enable_flavors,
+        TestSpaceCache<Flavor::Generic>
+        >
+      makeTestSpaceCache(Flavor_) const
+      {
+        return TestSpaceCache<Flavor::Generic>();
       }
 
       const TrialSpace& trialSpace() const
@@ -166,9 +253,24 @@ namespace Dune {
         return _trial_vector->gridFunctionSpace();
       }
 
-      TrialSpaceCache makeTrialSpaceCache() const
+      template<typename Flavor_>
+      std::enable_if_t<
+        Std::to_true_type<Flavor_>::value and enable_flavors,
+        TrialSpaceCache<Flavor_>
+        >
+      makeTrialSpaceCache(Flavor_) const
       {
-        return TrialSpaceCache();
+        return TrialSpaceCache<Flavor_>();
+      }
+
+      template<typename Flavor_>
+      std::enable_if_t<
+        Std::to_true_type<Flavor_>::value and not enable_flavors,
+        TrialSpaceCache<Flavor::Generic>
+        >
+      makeTrialSpaceCache(Flavor_) const
+      {
+        return TrialSpaceCache<Flavor::Generic>();
       }
 
       LOP& localOperator()
@@ -193,25 +295,25 @@ namespace Dune {
                   extractCellContext(
                     *_lop,
                     cellResidualData(
-                      cachedVectorData<UncachedVectorView<TestVector,TestSpaceCache>,LocalViewDataMode::accumulate>(
+                      cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
                         cellArgumentData(
-                          cachedVectorData<UncachedVectorView<TrialVector,TrialSpaceCache>,LocalViewDataMode::read>(
+                          cachedVectorData<UncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                             trialSpaceData(
                               testSpaceData(
                                 cellGridData(
-                                  Data<CellFlavor::Outside>(*this)
+                                  Data<CellFlavor::Outside<enable_flavors>>(*this)
                                   )))))))),
                   insideCell(
                     extractCellContext(
                       *_lop,
                       cellResidualData(
-                        cachedVectorData<UncachedVectorView<TestVector,TestSpaceCache>,LocalViewDataMode::accumulate>(
+                        cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
                           cellArgumentData(
-                            cachedVectorData<UncachedVectorView<TrialVector,TrialSpaceCache>,LocalViewDataMode::read>(
+                            cachedVectorData<UncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                               trialSpaceData(
                                 testSpaceData(
                                   cellGridData(
-                                    Data<CellFlavor::Inside>(*this)
+                                    Data<CellFlavor::Inside<enable_flavors>>(*this)
                                     )))))))))))));
       }
 

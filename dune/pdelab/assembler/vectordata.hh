@@ -52,7 +52,7 @@ namespace Dune {
       using Context::unbind;
 
       template<typename LFSCache>
-      void bind(const LFSCache& lfs_cache)
+      void bind(LFSCache& lfs_cache)
       {
         _local_view.bind(lfs_cache);
 
@@ -68,7 +68,7 @@ namespace Dune {
       }
 
       template<typename LFSCache>
-      void unbind(const LFSCache& lfs_cache)
+      void unbind(LFSCache& lfs_cache)
       {
         if constexpr (_mode == LocalViewDataMode::write or _mode == LocalViewDataMode::readWrite)
           {
@@ -112,16 +112,29 @@ namespace Dune {
     };
 
 
-    template<typename LV, LocalViewDataMode _mode, typename Context>
-    auto cachedVectorData(typename LV::value_type initial, Context&& ctx)
+    template<
+      template<typename,typename> typename LV,
+      typename Vector,
+      typename Flavor,
+      LocalViewDataMode _mode,
+      typename Field,
+      typename Context
+      >
+    auto cachedVectorData(const Field& initial, Context&& ctx)
     {
-      return CachedVectorData<Context,LV,_mode>{std::move(ctx),initial};
+      return CachedVectorData<Context,LV<Vector,std::decay_t<decltype(ctx.cache(Flavor{}))>>,_mode>{std::move(ctx),initial};
     }
 
-    template<typename LV, LocalViewDataMode _mode, typename Context>
+    template<
+      template<typename,typename> typename LV,
+      typename Vector,
+      typename Flavor,
+      LocalViewDataMode _mode,
+      typename Context
+      >
     auto cachedVectorData(Context&& ctx)
     {
-      return CachedVectorData<Context,LV,_mode>{std::move(ctx)};
+      return CachedVectorData<Context,LV<Vector,std::decay_t<decltype(ctx.cache(Flavor{}))>>,_mode>{std::move(ctx)};
     }
 
     template<typename Implementation>
