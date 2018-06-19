@@ -56,9 +56,6 @@ namespace Dune {
         auto ctx = makeContext(engine.context(*this));
         ctx.setup();
 
-        std::cout << "sizeof(ctx) = " << sizeof(ctx) << std::endl;
-        std::cout << Dune::className(ctx) << std::endl;
-
         engine.start(ctx);
 
         for (const auto& element : elements(entity_set))
