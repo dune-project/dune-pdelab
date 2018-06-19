@@ -310,8 +310,6 @@ namespace Dune {
               ci_out++;
             }
 
-            assert(ci_out==ci_end);
-
             return _containerIndices[entityIndex[0]][entityIndex[1]].size();
           }
 
@@ -401,8 +399,7 @@ namespace Dune {
                                  typename Traits::SizeType child_index,
                                  CIOutIterator ci_out, const CIOutIterator ci_end) const
           {
-            DIOutIterator dummy;
-            return this->child(Indices::_0).extract_entity_indices(ei, child_index, ci_out, ci_end, dummy);
+            return 0;
           }
 
         private:
