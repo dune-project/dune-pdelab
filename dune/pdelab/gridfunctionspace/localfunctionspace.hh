@@ -15,6 +15,7 @@
 #include <dune/typetree/typetree.hh>
 
 #include <dune/pdelab/gridfunctionspace/tags.hh>
+#include <dune/pdelab/gridfunctionspace/flavor.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 
 namespace Dune {
@@ -165,7 +166,7 @@ namespace Dune {
     //=======================================
 
     //! traits mapping global function space information to local function space
-    template<typename GFS, typename DI>
+    template<typename GFS, typename DI, typename Flavor_>
     struct LocalFunctionSpaceBaseTraits
     {
       //! \brief Type of the underlying grid function space
@@ -186,9 +187,12 @@ namespace Dune {
       //! \brief Type of container to store multiindices.
       typedef typename std::vector<DI> DOFIndexContainer;
 
+      //! \brief The flavor of the function space (inside / outside, test / trial etc.)
+      using Flavor = Flavor_;
+
     };
 
-    template <typename GFS, typename DOFIndex>
+    template <typename GFS, typename DOFIndex, typename Flavor_>
     class LocalFunctionSpaceBaseNode
     {
       typedef typename GFS::Traits::Backend B;
@@ -206,7 +210,10 @@ namespace Dune {
       friend class LFSIndexCacheBase;
 
     public:
-      typedef LocalFunctionSpaceBaseTraits<GFS,DOFIndex> Traits;
+      using Flavor = Flavor_;
+
+      typedef LocalFunctionSpaceBaseTraits<GFS,DOFIndex,Flavor> Traits;
+
 
       //! \brief construct from global function space
       LocalFunctionSpaceBaseNode (std::shared_ptr<const GFS> gfs)
@@ -296,8 +303,8 @@ namespace Dune {
     };
 
     //! traits for local function space on a gridview
-    template<typename GFS, typename DOFIndex>
-    struct GridViewLocalFunctionSpaceBaseTraits : public LocalFunctionSpaceBaseTraits<GFS,DOFIndex>
+    template<typename GFS, typename DOFIndex,typename Flavor>
+    struct GridViewLocalFunctionSpaceBaseTraits : public LocalFunctionSpaceBaseTraits<GFS,DOFIndex,Flavor>
     {
       //! \brief Type of the grid view that the underlying grid function space is defined on.
       typedef typename GFS::Traits::GridViewType GridViewType;
@@ -311,19 +318,19 @@ namespace Dune {
       using Element = typename EntitySet::Element;
     };
 
-    template <typename GFS, typename DOFIndex>
+    template <typename GFS, typename DOFIndex, typename Flavor>
     class GridViewLocalFunctionSpaceBaseNode :
-      public LocalFunctionSpaceBaseNode<GFS,DOFIndex>
+      public LocalFunctionSpaceBaseNode<GFS,DOFIndex,Flavor>
     {
       typedef typename GFS::Traits::Backend B;
-      typedef LocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
+      using Base = LocalFunctionSpaceBaseNode<GFS,DOFIndex,Flavor>;
 
     public:
-      typedef GridViewLocalFunctionSpaceBaseTraits<GFS,DOFIndex> Traits;
+      using Traits = GridViewLocalFunctionSpaceBaseTraits<GFS,DOFIndex,Flavor>;
 
       //! \brief construct from global function space
       GridViewLocalFunctionSpaceBaseNode (std::shared_ptr<const GFS> gfs)
-        : BaseT(gfs)
+        : Base(gfs)
       {}
 
     protected:
@@ -341,47 +348,45 @@ namespace Dune {
          \param e entity to bind to
        */
       template<typename NodeType, bool fast = false>
-      void bind (NodeType& node, const typename Traits::Element& e, std::integral_constant<bool,fast> = std::integral_constant<bool,fast>{});
+      void bind(
+        NodeType& node,
+        const typename Traits::Element& e,
+        std::integral_constant<bool,fast> = std::integral_constant<bool,fast>{}
+        )
+      {
+        using Element = typename Traits::Element;
+        assert(&node == this);
+
+        // compute sizes
+        ComputeSizeVisitor<Element,fast> csv(e);
+        TypeTree::applyToTree(node,csv);
+
+        // initialize iterators and fill indices
+        FillIndicesVisitor<Element,fast> fiv(e);
+        TypeTree::applyToTree(node,fiv);
+      }
+
     };
-
-    template <typename GFS, typename DOFIndex>
-    template <typename NodeType, bool fast>
-    void GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>::bind (NodeType& node,
-                                                                 const typename GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>::Traits::Element& e,
-                                                                 std::integral_constant<bool,fast>)
-    {
-      typedef typename GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>::Traits::Element Element;
-      assert(&node == this);
-
-      // compute sizes
-      ComputeSizeVisitor<Element,fast> csv(e);
-      TypeTree::applyToTree(node,csv);
-
-
-      // initialize iterators and fill indices
-      FillIndicesVisitor<Element,fast> fiv(e);
-      TypeTree::applyToTree(node,fiv);
-    }
 
     //=======================================
     // local function space base: power implementation
     //=======================================
 
     //! traits for multi component local function space
-    template<typename GFS, typename DOFIndex, typename N>
-    struct PowerCompositeLocalFunctionSpaceTraits : public GridViewLocalFunctionSpaceBaseTraits<GFS,DOFIndex>
+    template<typename GFS, typename DOFIndex, typename Flavor, typename N>
+    struct PowerCompositeLocalFunctionSpaceTraits : public GridViewLocalFunctionSpaceBaseTraits<GFS,DOFIndex,Flavor>
     {
       //! type of local function space node
       typedef N NodeType;
     };
 
     // local function space for a power grid function space
-    template<typename GFS, typename DOFIndex, typename ChildLFS, std::size_t k>
+    template<typename GFS, typename DOFIndex, typename Flavor, typename ChildLFS, std::size_t k>
     class PowerLocalFunctionSpaceNode :
-      public GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>,
+      public GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex,Flavor>,
       public TypeTree::PowerNode<ChildLFS,k>
     {
-      typedef GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
+      typedef GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex,Flavor> BaseT;
       typedef TypeTree::PowerNode<ChildLFS,k> TreeNode;
 
       template<typename>
@@ -397,7 +402,7 @@ namespace Dune {
       friend struct FillIndicesVisitor;
 
     public:
-      typedef PowerCompositeLocalFunctionSpaceTraits<GFS,DOFIndex,PowerLocalFunctionSpaceNode> Traits;
+      typedef PowerCompositeLocalFunctionSpaceTraits<GFS,DOFIndex,Flavor,PowerLocalFunctionSpaceNode> Traits;
 
       typedef PowerLocalFunctionSpaceTag ImplementationTag;
 
@@ -436,7 +441,7 @@ namespace Dune {
       template<typename TC>
       struct result
       {
-        typedef PowerLocalFunctionSpaceNode<SourceNode,typename Transformation::DOFIndex,TC,TypeTree::StaticDegree<SourceNode>::value> type;
+        typedef PowerLocalFunctionSpaceNode<SourceNode,typename Transformation::DOFIndex,typename Transformation::Flavor,TC,TypeTree::StaticDegree<SourceNode>::value> type;
       };
     };
 
@@ -455,12 +460,12 @@ namespace Dune {
     //=======================================
 
     // local function space for a power grid function space
-    template<typename GFS, typename DOFIndex, typename... Children>
+    template<typename GFS, typename DOFIndex, typename Flavor, typename... Children>
     class CompositeLocalFunctionSpaceNode
-      : public GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>
+      : public GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex,Flavor>
       , public TypeTree::CompositeNode<Children...>
     {
-      typedef GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
+      typedef GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex,Flavor> BaseT;
       typedef TypeTree::CompositeNode<Children...> NodeType;
 
       template<typename>
@@ -476,7 +481,7 @@ namespace Dune {
       friend struct FillIndicesVisitor;
 
     public:
-      typedef PowerCompositeLocalFunctionSpaceTraits<GFS,DOFIndex,CompositeLocalFunctionSpaceNode> Traits;
+      typedef PowerCompositeLocalFunctionSpaceTraits<GFS,DOFIndex,Flavor,CompositeLocalFunctionSpaceNode> Traits;
 
       typedef CompositeLocalFunctionSpaceTag ImplementationTag;
 
@@ -513,7 +518,12 @@ namespace Dune {
       template<typename... TC>
       struct result
       {
-        typedef CompositeLocalFunctionSpaceNode<SourceNode,typename Transformation::DOFIndex,TC...> type;
+        using type = CompositeLocalFunctionSpaceNode<
+          SourceNode,
+          typename Transformation::DOFIndex,
+          typename Transformation::Flavor,
+          TC...
+          >;
       };
     };
 
@@ -532,8 +542,8 @@ namespace Dune {
     //=======================================
 
     //! traits for single component local function space
-    template<typename GFS, typename DOFIndex, typename N>
-    struct LeafLocalFunctionSpaceTraits : public PowerCompositeLocalFunctionSpaceTraits<GFS,DOFIndex,N>
+    template<typename GFS, typename DOFIndex, typename Flavor, typename N>
+    struct LeafLocalFunctionSpaceTraits : public PowerCompositeLocalFunctionSpaceTraits<GFS,DOFIndex,Flavor,N>
     {
       //! Type of local finite element
       typedef typename GFS::Traits::FiniteElementType FiniteElementType;
@@ -548,12 +558,12 @@ namespace Dune {
     };
 
     //! single component local function space
-    template<typename GFS, typename DOFIndex>
+    template<typename GFS, typename DOFIndex, typename Flavor>
     class LeafLocalFunctionSpaceNode
-      : public GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>
+      : public GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex,Flavor>
       , public TypeTree::LeafNode
     {
-      typedef GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
+      typedef GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex,Flavor> BaseT;
 
       template<typename>
       friend struct PropagateGlobalStorageVisitor;
@@ -568,7 +578,7 @@ namespace Dune {
       friend struct FillIndicesVisitor;
 
     public:
-      typedef LeafLocalFunctionSpaceTraits<GFS,DOFIndex,LeafLocalFunctionSpaceNode> Traits;
+      typedef LeafLocalFunctionSpaceTraits<GFS,DOFIndex,Flavor,LeafLocalFunctionSpaceNode> Traits;
 
       typedef LeafLocalFunctionSpaceTag ImplementationTag;
 
@@ -686,16 +696,13 @@ namespace Dune {
     TypeTree::GenericLeafNodeTransformation<
       GridFunctionSpace,
       gfs_to_lfs<Params>,
-      LeafLocalFunctionSpaceNode<GridFunctionSpace,typename gfs_to_lfs<Params>::DOFIndex>
+      LeafLocalFunctionSpaceNode<GridFunctionSpace,typename gfs_to_lfs<Params>::DOFIndex,typename gfs_to_lfs<Params>::Flavor>
       >
     registerNodeTransformation(GridFunctionSpace* gfs, gfs_to_lfs<Params>* t, LeafGridFunctionSpaceTag* tag);
 
     //=======================================
     // local function facade
     //=======================================
-
-    template <typename GFS, typename TAG=AnySpaceTag>
-    class LocalFunctionSpace;
 
     /**
        \brief Create a local function space from a global function space
@@ -710,13 +717,13 @@ namespace Dune {
 
        \extends LocalFunctionSpaceBaseNode
      */
-    template <typename GFS, typename TAG>
+    template <typename GFS, typename Flavor = Flavor::Generic>
     class LocalFunctionSpace :
-      public TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type
+      public TypeTree::TransformTree<GFS,gfs_to_lfs<gfs_to_lfs_params<GFS,Flavor>>>::Type
     {
-      typedef typename TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type BaseT;
-      typedef typename BaseT::Traits::IndexContainer::size_type I;
-      typedef typename BaseT::Traits::IndexContainer::size_type LocalIndex;
+      using Transformation = TypeTree::TransformTree<GFS,gfs_to_lfs<gfs_to_lfs_params<GFS,Flavor>>>;
+      using Base           = typename Transformation::type;
+      using LocalIndex     = typename Base::Traits::IndexContainer::size_type;
 
       template<typename>
       friend struct PropagateGlobalStorageVisitor;
@@ -724,23 +731,23 @@ namespace Dune {
       template<typename>
       friend struct ClearSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct ComputeSizeVisitor;
 
-      template<typename>
+      template<typename,bool>
       friend struct FillIndicesVisitor;
 
     public:
-      typedef typename BaseT::Traits Traits;
+      using Traits = typename Base::Traits;
 
       LocalFunctionSpace(const GFS & gfs)
-        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
+        : Base(Transformation::transform(gfs))
       {
         this->setup(*this);
       }
 
       LocalFunctionSpace(const LocalFunctionSpace & lfs)
-        : BaseT(lfs)
+        : Base(lfs)
       {
         // We need to reset the DOFIndex storage pointers in the new LFS tree,
         // as they are still pointing to the _dof_index_storage of the
@@ -751,7 +758,7 @@ namespace Dune {
 
       LocalIndex localIndex (typename Traits::IndexContainer::size_type index) const
       {
-        return LocalIndex(BaseT::localIndex(index));
+        return LocalIndex(Base::localIndex(index));
       }
 
     private:
@@ -760,55 +767,6 @@ namespace Dune {
       void getChild () const;
       template<int i>
       void child () const;
-    };
-
-    // specialization for AnySpaceTag
-    // WARNING: If you modify this class, make sure to also fix the specialization in
-    // subspacelocalfunctionspace.hh!
-    template <typename GFS>
-    class LocalFunctionSpace<GFS, AnySpaceTag> :
-      public TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type
-    {
-      typedef typename TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type BaseT;
-
-      template<typename>
-      friend struct PropagateGlobalStorageVisitor;
-
-      template<typename>
-      friend struct ClearSizeVisitor;
-
-      template<typename,bool>
-      friend struct ComputeSizeVisitor;
-
-      template<typename,bool>
-      friend struct FillIndicesVisitor;
-
-    public:
-
-      LocalFunctionSpace(const GFS & gfs)
-        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
-      {
-        this->_dof_indices = &(this->_dof_index_storage);
-        this->setup(*this);
-      }
-
-      LocalFunctionSpace(std::shared_ptr<const GFS> pgfs)
-        : BaseT(*TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform_storage(pgfs))
-      {
-        this->_dof_indices = &(this->_dof_index_storage);
-        this->setup(*this);
-      }
-
-      LocalFunctionSpace(const LocalFunctionSpace & lfs)
-        : BaseT(lfs)
-      {
-        // We need to reset the DOFIndex storage pointers in the new LFS tree,
-        // as they are still pointing to the _dof_index_storage of the
-        // old tree.
-        this->_dof_indices = &(this->_dof_index_storage);
-        this->setup(*this);
-      }
-
     };
 
     //! \} group GridFunctionSpace

@@ -62,7 +62,7 @@ namespace Dune {
                                   TypeTree::plus<std::size_t>
                                   >::result + 1;
 
-      typedef typename gfs_to_lfs<RootGFS>::DOFIndex DOFIndex;
+      typedef typename gfs_to_lfs<gfs_to_lfs_params<RootGFS>>::DOFIndex DOFIndex;
       typedef MultiIndex<std::size_t,ci_depth> ContainerIndex;
     };
 
