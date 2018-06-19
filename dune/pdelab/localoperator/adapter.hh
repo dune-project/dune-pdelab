@@ -19,6 +19,11 @@ namespace Dune {
 
     public:
 
+      static constexpr bool disableFunctionSpaceFlavors()
+      {
+        return true;
+      }
+
       template<typename Context>
       std::enable_if_t<LOP::doAlphaVolume or LOP::doLambdaVolume>
       volumeIntegral(Context& ctx) const
