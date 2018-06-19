@@ -59,10 +59,11 @@ namespace Dune {
 
     private:
 
-      using fe_transformation = TypeTree::TransformTree<LFS,lfs_to_finite_elements<typename Context::Cell>>;
-      using FiniteElements    = typename fe_transformation::transformed_type;
+      using fe_transformation = TypeTree::TransformTree<LFS,lfs_to_finite_elements<Context>>;
 
     public:
+
+      using FiniteElements    = typename fe_transformation::transformed_type;
 
       template<std::size_t... I>
       using SubSpace = TypeTree::Child<LFS,I...>;
@@ -85,6 +86,12 @@ namespace Dune {
 
       template<typename... Indices>
       const auto& functionSpace(Indices... indices) const
+      {
+        return child(_function_space,indices...);
+      }
+
+      template<typename... Indices>
+      const auto& space(Indices... indices) const
       {
         return child(_function_space,indices...);
       }
@@ -121,7 +128,7 @@ namespace Dune {
       Context* setup()
       {
         _function_space_cache.attach(_function_space);
-        TypeTree::applyToTree(_finite_elements,set_context<typename Context::Cell>(*this));
+        TypeTree::applyToTree(_finite_elements,set_context<Context>(*this));
         return this;
       }
 

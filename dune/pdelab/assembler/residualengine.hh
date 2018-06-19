@@ -97,6 +97,11 @@ namespace Dune {
           return _engine;
         }
 
+        const Engine& engine() const
+        {
+          return _engine;
+        }
+
       private:
 
         Engine& _engine;
@@ -164,6 +169,16 @@ namespace Dune {
       TrialSpaceCache makeTrialSpaceCache() const
       {
         return TrialSpaceCache();
+      }
+
+      LOP& localOperator()
+      {
+        return *_lop;
+      }
+
+      const LOP& localOperator() const
+      {
+        return *_lop;
       }
 
       template<typename Assembler>

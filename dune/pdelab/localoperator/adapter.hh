@@ -58,7 +58,7 @@ namespace Dune {
       boundaryIntegral(Context& ctx) const
       {
         auto residual = ctx.inside().residual();
-        auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection());
+        auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
         Call<LOP::doAlphaBoundary and not ctx.skipVariablePart()>::alpha_boundary(
           _lop,ig,
           ctx.inside().trial().functionSpace(),ctx.inside().argument(),
@@ -76,7 +76,7 @@ namespace Dune {
       {
         auto inside_residual = ctx.inside().residual();
         auto outside_residual = ctx.outside().residual();
-        auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection());
+        auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
         Call<LOP::doAlphaSkeleton and not ctx.skipVariablePart()>::alpha_skeleton(
           _lop,ig,
           ctx.inside().trial().functionSpace(),ctx.inside().argument(),ctx.inside().test().functionSpace(),

@@ -218,6 +218,114 @@ namespace Dune {
       L2 scalar_operator;
     };
 
+
+
+
+
+    class NewL2
+    {
+    public:
+
+      NewL2(int intorderadd = 0, double scaling = 1.0)
+        : _intorderadd(intorderadd)
+        , _scaling(scaling)
+      {}
+
+      /*
+      template<typename Context>
+      struct CellContext
+        : public Context
+      {
+        CellContext(Context&& ctx)
+          : Context(std::move(ctx))
+        {}
+      };
+
+      template<typename Context_>
+      struct Context
+        : public Context_
+      {
+        Context(Context_&& ctx)
+          : Context_(std::move(ctx))
+        {}
+      };
+      */
+
+      template<typename Context>
+      void volumeIntegral(Context& ctx) const
+      {
+        static_assert(ctx.isGalerkin(), "NewL2 only works for Galerkin problems");
+
+        if (ctx.skipVariablePart())
+          return;
+
+        using RangeField = LocalOperator::RangeField<Context>;
+        using size_type = std::size_t;
+
+        auto& basis = ctx.test().basis();
+        auto intorder = 2 * basis.order() + _intorderadd;
+
+        auto& testSpace = ctx.test().functionSpace();
+        auto& x = ctx.argument();
+
+        for (const auto& qp : ctx.domain().quadratureRule(intorder))
+          {
+            auto phi = basis(qp);
+
+            RangeField u = 0.0;
+            for (size_type i = 0 ; i < testSpace.size() ; ++i)
+              u += x(testSpace,i) * phi[i];
+
+            auto factor = _scaling * qp.weight();
+
+            for (size_type i = 0 ; i < testSpace.size() ; ++i)
+              ctx.residual().accumulate(testSpace,i, u * phi[i] * factor);
+          }
+      }
+
+
+      // Jacobian of volume term
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
+      void jacobian_volume(const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat) const
+      {
+        // Switches between local and global interface
+        using FESwitch = FiniteElementInterfaceSwitch<
+          typename LFSU::Traits::FiniteElementType>;
+        using BasisSwitch = BasisInterfaceSwitch<
+          typename FESwitch::Basis>;
+
+        // Define types
+        using RangeType = typename BasisSwitch::Range;
+        using size_type = typename LFSU::Traits::SizeType;
+
+        // Get geometry
+        auto geo = eg.geometry();
+
+        // Inititialize vectors outside for loop
+        std::vector<RangeType> phi(lfsu.size());
+
+        // determine integration order
+        auto intorder = 2*FESwitch::basis(lfsu.finiteElement()).order() + _intorderadd;
+
+        // Loop over quadrature points
+        for (const auto& qp : quadratureRule(geo,intorder))
+          {
+            // Evaluate basis functions
+            FESwitch::basis(lfsu.finiteElement()).evaluateFunction(qp.position(),phi);
+
+            // Integrate phi_j*phi_i
+            auto factor = _scaling * qp.weight() * geo.integrationElement(qp.position());
+            for (size_type j=0; j<lfsu.size(); j++)
+              for (size_type i=0; i<lfsu.size(); i++)
+                mat.accumulate(lfsv,i,lfsu,j, phi[j]*phi[i]*factor);
+          }
+      }
+
+    private:
+      int _intorderadd;
+      double _scaling;
+    };
+
     //! \} group LocalOperator
   } // namespace PDELab
 } // namespace Dune

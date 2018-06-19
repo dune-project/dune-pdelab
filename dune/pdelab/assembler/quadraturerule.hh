@@ -10,6 +10,128 @@
 namespace Dune {
   namespace PDELab {
 
+    template<typename Geometry>
+    class CellEmbedding
+    {
+
+    public:
+
+      using Global           = Geometry;
+      using Field            = typename Geometry::ctype;
+      using Cell             = IdentityGeometry<Field,Geometry::mydimension>;
+      using Local            = Cell;
+      using Inside           = Cell;
+      using LocalCoordinate  = typename Geometry::LocalCoordinate;
+      using CellCoordinate   = LocalCoordinate;
+      using GlobalCoordinate = typename Geometry::GlobalCoordinate;
+      static constexpr int dimLocal = Geometry::mydimension;
+      static constexpr int dimWorld = Geometry::coorddimension;
+
+      const Global& global() const
+      {
+        return *_global;
+      }
+
+      Cell local() const
+      {
+        return Local(global().type());
+      }
+
+      Cell inside() const
+      {
+        return local();
+      }
+
+      CellEmbedding(const Geometry& geo)
+        : _global(&geo)
+      {}
+
+    private:
+
+      const Global* _global;
+
+    };
+
+    template<typename Embedding_>
+    class EmbeddedPoint
+    {
+
+    public:
+
+      using Embedding        = Embedding_;
+      using LocalCoordinate  = typename Embedding::Global::LocalCoordinate;
+      using CellCoordinate   = typename Embedding::Inside::GlobalCoordinate;
+      using GlobalCoordinate = typename Embedding::Global::GlobalCoordinate;
+      using Field            = typename Embedding::Field;
+
+      const LocalCoordinate& local() const
+      {
+        return _local;
+      }
+
+      operator const LocalCoordinate&() const
+      {
+        return local();
+      }
+
+      const CellCoordinate& cell() const
+      {
+        return inside();
+      }
+
+      const CellCoordinate& inside() const
+      {
+        if (!_inside)
+          return _inside.emplace(_embedding.inside().global(local()));
+        else
+          return *_inside;
+      }
+
+      const CellCoordinate& outside() const
+      {
+        if (!_outside)
+          return _outside.emplace(_embedding.outside().global(local()));
+        else
+          return *_outside;
+      }
+
+      const GlobalCoordinate& global() const
+      {
+        if (!_global)
+          return _global.emplace(_embedding.global().global(local()));
+        else
+          return *_global;
+      }
+
+      Embedding embedding() const
+      {
+        return _embedding;
+      }
+
+      EmbeddedPoint(const LocalCoordinate& local, const Embedding& embedding)
+        : _local(local)
+        , _embedding(embedding)
+      {}
+
+      friend std::ostream& operator<<(std::ostream& os, const EmbeddedPoint& p)
+      {
+        os << "EP(local=" << p.local()
+           << ", inside=" << p.inside()
+           << ", global=" << p.global()
+           << ")";
+        return os;
+      }
+
+    private:
+
+      LocalCoordinate _local;
+      mutable std::optional<CellCoordinate> _inside;
+      mutable std::optional<CellCoordinate> _outside;
+      mutable std::optional<GlobalCoordinate> _global;
+      Embedding _embedding;
+
+    };
+
 
     template<typename Rule_>
     class QuadraturePoint
@@ -18,6 +140,7 @@ namespace Dune {
     public:
 
       using Rule             = Rule_;
+      using Embedding        = typename Rule::Embedding;
       using Native           = typename Rule::Native::value_type;
       using LocalCoordinate  = typename Rule::LocalCoordinate;
       using CellCoordinate   = typename Rule::CellCoordinate;
@@ -35,14 +158,32 @@ namespace Dune {
         return _qp.position();
       }
 
+      operator const LocalCoordinate&() const
+      {
+        return _qp.position();
+      }
+
       Index index() const
       {
         return _index;
       }
 
+      Field ruleWeight() const
+      {
+        return _qp.weight();
+      }
+
       Field weight() const
       {
-        return _qp.weight() * _rule.integrationElement(*this);
+        return ruleWeight() * integrationElement();
+      }
+
+      Field integrationElement() const
+      {
+        if (!_integration_element)
+          return _integration_element.emplace(_rule.integrationElement(*this));
+        else
+          return *_integration_element;
       }
 
       const CellCoordinate& cell() const
@@ -79,6 +220,21 @@ namespace Dune {
         return _rule;
       }
 
+      Embedding embedding() const
+      {
+        return _rule.embedding();
+      }
+
+      friend std::ostream& operator<<(std::ostream& os, const QuadraturePoint& p)
+      {
+        os << "QP(local=" << p.local()
+           << ", inside=" << p.inside()
+           << ", global=" << p.global()
+           << ", weight=" << p.weight()
+           << ")";
+        return os;
+      }
+
       QuadraturePoint(const Native& qp, Index index, const Rule& rule)
         : _qp(qp)
         , _index(index)
@@ -92,12 +248,13 @@ namespace Dune {
       mutable std::optional<CellCoordinate> _inside;
       mutable std::optional<CellCoordinate> _outside;
       mutable std::optional<GlobalCoordinate> _global;
+      mutable std::optional<Field> _integration_element;
       const Rule& _rule;
 
     };
 
 
-    template<typename QR, typename Embedding>
+    template<typename QR, typename Embedding_>
     class QuadratureRule
     {
 
@@ -106,9 +263,10 @@ namespace Dune {
     public:
 
       using Native           = QR;
+      using Embedding        = Embedding_;
       using Field            = typename Native::value_type::Field;
       using LocalCoordinate  = typename Native::value_type::Vector;
-      using CellCoordinate   = typename Embedding::Local::GlobalCoordinate;
+      using CellCoordinate   = typename Embedding::Cell::GlobalCoordinate;
       using GlobalCoordinate = typename Embedding::Global::GlobalCoordinate;
 
       //! The size type used by the container.
@@ -261,6 +419,11 @@ namespace Dune {
       {}
 
 #endif
+
+      Embedding embedding() const
+      {
+        return _embedding;
+      }
 
     private:
 
