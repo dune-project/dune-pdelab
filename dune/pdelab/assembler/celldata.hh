@@ -22,6 +22,19 @@ namespace Dune {
 
     namespace CellFlavor {
 
+      template<typename Context>
+      using TestLocalSpace  = typename Context::Engine::template TestLocalSpace<typename Context::Flavor::Test>;
+
+      template<typename Context>
+      using TestSpaceCache  = typename Context::Engine::template TestSpaceCache<typename Context::Flavor::Test>;
+
+      template<typename Context>
+      using TrialLocalSpace = typename Context::Engine::template TrialLocalSpace<typename Context::Flavor::Trial>;
+
+      template<typename Context>
+      using TrialSpaceCache = typename Context::Engine::template TrialSpaceCache<typename Context::Flavor::Trial>;
+
+      template<bool enable_flavors>
       struct Inside
       {
         template<typename QP>
@@ -29,8 +42,13 @@ namespace Dune {
         {
           return qp.inside();
         }
+
+        using Test  = std::conditional_t<enable_flavors,Flavor::InsideTest,Flavor::Generic>;
+        using Trial = std::conditional_t<enable_flavors,Flavor::InsideTrial,Flavor::Generic>;
+
       };
 
+      template<bool enable_flavors>
       struct Outside
       {
         template<typename QP>
@@ -38,6 +56,10 @@ namespace Dune {
         {
           return qp.outside();
         }
+
+        using Test  = std::conditional_t<enable_flavors,Flavor::OutsideTest,Flavor::Generic>;
+        using Trial = std::conditional_t<enable_flavors,Flavor::OutsideTrial,Flavor::Generic>;
+
       };
 
     }

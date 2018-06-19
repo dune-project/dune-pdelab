@@ -32,6 +32,8 @@ namespace Dune {
           return this;
         }
 
+        void cache(int) = delete;
+
       };
 
 
