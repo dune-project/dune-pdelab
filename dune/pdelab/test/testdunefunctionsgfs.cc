@@ -270,13 +270,6 @@ void solveParallelPoissonProblem()
   // Fill the coefficient vector
   PDELab::interpolate(g,gridFunctionSpace,z);
 
-  // make vector consistent NEW IN PARALLEL
-  PDELab::ISTL::ParallelHelper<GridFunctionSpace> helper(gridFunctionSpace);
-  helper.maskForeignDOFs(z);
-  PDELab::AddDataHandle<GridFunctionSpace,Z> adddh(gridFunctionSpace,z);
-  if (gridFunctionSpace.gridView().comm().size()>1)
-    gridFunctionSpace.gridView().communicate(adddh,InteriorBorder_All_Interface,ForwardCommunication);
-
   // Make a local operator
   typedef PDELab::ConvectionDiffusionFEM<decltype(problem),typename GridFunctionSpace::Traits::FiniteElementMap> LOP;
   LOP lop(problem);
