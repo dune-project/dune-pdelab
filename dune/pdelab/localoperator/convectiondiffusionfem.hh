@@ -494,10 +494,13 @@ namespace Dune {
             // update all variables dependent on A if A is not cell-wise constant
             if (!Impl::permeabilityIsConstantPerCell<T>(param))
             {
+              // local normal
+              auto n_F_local = ig.unitOuterNormal(ip.position());
+
               A_s = param.A(cell_inside,geo_in_inside.global(ip.position()));
               A_n = param.A(cell_outside,geo_in_outside.global(ip.position()));
-              A_s.mv(n_F,An_F_s);
-              A_n.mv(n_F,An_F_n);
+              A_s.mv(n_F_local,An_F_s);
+              A_n.mv(n_F_local,An_F_n);
             }
 
             // position of quadrature point in local coordinates of elements
@@ -596,8 +599,11 @@ namespace Dune {
             // update all variables dependent on A if A is not cell-wise constant
             if (!Impl::permeabilityIsConstantPerCell<T>(param))
             {
+              // local normal
+              auto n_F_local = ig.unitOuterNormal(ip.position());
+
               A_s = param.A(cell_inside,geo_in_inside.global(ip.position()));
-              A_s.mv(n_F,An_F_s);
+              A_s.mv(n_F_local,An_F_s);
             }
 
             // position of quadrature point in local coordinates of elements
