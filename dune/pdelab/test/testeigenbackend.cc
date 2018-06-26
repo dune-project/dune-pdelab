@@ -50,6 +50,12 @@ class PoissonModelProblem
 public:
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
+  //! tensor diffusion constant per cell? return false if you want more than one evaluation of A per cell.
+  static constexpr bool permeabilityIsConstantPerCell()
+  {
+    return true;
+  }
+
   //! tensor diffusion coefficient
   typename Traits::PermTensorType
   A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
@@ -259,6 +265,19 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
     Dune::Timer timer;
     std::cout << "StationaryLinearProblemSolver" << std::endl;
     typedef Dune::PDELab::EigenBackend_BiCGSTAB_Diagonal LS;
+    LS linearSolver(5000);
+    x = 0.0;
+    Dune::PDELab::StationaryLinearProblemSolver<GridOperator,LS,DV> slp(gridoperator,linearSolver,x,1e-10);
+    slp.apply();
+    x += x0;
+    std::cout << "Time SLPSolver: " << timer.elapsed() << std::endl;
+  }
+
+  // test the CG solver backend as part of a pdelab solver
+  {
+    Dune::Timer timer;
+    std::cout << "StationaryLinearProblemSolver" << std::endl;
+    typedef Dune::PDELab::EigenBackend_CG_Diagonal_Up LS;
     LS linearSolver(5000);
     x = 0.0;
     Dune::PDELab::StationaryLinearProblemSolver<GridOperator,LS,DV> slp(gridoperator,linearSolver,x,1e-10);

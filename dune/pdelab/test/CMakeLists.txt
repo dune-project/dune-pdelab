@@ -4,8 +4,6 @@ dune_add_test(SOURCES testanalytic.cc)
 
 dune_add_test(SOURCES testbindtime.cc)
 
-dune_add_test(SOURCES testclock.cc)
-
 dune_add_test(NAME testcomplexnumbers-istl
               SOURCES testcomplexnumbers.cc
               COMPILE_DEFINITIONS SUPERLU_NTYPE=3
@@ -41,11 +39,11 @@ dune_add_test(SOURCES testheat-instationary-periodic.cc)
 
 dune_add_test(SOURCES testelasticity.cc)
 
-if(SuiteSparse_UMFPACK_FOUND AND ARPACK_FOUND)
+if(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
   dune_add_test(SOURCES testgeneo.cc
                 MPI_RANKS 2
                 TIMEOUT 300)
-endif(SuiteSparse_UMFPACK_FOUND AND ARPACK_FOUND)
+endif(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
 
 dune_add_test(SOURCES testdglegendre.cc)
 
@@ -83,8 +81,6 @@ dune_add_test(SOURCES testutilities.cc)
 
 dune_add_test(SOURCES testinterpolate.cc)
 
-dune_add_test(SOURCES test-instationary-with-boundary-constraints.cc)
-
 dune_add_test(SOURCES testnumericaljacobianmethods.cc)
 
 dune_add_test(SOURCES testrtfem.cc
@@ -100,7 +96,12 @@ dune_add_test(SOURCES testpermutedordering.cc)
 dune_add_test(SOURCES testsimplebackend.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 
-dune_add_test(SOURCES test-transport-ccfv.cc)
+
+if(NOT MINGW)
+  dune_add_test(SOURCES testclock.cc)
+  dune_add_test(SOURCES test-instationary-with-boundary-constraints.cc)
+  dune_add_test(SOURCES test-transport-ccfv.cc)
+endif()
 
 
 if(EIGEN3_FOUND)
@@ -169,6 +170,8 @@ dune_add_test(SOURCES testranktransmission.cc
               TIMEOUT 300)
 
 dune_add_test(SOURCES testl2.cc)
+
+dune_add_test(SOURCES test-blocked-istl-ordering.cc)
 
 exclude_from_headercheck(
   gridexamples.hh

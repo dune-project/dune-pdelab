@@ -58,7 +58,6 @@ class PoissonProblem
 : public PDELab::ConvectionDiffusionModelProblem<GridView,RangeType>
 {
 public:
-
   template<typename Element, typename Coord>
   auto f(const Element& element, const Coord& x) const
   {
