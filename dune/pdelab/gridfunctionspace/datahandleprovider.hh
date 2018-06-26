@@ -103,6 +103,7 @@ namespace Dune {
         template<typename Ordering, typename TreePath>
         void leaf(const Ordering& ordering, TreePath tp)
         {
+          static_assert(tp.size()>=1, "Cannot call method 'indices_for_entity::leaf' for empty tree path");
           size_type size = ordering.extract_entity_indices(_entity_index,
                                                            tp.back(),
                                                            _ci_it,

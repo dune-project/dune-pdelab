@@ -5,9 +5,13 @@
 
 #include <cstddef>
 #include <map>
+#include <bitset>
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/typetraits.hh>
+
+#include <dune/typetree/leafnode.hh>
+#include <dune/typetree/compositenode.hh>
 
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/dunefunctionslocalfunctionspace.hh>
@@ -53,7 +57,7 @@ namespace Dune {
       class GridFunctionSpace
         : public TypeTree::LeafNode
         , public GridFunctionOutputParameters
-        //        , public DataHandleProvider<DuneFunctionsGridFunctionSpace<DFBasis,CE,B,P> >
+        , public DataHandleProvider<GridFunctionSpace<DFBasis,VBE,CE> >
       {
         using GV = typename DFBasis::GridView;
 
@@ -130,38 +134,147 @@ namespace Dune {
 
         using Basis          = DFBasis;
 
-        struct Ordering {
+        /** \brief The actual Ordering object of the grid function space
+         *
+         * This class is the leaf in the ordering tree of the dune-functions grid function space.
+         * It is the class that implements that actual ordering.  PDELab requires orderings to be
+         * trees with at least two nodes even if the basis itself is represented by a tree with
+         * a single node only.
+         */
+        struct LeafOrdering
+          : public TypeTree::LeafNode
+        {
 
           struct Traits {
 
-            using DOFIndex       = typename DFBasis::MultiIndex;
-            using ContainerIndex = DOFIndex;
+            /** \brief A DOF index that is independent of any ordering */
+            using DOFIndex       = PDELab::DOFIndex<std::size_t,1,2>;
+
+            /** \brief The index to access containers with
+             *
+             * The implementation does not support blocking or other forms of multi-indices yet.
+             * Therefore the container index type is always a multi-index with one digit,
+             * i.e., an integer.
+             */
+            using ContainerIndex = PDELab::MultiIndex<std::size_t,1>;
             using size_type      = std::size_t;
             using SizeType       = size_type;
 
+            using DOFIndexAccessor = Dune::PDELab::DefaultDOFIndexAccessor;
           };
 
-          using DOFIndex       = typename DFBasis::MultiIndex;
-          using ContainerIndex = DOFIndex;
+          using DOFIndex       = typename Traits::DOFIndex;
+          using ContainerIndex = typename Traits::ContainerIndex;
           using size_type      = std::size_t;
 
-          using CacheTag       = DuneFunctionsCacheTag;
-          using ContainerAllocationTag = FlatContainerAllocationTag;
-
-          Ordering(const GridFunctionSpace& gfs)
+          LeafOrdering(const GridFunctionSpace& gfs)
             : _gfs(gfs)
-          {}
+          {
+            constexpr auto dim = GV::dimension;
+            const auto  gridView = _gfs.gridView();
+            const auto& indexSet = gridView.indexSet();
+
+            // Count how many dofs there are for each individual entity
+            std::vector<std::vector<size_type> > dofsPerEntity(GlobalGeometryTypeIndex::size(dim));
+            for (size_type codim=0; codim<=dim; codim++)
+              for (auto&& type : indexSet.types(codim))
+              {
+                dofsPerEntity[GlobalGeometryTypeIndex::index(type)].resize(gridView.size(type));
+                std::fill(dofsPerEntity[GlobalGeometryTypeIndex::index(type)].begin(),
+                          dofsPerEntity[GlobalGeometryTypeIndex::index(type)].end(), 0);
+              }
+
+            typename DFBasis::LocalView localView = _gfs.basis().localView();
+            for (auto&& element : elements(gridView))
+            {
+              localView.bind(element);
+              const auto refElement = ReferenceElements<typename GV::ctype,dim>::general(element.type());
+
+              const auto& localFiniteElement = localView.tree().finiteElement();
+
+              for (size_type i=0; i<localFiniteElement.size(); i++)
+              {
+                const auto& localKey = localFiniteElement.localCoefficients().localKey(i);
+
+                // Type of the entity that the current local dof is attached to
+                auto subentityTypeIndex = GlobalGeometryTypeIndex::index(refElement.type(localKey.subEntity(), localKey.codim()));
+
+                // Global index of the entity that the current local dof is attached to
+                auto subentityIndex = indexSet.subIndex(element, localKey.subEntity(), localKey.codim());
+
+                dofsPerEntity[subentityTypeIndex][subentityIndex]
+                  = std::max(dofsPerEntity[subentityTypeIndex][subentityIndex], (size_type)localKey.index()+1);
+              }
+            }
+
+            // Set up the nested container for the container indices
+            _containerIndices.resize(GlobalGeometryTypeIndex::size(dim));
+
+            for (size_type codim=0; codim<=dim; codim++)
+              for (auto&& type : indexSet.types(codim))
+              {
+                _containerIndices[GlobalGeometryTypeIndex::index(type)].resize(gridView.size(type));
+                for (size_type i=0; i<_containerIndices[GlobalGeometryTypeIndex::index(type)].size(); i++)
+                  _containerIndices[GlobalGeometryTypeIndex::index(type)][i].resize(dofsPerEntity[GlobalGeometryTypeIndex::index(type)][i]);
+              }
+
+            // Actually set the container indices for all dofs on all entities
+            for (auto&& element : elements(gridView))
+            {
+              localView.bind(element);
+              const auto refElement = ReferenceElements<typename GV::ctype,dim>::general(element.type());
+
+              const auto& localFiniteElement = localView.tree().finiteElement();
+
+              for (size_type i=0; i<localFiniteElement.size(); i++)
+              {
+                const auto& localKey = localFiniteElement.localCoefficients().localKey(i);
+
+                // Type of the entity that the current local dof is attached to
+                GeometryType subentityType = refElement.type(localKey.subEntity(), localKey.codim());
+
+                // Global index of the entity that the current local dof is attached to
+                auto subentityIndex = indexSet.subIndex(element, localKey.subEntity(), localKey.codim());
+
+                _containerIndices[GlobalGeometryTypeIndex::index(subentityType)][subentityIndex][localKey.index()].set({localView.index(i)});
+              }
+
+            }
+
+            // Precompute for each codimension whether there is at least one entity with degrees of freedom,
+            // and whether all entities have the same number of dofs
+            for (size_type codim=0; codim<=dim; codim++)
+            {
+              _contains[codim] = false;
+              _contains[codim] = true;
+              for (auto&& type : indexSet.types(codim))
+              {
+                const auto& dofs = dofsPerEntity[GlobalGeometryTypeIndex::index(type)];
+
+                if (dofs[0] > 0)
+                  _contains[codim] = true;
+
+                for (size_type i=1; i<dofs.size(); i++)
+                {
+                  if (dofs[i] > 0)
+                    _contains[codim] = true;
+
+                  if (dofs[i-1] != dofs[i])
+                    _fixedSize[codim] = false;
+                }
+              }
+            }
+          }
 
           size_type size() const
           {
             return _gfs.basis().size();
           }
 
-          /** \brief Same as size(), because block size is always 1
-           */
-          size_type blockCount() const
+          /** \brief Number of degrees of freedom per entity */
+          size_type size(const typename DOFIndex::EntityIndex& entity) const
           {
-            return size();
+            return _containerIndices[entity[0]][entity[1]].size();
           }
 
           size_type maxLocalSize() const
@@ -169,22 +282,132 @@ namespace Dune {
             return _gfs.basis().localView().maxSize();
           }
 
-          ContainerIndex mapIndex(const DOFIndex& di) const
+          /** \brief True if there is at least one entity of the given codim that has a dof
+           */
+          bool contains(typename Traits::SizeType codim) const
           {
-            return di;
+            return _contains[codim];
           }
 
-          void mapIndex(const DOFIndex& di, ContainerIndex& ci) const
+          /** \brief True if all entities of the given codimension have the same number of dofs
+           */
+          bool fixedSize(typename Traits::SizeType codim) const
           {
-            ci = di;
+            return _fixedSize[codim];
           }
 
-          void update()
-          {}
+          // child_index: Steffen sagt: unklar, im Zweifel einfach ignorieren
+          template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
+          typename Traits::SizeType
+          extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& entityIndex,
+                                 typename Traits::SizeType child_index,
+                                 CIOutIterator ci_out, const CIOutIterator ci_end,
+                                 DIOutIterator dummy) const
+          {
+            for (size_type i=0; i<_containerIndices[entityIndex[0]][entityIndex[1]].size(); i++)
+            {
+              *ci_out = _containerIndices[entityIndex[0]][entityIndex[1]][i];
+              ci_out++;
+            }
+
+            return _containerIndices[entityIndex[0]][entityIndex[1]].size();
+          }
+
+          ContainerIndex containerIndex(const DOFIndex& i) const
+          {
+            return _containerIndices[i.entityIndex()[0]][i.entityIndex()[1]][i.treeIndex()[0]];
+          }
 
         private:
 
           const GridFunctionSpace& _gfs;
+
+          // Container that contains the ContainerIndices for all dofs, accessible by entities
+          std::vector<std::vector<std::vector<ContainerIndex> > > _containerIndices;
+
+          /** \brief True if there is at least one entity of the given codim
+           *         that has degrees of freedom
+           */
+          std::bitset<GV::dimension+1> _contains;
+
+          /** \brief True if all entities of the given codim have the same number of dofs
+           */
+          std::bitset<GV::dimension+1> _fixedSize;
+        };
+
+        /** \brief Root of the ordering tree
+         *
+         * PDELab requires ordering trees to have at least two nodes even if the corresponding
+         * basis tree consists of a single node only.  So here is an artificial root node to
+         * please PDELab.  All it does is forward all method calls to its single child.
+         */
+        struct Ordering
+          : public TypeTree::CompositeNode<LeafOrdering>
+        {
+          friend class LocalFunctionSpace<GridFunctionSpace>;
+
+          using Traits = typename LeafOrdering::Traits;
+
+          static const bool consume_tree_index = false;
+
+          using DOFIndex       = typename Traits::DOFIndex;
+          using ContainerIndex = typename Traits::ContainerIndex;
+          using size_type      = std::size_t;
+
+          using CacheTag       = DuneFunctionsCacheTag;
+          using ContainerAllocationTag = FlatContainerAllocationTag;
+
+          Ordering(const GridFunctionSpace& gfs)
+            : TypeTree::CompositeNode<LeafOrdering>(LeafOrdering(gfs))
+          {}
+
+          size_type size() const
+          {
+            return this->child(Indices::_0).size();
+          }
+
+          /** \brief Same as size(), because block size is always 1
+           */
+          size_type blockCount() const
+          {
+            return this->child(Indices::_0).size();
+          }
+
+          size_type maxLocalSize() const
+          {
+            return this->child(Indices::_0).maxLocalSize();
+          }
+
+          /** \brief Returns true if there is at least one entity of the given codim
+           *         for which data needs to be communicated.
+           */
+          bool contains(typename Traits::SizeType codim) const
+          {
+            return this->child(Indices::_0).contains(codim);
+          }
+
+          /** \brief True if for all entities of the given codim the same number of data items has to be communicated
+           */
+          bool fixedSize(typename Traits::SizeType codim) const
+          {
+            return this->child(Indices::_0).fixedSize(codim);
+          }
+
+          template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
+          typename Traits::SizeType
+          extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& ei,
+                                 typename Traits::SizeType child_index,
+                                 CIOutIterator ci_out, const CIOutIterator ci_end) const
+          {
+            return 0;
+          }
+
+        private:
+
+          ContainerIndex containerIndex(const DOFIndex& i) const
+          {
+            return this->child(Indices::_0).containerIndex(i);
+          }
 
         };
 
@@ -326,52 +549,6 @@ namespace Dune {
 
     } // namespace Experimental
 
-    /** \brief Dummy data handle -- does nothing
-     *
-     * The pdelab adaptivity code requires such a handle, even when the simulation is purely sequential.
-     * Therefore this data handle exists, but it doesn't actually do anything.
-     */
-    template <typename DFBasis, typename V, typename CE, typename U>
-    class AddDataHandle<Experimental::GridFunctionSpace<DFBasis,V,CE>,U>
-    : public CommDataHandleIF<AddDataHandle<Experimental::GridFunctionSpace<DFBasis,V,CE>,U>, typename U::field_type>
-    {
-      using DataType = typename U::field_type;
-
-      //! constructor
-    public:
-      AddDataHandle(const Experimental::GridFunctionSpace<DFBasis,V,CE>& gfs,
-                    const U& u)
-      {}
-
-      //! returns true if data for this codim should be communicated
-      bool contains (int dim, int codim) const
-      {
-        return false;
-      }
-
-      //! returns true if size per entity of given dim and codim is a constant
-      bool fixedsize (int dim, int codim) const
-      {
-        return true;
-      }
-
-      // How many objects of type DataType have to be sent for a given entity
-      template<class EntityType>
-      size_t size (const EntityType& e) const
-      {
-        return 0;
-      }
-
-      // Pack data from user to message buffer
-      template<class MessageBuffer, class EntityType>
-      void gather(MessageBuffer& buffer, const EntityType& entity) const
-      {}
-
-      // Unpack data from message buffer to user
-      template<class MessageBuffer, class EntityType>
-      void scatter(MessageBuffer& buffer, const EntityType& entity, size_t n)
-      {}
-    };
   } // namespace PDELab
 } // namespace Dune
 

@@ -12,8 +12,12 @@ to the [PDELab bugtracker][] instead.
 Changes
 =======
 
-PDELab 2.7
-----------
+PDELab git master (will be PDELab 2.7)
+--------------------------------------
+
+-   The adapter class `Experimental::GridFunctionSpace` that allows to use [dune-functions][] function
+    space bases as `GridFunctionSpace` implementations has gained limited support for distributed
+    computations.
 
 
 PDELab 2.6
