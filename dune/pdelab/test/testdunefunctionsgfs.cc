@@ -77,7 +77,7 @@ void solvePoissonProblem()
   // Construct Lagrangian finite element space basis
   using GridView = typename GridType::LeafGridView;
   auto gridView = grid.leafGridView();
-  using Basis = Functions::PQkNodalBasis<GridView,order>;
+  using Basis = Functions::LagrangeBasis<GridView,order>;
   auto basis = std::make_shared<Basis>(gridView);
 
   // What precisely does this do?
