@@ -166,9 +166,12 @@ namespace Dune{
                                 const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                                 const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
-        local_assembler.scatter_jacobian(al_sn,global_a_sn_view,false);
-        local_assembler.scatter_jacobian(al_ns,global_a_ns_view,false);
-        local_assembler.scatter_jacobian(al_nn,global_a_nn_view,false);
+        if (lfsu_s_cache.size() > 0 && lfsv_n_cache.size() > 0)
+          local_assembler.scatter_jacobian(al_sn,global_a_sn_view,false);
+        if (lfsu_n_cache.size() > 0 && lfsv_s_cache.size() > 0)
+          local_assembler.scatter_jacobian(al_ns,global_a_ns_view,false);
+        if (lfsu_n_cache.size() > 0 && lfsv_n_cache.size() > 0)
+          local_assembler.scatter_jacobian(al_nn,global_a_nn_view,false);
       }
 
       //! @}
