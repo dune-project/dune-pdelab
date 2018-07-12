@@ -53,6 +53,8 @@ dune_add_test(SOURCES testinstationaryfastdgassembler.cc)
 
 dune_add_test(SOURCES testlocalfunctionspace.cc)
 
+dune_add_test(SOURCES testlocalmatrix.cc)
+
 dune_add_test(SOURCES testlocaloperatorinterface.cc)
 
 dune_add_test(SOURCES testpk2dinterpolation.cc
