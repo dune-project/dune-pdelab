@@ -8,6 +8,14 @@
 #include <dune/typetree/typetraits.hh>
 
 namespace Dune {
+
+  namespace Std {
+
+    template<typename T>
+    constexpr bool to_true_v = to_true_type<T>::value;
+
+  }
+
   namespace PDELab {
 
     // Import AlwaysVoid from TypeTree library

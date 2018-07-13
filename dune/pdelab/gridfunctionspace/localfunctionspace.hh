@@ -6,6 +6,7 @@
 #include<vector>
 
 #include <dune/common/stdstreams.hh>
+#include <dune/common/rangeutilities.hh>
 
 #include <dune/geometry/referenceelements.hh>
 
@@ -229,6 +230,18 @@ namespace Dune {
         return n;
       }
 
+      using iterator = typename IntegralRange<typename Traits::IndexContainer::size_type>::iterator;
+
+      iterator begin() const
+      {
+        return iterator{0};
+      }
+
+      iterator end() const
+      {
+        return iterator{size()};
+      }
+
       std::size_t subSpaceDepth() const
       {
         return 0;
@@ -238,7 +251,7 @@ namespace Dune {
       typename Traits::IndexContainer::size_type maxSize () const
       {
         // _dof_indices is always as large as the max local size of the root GFS
-        return _dof_indices->size();
+        return gridFunctionSpace().maxLocalSize();
       }
 
       //! \brief get size of an appropriate local vector object

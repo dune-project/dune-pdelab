@@ -214,6 +214,38 @@ namespace Dune {
       return Impl::extractContext(PriorityTag<2>{},target, std::move(ctx));
     }
 
+
+
+    template<typename Pattern, typename RI, typename CI>
+    typename std::enable_if<
+      std::is_same<RI,CI>::value
+      >::type
+    add_diagonal_entry(Pattern& pattern, const RI& ri, const CI& ci)
+    {
+      if (ri == ci)
+        pattern.add_link(ri,ci);
+    }
+
+    template<typename Pattern, typename RI, typename CI>
+    typename std::enable_if<
+      !std::is_same<RI,CI>::value
+      >::type
+    add_diagonal_entry(Pattern& pattern, const RI& ri, const CI& ci)
+    {}
+
+    template<typename GFSV, typename GC, typename C>
+    void set_trivial_rows(const GFSV& gfsv, GC& globalcontainer, const C& c)
+    {
+      typedef typename C::const_iterator global_row_iterator;
+      for (global_row_iterator cit = c.begin(); cit != c.end(); ++cit)
+        globalcontainer.clear_row(cit->first,1);
+    }
+
+    template<typename GFSV, typename GC>
+    void set_trivial_rows(const GFSV& gfsv, GC& globalcontainer, const EmptyTransformation& c)
+    {
+    }
+
   } // namespace PDELab
 } // namespace Dune
 

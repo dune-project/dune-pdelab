@@ -10,11 +10,13 @@ namespace Dune {
   namespace PDELab {
     namespace ISTL {
 
+#ifndef DOXYGEN
+
       // ********************************************************************************
       // infrastructure for deducing the pattern type from row and column orderings
       // ********************************************************************************
 
-      namespace {
+      namespace Impl {
 
         template<typename M, typename RowOrdering, typename ColOrdering, bool pattern>
         struct _build_bcrs_pattern_type
@@ -166,8 +168,9 @@ namespace Dune {
               }
         }
 
-      } // anonymous namespace
+      } // namespace Impl
 
+#endif // DOXYGEN
 
 
       //! Backend using (possibly nested) ISTL BCRSMatrices.
@@ -195,7 +198,7 @@ namespace Dune {
 
         //! The type of the pattern object passed to the GridOperator for pattern construction.
         template<typename Matrix, typename GFSV, typename GFSU>
-        using Pattern = typename build_bcrs_pattern_type<
+        using Pattern = typename Impl::build_bcrs_pattern_type<
           typename Matrix::Container,
           GFSV,
           GFSU,
@@ -231,13 +234,20 @@ namespace Dune {
             > pattern(grid_operator.testGridFunctionSpace().ordering(),grid_operator.trialGridFunctionSpace().ordering(),_entries_per_row);
           grid_operator.fill_pattern(pattern);
           std::vector<Statistics> stats;
-          allocate_bcrs_matrix(grid_operator.testGridFunctionSpace().ordering(),
-                               grid_operator.trialGridFunctionSpace().ordering(),
-                               pattern,
-                               Backend::native(matrix),
-                               stats
-                               );
+          Impl::allocate_bcrs_matrix(
+            grid_operator.testGridFunctionSpace().ordering(),
+            grid_operator.trialGridFunctionSpace().ordering(),
+            pattern,
+            Backend::native(matrix),
+            stats
+            );
           return stats;
+        }
+
+        template<typename Matrix, typename TestSpace, typename TrialSpace>
+        auto makePattern(const TestSpace& test_space, const TrialSpace& trial_space)
+        {
+          return Pattern<Matrix,TestSpace,TrialSpace>(test_space.ordering(),trial_space.ordering(),_entries_per_row);
         }
 
         //! Constructs a BCRSMatrixBackend.

@@ -254,7 +254,7 @@ namespace Dune {
       template<typename Context>
       void volumeIntegral(Context& ctx) const
       {
-        static_assert(ctx.isGalerkin(), "NewL2 only works for Galerkin problems");
+        static_assert(Context::isGalerkin(), "NewL2 only works for Galerkin problems");
 
         if (ctx.skipVariablePart())
           return;

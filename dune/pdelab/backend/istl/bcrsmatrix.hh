@@ -14,6 +14,17 @@ namespace Dune {
 
     namespace ISTL {
 
+#ifndef DOXYGEN
+
+      namespace Impl {
+
+        template<typename M, typename GFSV, typename GFSU, typename Tag>
+        struct build_bcrs_pattern_type;
+
+      }
+
+#endif // DOXYGEN
+
       template<typename GFSV, typename GFSU, typename C, typename Stats>
       class BCRSMatrix
         : public Backend::impl::Wrapper<C>
@@ -33,10 +44,13 @@ namespace Dune {
         typedef GFSU TrialGridFunctionSpace;
         typedef GFSV TestGridFunctionSpace;
 
+        using TrialSpace = GFSU;
+        using TestSpace  = GFSV;
+
         typedef typename GFSV::Ordering::Traits::ContainerIndex RowIndex;
         typedef typename GFSU::Ordering::Traits::ContainerIndex ColIndex;
 
-        typedef typename ISTL::build_pattern_type<C,GFSV,GFSU,typename GFSV::Ordering::ContainerAllocationTag>::type Pattern;
+        typedef typename ISTL::Impl::build_bcrs_pattern_type<C,GFSV,GFSU,typename GFSV::Ordering::ContainerAllocationTag>::type Pattern;
 
         typedef Stats PatternStatistics;
 
@@ -251,9 +265,27 @@ namespace Dune {
           ISTL::write_matrix_element_if_exists_to_block(diagonal_entry,ISTL::container_tag(*_container),*_container,ri,ri,ri.size()-1,ri.size()-1);
         }
 
+        const TrialSpace& trialSpace() const
+        {
+          return *_trial_space;
+        }
+
+        const TestSpace& testSpace() const
+        {
+          return *_test_space;
+        }
+
+        void attach(const TrialSpace& trial_space, const TestSpace& test_space)
+        {
+          _trial_space = &trial_space;
+          _test_space = &test_space;
+        }
+
       private:
 
         std::shared_ptr<Container> _container;
+        const TrialSpace* _trial_space;
+        const TestSpace* _test_space;
         std::vector<PatternStatistics> _stats;
 
       };

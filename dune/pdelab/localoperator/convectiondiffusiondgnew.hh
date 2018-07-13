@@ -69,6 +69,33 @@ namespace Dune {
         if (method==ConvectionDiffusionDGMethod::IIPG) theta = 0.0;
       }
 
+
+      template<typename Context>
+      void volumePattern(Context& ctx) const
+      {
+        for (auto i : ctx.test().space())
+          for (auto j : ctx.trial().space())
+            ctx.pattern().addLink(ctx.test().space(),i,ctx.trial().space(),j);
+      }
+
+      template<typename Context>
+      void skeletonPattern(Context& ctx) const
+      {
+        auto& inside  = ctx.inside();
+        auto& outside = ctx.outside();
+
+        auto& pattern_io = ctx.pattern(inside,outside);
+        for (auto i : inside.test().space())
+          for (auto j : outside.trial().space())
+            pattern_io.addLink(inside.test().space(),i,outside.trial().space(),j);
+
+        auto& pattern_oi = ctx.pattern(outside,inside);
+        for (auto i : outside.test().space())
+          for (auto j : inside.trial().space())
+            pattern_oi.addLink(outside.test().space(),i,inside.trial().space(),j);
+      }
+
+
       template<typename Context>
       void volumeIntegral(Context& ctx) const
       {
@@ -143,7 +170,7 @@ namespace Dune {
                 f = cell.f(ip);
               }
 
-            for (size_type i = 0 ; i < test_space.size() ; ++i)
+            for (auto [dof, i] : ctx.residual(test_space))
               {
                 RF r = 0.0;
                 if (not ctx.skipVariablePart())
@@ -158,7 +185,7 @@ namespace Dune {
                     // integrate -f*psi_i
                     r -= f * psi[i];
                   }
-                ctx.residual().accumulate(test_space,i,r*ip.weight());
+                dof += r*ip.weight();
               }
           }
       }
@@ -357,33 +384,36 @@ namespace Dune {
                 omegaup_n = 1.0;
               }
 
+            auto inside_residual  = inside.residual(inside.test().space());
+            auto outside_residual = outside.residual(outside.test().space());
+
             // convection term
             auto term1 = (omegaup_s*u_s + omegaup_n*u_n) * normalflux * ip.weight();
-            for (size_type i = 0 ; i < inside.trial().space().size() ; ++i)
-              inside.residual().accumulate(inside.trial().space(),i,term1 * psi_s[i]);
-            for (size_type i = 0 ; i < outside.trial().space().size() ; ++i)
-              outside.residual().accumulate(outside.trial().space(),i,-term1 * psi_n[i]);
+            for (auto [dof, i] : inside_residual)
+              dof += term1 * psi_s[i];
+            for (auto [dof, i] : outside_residual)
+              dof -= term1 * psi_n[i];
 
             // diffusion term
             auto term2 =  -(omega_s*(An_F_s*gradu_s) + omega_n*(An_F_n*gradu_n)) * ip.weight();
-            for (size_type i = 0 ; i < inside.trial().space().size() ; ++i)
-              inside.residual().accumulate(inside.trial().space(),i,term2 * psi_s[i]);
-            for (size_type i = 0 ; i < outside.trial().space().size() ; ++i)
-              outside.residual().accumulate(outside.trial().space(),i,-term2 * psi_n[i]);
+            for (size_type i = 0 ; i < inside_residual.size() ; ++i)
+              inside_residual.accumulate(i,term2 * psi_s[i]);
+            for (size_type i = 0 ; i < outside_residual.size() ; ++i)
+              outside_residual.accumulate(i,-term2 * psi_n[i]);
 
             // (non-)symmetric IP term
             auto term3 = (u_s-u_n) * ip.weight();
             for (size_type i = 0 ; i < inside.trial().space().size() ; ++i)
-              inside.residual().accumulate(inside.trial().space(),i,term3 * theta * omega_s * (An_F_s * gradpsi_s[i]));
+              inside_residual.accumulate(inside.trial().space(),i,term3 * theta * omega_s * (An_F_s * gradpsi_s[i]));
             for (size_type i = 0 ; i < outside.trial().space().size() ; ++i)
-              outside.residual().accumulate(outside.trial().space(),i,term3 * theta * omega_n * (An_F_n * gradpsi_n[i]));
+              outside_residual.accumulate(outside.trial().space(),i,term3 * theta * omega_n * (An_F_n * gradpsi_n[i]));
 
             // standard IP term integral
             auto term4 = penalty_factor * (u_s-u_n) * ip.weight();
-            for (size_type i = 0 ; i < inside.trial().space().size() ; ++i)
-              inside.residual().accumulate(inside.trial().space(),i,term4 * psi_s[i]);
-            for (size_type i = 0 ; i < outside.trial().space().size() ; ++i)
-              outside.residual().accumulate(outside.trial().space(),i,-term4 * psi_n[i]);
+            for (auto [dof, i] : inside_residual)
+              dof += term4 * psi_s[i];
+            for (auto [dof, i] : outside_residual)
+              dof -= term4 * psi_n[i];
           }
       }
 
@@ -718,12 +748,10 @@ namespace Dune {
       void boundaryJacobian(Context& ctx) const
       {
         // extract some useful types
-        using RF        = LocalOperator::RangeField<Context>;
-        using Gradient  = LocalOperator::Gradient<Context>;
-        using size_type = std::size_t;
+        using RF = LocalOperator::RangeField<Context>;
 
         auto domain = ctx.domain();
-        auto& cell   = ctx.cell();
+        auto& cell  = ctx.cell();
 
         // dimensions
         auto order    = std::max(ctx.trial().basis().order(),ctx.test().basis().order());

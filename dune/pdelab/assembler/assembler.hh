@@ -33,16 +33,16 @@ namespace Dune {
       template<typename Engine>
       decltype(auto) assemble(Engine& engine) const
       {
-        constexpr bool visit_periodic_intersections = engine.visitPeriodicIntersections();
-        constexpr bool visit_skeleton_intersections = engine.visitSkeletonIntersections();
-        constexpr bool visit_boundary_intersections = engine.visitBoundaryIntersections();
-        constexpr bool visit_processor_intersections = engine.visitProcessorIntersections();
+        constexpr bool visit_periodic_intersections = Engine::visitPeriodicIntersections();
+        constexpr bool visit_skeleton_intersections = Engine::visitSkeletonIntersections();
+        constexpr bool visit_boundary_intersections = Engine::visitBoundaryIntersections();
+        constexpr bool visit_processor_intersections = Engine::visitProcessorIntersections();
         constexpr bool visit_intersections =
           visit_periodic_intersections or
           visit_skeleton_intersections or
           visit_boundary_intersections or
           visit_processor_intersections;
-        constexpr bool intersections_two_sided [[maybe_unused]] = engine.intersectionsTwoSided();
+        constexpr bool intersections_two_sided [[maybe_unused]] = Engine::intersectionsTwoSided();
 
         using Index = typename EntitySet::IndexSet::Index;
 
@@ -51,7 +51,7 @@ namespace Dune {
 
         auto invalid_element_storage = typename EntitySet::template Codim<0>::Entity{};
         const typename EntitySet::template Codim<0>::Entity& invalid_element = invalid_element_storage;
-        constexpr auto invalid_index [[maybe_unused]] = index_set.invalidIndex();
+        constexpr auto invalid_index [[maybe_unused]] = std::decay_t<decltype(index_set)>::invalidIndex();
 
         auto ctx = makeContext(engine.context(*this));
         ctx.setup();

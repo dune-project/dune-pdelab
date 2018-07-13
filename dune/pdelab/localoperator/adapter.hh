@@ -24,74 +24,135 @@ namespace Dune {
         return true;
       }
 
+      static constexpr bool intersectionsTwoSided()
+      {
+        return LOP::doSkeletonTwoSided;
+      }
+
       template<typename Context>
-      std::enable_if_t<LOP::doAlphaVolume or LOP::doLambdaVolume>
+      std::enable_if_t<Std::to_true_v<Context> and (LOP::doAlphaVolume or LOP::doLambdaVolume)>
       volumeIntegral(Context& ctx) const
       {
         auto residual = ctx.residual();
         auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
-        Call<LOP::doAlphaVolume and not ctx.skipVariablePart()>::alpha_volume(
+        Call<LOP::doAlphaVolume and not Context::skipVariablePart()>::alpha_volume(
           _lop,eg,
           ctx.trial().functionSpace(),ctx.argument(),
           ctx.test().functionSpace(),residual
           );
-        Call<LOP::doLambdaVolume and not ctx.skipConstantPart()>::lambda_volume(
+        Call<LOP::doLambdaVolume and not Context::skipConstantPart()>::lambda_volume(
           _lop,eg,
           ctx.test().functionSpace(),residual
           );
       }
 
       template<typename Context>
-      std::enable_if_t<LOP::doAlphaVolumePostSkeleton or LOP::doLambdaVolumePostSkeleton>
+      std::enable_if_t<Std::to_true_v<Context> and (LOP::doAlphaVolumePostSkeleton or LOP::doLambdaVolumePostSkeleton)>
       volumeIntegralPostIntersections(Context& ctx) const
       {
         auto residual = ctx.residual();
         auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
-        Call<LOP::doAlphaVolumePostSkeleton and not ctx.skipVariablePart()>::alpha_volume_post_skeleton(
+        Call<LOP::doAlphaVolumePostSkeleton and not Context::skipVariablePart()>::alpha_volume_post_skeleton(
           _lop,eg,
           ctx.trial().functionSpace(),ctx.argument(),
           ctx.test().functionSpace(),residual
           );
-        Call<LOP::doLambdaVolumePostSkeleton and not ctx.skipConstantPart()>::lambda_volume_post_skeleton(
+        Call<LOP::doLambdaVolumePostSkeleton and not Context::skipConstantPart()>::lambda_volume_post_skeleton(
           _lop,eg,
           ctx.test().functionSpace(),residual
           );
       }
 
       template<typename Context>
-      std::enable_if_t<LOP::doAlphaBoundary or LOP::doLambdaBoundary>
+      std::enable_if_t<Std::to_true_v<Context> and (LOP::doAlphaBoundary or LOP::doLambdaBoundary)>
       boundaryIntegral(Context& ctx) const
       {
         auto residual = ctx.inside().residual();
         auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
-        Call<LOP::doAlphaBoundary and not ctx.skipVariablePart()>::alpha_boundary(
+        Call<LOP::doAlphaBoundary and not Context::skipVariablePart()>::alpha_boundary(
           _lop,ig,
           ctx.inside().trial().functionSpace(),ctx.inside().argument(),
           ctx.inside().test().functionSpace(),residual
           );
-        Call<LOP::doLambdaBoundary and not ctx.skipConstantPart()>::lambda_boundary(
+        Call<LOP::doLambdaBoundary and not Context::skipConstantPart()>::lambda_boundary(
           _lop,ig,
           ctx.inside().test().functionSpace(),residual
           );
       }
 
       template<typename Context>
-      std::enable_if_t<LOP::doAlphaSkeleton or LOP::doLambdaSkeleton>
+      std::enable_if_t<Std::to_true_v<Context> and (LOP::doAlphaSkeleton or LOP::doLambdaSkeleton)>
       skeletonIntegral(Context& ctx) const
       {
         auto inside_residual = ctx.inside().residual();
         auto outside_residual = ctx.outside().residual();
         auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
-        Call<LOP::doAlphaSkeleton and not ctx.skipVariablePart()>::alpha_skeleton(
+        Call<LOP::doAlphaSkeleton and not Context::skipVariablePart()>::alpha_skeleton(
           _lop,ig,
           ctx.inside().trial().functionSpace(),ctx.inside().argument(),ctx.inside().test().functionSpace(),
           ctx.outside().trial().functionSpace(),ctx.outside().argument(),ctx.outside().test().functionSpace(),
           inside_residual,outside_residual
           );
-        Call<LOP::doLambdaSkeleton and not ctx.skipConstantPart()>::lambda_skeleton(
+        Call<LOP::doLambdaSkeleton and not Context::skipConstantPart()>::lambda_skeleton(
           _lop,ig,
           ctx.inside().test().functionSpace(),ctx.outside().test().functionSpace(),
           inside_residual,outside_residual
+          );
+      }
+
+      template<typename Context>
+      std::enable_if_t<Std::to_true_v<Context> and LOP::doAlphaVolume>
+      volumeJacobian(Context& ctx) const
+      {
+        auto jacobian = ctx.jacobian();
+        auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
+        Call<LOP::doAlphaVolume>::jacobian_volume(
+          _lop,eg,
+          ctx.trial().functionSpace(),ctx.argument(),
+          ctx.test().functionSpace(),jacobian
+          );
+      }
+
+      template<typename Context>
+      std::enable_if_t<Std::to_true_v<Context> and LOP::doAlphaVolumePostSkeleton>
+      volumeJacobianPostIntersections(Context& ctx) const
+      {
+        auto jacobian = ctx.jacobian();
+        auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
+        Call<LOP::doAlphaVolume>::jacobian_volume_post_skeleton(
+          _lop,eg,
+          ctx.trial().functionSpace(),ctx.argument(),
+          ctx.test().functionSpace(),jacobian
+          );
+      }
+
+      template<typename Context>
+      std::enable_if_t<Std::to_true_v<Context> and LOP::doAlphaBoundary>
+      boundaryJacobian(Context& ctx) const
+      {
+        auto jacobian = ctx.inside().jacobian();
+        auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
+        Call<LOP::doAlphaBoundary>::jacobian_boundary(
+          _lop,ig,
+          ctx.inside().trial().functionSpace(),ctx.inside().argument(),
+          ctx.inside().test().functionSpace(),jacobian
+          );
+      }
+
+      template<typename Context>
+      std::enable_if_t<Std::to_true_v<Context> and LOP::doAlphaSkeleton>
+      skeletonJacobian(Context& ctx) const
+      {
+        auto jac_ss = ctx.inside().jacobian();
+        auto jac_nn = ctx.outside().jacobian();
+        auto jac_sn = ctx.jacobian(ctx.inside(),ctx.outside());
+        auto jac_ns = ctx.jacobian(ctx.outside(),ctx.inside());
+        auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
+        Call<LOP::doAlphaSkeleton>::jacobian_skeleton(
+          _lop,ig,
+          ctx.inside().trial().functionSpace(),ctx.inside().argument(),ctx.inside().test().functionSpace(),
+          ctx.outside().trial().functionSpace(),ctx.outside().argument(),ctx.outside().test().functionSpace(),
+          jac_ss,jac_sn,jac_ns,jac_nn
           );
       }
 
