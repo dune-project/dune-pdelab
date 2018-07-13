@@ -246,6 +246,8 @@ namespace Dune{
                             }
                           }
                         break;
+                      default:
+                        DUNE_THROW(Exception,"Unexpected intersection type " << label(intersection_type));
                       } // switch
 
                     ++intersection_index;

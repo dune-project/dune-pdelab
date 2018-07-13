@@ -46,6 +46,11 @@ namespace Dune {
         using Test  = std::conditional_t<enable_flavors,Flavor::InsideTest,Flavor::Generic>;
         using Trial = std::conditional_t<enable_flavors,Flavor::InsideTrial,Flavor::Generic>;
 
+        struct Flavor {
+          using Test  = Inside::Test;
+          using Trial = Inside::Trial;
+        };
+
       };
 
       template<bool enable_flavors>
@@ -59,6 +64,11 @@ namespace Dune {
 
         using Test  = std::conditional_t<enable_flavors,Flavor::OutsideTest,Flavor::Generic>;
         using Trial = std::conditional_t<enable_flavors,Flavor::OutsideTrial,Flavor::Generic>;
+
+        struct Flavor {
+          using Test  = Outside::Test;
+          using Trial = Outside::Trial;
+        };
 
       };
 
@@ -282,10 +292,10 @@ namespace Dune {
         using Entity       = typename EntitySet::template Codim<0>::Entity;
         using Intersection = typename EntitySet::Intersection;
         using Field        = typename EntitySet::Field;
+        using Index        = typename EntitySet::IndexSet::Index;
 
       private:
 
-        using Index = typename EntitySet::IndexSet::Index;
         static constexpr Index invalid_index = EntitySet::IndexSet::invalidIndex();
         static constexpr auto invalid_type   = IntersectionType::invalid;
 

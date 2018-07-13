@@ -152,6 +152,64 @@ namespace Dune {
         };
       }
 
+      inline constexpr auto volumeJacobian()
+      {
+        return [&](const auto& lop, auto& ctx) -> decltype(lop.volumeJacobian(ctx)) {
+          return lop.volumeJacobian(ctx);
+        };
+      }
+
+      inline constexpr auto skeletonJacobian()
+      {
+        return [&](const auto& lop, auto& ctx) -> decltype(lop.skeletonJacobian(ctx)) {
+          return lop.skeletonJacobian(ctx);
+        };
+      }
+
+      inline constexpr auto boundaryJacobian()
+      {
+        return [&](const auto& lop, auto& ctx) -> decltype(lop.boundaryJacobian(ctx)) {
+          return lop.boundaryJacobian(ctx);
+        };
+      }
+
+      inline constexpr auto volumeJacobianPostIntersections()
+      {
+        return [&](const auto& lop, auto& ctx) -> decltype(lop.volumeJacobianPostIntersections(ctx)) {
+          return lop.volumeJacobianPostIntersections(ctx);
+        };
+      }
+
+
+      inline constexpr auto volumePattern()
+      {
+        return [&](const auto& lop, auto& ctx) -> decltype(lop.volumePattern(ctx)) {
+          return lop.volumePattern(ctx);
+        };
+      }
+
+      inline constexpr auto skeletonPattern()
+      {
+        return [&](const auto& lop, auto& ctx) -> decltype(lop.skeletonPattern(ctx)) {
+          return lop.skeletonPattern(ctx);
+        };
+      }
+
+      inline constexpr auto boundaryPattern()
+      {
+        return [&](const auto& lop, auto& ctx) -> decltype(lop.boundaryPattern(ctx)) {
+          return lop.boundaryPattern(ctx);
+        };
+      }
+
+      inline constexpr auto volumePatternPostIntersections()
+      {
+        return [&](const auto& lop, auto& ctx) -> decltype(lop.volumePatternPostIntersections(ctx)) {
+          return lop.volumePatternPostIntersections(ctx);
+        };
+      }
+
+
       template<typename LOP>
       inline constexpr auto intersectionsTwoSided()
       {

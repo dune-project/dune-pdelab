@@ -3,6 +3,7 @@
 
 #include <utility>
 #include <tuple>
+#include <string_view>
 
 #include <dune/common/version.hh>
 #include <dune/grid/common/partitionset.hh>
@@ -57,6 +58,24 @@ namespace Dune {
         return std::make_tuple(type,decltype(is.outside()){});
     }
 
+    constexpr std::string_view label(IntersectionType it)
+    {
+      switch (it)
+        {
+        case IntersectionType::processor:
+          return "processor";
+        case IntersectionType::skeleton:
+          return "skeleton";
+        case IntersectionType::boundary:
+          return "boundary";
+        case IntersectionType::periodic:
+          return "periodic";
+        case IntersectionType::invalid:
+          return "invalid";
+        default:
+          return "illegal";
+        }
+    }
 
   } // namespace PDELab
 } // namespace Dune

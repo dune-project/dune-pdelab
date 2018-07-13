@@ -13,6 +13,7 @@
 #include <dune/pdelab/common/quadraturerules.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/assembler/utility.hh>
+#include <dune/pdelab/assembler/localviewproxy.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -94,6 +95,16 @@ namespace Dune {
         return _container;
       }
 
+      typename Traits::Container& readWriteView()
+      {
+        return _container;
+      }
+
+      typename Traits::Weight weight() const
+      {
+        return _weight;
+      }
+
     public:
 
       CachedVectorData(Context&& ctx, typename Traits::value_type initial = typename Traits::value_type(0))
@@ -149,6 +160,12 @@ namespace Dune {
       typename Residual::AccumulationView residual()
       {
         return Implementation::accumulationView();
+      }
+
+      template<typename LFS>
+      LocalVectorProxy<typename Residual::Container,LFS> residual(const LFS& lfs)
+      {
+        return {Implementation::readWriteView(),lfs,Implementation::weight()};
       }
 
       Context_* setup()
