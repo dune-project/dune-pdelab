@@ -241,9 +241,9 @@ namespace Dune {
             auto c = cell.c(ip);
 
             // integrate (A grad u - bu)*grad phi_i + a*u*phi_i
-            for (size_type i = 0; i < test_space.size(); ++i)
-              for (size_type j = 0; j < trial_space.size(); ++j)
-                cell.jacobian().accumulate(test_space,i,trial_space,j,( cell.Agradphi[j]*gradpsi[i] - phi[j]*(b*gradpsi[i]) + c*phi[j]*psi[i] )*ip.weight());
+            for (auto [dof,i,j] : cell.jacobian(test_space,trial_space))
+              dof += (cell.Agradphi[j]*gradpsi[i] - phi[j]*(b*gradpsi[i]) + c*phi[j]*psi[i]) * ip.weight();
+
           }
       }
 
