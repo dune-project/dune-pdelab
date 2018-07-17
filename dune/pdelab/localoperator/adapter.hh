@@ -104,7 +104,7 @@ namespace Dune {
       std::enable_if_t<Std::to_true_v<Context> and LOP::doAlphaVolume>
       volumeJacobian(Context& ctx) const
       {
-        auto jacobian = ctx.jacobian();
+        auto jacobian = ctx.inside().jacobian();
         auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
         Call<LOP::doAlphaVolume>::jacobian_volume(
           _lop,eg,
@@ -117,7 +117,7 @@ namespace Dune {
       std::enable_if_t<Std::to_true_v<Context> and LOP::doAlphaVolumePostSkeleton>
       volumeJacobianPostIntersections(Context& ctx) const
       {
-        auto jacobian = ctx.jacobian();
+        auto jacobian = ctx.inside().jacobian();
         auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
         Call<LOP::doAlphaVolume>::jacobian_volume_post_skeleton(
           _lop,eg,
