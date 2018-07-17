@@ -156,6 +156,58 @@ namespace Dune {
           );
       }
 
+
+
+      template<typename Context>
+      std::enable_if_t<Std::to_true_v<Context> and LOP::doPatternVolume>
+      volumePattern(Context& ctx) const
+      {
+        auto& pattern = ctx.inside().pattern();
+        _lop.pattern_volume(
+          ctx.trial().functionSpace(),
+          ctx.test().functionSpace(),
+          pattern
+          );
+      }
+
+      template<typename Context>
+      std::enable_if_t<Std::to_true_v<Context> and LOP::doPatternVolumePostSkeleton>
+      volumePatternPostIntersections(Context& ctx) const
+      {
+        auto& pattern = ctx.inside().pattern();
+        _lop.pattern_volume_post_skeleton(
+          ctx.trial().functionSpace(),
+          ctx.test().functionSpace(),
+          pattern
+          );
+      }
+
+      template<typename Context>
+      std::enable_if_t<Std::to_true_v<Context> and LOP::doPatternBoundary>
+      boundaryPattern(Context& ctx) const
+      {
+        auto& pattern = ctx.inside().jacobian();
+        _lop.pattern_boundary(
+          ctx.inside().trial().functionSpace(),
+          ctx.inside().test().functionSpace(),
+          pattern
+          );
+      }
+
+      template<typename Context>
+      std::enable_if_t<Std::to_true_v<Context> and LOP::doPatternSkeleton>
+      skeletonPattern(Context& ctx) const
+      {
+        auto& pattern_sn = ctx.pattern(ctx.inside(),ctx.outside());
+        auto& pattern_ns = ctx.pattern(ctx.outside(),ctx.inside());
+        _lop.pattern_skeleton(
+          ctx.inside().trial().functionSpace(),ctx.inside().test().functionSpace(),
+          ctx.outside().trial().functionSpace(),ctx.outside().test().functionSpace(),
+          pattern_sn,
+          pattern_ns
+          );
+      }
+
       LocalOperatorAdapter(const LOP& lop)
         : _lop(lop)
       {}
