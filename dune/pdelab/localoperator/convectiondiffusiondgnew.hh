@@ -219,7 +219,7 @@ namespace Dune {
           {
 
             // update all variables dependent on A if A is not cell-wise constant
-            if (cell.permeabilityIsConstantPerCell())
+            if (not cell.permeabilityIsConstantPerCell())
             {
               A = cell.A(ip);
             }
