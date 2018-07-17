@@ -12,6 +12,7 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/istl/solvers.hh>
+#include <dune/istl/io.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include <dune/pdelab/finiteelementmap/qkdg.hh>
@@ -321,6 +322,7 @@ void benchmark(const Dune::ParameterTree& params, const GV& gv, const FEM& fem)
   using VBE = Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed>;
   using GFS = Dune::PDELab::GridFunctionSpace<ES,FEM,CON,VBE>;
   GFS gfs(es,fem);
+  gfs.ordering();
 
   auto mbe = Dune::PDELab::ISTL::BCRSMatrixBackend(5ul);
   using MBE = decltype(mbe);
@@ -366,9 +368,15 @@ void benchmark(const Dune::ParameterTree& params, const GV& gv, const FEM& fem)
 
   Dune::PDELab::Assembler<ES> assembler(es);
 
-  auto runs = params.get<std::size_t>("benchmark.runs");
+  Vector r_old(gfs,0.0), r_wrapped(gfs,0.0), r_new(gfs,0.0);
+  Matrix j_old(grid_operator,0.0), j_wrapped(grid_operator,0.0), j_new(grid_operator,0.0);
 
+  auto runs = params.get<std::size_t>("benchmark.runs");
   {
+
+    grid_operator.residual(solution,r_old);
+    grid_operator.jacobian(solution,j_old);
+
     auto helper = Dune::PDELab::BenchmarkHelper("old operator",runs);
 
     for (std::size_t i = 0 ; i < runs ; ++i)
@@ -397,6 +405,14 @@ void benchmark(const Dune::ParameterTree& params, const GV& gv, const FEM& fem)
   }
 
   {
+
+    {
+      auto residual_engine = Dune::PDELab::ResidualEngine(solution,r_wrapped,wrapped_local_operator);
+      assembler.assemble(residual_engine);
+      auto jacobian_engine = Dune::PDELab::JacobianEngine(solution,j_wrapped,wrapped_local_operator);
+      assembler.assemble(jacobian_engine);
+    }
+
     auto helper = Dune::PDELab::BenchmarkHelper("wrapped operator",runs);
 
     for (std::size_t i = 0 ; i < runs ; ++i)
@@ -411,7 +427,6 @@ void benchmark(const Dune::ParameterTree& params, const GV& gv, const FEM& fem)
           auto engine = Dune::PDELab::ResidualEngine(solution,residual,wrapped_local_operator);
           assembler.assemble(engine);
         }
-        grid_operator.residual(solution,residual);
         helper.end("residual",std::cout);
 
         helper.start("matrix setup",std::cout);
@@ -429,7 +444,7 @@ void benchmark(const Dune::ParameterTree& params, const GV& gv, const FEM& fem)
 
         helper.start("jacobian",std::cout);
         {
-          auto engine = Dune::PDELab::PatternEngine(solution,residual,wrapped_local_operator,mbe);
+          auto engine = Dune::PDELab::JacobianEngine(solution,jacobian,wrapped_local_operator);
           assembler.assemble(engine);
         }
         helper.end("jacobian",std::cout);
@@ -441,6 +456,14 @@ void benchmark(const Dune::ParameterTree& params, const GV& gv, const FEM& fem)
   }
 
   {
+
+    {
+      auto residual_engine = Dune::PDELab::ResidualEngine(solution,r_new,local_operator);
+      assembler.assemble(residual_engine);
+      auto jacobian_engine = Dune::PDELab::JacobianEngine(solution,j_new,local_operator);
+      assembler.assemble(jacobian_engine);
+    }
+
     auto helper = Dune::PDELab::BenchmarkHelper("new operator",runs);
 
     for (std::size_t i = 0 ; i < runs ; ++i)
@@ -455,7 +478,6 @@ void benchmark(const Dune::ParameterTree& params, const GV& gv, const FEM& fem)
           auto engine = Dune::PDELab::ResidualEngine(solution,residual,local_operator);
           assembler.assemble(engine);
         }
-        grid_operator.residual(solution,residual);
         helper.end("residual",std::cout);
 
         helper.start("matrix setup",std::cout);
@@ -473,7 +495,7 @@ void benchmark(const Dune::ParameterTree& params, const GV& gv, const FEM& fem)
 
         helper.start("jacobian",std::cout);
         {
-          auto engine = Dune::PDELab::PatternEngine(solution,residual,local_operator,mbe);
+          auto engine = Dune::PDELab::JacobianEngine(solution,jacobian,local_operator);
           assembler.assemble(engine);
         }
         helper.end("jacobian",std::cout);
@@ -482,6 +504,52 @@ void benchmark(const Dune::ParameterTree& params, const GV& gv, const FEM& fem)
       }
 
     helper.print(std::cout);
+  }
+
+  {
+    Vector diff(gfs,0.0);
+    diff = r_old;
+    diff -= r_wrapped;
+    std::cout << "residual: old vs wrapped: " << diff.two_norm() << std::endl;
+    diff = r_old;
+    diff -= r_new;
+    std::cout << "residual: old vs new   : " << diff.two_norm() << std::endl;
+  }
+
+  {
+    using Dune::PDELab::Backend::native;
+    using std::sqrt;
+    Real norm(0.0);
+    for (auto rit1 = native(j_old).begin(), rend = native(j_old).end(), rit2 = native(j_wrapped).begin() ;
+         rit1 != rend ;
+         ++rit1, ++rit2
+         )
+      for (auto cit1 = rit1->begin(), cend = rit1->end(), cit2 = rit2->begin() ;
+           cit1 != cend ;
+           ++cit1, ++cit2
+           )
+        {
+          auto diff = *cit1;
+          diff -= *cit2;
+          norm += diff.frobenius_norm2();
+        }
+    std::cout << "jacobian: old vs wrapped: " << sqrt(norm) << std::endl;
+
+    norm = 0.0;
+    for (auto rit1 = native(j_old).begin(), rend = native(j_old).end(), rit2 = native(j_new).begin() ;
+         rit1 != rend ;
+         ++rit1, ++rit2
+         )
+      for (auto cit1 = rit1->begin(), cend = rit1->end(), cit2 = rit2->begin() ;
+           cit1 != cend ;
+           ++cit1, ++cit2
+           )
+        {
+          auto diff = *cit1;
+          diff -= *cit2;
+          norm += diff.frobenius_norm2();
+        }
+    std::cout << "jacobian: old vs new: " << sqrt(norm) << std::endl;
   }
 
 }
@@ -515,7 +583,7 @@ int main(int argc, char** argv)
   // Get GridView
   auto gv = grid.leafGridView();
 
-  constexpr int degree=1;
+  constexpr int degree = 1;
   using FEM = Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,Real,degree,dim>;
   FEM fem;
 
