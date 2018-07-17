@@ -756,6 +756,7 @@ namespace Dune {
       LocalFunctionSpace(const GFS & gfs)
         : Base(Transformation::transform(gfs))
       {
+        this->_dof_indices = &(this->_dof_index_storage);
         this->setup(*this);
       }
 
