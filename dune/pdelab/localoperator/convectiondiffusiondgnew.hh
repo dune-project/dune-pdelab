@@ -278,7 +278,7 @@ namespace Dune {
 
         // variables for quantities used inside the quadrature loop
         Range u_s, u_n;
-        Gradient gradu_s, gradu_n, Agradu_s, Agradu_n;
+        Gradient gradu_s, gradu_n;
         typename Context::Traits::Velocity b;
 
         // face diameter for anisotropic meshes taken from Paul Houston et al.
