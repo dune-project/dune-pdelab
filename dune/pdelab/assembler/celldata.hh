@@ -621,10 +621,10 @@ namespace Dune {
         return _outside;
       }
 
-      Context* setup()
+      void setup()
       {
-        Dune::PDELab::Context::setup(_outside);
-        return this;
+        Context::setup();
+        outside().setup();
       }
 
       using Context::bind;

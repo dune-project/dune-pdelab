@@ -127,11 +127,11 @@ namespace Dune {
         , _finite_elements(fe_transformation::transform(_function_space))
       {}
 
-      Context* setup()
+      void setup()
       {
+        Context::setup();
         _function_space_cache.attach(_function_space);
         TypeTree::applyToTree(_finite_elements,set_context<Context>(*this));
-        return this;
       }
 
     private:

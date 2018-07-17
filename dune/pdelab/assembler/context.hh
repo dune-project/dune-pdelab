@@ -15,10 +15,8 @@ namespace Dune {
       struct RootContext
       {
 
-        constexpr RootContext* setup()
-        {
-          return this;
-        }
+        void setup()
+        {}
 
         template<typename... Args>
         constexpr RootContext* bind(Args&&... args)
@@ -35,18 +33,6 @@ namespace Dune {
         void cache(int) = delete;
 
       };
-
-
-      template<typename Context>
-      std::enable_if_t<std::is_same<Context,RootContext>::value> setup(Context& ctx)
-      {}
-
-      template<typename Context>
-      std::enable_if_t<not std::is_same<Context,RootContext>::value> setup(Context& ctx)
-      {
-        setup(static_cast<decltype(*ctx.setup())>(ctx));
-        ctx.setup();
-      }
 
       template<typename Context, typename... Args>
       std::enable_if_t<std::is_same<Context,RootContext>::value> bind(Context& ctx, Args&&... args)
@@ -147,7 +133,7 @@ namespace Dune {
 
         void setup()
         {
-          Dune::PDELab::Context::setup(*static_cast<Base*>(this));
+          Base::setup();
         }
 
         template<typename... Args>
