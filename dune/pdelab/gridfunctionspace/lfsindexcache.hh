@@ -623,7 +623,6 @@ namespace Dune {
       void attach(const LFS& lfs)
       {
         assert(not attached());
-        std::cout << "a" << std::flush;
         _container_indices.resize(lfs.maxSize());
         _lfs = &lfs;
       }
