@@ -99,6 +99,8 @@ namespace Dune {
         template<typename GO>
         BCRSMatrix (const GO& go, Container& container)
           : _container(Dune::stackobject_to_shared_ptr(container))
+          , _trial_space(&go.trialGridFunctionSpace())
+          , _test_space(&go.testGridFunctionSpace())
         {
           _stats = go.matrixBackend().buildPattern(go,*this);
         }
@@ -106,6 +108,8 @@ namespace Dune {
         template<typename GO>
         BCRSMatrix (const GO& go, const E& e)
           : _container(std::make_shared<Container>())
+          , _trial_space(&go.trialGridFunctionSpace())
+          , _test_space(&go.testGridFunctionSpace())
         {
           _stats = go.matrixBackend().buildPattern(go,*this);
           (*_container) = e;
@@ -113,15 +117,21 @@ namespace Dune {
 
         //! Creates an BCRSMatrix without allocating an underlying ISTL matrix.
         explicit BCRSMatrix (Backend::unattached_container = Backend::unattached_container())
+          : _trial_space(nullptr)
+          , _test_space(nullptr)
         {}
 
         //! Creates an BCRSMatrix with an empty underlying ISTL matrix.
         explicit BCRSMatrix (Backend::attached_container)
           : _container(std::make_shared<Container>())
+          , _trial_space(nullptr)
+          , _test_space(nullptr)
         {}
 
         BCRSMatrix(const BCRSMatrix& rhs)
           : _container(std::make_shared<Container>(*(rhs._container)))
+          , _trial_space(rhs._trial_space)
+          , _test_space(rhs._test_space)
         {}
 
         BCRSMatrix& operator=(const BCRSMatrix& rhs)
@@ -137,6 +147,8 @@ namespace Dune {
             {
               _container = std::make_shared<Container>(*(rhs._container));
             }
+          _trial_space = rhs._trial_space;
+          _test_space = rhs._test_space;
           return *this;
         }
 
