@@ -46,6 +46,7 @@ namespace Dune {
 
       void setup(typename Traits::Vector& vector)
       {
+        Context::setup();
         _local_view.attach(vector);
       }
 
@@ -168,10 +169,9 @@ namespace Dune {
         return {Implementation::readWriteView(),lfs,Implementation::weight()};
       }
 
-      Context_* setup()
+      void setup()
       {
         Implementation::setup(Context_::engine().residual());
-        return this;
       }
 
       using Context_::bind;
@@ -215,10 +215,9 @@ namespace Dune {
         return Implementation::readOnlyView();
       }
 
-      Context_* setup()
+      void setup()
       {
         Implementation::setup(Context_::engine().argument());
-        return this;
       }
 
       using Context_::bind;
