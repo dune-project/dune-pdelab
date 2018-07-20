@@ -64,7 +64,7 @@ namespace Dune {
 
         using Domain = typename Context::CellDomain;
 
-        Domain domain() const
+        Domain domain()
         {
           return Context::cellDomain();
         }
@@ -74,11 +74,6 @@ namespace Dune {
         {}
 
         CellContext& cellContext()
-        {
-          return *this;
-        }
-
-        const CellContext& cellContext() const
         {
           return *this;
         }
@@ -94,7 +89,7 @@ namespace Dune {
 
         using Domain = typename Context::IntersectionDomain;
 
-        Domain domain() const
+        Domain domain()
         {
           return Context::intersectionDomain();
         }
@@ -104,11 +99,6 @@ namespace Dune {
         {}
 
         IntersectionContext& intersectionContext()
-        {
-          return *this;
-        }
-
-        const IntersectionContext& intersectionContext() const
         {
           return *this;
         }

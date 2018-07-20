@@ -289,11 +289,11 @@ namespace Dune {
 
       private:
 
-        const CellDomainData& _data;
+        CellDomainData& _data;
 
       };
 
-      CellDomain cellDomain() const
+      CellDomain cellDomain()
       {
         return {*this};
       }
@@ -499,18 +499,18 @@ namespace Dune {
 
       private:
 
-        const IntersectionDomainData& _data;
+        IntersectionDomainData& _data;
 
       };
 
       using Domain = IntersectionDomain;
 
-      IntersectionDomain intersectionDomain() const
+      IntersectionDomain intersectionDomain()
       {
         return {*this};
       }
 
-      Domain domain() const
+      Domain domain()
       {
         return {*this};
       }

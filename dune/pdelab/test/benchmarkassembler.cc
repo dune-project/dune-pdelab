@@ -217,7 +217,7 @@ namespace DG {
 
       //! tensor diffusion coefficient
       template<typename P>
-      typename Traits::PermeabilityTensor A(const P& p) const
+      typename Traits::PermeabilityTensor A(const P& p)
       {
         typename Traits::PermeabilityTensor I;
         auto x = Context::global(p);
@@ -232,7 +232,7 @@ namespace DG {
 
       //! velocity field
       template<typename P>
-      typename Traits::Velocity b(const P& p) const
+      typename Traits::Velocity b(const P& p)
       {
         using std::sin;
         using std::cos;
@@ -245,7 +245,7 @@ namespace DG {
 
       //! sink term
       template<typename P>
-      LOP::RangeField<Context> c(const P& p) const
+      LOP::RangeField<Context> c(const P& p)
       {
         auto x = Context::global(p);
         return 3.0*cos(23.0*x[0])*sin(29*x[1]);
@@ -253,7 +253,7 @@ namespace DG {
 
       //! source term
       template<typename P>
-      LOP::RangeField<Context> f(const P& p) const
+      LOP::RangeField<Context> f(const P& p)
       {
         auto x = Context::global(p);
         return -2.0*exp(problem().lambda*cos(13.0*x[1])) - 2.0*exp(problem().lambda*cos(17.0*x[0])) + 2.0*x[0]*cos(11.0*x[0]) + 2.0*x[1]*sin(7.0*x[1]) + (x[0]*x[0] + x[1]*x[1])*(-11.0*sin(11.0*x[0]) + 7.0*cos(7.0*x[1])) + 3.0*cos(23.0*x[0])*sin(29.0*x[1]) * (x[0]*x[0] + x[1]*x[1]);
@@ -261,14 +261,14 @@ namespace DG {
 
       //! boundary condition type function
       template<typename P>
-      typename Traits::BoundaryCondition bctype(const P& p) const
+      typename Traits::BoundaryCondition bctype(const P& p)
       {
         return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
       }
 
       //! Dirichlet boundary condition value
       template<typename P>
-      LOP::RangeField<Context> g(const P& p) const
+      LOP::RangeField<Context> g(const P& p)
       {
         auto x = Context::global(p);
         return x[0]*x[0] + x[1]*x[1];
@@ -276,7 +276,7 @@ namespace DG {
 
       //! Neumann boundary condition
       template<typename P>
-      LOP::RangeField<Context> j(const P& p) const
+      LOP::RangeField<Context> j(const P& p)
       {
         auto x = Context::global(p);
         LOP::Gradient<Context> gradient; //This will be A applied to the gradient of u: gradient = (A(x)\nabla u).
@@ -289,12 +289,12 @@ namespace DG {
 
       //! outflow boundary condition
       template<typename P>
-      LOP::RangeField<Context> o(const P& p) const
+      LOP::RangeField<Context> o(const P& p)
       {
         return 0.0;
       }
 
-      const Problem& problem() const
+      const Problem& problem()
       {
         return Context::engine().localOperator().problem();
       }
