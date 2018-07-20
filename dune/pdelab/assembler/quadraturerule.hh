@@ -16,14 +16,21 @@ namespace Dune {
 
     public:
 
-      using Global           = Geometry;
-      using Field            = typename Geometry::ctype;
-      using Cell             = IdentityGeometry<Field,Geometry::mydimension>;
-      using Local            = Cell;
-      using Inside           = Cell;
-      using LocalCoordinate  = typename Geometry::LocalCoordinate;
-      using CellCoordinate   = LocalCoordinate;
-      using GlobalCoordinate = typename Geometry::GlobalCoordinate;
+      using Global                           = Geometry;
+      using Field                            = typename Geometry::ctype;
+      using Cell                             = IdentityGeometry<Field,Geometry::mydimension>;
+      using Local                            = Cell;
+      using Inside                           = Cell;
+      using LocalCoordinate                  = typename Geometry::LocalCoordinate;
+      using CellCoordinate                   = LocalCoordinate;
+      using GlobalCoordinate                 = typename Geometry::GlobalCoordinate;
+      using JacobianTransposed               = typename Geometry::JacobianTransposed;
+      using JacobianInverseTransposed        = typename Geometry::JacobianInverseTransposed;
+      using InsideJacobianTransposed         = JacobianTransposed;
+      using InsideJacobianInverseTransposed  = JacobianInverseTransposed;
+      using OutsideJacobianTransposed        = int;
+      using OutsideJacobianInverseTransposed = int;
+
       static constexpr int dimLocal = Geometry::mydimension;
       static constexpr int dimWorld = Geometry::coorddimension;
 
@@ -40,6 +47,18 @@ namespace Dune {
       Cell inside() const
       {
         return local();
+      }
+
+      template<typename P>
+      InsideJacobianTransposed insideJacobianTransposed(const P& p) const
+      {
+        return global().jacobianTransposed(p.inside());
+      }
+
+      template<typename P>
+      InsideJacobianInverseTransposed insideJacobianInverseTransposed(const P& p) const
+      {
+        return global().jacobianInverseTransposed(p.inside());
       }
 
       CellEmbedding(const Geometry& geo)
@@ -139,14 +158,20 @@ namespace Dune {
 
     public:
 
-      using Rule             = Rule_;
-      using Embedding        = typename Rule::Embedding;
-      using Native           = typename Rule::Native::value_type;
-      using LocalCoordinate  = typename Rule::LocalCoordinate;
-      using CellCoordinate   = typename Rule::CellCoordinate;
-      using GlobalCoordinate = typename Rule::GlobalCoordinate;
-      using Index            = typename Rule::Index;
-      using Field            = typename Rule::Field;
+      using Rule                      = Rule_;
+      using Embedding                 = typename Rule::Embedding;
+      using Native                    = typename Rule::Native::value_type;
+      using LocalCoordinate           = typename Rule::LocalCoordinate;
+      using CellCoordinate            = typename Rule::CellCoordinate;
+      using GlobalCoordinate          = typename Rule::GlobalCoordinate;
+      using Index                     = typename Rule::Index;
+      using Field                     = typename Rule::Field;
+      using JacobianTransposed        = typename Embedding::JacobianTransposed;
+      using JacobianInverseTransposed = typename Embedding::JacobianInverseTransposed;
+      using InsideJacobianTransposed        = typename Embedding::InsideJacobianTransposed;
+      using InsideJacobianInverseTransposed = typename Embedding::InsideJacobianInverseTransposed;
+      using OutsideJacobianTransposed        = typename Embedding::OutsideJacobianTransposed;
+      using OutsideJacobianInverseTransposed = typename Embedding::OutsideJacobianInverseTransposed;
 
       const Native& native() const
       {
@@ -215,6 +240,62 @@ namespace Dune {
           return *_global;
       }
 
+      const JacobianTransposed& jacobianTransposed() const
+      {
+        if (!_jacobian_transposed)
+          return _jacobian_transposed.emplace(_rule.jacobianTransposed(*this));
+        else
+          return *_jacobian_transposed;
+      }
+
+      const JacobianInverseTransposed& jacobianInverseTransposed() const
+      {
+        if (!_jacobian_inverse_transposed)
+          return _jacobian_inverse_transposed.emplace(_rule.jacobianInverseTransposed(*this));
+        else
+          return *_jacobian_inverse_transposed;
+      }
+
+      const InsideJacobianTransposed& insideJacobianTransposed() const
+      {
+        if (!_inside_jacobian_transposed)
+          return _inside_jacobian_transposed.emplace(_rule.insideJacobianTransposed(*this));
+        else
+          return *_inside_jacobian_transposed;
+      }
+
+      const InsideJacobianInverseTransposed& insideJacobianInverseTransposed() const
+      {
+        if (!_inside_jacobian_inverse_transposed)
+          return _inside_jacobian_inverse_transposed.emplace(_rule.insideJacobianInverseTransposed(*this));
+        else
+          return *_inside_jacobian_inverse_transposed;
+      }
+
+      const OutsideJacobianTransposed& outsideJacobianTransposed() const
+      {
+        if (!_outside_jacobian_transposed)
+          return _outside_jacobian_transposed.emplace(_rule.outsideJacobianTransposed(*this));
+        else
+          return *_outside_jacobian_transposed;
+      }
+
+      const OutsideJacobianInverseTransposed& outsideJacobianInverseTransposed() const
+      {
+        if (!_outside_jacobian_inverse_transposed)
+          return _outside_jacobian_inverse_transposed.emplace(_rule.outsideJacobianInverseTransposed(*this));
+        else
+          return *_outside_jacobian_inverse_transposed;
+      }
+
+      const GlobalCoordinate& unitOuterNormal() const
+      {
+        if (!_unit_outer_normal)
+          return _unit_outer_normal.emplace(_rule.unitOuterNormal(*this));
+        else
+          return *_unit_outer_normal;
+      }
+
       const Rule& rule() const
       {
         return _rule;
@@ -249,6 +330,13 @@ namespace Dune {
       mutable std::optional<CellCoordinate> _outside;
       mutable std::optional<GlobalCoordinate> _global;
       mutable std::optional<Field> _integration_element;
+      mutable std::optional<JacobianTransposed> _jacobian_transposed;
+      mutable std::optional<JacobianInverseTransposed> _jacobian_inverse_transposed;
+      mutable std::optional<InsideJacobianTransposed> _inside_jacobian_transposed;
+      mutable std::optional<InsideJacobianInverseTransposed> _inside_jacobian_inverse_transposed;
+      mutable std::optional<OutsideJacobianTransposed> _outside_jacobian_transposed;
+      mutable std::optional<OutsideJacobianInverseTransposed> _outside_jacobian_inverse_transposed;
+      mutable std::optional<GlobalCoordinate> _unit_outer_normal;
       const Rule& _rule;
 
     };
@@ -445,6 +533,41 @@ namespace Dune {
       Field integrationElement(const QuadraturePoint& qp) const
       {
         return _embedding.global().integrationElement(qp.local());
+      }
+
+      auto jacobianTransposed(const QuadraturePoint& qp) const
+      {
+        return _embedding.global().jacobianTransposed(qp.local());
+      }
+
+      auto jacobianInverseTransposed(const QuadraturePoint& qp) const
+      {
+        return _embedding.global().jacobianInverseTransposed(qp.local());
+      }
+
+      auto insideJacobianTransposed(const QuadraturePoint& qp) const
+      {
+        return _embedding.insideJacobianTransposed(qp);
+      }
+
+      auto insideJacobianInverseTransposed(const QuadraturePoint& qp) const
+      {
+        return _embedding.insideJacobianInverseTransposed(qp);
+      }
+
+      auto outsideJacobianTransposed(const QuadraturePoint& qp) const
+      {
+        return _embedding.outsideJacobianTransposed(qp);
+      }
+
+      auto outsideJacobianInverseTransposed(const QuadraturePoint& qp) const
+      {
+        return _embedding.outsideJacobianInverseTransposed(qp);
+      }
+
+      auto unitOuterNormal(const QuadraturePoint& qp) const
+      {
+        return _embedding.unitOuterNormal(qp);
       }
 
       const QR* _quadrature_rule;
