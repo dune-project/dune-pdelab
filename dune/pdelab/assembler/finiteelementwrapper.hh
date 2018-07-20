@@ -63,7 +63,7 @@ namespace Dune {
     class FiniteElementWrapper;
 
 
-    template<typename Container>
+    template<typename Implementation, typename Container>
     class ExclusiveRangeHolder
     {
 
@@ -83,25 +83,25 @@ namespace Dune {
         size_type size() const
         {
           assert(_range_holder);
-          return _range_holder->_container.size();
+          return _range_holder->accessContainer().size();
         }
 
         iterator begin() const
         {
           assert(_range_holder);
-          return _range_holder->_container.begin();
+          return _range_holder->accessContainer().begin();
         }
 
         iterator end() const
         {
           assert(_range_holder);
-          return _range_holder->_container.end();
+          return _range_holder->accessContainer().end();
         }
 
         const_reference operator[](size_type i) const
         {
           assert(_range_holder);
-          return _range_holder->_container[i];
+          return _range_holder->accessContainer()[i];
         }
 
         Proxy() noexcept
@@ -173,12 +173,28 @@ namespace Dune {
         if (_proxy_count > 0)
           DUNE_THROW(Dune::Exception,"Attempt to access underlying container while there are still " << _proxy_count << " proxies around.");
 #endif
-        return _container;
+        return accessContainer();
+      }
+
+      void assertWriteAccess() const
+      {
+#if DUNE_PDELAB_DEBUG_RANGE_PROXY
+        if (_proxy_count > 0)
+          DUNE_THROW(Dune::Exception,"Attempt to access underlying container while there are still " << _proxy_count << " proxies around.");
+#endif
       }
 
     private:
 
-      Container _container;
+      Container& accessContainer()
+      {
+        return static_cast<Implementation*>(this)->accessContainer();
+      }
+
+      const Container& accessContainer() const
+      {
+        return static_cast<const Implementation*>(this)->accessContainer();
+      }
 
 #if DUNE_PDELAB_DEBUG_RANGE_PROXY
       mutable std::size_t _proxy_count;
@@ -186,13 +202,31 @@ namespace Dune {
 
     };
 
-
-    template<typename Evaluation>
-    struct UncachedEvaluationStore
-      : public ExclusiveRangeHolder<std::vector<typename Evaluation::Range>>
+    struct EvaluationProvider
     {
 
-      using Base = ExclusiveRangeHolder<std::vector<typename Evaluation::Range>>;
+      template<typename BasisWrapper>
+      void bind(BasisWrapper& basis_wrapper)
+      {}
+
+      template<typename QR>
+      void beginQuadrature(QR& qr)
+      {}
+
+      template<typename QR>
+      void endQuadrature(QR& qr)
+      {}
+
+    };
+
+    template<typename Context, typename Evaluation>
+    struct UncachedEvaluationStore
+      : public ExclusiveRangeHolder<UncachedEvaluationStore<Context,Evaluation>,std::vector<typename Evaluation::Range>>
+      , public EvaluationProvider
+    {
+
+      using Container = std::vector<typename Evaluation::Range>;
+      using Base = ExclusiveRangeHolder<UncachedEvaluationStore,Container>;
       using Base::container;
 
       template<typename Point>
@@ -214,7 +248,233 @@ namespace Dune {
         _evaluate.setBasisWrapper(basis_wrapper);
       }
 
+      Container& accessContainer()
+      {
+        return _container;
+      }
+
+      const Container& accessContainer() const
+      {
+        return _container;
+      }
+
       Evaluation _evaluate;
+      Container _container;
+
+    };
+
+
+    template<typename Context, typename Evaluation>
+    struct CoordinateCachedEvaluationStore
+      : public ExclusiveRangeHolder<CoordinateCachedEvaluationStore<Context,Evaluation>,std::vector<typename Evaluation::Range>>
+      , public EvaluationProvider
+    {
+
+      using Container = std::vector<typename Evaluation::Range>;
+      using Base = ExclusiveRangeHolder<CoordinateCachedEvaluationStore,Container>;
+      using Base::container;
+      using Base::assertWriteAccess;
+
+      using RuleCache = std::unordered_map<typename Evaluation::Domain,Container>;
+      using Key = std::size_t;
+      using Cache = std::unordered_map<Key,RuleCache>;
+
+      Container& accessContainer()
+      {
+        assert(_current);
+        return *_current;
+      }
+
+      const Container& accessContainer() const
+      {
+        assert(_current);
+        return *_current;
+      }
+
+      RuleCache& ruleCache()
+      {
+        assert(_rule_cache);
+        return *_rule_cache;
+      }
+
+      template<typename Point>
+      void update(const Point& x)
+      {
+        assertWriteAccess();
+        if (auto it = ruleCache().find(Context::Flavor::quadratureCoordinate(x)) ; it != ruleCache().end())
+          _current = &it->second;
+        else
+          {
+            _current = &ruleCache()[Context::Flavor::quadratureCoordinate(x)];
+            container().resize(_evaluate.size());
+            _evaluate(x,container());
+          }
+      }
+
+      CoordinateCachedEvaluationStore()
+        : _current(nullptr)
+        , _rule_cache(nullptr)
+      {}
+
+      CoordinateCachedEvaluationStore(const Evaluation& evaluate)
+        : _evaluate(evaluate)
+        , _current(nullptr)
+        , _rule_cache(nullptr)
+      {}
+
+      template<typename BasisWrapper>
+      void setBasisWrapper(BasisWrapper& basis_wrapper)
+      {
+        _evaluate.setBasisWrapper(basis_wrapper);
+      }
+
+      template<typename BasisWrapper>
+      void bind(BasisWrapper& basis_wrapper)
+      {
+        _rule_cache = &_cache[Dune::GlobalGeometryTypeIndex::index(basis_wrapper.context().embedding().global().type())];
+        _current = nullptr;
+      }
+
+      Evaluation _evaluate;
+
+      Container* _current;
+      RuleCache* _rule_cache;
+      Cache _cache;
+
+    };
+
+
+    template<typename Context, typename Evaluation>
+    struct IndexCachedEvaluationStore
+      : public ExclusiveRangeHolder<IndexCachedEvaluationStore<Context,Evaluation>,std::vector<typename Evaluation::Range>>
+      , public EvaluationProvider
+    {
+
+      using Container = std::vector<typename Evaluation::Range>;
+      using Base = ExclusiveRangeHolder<IndexCachedEvaluationStore,Container>;
+      using Base::container;
+      using Base::assertWriteAccess;
+
+      using RuleCache = std::vector<Container>;
+
+      struct Key
+      {
+        std::size_t type;
+        std::size_t index;
+        std::size_t order;
+
+        inline friend std::size_t hash_value(const Key& key)
+        {
+          std::size_t seed = 0;
+          hash_combine(seed,key.type);
+          hash_combine(seed,key.index);
+          hash_combine(seed,key.order);
+          return seed;
+        }
+
+        inline friend bool operator==(const Key& a, const Key& b)
+        {
+          return a.type == b.type and a.index == b.index and a.order == b.order;
+        }
+
+      };
+
+      struct Hasher
+      {
+        std::size_t operator()(const Key& key) const
+        {
+          return hash_value(key);
+        }
+      };
+
+      using Cache = std::unordered_map<Key,RuleCache,Hasher>;
+
+      Container& accessContainer()
+      {
+        assert(_current);
+        return *_current;
+      }
+
+      const Container& accessContainer() const
+      {
+        assert(_current);
+        return *_current;
+      }
+
+      RuleCache& ruleCache()
+      {
+        assert(_rule_cache);
+        return *_rule_cache;
+      }
+
+      template<typename Point>
+      void update(const Point& x)
+      {
+        assertWriteAccess();
+        _current = &ruleCache()[x.index()];
+        if (not _initialized)
+          {
+            container().resize(_evaluate.size());
+            _evaluate(x,container());
+          }
+      }
+
+      IndexCachedEvaluationStore()
+        : _current(nullptr)
+        , _initialized(false)
+        , _rule_cache(nullptr)
+      {}
+
+      IndexCachedEvaluationStore(const Evaluation& evaluate)
+        : _evaluate(evaluate)
+        , _current(nullptr)
+        , _initialized(false)
+        , _rule_cache(nullptr)
+      {}
+
+      template<typename BasisWrapper>
+      void setBasisWrapper(BasisWrapper& basis_wrapper)
+      {
+        _evaluate.setBasisWrapper(basis_wrapper);
+      }
+
+      template<typename QR>
+      void beginQuadrature(QR& qr)
+      {
+        auto key = Key{
+          Dune::GlobalGeometryTypeIndex::index(qr.type()),
+          Context::Flavor::embeddingDescriptor(qr.embedding()),
+          std::size_t(qr.order())
+        };
+
+        if (auto it = _cache.find(key) ; it != _cache.end())
+          {
+            _rule_cache = &it->second;
+            _initialized = true;
+          }
+        else
+          {
+            _rule_cache = &_cache[key];
+            ruleCache().resize(qr.size());
+            _initialized = false;
+          }
+        _current = nullptr;
+      }
+
+      template<typename QR>
+      void endQuadrature(QR& qr)
+      {
+        assertWriteAccess();
+        _current = nullptr;
+        _rule_cache = nullptr;
+      }
+
+      Evaluation _evaluate;
+
+      Container* _current;
+      bool _initialized;
+      RuleCache* _rule_cache;
+      Cache _cache;
 
     };
 
@@ -400,9 +660,13 @@ namespace Dune {
       using ReferenceGradientEvaluator = Dune::PDELab::ReferenceGradientEvaluator<BasisWrapper,Basis_>;
       using GradientEvaluator          = Dune::PDELab::GradientEvaluator<BasisWrapper,Basis_>;
 
-      using ValueProvider             = UncachedEvaluationStore<ValueEvaluator>;
-      using ReferenceGradientProvider = UncachedEvaluationStore<ReferenceGradientEvaluator>;
-      using GradientProvider          = UncachedEvaluationStore<GradientEvaluator>;
+      //using ValueProvider             = UncachedEvaluationStore<Context_,ValueEvaluator>;
+      //using ReferenceGradientProvider = UncachedEvaluationStore<Context_,ReferenceGradientEvaluator>;
+      //using ValueProvider             = CoordinateCachedEvaluationStore<Context_,ValueEvaluator>;
+      //using ReferenceGradientProvider = CoordinateCachedEvaluationStore<Context_,ReferenceGradientEvaluator>;
+      using ValueProvider             = IndexCachedEvaluationStore<Context_,ValueEvaluator>;
+      using ReferenceGradientProvider = IndexCachedEvaluationStore<Context_,ReferenceGradientEvaluator>;
+      using GradientProvider          = UncachedEvaluationStore<Context_,GradientEvaluator>;
 
     public:
 
@@ -496,22 +760,47 @@ namespace Dune {
         , _reference_gradients_qp_index(invalid_index)
       {}
 
+      Context& context()
+      {
+        assert(_ctx);
+        return *_ctx;
+      }
+
     private:
 
       void setContext(Context& ctx)
       {
         _ctx = &ctx;
-      }
-
-      void setBasis(const Native& basis)
-      {
-        _basis = &basis;
         _values.setBasisWrapper(*this);
         _reference_gradients.setBasisWrapper(*this);
         _gradients.setBasisWrapper(*this);
+      }
+
+      void bind(const Native& basis)
+      {
+        _basis = &basis;
         _values_qp_index = invalid_index;
         _gradients_qp_index = invalid_index;
         _reference_gradients_qp_index = invalid_index;
+        _values.bind(*this);
+        _reference_gradients.bind(*this);
+        _gradients.bind(*this);
+      }
+
+      template<typename QR>
+      void beginQuadrature(QR& qr)
+      {
+        _values.beginQuadrature(qr);
+        _reference_gradients.beginQuadrature(qr);
+        _gradients.beginQuadrature(qr);
+      }
+
+      template<typename QR>
+      void endQuadrature(QR& qr)
+      {
+        _values.endQuadrature(qr);
+        _reference_gradients.endQuadrature(qr);
+        _gradients.endQuadrature(qr);
       }
 
       static constexpr size_type invalid_index = ~size_type(0);
