@@ -16,6 +16,7 @@ namespace Dune {
 
     public:
 
+      using size_type                        = std::size_t;
       using Global                           = Geometry;
       using Field                            = typename Geometry::ctype;
       using Cell                             = IdentityGeometry<Field,Geometry::mydimension>;
@@ -64,6 +65,11 @@ namespace Dune {
       CellEmbedding(const Geometry& geo)
         : _global(&geo)
       {}
+
+      size_type insideDescriptor() const
+      {
+        return 0;
+      }
 
     private:
 
