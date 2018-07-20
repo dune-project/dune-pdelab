@@ -280,10 +280,10 @@ namespace Dune {
         auto quadratureRule(std::size_t order, QuadratureType::Enum quadrature_type = QuadratureType::GaussLegendre) const
         {
           auto& rule = QuadratureRules<typename Embedding::Global::ctype,Embedding::Global::mydimension>::rule(embedding().global().type(),order,quadrature_type);
-          return QuadratureRule(rule,embedding());
+          return QuadratureRule(_data,rule,embedding());
         }
 
-        CellDomain(const CellDomainData& data)
+        CellDomain(CellDomainData& data)
           : _data(data)
         {}
 
@@ -490,10 +490,10 @@ namespace Dune {
         auto quadratureRule(std::size_t order, QuadratureType::Enum quadrature_type = QuadratureType::GaussLegendre) const
         {
           auto& rule = QuadratureRules<typename Embedding::Global::ctype,Embedding::Global::mydimension>::rule(embedding().global().type(),order,quadrature_type);
-          return QuadratureRule(rule,embedding());
+          return QuadratureRule(_data,rule,embedding());
         }
 
-        IntersectionDomain(const IntersectionDomainData& data)
+        IntersectionDomain(IntersectionDomainData& data)
           : _data(data)
         {}
 
@@ -742,6 +742,45 @@ namespace Dune {
         doUnbind(type,entity,entity_index,unique_index);
         return this;
       }
+
+      template<typename QuadratureRule>
+      std::enable_if_t<
+        models<Concept::IntersectionEmbedding,typename QuadratureRule::Embedding>()
+        >
+      beginQuadrature(QuadratureRule& qr)
+      {
+        Context::beginQuadrature(qr);
+        _outside.beginQuadrature(qr);
+      }
+
+      template<typename QuadratureRule>
+      std::enable_if_t<
+        models<Concept::IntersectionEmbedding,typename QuadratureRule::Embedding>()
+        >
+      endQuadrature(QuadratureRule& qr)
+      {
+        _outside.endQuadrature(qr);
+        Context::endQuadrature(qr);
+      }
+
+      template<typename QuadratureRule>
+      std::enable_if_t<
+        not models<Concept::IntersectionEmbedding,typename QuadratureRule::Embedding>()
+        >
+      beginQuadrature(QuadratureRule& qr)
+      {
+        Context::beginQuadrature(qr);
+      }
+
+      template<typename QuadratureRule>
+      std::enable_if_t<
+        not models<Concept::IntersectionEmbedding,typename QuadratureRule::Embedding>()
+        >
+      endQuadrature(QuadratureRule& qr)
+      {
+        Context::endQuadrature(qr);
+      }
+
 
     private:
 

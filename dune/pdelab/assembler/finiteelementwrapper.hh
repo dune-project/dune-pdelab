@@ -561,6 +561,48 @@ namespace Dune {
 
     };
 
+
+    template<typename QR>
+    struct begin_quadrature
+      : public TypeTree::TreeVisitor
+      , public TypeTree::DynamicTraversal
+    {
+
+      template<typename FE, typename TreePath>
+      void leaf(FE& fe, TreePath treePath) const
+      {
+        fe.beginQuadrature(_qr);
+      }
+
+      begin_quadrature(QR& qr)
+        : _qr(qr)
+      {}
+
+      QR& _qr;
+
+    };
+
+    template<typename QR>
+    struct end_quadrature
+      : public TypeTree::TreeVisitor
+      , public TypeTree::DynamicTraversal
+    {
+
+      template<typename FE, typename TreePath>
+      void leaf(FE& fe, TreePath treePath) const
+      {
+        fe.endQuadrature(_qr);
+      }
+
+      end_quadrature(QR& qr)
+        : _qr(qr)
+      {}
+
+      QR& _qr;
+
+    };
+
+
     template<typename FE, typename Context>
     class FiniteElementWrapper
       : public TypeTree::LeafNode
@@ -571,6 +613,12 @@ namespace Dune {
       friend struct set_finite_elements;
 
       friend struct set_context<Context>;
+
+      template<typename>
+      friend struct begin_quadrature;
+
+      template<typename>
+      friend struct end_quadrature;
 
     public:
 
@@ -616,7 +664,19 @@ namespace Dune {
       void setFiniteElement(const Native& fe)
       {
         _fe = &fe;
-        _basis.setBasis(Switch::basis(fe));
+        _basis.bind(Switch::basis(fe));
+      }
+
+      template<typename QR>
+      void beginQuadrature(QR& qr)
+      {
+        _basis.beginQuadrature(qr);
+      }
+
+      template<typename QR>
+      void endQuadrature(QR& qr)
+      {
+        _basis.endQuadrature(qr);
       }
 
       const FiniteElement* _fe;
