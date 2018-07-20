@@ -38,6 +38,18 @@ namespace Dune {
 
     }
 
+    template<typename T, bool = models<Concept::LocalBasis,T>()>
+    struct ReferenceGradientType
+    {
+      using type = int;
+    };
+
+    template<typename T>
+    struct ReferenceGradientType<T,true>
+    {
+      using type = typename T::Traits::JacobianType;
+    };
+
     struct OnlyMovable
     {
       OnlyMovable() = default;
@@ -174,19 +186,207 @@ namespace Dune {
 
     };
 
-    template<typename T, bool = models<Concept::LocalBasis,T>()>
-    struct ReferenceGradientType
+
+    template<typename Evaluation>
+    struct UncachedEvaluationStore
+      : public ExclusiveRangeHolder<std::vector<typename Evaluation::Range>>
     {
-      using type = int;
+
+      using Base = ExclusiveRangeHolder<std::vector<typename Evaluation::Range>>;
+      using Base::container;
+
+      template<typename Point>
+      void update(const Point& x)
+      {
+        container().resize(_evaluate.size());
+        _evaluate(x,container());
+      }
+
+      UncachedEvaluationStore() = default;
+
+      UncachedEvaluationStore(const Evaluation& evaluate)
+        : _evaluate(evaluate)
+      {}
+
+      template<typename BasisWrapper>
+      void setBasisWrapper(BasisWrapper& basis_wrapper)
+      {
+        _evaluate.setBasisWrapper(basis_wrapper);
+      }
+
+      Evaluation _evaluate;
+
     };
 
-    template<typename T>
-    struct ReferenceGradientType<T,true>
+
+    template<typename BasisWrapper, typename Basis_>
+    struct ValueEvaluator
     {
-      using type = typename T::Traits::JacobianType;
+
+      using Basis  = Basis_;
+      using Switch = BasisInterfaceSwitch<Basis>;
+
+      using Domain = typename Switch::DomainLocal;
+      using Range  = typename Switch::Range;
+
+      template<typename X, typename Container>
+      void operator()(const X& x, Container& y) const
+      {
+        _basis_wrapper->native().evaluateFunction(BasisWrapper::Context::Flavor::quadratureCoordinate(x),y);
+      }
+
+      std::size_t size() const
+      {
+        return _basis_wrapper->size();
+      }
+
+      ValueEvaluator() noexcept
+        : _basis_wrapper(nullptr)
+      {}
+
+      void setBasisWrapper(BasisWrapper& basis_wrapper)
+      {
+        _basis_wrapper = &basis_wrapper;
+      }
+
+    private:
+
+      BasisWrapper* _basis_wrapper;
+
     };
 
-    template<typename Basis_,typename Context>
+
+    template<typename BasisWrapper, typename Basis_>
+    struct ReferenceGradientEvaluator
+    {
+
+      using Basis  = Basis_;
+      using Switch = BasisInterfaceSwitch<Basis>;
+
+      using Domain = typename Switch::DomainLocal;
+      using Range  = typename ReferenceGradientType<Basis>::type;
+
+      template<typename X, typename Container>
+      void operator()(const X& x, Container& y) const
+      {
+        static_assert(Std::to_true_v<X> and not std::is_same_v<Range,int>,"basis does not support reference gradients");
+        _basis_wrapper->native().evaluateJacobian(BasisWrapper::Context::Flavor::quadratureCoordinate(x),y);
+      }
+
+      std::size_t size() const
+      {
+        return _basis_wrapper->size();
+      }
+
+      ReferenceGradientEvaluator() noexcept
+        : _basis_wrapper(nullptr)
+      {}
+
+      void setBasisWrapper(BasisWrapper& basis_wrapper)
+      {
+        _basis_wrapper = &basis_wrapper;
+      }
+
+    private:
+
+      BasisWrapper* _basis_wrapper;
+
+    };
+
+
+    template<typename BasisWrapper, typename Basis_, bool haveReferenceGradient = models<Concept::LocalBasis,Basis_>()>
+    struct GradientEvaluator
+    {
+
+      using Basis  = Basis_;
+      using Switch = BasisInterfaceSwitch<Basis>;
+
+      using Domain = typename Switch::DomainLocal;
+      using Range  = std::conditional_t<
+        Switch::dimRange == 1,
+        FieldVector<typename Switch::RangeField,BasisWrapper::Context::Geometry::coorddimension>,
+        FieldMatrix<typename Switch::RangeField,Switch::dimRange,BasisWrapper::Context::Geometry::coorddimension>
+        >;
+
+      template<typename X, typename Container>
+      void operator()(const X& x, Container& y) const
+      {
+        std::size_t size = _basis_wrapper->size();
+        auto reference_gradients = _basis_wrapper->referenceGradients(x);
+
+        auto jac = BasisWrapper::Context::Flavor::cellJacobianInverseTransposed(x);
+
+        for(std::size_t i = 0 ; i < size ; ++i)
+          jac.mv(reference_gradients[i][0],y[i]);
+      }
+
+      std::size_t size() const
+      {
+        return _basis_wrapper->size();
+      }
+
+      GradientEvaluator() noexcept
+        : _basis_wrapper(nullptr)
+      {}
+
+      void setBasisWrapper(BasisWrapper& basis_wrapper)
+      {
+        _basis_wrapper = &basis_wrapper;
+      }
+
+    private:
+
+      BasisWrapper* _basis_wrapper;
+
+    };
+
+
+
+    template<typename BasisWrapper, typename Basis_>
+    struct GradientEvaluator<BasisWrapper,Basis_,false>
+    {
+
+      using Basis  = Basis_;
+      using Switch = BasisInterfaceSwitch<Basis>;
+
+      using Domain = typename Switch::DomainLocal;
+      using Range  = std::conditional_t<
+        Switch::dimRange == 1,
+        FieldVector<typename Switch::RangeField,BasisWrapper::Context::Geometry::coorddimension>,
+        FieldMatrix<typename Switch::RangeField,Switch::dimRange,BasisWrapper::Context::Geometry::coorddimension>
+        >;
+
+      template<typename X, typename Container>
+      void operator()(const X& x, Container& y) const
+      {
+        _basis_wrapper->native().evaluateJacobian(BasisWrapper::Context::Flavor::quadratureCoordinate(x),y);
+      }
+
+      std::size_t size() const
+      {
+        return _basis_wrapper->size();
+      }
+
+      GradientEvaluator() noexcept
+        : _basis_wrapper(nullptr)
+      {}
+
+      void setBasisWrapper(BasisWrapper& basis_wrapper)
+      {
+        _basis_wrapper = &basis_wrapper;
+      }
+
+      void setBasis(const Basis& basis)
+      {}
+
+    private:
+
+      BasisWrapper* _basis_wrapper;
+
+    };
+
+
+    template<typename Basis_,typename Context_>
     class BasisWrapper
       : public OnlyMovable
     {
@@ -196,28 +396,32 @@ namespace Dune {
       template<typename, typename>
       friend class FiniteElementWrapper;
 
+      using ValueEvaluator             = Dune::PDELab::ValueEvaluator<BasisWrapper,Basis_>;
+      using ReferenceGradientEvaluator = Dune::PDELab::ReferenceGradientEvaluator<BasisWrapper,Basis_>;
+      using GradientEvaluator          = Dune::PDELab::GradientEvaluator<BasisWrapper,Basis_>;
+
+      using ValueProvider             = UncachedEvaluationStore<ValueEvaluator>;
+      using ReferenceGradientProvider = UncachedEvaluationStore<ReferenceGradientEvaluator>;
+      using GradientProvider          = UncachedEvaluationStore<GradientEvaluator>;
+
     public:
 
-      using Basis = Basis_;
-      using Native = Basis;
-      using DomainField = typename Switch::DomainField;
-      static const int dimDomainLocal = Switch::dimDomainLocal;
-      using DomainLocal = typename Switch::DomainLocal;
-      using RangeField = typename Switch::RangeField;
-      static const int dimRange = Switch::dimRange;
-      using Range = typename Switch::Range;
-      using size_type = std::size_t;
-      using Jacobian = typename Native::Traits::JacobianType;
-      using ReferenceGradient = typename ReferenceGradientType<Basis_>::type;
-      using Gradient = std::conditional_t<
-        dimRange == 1,
-        FieldVector<RangeField,Context::Geometry::coorddimension>,
-        FieldMatrix<RangeField,dimRange,Context::Geometry::coorddimension>
-        >;
-
-      using Values = typename ExclusiveRangeHolder<std::vector<Range>>::Proxy;
-      using ReferenceGradients = typename ExclusiveRangeHolder<std::vector<ReferenceGradient>>::Proxy;
-      using Gradients = typename ExclusiveRangeHolder<std::vector<Gradient>>::Proxy;
+      using            Basis               = Basis_;
+      using            Native              = Basis;
+      using            Context             = Context_;
+      using            DomainField         = typename Switch::DomainField;
+      static const int dimDomainLocal      = Switch::dimDomainLocal;
+      using            DomainLocal         = typename Switch::DomainLocal;
+      using            RangeField          = typename Switch::RangeField;
+      static const int dimRange            = Switch::dimRange;
+      using            Range               = typename Switch::Range;
+      using            size_type           = std::size_t;
+      using            Jacobian            = typename Native::Traits::JacobianType;
+      using            RefeferenceGradient = typename ReferenceGradientEvaluator::Range;
+      using            Gradient            = typename GradientEvaluator::Range;
+      using            Values              = typename ValueProvider::Proxy;
+      using            ReferenceGradients  = typename ReferenceGradientProvider::Proxy;
+      using            Gradients           = typename GradientProvider::Proxy;
 
       const Basis& native() const
       {
@@ -237,16 +441,22 @@ namespace Dune {
       template<typename In, typename Out>
       void evaluateFunction(const In& in, Out& out) const
       {
-        _basis->evaluateFunction(in,out);
+        _values.evaluator().evaluateFunction(in,out);
       }
+
 
       template<typename QP>
       Values operator()(const QP& qp)
       {
+        return values(qp);
+      }
+
+      template<typename QP>
+      Values values(const QP& qp)
+      {
         if (qp.index() != _values_qp_index)
           {
-            _values.container().resize(size());
-            _basis->evaluateFunction(Context::Flavor::quadratureCoordinate(qp),_values.container());
+            _values.update(qp);
             _values_qp_index = qp.index();
           }
         return _values.proxy();
@@ -261,52 +471,19 @@ namespace Dune {
       {
         if (qp.index() != _reference_gradients_qp_index)
           {
-            _reference_gradients.container().resize(size());
-            _basis->evaluateJacobian(Context::Flavor::quadratureCoordinate(qp),_reference_gradients.container());
+            _reference_gradients.update(qp);
             _reference_gradients_qp_index = qp.index();
           }
         return _reference_gradients.proxy();
       }
 
       template<typename QP>
-      std::enable_if_t<
-        models<Concept::LocalBasis,Native>() and dimRange == 1 and Std::to_true_type<QP>(),
-        Gradients
-        >
-      gradients(const QP& qp)
+      Gradients gradients(const QP& qp)
       {
         if (qp.index() != _gradients_qp_index)
           {
-            size_type size = this->size();
-            auto& gradients = _gradients.container();
-            gradients.resize(size);
-
-            auto reference_gradients = referenceGradients(qp);
-
-            auto jac = _ctx->geometry().jacobianInverseTransposed(Context::Flavor::quadratureCoordinate(qp));
-
-            for(std::size_t i = 0 ; i < size ; ++i)
-              jac.mv(reference_gradients[i][0],gradients[i]);
-
+            _gradients.update(qp);
             _gradients_qp_index = qp.index();
-          }
-        return _gradients.proxy();
-      }
-
-      template<typename QP>
-      std::enable_if_t<
-        not models<Concept::LocalBasis,Native>() and Std::to_true_type<QP>(),
-        Gradients
-        >
-      gradients(const QP& qp)
-      {
-        if (qp.index() != _gradients_qp_index)
-          {
-            auto& gradients = _gradients.container();
-            gradients.resize(size());
-            _basis->evaluateJacobian(Context::Flavor::quadratureCoordinate(qp),gradients);
-            _gradients_qp_index = qp.index();
-
           }
         return _gradients.proxy();
       }
@@ -329,6 +506,9 @@ namespace Dune {
       void setBasis(const Native& basis)
       {
         _basis = &basis;
+        _values.setBasisWrapper(*this);
+        _reference_gradients.setBasisWrapper(*this);
+        _gradients.setBasisWrapper(*this);
         _values_qp_index = invalid_index;
         _gradients_qp_index = invalid_index;
         _reference_gradients_qp_index = invalid_index;
@@ -338,9 +518,9 @@ namespace Dune {
 
       const Basis* _basis;
       Context* _ctx;
-      ExclusiveRangeHolder<std::vector<Range>> _values;
-      ExclusiveRangeHolder<std::vector<Gradient>> _gradients;
-      ExclusiveRangeHolder<std::vector<ReferenceGradient>> _reference_gradients;
+      ValueProvider _values;
+      ReferenceGradientProvider _reference_gradients;
+      GradientProvider _gradients;
       size_type _values_qp_index;
       size_type _gradients_qp_index;
       size_type _reference_gradients_qp_index;
