@@ -37,10 +37,23 @@ namespace Dune {
       template<bool enable_flavors>
       struct Inside
       {
+
         template<typename QP>
         static constexpr auto& quadratureCoordinate(const QP& qp)
         {
           return qp.inside();
+        }
+
+        template<typename QP>
+        static constexpr auto& cellJacobianTransposed(const QP& qp)
+        {
+          return qp.insideJacobianTransposed();
+        }
+
+        template<typename QP>
+        static constexpr auto& cellJacobianInverseTransposed(const QP& qp)
+        {
+          return qp.insideJacobianInverseTransposed();
         }
 
         using Test  = std::conditional_t<enable_flavors,Flavor::InsideTest,Flavor::Generic>;
@@ -60,6 +73,18 @@ namespace Dune {
         static constexpr auto& quadratureCoordinate(const QP& qp)
         {
           return qp.outside();
+        }
+
+        template<typename QP>
+        static constexpr auto& cellJacobianTransposed(const QP& qp)
+        {
+          return qp.outsideJacobianTransposed();
+        }
+
+        template<typename QP>
+        static constexpr auto& cellJacobianInverseTransposed(const QP& qp)
+        {
+          return qp.outsideJacobianInverseTransposed();
         }
 
         using Test  = std::conditional_t<enable_flavors,Flavor::OutsideTest,Flavor::Generic>;
@@ -305,14 +330,20 @@ namespace Dune {
 
           friend class IntersectionDomain;
 
-          using Field   = typename IntersectionDomain::Field;
-          using Global  = typename Intersection::Geometry;
-          using Cell    = typename Intersection::LocalGeometry;
-          using Inside  = typename Intersection::LocalGeometry;
-          using Outside = typename Intersection::LocalGeometry;
-          using LocalCoordinate = typename Global::LocalCoordinate;
-          using GlobalCoordinate = typename Global::GlobalCoordinate;
-          using CellCoordinate = typename Inside::GlobalCoordinate;
+          using Field                            = typename IntersectionDomain::Field;
+          using Global                           = typename Intersection::Geometry;
+          using Cell                             = typename Intersection::LocalGeometry;
+          using Inside                           = typename Intersection::LocalGeometry;
+          using Outside                          = typename Intersection::LocalGeometry;
+          using LocalCoordinate                  = typename Global::LocalCoordinate;
+          using GlobalCoordinate                 = typename Global::GlobalCoordinate;
+          using CellCoordinate                   = typename Inside::GlobalCoordinate;
+          using JacobianTransposed               = typename Global::JacobianTransposed;
+          using JacobianInverseTransposed        = typename Global::JacobianInverseTransposed;
+          using InsideJacobianTransposed         = typename Context::Inside::Embedding::JacobianTransposed;
+          using InsideJacobianInverseTransposed  = typename Context::Inside::Embedding::JacobianInverseTransposed;
+          using OutsideJacobianTransposed        = typename Context::Outside::Embedding::JacobianTransposed;
+          using OutsideJacobianInverseTransposed = typename Context::Outside::Embedding::JacobianInverseTransposed;
 
           const Global& global() const
           {
@@ -327,6 +358,36 @@ namespace Dune {
           const Outside& outside() const
           {
             return _data.intersectionGeometryInOutside();
+          }
+
+          template<typename P>
+          GlobalCoordinate unitOuterNormal(const P& p) const
+          {
+            return _data.intersection().unitOuterNormal(p.local());
+          }
+
+          template<typename P>
+          InsideJacobianTransposed insideJacobianTransposed(const P& p) const
+          {
+            return _data.inside().embedding().global().jacobianTransposed(p.inside());
+          }
+
+          template<typename P>
+          InsideJacobianInverseTransposed insideJacobianInverseTransposed(const P& p) const
+          {
+            return _data.inside().embedding().global().jacobianInverseTransposed(p.inside());
+          }
+
+          template<typename P>
+          OutsideJacobianTransposed outsideJacobianTransposed(const P& p) const
+          {
+            return _data.outside().embedding().global().jacobianTransposed(p.outside());
+          }
+
+          template<typename P>
+          OutsideJacobianInverseTransposed outsideJacobianInverseTransposed(const P& p) const
+          {
+            return _data.outside().embedding().global().jacobianInverseTransposed(p.outside());
           }
 
         private:
