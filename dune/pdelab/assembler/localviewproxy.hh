@@ -217,6 +217,8 @@ namespace Dune {
           : _view(nullptr)
           , _weight(0)
           , _columns(0)
+          , _row(0)
+          , _col(0)
           , _index(0)
         {}
 
@@ -224,6 +226,8 @@ namespace Dune {
           : _view(&view)
           , _weight(weight)
           , _columns(columns)
+          , _row(index / columns)
+          , _col(index % columns)
           , _index(index)
         {}
 
@@ -236,6 +240,11 @@ namespace Dune {
         void increment()
         {
           ++_index;
+          if (++_col == _columns)
+            {
+              ++_row;
+              _col = 0;
+            }
         }
 
         void decrement()
@@ -257,9 +266,7 @@ namespace Dune {
         std::tuple<Proxy,size_type,size_type> dereference() const
         {
           assert(_view);
-          size_type i = _index / _columns;
-          size_type j = _index % _columns;
-          return {{(*_view)(i,j),_weight},i,j};
+          return {{(*_view)(_row,_col),_weight},_row,_col};
         }
 
       private:
@@ -267,7 +274,7 @@ namespace Dune {
         LocalMatrixProxy* _view;
         weight_type _weight;
         std::size_t _columns;
-        std::size_t _index;
+        std::size_t _row, _col, _index;
 
       };
 
