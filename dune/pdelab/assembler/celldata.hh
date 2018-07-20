@@ -56,6 +56,12 @@ namespace Dune {
           return qp.insideJacobianInverseTransposed();
         }
 
+        template<typename Embedding>
+        static constexpr auto embeddingDescriptor(const Embedding& embedding)
+        {
+          return embedding.insideDescriptor();
+        }
+
         using Test  = std::conditional_t<enable_flavors,Flavor::InsideTest,Flavor::Generic>;
         using Trial = std::conditional_t<enable_flavors,Flavor::InsideTrial,Flavor::Generic>;
 
@@ -85,6 +91,12 @@ namespace Dune {
         static constexpr auto& cellJacobianInverseTransposed(const QP& qp)
         {
           return qp.outsideJacobianInverseTransposed();
+        }
+
+        template<typename Embedding>
+        static constexpr auto embeddingDescriptor(const Embedding& embedding)
+        {
+          return embedding.outsideDescriptor();
         }
 
         using Test  = std::conditional_t<enable_flavors,Flavor::OutsideTest,Flavor::Generic>;
@@ -330,6 +342,7 @@ namespace Dune {
 
           friend class IntersectionDomain;
 
+          using size_type                        = std::size_t;
           using Field                            = typename IntersectionDomain::Field;
           using Global                           = typename Intersection::Geometry;
           using Cell                             = typename Intersection::LocalGeometry;
@@ -389,6 +402,16 @@ namespace Dune {
           OutsideJacobianInverseTransposed outsideJacobianInverseTransposed(const P& p) const
           {
             return _data.outside().embedding().global().jacobianInverseTransposed(p.outside());
+          }
+
+          size_type insideDescriptor() const
+          {
+            return _data.intersection().indexInInside();
+          }
+
+          size_type outsideDescriptor() const
+          {
+            return _data.intersection().indexInOutside();
           }
 
         private:
