@@ -344,6 +344,7 @@ namespace Dune {
           using InsideJacobianInverseTransposed  = typename Context::Inside::Embedding::JacobianInverseTransposed;
           using OutsideJacobianTransposed        = typename Context::Outside::Embedding::JacobianTransposed;
           using OutsideJacobianInverseTransposed = typename Context::Outside::Embedding::JacobianInverseTransposed;
+          using Intersection                     = typename IntersectionDomain::Intersection;
 
           const Global& global() const
           {

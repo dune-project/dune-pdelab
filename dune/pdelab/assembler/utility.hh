@@ -10,6 +10,19 @@
 namespace Dune {
   namespace PDELab {
 
+    namespace Concept {
+
+      struct IntersectionEmbedding
+      {
+        template<class Embedding>
+        auto require(Embedding&&) -> decltype(
+          Dune::Concept::requireType<typename Embedding::Intersection>()
+        );
+      };
+
+    }
+
+
     namespace Impl {
 
       template<typename F, typename... Args>
