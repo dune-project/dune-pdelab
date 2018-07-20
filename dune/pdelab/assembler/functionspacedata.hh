@@ -84,6 +84,20 @@ namespace Dune {
         return this;
       }
 
+      template<typename QuadratureRule>
+      void beginQuadrature(QuadratureRule& qr)
+      {
+        Context::beginQuadrature(qr);
+        TypeTree::applyToTree(_finite_elements,begin_quadrature{qr});
+      }
+
+      template<typename QuadratureRule>
+      void endQuadrature(QuadratureRule& qr)
+      {
+        TypeTree::applyToTree(_finite_elements,end_quadrature{qr});
+        Context::endQuadrature(qr);
+      }
+
       template<typename... Indices>
       const auto& functionSpace(Indices... indices) const
       {

@@ -348,7 +348,7 @@ namespace Dune {
     };
 
 
-    template<typename QR, typename Embedding_>
+    template<typename Context_, typename QR, typename Embedding_>
     class QuadratureRule
     {
 
@@ -356,6 +356,7 @@ namespace Dune {
 
     public:
 
+      using Context          = Context_;
       using Native           = QR;
       using Embedding        = Embedding_;
       using Field            = typename Native::value_type::Field;
@@ -493,24 +494,35 @@ namespace Dune {
       }
 
       //! Returns an iterator pointing to the first quadrature point.
-      const_iterator begin() const
+      const_iterator begin()
       {
+        assert(not _started);
+        _ctx->beginQuadrature(*this);
+        _started = true;
         auto it = _quadrature_rule->begin();
         return {it,0,*this};
       }
 
       //! Returns an iterator pointing after the last quadrature point.
-      const_iterator end() const
+      const_iterator end()
       {
         return {_quadrature_rule->end(),size(),*this};
       }
 
 #ifndef DOXYGEN
 
-      QuadratureRule(const QR& quadrature_rule, Embedding&& embedding)
-        : _quadrature_rule(&quadrature_rule)
+      QuadratureRule(Context& ctx, const QR& quadrature_rule, Embedding&& embedding)
+        : _ctx(&ctx)
+        , _started(false)
+        , _quadrature_rule(&quadrature_rule)
         , _embedding(std::move(embedding))
       {}
+
+      ~QuadratureRule()
+      {
+        if (_started)
+          _ctx->endQuadrature(*this);
+      }
 
 #endif
 
@@ -576,6 +588,8 @@ namespace Dune {
         return _embedding.unitOuterNormal(qp);
       }
 
+      Context* _ctx;
+      bool _started;
       const QR* _quadrature_rule;
       Embedding _embedding;
 

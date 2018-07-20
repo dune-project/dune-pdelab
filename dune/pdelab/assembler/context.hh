@@ -30,6 +30,14 @@ namespace Dune {
           return this;
         }
 
+        template<typename QuadratureRule>
+        void beginQuadrature(QuadratureRule&)
+        {}
+
+        template<typename QuadratureRule>
+        void endQuadrature(QuadratureRule&)
+        {}
+
         void cache(int) = delete;
 
       };
