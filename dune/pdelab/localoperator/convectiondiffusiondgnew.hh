@@ -321,7 +321,7 @@ namespace Dune {
           {
 
             // exact normal
-            auto n_F_local = domain.unitOuterNormal(ip);
+            auto n_F_local = ip.unitOuterNormal();
 
             // update all variables dependent on A if A is not cell-wise constant
             if (not inside.permeabilityIsConstantPerCell())
@@ -480,7 +480,7 @@ namespace Dune {
           {
 
             // exact normal
-            auto n_F_local = domain.unitOuterNormal(ip);
+            auto n_F_local = ip.unitOuterNormal();
 
             // update all variables dependent on A if A is not cell-wise constant
             if (not inside.permeabilityIsConstantPerCell())
@@ -633,7 +633,7 @@ namespace Dune {
               continue;
 
             // local normal
-            auto n_F_local = domain.unitOuterNormal(ip);
+            auto n_F_local = ip.unitOuterNormal();
 
             // update all variables dependent on A if A is not cell-wise constant
             if (not cell.permeabilityIsConstantPerCell())
