@@ -344,6 +344,7 @@ namespace Dune {
 
           using size_type                        = std::size_t;
           using Field                            = typename IntersectionDomain::Field;
+          using Intersection                     = typename Context::EntitySet::Intersection;
           using Global                           = typename Intersection::Geometry;
           using Cell                             = typename Intersection::LocalGeometry;
           using Inside                           = typename Intersection::LocalGeometry;
@@ -357,7 +358,6 @@ namespace Dune {
           using InsideJacobianInverseTransposed  = typename Context::Inside::Embedding::JacobianInverseTransposed;
           using OutsideJacobianTransposed        = typename Context::Outside::Embedding::JacobianTransposed;
           using OutsideJacobianInverseTransposed = typename Context::Outside::Embedding::JacobianInverseTransposed;
-          using Intersection                     = typename IntersectionDomain::Intersection;
 
           const Global& global() const
           {
