@@ -412,23 +412,16 @@ namespace Dune {
       {
         assertWriteAccess();
         _current = &ruleCache()[x.index()];
-        if (not _initialized)
-          {
-            container().resize(_evaluate.size());
-            _evaluate(x,container());
-          }
       }
 
       IndexCachedEvaluationStore()
         : _current(nullptr)
-        , _initialized(false)
         , _rule_cache(nullptr)
       {}
 
       IndexCachedEvaluationStore(const Evaluation& evaluate)
         : _evaluate(evaluate)
         , _current(nullptr)
-        , _initialized(false)
         , _rule_cache(nullptr)
       {}
 
@@ -450,13 +443,18 @@ namespace Dune {
         if (auto it = _cache.find(key) ; it != _cache.end())
           {
             _rule_cache = &it->second;
-            _initialized = true;
           }
         else
           {
             _rule_cache = &_cache[key];
             ruleCache().resize(qr.size());
-            _initialized = false;
+            auto size = _evaluate.size();
+            std::transform(qr.util_begin(),qr.end(),ruleCache().begin(),[&](const auto& x)
+              {
+                Container temp(size);
+                _evaluate(x,temp);
+                return std::move(temp);
+              });
           }
         _current = nullptr;
       }
@@ -472,7 +470,6 @@ namespace Dune {
       Evaluation _evaluate;
 
       Container* _current;
-      bool _initialized;
       RuleCache* _rule_cache;
       Cache _cache;
 

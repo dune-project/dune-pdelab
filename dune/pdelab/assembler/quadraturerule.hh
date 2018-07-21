@@ -503,6 +503,13 @@ namespace Dune {
         return {it,0,*this};
       }
 
+      const_iterator util_begin()
+      {
+        assert(_started);
+        auto it = _quadrature_rule->begin();
+        return {it,0,*this};
+      }
+
       //! Returns an iterator pointing after the last quadrature point.
       const_iterator end()
       {
