@@ -583,7 +583,7 @@ int main(int argc, char** argv)
   // Get GridView
   auto gv = grid.leafGridView();
 
-  constexpr int degree = 1;
+  constexpr int degree = 2;
   using FEM = Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,Real,degree,dim>;
   FEM fem;
 
