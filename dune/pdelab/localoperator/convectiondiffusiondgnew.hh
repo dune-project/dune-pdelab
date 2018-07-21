@@ -225,8 +225,8 @@ namespace Dune {
             }
 
             // evaluate basis functions and gradients
-            auto phi = trial_basis(ip);
-            auto psi = test_basis(ip);
+            auto phi = trial_basis.values(ip);
+            auto psi = test_basis.values(ip);
 
             auto gradphi = trial_basis.gradients(ip);
             auto gradpsi = test_basis.gradients(ip);
@@ -241,8 +241,9 @@ namespace Dune {
             auto c = cell.c(ip);
 
             // integrate (A grad u - bu)*grad phi_i + a*u*phi_i
-            for (auto [dof,i,j] : cell.jacobian(test_space,trial_space))
-              dof += (cell.Agradphi[j]*gradpsi[i] - phi[j]*(b*gradpsi[i]) + c*phi[j]*psi[i]) * ip.weight();
+            for (auto [trialFunctions,i] : cell.jacobian(test_space,trial_space))
+              for (auto [dof,j] : trialFunctions)
+                dof += (cell.Agradphi[j]*gradpsi[i] - phi[j]*(b*gradpsi[i]) + c*phi[j]*psi[i]) * ip.weight();
 
           }
       }
@@ -530,56 +531,39 @@ namespace Dune {
             // integration factor
             auto ipfactor = penalty_factor * ip.weight();
 
-            auto mat_ss = ctx.jacobian(inside.test().space(),inside.trial().space());
-            auto mat_sn = ctx.jacobian(inside.test().space(),outside.trial().space());
-            auto mat_ns = ctx.jacobian(outside.test().space(),inside.trial().space());
-            auto mat_nn = ctx.jacobian(outside.test().space(),outside.trial().space());
-
             // do all terms in the order: I convection, II diffusion, III consistency, IV ip
-            for (size_type j = 0 ; j < mat_ss.trialSize() ; ++j)
-              {
-                auto temp1 = -(An_F_s*gradphi_s[j])*omega_s*ip.weight();
-                for (size_type i = 0 ; i < mat_ss.testSize() ; ++i)
-                  {
-                    mat_ss.accumulate(i,j,omegaup_s * phi_s[j] * normalflux * ip.weight() * psi_s[i]);
-                    mat_ss.accumulate(i,j,temp1 * psi_s[i]);
-                    mat_ss.accumulate(i,j,phi_s[j] * ip.weight() * theta * omega_s * (An_F_s*gradpsi_s[i]));
-                    mat_ss.accumulate(i,j,phi_s[j] * ipfactor * psi_s[i]);
-                  }
-              }
-            for (size_type j = 0 ; j < mat_sn.trialSize() ; ++j)
-              {
-                auto temp1 = -(An_F_n*gradphi_n[j])*omega_n*ip.weight();
-                for (size_type i = 0 ; i < mat_sn.testSize() ; ++i)
-                  {
-                    mat_sn.accumulate(i,j,omegaup_n * phi_n[j] * normalflux * ip.weight() * psi_s[i]);
-                    mat_sn.accumulate(i,j,temp1 * psi_s[i]);
-                    mat_sn.accumulate(i,j,-phi_n[j] * ip.weight() * theta * omega_s * (An_F_s*gradpsi_s[i]));
-                    mat_sn.accumulate(i,j,-phi_n[j] * ipfactor * psi_s[i]);
-                  }
-              }
-            for (size_type j = 0 ; j < mat_ss.trialSize() ; ++j)
-              {
-                auto temp1 = -(An_F_s*gradphi_s[j])*omega_s*ip.weight();
-                for (size_type i = 0 ; i < mat_ss.testSize() ; ++i)
-                  {
-                    mat_ns.accumulate(i,j,-omegaup_s * phi_s[j] * normalflux * ip.weight() * psi_n[i]);
-                    mat_ns.accumulate(i,j,-temp1 * psi_n[i]);
-                    mat_ns.accumulate(i,j,phi_s[j] * ip.weight() * theta * omega_n * (An_F_n*gradpsi_n[i]));
-                    mat_ns.accumulate(i,j,-phi_s[j] * ipfactor * psi_n[i]);
-                  }
-              }
-            for (size_type j = 0 ; j < mat_sn.trialSize() ; ++j)
-              {
-                auto temp1 = -(An_F_n*gradphi_n[j])*omega_n*ip.weight();
-                for (size_type i = 0 ; i < mat_sn.testSize() ; ++i)
-                  {
-                    mat_nn.accumulate(i,j,-omegaup_n * phi_n[j] * normalflux * ip.weight() * psi_n[i]);
-                    mat_nn.accumulate(i,j,-temp1 * psi_n[i]);
-                    mat_nn.accumulate(i,j,-phi_n[j] * ip.weight() * theta * omega_n * (An_F_n*gradpsi_n[i]));
-                    mat_nn.accumulate(i,j,phi_n[j] * ipfactor * psi_n[i]);
-                  }
-              }
+            for (auto [trialFunctions,i] : ctx.jacobian(inside.test().space(),inside.trial().space()))
+              for (auto [dof,j] : trialFunctions)
+                {
+                  dof += omegaup_s * phi_s[j] * normalflux * ip.weight() * psi_s[i];
+                  dof -= (An_F_s*gradphi_s[j])*omega_s*ip.weight() * psi_s[i];
+                  dof += phi_s[j] * ip.weight() * theta * omega_s * (An_F_s*gradpsi_s[i]);
+                  dof += phi_s[j] * ipfactor * psi_s[i];
+                }
+            for (auto [trialFunctions,i] : ctx.jacobian(inside.test().space(),outside.trial().space()))
+              for (auto [dof,j] : trialFunctions)
+                {
+                  dof += omegaup_n * phi_n[j] * normalflux * ip.weight() * psi_s[i];
+                  dof -= (An_F_n*gradphi_n[j])*omega_n*ip.weight() * psi_s[i];
+                  dof -= phi_n[j] * ip.weight() * theta * omega_s * (An_F_s*gradpsi_s[i]);
+                  dof -= phi_n[j] * ipfactor * psi_s[i];
+                }
+            for (auto [trialFunctions,i] : ctx.jacobian(outside.test().space(),inside.trial().space()))
+              for (auto [dof,j] : trialFunctions)
+                {
+                  dof -= omegaup_s * phi_s[j] * normalflux * ip.weight() * psi_n[i];
+                  dof += (An_F_s*gradphi_s[j])*omega_s*ip.weight() * psi_n[i];
+                  dof += phi_s[j] * ip.weight() * theta * omega_n * (An_F_n*gradpsi_n[i]);
+                  dof -= phi_s[j] * ipfactor * psi_n[i];
+                }
+            for (auto [trialFunctions,i] : ctx.jacobian(outside.test().space(),outside.trial().space()))
+              for (auto [dof,j] : trialFunctions)
+                {
+                  dof -= omegaup_n * phi_n[j] * normalflux * ip.weight() * psi_n[i];
+                  dof += (An_F_n*gradphi_n[j])*omega_n*ip.weight() * psi_n[i];
+                  dof -= phi_n[j] * ip.weight() * theta * omega_n * (An_F_n*gradpsi_n[i]);
+                  dof += phi_n[j] * ipfactor * psi_n[i];
+                }
           }
       }
 
@@ -822,8 +806,9 @@ namespace Dune {
                     << ip.global() << ") = "
                     << b << ")" << n_F_local << " " << normalflux);
 
-                for (auto [dof,i,j] : mat_ss)
-                  dof += phi_s[j] * normalflux * ip.weight() * psi_s[i];
+                for (auto [trialFunctions,i] : mat_ss)
+                  for (auto [dof,j] : trialFunctions)
+                    dof += phi_s[j] * normalflux * ip.weight() * psi_s[i];
 
                 continue;
               }
@@ -835,20 +820,21 @@ namespace Dune {
             // upwind
             RF omegaup_s = normalflux>=0.0 ? 1.0 : 0.0;
 
-            for (auto [dof,i,j] : mat_ss)
-              {
-                // convection term
-                dof += omegaup_s * phi_s[j] * normalflux * ip.weight() * psi_s[i];
+            for (auto [trialFunctions,i] : mat_ss)
+              for (auto [dof,j] : trialFunctions)
+                {
+                  // convection term
+                  dof += omegaup_s * phi_s[j] * normalflux * ip.weight() * psi_s[i];
 
-                // diffusion term
-                dof -= (An_F_s*gradphi_s[j]) * ip.weight() * psi_s[i];
+                  // diffusion term
+                  dof -= (An_F_s*gradphi_s[j]) * ip.weight() * psi_s[i];
 
-                // (non-)symmetric IP term
-                dof += phi_s[j] * ip.weight() * theta * (An_F_s*gradpsi_s[i]);
+                  // (non-)symmetric IP term
+                  dof += phi_s[j] * ip.weight() * theta * (An_F_s*gradpsi_s[i]);
 
-                // standard IP term
-                dof += penalty_factor * phi_s[j] * psi_s[i] * ip.weight();
-              }
+                  // standard IP term
+                  dof += penalty_factor * phi_s[j] * psi_s[i] * ip.weight();
+                }
           }
       }
 

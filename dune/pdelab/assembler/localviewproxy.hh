@@ -192,6 +192,32 @@ namespace Dune {
     };
 
 
+    struct IndexCache
+    {
+
+      using Indices = std::vector<std::pair<std::size_t,std::size_t>>;
+      using Cache = std::unordered_map<std::size_t,Indices>;
+
+      static Cache& cache()
+      {
+        static Cache _cache;
+        return _cache;
+      }
+
+      static const Indices& indices(std::size_t rows, std::size_t cols)
+      {
+        auto& c = cache();
+        if (auto it = c.find(cols) ; it != c.end())
+          return it->second;
+        auto& indices = c[cols];
+        for (std::size_t i = 0 ; i < rows ; ++i)
+          for (std::size_t j = 0 ; j < cols ; ++j)
+            indices.emplace_back(i,j);
+        return indices;
+      }
+
+    };
+
 
     template<typename LM, typename TestSpace, typename TrialSpace>
     class LocalMatrixProxy
@@ -205,46 +231,132 @@ namespace Dune {
 
       using Proxy = DOFAccumulationProxy<value_type,weight_type>;
 
-      class iterator
-        : public RandomAccessIteratorFacade<iterator,std::tuple<Proxy,size_type,size_type>,std::tuple<Proxy,size_type,size_type>>
+      class iterator;
+
+      class TrialFunctions
       {
 
-        friend class RandomAccessIteratorFacade<iterator,std::tuple<Proxy,size_type,size_type>,std::tuple<Proxy,size_type,size_type>>;
+        friend class LocalMatrixProxy::iterator;
+
+      public:
+
+        class iterator
+          : public RandomAccessIteratorFacade<iterator,std::pair<Proxy,size_type>,std::pair<Proxy,size_type>>
+        {
+
+          friend class RandomAccessIteratorFacade<iterator,std::pair<Proxy,size_type>,std::pair<Proxy,size_type>>;
+
+        public:
+
+          iterator()
+            : _view(nullptr)
+            , _weight(0)
+            , _row(0)
+            , _index(0)
+          {}
+
+          iterator(LocalMatrixProxy& view, weight_type weight, std::size_t row, std::size_t index)
+            : _view(&view)
+            , _weight(weight)
+            , _row(row)
+            , _index(index)
+          {}
+
+          bool equals(const iterator& other) const
+          {
+            assert(_view == other._view and _weight == other._weight and _row == other._row);
+            return _index == other._index;
+          }
+
+          void increment()
+          {
+            ++_index;
+          }
+
+          void decrement()
+          {
+            --_index;
+          }
+
+          void advance(int n)
+          {
+            _index += n;
+          }
+
+          std::ptrdiff_t distanceTo(iterator& other) const
+          {
+            assert(_view == other._view and _weight == other._weight and _row == other._row);
+            return other._index - _index;
+          }
+
+          std::pair<Proxy,size_type> dereference() const
+          {
+            assert(_view);
+            return {{(*_view)(_row,_index),_weight},_index};
+          }
+
+        private:
+
+          LocalMatrixProxy* _view;
+          weight_type _weight;
+          std::size_t _row;
+          std::size_t _index;
+
+        };
+
+        iterator begin()
+        {
+          return {*_view,_weight,_row,0};
+        }
+
+        iterator end()
+        {
+          return {*_view,_weight,_row,_view->trialSpace().size()};
+        }
+
+      private:
+
+        TrialFunctions(LocalMatrixProxy* view, weight_type weight, std::size_t row)
+          : _view(view)
+          , _weight(weight)
+          , _row(row)
+        {}
+
+        LocalMatrixProxy* _view;
+        weight_type _weight;
+        std::size_t _row;
+
+      };
+
+      class iterator
+        : public RandomAccessIteratorFacade<iterator,std::pair<TrialFunctions,std::size_t>,std::pair<TrialFunctions,std::size_t>>
+      {
+
+        friend class RandomAccessIteratorFacade<iterator,std::pair<TrialFunctions,std::size_t>,std::pair<TrialFunctions,std::size_t>>;
 
       public:
 
         iterator()
           : _view(nullptr)
           , _weight(0)
-          , _columns(0)
-          , _row(0)
-          , _col(0)
           , _index(0)
         {}
 
-        iterator(LocalMatrixProxy& view, weight_type weight, std::size_t columns, std::size_t index)
+        iterator(LocalMatrixProxy& view, weight_type weight, std::size_t index)
           : _view(&view)
           , _weight(weight)
-          , _columns(columns)
-          , _row(index / columns)
-          , _col(index % columns)
           , _index(index)
         {}
 
         bool equals(const iterator& other) const
         {
-          assert(_view == other._view and _weight == other._weight and _columns == other._columns);
+          assert(_view == other._view and _weight == other._weight);
           return _index == other._index;
         }
 
         void increment()
         {
           ++_index;
-          if (++_col == _columns)
-            {
-              ++_row;
-              _col = 0;
-            }
         }
 
         void decrement()
@@ -259,33 +371,32 @@ namespace Dune {
 
         std::ptrdiff_t distanceTo(iterator& other) const
         {
-          assert(_view == other._view and _weight == other._weight and _columns == other._columns);
+          assert(_view == other._view and _weight == other._weight);
           return other._index - _index;
         }
 
-        std::tuple<Proxy,size_type,size_type> dereference() const
+        std::pair<TrialFunctions,std::size_t> dereference() const
         {
           assert(_view);
-          return {{(*_view)(_row,_col),_weight},_row,_col};
+          return {{_view,_weight,_index},_index};
         }
 
       private:
 
         LocalMatrixProxy* _view;
         weight_type _weight;
-        std::size_t _columns;
-        std::size_t _row, _col, _index;
+        std::size_t _index;
 
       };
 
       iterator begin()
       {
-        return {*this,weight(),trialSpace().size(),0};
+        return {*this,weight(),0};
       }
 
       iterator end()
       {
-        return {*this,weight(),trialSpace().size(),size()};
+        return {*this,weight(),testSpace().size()};
       }
 
       weight_type weight() const
@@ -295,7 +406,7 @@ namespace Dune {
 
       size_type size() const
       {
-        return trialSpace().size() * testSpace().size();
+        return testSpace().size();
       }
 
       size_type trialSize() const
