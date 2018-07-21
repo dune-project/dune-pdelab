@@ -249,82 +249,82 @@ namespace Dune {
         public:
 
           iterator()
-            : _view(nullptr)
+            : _index(0)
+            , _dof(nullptr)
             , _weight(0)
-            , _row(0)
-            , _index(0)
           {}
 
-          iterator(LocalMatrixProxy& view, weight_type weight, std::size_t row, std::size_t index)
-            : _view(&view)
+          iterator(std::size_t index, value_type* dof, weight_type weight)
+            : _index(index)
+            , _dof(dof)
             , _weight(weight)
-            , _row(row)
-            , _index(index)
           {}
 
           bool equals(const iterator& other) const
           {
-            assert(_view == other._view and _weight == other._weight and _row == other._row);
+            assert(_weight == other._weight);
             return _index == other._index;
           }
 
           void increment()
           {
             ++_index;
+            ++_dof;
           }
 
           void decrement()
           {
             --_index;
+            --_dof;
           }
 
           void advance(int n)
           {
             _index += n;
+            _dof += n;
           }
 
           std::ptrdiff_t distanceTo(iterator& other) const
           {
-            assert(_view == other._view and _weight == other._weight and _row == other._row);
+            assert(_weight == other._weight);
             return other._index - _index;
           }
 
           std::pair<Proxy,size_type> dereference() const
           {
-            assert(_view);
-            return {{(*_view)(_row,_index),_weight},_index};
+            assert(_dof);
+            return {{*_dof,_weight},_index};
           }
 
         private:
 
-          LocalMatrixProxy* _view;
-          weight_type _weight;
-          std::size_t _row;
           std::size_t _index;
+          value_type* _dof;
+          weight_type _weight;
 
         };
 
         iterator begin()
         {
-          return {*_view,_weight,_row,0};
+          return {0,_dof_row_begin,_weight};
         }
 
         iterator end()
         {
-          return {*_view,_weight,_row,_view->trialSpace().size()};
+          return {_columns,nullptr,_weight};
         }
 
       private:
 
-        TrialFunctions(LocalMatrixProxy* view, weight_type weight, std::size_t row)
-          : _view(view)
+        TrialFunctions(value_type* dof_row_begin, weight_type weight, std::size_t columns)
+          : _dof_row_begin(dof_row_begin)
           , _weight(weight)
-          , _row(row)
+          , _columns(columns)
         {}
 
-        LocalMatrixProxy* _view;
+        value_type* _dof_row_begin;
         weight_type _weight;
-        std::size_t _row;
+        std::size_t _columns;
 
       };
 
@@ -337,66 +337,72 @@ namespace Dune {
       public:
 
         iterator()
-          : _view(nullptr)
+          : _index(0)
+          , _dof_row_begin(nullptr)
           , _weight(0)
-          , _index(0)
+          , _columns(0)
         {}
 
-        iterator(LocalMatrixProxy& view, weight_type weight, std::size_t index)
-          : _view(&view)
+        iterator(std::size_t index, value_type* dof_row_begin, weight_type weight, std::size_t columns)
+          : _index(index)
+          , _dof_row_begin(dof_row_begin)
           , _weight(weight)
-          , _index(index)
+          , _columns(columns)
         {}
 
         bool equals(const iterator& other) const
         {
-          assert(_view == other._view and _weight == other._weight);
+          assert(_weight == other._weight and _columns == other._columns);
           return _index == other._index;
         }
 
         void increment()
         {
           ++_index;
+          _dof_row_begin += _columns;
         }
 
         void decrement()
         {
           --_index;
+          _dof_row_begin -= _columns;
         }
 
         void advance(int n)
         {
           _index += n;
+          _dof_row_begin += n * _columns;
         }
 
         std::ptrdiff_t distanceTo(iterator& other) const
         {
-          assert(_view == other._view and _weight == other._weight);
+          assert(_weight == other._weight and _columns == other._columns);
           return other._index - _index;
         }
 
         std::pair<TrialFunctions,std::size_t> dereference() const
         {
-          assert(_view);
-          return {{_view,_weight,_index},_index};
+          assert(_dof_row_begin);
+          return {{_dof_row_begin,_weight,_columns},_index};
         }
 
       private:
 
-        LocalMatrixProxy* _view;
-        weight_type _weight;
         std::size_t _index;
+        value_type* _dof_row_begin;
+        weight_type _weight;
+        std::size_t _columns;
 
       };
 
       iterator begin()
       {
-        return {*this,weight(),0};
+        return {0,&(*this)(0,0),weight(),trialSize()};
       }
 
       iterator end()
       {
-        return {*this,weight(),testSpace().size()};
+        return {testSize(),nullptr,weight(),trialSize()};
       }
 
       weight_type weight() const
