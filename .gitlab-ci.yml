@@ -1,5 +1,14 @@
 ---
 
+variables:
+# Suitesparse, as installed with Debian, is thread-parallel using OpenMP.
+# OpenMP silently assumes, it can spawn as many threads as there are cores.
+# In a worst case scenario, this leads to a number of threads quadratic in
+# the core count, if you also do parallel test execution with the maximum
+# number of cores. We solve the issue by disallowing OpenMP to allocate more
+# than one thread.
+  OMP_NUM_THREADS: 1
+
 debian:10--gcc:
   image: registry.dune-project.org/docker/ci/dune-pdelab-deps:git
   script: duneci-standard-test
