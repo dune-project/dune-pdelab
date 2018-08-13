@@ -841,6 +841,7 @@ namespace Dune {
        *       then remap_[i] denotes the corresponding child of the
        *       gridfunctionspace.
        */
+      template<class Remap>
       VectorDiscreteGridFunction (std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x_,
                                  const Remap &remap_)
         : pgfs(gfs)
