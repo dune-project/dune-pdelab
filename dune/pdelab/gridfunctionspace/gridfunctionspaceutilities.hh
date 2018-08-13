@@ -217,6 +217,22 @@ namespace Dune {
       , px(stackobject_to_shared_ptr(x_))
       {}
 
+      /** \brief Construct a DiscreteGridFunctionCurl
+       *
+       * \param gfs shared pointer to the GridFunctionsSpace
+       * \param x_  shared pointer to the coefficients vector
+       */
+      DiscreteGridFunctionCurl(std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x_)
+      : pgfs(gfs)
+      , lfs(*gfs)
+      , lfs_cache(lfs)
+      , x_view(*x_)
+      , xl(gfs->maxLocalSize())
+      , jacobian(gfs->maxLocalSize())
+      , yb(gfs->maxLocalSize())
+      , px(x_)
+      {}
+
       // Evaluate
       void evaluate (const typename Traits::ElementType& e,
                      const typename Traits::DomainType& x,
@@ -388,6 +404,21 @@ namespace Dune {
       , px(stackobject_to_shared_ptr(x_))
       {}
 
+      /** \brief Construct a DiscreteGridFunctionGlobalCurl
+       *
+       * \param gfs shared pointer to the GridFunctionsSpace
+       * \param x_  shared pointer to the coefficients vector
+       */
+      DiscreteGridFunctionGlobalCurl(std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x_)
+      : pgfs(gfs)
+      , lfs(*gfs)
+      , lfs_cache(lfs)
+      , x_view(*x_)
+      , xl(gfs->maxLocalSize())
+      , J(gfs->maxLocalSize())
+      , yb(gfs->maxLocalSize())
+      , px(x_)
+      {}
 
       // Evaluate
       inline void evaluate (const typename Traits::ElementType& e,
@@ -504,6 +535,19 @@ namespace Dune {
         , xl(lfs.size())
       { }
 
+      /** \brief Construct a DiscreteGridFunctionGradient
+       *
+       * \param gfs shared pointer to the GridFunctionsSpace
+       * \param x_  shared pointer to the coefficients vector
+       */
+      DiscreteGridFunctionGradient (std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x_)
+        : pgfs(gfs)
+        , lfs(*gfs)
+        , lfs_cache(lfs)
+        , x_view(*x_)
+        , xl(lfs.size())
+      { }
+
       // Evaluate
       inline void evaluate (const typename Traits::ElementType& e,
                             const typename Traits::DomainType& x,
@@ -598,6 +642,21 @@ namespace Dune {
         , lfs(gfs)
         , lfs_cache(lfs)
         , x_view(x_)
+        , xl(pgfs->maxLocalSize())
+        , yb(pgfs->maxLocalSize())
+      {
+      }
+
+      /** \brief Construct a DiscreteGridFunctionPiola
+       *
+       * \param gfs shared pointer to the GridFunctionsSpace
+       * \param x_  shared pointer to the coefficients vector
+       */
+      DiscreteGridFunctionPiola (std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x_)
+        : pgfs(gfs)
+        , lfs(*gfs)
+        , lfs_cache(lfs)
+        , x_view(*x_)
         , xl(pgfs->maxLocalSize())
         , yb(pgfs->maxLocalSize())
       {
@@ -727,6 +786,23 @@ namespace Dune {
           remap[i] = i + start;
       }
 
+      /** \brief Construct a VectorDiscreteGridFunction
+       *
+       * \param gfs shared pointer to the GridFunctionsSpace
+       * \param x_  shared pointer to the coefficients vector
+       * \param start Number of first child of gfs to use.
+       */
+      VectorDiscreteGridFunction (std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x_,
+                                 std::size_t start = 0)
+        : pgfs(gfs)
+        , lfs(*gfs)
+        , lfs_cache(lfs)
+        , x_view(*x_)
+        , xl(pgfs->maxLocalSize())
+        , yb(pgfs->maxLocalSize())
+      {
+      }
+
       //! construct
       /**
        * \param gfs    GridFunctionSpace.
@@ -749,6 +825,32 @@ namespace Dune {
       , xl(gfs.maxLocalSize())
       , yb(gfs.maxLocalSize())
       ,	px(stackobject_to_shared_ptr(x_))
+      {
+        for(std::size_t i = 0; i < dimR; ++i)
+          remap[i] = remap_[i];
+      }
+
+      /** \brief Construct a VectorDiscreteGridFunction
+       *
+       * \param gfs shared pointer to the GridFunctionsSpace
+       * \param x_  shared pointer to the coefficients vector
+       * \param remap_ Subscriptable entity (i.e. a container, array, or
+       *               pointer) with at least dimR entries.  The relevant
+       *               entries are copied.
+       *
+       * \note If \c i denotes a component of the resulting grid function,
+       *       then remap_[i] denotes the corresponding child of the
+       *       gridfunctionspace.
+       */
+      VectorDiscreteGridFunction (std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x_,
+                                 const Remap &remap_)
+        : pgfs(gfs)
+        , lfs(*gfs)
+        , lfs_cache(lfs)
+        , x_view(*x_)
+        , xl(pgfs->maxLocalSize())
+        , yb(pgfs->maxLocalSize())
+        , px(x_)
       {
         for(std::size_t i = 0; i < dimR; ++i)
           remap[i] = remap_[i];
@@ -840,6 +942,11 @@ namespace Dune {
       typedef typename LBTraits::RangeFieldType RF;
       typedef typename LBTraits::JacobianType JT;
 
+      /** \brief Construct a VectorDiscreteGridFunctionGradient
+       *
+       * \param gfs    GridFunctionSpace.
+       * \param x_     Coefficient vector.
+       */
       VectorDiscreteGridFunctionGradient (const GFS& gfs, const X& x_)
         : pgfs(stackobject_to_shared_ptr(gfs))
         , lfs(gfs)
@@ -847,6 +954,21 @@ namespace Dune {
         , x_view(x_)
         , xl(gfs.maxLocalSize())
         , J(gfs.maxLocalSize())
+      {
+      }
+
+      /** \brief Construct a VectorDiscreteGridFunctionGradient
+       *
+       * \param gfs shared pointer to the GridFunctionsSpace
+       * \param x_  shared pointer to the coefficients vector
+       */
+      VectorDiscreteGridFunctionGradient (std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x_)
+        : pgfs(gfs)
+        , lfs(*gfs)
+        , lfs_cache(lfs)
+        , x_view(*x_)
+        , xl(pgfs->maxLocalSize())
+        , J(pgfs->maxLocalSize())
       {
       }
 
@@ -1019,6 +1141,11 @@ namespace Dune {
       typedef typename LBTraits::RangeFieldType RF;
       typedef typename LBTraits::JacobianType JT;
 
+      /** \brief Construct a VectorDiscreteGridFunctionDiv
+       *
+       * \param gfs    GridFunctionSpace.
+       * \param x_     Coefficient vector.
+       */
       VectorDiscreteGridFunctionDiv(const GFS& gfs, const X& x_)
         : pgfs(stackobject_to_shared_ptr(gfs))
         , lfs(gfs)
@@ -1026,6 +1153,23 @@ namespace Dune {
         , x_view(x_)
         , xl(gfs.maxLocalSize())
         , J(gfs.maxLocalSize())
+      {
+        static_assert(LBTraits::dimDomain == TypeTree::StaticDegree<T>::value,
+                           "dimDomain and number of children has to be the same");
+      }
+
+      /** \brief Construct a VectorDiscreteGridFunctionDiv
+       *
+       * \param gfs shared pointer to the GridFunctionsSpace
+       * \param x_  shared pointer to the coefficients vector
+       */
+      VectorDiscreteGridFunctionDiv (std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x_)
+        : pgfs(gfs)
+        , lfs(*gfs)
+        , lfs_cache(lfs)
+        , x_view(*x_)
+        , xl(pgfs->maxLocalSize())
+        , J(pgfs->maxLocalSize())
       {
         static_assert(LBTraits::dimDomain == TypeTree::StaticDegree<T>::value,
                            "dimDomain and number of children has to be the same");
@@ -1110,11 +1254,19 @@ namespace Dune {
     {
       typedef T GFS;
     public :
+
       VectorDiscreteGridFunctionCurl(const GFS& gfs, const X& x)
       {
         static_assert(AlwaysFalse<typename GFS::Traits::GridViewType>::value,
                       "Curl computation can only be done in two or three dimensions");
       }
+
+      VectorDiscreteGridFunctionCurl(std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x_)
+      {
+        static_assert(AlwaysFalse<typename GFS::Traits::GridViewType>::value,
+                      "Curl computation can only be done in two or three dimensions");
+      }
+
     };
 
     /** \brief Compute curl of vector-valued functions (3D).
@@ -1170,6 +1322,11 @@ namespace Dune {
       typedef typename LBTraits::RangeFieldType RF;
       typedef typename LBTraits::JacobianType JT;
 
+      /** \brief Construct a VectorDiscreteGridFunctionCurl
+       *
+       * \param gfs    GridFunctionSpace.
+       * \param x_     Coefficient vector.
+       */
       VectorDiscreteGridFunctionCurl(const GFS& gfs, const X& x_)
         : pgfs(stackobject_to_shared_ptr(gfs))
         , lfs(gfs)
@@ -1177,6 +1334,23 @@ namespace Dune {
         , x_view(x_)
         , xl(gfs.maxLocalSize())
         , J(gfs.maxLocalSize())
+      {
+        static_assert(LBTraits::dimDomain == TypeTree::StaticDegree<T>::value,
+                           "dimDomain and number of children has to be the same");
+      }
+
+      /** \brief Construct a VectorDiscreteGridFunctionCurl
+       *
+       * \param gfs shared pointer to the GridFunctionsSpace
+       * \param x_  shared pointer to the coefficients vector
+       */
+      VectorDiscreteGridFunctionCurl (std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x_)
+        : pgfs(gfs)
+        , lfs(*gfs)
+        , lfs_cache(lfs)
+        , x_view(*x_)
+        , xl(pgfs->maxLocalSize())
+        , J(pgfs->maxLocalSize())
       {
         static_assert(LBTraits::dimDomain == TypeTree::StaticDegree<T>::value,
                            "dimDomain and number of children has to be the same");
@@ -1298,6 +1472,11 @@ namespace Dune {
       typedef typename LBTraits::RangeFieldType RF;
       typedef typename LBTraits::JacobianType JT;
 
+      /** \brief Construct a VectorDiscreteGridFunctionCurl
+       *
+       * \param gfs    GridFunctionSpace.
+       * \param x_     Coefficient vector.
+       */
       VectorDiscreteGridFunctionCurl(const GFS& gfs, const X& x_)
         : pgfs(stackobject_to_shared_ptr(gfs))
         , lfs(gfs)
@@ -1310,6 +1489,23 @@ namespace Dune {
                            "dimDomain and number of children has to be the same");
       }
 
+      /** \brief Construct a VectorDiscreteGridFunctionCurl
+       *
+       * \param gfs shared pointer to the GridFunctionsSpace
+       * \param x_  shared pointer to the coefficients vector
+       */
+      VectorDiscreteGridFunctionCurl (std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x_)
+        : pgfs(gfs)
+        , lfs(*gfs)
+        , lfs_cache(lfs)
+        , x_view(*x_)
+        , xl(pgfs->maxLocalSize())
+        , J(pgfs->maxLocalSize())
+      {
+        static_assert(LBTraits::dimDomain == TypeTree::StaticDegree<T>::value,
+                           "dimDomain and number of children has to be the same");
+      }
+      
       inline void evaluate(const typename Traits::ElementType& e,
                            const typename Traits::DomainType& x,
                            typename Traits::RangeType& y) const
