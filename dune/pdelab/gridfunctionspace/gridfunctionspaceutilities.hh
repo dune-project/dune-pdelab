@@ -416,7 +416,6 @@ namespace Dune {
       , x_view(*x_)
       , xl(gfs->maxLocalSize())
       , J(gfs->maxLocalSize())
-      , yb(gfs->maxLocalSize())
       , px(x_)
       {}
 
@@ -1505,7 +1504,7 @@ namespace Dune {
         static_assert(LBTraits::dimDomain == TypeTree::StaticDegree<T>::value,
                            "dimDomain and number of children has to be the same");
       }
-      
+
       inline void evaluate(const typename Traits::ElementType& e,
                            const typename Traits::DomainType& x,
                            typename Traits::RangeType& y) const
