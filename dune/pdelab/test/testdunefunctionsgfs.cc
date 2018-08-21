@@ -195,9 +195,8 @@ void solvePoissonProblem()
   cg.apply(x, rhs, statistics);
 
   // Test whether we can refine the grid and carry a function along.
-  // Of course we cannot: we haven't marked anything, and we are using
-  // YaspGrid anyway.  But let's make sure we can at least call the method.
   VectorContainer xContainer(gfs,x);
+  grid.mark(1, *grid.leafGridView().template begin<0>());
   PDELab::adapt_grid(grid, gfs, xContainer, 2 );
 
   // Output result to VTK file
