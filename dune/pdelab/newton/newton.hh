@@ -349,7 +349,7 @@ namespace Dune
                   // the undamped version is also integrated in here
                   this->line_search(*this->z_, *this->r_);
                 }
-              catch (NewtonLineSearchError)
+              catch (NewtonLineSearchError&)
                 {
                   if (this->reassembled_)
                     throw;
@@ -669,7 +669,7 @@ namespace Dune
             try {
               this->defect(r);
             }
-             catch (NewtonDefectError)
+             catch (NewtonDefectError&)
               {
                 if (this->verbosity_level_ >= 4)
                   std::cout << "          NaNs detected" << std::endl;
