@@ -11,6 +11,7 @@
 
 #include <dune/pdelab/backend/istl/geneo/geneobasis.hh>
 #include <dune/pdelab/backend/istl/geneo/liptonbabuskabasis.hh>
+#include <dune/pdelab/backend/istl/geneo/rndgeneobasis.hh>
 
 
 #endif // DUNE_PDELAB_BACKEND_ISTL_GENEO_GENEO_HH

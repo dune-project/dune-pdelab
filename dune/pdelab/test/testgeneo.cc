@@ -276,6 +276,8 @@ void driver(std::string basis_type, std::string part_unity_type) {
   std::shared_ptr<Dune::PDELab::SubdomainBasis<V> > subdomain_basis;
   if (basis_type == "geneo")
     subdomain_basis = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb);
+  else if (basis_type == "rndgeneo")
+    subdomain_basis = std::make_shared<Dune::PDELab::RndGenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb);
   else if (basis_type == "lipton_babuska")
     subdomain_basis = std::make_shared<Dune::PDELab::LiptonBabuskaBasis<GFS,M_EXTERIOR,V,V,1> >(gfs, AF_exterior, AF_ovlp, -1, *part_unity, nev, nev_arpack);
   else if (basis_type == "part_unity") // We can't test this one, it does not lead to sufficient error reduction. Let's instantiate it anyway for test's sake.
@@ -319,9 +321,11 @@ int main(int argc, char **argv)
     // initialize MPI, finalize is done automatically on exit
     Dune::MPIHelper::instance(argc,argv);
 
-    driver("geneo", "standard");
+    /*driver("geneo", "standard");
     driver("geneo", "sarkis");
-    driver("lipton_babuska", "standard");
+    driver("lipton_babuska", "standard");*/
+    driver("geneo", "standard");
+    driver("rndgeneo", "standard");
 
     return 0;
   }
