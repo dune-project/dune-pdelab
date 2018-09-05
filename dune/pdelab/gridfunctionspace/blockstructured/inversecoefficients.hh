@@ -67,7 +67,7 @@ namespace Dune{
 
           std::size_t offset = 0;
           for (int c = 0; c < d + 1; ++c) {
-            for (int s = 0; s < subentitySizes[c].size(); ++s) {
+            for (std::size_t s = 0; s < subentitySizes[c].size(); ++s) {
               subentityOffset[c][s] = offset;
               offset += subentitySizes[c][s];
             }

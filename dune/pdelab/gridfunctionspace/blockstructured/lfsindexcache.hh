@@ -62,8 +62,8 @@ namespace Dune{
         map_dof_indices_to_container_indices(DOFLeafIterator dof_leaf_begin,
                                              ContainerLeafIterator container_leaf_begin,
                                              std::size_t dof_index_tail_length = 0)
-            : dof_leaf(dof_leaf_begin)
-            , container_leaf(container_leaf_begin), dof_tail_size(0)
+            : dof_leaf(dof_leaf_begin), dof_tail_size(0)
+            , container_leaf(container_leaf_begin)
         {}
 
 
