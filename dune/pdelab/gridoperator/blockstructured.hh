@@ -56,6 +56,8 @@ namespace Dune{
               local_assembler(lop_, dof_exchanger) {}
 
 
+        LocalAssembler & localAssembler() const { return local_assembler; }
+
         //! Assemble residual
         void residual(const typename Base::Domain &x, typename Base::Range &r) const {
           auto &residual_engine = local_assembler.localResidualAssemblerEngine(r, x);
