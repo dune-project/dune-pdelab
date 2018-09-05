@@ -50,7 +50,7 @@ namespace Dune {
         typedef typename BasisSwitch::Range RT;
         enum { dim = BasisSwitch::dimDomainLocal };
       public:
-        typedef WrappedLocalShapeFunction<Imp> Traits;
+        typedef WrappedLocalShapeFunctionTraits<Imp> Traits;
         WrappedLocalShapeFunction (const Imp& imp, int comp) :
           _imp(imp), _comp(comp) {}
 

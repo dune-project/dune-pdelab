@@ -284,7 +284,7 @@ namespace Dune {
 
           iterator end()
           {
-            return iterator(*this,nrows(),0);
+            return ncols() > 0 ? iterator(*this, nrows(), 0) : begin();
           }
 
           //! Default constructor

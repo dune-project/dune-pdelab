@@ -6,8 +6,6 @@ dune_add_test(SOURCES testanalytic.cc)
 
 dune_add_test(SOURCES testbindtime.cc)
 
-dune_add_test(SOURCES testclock.cc)
-
 dune_add_test(NAME testcomplexnumbers-istl
               SOURCES testcomplexnumbers.cc
               COMPILE_DEFINITIONS SUPERLU_NTYPE=3
@@ -22,7 +20,8 @@ dune_add_test(SOURCES testconstraints.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 
 dune_add_test(SOURCES testdunefunctionsgfs.cc
-              CMAKE_GUARD dune-functions_FOUND)
+              MPI_RANKS 1 2 4
+              TIMEOUT 300)
 
 dune_add_test(SOURCES testelectrodynamic.cc
               CMD_ARGS "${CMAKE_CURRENT_SOURCE_DIR}/grids/circ_in_rect.msh"
@@ -56,6 +55,8 @@ dune_add_test(SOURCES testinstationaryfastdgassembler.cc)
 
 dune_add_test(SOURCES testlocalfunctionspace.cc)
 
+dune_add_test(SOURCES testlocalmatrix.cc)
+
 dune_add_test(SOURCES testlocaloperatorinterface.cc)
 
 dune_add_test(SOURCES testpk2dinterpolation.cc
@@ -84,8 +85,6 @@ dune_add_test(SOURCES testutilities.cc)
 
 dune_add_test(SOURCES testinterpolate.cc)
 
-dune_add_test(SOURCES test-instationary-with-boundary-constraints.cc)
-
 dune_add_test(SOURCES testnumericaljacobianmethods.cc)
 
 dune_add_test(SOURCES testrtfem.cc
@@ -101,7 +100,12 @@ dune_add_test(SOURCES testpermutedordering.cc)
 dune_add_test(SOURCES testsimplebackend.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 
-dune_add_test(SOURCES test-transport-ccfv.cc)
+
+if(NOT MINGW)
+  dune_add_test(SOURCES testclock.cc)
+  dune_add_test(SOURCES test-instationary-with-boundary-constraints.cc)
+  dune_add_test(SOURCES test-transport-ccfv.cc)
+endif()
 
 
 if(EIGEN3_FOUND)
@@ -170,6 +174,8 @@ dune_add_test(SOURCES testranktransmission.cc
               TIMEOUT 300)
 
 dune_add_test(SOURCES testl2.cc)
+
+dune_add_test(SOURCES test-blocked-istl-ordering.cc)
 
 exclude_from_headercheck(
   gridexamples.hh
