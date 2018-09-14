@@ -198,6 +198,7 @@ void solvePoissonProblem()
   VectorContainer xContainer(gfs,x);
   grid.mark(1, *grid.leafGridView().template begin<0>());
   PDELab::adapt_grid(grid, gfs, xContainer, 2 );
+  basis->update(grid.leafGridView());
 
   // Output result to VTK file
   auto pressureFunction = Functions::makeDiscreteGlobalBasisFunction<double>(*basis,x);
@@ -206,6 +207,9 @@ void solvePoissonProblem()
   vtkWriter.addVertexData(pressureFunction, VTK::FieldInfo("pressure", VTK::FieldInfo::Type::scalar, 1));
   vtkWriter.write("testdunefunctionsgfs-poisson");
 
+  // Reassemble the Dirichlet constraints on the refined grid
+  constraintsContainer.clear();
+  PDELab::constraints(bctype,gfs,constraintsContainer);
 }
 
 void solveParallelPoissonProblem()
