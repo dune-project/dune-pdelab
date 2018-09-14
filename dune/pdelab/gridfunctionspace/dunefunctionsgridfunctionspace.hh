@@ -126,6 +126,7 @@ namespace Dune {
               }
             }
 
+          private:
             std::shared_ptr<DFBasis> _basis;
 
             mutable std::map<GeometryType, std::shared_ptr<typename DFBasis::LocalView> > geometryTypeToLocalView_;
