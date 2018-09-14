@@ -95,6 +95,10 @@ namespace Dune {
               using FiniteElementType = FiniteElement;
             };
 
+            FEM(const std::shared_ptr<DFBasis>& basis)
+            : _basis(basis)
+            {}
+
             /** \brief Get local basis functions for entity
              *
              * This method makes a few short-cuts.  The problem is that dune-functions bases return LocalFiniteElement objects
@@ -439,6 +443,7 @@ namespace Dune {
         GridFunctionSpace (std::shared_ptr<DFBasis> df_basis, std::shared_ptr<CE> ce)
           : _es(df_basis->gridView(), Traits::EntitySet::allCodims())
           , _df_basis(std::move(df_basis))
+          , _finiteElementMap(_df_basis)
           , _pce(std::move(ce))
           , _ordering(*this)
         {}
@@ -446,6 +451,7 @@ namespace Dune {
         GridFunctionSpace (std::shared_ptr<DFBasis> df_basis)
           : _es(df_basis->gridView(), Traits::EntitySet::allCodims())
           , _df_basis(std::move(df_basis))
+          , _finiteElementMap(_df_basis)
           , _pce(std::make_shared<CE>())
           , _ordering(*this)
         {}
