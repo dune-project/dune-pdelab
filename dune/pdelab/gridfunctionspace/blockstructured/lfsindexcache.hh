@@ -38,8 +38,9 @@ namespace Dune{
             dof_tail_size--;
           }
           while (dof_stack.top() != dof_leaf) {
-            Dune::PDELab::DOFIndexViewIterator dof_pos(dof_stack.top()->cbegin(), dof_tail_size);
-            Dune::PDELab::DOFIndexViewIterator dof_end(dof_stack.top()->cend(), dof_tail_size);
+            using const_iterator = decltype(dof_stack.top()->cbegin());
+            Dune::PDELab::DOFIndexViewIterator<const_iterator> dof_pos(dof_stack.top()->cbegin(), dof_tail_size);
+            Dune::PDELab::DOFIndexViewIterator<const_iterator> dof_end(dof_stack.top()->cend(), dof_tail_size);
             ordering.map_lfs_indices(dof_pos, dof_end, container_stack.top()->begin());
             dof_stack.top()++;
             container_stack.top()++;
@@ -154,7 +155,8 @@ namespace Dune{
         void initializeLocalCoefficients() {
           TypeTree::forEachLeafNode(Base::localFunctionSpace(), [this](auto &Node, auto &TreePath) {
             const auto &fe = Node.finiteElement();
-            inverseLocalCoefficientsMap.try_emplace(fe.size(), fe);
+            if(inverseLocalCoefficientsMap.find(fe.size()) == inverseLocalCoefficientsMap.end())
+              inverseLocalCoefficientsMap.emplace(fe.size(), fe);
           });
 
           TypeTree::forEachLeafNode(Base::localFunctionSpace(), [this](auto &Node, auto &TreePath) {
