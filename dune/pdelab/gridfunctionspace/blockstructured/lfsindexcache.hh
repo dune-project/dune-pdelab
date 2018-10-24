@@ -156,7 +156,7 @@ namespace Dune{
           TypeTree::forEachLeafNode(Base::localFunctionSpace(), [this](auto &Node, auto &TreePath) {
             const auto &fe = Node.finiteElement();
             if(inverseLocalCoefficientsMap.find(fe.size()) == inverseLocalCoefficientsMap.end())
-              inverseLocalCoefficientsMap.emplace(fe.size(), fe);
+              inverseLocalCoefficientsMap.emplace(fe.size(), InverseQkLocalCoefficients<d>(fe));
           });
 
           TypeTree::forEachLeafNode(Base::localFunctionSpace(), [this](auto &Node, auto &TreePath) {
