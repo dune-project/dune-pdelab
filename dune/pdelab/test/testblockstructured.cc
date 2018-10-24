@@ -284,34 +284,29 @@ int main(int argc, char **argv) {
     using Grid2d = Dune::YaspGrid<2>;
     using Grid3d = Dune::YaspGrid<3>;
 
+    Grid1d grid1({1}, {1});
     Grid2d grid2({1, 1}, {1, 1});
-    TestData td2(grid2.leafGridView());
+    Grid3d grid3({1, 1, 1}, {1, 1, 1});
+
+    TestData<typename Grid1d::LeafGridView> td1(grid1.leafGridView());
+    TestData<typename Grid2d::LeafGridView> td2(grid2.leafGridView());
+    TestData<typename Grid3d::LeafGridView> td3(grid3.leafGridView());
+
+    runAllTests(td1);
     runAllTests(td2);
-//
-//    Grid1d grid1({1}, {1});
-//    Grid2d grid2({1, 1}, {1, 1});
-//    Grid3d grid3({1, 1, 1}, {1, 1, 1});
-//
-//    TestData td1(grid1.leafGridView());
-//    TestData td2(grid2.leafGridView());
-//    TestData td3(grid3.leafGridView());
-//
-//    runAllTests(td1);
-//    runAllTests(td2);
-//    runAllTests(td3);
-//
+    runAllTests(td3);
+
 //#if HAVE_DUNE_ALUGRID
 //    using GridPk2d = Dune::ALUGrid<2, 2, Dune::simplex, Dune::conforming, Dune::ALUGridMPIComm>;
 //    using GridPk3d = Dune::ALUGrid<3, 3, Dune::simplex, Dune::conforming, Dune::ALUGridMPIComm>;
 //    std::shared_ptr<GridPk2d> gridPk2d(Dune::StructuredGridFactory<GridPk2d>::createSimplexGrid({0,0}, {1,1}, std::array<int,2>{1,1}));
 //    std::shared_ptr<GridPk3d> gridPk3d(Dune::StructuredGridFactory<GridPk3d>::createSimplexGrid({0,0,0}, {1,1,1}, std::array<int,3>{1,1,1}));
 //
-//    TestDataPk tdPk2d(gridPk2d->leafGridView());
-//    TestDataPk tdPk3d(gridPk3d->leafGridView());
+//    TestDataPk<typename GridPk2d::LeafGridView> tdPk2d(gridPk2d->leafGridView());
+//    TestDataPk<typename GridPk3d::LeafGridView> tdPk3d(gridPk3d->leafGridView());
 //
 //    runAllTests(tdPk2d);
 //    runAllTests(tdPk3d);
-//
 //#endif
   }
   catch (Dune::Exception &e) {
