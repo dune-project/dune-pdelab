@@ -198,7 +198,6 @@ void solvePoissonProblem()
   VectorContainer xContainer(gfs,x);
   grid.mark(1, *grid.leafGridView().template begin<0>());
   PDELab::adapt_grid(grid, gfs, xContainer, 2 );
-  basis->update(grid.leafGridView());
 
   // Output result to VTK file
   auto pressureFunction = Functions::makeDiscreteGlobalBasisFunction<double>(*basis,x);
