@@ -251,7 +251,7 @@ namespace Dune {
             for (size_type codim=0; codim<=dim; codim++)
             {
               _contains[codim] = false;
-              _contains[codim] = true;
+              _fixedSize[codim] = true;
               for (auto&& type : indexSet.types(codim))
               {
                 const auto& dofs = dofsPerEntity[GlobalGeometryTypeIndex::index(type)];
