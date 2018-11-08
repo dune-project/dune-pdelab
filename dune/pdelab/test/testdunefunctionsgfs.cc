@@ -207,7 +207,6 @@ void solvePoissonProblem()
   vtkWriter.write("testdunefunctionsgfs-poisson");
 
   // Reassemble the Dirichlet constraints on the refined grid
-  constraintsContainer.clear();
   PDELab::constraints(bctype,gfs,constraintsContainer);
 }
 
