@@ -222,9 +222,9 @@ void solveParallelPoissonProblem()
   typedef GridType::ctype DF;
   FieldVector<DF,dim> L = {1.0, 1.0};
   std::array<int,dim> N = {16, 16};
-  std::bitset<dim> B(false);
+  std::bitset<dim> periodic(false);
   int overlap=1;
-  GridType grid(L,N,B,overlap,MPIHelper::getCollectiveCommunication());
+  GridType grid(L,N,periodic,overlap,MPIHelper::getCollectiveCommunication());
   grid.refineOptions(false); // keep overlap in cells
   grid.globalRefine(refinement);
   using GV = GridType::LeafGridView;
