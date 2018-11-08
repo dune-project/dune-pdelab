@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
                 << std::endl;
     }
     catch(Dune::PDELab::ClockError &e) {
-      std::cerr << "  Cought ClockError: " << e << std::endl;
+      std::cerr << "  Caught ClockError: " << e << std::endl;
       result = 1;
     }
 
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
                 << std::endl;
     }
     catch(Dune::PDELab::ClockError &e) {
-      std::cerr << "  Cought ClockError: " << e << std::endl;
+      std::cerr << "  Caught ClockError: " << e << std::endl;
       result = 1;
     }
 
