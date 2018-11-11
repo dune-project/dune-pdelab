@@ -126,6 +126,11 @@ namespace Dune {
               }
             }
 
+            void update()
+            {
+              geometryTypeToLocalView_.clear();
+            }
+
           private:
             const std::shared_ptr<DFBasis> _basis;
 
@@ -175,6 +180,65 @@ namespace Dune {
           LeafOrdering(const GridFunctionSpace& gfs)
             : _gfs(gfs)
           {
+            update();
+          }
+
+          size_type size() const
+          {
+            return _gfs.basis().size();
+          }
+
+          /** \brief Number of degrees of freedom per entity */
+          size_type size(const typename DOFIndex::EntityIndex& entity) const
+          {
+            return _containerIndices[entity[0]][entity[1]].size();
+          }
+
+          size_type maxLocalSize() const
+          {
+            return _gfs.basis().localView().maxSize();
+          }
+
+          /** \brief True if there is at least one entity of the given codim that has a dof
+           */
+          bool contains(typename Traits::SizeType codim) const
+          {
+            return _contains[codim];
+          }
+
+          /** \brief True if all entities of the given codimension have the same number of dofs
+           */
+          bool fixedSize(typename Traits::SizeType codim) const
+          {
+            return _fixedSize[codim];
+          }
+
+          // child_index: Steffen sagt: unklar, im Zweifel einfach ignorieren
+          template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
+          typename Traits::SizeType
+          extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& entityIndex,
+                                 typename Traits::SizeType child_index,
+                                 CIOutIterator ci_out, const CIOutIterator ci_end,
+                                 DIOutIterator dummy) const
+          {
+            for (size_type i=0; i<_containerIndices[entityIndex[0]][entityIndex[1]].size(); i++)
+            {
+              *ci_out = _containerIndices[entityIndex[0]][entityIndex[1]][i];
+              ci_out++;
+            }
+
+            return _containerIndices[entityIndex[0]][entityIndex[1]].size();
+          }
+
+          ContainerIndex containerIndex(const DOFIndex& i) const
+          {
+            return _containerIndices[i.entityIndex()[0]][i.entityIndex()[1]][i.treeIndex()[0]];
+          }
+
+          void update()
+          {
+            _containerIndices.clear();
+
             constexpr auto dim = GV::dimension;
             const auto  gridView = _gfs.gridView();
             const auto& indexSet = gridView.indexSet();
@@ -271,58 +335,6 @@ namespace Dune {
             }
           }
 
-          size_type size() const
-          {
-            return _gfs.basis().size();
-          }
-
-          /** \brief Number of degrees of freedom per entity */
-          size_type size(const typename DOFIndex::EntityIndex& entity) const
-          {
-            return _containerIndices[entity[0]][entity[1]].size();
-          }
-
-          size_type maxLocalSize() const
-          {
-            return _gfs.basis().localView().maxSize();
-          }
-
-          /** \brief True if there is at least one entity of the given codim that has a dof
-           */
-          bool contains(typename Traits::SizeType codim) const
-          {
-            return _contains[codim];
-          }
-
-          /** \brief True if all entities of the given codimension have the same number of dofs
-           */
-          bool fixedSize(typename Traits::SizeType codim) const
-          {
-            return _fixedSize[codim];
-          }
-
-          // child_index: Steffen sagt: unklar, im Zweifel einfach ignorieren
-          template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
-          typename Traits::SizeType
-          extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& entityIndex,
-                                 typename Traits::SizeType child_index,
-                                 CIOutIterator ci_out, const CIOutIterator ci_end,
-                                 DIOutIterator dummy) const
-          {
-            for (size_type i=0; i<_containerIndices[entityIndex[0]][entityIndex[1]].size(); i++)
-            {
-              *ci_out = _containerIndices[entityIndex[0]][entityIndex[1]][i];
-              ci_out++;
-            }
-
-            return _containerIndices[entityIndex[0]][entityIndex[1]].size();
-          }
-
-          ContainerIndex containerIndex(const DOFIndex& i) const
-          {
-            return _containerIndices[i.entityIndex()[0]][i.entityIndex()[1]][i.treeIndex()[0]];
-          }
-
         private:
 
           const GridFunctionSpace& _gfs;
@@ -405,6 +417,11 @@ namespace Dune {
                                  CIOutIterator ci_out, const CIOutIterator ci_end) const
           {
             return 0;
+          }
+
+          void update()
+          {
+            this->child(Indices::_0).update();
           }
 
         private:
@@ -522,6 +539,9 @@ namespace Dune {
         {
           _es.update(force);
           _df_basis->update(_es.gridView());
+          _finiteElementMap.update();
+          // Apparently there is no need to update the constraints assembler '_pce';
+          _ordering.update();
         }
 
         const std::string& name() const
