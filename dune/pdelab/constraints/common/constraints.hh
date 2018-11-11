@@ -765,7 +765,7 @@ namespace Dune {
      * \param p       The condition parameters
      * \param gfs     The gridfunctionspace
      * \param cg      The constraints container
-     * \param verbose Print information about the constaints at the end
+     * \param verbose Print information about the constraints at the end
      *
      * \note For backwards compatibility you can implement the parameter tree as an Implemention Dune::PDELab::FunctionInterface
      *
