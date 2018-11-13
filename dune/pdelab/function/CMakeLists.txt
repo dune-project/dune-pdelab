@@ -1,4 +1,6 @@
 install(FILES
+              bindtime.hh
+              discretegridviewfunction.hh
               localfunction.hh
               localfunctionhelper.hh
               oldinterfaceadapter.hh
