@@ -47,6 +47,7 @@ namespace Dune {
      * Note:
      *  - This formulation is valid for velocity fields which are non-divergence free.
      *  - Outflow boundary conditions should only be set on the outflow boundary
+     *  - This implementiation does not work with polynomial degree 0. Use ConvectionDiffusionCCFV in this case.
      *
      * \tparam T model of ConvectionDiffusionParameterInterface
      */
