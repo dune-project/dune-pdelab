@@ -41,12 +41,12 @@ namespace Dune {
 
       std::size_t size(GeometryType gt) const
       {
-        return gt == _gt ? Dune::MonomImp::Size<d,p>::val : 0;
+        return gt == _gt ? MonomialLocalBasis<D,R,d,p>::size() : 0;
       }
 
       static constexpr std::size_t maxLocalSize()
       {
-        return MonomImp::Size<d,p>::val;
+        return MonomialLocalBasis<D,R,d,p>::size();
       }
 
     private:
