@@ -195,9 +195,8 @@ void solvePoissonProblem()
   cg.apply(x, rhs, statistics);
 
   // Test whether we can refine the grid and carry a function along.
-  // Of course we cannot: we haven't marked anything, and we are using
-  // YaspGrid anyway.  But let's make sure we can at least call the method.
   VectorContainer xContainer(gfs,x);
+  grid.mark(1, *grid.leafGridView().template begin<0>());
   PDELab::adapt_grid(grid, gfs, xContainer, 2 );
 
   // Output result to VTK file
@@ -207,6 +206,8 @@ void solvePoissonProblem()
   vtkWriter.addVertexData(pressureFunction, VTK::FieldInfo("pressure", VTK::FieldInfo::Type::scalar, 1));
   vtkWriter.write("testdunefunctionsgfs-poisson");
 
+  // Reassemble the Dirichlet constraints on the refined grid
+  PDELab::constraints(bctype,gfs,constraintsContainer);
 }
 
 void solveParallelPoissonProblem()
@@ -221,9 +222,9 @@ void solveParallelPoissonProblem()
   typedef GridType::ctype DF;
   FieldVector<DF,dim> L = {1.0, 1.0};
   std::array<int,dim> N = {16, 16};
-  std::bitset<dim> B(false);
+  std::bitset<dim> periodic(false);
   int overlap=1;
-  GridType grid(L,N,B,overlap,MPIHelper::getCollectiveCommunication());
+  GridType grid(L,N,periodic,overlap,MPIHelper::getCollectiveCommunication());
   grid.refineOptions(false); // keep overlap in cells
   grid.globalRefine(refinement);
   using GV = GridType::LeafGridView;
