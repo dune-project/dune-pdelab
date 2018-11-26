@@ -257,7 +257,7 @@ namespace Dune {
       template<typename LFSV, typename LFSU>
       void accumulate(const LFSV& lfsv, size_type i, const LFSU& lfsu, size_type j, value_type value)
       {
-        this->_data[lfsv.localIndex(i) * colIndexCache().size() + lfsu.localIndex(j)] += value;
+        this->_data[lfsv.localIndex(i) * colIndexCache().size() + lfsu.localIndex(j)] += weight_ * value;
       }
 
       template<typename LFSV, typename LFSU>

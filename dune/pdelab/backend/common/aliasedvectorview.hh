@@ -149,7 +149,7 @@ namespace Dune {
       template<typename LFS>
       void accumulate(const LFS& lfs, size_type n, value_type v)
       {
-        this->_data[lfs.localIndex(n)] += v;
+        this->_data[lfs.localIndex(n)] += weight_ * v;
       }
 
       template<typename LFS>
