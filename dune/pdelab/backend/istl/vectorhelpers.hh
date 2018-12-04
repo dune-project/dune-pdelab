@@ -78,7 +78,7 @@ namespace Dune {
       template<typename Vector>
       void resize_vector(tags::block_vector, Vector& v, std::size_t size, bool copy_values)
       {
-        v.resize(size,copy_values);
+        v.resize(size);
       }
 
       template<typename Vector>
