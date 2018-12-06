@@ -29,7 +29,7 @@ namespace Dune {
 
 #else
 
-  template<typename F>
+  template<typename F, typename Allocator>
   class DynamicVector;
 
 #endif

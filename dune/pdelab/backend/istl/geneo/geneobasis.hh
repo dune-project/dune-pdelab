@@ -40,8 +40,10 @@ namespace Dune {
        * \param verbose Verbosity value.
        */
       GenEOBasis(const GFS& gfs, const M& AF_exterior, const M& AF_ovlp, const double eigenvalue_threshold, X& part_unity,
-                int& nev, int nev_arpack = -1, double shift = 0.001, bool add_part_unity = false, int verbose = 0) {
+                int& nev, int nev_arpack = -1, double shift = 0.001, bool add_part_unity = false, int verbose = 0, double eps = 0.0) {
         using Dune::PDELab::Backend::native;
+
+        Dune::Timer timer;
 
         if (nev_arpack == -1)
           nev_arpack = std::max(nev, 2);
@@ -56,14 +58,18 @@ namespace Dune {
           }
         }
 
+        if (verbose > 0) std::cout << "X * A0 * X: " << timer.elapsed() << std::endl; timer.reset();
+
         // Setup Arpack for solving generalized eigenproblem
         ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, X> arpack(native(AF_exterior));
-        double eps = 0.0;
+        //double eps = 0.0;
 
         std::vector<double> eigenvalues(nev_arpack,0.0);
         std::vector<X> eigenvectors(nev_arpack,X(gfs,0.0));
 
         arpack.computeGenNonSymMinMagnitude(native(ovlp_mat), eps, eigenvectors, eigenvalues, shift);
+
+        if (verbose > 0) std::cout << "Arpack: " << timer.elapsed() << std::endl; timer.reset();
 
         // Count eigenvectors below threshold
         int cnt = -1;
@@ -95,10 +101,13 @@ namespace Dune {
             );
         }
 
+        if (verbose > 0) std::cout << "copy: " << timer.elapsed() << std::endl; timer.reset();
+
         // Normalize basis vectors
         for (auto& v : this->local_basis) {
           *v *= 1.0 / v->two_norm2();
         }
+
 
         // Optionally add partition of unity to eigenvectors
         // Only if there is no near-zero eigenvalue (that usually already corresponds to a partition of unity!)
@@ -106,6 +115,7 @@ namespace Dune {
           this->local_basis.insert (this->local_basis.begin(), std::make_shared<X>(part_unity));
           this->local_basis.pop_back();
         }
+        if (verbose > 0) std::cout << "normalization, write out: " << timer.elapsed() << std::endl; timer.reset();
       }
     };
 

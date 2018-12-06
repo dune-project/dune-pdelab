@@ -40,6 +40,9 @@ dune_add_test(SOURCES testheat-instationary-periodic.cc)
 dune_add_test(SOURCES testelasticity.cc)
 
 if(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
+  dune_symlink_to_source_files(FILES config.ini)
+  dune_symlink_to_source_files(FILES plot.py)
+
   dune_add_test(SOURCES testgeneo.cc
                 MPI_RANKS 2
                 TIMEOUT 300)

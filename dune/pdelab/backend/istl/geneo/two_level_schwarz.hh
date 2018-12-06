@@ -14,7 +14,7 @@ namespace Dune {
       /*!
       * \brief Two level overlapping Schwarz preconditioner with arbitrary coarse space.
       */
-      template<class GFS, class M, class X, class Y>
+      template<class GFS, class M, class M_EXTERIOR, class X, class Y>
       class TwoLevelOverlappingAdditiveSchwarz
         : public Dune::Preconditioner<X,Y>
       {
@@ -37,10 +37,12 @@ namespace Dune {
           \param n The number of iterations to perform.
           \param w The relaxation factor.
         */
-        TwoLevelOverlappingAdditiveSchwarz (const GFS& gfs, const M& AF, std::shared_ptr<CoarseSpace<X> > coarse_space, bool coarse_space_active = true, int verbosity = 0)
+        TwoLevelOverlappingAdditiveSchwarz (const GFS& gfs, const M& AF, const M_EXTERIOR& AF_exterior, std::shared_ptr<CoarseSpace<X> > coarse_space, bool coarse_space_active = true, bool hybrid = false, int verbosity = 0)
           : verbosity_(verbosity),
+            hybrid_(hybrid),
             coarse_space_active_(coarse_space_active),
             gfs_(gfs),
+            AF_exterior_(AF_exterior),
             solverf_(Dune::PDELab::Backend::native(AF),false),
             coarse_space_(coarse_space),
             coarse_solver_ (*coarse_space_->get_coarse_system()),
@@ -63,18 +65,22 @@ namespace Dune {
         */
         virtual void apply (X& v, const Y& d)
         {
-          // first the subdomain solves
-          Y b(d); // need copy, since solver overwrites right hand side
-          Dune::InverseOperatorResult result;
-          solverf_.apply(v,b,result);
 
           if (!coarse_space_active_) {
+            // first the subdomain solves
+            Y b(d); // need copy, since solver overwrites right hand side
+            Dune::InverseOperatorResult result;
+            solverf_.apply(v,b,result);
 
             Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs_,v);
             // Just add local results and return in 1-level Schwarz case
             gfs_.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
 
-          } else {
+          } else if (!hybrid_) {
+            // first the subdomain solves
+            Y b(d); // need copy, since solver overwrites right hand side
+            Dune::InverseOperatorResult result;
+            solverf_.apply(v,b,result);
 
             gfs_.gridView().comm().barrier();
             Dune::Timer timer_coarse_solve;
@@ -82,7 +88,6 @@ namespace Dune {
             coarse_space_->restrict (d, coarse_defect_);
 
             // Solve coarse system
-            Dune::InverseOperatorResult result;
             COARSE_V v0(coarse_space_->basis_size(),coarse_space_->basis_size());
             coarse_solver_.apply(v0, coarse_defect_, result);
 
@@ -95,6 +100,80 @@ namespace Dune {
 
             Dune::PDELab::AddDataHandle<GFS,X> result_addh(gfs_,v);
             gfs_.gridView().communicate(result_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
+          } else {
+
+            using PDELab::Backend::native;
+
+            gfs_.gridView().comm().barrier();
+            Dune::Timer timer_coarse_solve;
+
+            coarse_space_->restrict (d, coarse_defect_);
+
+            X prolongated_defect(gfs_, 0.0);
+            coarse_space_->prolongate(coarse_defect_, prolongated_defect);
+
+            // Solve coarse system
+            Dune::InverseOperatorResult result;
+            COARSE_V v0(coarse_space_->basis_size(),coarse_space_->basis_size());
+            coarse_solver_.apply(v0, coarse_defect_, result);
+
+            // Prolongate coarse solution on local domain
+            coarse_space_->prolongate(v0, prolongated_);
+
+            Dune::PDELab::AddDataHandle<GFS,X> prolongated_addh(gfs_,prolongated_);
+            gfs_.gridView().communicate(prolongated_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
+
+
+            // Prolongate coarse solution on local domain
+            Dune::PDELab::AddDataHandle<GFS,X> prolongated_def_addh(gfs_,prolongated_defect);
+            gfs_.gridView().communicate(prolongated_def_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
+
+
+            Y b(d); // need copy, since solver overwrites right hand side
+            //native(AF_exterior_).mmv(native(prolongated_), native(b));
+            //native(b) -= native(prolongated_);
+            native(b) -= native(prolongated_defect);
+            solverf_.apply(v,b,result);
+
+
+            coarse_time_ += timer_coarse_solve.elapsed();
+            apply_calls_++;
+
+            Dune::PDELab::AddDataHandle<GFS,X> result_addh(gfs_,v);
+            gfs_.gridView().communicate(result_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
+
+            v += prolongated_;
+
+            /*std::cout << "hybrid" << std::endl;
+            MPI_Barrier(gfs.gridView().comm());
+            Dune::Timer timer_setup;
+
+            // coarse defect
+            auto coarse_defect = coarse_space_->restrict_defect (d);
+
+            // Solve coarse system
+            Dune::InverseOperatorResult result;
+            COARSE_V v0(coarse_space_->basis_size(),coarse_space_->basis_size());
+            coarse_solver_.apply(v0, *coarse_defect, result);
+
+            // Prolongate coarse solution on local domain
+            auto coarse_correction = coarse_space_->prolongate_defect (v0);
+            //v += *coarse_correction;
+
+            Dune::PDELab::AddDataHandle<GFS,X> coarsecorr_addh(gfs,*coarse_correction);
+            gfs.gridView().communicate(coarsecorr_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
+
+            Y b(d); // need copy, since solver overwrites right hand side
+            native(AF_exterior).mmv(*coarse_correction, b)
+            Dune::InverseOperatorResult result;
+            solverf.apply(v,b,result);
+
+            coarse_time += timer_setup.elapsed();
+            apply_calls++;
+
+            Dune::PDELab::AddDataHandle<GFS,X> result_addh(gfs,v);
+            gfs.gridView().communicate(result_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
+            v += *coarse_correction;*/
           }
         }
 
@@ -111,6 +190,7 @@ namespace Dune {
       private:
         int verbosity_;
         bool coarse_space_active_;
+        bool hybrid_;
 
         double coarse_time_ = 0.0;
         int apply_calls_ = 0;
@@ -119,6 +199,8 @@ namespace Dune {
         Dune::UMFPack<ISTLM> solverf_;
         std::shared_ptr<CoarseSpace<X> > coarse_space_;
         Dune::UMFPack<COARSE_M> coarse_solver_;
+
+        const M_EXTERIOR& AF_exterior_;
 
         typename CoarseSpace<X>::COARSE_V coarse_defect_;
         X prolongated_;

@@ -9,7 +9,9 @@
 #include <dune/pdelab/backend/istl/geneo/partitionofunity.hh>
 #include <dune/pdelab/backend/istl/geneo/localoperator_ovlp_region.hh>
 
+#include <dune/pdelab/backend/istl/geneo/fastrndgeneobasis.hh>
 #include <dune/pdelab/backend/istl/geneo/geneobasis.hh>
+#include <dune/pdelab/backend/istl/geneo/rndgeneobasis.hh>
 #include <dune/pdelab/backend/istl/geneo/liptonbabuskabasis.hh>
 
 

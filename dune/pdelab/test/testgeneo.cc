@@ -2,12 +2,21 @@
 #include "config.h"
 #endif
 
+#include <dune/common/parametertree.hh>
+Dune::ParameterTree configuration;
+
+#include <dune/common/timer.hh>
+
 #include <dune/pdelab/boilerplate/pdelab.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionadapter.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
 
 #include <dune/pdelab/backend/istl/geneo/geneo.hh>
+
+#include <cholmod.h>
+
+#include <stdio.h>
 
 /*
  * Defining a Darcy problem with alternating layers of permeability and a high contrast
@@ -20,6 +29,10 @@ class GenericEllipticProblem
 public:
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
+  GenericEllipticProblem()
+  : layers(configuration.get<int>("layers")),
+    contrast(configuration.get<double>("contrast")) {}
+
   //! tensor diffusion coefficient
   typename Traits::PermTensorType
   A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
@@ -27,8 +40,8 @@ public:
     typename Traits::DomainType xglobal = e.geometry().global(x);
 
     RF perm1 = 1e0;
-    RF perm2 = 1e6;
-    RF layer_thickness = 1.0 / 20.0;
+    RF perm2 = contrast;
+    RF layer_thickness = 1.0 / (double)layers;
 
     RF coeff = (int)std::floor(xglobal[1] / layer_thickness) % 2 == 0 ? perm1 : perm2;
 
@@ -66,7 +79,11 @@ public:
   bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     typename Traits::DomainType xglobal = is.geometry().global(x);
-    if (!(xglobal[1]<1E-6 || xglobal[1]>1.0-1E-6))
+    /*if (!(xglobal[0]<1E-10 || xglobal[0]>1.0-1E-10))
+      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
+    else
+      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;*/
+    if (!((xglobal[0]<0.1 && xglobal[1]>1.0-1E-10) || (xglobal[1]<0.9 && xglobal[1]<1E-10)))
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
     else
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
@@ -77,7 +94,7 @@ public:
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
-    if (xglobal[1] > 1.0-1E-6)
+    if (xglobal[0] > 1.0-1E-10)
       return 1.0;
     else
       return 0.0;
@@ -96,12 +113,20 @@ public:
   {
     return 0.0;
   }
+private:
+
+  int layers;
+  double contrast;
+
 };
 
 void driver(std::string basis_type, std::string part_unity_type) {
 
-  int cells = 100;
-  int overlap = 1;
+  Dune::Timer timer_assembly;
+
+
+  int cells = configuration.get<int>("cells");
+  int overlap = configuration.get<int>("overlap");
 
   // define parameters
   const unsigned int dim = 2;
@@ -117,7 +142,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
   std::bitset<dim> B(false);
 
   typedef Dune::YaspFixedSizePartitioner<dim> YP;
-  std::array<int,dim> yasppartitions = {2, 1};
+  std::array<int,dim> yasppartitions = {configuration.get<int>("subdomainsx"), configuration.get<int>("subdomainsy")};
   auto yp = new YP(yasppartitions);
 
   auto grid = std::make_shared<GM>(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication(),yp);
@@ -253,10 +278,17 @@ void driver(std::string basis_type, std::string part_unity_type) {
   int verb=0;
   if (gfs.gridView().comm().rank()==0) verb=2;
 
+  if (verb > 0)
+    std::cout << "Running basis " << basis_type << " with " << part_unity_type << " partition of unity" << std::endl;
+
   // Create a local function space needed for the Sarkis partition of unity only
   typedef Dune::PDELab::LocalFunctionSpace<GFS, Dune::PDELab::AnySpaceTag> LFS;
   LFS lfs(gfs);
 
+  MPI_Barrier (MPI_COMM_WORLD);
+  if (verb > 0) std::cout << "Assembly: " << timer_assembly.elapsed() << std::endl;
+  Dune::Timer timer_full_solve;
+  Dune::Timer timer_part_unity;
 
   // Generate a partition of unity
   std::shared_ptr<V> part_unity;
@@ -267,21 +299,38 @@ void driver(std::string basis_type, std::string part_unity_type) {
   else
     DUNE_THROW(Dune::Exception, "Unkown selection in test driver!");
 
+  MPI_Barrier (MPI_COMM_WORLD);
+  if (verb > 0) std::cout << "Part unity: " << timer_part_unity.elapsed() << std::endl;
 
   // Choose how many eigenvalues to compute
-  int nev = 10;
-  int nev_arpack = 10;
+  int nev = configuration.get<int>("nev");
+  //if (basis_type == "rndgeneo") nev += 10;
+  int nev_arpack = nev; // FIXME: This still correct? // configuration.get<int>("nev_arpack");
+  eigenvalue_threshold = -1.0;
 
+  Dune::Timer timer_basis;
   // Construct per-subdomain basis functions
   std::shared_ptr<Dune::PDELab::SubdomainBasis<V> > subdomain_basis;
   if (basis_type == "geneo")
-    subdomain_basis = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb);
+    subdomain_basis = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb, 0.0);
+  else if (basis_type == "inexactgeneo")
+    subdomain_basis = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb, 1e-3);
+  else if (basis_type == "rndgeneo")
+    subdomain_basis = std::make_shared<Dune::PDELab::RndGenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, verb);
+  else if (basis_type == "fastrndgeneo")
+    subdomain_basis = std::make_shared<Dune::PDELab::FastRndGenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, verb);
+  else if (basis_type == "fastrndgeneo2")
+    subdomain_basis = std::make_shared<Dune::PDELab::FastRndGenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, verb, 2);
   else if (basis_type == "lipton_babuska")
     subdomain_basis = std::make_shared<Dune::PDELab::LiptonBabuskaBasis<GFS,M_EXTERIOR,V,V,1> >(gfs, AF_exterior, AF_ovlp, -1, *part_unity, nev, nev_arpack);
   else if (basis_type == "part_unity") // We can't test this one, it does not lead to sufficient error reduction. Let's instantiate it anyway for test's sake.
     subdomain_basis = std::make_shared<Dune::PDELab::SubdomainBasis<V> >(*part_unity);
+  else if (basis_type == "onelevel")
+    subdomain_basis = std::make_shared<Dune::PDELab::SubdomainBasis<V> >(*part_unity);
   else
     DUNE_THROW(Dune::Exception, "Unkown selection in test driver!");
+  MPI_Barrier (MPI_COMM_WORLD);
+  if (verb > 0) std::cout << "Basis setup: " << timer_basis.elapsed() << std::endl;
 
 
   // Fuse per-subdomain basis functions to a global coarse space
@@ -289,16 +338,22 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
 
   // Plug coarse basis into actual preconditioner
-  auto prec = std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,V,V>>(gfs, AF, coarse_space, true, verb);
+  auto prec = std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,M_EXTERIOR,V,V>>(gfs, AF, AF_exterior, coarse_space, basis_type != "onelevel", configuration.get<bool>("hybrid"), verb);
 
+  //Dune::Richardson<V,V> richardson();
+
+  Dune::Timer timer_solve;
 
   // now solve defect equation A*v = d using a CG solver with our shiny preconditioner
   V v(gfs,0.0);
-  auto solver_ref = std::make_shared<Dune::CGSolver<V> >(*popf,ospf,*prec,1E-6,1000,verb,true);
+  auto solver_ref = std::make_shared<Dune::CGSolver<V> >(*popf,ospf,*prec,1E-6,1000,verb,false);
   Dune::InverseOperatorResult result;
   solver_ref->apply(v,d,result);
   x -= v;
 
+  MPI_Barrier (MPI_COMM_WORLD);
+  if (verb > 0) std::cout << "pCG solve: " << timer_solve.elapsed() << std::endl;
+  if (verb > 0) std::cout << "full solve: " << timer_full_solve.elapsed() << std::endl;
 
   // Write solution to VTK
   Dune::VTKWriter<GV> vtkwriter(gfs.gridView());
@@ -310,18 +365,29 @@ void driver(std::string basis_type, std::string part_unity_type) {
   vtkwriter.write("testgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type);
 }
 
+void error_handler(int status, const char *file,
+ int line, const char *message) {
+std::cout<<"!!"<<std::endl;
+}
 
 int main(int argc, char **argv)
 {
+  Dune::ParameterTreeParser parser;
+  parser.readINITree("config.ini", configuration);
+  parser.readOptions(argc, argv, configuration);
+
   using Dune::PDELab::Backend::native;
 
   try{
     // initialize MPI, finalize is done automatically on exit
     Dune::MPIHelper::instance(argc,argv);
 
-    driver("geneo", "standard");
-    driver("geneo", "sarkis");
-    driver("lipton_babuska", "standard");
+    //std::cout << "#################### geneo" << std::endl;
+    //driver("geneo", "standard");
+    //std::cout << "#################### rndgeneo" << std::endl;
+    driver(configuration.get<std::string>("method"), configuration.get<std::string>("part_unity"));
+    //std::cout << "#################### babuska" << std::endl;
+    //driver("lipton_babuska", "standard");
 
     return 0;
   }
