@@ -83,10 +83,14 @@ public:
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
     else
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;*/
-    if (!((xglobal[0]<0.1 && xglobal[1]>1.0-1E-10) || (xglobal[0]>0.90 && xglobal[1]<1E-10)))
+    /*if (!((xglobal[1]<0.5 && xglobal[0]>1.0-1E-10) || (xglobal[1]>0.50 && xglobal[0]<1E-10)))
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
     else
+      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;*/
+    if (xglobal[0] < 1E-10 || xglobal[0] > 1.0-1E-10)
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
+    else
+      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
   }
 
   //! Dirichlet boundary condition value
@@ -94,8 +98,10 @@ public:
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
-    if (xglobal[1] > 1.0-1E-10)
-      return 1.0;
+    if (xglobal[0] < 1E-10)
+      return std::sin(xglobal[1] * 2 * 3.141592);
+    else if (xglobal[0] > 1.0-1E-10)
+      return std::cos(xglobal[1] * 2 * 3.141592);
     else
       return 0.0;
   }
