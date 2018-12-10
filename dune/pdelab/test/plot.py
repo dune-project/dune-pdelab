@@ -5,7 +5,7 @@ import os
 import subprocess
 import re
 from collections import OrderedDict
-
+from slurmpy import Slurm
 
 
 def run (bincall, plotprefix, configuration, permutations, extractions):
@@ -25,9 +25,20 @@ def run (bincall, plotprefix, configuration, permutations, extractions):
     runconfig.update(zip(permutations.keys(), tpl))
     params = ' '.join(['-%s %s' % (key, value) for (key, value) in runconfig.items()])
 
-    os.system (bincall + " " + params + " > out")
 
-    with open('out', encoding="utf-8") as f:
+    #sbatch --out "test.out" batch.sbatch "params..."
+    os.system("sbatch --job-name=prmstudy --out \"" + str(tpl) + ".out\" batch.sbatch \"" + params + "\"")
+
+    #os.system (bincall + " " + params + " > out")
+
+
+  print("waiting for runs...")
+  os.system("while squeue | grep --quiet prmstudy; do sleep 3; done")
+
+  for tpl in list(itertools.product(*permutations.values())):
+    print ("Reading " + str(tpl) + ".out")
+
+    with open(str(tpl) + ".out", encoding="utf-8") as f:
       for line in f:
         print(line)
         for extraction in extractions.keys():
@@ -129,11 +140,12 @@ permutations = OrderedDict([
   ("cells", ["100"])
 ])
 
-#run(
-#  bincall = "OMP_NUM_THREADS=1 && export OMP_NUM_THREADS && make testgeneo && mpirun -x OMP_NUM_THREADS -np 4 ./testgeneo",
-#  plotprefix = "EV 100 Cells ",
-#  configuration = config, permutations = permutations, extractions = extractions)
+run(
+  bincall = "--export=OMP_NUM_THREADS=1 ./testgeneo",
+  plotprefix = "EV 100 Cells ",
+  configuration = config, permutations = permutations, extractions = extractions)
 
+exit(0)
 
 
 permutations = OrderedDict([

@@ -83,7 +83,7 @@ public:
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
     else
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;*/
-    if (!((xglobal[0]<0.1 && xglobal[1]>1.0-1E-10) || (xglobal[1]<0.9 && xglobal[1]<1E-10)))
+    if (!((xglobal[0]<0.1 && xglobal[1]>1.0-1E-10) || (xglobal[0]>0.90 && xglobal[1]<1E-10)))
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
     else
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
@@ -94,7 +94,7 @@ public:
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
-    if (xglobal[0] > 1.0-1E-10)
+    if (xglobal[1] > 1.0-1E-10)
       return 1.0;
     else
       return 0.0;
