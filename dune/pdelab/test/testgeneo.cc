@@ -319,8 +319,10 @@ void driver(std::string basis_type, std::string part_unity_type) {
   std::shared_ptr<Dune::PDELab::SubdomainBasis<V> > subdomain_basis;
   if (basis_type == "geneo")
     subdomain_basis = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb, 0.0);
-  else if (basis_type == "inexactgeneo")
+  else if (basis_type == "geneo_1e-3")
     subdomain_basis = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb, 1e-3);
+  else if (basis_type == "geneo_1e-6")
+    subdomain_basis = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb, 1e-6);
   else if (basis_type == "rndgeneo")
     subdomain_basis = std::make_shared<Dune::PDELab::RndGenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, verb);
   else if (basis_type == "fastrndgeneo")
