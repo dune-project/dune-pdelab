@@ -43,7 +43,7 @@ public:
     RF perm2 = contrast;
     RF layer_thickness = 1.0 / (double)layers;
 
-    RF coeff = (int)std::floor(xglobal[1] / layer_thickness) % 2 == 0 ? perm1 : perm2;
+    RF coeff = (int)std::floor(xglobal[1]/ layer_thickness) % 2 == 0 ? perm1 : perm2;
 
     typename Traits::PermTensorType I;
     I[0][0] = coeff;
@@ -87,7 +87,9 @@ public:
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
     else
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;*/
-    if (xglobal[0] < 1E-10 || xglobal[0] > 1.0-1E-10)
+    //if (//(xglobal[1] < 1E-10 && xglobal[0] > 0.75) || (xglobal[1] > 1.0-1E-10 && xglobal[0] < 0.25) ||
+        //xglobal[0] < 1E-10 || xglobal[0] > 1.0-1E-10)
+        if (xglobal[1] > 1.0-1E-10 || xglobal[1] < 1E-10)
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
     else
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
@@ -98,10 +100,18 @@ public:
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
-    if (xglobal[0] < 1E-10)
-      return std::sin(xglobal[1] * 2 * 3.141592);
-    else if (xglobal[0] > 1.0-1E-10)
-      return std::cos(xglobal[1] * 2 * 3.141592);
+    /*if (xglobal[1] < 1E-10 && xglobal[0] > 0.75)
+      return std::cos(xglobal[0] * 8* 3.141592);
+    else if (xglobal[1] > 1.0-1E-10 && xglobal[0] < 0.25)
+      return std::sin(xglobal[0] * 8 * 3.141592);
+    else if (xglobal[0] < 1E-10)
+      return std::sin(xglobal[1] * 2 * 3.141592) + 1.0;
+    else if (xglobal[0] > 1.0 - 1E-10)
+      return std::cos(xglobal[1] * 2 * 3.141592) - 1.0;
+    else
+      return 0.0;*/
+    if (xglobal[1] > 1.0-1E-10)
+      return 1.0;
     else
       return 0.0;
   }
