@@ -57,9 +57,8 @@ namespace Dune {
        * \note This can be used together with rawAccumulate() to avoid applying the weight at
        * each loop iteration.
        */
-      weight_type weight()
+      weight_type weight() const
       {
-        _modified = true;
         return _weight;
       }
 
