@@ -109,7 +109,7 @@ namespace Dune{
 
           globalContainerIndices.resize(numberOfLeafs());
 
-          TypeTree::forEachLeafNode(lfs, [this, &lfs, &subentityWiseDOFs](auto &Node, auto &TreePath) {
+          TypeTree::forEachLeafNode(lfs, [this](auto &Node, auto &TreePath) {
             const auto leaf = Node.offsetLeafs;
             localDOFsOffset[leaf] = Node.offset;
 
