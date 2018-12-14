@@ -150,11 +150,14 @@ namespace Dune{
       template<typename LFSVC, typename LFSUC>
       void add_pattern(const LFSVC& lfsv_cache, const LFSUC& lfsu_cache, const LocalPattern& p)
       {
-        for (size_type k=0; k<p.size(); ++k)
+        if (p.size() > 0)
+        {
           local_assembler.add_entry(*pattern,
-                                    lfsv_cache,p[k].i(),
-                                    lfsu_cache,p[k].j()
+                                    lfsv_cache,p[0].i(),
+                                    lfsu_cache,p[0].j()
                                     );
+
+        }
 
         add_border_pattern(std::integral_constant<bool,LocalAssembler::isNonOverlapping>(),
                            lfsv_cache,
