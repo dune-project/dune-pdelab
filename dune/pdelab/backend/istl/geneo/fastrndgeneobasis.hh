@@ -65,7 +65,7 @@ namespace Dune {
           }
         }
         MPI_Barrier (MPI_COMM_WORLD);
-        if (verbose > 0) std::cout << "X * A0 * X: " << timer.elapsed() << std::endl; timer.reset();
+        if (verbose > 0) std::cout << "XA0X: " << timer.elapsed() << std::endl; timer.reset();
 
         /*if (verbose > 0) {
           Dune::storeMatrixMarket(native(AF_ovlp), "AF_ovlp.mm");

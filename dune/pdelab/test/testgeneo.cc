@@ -72,7 +72,10 @@ public:
   typename Traits::RangeFieldType
   f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    return 0.0;
+    typename Traits::DomainType xglobal = e.geometry().global(x);
+    return - std::exp(-std::sqrt(std::pow(xglobal[0] - 0.25, 2) + std::pow(xglobal[1] - 0.25, 2)))
+           + std::exp(-std::sqrt(std::pow(xglobal[0] - 0.75, 2) + std::pow(xglobal[1] - 0.75, 2)));
+    //return 0.0;
   }
 
   BCType
@@ -89,7 +92,7 @@ public:
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;*/
     //if (//(xglobal[1] < 1E-10 && xglobal[0] > 0.75) || (xglobal[1] > 1.0-1E-10 && xglobal[0] < 0.25) ||
         //xglobal[0] < 1E-10 || xglobal[0] > 1.0-1E-10)
-        if (xglobal[1] > 1.0-1E-10 || xglobal[1] < 1E-10)
+    if (xglobal[1] > 1.0-1E-10 || xglobal[1] < 1E-10)
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
     else
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
@@ -321,7 +324,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
   // Choose how many eigenvalues to compute
   int nev = configuration.get<int>("nev");
   //if (basis_type == "rndgeneo") nev += 10;
-  int nev_arpack = nev; // FIXME: This still correct? // configuration.get<int>("nev_arpack");
+  int nev_arpack = std::ceil(double(nev) * configuration.get<double>("arpack_factor")); // FIXME: This still correct? // configuration.get<int>("nev_arpack");
   eigenvalue_threshold = -1.0;
 
   Dune::Timer timer_basis;
