@@ -381,6 +381,25 @@ void driver(std::string basis_type, std::string part_unity_type) {
   auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
   vtkwriter.addVertexData(adapt);
   vtkwriter.write("testgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type);
+
+
+  if  (configuration.get<bool>("write_basis", false)) {
+    for (int i = 0; i < subdomain_basis->basis_size(); i++) {
+      std::shared_ptr<V> vec = subdomain_basis->get_basis_vector(i);
+
+      Dune::VTKWriter<GV> vtkwriter(gfs.gridView());
+      typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+      DGF xdgf(gfs,*vec);
+      typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
+      auto adapt = std::make_shared<ADAPT>(xdgf,"basis");
+      vtkwriter.addVertexData(adapt);
+      vtkwriter.write("testgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type
+                      + "_r_" + std::to_string(gfs.gridView().comm().rank()) + "_vec_" + std::to_string(i));
+
+    }
+  }
+
+
 }
 
 void error_handler(int status, const char *file,

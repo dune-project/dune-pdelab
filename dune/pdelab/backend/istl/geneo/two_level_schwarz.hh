@@ -42,6 +42,7 @@ namespace Dune {
             hybrid_(hybrid),
             coarse_space_active_(coarse_space_active),
             gfs_(gfs),
+            AF_(AF),
             AF_exterior_(AF_exterior),
             solverf_(Dune::PDELab::Backend::native(AF),false),
             coarse_space_(coarse_space),
@@ -104,10 +105,48 @@ namespace Dune {
 
             using PDELab::Backend::native;
 
+
+
+
+            // first the subdomain solves
+            Y b(d); // need copy, since solver overwrites right hand side
+            Dune::InverseOperatorResult result;
+            solverf_.apply(v,b,result);
+
+            Dune::PDELab::AddDataHandle<GFS,X> corr_addh(gfs_,v);
+            gfs_.gridView().communicate(corr_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
+
+
+
+            Y c(d);
+            native(AF_).mmv(native(v), native(c));
+
+
+
+
             gfs_.gridView().comm().barrier();
             Dune::Timer timer_coarse_solve;
 
-            coarse_space_->restrict (d, coarse_defect_);
+            coarse_space_->restrict (c, coarse_defect_);
+
+            // Solve coarse system
+            COARSE_V v0(coarse_space_->basis_size(),coarse_space_->basis_size());
+            coarse_solver_.apply(v0, coarse_defect_, result);
+
+            // Prolongate coarse solution on local domain
+            coarse_space_->prolongate(v0, prolongated_);
+
+            Dune::PDELab::AddDataHandle<GFS,X> result_addh(gfs_,prolongated_);
+            gfs_.gridView().communicate(result_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
+
+            v += prolongated_;
+
+           coarse_time_ += timer_coarse_solve.elapsed();
+            apply_calls_++;
+
+
+
+            /*coarse_space_->restrict (d, coarse_defect_);
 
             X prolongated_defect(gfs_, 0.0);
             coarse_space_->prolongate(coarse_defect_, prolongated_defect);
@@ -142,7 +181,7 @@ namespace Dune {
             Dune::PDELab::AddDataHandle<GFS,X> result_addh(gfs_,v);
             gfs_.gridView().communicate(result_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
 
-            v += prolongated_;
+            v += prolongated_;*/
 
             /*std::cout << "hybrid" << std::endl;
             MPI_Barrier(gfs.gridView().comm());
@@ -201,6 +240,7 @@ namespace Dune {
         Dune::UMFPack<COARSE_M> coarse_solver_;
 
         const M_EXTERIOR& AF_exterior_;
+        const M& AF_;
 
         typename CoarseSpace<X>::COARSE_V coarse_defect_;
         X prolongated_;

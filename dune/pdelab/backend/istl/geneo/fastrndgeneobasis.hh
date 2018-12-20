@@ -77,6 +77,10 @@ namespace Dune {
 
 
         Dune::UMFPack<ISTLM> source_inverse(native(AF_exterior));
+        /*Dune::MatrixAdapter<ISTLM, ISTLX, ISTLX> matop(native(AF_exterior));
+        Dune::SeqGS<ISTLM, ISTLX, ISTLX> seqgs(native(AF_exterior), 10, 1.0);
+        Dune::CGSolver<ISTLX> cgsolver(matop, seqgs, 1e-6, 1000, 1);*/
+
         MPI_Barrier (MPI_COMM_WORLD);
         if (verbose > 0) std::cout << "source_inverse: " << timer.elapsed() << std::endl; timer.reset();
 
@@ -122,6 +126,7 @@ namespace Dune {
                            std::multiplies<>()
             );
 
+            //cgsolver.apply(temp, ext, result);
             source_inverse.apply(temp, ext, result);
             ext = temp;
 
