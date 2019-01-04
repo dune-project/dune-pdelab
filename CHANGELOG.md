@@ -38,6 +38,9 @@ PDELab git master (will be PDELab 2.7)
 -   There is now a convenience header `dune/pdelab.hh` which includes the entire module. It can replace
     the usual bulk of includes, improves copy-pastability of PDELab code and makes life easier for beginners.
 
+-   The class `Pk1dLocalFiniteElement` (a 1d Lagrange element with run-time order) has been deprecated.
+    Please use `LagrangeLocalFiniteElement` from [dune-localfunctions][] instead.
+
 PDELab 2.6
 ----------
 
