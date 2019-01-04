@@ -19,6 +19,8 @@ PDELab git master (will be PDELab 2.7)
     space bases as `GridFunctionSpace` implementations has gained limited support for distributed
     computations.
 
+-   The class `Pk1dLocalFiniteElement` (a 1d Lagrange element with run-time order) has been deprecated.
+    Please use `LagrangeLocalFiniteElement` from [dune-localfunctions][] instead.
 
 PDELab 2.6
 ----------
