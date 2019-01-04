@@ -6,6 +6,8 @@
 #ifndef DUNE_PDELAB_FINITEELEMENT_PK1D_HH
 #define DUNE_PDELAB_FINITEELEMENT_PK1D_HH
 
+#warning This file is deprecated. Please use LagrangeLocalFiniteElement from dune-localfunctions directly!
+
 #include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/lagrange.hh>

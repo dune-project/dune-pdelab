@@ -23,6 +23,8 @@ PDELab git master (will be PDELab 2.7)
     region when re-interpolating boundary condition values between stages (i.e. whenn you call the version of
     `apply()` on the `OneStepMethod` that takes a boundary value function).
 
+-   The class `Pk1dLocalFiniteElement` (a 1d Lagrange element with run-time order) has been deprecated.
+    Please use `LagrangeLocalFiniteElement` from [dune-localfunctions][] instead.
 
 PDELab 2.6
 ----------
