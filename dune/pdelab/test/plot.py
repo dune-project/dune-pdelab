@@ -19,12 +19,11 @@ def run (bincall, plotprefix, configuration, permutations, extractions):
 
   for tpl in list(itertools.product(*permutations.values())):
 
-    print ("Running " + str(tpl))
-
     runconfig = configuration.copy()
     runconfig.update(zip(permutations.keys(), tpl))
     params = ' '.join(['-%s %s' % (key, value) for (key, value) in runconfig.items()])
 
+    print ("Running " + str(tpl) + "\n\t" + params)
 
     #sbatch --out "test.out" batch.sbatch "params..."
     os.system("sbatch --job-name=prmstudy --out \"out/" + str(tpl) + ".out\" batch.sbatch \"" + params + "\"")
@@ -135,8 +134,8 @@ permutations = OrderedDict([
 #  configuration = config, permutations = permutations, extractions = extractions)
 
 #nev = ["5", "10", "15", "20", "30", "40", "50", "60"]
-nev =  list(range(5,41))
-nev =  ["5", "10", "15", "20", "25", "30"]
+nev =  list(range(10,31))
+#nev =  ["8", "10", "15", "20", "25", "30"]
 
 # Effectiveness/Cost of #EV
 
@@ -150,37 +149,50 @@ permutations = OrderedDict([
 
 run(
   bincall = bincall,
-  plotprefix = "hybridtest EV 100 Cells ",
+  plotprefix = "Hybrid vs Additive EV 100 Cells ",
   configuration = config, permutations = permutations, extractions = extractions)
 
-#exit(0)
 
 
 permutations = OrderedDict([
   ("nev", nev),#, "20", "25", "30"]),
   ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2"]),
-  ("cells", ["100"])
+  ("cells", ["100"]),
+  ("hybrid", ["true"])
 ])
 
 run(
   bincall = bincall,
-  plotprefix = "EV 100 Cells ",
+  plotprefix = "Hybrid EV 100 Cells ",
   configuration = config, permutations = permutations, extractions = extractions)
-
-exit(0)
 
 
 permutations = OrderedDict([
-  ("nev", ["5", "10", "15", "20", "30", "40", "50", "60"]),#, "20", "25", "30"]),
-  ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2"]),
-  ("cells", ["250"])
+  ("nev", nev),#, "20", "25", "30"]),
+  ("method", ["geneo", "geneo_1e-3", "fastrndgeneo"]),
+  ("cells", ["250"]),
+  ("hybrid", ["true", "false"])
 ])
 
 run(
   bincall = bincall,
-  plotprefix = "EV 250 Cells ",
+  plotprefix = "Hybrid vs Additive EV 250 Cells ",
   configuration = config, permutations = permutations, extractions = extractions)
 
+
+permutations = OrderedDict([
+  ("nev", nev),#, "20", "25", "30"]),
+  ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2"]),
+  ("cells", ["250"]),
+  ("hybrid", ["true"])
+])
+
+run(
+  bincall = bincall,
+  plotprefix = "Hybrid EV 250 Cells ",
+  configuration = config, permutations = permutations, extractions = extractions)
+
+exit(0)
 
 permutations = OrderedDict([
   ("nev", ["5", "10", "15", "20", "30", "40", "50", "60"]),#, "20", "25", "30"]),
