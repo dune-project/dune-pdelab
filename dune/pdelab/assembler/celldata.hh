@@ -13,6 +13,7 @@
 
 #include <dune/pdelab/common/intersectiontype.hh>
 #include <dune/pdelab/common/quadraturerules.hh>
+#include <dune/pdelab/gridfunctionspace/flavor.hh>
 #include <dune/pdelab/assembler/utility.hh>
 #include <dune/pdelab/assembler/finiteelementwrapper.hh>
 #include <dune/pdelab/assembler/quadraturerule.hh>

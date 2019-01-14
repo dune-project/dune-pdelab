@@ -7,6 +7,10 @@
 #include <type_traits>
 #include <tuple>
 
+#include <dune/common/concept.hh>
+
+#include <dune/pdelab/constraints/common/constraintstransformation.hh>
+
 namespace Dune {
   namespace PDELab {
 
