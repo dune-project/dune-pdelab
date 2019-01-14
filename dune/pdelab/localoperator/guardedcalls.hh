@@ -6,6 +6,8 @@
 #include <cassert>
 #include <type_traits>
 
+#include <dune/typetree/childextraction.hh>
+
 #include <dune/pdelab/assembler/context.hh>
 #include <dune/pdelab/assembler/utility.hh>
 #include <dune/pdelab/assembler/finiteelementwrapper.hh>
