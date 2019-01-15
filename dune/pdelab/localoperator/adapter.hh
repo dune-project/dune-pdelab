@@ -4,8 +4,10 @@
 #define DUNE_PDELAB_LOCALOPERATOR_ADAPTER_HH
 
 #include <type_traits>
+#include <dune/pdelab/common/typetraits.hh>
 
 #include <dune/pdelab/common/geometrywrapper.hh>
+#include <dune/pdelab/localoperator/callswitch.hh>
 
 namespace Dune {
   namespace PDELab {

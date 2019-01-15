@@ -10,6 +10,8 @@
 #include <dune/common/concept.hh>
 #include <dune/common/hash.hh>
 
+#include <dune/geometry/typeindex.hh>
+
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
 #include <dune/typetree/leafnode.hh>

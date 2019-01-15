@@ -9,6 +9,7 @@
 
 #include <dune/geometry/identitygeometry.hh>
 
+#include <dune/pdelab/common/checks.hh>
 #include <dune/pdelab/common/intersectiontype.hh>
 #include <dune/pdelab/common/quadraturerules.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
