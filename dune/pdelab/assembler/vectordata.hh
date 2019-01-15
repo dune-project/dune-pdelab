@@ -208,6 +208,72 @@ namespace Dune {
       return CellResidualData<Implementation>(std::move(implementation));
     }
 
+
+    template<typename Implementation>
+    struct CellResultData
+      : public Implementation
+    {
+
+      using Context_ = typename Implementation::Context_;
+
+      using Result = typename Implementation::Traits;
+      using Residual = Result;
+
+      typename Result::AccumulationView result()
+      {
+        return Implementation::accumulationView();
+      }
+
+      typename Result::AccumulationView residual()
+      {
+        return Implementation::accumulationView();
+      }
+
+      template<typename LFS>
+      LocalVectorProxy<typename Result::Container,LFS> result(const LFS& lfs)
+      {
+        return {Implementation::readWriteView(),lfs,Implementation::weight()};
+      }
+
+      template<typename LFS>
+      LocalVectorProxy<typename Result::Container,LFS> residual(const LFS& lfs)
+      {
+        return {Implementation::readWriteView(),lfs,Implementation::weight()};
+      }
+
+      void setup()
+      {
+        Implementation::setup(Context_::engine().result());
+      }
+
+      using Context_::bind;
+      using Context_::unbind;
+
+      Context_* bind(const typename Context_::Entity&, typename Context_::Index, typename Context_::Index)
+      {
+        Implementation::bind(Context_::test().cache());
+        return this;
+      }
+
+      Context_* unbind(const typename Context_::Entity&, typename Context_::Index, typename Context_::Index)
+      {
+        Implementation::unbind(Context_::test().cache());
+        return this;
+      }
+
+      CellResultData(Implementation&& implementation)
+        : Implementation(std::move(implementation))
+      {}
+
+    };
+
+    template<typename Implementation>
+    auto cellResultData(Implementation&& implementation)
+    {
+      return CellResultData<Implementation>(std::move(implementation));
+    }
+
+
     template<typename Implementation>
     struct CellArgumentData
       : public Implementation
