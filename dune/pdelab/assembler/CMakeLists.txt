@@ -1,0 +1,21 @@
+install(
+  FILES
+    applyjacobianengine.hh
+    assembler.hh
+    celldata.hh
+    context.hh
+    enginebase.hh
+    finiteelementwrapper.hh
+    functionspacedata.hh
+    jacobianengine.hh
+    localviewproxy.hh
+    matrixdata.hh
+    patterndata.hh
+    patternengine.hh
+    quadraturerule.hh
+    residualengine.hh
+    utility.hh
+    vectordata.hh
+  DESTINATION
+    ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/assembler
+  )
