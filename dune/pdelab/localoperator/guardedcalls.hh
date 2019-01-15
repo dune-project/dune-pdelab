@@ -59,6 +59,8 @@ namespace Dune {
       template<typename T>
       using TestSpace = typename Impl::extract_local_test_space<T>::type;
 
+      // TODO: Make these work with spaces as well
+
       template<typename T, std::size_t... I>
       using Range = typename FiniteElementWrapper<typename Impl::extract_finite_element_traits<TypeTree::Child<TestSpace<T>,I...>>::type,T>::Basis::Range;
 
