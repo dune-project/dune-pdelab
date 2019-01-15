@@ -7,6 +7,7 @@
 #include <dune/pdelab/common/checks.hh>
 #include <dune/pdelab/common/exceptions.hh>
 #include <dune/pdelab/common/typetraits.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
@@ -92,7 +93,7 @@ namespace Dune {
 
       LOP* _lop;
 
-      TrialVector* _trial_vector;
+      const TrialVector* _linearization_point;
       Jacobian* _jacobian;
 
       EmptyTransformation _empty_constraints;
@@ -185,7 +186,7 @@ namespace Dune {
       }
 
       JacobianEngine(
-        TrialVector& trial_vector,
+        const TrialVector& linearization_point,
         Jacobian& jacobian,
         LOP& lop,
         const TrialConstraints& trial_constraints,
@@ -193,7 +194,7 @@ namespace Dune {
         std::integral_constant<Galerkin,galerkin> = std::integral_constant<Galerkin,galerkin>{}
         )
         : _lop(&lop)
-        , _trial_vector(&trial_vector)
+        , _linearization_point(&linearization_point)
         , _jacobian(&jacobian)
         , _trial_constraints(&trial_constraints)
         , _test_constraints(&test_constraints)
@@ -202,19 +203,48 @@ namespace Dune {
 
       template<typename LOP_>
       JacobianEngine(
-        TrialVector& trial_vector,
+        const TrialVector& linearization_point,
         Jacobian& jacobian,
         LOP_& lop,
         std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,std::integral_constant<Galerkin,galerkin>> = std::integral_constant<Galerkin,galerkin>{}
         )
         : _lop(&lop)
-        , _trial_vector(&trial_vector)
+        , _linearization_point(&linearization_point)
         , _jacobian(&jacobian)
         , _trial_constraints(&_empty_constraints)
         , _test_constraints(&_empty_constraints)
         , _symmetric_dirichlet_constraints(false)
       {}
 
+      template<typename LOP_>
+      JacobianEngine(
+        Jacobian& jacobian,
+        LOP_& lop,
+        const TrialConstraints& trial_constraints,
+        const TestConstraints& test_constraints,
+        std::enable_if_t<not models<Concept::PossiblyNonLinear,LOP>() and std::is_same_v<LOP_,LOP>,int> = 0
+        )
+        : _lop(&lop)
+        , _linearization_point(nullptr)
+        , _jacobian(&jacobian)
+        , _trial_constraints(&trial_constraints)
+        , _test_constraints(&test_constraints)
+        , _symmetric_dirichlet_constraints(false)
+      {}
+
+      template<typename LOP_>
+      JacobianEngine(
+        Jacobian& jacobian,
+        LOP_& lop,
+        std::enable_if_t<not models<Concept::PossiblyNonLinear,LOP>() and unconstrained() and std::is_same_v<LOP_,LOP>,std::integral_constant<Galerkin,galerkin>> = std::integral_constant<Galerkin,galerkin>{}
+        )
+        : _lop(&lop)
+        , _linearization_point(nullptr)
+        , _jacobian(&jacobian)
+        , _trial_constraints(&_empty_constraints)
+        , _test_constraints(&_empty_constraints)
+        , _symmetric_dirichlet_constraints(false)
+      {}
 
       Jacobian& jacobian()
       {
@@ -226,13 +256,13 @@ namespace Dune {
         return isNonLinear(localOperator());
       }
 
-      TrialVector& linearizationPoint()
+      const TrialVector& linearizationPoint() const
       {
 #if DUNE_PDELAB_ENABLE_CHECK_ASSEMBLY
         if (not isNonLinear(localOperator()))
           DUNE_THROW(AssemblyError, "Not allowed to call linearizationPoint() for linear operators");
 #endif
-        return *_trial_vector;
+        return *_linearization_point;
       }
 
       const TestSpace& testSpace() const
@@ -267,7 +297,7 @@ namespace Dune {
 
       const TrialSpace& trialSpace() const
       {
-        return _trial_vector->gridFunctionSpace();
+        return _linearization_point->gridFunctionSpace();
       }
 
       template<typename Flavor_>
@@ -322,7 +352,7 @@ namespace Dune {
                           cachedMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
                             cellLinearizationPointData(
                               models<Concept::PossiblyNonLinear,LOP>(),
-                              cachedVectorData<UncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                              cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                 trialSpaceData(
                                   testSpaceData(
                                     cellGridData(
@@ -335,7 +365,7 @@ namespace Dune {
                             cachedMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
                               cellLinearizationPointData(
                                 models<Concept::PossiblyNonLinear,LOP>(),
-                                cachedVectorData<UncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                                cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                   trialSpaceData(
                                     testSpaceData(
                                       cellGridData(
@@ -584,7 +614,7 @@ namespace Dune {
     template<typename TrialVector, typename Jacobian, typename LOP>
     JacobianEngine(
         const TrialVector&,
-        const Jacobian&,
+        Jacobian&,
         LOP&
       )
       -> JacobianEngine<
@@ -599,7 +629,7 @@ namespace Dune {
     template<typename TrialVector, typename Jacobian, typename LOP, Galerkin galerkin>
     JacobianEngine(
         const TrialVector&,
-        const Jacobian&,
+        Jacobian&,
         LOP&,
         std::integral_constant<Galerkin,galerkin>
       )
@@ -610,6 +640,23 @@ namespace Dune {
         EmptyTransformation,
         EmptyTransformation,
         galerkin
+        >;
+
+    template<typename Jacobian, typename LOP>
+    JacobianEngine(
+        Jacobian&,
+        LOP&
+      )
+      -> JacobianEngine<
+        Backend::Vector<
+          typename Jacobian::TrialGridFunctionSpace,
+          typename Jacobian::value_type
+          >,
+        Jacobian,
+        LOP,
+        EmptyTransformation,
+        EmptyTransformation,
+        Galerkin::automatic
         >;
 
 
