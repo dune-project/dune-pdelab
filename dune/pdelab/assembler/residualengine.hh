@@ -67,7 +67,7 @@ namespace Dune {
 
       LOP* _lop;
 
-      TrialVector* _trial_vector;
+      const TrialVector* _trial_vector;
       TestVector* _test_vector;
 
     public:
@@ -152,7 +152,7 @@ namespace Dune {
         return visitSkeletonIntersections();
       }
 
-      ResidualEngine(TrialVector& trial_vector, TestVector& test_vector, LOP& lop,
+      ResidualEngine(const TrialVector& trial_vector, TestVector& test_vector, LOP& lop,
                      std::integral_constant<Galerkin,galerkin> = std::integral_constant<Galerkin,galerkin>{})
         : _lop(&lop)
         , _trial_vector(&trial_vector)
@@ -164,7 +164,7 @@ namespace Dune {
         return *_test_vector;
       }
 
-      TrialVector& argument()
+      const TrialVector& argument() const
       {
         return *_trial_vector;
       }
@@ -243,7 +243,7 @@ namespace Dune {
                     cellResidualData(
                       cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
                         cellArgumentData(
-                          cachedVectorData<UncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                          cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                             trialSpaceData(
                               testSpaceData(
                                 cellGridData(
@@ -255,7 +255,7 @@ namespace Dune {
                       cellResidualData(
                         cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
                           cellArgumentData(
-                            cachedVectorData<UncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                            cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                               trialSpaceData(
                                 testSpaceData(
                                   cellGridData(
