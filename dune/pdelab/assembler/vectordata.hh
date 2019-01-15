@@ -248,6 +248,65 @@ namespace Dune {
       return CellArgumentData<Implementation>(std::move(implementation));
     }
 
+
+
+    template<bool enabled, typename Implementation>
+    struct CellLinearizationPointData
+      : public Implementation
+    {
+
+      using Context_ = typename Implementation::Context_;
+
+      using LinearizationPoint = typename Implementation::Traits;
+
+      template<typename T = int>
+      const typename LinearizationPoint::Container& linearizationPoint(T dummy = 0)
+      {
+        static_assert(Std::to_true_type<T>::value and enabled, "Calling linearizationPoint() is not allowed for linear problems!");
+#if DUNE_PDELAB_ENABLE_CHECK_ASSEMBLY
+        if (not Context_::engine().bindLinearizationPoint())
+          DUNE_THROW(AssemblyError, "Not allowed to call linearizationPoint() for linear operators");
+#endif
+        return Implementation::readOnlyView();
+      }
+
+      void setup()
+      {
+        if (enabled and Context_::engine().bindLinearizationPoint())
+          Implementation::setup(Context_::engine().linearizationPoint());
+        else
+          Context_::setup();
+      }
+
+      using Context_::bind;
+      using Context_::unbind;
+
+      Context_* bind(const typename Context_::Entity&, typename Context_::Index, typename Context_::Index)
+      {
+        if (enabled and Context_::engine().bindLinearizationPoint())
+          Implementation::bind(Context_::trial().cache());
+        return this;
+      }
+
+      Context_* unbind(const typename Context_::Entity&, typename Context_::Index, typename Context_::Index)
+      {
+        if (enabled and Context_::engine().bindLinearizationPoint())
+          Implementation::unbind(Context_::trial().cache());
+        return this;
+      }
+
+      CellLinearizationPointData(Implementation&& implementation)
+        : Implementation(std::move(implementation))
+      {}
+
+    };
+
+    template<bool enabled, typename Implementation>
+    auto cellLinearizationPointData(std::bool_constant<enabled>, Implementation&& implementation)
+    {
+      return CellLinearizationPointData<enabled,Implementation>(std::move(implementation));
+    }
+
   } // namespace PDELab
 } // namespace Dune
 
