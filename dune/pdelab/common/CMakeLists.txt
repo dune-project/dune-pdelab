@@ -4,6 +4,7 @@ endif()
 
 install(FILES benchmarkhelper.hh
               borderindexidcache.hh
+              checks.hh
               ${clock_hh}
               crossproduct.hh
               dofindex.hh
