@@ -183,6 +183,35 @@ namespace Dune {
       }
 
 
+      inline constexpr auto volumeApplyJacobian()
+      {
+        return [&](const auto& lop, auto& ctx) -> decltype(lop.volumeApplyJacobian(ctx)) {
+          return lop.volumeApplyJacobian(ctx);
+        };
+      }
+
+      inline constexpr auto skeletonApplyJacobian()
+      {
+        return [&](const auto& lop, auto& ctx) -> decltype(lop.skeletonApplyJacobian(ctx)) {
+          return lop.skeletonApplyJacobian(ctx);
+        };
+      }
+
+      inline constexpr auto boundaryApplyJacobian()
+      {
+        return [&](const auto& lop, auto& ctx) -> decltype(lop.boundaryApplyJacobian(ctx)) {
+          return lop.boundaryApplyJacobian(ctx);
+        };
+      }
+
+      inline constexpr auto volumeApplyJacobianPostIntersections()
+      {
+        return [&](const auto& lop, auto& ctx) -> decltype(lop.volumeApplyJacobianPostIntersections(ctx)) {
+          return lop.volumeApplyJacobianPostIntersections(ctx);
+        };
+      }
+
+
       inline constexpr auto volumePattern()
       {
         return [&](const auto& lop, auto& ctx) -> decltype(lop.volumePattern(ctx)) {
