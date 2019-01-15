@@ -191,6 +191,11 @@ namespace Dune {
           }
       }
 
+      template<typename Context>
+      void volumeApplyJacobian(Context& ctx) const
+      {
+        volumeIntegral(ctx);
+      }
 
       template<typename Context>
       void volumeJacobian(Context& ctx) const
@@ -419,6 +424,11 @@ namespace Dune {
           }
       }
 
+      template<typename Context>
+      void skeletonApplyJacobian(Context& ctx) const
+      {
+        skeletonIntegral(ctx);
+      }
 
       template<typename Context>
       void skeletonJacobian(Context& ctx) const
@@ -726,6 +736,13 @@ namespace Dune {
             for (size_type i = 0 ; i < ctx.test().space().size() ; ++i)
               cell.residual().accumulate(ctx.test().space(),i,term4 * psi_s[i]);
           }
+      }
+
+
+      template<typename Context>
+      void boundaryApplyJacobian(Context& ctx) const
+      {
+        boundaryIntegral(ctx);
       }
 
 
