@@ -500,8 +500,8 @@ namespace Dune {
       const_iterator begin()
       {
         assert(not _started);
-        _ctx->beginQuadrature(*this);
         _started = true;
+        _ctx->beginQuadrature(*this);
         auto it = _quadrature_rule->begin();
         return {it,0,*this};
       }
