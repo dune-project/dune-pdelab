@@ -40,12 +40,18 @@ namespace Dune {
         using value_type       = typename LV::value_type;
       };
 
+    private:
+
+      using VectorStorage = std::conditional_t<_mode == LocalViewDataMode::read, const typename Traits::Vector, typename Traits::Vector>;
+
+    protected:
+
       void setWeight(const typename Traits::Weight& weight)
       {
         _weight = weight;
       }
 
-      void setup(typename Traits::Vector& vector)
+      void setup(VectorStorage& vector)
       {
         Context::setup();
         _local_view.attach(vector);
@@ -135,7 +141,7 @@ namespace Dune {
       >
     auto cachedVectorData(const Field& initial, Context&& ctx)
     {
-      return CachedVectorData<Context,LV<Vector,std::decay_t<decltype(ctx.cache(Flavor{}))>>,_mode>{std::move(ctx),initial};
+      return CachedVectorData<Context,LV<std::conditional_t<_mode == LocalViewDataMode::read,const Vector, Vector>,std::decay_t<decltype(ctx.cache(Flavor{}))>>,_mode>{std::move(ctx),initial};
     }
 
     template<
@@ -147,7 +153,7 @@ namespace Dune {
       >
     auto cachedVectorData(Context&& ctx)
     {
-      return CachedVectorData<Context,LV<Vector,std::decay_t<decltype(ctx.cache(Flavor{}))>>,_mode>{std::move(ctx)};
+      return CachedVectorData<Context,LV<std::conditional_t<_mode == LocalViewDataMode::read,const Vector, Vector>,std::decay_t<decltype(ctx.cache(Flavor{}))>>,_mode>{std::move(ctx)};
     }
 
     template<typename Implementation>
