@@ -24,6 +24,7 @@
 #include <dune/pdelab/assembler/residualengine.hh>
 #include <dune/pdelab/assembler/patternengine.hh>
 #include <dune/pdelab/assembler/jacobianengine.hh>
+#include <dune/pdelab/assembler/applyjacobianengine.hh>
 
 #include <dune/pdelab/localoperator/adapter.hh>
 #include <dune/pdelab/localoperator/l2.hh>
@@ -458,6 +459,10 @@ int main(int argc, char** argv)
 
     auto jac_engine = Dune::PDELab::JacobianEngine(solution,jac,lop);
     assembler.assemble(jac_engine);
+
+    residual = 0.0;
+    auto apply_engine = Dune::PDELab::ApplyJacobianEngine(solution,solution,residual,lop);
+    assembler.assemble(apply_engine);
 
     residual = 0.0;
     auto res_engine = Dune::PDELab::ResidualEngine(solution,residual,lop);
