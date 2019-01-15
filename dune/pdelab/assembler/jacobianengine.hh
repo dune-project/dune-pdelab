@@ -120,7 +120,7 @@ namespace Dune {
 
         static constexpr bool skipConstantPart()
         {
-          return false;
+          return true;
         }
 
         static constexpr bool skipOffDiagonalSkeletonPart()
@@ -166,12 +166,12 @@ namespace Dune {
 
       static constexpr bool visitBoundaryIntersections()
       {
-        return std::is_invocable_v<decltype(LocalOperator::boundaryIntegral()),LOP,PlaceHolder&>;
+        return std::is_invocable_v<decltype(LocalOperator::boundaryJacobian()),LOP,PlaceHolder&>;
       }
 
       static constexpr bool visitSkeletonIntersections()
       {
-        return std::is_invocable_v<decltype(LocalOperator::skeletonIntegral()),LOP,PlaceHolder&>;
+        return std::is_invocable_v<decltype(LocalOperator::skeletonJacobian()),LOP,PlaceHolder&>;
       }
 
       static constexpr bool visitPeriodicIntersections()
@@ -221,8 +221,17 @@ namespace Dune {
         return *_jacobian;
       }
 
-      TrialVector& argument()
+      constexpr bool bindLinearizationPoint() const
       {
+        return isNonLinear(localOperator());
+      }
+
+      TrialVector& linearizationPoint()
+      {
+#if DUNE_PDELAB_ENABLE_CHECK_ASSEMBLY
+        if (not isNonLinear(localOperator()))
+          DUNE_THROW(AssemblyError, "Not allowed to call linearizationPoint() for linear operators");
+#endif
         return *_trial_vector;
       }
 
@@ -311,7 +320,8 @@ namespace Dune {
                         *_lop,
                         cellJacobianData(
                           cachedMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
-                            cellArgumentData(
+                            cellLinearizationPointData(
+                              models<Concept::PossiblyNonLinear,LOP>(),
                               cachedVectorData<UncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                 trialSpaceData(
                                   testSpaceData(
@@ -323,7 +333,8 @@ namespace Dune {
                           *_lop,
                           cellJacobianData(
                             cachedMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
-                              cellArgumentData(
+                              cellLinearizationPointData(
+                                models<Concept::PossiblyNonLinear,LOP>(),
                                 cachedVectorData<UncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                   trialSpaceData(
                                     testSpaceData(
