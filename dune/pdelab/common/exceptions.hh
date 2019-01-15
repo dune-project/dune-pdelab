@@ -19,6 +19,11 @@ namespace Dune {
     {};
 
 
+    //! Assembly-related error.
+    class AssemblyError
+      : public Exception
+    {};
+
     //! GridFunctionSpace-related error.
     class GridFunctionSpaceError
       : public Exception
