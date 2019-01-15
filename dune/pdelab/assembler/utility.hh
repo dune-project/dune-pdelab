@@ -24,6 +24,14 @@ namespace Dune {
         );
       };
 
+      struct PossiblyNonLinear
+      {
+        template<class LocalOperator>
+        auto require(const LocalOperator& lop) -> decltype(
+          lop.isNonLinear()
+        );
+      };
+
     }
 
 
@@ -261,6 +269,20 @@ namespace Dune {
     template<typename GFSV, typename GC>
     void set_trivial_rows(const GFSV& gfsv, GC& globalcontainer, const EmptyTransformation& c)
     {
+    }
+
+    template<typename LOP>
+    constexpr std::enable_if_t<models<Concept::PossiblyNonLinear,LOP>(),bool>
+    isNonLinear(const LOP& lop)
+    {
+      return lop.isNonLinear();
+    }
+
+    template<typename LOP>
+    constexpr std::enable_if_t<not models<Concept::PossiblyNonLinear,LOP>(),bool>
+    isNonLinear(const LOP& lop)
+    {
+      return false;
     }
 
   } // namespace PDELab
