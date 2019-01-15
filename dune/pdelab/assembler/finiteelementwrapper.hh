@@ -473,7 +473,7 @@ namespace Dune {
               {
                 Container temp(size);
                 _evaluate(x,temp);
-                return std::move(temp);
+                return temp;
               });
           }
         _current = nullptr;
