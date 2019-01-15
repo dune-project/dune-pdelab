@@ -16,6 +16,7 @@
 #include<dune/pdelab/finiteelement/localbasiscache.hh>
 
 #include"convectiondiffusionparameter.hh"
+#include"convectiondiffusiondg.hh"
 
 /**
    \todo update quadrature order to work with lfsv != lfsu

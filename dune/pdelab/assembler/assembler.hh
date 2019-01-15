@@ -4,6 +4,11 @@
 #ifndef DUNE_PDELAB_ASSEMBLER_ASSEMBLER_HH
 #define DUNE_PDELAB_ASSEMBLER_ASSEMBLER_HH
 
+#include <tuple>
+#include <type_traits>
+
+#include <dune/pdelab/common/intersectiontype.hh>
+
 namespace Dune {
   namespace PDELab {
 

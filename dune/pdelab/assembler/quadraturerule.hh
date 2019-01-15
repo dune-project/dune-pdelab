@@ -3,9 +3,12 @@
 #ifndef DUNE_PDELAB_ASSEMBLER_QUADRATURERULE_HH
 #define DUNE_PDELAB_ASSEMBLER_QUADRATURERULE_HH
 
+#include <optional>
+
 #include <dune/common/iteratorfacades.hh>
 
 #include <dune/geometry/quadraturerules.hh>
+#include <dune/geometry/identitygeometry.hh>
 
 namespace Dune {
   namespace PDELab {

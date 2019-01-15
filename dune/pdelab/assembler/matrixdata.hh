@@ -14,6 +14,7 @@
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/assembler/utility.hh>
 #include <dune/pdelab/assembler/vectordata.hh>
+#include <dune/pdelab/gridfunctionspace/flavor.hh>
 #include <dune/pdelab/gridoperator/common/localmatrix.hh>
 
 namespace Dune {

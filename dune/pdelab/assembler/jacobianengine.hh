@@ -4,13 +4,19 @@
 #ifndef DUNE_PDELAB_ASSEMBLER_JACOBIANENGINE_HH
 #define DUNE_PDELAB_ASSEMBLER_JACOBIANENGINE_HH
 
+#include <dune/pdelab/common/checks.hh>
+#include <dune/pdelab/common/exceptions.hh>
+#include <dune/pdelab/common/typetraits.hh>
+#include <dune/pdelab/backend/common/uncachedmatrixview.hh>
+#include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/assembler/context.hh>
 #include <dune/pdelab/assembler/celldata.hh>
 #include <dune/pdelab/assembler/functionspacedata.hh>
-#include <dune/pdelab/assembler/vectordata.hh>
 #include <dune/pdelab/assembler/matrixdata.hh>
+#include <dune/pdelab/assembler/vectordata.hh>
+#include <dune/pdelab/assembler/utility.hh>
 #include <dune/pdelab/localoperator/guardedcalls.hh>
 #include <dune/pdelab/gridfunctionspace/flavor.hh>
 #include <dune/pdelab/assembler/enginebase.hh>

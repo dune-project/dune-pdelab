@@ -5,6 +5,7 @@
 #define DUNE_PDELAB_COMMON_TYPETRAITS_HH
 
 #include <dune/common/typetraits.hh>
+#include <dune/common/std/type_traits.hh>
 #include <dune/typetree/typetraits.hh>
 
 namespace Dune {
