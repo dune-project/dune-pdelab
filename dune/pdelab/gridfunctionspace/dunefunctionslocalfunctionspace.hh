@@ -84,6 +84,18 @@ namespace Dune {
           , _tree(TypeTree::child(_local_view.tree(),tree_path))
         {}
 
+        LocalFunctionSpace(const LocalFunctionSpace&) = delete;
+
+        LocalFunctionSpace(LocalFunctionSpace&& r)
+          : _gfs(std::move(r._gfs))
+          , _local_view(r._local_view)
+          , _tree_path(r._tree_path)
+          , _tree(TypeTree::child(_local_view.tree(),_tree_path))
+        {}
+
+        LocalFunctionSpace& operator=(const LocalFunctionSpace&) = delete;
+        LocalFunctionSpace& operator=(LocalFunctionSpace&&) = delete;
+
         size_type subSpaceDepth() const
         {
           return 0;
