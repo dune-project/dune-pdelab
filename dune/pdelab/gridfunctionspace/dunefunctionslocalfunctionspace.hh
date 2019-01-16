@@ -14,6 +14,7 @@
 
 #include <dune/typetree/typetree.hh>
 
+#include <dune/pdelab/gridfunctionspace/flavor.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
@@ -46,7 +47,7 @@ namespace Dune {
         };
       };
 
-      template<typename GFS, typename TreePath = TypeTree::HybridTreePath<>>
+      template<typename GFS, typename Flavor_, typename TreePath = TypeTree::HybridTreePath<>>
       class LocalFunctionSpace
         : public LeafLFSMixin<LocalFunctionSpace<GFS,TreePath>>
       {
@@ -72,10 +73,12 @@ namespace Dune {
           using SizeType          = std::size_t;
           using DOFIndex          = typename GFS::Ordering::Traits::DOFIndex;
           using ConstraintsType   = typename GFS::Traits::ConstraintsType;
+          using Flavor            = Flavor_;
 
         };
 
         using size_type = std::size_t;
+        using Flavor = Flavor_;
 
         LocalFunctionSpace(std::shared_ptr<const GFS> gfs, TreePath tree_path = TreePath(), size_type offset = 0)
           : _gfs(gfs)
@@ -193,9 +196,9 @@ namespace Dune {
     } // namespace Experimental
 
 
-    template<typename DFBasis, typename V, typename CE, typename TAG>
-    class LocalFunctionSpace<Experimental::GridFunctionSpace<DFBasis,V,CE>,TAG>
-      : public Experimental::LocalFunctionSpace<Experimental::GridFunctionSpace<DFBasis,V,CE>>
+    template<typename DFBasis, typename V, typename CE, typename Flavor>
+    class LocalFunctionSpace<Experimental::GridFunctionSpace<DFBasis,V,CE>,Flavor>
+      : public Experimental::LocalFunctionSpace<Experimental::GridFunctionSpace<DFBasis,V,CE>,Flavor>
     {
 
       using GFS = Experimental::GridFunctionSpace<DFBasis,V,CE>;
@@ -203,30 +206,11 @@ namespace Dune {
     public:
 
       LocalFunctionSpace(std::shared_ptr<const GFS> gfs)
-        : Experimental::LocalFunctionSpace<GFS>(gfs)
+        : Experimental::LocalFunctionSpace<GFS,Flavor>(gfs)
       {}
 
       LocalFunctionSpace(const GFS& gfs)
-        : Experimental::LocalFunctionSpace<GFS>(stackobject_to_shared_ptr(gfs))
-      {}
-
-    };
-
-    template<typename DFBasis, typename V, typename CE>
-    class LocalFunctionSpace<Experimental::GridFunctionSpace<DFBasis,V,CE>,AnySpaceTag>
-      : public Experimental::LocalFunctionSpace<Experimental::GridFunctionSpace<DFBasis,V,CE>>
-    {
-
-      using GFS = Experimental::GridFunctionSpace<DFBasis,V,CE>;
-
-    public:
-
-      LocalFunctionSpace(std::shared_ptr<const GFS> gfs)
-        : Experimental::LocalFunctionSpace<GFS>(gfs)
-      {}
-
-      LocalFunctionSpace(const GFS& gfs)
-        : Experimental::LocalFunctionSpace<GFS>(stackobject_to_shared_ptr(gfs))
+        : Experimental::LocalFunctionSpace<GFS,Flavor>(stackobject_to_shared_ptr(gfs))
       {}
 
     };

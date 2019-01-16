@@ -344,7 +344,8 @@ namespace Dune {
         struct Ordering
           : public TypeTree::CompositeNode<LeafOrdering>
         {
-          friend class LocalFunctionSpace<GridFunctionSpace>;
+          template<typename GFS, typename Flavor, typename TreePath>
+          friend class LocalFunctionSpace;
 
           using Traits = typename LeafOrdering::Traits;
 
