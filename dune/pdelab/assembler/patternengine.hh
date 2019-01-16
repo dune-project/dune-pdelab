@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/assembler/context.hh>
