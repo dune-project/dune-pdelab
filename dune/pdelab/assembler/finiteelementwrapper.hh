@@ -17,16 +17,9 @@
 #include <dune/typetree/leafnode.hh>
 #include <dune/typetree/traversal.hh>
 
+#include <dune/pdelab/common/checks.hh>
 #include <dune/pdelab/common/typetraits.hh>
 #include <dune/pdelab/assembler/utility.hh>
-
-#ifndef DUNE_PDELAB_DEBUG_RANGE_PROXY
-#ifdef NDEBUG
-#define DUNE_PDELAB_DEBUG_RANGE_PROXY 0
-#else
-#define DUNE_PDELAB_DEBUG_RANGE_PROXY 1
-#endif
-#endif
 
 namespace Dune {
 

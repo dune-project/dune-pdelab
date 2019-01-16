@@ -9,4 +9,13 @@
 #endif
 #endif
 
+#ifndef DUNE_PDELAB_DEBUG_RANGE_PROXY
+#ifdef NDEBUG
+#define DUNE_PDELAB_DEBUG_RANGE_PROXY 0
+#else
+#define DUNE_PDELAB_DEBUG_RANGE_PROXY 1
+#endif
+#endif
+
+
 #endif // DUNE_PDELAB_COMMON_CHECKS_HH
