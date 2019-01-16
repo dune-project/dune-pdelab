@@ -6,6 +6,7 @@
 #include<vector>
 
 #include <dune/common/stdstreams.hh>
+#include <dune/common/rangeutilities.hh>
 
 #include <dune/geometry/referenceelements.hh>
 
@@ -74,6 +75,8 @@ namespace Dune {
           using DOFIndex          = typename GFS::Ordering::Traits::DOFIndex;
           using ConstraintsType   = typename GFS::Traits::ConstraintsType;
           using Flavor            = Flavor_;
+          //! \brief Type of container to store indices
+          using IndexContainer    = std::vector<SizeType>;
 
         };
 
@@ -108,6 +111,18 @@ namespace Dune {
         size_type size () const
         {
           return _local_view.size();
+        }
+
+        using iterator = typename IntegralRange<typename Traits::IndexContainer::size_type>::iterator;
+
+        iterator begin() const
+        {
+          return iterator{0};
+        }
+
+        iterator end() const
+        {
+          return iterator{size()};
         }
 
         size_type maxSize () const
