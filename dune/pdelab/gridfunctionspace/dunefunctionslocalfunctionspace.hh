@@ -53,6 +53,8 @@ namespace Dune {
 
       public:
 
+        using ImplementationTag = LeafLocalFunctionSpaceTag;
+
         using Basis = typename GFS::Basis;
         using LocalView = typename Basis::LocalView;
         using Tree = TypeTree::ChildForTreePath<typename LocalView::Tree,TreePath>;
