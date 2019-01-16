@@ -226,6 +226,17 @@ namespace Dune {
         : _lfs(nullptr)
       {}
 
+      LFSIndexCacheBase(const LFSIndexCacheBase& r) = delete;
+      LFSIndexCacheBase(LFSIndexCacheBase&& r)
+        : _lfs(nullptr)
+      {
+        if (r.attached())
+          attach(*r._lfs);
+      }
+
+      LFSIndexCacheBase& operator=(const LFSIndexCacheBase&) = delete;
+      LFSIndexCacheBase& operator=(LFSIndexCacheBase&&) = delete;
+
       void attach(const LFS& lfs)
       {
         assert(not attached());
