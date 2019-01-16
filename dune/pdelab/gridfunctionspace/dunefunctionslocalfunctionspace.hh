@@ -16,6 +16,8 @@
 
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
+#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/dunefunctionslfsindexcache.hh>
 
 namespace Dune {
   namespace PDELab {

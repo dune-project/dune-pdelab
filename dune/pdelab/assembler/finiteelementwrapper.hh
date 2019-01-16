@@ -15,7 +15,9 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
 #include <dune/typetree/leafnode.hh>
+#include <dune/typetree/traversal.hh>
 
+#include <dune/pdelab/common/typetraits.hh>
 #include <dune/pdelab/assembler/utility.hh>
 
 #ifndef DUNE_PDELAB_DEBUG_RANGE_PROXY
