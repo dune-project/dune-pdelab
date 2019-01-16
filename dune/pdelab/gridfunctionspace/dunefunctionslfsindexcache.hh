@@ -59,14 +59,39 @@ namespace Dune {
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
       LFSIndexCacheBase(const LFS& lfs, const C& constraints, bool enable_constraints_caching)
-        : _lfs(lfs)
+        : _lfs(nullptr)
         , _enable_constraints_caching(enable_constraints_caching)
-        , _container_indices(lfs.maxSize())
-        , _dof_flags(lfs.maxSize(),0)
-        , _constraints_iterators(lfs.maxSize())
-        , _inverse_cache_built(false)
         , _gfs_constraints(constraints)
       {
+        attach(lfs);
+      }
+
+      LFSIndexCacheBase(const C& constraints, bool enable_constraints_caching)
+        : _lfs(nullptr)
+        , _enable_constraints_caching(enable_constraints_caching)
+        , _inverse_cache_built(false)
+        , _gfs_constraints(constraints)
+      {}
+
+      void attach(const LFS& lfs)
+      {
+        assert(not attached());
+        _lfs = &lfs;
+        _container_indices.resize(lfs.maxSize());
+        _dof_flags.resize(lfs.maxSize(),0);
+        _constraints_iterators.resize(lfs.maxSize());
+        _inverse_cache_built = false;
+      }
+
+      void detach()
+      {
+        assert(attached());
+        _lfs = nullptr;
+      }
+
+      bool attached() const
+      {
+        return _lfs;
       }
 
       void update()
@@ -74,12 +99,12 @@ namespace Dune {
 
       DI dofIndex(size_type i) const
       {
-        return _lfs.dofIndex(i);
+        return _lfs->dofIndex(i);
       }
 
       CI containerIndex(size_type i) const
       {
-        return _lfs.containerIndex(i);
+        return _lfs->containerIndex(i);
       }
 
       CI containerIndex(const DI& i) const
@@ -111,12 +136,12 @@ namespace Dune {
 
       const LocalFunctionSpace& localFunctionSpace() const
       {
-        return _lfs;
+        return *_lfs;
       }
 
       size_type size() const
       {
-        return _lfs.size();
+        return _lfs->size();
       }
 
       bool constraintsCachingEnabled() const
@@ -126,7 +151,7 @@ namespace Dune {
 
     private:
 
-      const LFS& _lfs;
+      const LFS* _lfs;
       const bool _enable_constraints_caching;
       CIVector _container_indices;
       std::vector<unsigned char> _dof_flags;
@@ -180,27 +205,58 @@ namespace Dune {
       typedef std::unordered_map<DI,CI> CIMap;
 
       explicit LFSIndexCacheBase(const LFS& lfs)
-        : _lfs(lfs)
-      {}
+        : _lfs(nullptr)
+      {
+        attach(lfs);
+      }
 
       template<typename C>
       LFSIndexCacheBase(const LFS& lfs, const C& c, bool enable_constraints_caching)
-        : _lfs(lfs)
+        : _lfs(&lfs)
+      {
+        attach(lfs);
+      }
+
+      template<typename C>
+      LFSIndexCacheBase(const C& c, bool enable_constraints_caching)
+        : _lfs(nullptr)
       {}
+
+      LFSIndexCacheBase()
+        : _lfs(nullptr)
+      {}
+
+      void attach(const LFS& lfs)
+      {
+        assert(not attached());
+        _lfs = &lfs;
+        _container_indices.resize(lfs.maxSize());
+      }
+
+      void detach()
+      {
+        assert(attached());
+        _lfs = nullptr;
+      }
+
+      bool attached() const
+      {
+        return _lfs;
+      }
 
       DI dofIndex(size_type i) const
       {
-        return _lfs.dofIndex(i);
+        return _lfs->dofIndex(i);
       }
 
       CI containerIndex(size_type i) const
       {
-        return _lfs.containerIndex(i);
+        return _lfs->containerIndex(i);
       }
 
       CI containerIndex(const DI& i) const
       {
-        return _lfs.containerIndex(i);
+        return _lfs->containerIndex(i);
       }
 
       bool isConstrained(size_type i) const
@@ -225,12 +281,12 @@ namespace Dune {
 
       const LocalFunctionSpace& localFunctionSpace() const
       {
-        return _lfs;
+        return *_lfs;
       }
 
       size_type size() const
       {
-        return _lfs.size();
+        return _lfs->size();
       }
 
       bool constraintsCachingEnabled() const
@@ -243,7 +299,7 @@ namespace Dune {
 
     private:
 
-      const LFS& _lfs;
+      const LFS* _lfs;
       CIVector _container_indices;
       mutable CIMap _container_index_map;
       const ConstraintsVector _constraints;
