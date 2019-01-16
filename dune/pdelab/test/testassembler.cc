@@ -305,6 +305,64 @@ namespace DG {
 
 }
 
+
+template<typename Assembler, typename Engine>
+class OnTheFlyOperator : public Dune::LinearOperator<
+  Dune::PDELab::Backend::Native<typename Engine::TrialVector>,
+  Dune::PDELab::Backend::Native<typename Engine::TestVector>
+  >
+{
+
+public:
+  using domain_type = Dune::PDELab::Backend::Native<typename Engine::TrialVector>;
+  using range_type  = Dune::PDELab::Backend::Native<typename Engine::TestVector>;
+  using field_type  = typename domain_type::field_type;
+
+  OnTheFlyOperator (Assembler& assembler, const Engine& engine)
+    : _assembler(assembler)
+    , _engine(engine)
+    , _x(_engine.trialSpace(),Dune::PDELab::Backend::unattached_container{})
+    , _y(_engine.testSpace(),Dune::PDELab::Backend::unattached_container{})
+  {
+    _engine.setArgument(_x);
+    _engine.setResult(_y);
+  }
+
+  virtual void apply (const domain_type& x, range_type& y) const override
+  {
+    _x.attach(Dune::stackobject_to_shared_ptr(const_cast<domain_type&>(x)));
+    _y.attach(Dune::stackobject_to_shared_ptr(y));
+    y = 0.0;
+    _assembler.assemble(_engine);
+    _x.detach();
+    _y.detach();
+  }
+
+  virtual void applyscaleadd (field_type alpha, const domain_type& x, range_type& y) const override
+  {
+    range_type temp(y);
+    _x.attach(Dune::stackobject_to_shared_ptr(const_cast<domain_type&>(x)));
+    _y.attach(Dune::stackobject_to_shared_ptr(temp));
+    temp = 0.0;
+    _assembler.assemble(_engine);
+    y.axpy(alpha,temp);
+    _x.detach();
+    _y.detach();
+  }
+
+  Dune::SolverCategory::Category category() const override
+  {
+    return Dune::SolverCategory::sequential;
+  }
+
+private:
+  Assembler& _assembler;
+  mutable Engine _engine;
+  mutable typename Engine::TrialVector _x;
+  mutable typename Engine::TestVector _y;
+};
+
+
 int main(int argc, char** argv)
 {
   auto& helper = Dune::MPIHelper::instance(argc, argv);
@@ -471,6 +529,7 @@ int main(int argc, char** argv)
     assembler.assemble(res_engine);
 
     auto matrix_operator = Dune::MatrixAdapter<Native<decltype(jac)>,Native<Vector>,Native<Vector>>(native(jac));
+    auto matrix_free_operator = OnTheFlyOperator(assembler, apply_engine);
 
     using Preconditioner = Dune::SeqILU<Native<decltype(jac)>,Native<Vector>,Native<Vector>>;
     Preconditioner preconditioner(native(jac),1,.9,false);
