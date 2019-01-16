@@ -751,7 +751,8 @@ namespace Dune {
       beginQuadrature(QuadratureRule& qr)
       {
         Context::beginQuadrature(qr);
-        _outside.beginQuadrature(qr);
+        if (_outside.bound())
+          _outside.beginQuadrature(qr);
       }
 
       template<typename QuadratureRule>
@@ -760,7 +761,8 @@ namespace Dune {
         >
       endQuadrature(QuadratureRule& qr)
       {
-        _outside.endQuadrature(qr);
+        if (_outside.bound())
+         _outside.endQuadrature(qr);
         Context::endQuadrature(qr);
       }
 
