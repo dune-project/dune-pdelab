@@ -212,7 +212,7 @@ namespace Dune {
 
       template<typename C>
       LFSIndexCacheBase(const LFS& lfs, const C& c, bool enable_constraints_caching)
-        : _lfs(&lfs)
+        : _lfs(nullptr)
       {
         attach(lfs);
       }
