@@ -19,6 +19,7 @@
 #include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
 #include <dune/pdelab/stationary/linearproblem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionadapter.hh>
+#include <dune/pdelab/gridfunctionspace/vtk.hh>
 
 #include <dune/pdelab/assembler/assembler.hh>
 #include <dune/pdelab/assembler/residualengine.hh>
@@ -341,6 +342,7 @@ int main(int argc, char** argv)
   using VBE = Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed>;
   using GFS = Dune::PDELab::GridFunctionSpace<ES,FEM,CON,VBE>;
   GFS gfs(es,fem);
+  gfs.name("u");
 
   Dune::PDELab::Assembler<ES> assembler(es);
 
@@ -480,11 +482,14 @@ int main(int argc, char** argv)
     Dune::InverseOperatorResult res;
     solver.apply(native(correction),native(residual),res);
 
-  }
+    solution -= correction;
 
-  for (auto& x : residual)
-    std::cout << " " << x;
-  std::cout << std::endl;
+    Dune::VTKWriter<GV> vtk_writer(gv);
+
+    Dune::PDELab::addSolutionToVTKWriter(vtk_writer,gfs,solution);
+    vtk_writer.write("test");
+
+  }
 
   return 0;
 }
