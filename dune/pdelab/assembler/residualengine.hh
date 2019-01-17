@@ -94,8 +94,8 @@ namespace Dune {
 
       EmptyTransformation _empty_constraints;
 
-      TrialConstraints* _trial_constraints;
-      TestConstraints* _test_constraints;
+      const TrialConstraints* _trial_constraints;
+      const TestConstraints* _test_constraints;
 
     public:
 
@@ -194,7 +194,7 @@ namespace Dune {
       {}
 
       ResidualEngine(const TrialVector& trial_vector, TestVector& test_vector, LOP& lop,
-                     TrialConstraints& trial_constraints, TestConstraints& test_constraints,
+                     const TrialConstraints& trial_constraints, const TestConstraints& test_constraints,
                      std::integral_constant<Galerkin,galerkin> = std::integral_constant<Galerkin,galerkin>{})
         : _lop(&lop)
         , _trial_vector(&trial_vector)
@@ -216,11 +216,6 @@ namespace Dune {
       const TestSpace& testSpace() const
       {
         return _test_vector->gridFunctionSpace();
-      }
-
-      TestConstraints& testConstraints()
-      {
-        return *_test_constraints;
       }
 
       const TestConstraints& testConstraints() const
@@ -251,11 +246,6 @@ namespace Dune {
       const TrialSpace& trialSpace() const
       {
         return _trial_vector->gridFunctionSpace();
-      }
-
-      TrialConstraints& trialConstraints()
-      {
-        return *_trial_constraints;
       }
 
       const TrialConstraints& trialConstraints() const

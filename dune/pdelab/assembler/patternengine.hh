@@ -230,11 +230,6 @@ namespace Dune {
         return *_test_space;
       }
 
-      TestConstraints& testConstraints()
-      {
-        return *_test_constraints;
-      }
-
       const TestConstraints& testConstraints() const
       {
         return *_test_constraints;
@@ -263,11 +258,6 @@ namespace Dune {
       const TrialSpace& trialSpace() const
       {
         return *_trial_space;
-      }
-
-      TrialConstraints& trialConstraints()
-      {
-        return *_trial_constraints;
       }
 
       const TrialConstraints& trialConstraints() const
