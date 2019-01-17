@@ -65,15 +65,6 @@ namespace Dune {
       using type = typename T::Traits::JacobianType;
     };
 
-    struct OnlyMovable
-    {
-      OnlyMovable() = default;
-      OnlyMovable(const OnlyMovable&) = delete;
-      OnlyMovable(OnlyMovable&&) = default;
-      OnlyMovable& operator=(const OnlyMovable&) = delete;
-      OnlyMovable& operator=(OnlyMovable&&) = delete;
-    };
-
     template<typename FE, typename Cell>
     class FiniteElementWrapper;
 
