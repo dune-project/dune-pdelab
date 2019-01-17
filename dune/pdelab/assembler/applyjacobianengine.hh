@@ -7,6 +7,7 @@
 #include <dune/pdelab/common/checks.hh>
 #include <dune/pdelab/common/exceptions.hh>
 #include <dune/pdelab/common/typetraits.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
@@ -451,6 +452,7 @@ namespace Dune {
       void finish(Context& ctx)
       {
         invoke_if_possible(LocalOperator::finish(),*_lop,ctx);
+        constrain_residual(trialConstraints(),result());
       }
 
       template<typename Context>
