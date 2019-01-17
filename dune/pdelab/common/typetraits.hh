@@ -53,6 +53,15 @@ namespace Dune {
     template<typename T>
     using IsGridFunction = std::integral_constant<bool,impl::IsGridFunction<std::decay_t<T>>::value>;
 
+    struct OnlyMovable
+    {
+      OnlyMovable() = default;
+      OnlyMovable(const OnlyMovable&) = delete;
+      OnlyMovable(OnlyMovable&&) = default;
+      OnlyMovable& operator=(const OnlyMovable&) = delete;
+      OnlyMovable& operator=(OnlyMovable&&) = delete;
+    };
+
   } // end namespace PDELab
 } // end namespace Dune
 
