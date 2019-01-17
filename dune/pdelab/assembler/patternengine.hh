@@ -22,13 +22,13 @@ namespace Dune {
   namespace PDELab {
 
     template<
-      typename TrialVector_,
-      typename TestVector_,
+      typename TrialSpace_,
+      typename TestSpace_,
       typename LOP,
       typename MBE,
+      typename JF,
       typename TrialConstraints_ = EmptyTransformation,
       typename TestConstraints_ = EmptyTransformation,
-      typename JF = typename TrialVector_::value_type,
       Galerkin galerkin = Galerkin::automatic
       >
     class PatternEngine
@@ -37,8 +37,8 @@ namespace Dune {
       static constexpr bool enable_flavors = not LocalOperator::disableFunctionSpaceFlavors<LOP>();
 
       using Types = LocalFunctionSpaceTypes<
-        typename TestVector_::GridFunctionSpace,
-        typename TrialVector_::GridFunctionSpace,
+        TrialSpace_,
+        TestSpace_,
         enable_flavors
         >;
 
@@ -46,10 +46,10 @@ namespace Dune {
 
       using size_type        = std::size_t;
 
-      using TrialVector      = TrialVector_;
+      using TrialVector      = Dune::PDELab::Backend::Vector<TrialSpace_,JF>;
       using TrialConstraints = TrialConstraints_;
 
-      using TestVector       = TestVector_;
+      using TestVector       = Dune::PDELab::Backend::Vector<TestSpace_,JF>;
       using TestConstraints  = TestConstraints_;
 
       using TestSpace        = typename Types::TestSpace;
@@ -189,34 +189,36 @@ namespace Dune {
       }
 
       PatternEngine(
-        const TrialVector& trial_vector,
-        const TestVector& test_vector,
+        const TrialSpace& trial_space,
+        const TestSpace& test_space,
         LOP& lop,
         const MatrixBackend& matrix_backend,
         const TrialConstraints& trial_constraints,
         const TestConstraints& test_constraints,
+        JF,
         std::integral_constant<Galerkin,galerkin> = std::integral_constant<Galerkin,galerkin>{}
         )
         : _lop(&lop)
         , _matrix_backend(matrix_backend)
-        , _trial_space(&trial_vector.gridFunctionSpace())
-        , _test_space(&test_vector.gridFunctionSpace())
+        , _trial_space(&trial_space)
+        , _test_space(&test_space)
         , _trial_constraints(&trial_constraints)
         , _test_constraints(&test_constraints)
       {}
 
       template<typename LOP_>
       PatternEngine(
-        const TrialVector& trial_vector,
-        const TestVector& test_vector,
+        const TrialSpace& trial_space,
+        const TestSpace& test_space,
         LOP_& lop,
         const MatrixBackend& matrix_backend,
+        JF,
         std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,std::integral_constant<Galerkin,galerkin>> = std::integral_constant<Galerkin,galerkin>{}
         )
         : _lop(&lop)
         , _matrix_backend(matrix_backend)
-        , _trial_space(&trial_vector.gridFunctionSpace())
-        , _test_space(&test_vector.gridFunctionSpace())
+        , _trial_space(&trial_space)
+        , _test_space(&test_space)
         , _trial_constraints(&_empty_constraints)
         , _test_constraints(&_empty_constraints)
       {}
@@ -455,40 +457,42 @@ namespace Dune {
 
     };
 
-    template<typename TrialVector, typename TestVector, typename LOP, typename MBE>
+    template<typename TrialSpace, typename TestSpace, typename LOP, typename MBE, typename JF>
     PatternEngine(
-        const TrialVector&,
-        const TestVector&,
+        const TrialSpace&,
+        const TestSpace&,
         LOP&,
-        const MBE&
+        const MBE&,
+        JF
       )
       -> PatternEngine<
-        TrialVector,
-        TestVector,
+        TrialSpace,
+        TestSpace,
         LOP,
         MBE,
+        JF,
         EmptyTransformation,
         EmptyTransformation,
-        typename TrialVector::value_type,
         Galerkin::automatic
         >;
 
-    template<typename TrialVector, typename TestVector, typename LOP, typename MBE, Galerkin galerkin>
+    template<typename TrialSpace, typename TestSpace, typename LOP, typename MBE, typename JF, Galerkin galerkin>
     PatternEngine(
-        const TrialVector&,
-        const TestVector&,
+        const TrialSpace&,
+        const TestSpace&,
         LOP&,
         const MBE&,
+        JF,
         std::integral_constant<Galerkin,galerkin>
       )
       -> PatternEngine<
-        TrialVector,
-        TestVector,
+        TrialSpace,
+        TestSpace,
         LOP,
         MBE,
+        JF,
         EmptyTransformation,
         EmptyTransformation,
-        typename TrialVector::value_type,
         galerkin
         >;
 

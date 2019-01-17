@@ -510,7 +510,7 @@ int main(int argc, char** argv)
     using Dune::PDELab::Backend::native;
     using Dune::PDELab::Backend::Native;
 
-    auto pattern_engine = Dune::PDELab::PatternEngine(solution,residual,lop,mbe);
+    auto pattern_engine = Dune::PDELab::PatternEngine(gfs,gfs,lop,mbe,double());
     auto pattern = assembler.assemble(pattern_engine);
     auto jac = Matrix(Dune::PDELab::Backend::attached_container());
     auto stats = std::vector<MBE::Statistics>();
