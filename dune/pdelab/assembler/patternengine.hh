@@ -386,7 +386,7 @@ namespace Dune {
       template<typename Context>
       void start(Context& ctx)
       {
-        _pattern = std::make_shared<Pattern>(_matrix_backend.template makePattern<Matrix>(testSpace(),trialSpace()));
+        _pattern = _matrix_backend.template makePattern<Matrix>(testSpace(),trialSpace());
         invoke_if_possible(LocalOperator::start(),*_lop,ctx);
       }
 

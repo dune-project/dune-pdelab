@@ -2,9 +2,12 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_BCRSMATRIXBACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_BCRSMATRIXBACKEND_HH
 
+#include <dune/common/concept.hh>
+
 #include <dune/pdelab/backend/istl/bcrsmatrix.hh>
 #include <dune/pdelab/backend/istl/bcrspattern.hh>
 #include <dune/pdelab/backend/istl/patternstatistics.hh>
+#include <dune/pdelab/assembler/utility.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -227,27 +230,46 @@ namespace Dune {
         template<typename GridOperator, typename Matrix>
         std::vector<Statistics> buildPattern(const GridOperator& grid_operator, Matrix& matrix) const
         {
-          Pattern<
-            Matrix,
-            typename GridOperator::Traits::TestGridFunctionSpace,
-            typename GridOperator::Traits::TrialGridFunctionSpace
-            > pattern(grid_operator.testGridFunctionSpace().ordering(),grid_operator.trialGridFunctionSpace().ordering(),_entries_per_row);
-          grid_operator.fill_pattern(pattern);
+          auto pattern = makePattern(grid_operator);
           std::vector<Statistics> stats;
           Impl::allocate_bcrs_matrix(
             grid_operator.testGridFunctionSpace().ordering(),
             grid_operator.trialGridFunctionSpace().ordering(),
-            pattern,
+            *pattern,
             Backend::native(matrix),
             stats
             );
           return stats;
         }
 
-        template<typename Matrix, typename TestSpace, typename TrialSpace>
-        auto makePattern(const TestSpace& test_space, const TrialSpace& trial_space)
+        template<typename GridOperator>
+        auto makePattern(const GridOperator& grid_operator) const
         {
-          return Pattern<Matrix,TestSpace,TrialSpace>(test_space.ordering(),trial_space.ordering(),_entries_per_row);
+          if constexpr (models<Concept::ReturnsMatrixPattern,GridOperator>())
+           {
+             return grid_operator.matrixPattern();
+           }
+          else
+          {
+            using Matrix = typename GridOperator::Traits::Jacobian;
+            auto pattern = makePattern<Matrix>(
+              grid_operator.testGridFunctionSpace(),
+              grid_operator.trialGridFunctionSpace()
+              );
+            grid_operator.fill_pattern(*pattern);
+            return pattern;
+          }
+
+        }
+
+        template<typename Matrix, typename TestSpace, typename TrialSpace>
+        auto makePattern(const TestSpace& test_space, const TrialSpace& trial_space) const
+        {
+          return std::make_shared<Pattern<Matrix,TestSpace,TrialSpace>>(
+            test_space.ordering(),
+            trial_space.ordering(),
+            _entries_per_row
+            );
         }
 
         //! Constructs a BCRSMatrixBackend.
