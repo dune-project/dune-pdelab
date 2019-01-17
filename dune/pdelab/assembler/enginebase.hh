@@ -17,52 +17,70 @@ namespace Dune {
     static constexpr auto disableGalerkin = std::integral_constant<Galerkin,Galerkin::disable>{};
     static constexpr auto automaticGalerkin = std::integral_constant<Galerkin,Galerkin::automatic>{};
 
-    template<typename TestSpace_, typename TrialSpace_, bool enable_flavors>
+    template<typename TestSpace_,
+             typename TrialSpace_,
+             typename TrialConstraints_,
+             typename TestConstraints_,
+             bool enable_flavors>
     struct LocalFunctionSpaceTypes;
 
-    template<typename TestSpace_, typename TrialSpace_>
-    struct LocalFunctionSpaceTypes<TestSpace_,TrialSpace_,true>
+    template<
+      typename TestSpace_,
+      typename TrialSpace_,
+      typename TrialConstraints_,
+      typename TestConstraints_
+      >
+    struct LocalFunctionSpaceTypes<TestSpace_,TrialSpace_,TrialConstraints_,TestConstraints_,true>
     {
 
-      using TestSpace       = TestSpace_;
+      using TestSpace        = TestSpace_;
+      using TestConstraints  = TestConstraints_;
 
       template<typename Flavor = Flavor::Generic>
-      using TestLocalSpace  = LocalFunctionSpace<TestSpace,Flavor>;
+      using TestLocalSpace   = LocalFunctionSpace<TestSpace,Flavor>;
 
       template<typename Flavor = Flavor::Generic>
-      using TestSpaceCache  = LFSIndexCache<TestLocalSpace<Flavor>>;
+      using TestSpaceCache   = LFSIndexCache<TestLocalSpace<Flavor>,TestConstraints>;
 
 
-      using TrialSpace      = TrialSpace_;
+      using TrialSpace       = TrialSpace_;
+      using TrialConstraints = TrialConstraints_;
 
       template<typename Flavor = Flavor::Generic>
       using TrialLocalSpace = LocalFunctionSpace<TrialSpace,Flavor>;
 
       template<typename Flavor = Flavor::Generic>
-      using TrialSpaceCache = LFSIndexCache<TrialLocalSpace<Flavor>>;
+      using TrialSpaceCache = LFSIndexCache<TrialLocalSpace<Flavor>,TrialConstraints>;
 
     };
 
-    template<typename TestSpace_, typename TrialSpace_>
-    struct LocalFunctionSpaceTypes<TestSpace_,TrialSpace_,false>
+    template<
+      typename TestSpace_,
+      typename TrialSpace_,
+      typename TrialConstraints_,
+      typename TestConstraints_
+      >
+    struct LocalFunctionSpaceTypes<TestSpace_,TrialSpace_,TrialConstraints_,TestConstraints_,false>
     {
 
-      using TestSpace       = TestSpace_;
+      using TestSpace        = TestSpace_;
+      using TestConstraints  = TestConstraints_;
 
       template<typename = Flavor::Generic>
-      using TestLocalSpace  = LocalFunctionSpace<TestSpace,Flavor::Generic>;
+      using TestLocalSpace   = LocalFunctionSpace<TestSpace,Flavor::Generic>;
 
       template<typename = Flavor::Generic>
-      using TestSpaceCache  = LFSIndexCache<TestLocalSpace<Flavor::Generic>>;
+      using TestSpaceCache   = LFSIndexCache<TestLocalSpace<Flavor::Generic>,TestConstraints>;
 
 
-      using TrialSpace      = TrialSpace_;
-
-      template<typename = Flavor::Generic>
-      using TrialLocalSpace = LocalFunctionSpace<TrialSpace,Flavor::Generic>;
+      using TrialSpace       = TrialSpace_;
+      using TrialConstraints = TrialConstraints_;
 
       template<typename = Flavor::Generic>
-      using TrialSpaceCache = LFSIndexCache<TrialLocalSpace<Flavor::Generic>>;
+      using TrialLocalSpace  = LocalFunctionSpace<TrialSpace,Flavor::Generic>;
+
+      template<typename = Flavor::Generic>
+      using TrialSpaceCache  = LFSIndexCache<TrialLocalSpace<Flavor::Generic>,TrialConstraints>;
 
     };
 
