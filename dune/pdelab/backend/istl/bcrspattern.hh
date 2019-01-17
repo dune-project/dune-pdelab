@@ -182,12 +182,11 @@ namespace Dune {
           {
             if (_in_overflow)
               {
-                if (_oit != _oend)
-                  ++_oit;
-                if (_oit->first == _row)
-                  return;
-                // we have exhausted the row, invalidate iterator
-                _at_end = true;
+                if (++_oit == _oend or _oit->first != _row)
+                  {
+                    // we have exhausted the row, invalidate iterator
+                    _at_end = true;
+                  }
               }
             else
               {
