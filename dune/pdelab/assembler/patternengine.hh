@@ -488,6 +488,35 @@ namespace Dune {
         Galerkin::automatic
         >;
 
+    template<
+      typename TrialSpace,
+      typename TestSpace,
+      typename LOP,
+      typename MBE,
+      typename JF,
+      typename TrialConstraints,
+      typename TestConstraints
+      >
+    PatternEngine(
+        const TrialSpace&,
+        const TestSpace&,
+        LOP&,
+        const MBE&,
+        const TrialConstraints&,
+        const TestConstraints&,
+        JF
+      )
+      -> PatternEngine<
+        TrialSpace,
+        TestSpace,
+        LOP,
+        MBE,
+        JF,
+        TrialConstraints,
+        TestConstraints,
+        Galerkin::automatic
+        >;
+
     template<typename TrialSpace, typename TestSpace, typename LOP, typename MBE, typename JF, Galerkin galerkin>
     PatternEngine(
         const TrialSpace&,
