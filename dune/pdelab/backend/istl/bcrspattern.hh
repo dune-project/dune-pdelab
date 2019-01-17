@@ -160,7 +160,7 @@ namespace Dune {
         {
           std::vector<size_type> r(_row_ordering.blockCount());
           sizes(r.begin());
-          return std::move(r);
+          return r;
         }
 
         //! Iterator over all column indices for a given row, unique but in arbitrary order.
