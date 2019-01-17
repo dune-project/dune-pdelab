@@ -32,6 +32,14 @@ namespace Dune {
         );
       };
 
+      struct ReturnsMatrixPattern
+      {
+        template<typename GridOperator>
+        auto require(const GridOperator& go) -> decltype(
+          go.matrixPattern()
+        );
+      };
+
     }
 
 
