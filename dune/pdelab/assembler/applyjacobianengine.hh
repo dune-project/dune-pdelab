@@ -39,6 +39,8 @@ namespace Dune {
       using Types = LocalFunctionSpaceTypes<
         typename TestVector_::GridFunctionSpace,
         typename TrialVector_::GridFunctionSpace,
+        TrialConstraints_,
+        TestConstraints_,
         enable_flavors
         >;
 
@@ -275,7 +277,7 @@ namespace Dune {
         >
       makeTestSpaceCache(Flavor_) const
       {
-        return TestSpaceCache<Flavor_>();
+        return TestSpaceCache<Flavor_>(testConstraints());
       }
 
       template<typename Flavor_>
@@ -285,7 +287,7 @@ namespace Dune {
         >
       makeTestSpaceCache(Flavor_) const
       {
-        return TestSpaceCache<Flavor::Generic>();
+        return TestSpaceCache<Flavor::Generic>(testConstraints());
       }
 
       const TestConstraints& testConstraints() const
@@ -305,7 +307,7 @@ namespace Dune {
         >
       makeTrialSpaceCache(Flavor_) const
       {
-        return TrialSpaceCache<Flavor_>();
+        return TrialSpaceCache<Flavor_>(trialConstraints());
       }
 
       template<typename Flavor_>
@@ -315,7 +317,7 @@ namespace Dune {
         >
       makeTrialSpaceCache(Flavor_) const
       {
-        return TrialSpaceCache<Flavor::Generic>();
+        return TrialSpaceCache<Flavor::Generic>(trialConstraints());
       }
 
       const TrialConstraints& trialConstraints() const

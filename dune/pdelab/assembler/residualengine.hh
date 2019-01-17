@@ -18,36 +18,51 @@ namespace Dune {
   namespace PDELab {
 
 
-    template<typename TrialVector, typename TestVector, typename LOP, Galerkin galerkin = Galerkin::automatic>
+    template<
+      typename TrialVector_,
+      typename TestVector_,
+      typename LOP,
+      typename TrialConstraints_ = EmptyTransformation,
+      typename TestConstraints_ = EmptyTransformation,
+      Galerkin galerkin = Galerkin::automatic>
     class ResidualEngine
     {
 
       static constexpr bool enable_flavors = not LocalOperator::disableFunctionSpaceFlavors<LOP>();
 
       using Types = LocalFunctionSpaceTypes<
-        typename TestVector::GridFunctionSpace,
-        typename TrialVector::GridFunctionSpace,
+        typename TestVector_::GridFunctionSpace,
+        typename TrialVector_::GridFunctionSpace,
+        TrialConstraints_,
+        TestConstraints_,
         enable_flavors
         >;
 
     public:
 
-      using TestSpace       = typename Types::TestSpace;
+      using size_type        = std::size_t;
+
+      using TrialVector      = TrialVector_;
+      using TestVector       = TestVector_;
+      using TrialConstraints = TrialConstraints_;
+      using TestConstraints  = TestConstraints_;
+
+      using TestSpace        = typename Types::TestSpace;
 
       template<typename Flavor = Flavor::Generic>
-      using TestLocalSpace  = typename Types::template TestLocalSpace<Flavor>;
+      using TestLocalSpace   = typename Types::template TestLocalSpace<Flavor>;
 
       template<typename Flavor = Flavor::Generic>
-      using TestSpaceCache  = typename Types::template TestSpaceCache<Flavor>;
+      using TestSpaceCache   = typename Types::template TestSpaceCache<Flavor>;
 
 
-      using TrialSpace      = typename Types::TrialSpace;
-
-      template<typename Flavor = Flavor::Generic>
-      using TrialLocalSpace = typename Types::template TrialLocalSpace<Flavor>;
+      using TrialSpace       = typename Types::TrialSpace;
 
       template<typename Flavor = Flavor::Generic>
-      using TrialSpaceCache = typename Types::template TrialSpaceCache<Flavor>;
+      using TrialLocalSpace  = typename Types::template TrialLocalSpace<Flavor>;
+
+      template<typename Flavor = Flavor::Generic>
+      using TrialSpaceCache  = typename Types::template TrialSpaceCache<Flavor>;
 
 
       using EntitySet       = typename TestSpace::Traits::EntitySet;
@@ -69,6 +84,11 @@ namespace Dune {
 
       const TrialVector* _trial_vector;
       TestVector* _test_vector;
+
+      EmptyTransformation _empty_constraints;
+
+      TrialConstraints* _trial_constraints;
+      TestConstraints* _test_constraints;
 
     public:
 
@@ -152,11 +172,28 @@ namespace Dune {
         return visitSkeletonIntersections();
       }
 
+      template<typename LOP_>
+      ResidualEngine(
+        const TrialVector& trial_vector,
+        TestVector& test_vector,
+        LOP_& lop,
+        std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,std::integral_constant<Galerkin,galerkin>> = std::integral_constant<Galerkin,galerkin>{}
+        )
+        : _lop(&lop)
+        , _trial_vector(&trial_vector)
+        , _test_vector(&test_vector)
+        , _trial_constraints(nullptr)
+        , _test_constraints(nullptr)
+      {}
+
       ResidualEngine(const TrialVector& trial_vector, TestVector& test_vector, LOP& lop,
+                     TrialConstraints& trial_constraints, TestConstraints& test_constraints,
                      std::integral_constant<Galerkin,galerkin> = std::integral_constant<Galerkin,galerkin>{})
         : _lop(&lop)
         , _trial_vector(&trial_vector)
         , _test_vector(&test_vector)
+        , _trial_constraints(&trial_constraints)
+        , _test_constraints(&test_constraints)
       {}
 
       TestVector& residual()
@@ -174,6 +211,16 @@ namespace Dune {
         return _test_vector->gridFunctionSpace();
       }
 
+      TestConstraints& testConstraints()
+      {
+        return *_test_constraints;
+      }
+
+      const TestConstraints& testConstraints() const
+      {
+        return *_test_constraints;
+      }
+
       template<typename Flavor_>
       std::enable_if_t<
         Std::to_true_type<Flavor_>::value and enable_flavors,
@@ -181,7 +228,7 @@ namespace Dune {
         >
       makeTestSpaceCache(Flavor_) const
       {
-        return TestSpaceCache<Flavor_>();
+        return TestSpaceCache<Flavor_>(testConstraints());
       }
 
       template<typename Flavor_>
@@ -191,12 +238,22 @@ namespace Dune {
         >
       makeTestSpaceCache(Flavor_) const
       {
-        return TestSpaceCache<Flavor::Generic>();
+        return TestSpaceCache<Flavor::Generic>(testConstraints());
       }
 
       const TrialSpace& trialSpace() const
       {
         return _trial_vector->gridFunctionSpace();
+      }
+
+      TrialConstraints& trialConstraints()
+      {
+        return *_trial_constraints;
+      }
+
+      const TrialConstraints& trialConstraints() const
+      {
+        return *_trial_constraints;
       }
 
       template<typename Flavor_>
@@ -206,7 +263,7 @@ namespace Dune {
         >
       makeTrialSpaceCache(Flavor_) const
       {
-        return TrialSpaceCache<Flavor_>();
+        return TrialSpaceCache<Flavor_>(trialConstraints());
       }
 
       template<typename Flavor_>
@@ -216,7 +273,7 @@ namespace Dune {
         >
       makeTrialSpaceCache(Flavor_) const
       {
-        return TrialSpaceCache<Flavor::Generic>();
+        return TrialSpaceCache<Flavor::Generic>(trialConstraints());
       }
 
       LOP& localOperator()
@@ -347,6 +404,37 @@ namespace Dune {
 
     };
 
+    template<typename Argument, typename Residual, typename LOP>
+    ResidualEngine(
+        const Argument&,
+        Residual&,
+        LOP&
+      )
+      -> ResidualEngine<
+        Argument,
+        Residual,
+        LOP,
+        EmptyTransformation,
+        EmptyTransformation,
+        Galerkin::automatic
+        >;
+
+
+    template<typename Argument, typename Residual, typename LOP, Galerkin galerkin>
+    ResidualEngine(
+        const Argument&,
+        Residual&,
+        LOP&,
+        std::integral_constant<Galerkin,galerkin>
+      )
+      -> ResidualEngine<
+        Argument,
+        Residual,
+        LOP,
+        EmptyTransformation,
+        EmptyTransformation,
+        galerkin
+        >;
 
 
   } // namespace PDELab

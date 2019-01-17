@@ -39,6 +39,8 @@ namespace Dune {
       using Types = LocalFunctionSpaceTypes<
         TrialSpace_,
         TestSpace_,
+        TrialConstraints_,
+        TestConstraints_,
         enable_flavors
         >;
 
@@ -228,6 +230,16 @@ namespace Dune {
         return *_test_space;
       }
 
+      TestConstraints& testConstraints()
+      {
+        return *_test_constraints;
+      }
+
+      const TestConstraints& testConstraints() const
+      {
+        return *_test_constraints;
+      }
+
       template<typename Flavor_>
       std::enable_if_t<
         Std::to_true_type<Flavor_>::value and enable_flavors,
@@ -235,7 +247,7 @@ namespace Dune {
         >
       makeTestSpaceCache(Flavor_) const
       {
-        return TestSpaceCache<Flavor_>();
+        return TestSpaceCache<Flavor_>(testConstraints());
       }
 
       template<typename Flavor_>
@@ -245,12 +257,22 @@ namespace Dune {
         >
       makeTestSpaceCache(Flavor_) const
       {
-        return TestSpaceCache<Flavor::Generic>();
+        return TestSpaceCache<Flavor::Generic>(testConstraints());
       }
 
       const TrialSpace& trialSpace() const
       {
         return *_trial_space;
+      }
+
+      TrialConstraints& trialConstraints()
+      {
+        return *_trial_constraints;
+      }
+
+      const TrialConstraints& trialConstraints() const
+      {
+        return *_trial_constraints;
       }
 
       template<typename Flavor_>
@@ -260,7 +282,7 @@ namespace Dune {
         >
       makeTrialSpaceCache(Flavor_) const
       {
-        return TrialSpaceCache<Flavor_>();
+        return TrialSpaceCache<Flavor_>(trialConstraints());
       }
 
       template<typename Flavor_>
@@ -270,7 +292,7 @@ namespace Dune {
         >
       makeTrialSpaceCache(Flavor_) const
       {
-        return TrialSpaceCache<Flavor::Generic>();
+        return TrialSpaceCache<Flavor::Generic>(trialConstraints());
       }
 
       LOP& localOperator()
