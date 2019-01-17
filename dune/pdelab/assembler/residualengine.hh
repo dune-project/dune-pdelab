@@ -6,6 +6,7 @@
 
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/assembler/context.hh>
 #include <dune/pdelab/assembler/celldata.hh>
 #include <dune/pdelab/assembler/functionspacedata.hh>
@@ -65,7 +66,13 @@ namespace Dune {
       using TrialSpaceCache  = typename Types::template TrialSpaceCache<Flavor>;
 
 
-      using EntitySet       = typename TestSpace::Traits::EntitySet;
+      using EntitySet        = typename TestSpace::Traits::EntitySet;
+
+
+      static constexpr bool unconstrained()
+      {
+        return std::is_same<TestConstraints,EmptyTransformation>::value;
+      }
 
       static constexpr
       std::bool_constant<
@@ -396,6 +403,7 @@ namespace Dune {
       void finish(Context& ctx)
       {
         invoke_if_possible(LocalOperator::finish(),*_lop,ctx);
+        constrain_residual(testConstraints(),residual());
       }
 
       template<typename Context>
