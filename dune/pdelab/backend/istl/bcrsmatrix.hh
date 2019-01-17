@@ -83,6 +83,8 @@ namespace Dune {
         template<typename GO>
         explicit BCRSMatrix (const GO& go)
           : _container(std::make_shared<Container>())
+          , _trial_space(&go.trialGridFunctionSpace())
+          , _test_space(&go.testGridFunctionSpace())
         {
           _stats = go.matrixBackend().buildPattern(go,*this);
         }
