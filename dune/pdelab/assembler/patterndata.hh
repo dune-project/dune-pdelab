@@ -7,6 +7,7 @@
 #include <type_traits>
 
 #include <dune/pdelab/common/intersectiontype.hh>
+#include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/assembler/utility.hh>
 #include <dune/pdelab/assembler/vectordata.hh>
 
