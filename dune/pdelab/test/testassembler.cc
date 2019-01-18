@@ -12,6 +12,9 @@
 #include <dune/istl/solvers.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+
+#include <dune/functions/functionspacebases/lagrangedgbasis.hh>
+
 #include <dune/pdelab/finiteelementmap/qkdg.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/istl.hh>
@@ -20,17 +23,23 @@
 #include <dune/pdelab/stationary/linearproblem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionadapter.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/pdelab/gridfunctionspace/dunefunctionsgridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/dunefunctionslocalfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/dunefunctionslfsindexcache.hh>
 
 #include <dune/pdelab/assembler/assembler.hh>
 #include <dune/pdelab/assembler/residualengine.hh>
 #include <dune/pdelab/assembler/patternengine.hh>
 #include <dune/pdelab/assembler/jacobianengine.hh>
 #include <dune/pdelab/assembler/applyjacobianengine.hh>
+#include <dune/pdelab/assembler/gridoperator.hh>
 
 #include <dune/pdelab/localoperator/adapter.hh>
 #include <dune/pdelab/localoperator/l2.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include <dune/pdelab/localoperator/convectiondiffusiondgnew.hh>
+
+#include <dune/pdelab/newton/newton.hh>
 
 struct LOP
 {
@@ -393,14 +402,27 @@ int main(int argc, char** argv)
 
   // Create DG space
   constexpr int degree=1;
+  using VBE = Dune::PDELab::ISTL::VectorBackend<>;//Dune::PDELab::ISTL::Blocking::fixed>;
+  using CON = Dune::PDELab::NoConstraints;
+
+#if 1
   using FEM = Dune::PDELab::QkDGLocalFiniteElementMap<Grid::ctype,Real,degree,dim>;
   FEM fem;
 
-  using CON = Dune::PDELab::NoConstraints;
-  using VBE = Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed>;
   using GFS = Dune::PDELab::GridFunctionSpace<ES,FEM,CON,VBE>;
   GFS gfs(es,fem);
   gfs.name("u");
+#else
+
+  using namespace Dune::Functions::BasisFactory;
+
+  auto basis = makeBasis(gv, lagrangeDG<degree>());
+
+  using GFS = Dune::PDELab::Experimental::GridFunctionSpace<decltype(basis), VBE, CON>;
+  GFS gfs(Dune::stackobject_to_shared_ptr(basis));
+  gfs.name("u");
+
+#endif
 
   Dune::PDELab::Assembler<ES> assembler(es);
 
@@ -510,7 +532,7 @@ int main(int argc, char** argv)
     using Dune::PDELab::Backend::native;
     using Dune::PDELab::Backend::Native;
 
-    auto pattern_engine = Dune::PDELab::PatternEngine(gfs,gfs,lop,mbe,double());
+    auto pattern_engine = Dune::PDELab::PatternEngine(gfs,gfs,lop,mbe,Real());
     auto pattern = assembler.assemble(pattern_engine);
     auto jac = Matrix(Dune::PDELab::Backend::attached_container());
     auto stats = std::vector<MBE::Statistics>();
@@ -534,14 +556,24 @@ int main(int argc, char** argv)
     using Preconditioner = Dune::SeqILU<Native<decltype(jac)>,Native<Vector>,Native<Vector>>;
     Preconditioner preconditioner(native(jac),1,.9,false);
 
-    auto solver = Dune::CGSolver<Native<Vector>>(matrix_operator,preconditioner,1e-9,5000,2);
+    auto solver = Dune::CGSolver<Native<Vector>>(matrix_operator,preconditioner,1e-9,100,2);
 
     Vector correction(gfs,0.0);
 
     Dune::InverseOperatorResult res;
     solver.apply(native(correction),native(residual),res);
 
-    solution -= correction;
+    solution = 0.0;
+
+    using GO = Dune::PDELab::NewGridOperator<
+      GFS,GFS,LOP,MBE,Real,Real,Real
+      >;
+    GO go(gfs,gfs,lop,mbe);
+
+    auto ls = Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0(500);
+    using Newton = Dune::PDELab::Newton<GO,decltype(ls),Vector>;
+    auto newton = Newton(go,ls);
+    newton.apply(solution);
 
     Dune::VTKWriter<GV> vtk_writer(gv);
 
