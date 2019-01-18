@@ -181,6 +181,8 @@ dune_add_test(SOURCES testassembler.cc)
 
 dune_add_test(SOURCES benchmarkassembler.cc)
 
+dune_add_test(SOURCES testnewassembler.cc)
+
 exclude_from_headercheck(
   gridexamples.hh
   helmholtzoperator.hh
