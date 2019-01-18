@@ -188,8 +188,8 @@ namespace Dune {
 
         if (_hanging_node_modifications)
           {
-            Dune::PDELab::set_shifted_dofs(_go.localAssembler().trialConstraints(),0.0,*_x); // set hanging node DOFs to zero
-            _go.localAssembler().backtransform(*_x); // interpolate hanging nodes adjacent to Dirichlet nodes
+            //Dune::PDELab::set_shifted_dofs(_go.localAssembler().trialConstraints(),0.0,*_x); // set hanging node DOFs to zero
+            //_go.localAssembler().backtransform(*_x); // interpolate hanging nodes adjacent to Dirichlet nodes
           }
 
         if (!reuse_matrix)
@@ -255,11 +255,11 @@ namespace Dune {
         _res.linear_solver_iterations = _linear_solver_result.iterations;
 
         // and update
-        if (_hanging_node_modifications)
-          Dune::PDELab::set_shifted_dofs(_go.localAssembler().trialConstraints(),0.0,*_x); // set hanging node DOFs to zero
+        //if (_hanging_node_modifications)
+        //  Dune::PDELab::set_shifted_dofs(_go.localAssembler().trialConstraints(),0.0,*_x); // set hanging node DOFs to zero
         *_x -= z;
-        if (_hanging_node_modifications)
-          _go.localAssembler().backtransform(*_x); // interpolate hanging nodes adjacent to Dirichlet nodes
+        //if (_hanging_node_modifications)
+        //  _go.localAssembler().backtransform(*_x); // interpolate hanging nodes adjacent to Dirichlet nodes
 
         if (!_keep_matrix)
           _jacobian.reset();
