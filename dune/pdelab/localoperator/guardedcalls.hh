@@ -59,6 +59,9 @@ namespace Dune {
       template<typename T>
       using TestSpace = typename Impl::extract_local_test_space<T>::type;
 
+      template<typename T>
+      constexpr int dimension = TestSpace<T>::Traits::GridFunctionSpace::Traits::EntitySet::dimension;
+
       // TODO: Make these work with spaces as well
 
       template<typename T, std::size_t... I>
