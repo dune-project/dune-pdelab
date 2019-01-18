@@ -458,8 +458,8 @@ namespace Dune {
                     if (test_indices.isDirichletConstraint(i))
                       continue;
 
-                    for (auto vcit = test_indices.constraintsBegin(),
-                           vcend = test_indices.constraintsEnd() ;
+                    for (auto vcit = test_indices.constraintsBegin(i),
+                           vcend = test_indices.constraintsEnd(i) ;
                          vcit != vcend ;
                          ++vcit)
                       {
@@ -473,8 +473,8 @@ namespace Dune {
                               }
                             else
                               {
-                                for (auto ucit = trial_indices.constraintsBegin(),
-                                       ucend = trial_indices.constraintsEnd() ;
+                                for (auto ucit = trial_indices.constraintsBegin(j),
+                                       ucend = trial_indices.constraintsEnd(j) ;
                                      ucit != ucend ;
                                      ++ucit)
                                   {
@@ -502,8 +502,8 @@ namespace Dune {
                           }
                         else
                           {
-                            for (auto ucit = trial_indices.constraintsBegin(),
-                                   ucend = trial_indices.constraintsEnd() ;
+                            for (auto ucit = trial_indices.constraintsBegin(j),
+                                   ucend = trial_indices.constraintsEnd(j) ;
                                  ucit != ucend ;
                                  ++ucit)
                               {
