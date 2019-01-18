@@ -31,6 +31,11 @@ namespace Dune {
         return LOP::doSkeletonTwoSided;
       }
 
+      static constexpr bool isNonLinear()
+      {
+        return true;
+      }
+
       template<typename Context>
       std::enable_if_t<Std::to_true_v<Context> and (LOP::doAlphaVolume or LOP::doLambdaVolume)>
       volumeIntegral(Context& ctx) const
@@ -110,7 +115,7 @@ namespace Dune {
         auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
         Call<LOP::doAlphaVolume>::jacobian_volume(
           _lop,eg,
-          ctx.trial().functionSpace(),ctx.argument(),
+          ctx.trial().functionSpace(),ctx.linearizationPoint(),
           ctx.test().functionSpace(),jacobian
           );
       }
@@ -123,7 +128,7 @@ namespace Dune {
         auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
         Call<LOP::doAlphaVolume>::jacobian_volume_post_skeleton(
           _lop,eg,
-          ctx.trial().functionSpace(),ctx.argument(),
+          ctx.trial().functionSpace(),ctx.linearizationPoint(),
           ctx.test().functionSpace(),jacobian
           );
       }
@@ -136,7 +141,7 @@ namespace Dune {
         auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
         Call<LOP::doAlphaBoundary>::jacobian_boundary(
           _lop,ig,
-          ctx.inside().trial().functionSpace(),ctx.inside().argument(),
+          ctx.inside().trial().functionSpace(),ctx.inside().linearizationPoint(),
           ctx.inside().test().functionSpace(),jacobian
           );
       }
@@ -152,8 +157,8 @@ namespace Dune {
         auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
         Call<LOP::doAlphaSkeleton>::jacobian_skeleton(
           _lop,ig,
-          ctx.inside().trial().functionSpace(),ctx.inside().argument(),ctx.inside().test().functionSpace(),
-          ctx.outside().trial().functionSpace(),ctx.outside().argument(),ctx.outside().test().functionSpace(),
+          ctx.inside().trial().functionSpace(),ctx.inside().linearizationPoint(),ctx.inside().test().functionSpace(),
+          ctx.outside().trial().functionSpace(),ctx.outside().linearizationPoint(),ctx.outside().test().functionSpace(),
           jac_ss,jac_sn,jac_ns,jac_nn
           );
       }
