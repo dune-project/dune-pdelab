@@ -641,7 +641,7 @@ namespace Dune
 
       virtual void line_search(TrialVector& z, TestVector& r) override
       {
-        if (strategy_ == noLineSearch)
+        if ((strategy_ == noLineSearch) || (this->res_.defect < this->abs_limit_))
           {
             this->u_->axpy(-1.0, z);
             this->defect(r);
