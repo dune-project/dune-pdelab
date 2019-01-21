@@ -377,6 +377,10 @@ namespace Dune {
                           }
                       }
                   }
+                else
+                {
+                  _pattern->add_link(test_indices.containerIndex(i),trial_indices.containerIndex(j));
+                }
               }
           }
       }
