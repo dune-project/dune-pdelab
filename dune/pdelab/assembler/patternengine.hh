@@ -345,8 +345,8 @@ namespace Dune {
                   {
                     if (constrained_u and not trial_indices.isDirichletConstraint(j))
                       {
-                        for (auto it = trial_indices.constraintsBegin(),
-                               end = trial_indices.constraintsEnd() ;
+                        for (auto it = trial_indices.constraintsBegin(j),
+                               end = trial_indices.constraintsEnd(j) ;
                              it != end ;
                              ++it)
                           _pattern->add_link(test_indices.containerIndex(i),it->containerIndex());
@@ -358,8 +358,8 @@ namespace Dune {
                   }
                 else if (not test_indices.isDirichletConstraint(i))
                   {
-                    for (auto vit = test_indices.constraintsBegin(),
-                           end = test_indices.constraintsEnd() ;
+                    for (auto vit = test_indices.constraintsBegin(i),
+                           end = test_indices.constraintsEnd(i) ;
                          vit != end ;
                          ++vit)
                       {
@@ -369,8 +369,8 @@ namespace Dune {
                           }
                         else
                           {
-                            for (auto uit = trial_indices.constraintsBegin(),
-                                   end = trial_indices.constraintsEnd() ;
+                            for (auto uit = trial_indices.constraintsBegin(j),
+                                   end = trial_indices.constraintsEnd(j) ;
                                  uit != end ;
                                  ++uit)
                               _pattern->add_link(vit->containerIndex(),uit->containerIndex());
