@@ -4,7 +4,11 @@
 #define DUNE_PDELAB_ASSEMBLER_LOCALVIEWPROXY_HH
 
 #include <tuple>
+#include <unordered_map>
 #include <utility>
+#include <vector>
+
+#include <dune/common/iteratorfacades.hh>
 
 namespace Dune {
   namespace PDELab {
