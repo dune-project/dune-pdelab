@@ -434,7 +434,7 @@ namespace Dune {
            */
           value_type& getEntry(size_type i, size_type j)
           {
-            return _container[j*_rows + i];
+            return _container[i*_cols + j];
           }
 
           //! Direct (unmapped) access to the (i,j)-th entry of the matrix (const version).
@@ -448,7 +448,7 @@ namespace Dune {
            */
           const value_type& getEntry(size_type i, size_type j) const
           {
-            return _container[j*_rows + i];
+            return _container[i*_cols + j];
           }
 
         private:
