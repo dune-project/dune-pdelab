@@ -87,6 +87,46 @@ namespace Dune {
 
     };
 
+    template<typename Context>
+    struct TimeData
+      : public Context
+    {
+      using TimeReal = typename Context::Engine::TimeReal;
+      using Context_ = Context;
+
+      static constexpr bool instationary()
+      {
+        return Context_::Engine::instationary();
+      }
+
+      TimeReal time() const
+      {
+        return Context_::engine().time();
+      }
+
+      TimeReal dt() const
+      {
+        return Context_::engine().dt();
+      }
+
+      TimeReal t0() const
+      {
+        return Context_::engine().t0();
+      }
+
+      TimeData(Context&& ctx)
+        : Context(std::move(ctx))
+      {}
+
+    };
+
+    template<typename Context>
+    auto timeData(Context&& context)
+    {
+      return TimeData<Context>(std::move(context));
+    }
+
+
     template<typename Real, bool instationary_>
     class InstationaryEngineBase
     {
