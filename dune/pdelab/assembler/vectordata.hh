@@ -46,11 +46,6 @@ namespace Dune {
 
     protected:
 
-      void setWeight(const typename Traits::Weight& weight)
-      {
-        _weight = weight;
-      }
-
       void setup(VectorStorage& vector)
       {
         Context::setup();
@@ -93,9 +88,9 @@ namespace Dune {
         _local_view.unbind();
       }
 
-      typename Traits::AccumulationView accumulationView()
+      typename Traits::AccumulationView accumulationView(typename Traits::Weight weight)
       {
-        return _container.weightedAccumulationView(_weight);
+        return _container.weightedAccumulationView(weight);
       }
 
       const typename Traits::Container& readOnlyView()
@@ -108,16 +103,10 @@ namespace Dune {
         return _container;
       }
 
-      typename Traits::Weight weight() const
-      {
-        return _weight;
-      }
-
     public:
 
       CachedVectorData(Context&& ctx, typename Traits::value_type initial = typename Traits::value_type(0))
         : Context(std::move(ctx))
-        , _weight(1.0)
         , _initial(initial)
       {}
 
@@ -125,7 +114,6 @@ namespace Dune {
 
       typename Traits::LocalView _local_view;
       typename Traits::Container _container;
-      typename Traits::Weight _weight;
       typename Traits::value_type _initial;
 
     };
@@ -156,6 +144,7 @@ namespace Dune {
       return CachedVectorData<Context,LV<std::conditional_t<_mode == LocalViewDataMode::read,const Vector, Vector>,std::decay_t<decltype(ctx.cache(Flavor{}))>>,_mode>{std::move(ctx)};
     }
 
+
     template<typename Implementation>
     struct CellResidualData
       : public Implementation
@@ -167,13 +156,13 @@ namespace Dune {
 
       typename Residual::AccumulationView residual()
       {
-        return Implementation::accumulationView();
+        return Implementation::accumulationView(Context_::engine().weight());
       }
 
       template<typename LFS>
       LocalVectorProxy<typename Residual::Container,LFS> residual(const LFS& lfs)
       {
-        return {Implementation::readWriteView(),lfs,Implementation::weight()};
+        return {Implementation::readWriteView(),lfs,Context_::engine().weight()};
       }
 
       void setup()
@@ -210,9 +199,89 @@ namespace Dune {
 
 
     template<typename Implementation>
+    struct CellTimeResidualData
+      : public Implementation
+    {
+
+      using Context_ = typename Implementation::Context_;
+
+      using Residual = typename Implementation::Traits;
+
+      typename Residual::AccumulationView timeResidual()
+      {
+        return Implementation::accumulationView(Context_::engine().timeWeight());
+      }
+
+      template<typename LFS>
+      LocalVectorProxy<typename Residual::Container,LFS> residual(const LFS& lfs)
+      {
+        return {Implementation::readWriteView(),lfs,Context_::engine().timeWeight()};
+      }
+
+      void setup()
+      {
+        Implementation::setup(Context_::engine().timeResidual());
+      }
+
+      using Context_::bind;
+      using Context_::unbind;
+
+      Context_* bind(const typename Context_::Entity&, typename Context_::Index, typename Context_::Index)
+      {
+        Implementation::bind(Context_::test().cache());
+        return this;
+      }
+
+      Context_* unbind(const typename Context_::Entity&, typename Context_::Index, typename Context_::Index)
+      {
+        Implementation::unbind(Context_::test().cache());
+        return this;
+      }
+
+      CellTimeResidualData(Implementation&& implementation)
+        : Implementation(std::move(implementation))
+      {}
+
+    };
+
+    template<
+      template<typename,typename> typename LV,
+      typename Vector,
+      typename Flavor,
+      typename Context
+      >
+    auto cellTimeResidualData(std::true_type, Context&& context)
+    {
+      using Implementation = std::decay_t<
+        decltype(cachedVectorData<LV,Vector,Flavor,LocalViewDataMode::accumulate>(std::move(context)))
+        >;
+      return CellTimeResidualData<Implementation>(
+        cachedVectorData<LV,Vector,Flavor,LocalViewDataMode::accumulate>(std::move(context))
+        );
+    }
+
+    template<
+      template<typename,typename> typename LV,
+      typename Vector,
+      typename Flavor,
+      typename Context
+      >
+    auto cellTimeResidualData(std::false_type, Context&& context)
+    {
+      return std::move(context);
+    }
+
+
+    template<typename Implementation>
     struct CellResultData
       : public Implementation
     {
+
+    protected:
+
+      using ResultImplementation = Implementation;
+
+    public:
 
       using Context_ = typename Implementation::Context_;
 
@@ -221,24 +290,24 @@ namespace Dune {
 
       typename Result::AccumulationView result()
       {
-        return Implementation::accumulationView();
+        return Implementation::accumulationView(Context_::engine().weight());
       }
 
       typename Result::AccumulationView residual()
       {
-        return Implementation::accumulationView();
+        return Implementation::accumulationView(Context_::engine().weight());
       }
 
       template<typename LFS>
       LocalVectorProxy<typename Result::Container,LFS> result(const LFS& lfs)
       {
-        return {Implementation::readWriteView(),lfs,Implementation::weight()};
+        return {Implementation::readWriteView(),lfs,Context_::engine().weight()};
       }
 
       template<typename LFS>
       LocalVectorProxy<typename Result::Container,LFS> residual(const LFS& lfs)
       {
-        return {Implementation::readWriteView(),lfs,Implementation::weight()};
+        return {Implementation::readWriteView(),lfs,Context_::engine().weight()};
       }
 
       void setup()
@@ -273,6 +342,54 @@ namespace Dune {
       return CellResultData<Implementation>(std::move(implementation));
     }
 
+
+    template<typename Context>
+    struct CellTimeResultData
+      : public Context
+    {
+
+      using Context_ = Context;
+      using Result   = typename Context_::Result;
+
+      typename Result::AccumulationView timeResult()
+      {
+        return Context_::ResultImplementation::accumulationView(Context_::engine().timeWeight());
+      }
+
+      typename Result::AccumulationView timeResidual()
+      {
+        return timeResult();
+      }
+
+      template<typename LFS>
+      LocalVectorProxy<typename Result::Container,LFS> timeResult(const LFS& lfs)
+      {
+        return {Context_::ResultImplementation::readWriteView(),lfs,Context_::engine().timeWeight()};
+      }
+
+      template<typename LFS>
+      LocalVectorProxy<typename Result::Container,LFS> timeResidual(const LFS& lfs)
+      {
+        return {Context_::ResultImplementation::readWriteView(),lfs,Context_::engine().timeWeight()};
+      }
+
+      CellTimeResultData(Context&& context)
+        : Context(std::move(context))
+      {}
+
+    };
+
+    template<typename Context>
+    auto cellTimeResultData(std::true_type, Context&& context)
+    {
+      return CellTimeResultData<Context>(std::move(context));
+    }
+
+    template<typename Context>
+    auto cellTimeResultData(std::false_type, Context&& context)
+    {
+      return std::move(context);
+    }
 
     template<typename Implementation>
     struct CellArgumentData

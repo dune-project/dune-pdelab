@@ -18,15 +18,17 @@
 namespace Dune {
   namespace PDELab {
 
-
     template<
       typename TrialVector_,
       typename TestVector_,
       typename LOP,
       typename TrialConstraints_ = EmptyTransformation,
       typename TestConstraints_ = EmptyTransformation,
-      Galerkin galerkin = Galerkin::automatic>
+      bool instationary_ = false,
+      Galerkin galerkin = Galerkin::automatic
+      >
     class ResidualEngine
+        : public InstationaryEngineBase<typename TrialVector_::value_type,instationary_>
     {
 
       static constexpr bool enable_flavors = not LocalOperator::disableFunctionSpaceFlavors<LOP>();
@@ -39,7 +41,17 @@ namespace Dune {
         enable_flavors
         >;
 
+      using IEB = InstationaryEngineBase<typename TrialVector_::value_type,instationary_>;
+
     public:
+
+      using IEB::instationary;
+      using IEB::stage;
+      using IEB::setStage;
+      using IEB::oneStepMethod;
+      using IEB::setOneStepMethod;
+      using IEB::timestepFactor;
+      using IEB::timestepTimeFactor;
 
       using size_type        = std::size_t;
 
@@ -68,6 +80,7 @@ namespace Dune {
 
       using EntitySet        = typename TestSpace::Traits::EntitySet;
 
+      using TimeReal         = typename TrialVector::value_type;
 
       static constexpr bool unconstrained()
       {
@@ -89,13 +102,30 @@ namespace Dune {
 
       LOP* _lop;
 
-      const TrialVector* _trial_vector;
-      TestVector* _test_vector;
+      bool _stage_accept_mode = false;
+
+      std::vector<std::shared_ptr<TestVector>> _residuals;
+      std::vector<std::shared_ptr<TestVector>> _time_residuals;
+
+      const TrialVector* _argument;
+      TestVector* _residual      = nullptr;;
+      TestVector* _time_residual = nullptr;
 
       EmptyTransformation _empty_constraints;
 
       const TrialConstraints* _trial_constraints;
       const TestConstraints* _test_constraints;
+
+      void setOneStepMethod(const OneStep::Method<TimeReal>& one_step_method)
+      {
+        IEB::setOneStepMethod(one_step_method);
+        _residuals.resize(oneStepMethod().stages());
+        _time_residuals.resize(oneStepMethod().stages());
+        for (auto& r : _residuals)
+          r = std::make_shared<TestVector>(testSpace());
+        for (auto& r : _time_residuals)
+          r = std::make_shared<TestVector>(testSpace());
+      }
 
     public:
 
@@ -187,8 +217,8 @@ namespace Dune {
         std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,std::integral_constant<Galerkin,galerkin>> = std::integral_constant<Galerkin,galerkin>{}
         )
         : _lop(&lop)
-        , _trial_vector(&trial_vector)
-        , _test_vector(&test_vector)
+        , _argument(&trial_vector)
+        , _residual(&test_vector)
         , _trial_constraints(nullptr)
         , _test_constraints(nullptr)
       {}
@@ -197,25 +227,52 @@ namespace Dune {
                      const TrialConstraints& trial_constraints, const TestConstraints& test_constraints,
                      std::integral_constant<Galerkin,galerkin> = std::integral_constant<Galerkin,galerkin>{})
         : _lop(&lop)
-        , _trial_vector(&trial_vector)
-        , _test_vector(&test_vector)
+        , _argument(&trial_vector)
+        , _residual(&test_vector)
         , _trial_constraints(&trial_constraints)
         , _test_constraints(&test_constraints)
       {}
 
       TestVector& residual()
       {
-        return *_test_vector;
+        if (_stage_accept_mode)
+        {
+          assert(_residuals.size() > 0);
+          assert(_residuals.back());
+          return *_residuals.back();
+        }
+        else
+        {
+          assert(_residual);
+          return *_residual;
+        }
+      }
+
+      template<typename h = int>
+      TestVector& timeResidual()
+      {
+        static_assert(Std::to_true_v<h> and instationary(),"Calling timeResidual() is only allowed in instationary mode");
+        if (_stage_accept_mode)
+        {
+          assert(_time_residuals.size() > 0);
+          assert(_time_residuals.back());
+          return *_time_residuals.back();
+        }
+        else
+        {
+          assert(_time_residual);
+          return *_time_residual;
+        }
       }
 
       const TrialVector& argument() const
       {
-        return *_trial_vector;
+        return *_argument;
       }
 
       const TestSpace& testSpace() const
       {
-        return _test_vector->gridFunctionSpace();
+        return _residual->gridFunctionSpace();
       }
 
       const TestConstraints& testConstraints() const
@@ -245,7 +302,7 @@ namespace Dune {
 
       const TrialSpace& trialSpace() const
       {
-        return _trial_vector->gridFunctionSpace();
+        return _argument->gridFunctionSpace();
       }
 
       const TrialConstraints& trialConstraints() const
@@ -284,6 +341,35 @@ namespace Dune {
       }
 
       template<typename Assembler>
+      void acceptStage(Assembler& assembler, const TrialVector& solution)
+      {
+        _stage_accept_mode = true;
+        updateWeights();
+        auto argument = _argument;
+        _argument = solution;
+        auto residual = _residual;
+        auto time_residual = _time_residual;
+        assembler.assemble(*this);
+        _residual = residual;
+        _time_residual = time_residual;
+        _stage_accept_mode = false;
+        setStage(stage()+1);
+        updateWeights();
+        if (stage() == oneStepMethod().stages())
+          _argument = argument;
+      }
+
+      void updateWeights()
+      {
+        IEB::updateWeights();
+        if (instationary() and _stage_accept_mode)
+        {
+          IEB::setWeight(IEB::timestepFactor());
+          IEB::setTimeWeight(IEB::timestepTimeFactor());
+        }
+      }
+
+      template<typename Assembler>
       auto context(const Assembler& assembler)
       {
         return
@@ -294,18 +380,8 @@ namespace Dune {
                 outsideCell(
                   extractCellContext(
                     *_lop,
-                    cellResidualData(
-                      cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
-                        cellArgumentData(
-                          cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
-                            trialSpaceData(
-                              testSpaceData(
-                                cellGridData(
-                                  Data<CellFlavor::Outside<enable_flavors>>(*this)
-                                  )))))))),
-                  insideCell(
-                    extractCellContext(
-                      *_lop,
+                    cellTimeResidualData<UncachedVectorView,TestVector,Flavor::Test>(
+                      std::bool_constant<instationary()>{},
                       cellResidualData(
                         cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
                           cellArgumentData(
@@ -313,8 +389,24 @@ namespace Dune {
                               trialSpaceData(
                                 testSpaceData(
                                   cellGridData(
-                                    Data<CellFlavor::Inside<enable_flavors>>(*this)
-                                    )))))))))))));
+                                    timeData(
+                                      Data<CellFlavor::Outside<enable_flavors>>(*this)
+                                      )))))))))),
+                  insideCell(
+                    extractCellContext(
+                      *_lop,
+                      cellTimeResidualData<UncachedVectorView,TestVector,Flavor::Test>(
+                        std::bool_constant<instationary()>{},
+                        cellResidualData(
+                          cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
+                            cellArgumentData(
+                              cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                                trialSpaceData(
+                                  testSpaceData(
+                                    cellGridData(
+                                      timeData(
+                                        Data<CellFlavor::Inside<enable_flavors>>(*this)
+                                        )))))))))))))));
       }
 
       template<typename Context>
@@ -393,7 +485,20 @@ namespace Dune {
       void finish(Context& ctx)
       {
         invoke_if_possible(LocalOperator::finish(),*_lop,ctx);
+        if (instationary() and not _stage_accept_mode)
+        {
+          const auto& osm = oneStepMethod();
+          for (int r = 0; r < stage(); ++r) {
+            if (osm.timeDerivativeActive(stage(),r))
+              _time_residual->axpy(osm.timeDerivativeWeight(stage(),r)*timestepTimeFactor(),*_time_residuals[r]);
+            if (osm.active(stage(),r))
+              _residual->axpy(osm.weight(stage(),r)*timestepFactor(),*_residuals[r]);
+          }
+        }
         constrain_residual(testConstraints(),residual());
+        if constexpr(instationary())
+          if (_residual != _time_residual)
+            constrain_residual(testConstraints(),timeResidual());
       }
 
       template<typename Context>
@@ -414,6 +519,7 @@ namespace Dune {
         LOP,
         EmptyTransformation,
         EmptyTransformation,
+        false,
         Galerkin::automatic
         >;
 
@@ -431,6 +537,7 @@ namespace Dune {
         LOP,
         EmptyTransformation,
         EmptyTransformation,
+        false,
         galerkin
         >;
 
