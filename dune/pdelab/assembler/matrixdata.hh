@@ -43,11 +43,6 @@ namespace Dune {
 
       using Traits = MatrixDataTraits<LM>;
 
-      void setWeight(const typename Traits::Weight& weight)
-      {
-        _weight = weight;
-      }
-
       void setup(typename Traits::Matrix& matrix)
       {
         Context::setup();
@@ -90,9 +85,9 @@ namespace Dune {
         _local_view.unbind();
       }
 
-      typename Traits::AccumulationView accumulationView()
+      typename Traits::AccumulationView accumulationView(typename Traits::Weight weight)
       {
-        return _container.weightedAccumulationView(_weight);
+        return _container.weightedAccumulationView(weight);
       }
 
       const typename Traits::Container& readOnlyView()
@@ -109,7 +104,6 @@ namespace Dune {
 
       CachedMatrixData(Context&& ctx, typename Traits::value_type initial = typename Traits::value_type(0))
         : Context(std::move(ctx))
-        , _weight(1.0)
         , _initial(initial)
       {}
 
@@ -117,7 +111,6 @@ namespace Dune {
 
       typename Traits::LocalView _local_view;
       typename Traits::Container _container;
-      typename Traits::Weight _weight;
       typename Traits::value_type _initial;
 
     };
@@ -165,13 +158,19 @@ namespace Dune {
       : public Implementation
     {
 
+    protected:
+
+      using JacobianImplementation = Implementation;
+
+    public:
+
       using Context_ = typename Implementation::Context_;
 
       using Jacobian = typename Implementation::Traits;
 
       typename Jacobian::AccumulationView jacobian()
       {
-        return Implementation::accumulationView();
+        return Implementation::accumulationView(Context_::engine().weight());
       }
 
       template<typename TestSpace, typename TrialSpace>
@@ -183,7 +182,7 @@ namespace Dune {
         >
       jacobian(const TestSpace& test_space, const TrialSpace& trial_space)
       {
-        return {Implementation::readWriteView(),test_space,trial_space,Implementation::weight()};
+        return {Implementation::readWriteView(),test_space,trial_space,Context_::engine().weight()};
       }
 
       void setup()
@@ -221,6 +220,49 @@ namespace Dune {
       return CellJacobianData<Implementation>(std::move(implementation));
     }
 
+    template<typename Context>
+    struct CellTimeJacobianData
+      : public Context
+    {
+
+      using Context_ = Context;
+
+      using Jacobian = typename Context::Jacobian;
+
+      typename Jacobian::AccumulationView timeJacobian()
+      {
+        return Context_::JacobianImplementation::accumulationView(Context_::engine().timeWeight());
+      }
+
+      template<typename TestSpace, typename TrialSpace>
+      std::enable_if_t<
+        std::is_same_v<typename TestSpace::Flavor,typename Context_::Flavor::Test> and
+        (std::is_same_v<typename TrialSpace::Flavor,typename Context_::Flavor::Trial> or
+         (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,typename Context_::Flavor::Test>)),
+        LocalMatrixProxy<typename Jacobian::Container,TestSpace,TrialSpace>
+        >
+      timeJacobian(const TestSpace& test_space, const TrialSpace& trial_space)
+      {
+        return {Jacobian::readWriteView(),test_space,trial_space,Context_::engine().timeWeight()};
+      }
+
+      CellTimeJacobianData(Context&& context)
+        : Context(std::move(context))
+      {}
+
+    };
+
+    template<typename Context>
+    auto cellTimeJacobianData(std::true_type,Context&& context)
+    {
+      return CellTimeJacobianData<Context>(std::move(context));
+    }
+
+    template<typename Context>
+    auto cellTimeJacobianData(std::false_type,Context&& context)
+    {
+      return std::move(context);
+    }
 
     template<typename Context, typename LM_IO, typename LM_OI, LocalViewDataMode _mode>
     class CachedSkeletonMatrixData
@@ -233,11 +275,6 @@ namespace Dune {
 
       using InsideOutsideTraits = MatrixDataTraits<LM_IO>;
       using OutsideInsideTraits = MatrixDataTraits<LM_OI>;
-
-      void setWeight(const typename InsideOutsideTraits::Weight& weight)
-      {
-        _weight = weight;
-      }
 
       void setup(typename InsideOutsideTraits::Matrix& matrix)
       {
@@ -299,14 +336,14 @@ namespace Dune {
         return this;
       }
 
-      typename InsideOutsideTraits::AccumulationView insideOutsideAccumulationView()
+      typename InsideOutsideTraits::AccumulationView insideOutsideAccumulationView(typename InsideOutsideTraits::Weight weight)
       {
-        return _container_io.weightedAccumulationView(_weight);
+        return _container_io.weightedAccumulationView(weight);
       }
 
-      typename OutsideInsideTraits::AccumulationView outsideInsideAccumulationView()
+      typename OutsideInsideTraits::AccumulationView outsideInsideAccumulationView(typename InsideOutsideTraits::Weight weight)
       {
-        return _container_oi.weightedAccumulationView(_weight);
+        return _container_oi.weightedAccumulationView(weight);
       }
 
       const typename InsideOutsideTraits::Container& insideOutsideReadOnlyView()
@@ -333,7 +370,6 @@ namespace Dune {
 
       CachedSkeletonMatrixData(Context&& ctx, typename InsideOutsideTraits::value_type initial = typename InsideOutsideTraits::value_type(0))
         : Context(std::move(ctx))
-        , _weight(1.0)
         , _initial(initial)
       {}
 
@@ -343,7 +379,6 @@ namespace Dune {
       typename OutsideInsideTraits::LocalView _local_view_oi;
       typename InsideOutsideTraits::Container _container_io;
       typename OutsideInsideTraits::Container _container_oi;
-      typename InsideOutsideTraits::Weight _weight;
       typename InsideOutsideTraits::value_type _initial;
 
     };
@@ -419,7 +454,7 @@ namespace Dune {
         >
       jacobian(const Inside&, const Inside&)
       {
-        return Context_::inside().accumulationView();
+        return Context_::inside().accumulationView(Context_::engine().weight());
       }
 
       template<typename Outside>
@@ -429,7 +464,7 @@ namespace Dune {
         >
       jacobian(const Outside&, const Outside&)
       {
-        return Context_::outside().accumulationView();
+        return Context_::outside().accumulationView(Context_::engine().weight());
       }
 
       template<typename Inside, typename Outside>
@@ -439,7 +474,7 @@ namespace Dune {
         >
       jacobian(const Inside&, const Outside&)
       {
-        return Implementation::insideOutsideAccumulationView();
+        return Implementation::insideOutsideAccumulationView(Context_::engine().weight());
       }
 
       template<typename Outside, typename Inside>
@@ -449,7 +484,7 @@ namespace Dune {
         >
       jacobian(const Outside&, const Inside&)
       {
-        return Implementation::outsideInsideAccumulationView();
+        return Implementation::outsideInsideAccumulationView(Context_::engine().weight());
       }
 
       template<typename TestSpace, typename TrialSpace>
@@ -485,7 +520,7 @@ namespace Dune {
         >
       jacobian(const TestSpace& test_space, const TrialSpace& trial_space)
       {
-        return {Implementation::insideOutsideReadWriteView(),test_space,trial_space,Implementation::weight()};
+        return {Implementation::insideOutsideReadWriteView(),test_space,trial_space,Context_::engine().weight()};
       }
 
       template<typename TestSpace, typename TrialSpace>
@@ -497,7 +532,7 @@ namespace Dune {
         >
       jacobian(const TestSpace& test_space, const TrialSpace& trial_space)
       {
-        return {Implementation::outsideInsideReadWriteView(),test_space,trial_space,Implementation::weight()};
+        return {Implementation::outsideInsideReadWriteView(),test_space,trial_space,Context_::engine().weight()};
       }
 
       void setup()
@@ -545,6 +580,124 @@ namespace Dune {
     auto skeletonJacobianData(Implementation&& implementation)
     {
       return SkeletonJacobianData<Implementation>(std::move(implementation));
+    }
+
+
+    template<typename Context>
+    struct SkeletonTimeJacobianData
+      : public Context
+    {
+
+      using Context_ = Context;
+
+      using InsideOutsideJacobian = typename Context_::InsideOutsideTraits;
+      using OutsideInsideJacobian = typename Context_::OutsideInsideTraits;
+
+      SkeletonTimeJacobianData(Context&& context)
+        : Context(std::move(context))
+      {}
+
+
+      template<typename Inside>
+      std::enable_if_t<
+        std::is_same_v<Inside,typename Context_::Inside>,
+        typename Context_::Inside::Jacobian::AccumulationView
+        >
+      timeJacobian(const Inside&, const Inside&)
+      {
+        return Context_::inside().accumulationView(Context_::engine().timeWeight());
+      }
+
+      template<typename Outside>
+      std::enable_if_t<
+        std::is_same_v<Outside,typename Context_::Outside>,
+        typename Context_::Outside::Jacobian::AccumulationView
+        >
+      timeJacobian(const Outside&, const Outside&)
+      {
+        return Context_::outside().accumulationView(Context_::engine().timeWeight());
+      }
+
+      template<typename Inside, typename Outside>
+      std::enable_if_t<
+        std::is_same_v<Inside,typename Context_::Inside> and std::is_same_v<Outside,typename Context_::Outside>,
+        typename InsideOutsideJacobian::AccumulationView
+        >
+      timeJacobian(const Inside&, const Outside&)
+      {
+        return Context_::insideOutsideAccumulationView(Context_::engine().timeWeight());
+      }
+
+      template<typename Outside, typename Inside>
+      std::enable_if_t<
+        std::is_same_v<Outside,typename Context_::Outside> and std::is_same_v<Inside,typename Context_::Inside>,
+        typename OutsideInsideJacobian::AccumulationView
+        >
+      timeJacobian(const Outside&, const Inside&)
+      {
+        return Context_::outsideInsideAccumulationView(Context_::engine().timeWeight());
+      }
+
+      template<typename TestSpace, typename TrialSpace>
+      std::enable_if_t<
+        std::is_same_v<typename TestSpace::Flavor,Flavor::InsideTest> and
+        (std::is_same_v<typename TrialSpace::Flavor,Flavor::InsideTrial> or
+         (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,Flavor::InsideTest>)),
+        LocalMatrixProxy<typename Context_::Inside::Jacobian::Container,TestSpace,TrialSpace>
+        >
+      timeJacobian(const TestSpace& test_space, const TrialSpace& trial_space)
+      {
+        return Context_::inside().timeJacobian(test_space,trial_space);
+      }
+
+      template<typename TestSpace, typename TrialSpace>
+      std::enable_if_t<
+        std::is_same_v<typename TestSpace::Flavor,Flavor::OutsideTest> and
+        (std::is_same_v<typename TrialSpace::Flavor,Flavor::OutsideTrial> or
+         (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,Flavor::OutsideTest>)),
+        LocalMatrixProxy<typename Context_::Outside::Jacobian::Container,TestSpace,TrialSpace>
+        >
+      timeJacobian(const TestSpace& test_space, const TrialSpace& trial_space)
+      {
+        return Context_::outside().timeJacobian(test_space,trial_space);
+      }
+
+      template<typename TestSpace, typename TrialSpace>
+      std::enable_if_t<
+        std::is_same_v<typename TestSpace::Flavor,Flavor::InsideTest> and
+        (std::is_same_v<typename TrialSpace::Flavor,Flavor::OutsideTrial> or
+         (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,Flavor::OutsideTest>)),
+        LocalMatrixProxy<typename InsideOutsideJacobian::Container,TestSpace,TrialSpace>
+        >
+      timeJacobian(const TestSpace& test_space, const TrialSpace& trial_space)
+      {
+        return {Context_::insideOutsideReadWriteView(),test_space,trial_space,Context_::engine().timeWeight()};
+      }
+
+      template<typename TestSpace, typename TrialSpace>
+      std::enable_if_t<
+        std::is_same_v<typename TestSpace::Flavor,Flavor::OutsideTest> and
+        (std::is_same_v<typename TrialSpace::Flavor,Flavor::InsideTrial> or
+         (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,Flavor::InsideTest>)),
+        LocalMatrixProxy<typename OutsideInsideJacobian::Container,TestSpace,TrialSpace>
+        >
+      timeJacobian(const TestSpace& test_space, const TrialSpace& trial_space)
+      {
+        return {Context_::outsideInsideReadWriteView(),test_space,trial_space,Context_::engine().timeWeight()};
+      }
+
+    };
+
+    template<typename Context>
+    auto skeletonTimeJacobianData(std::true_type, Context&& context)
+    {
+      return SkeletonTimeJacobianData<Context>(std::move(context));
+    }
+
+    template<typename Context>
+    auto skeletonTimeJacobianData(std::false_type, Context&& context)
+    {
+      return std::move(context);
     }
 
 

@@ -30,9 +30,11 @@ namespace Dune {
       typename LOP,
       typename TrialConstraints_ = EmptyTransformation,
       typename TestConstraints_ = EmptyTransformation,
+      bool instationary_ = false,
       Galerkin galerkin = Galerkin::automatic
       >
     class ApplyJacobianEngine
+        : public InstationaryEngineBase<typename TrialVector_::value_type,instationary_>
     {
 
       static constexpr bool enable_flavors = not LocalOperator::disableFunctionSpaceFlavors<LOP>();
@@ -45,7 +47,11 @@ namespace Dune {
         enable_flavors
         >;
 
+      using IEB = InstationaryEngineBase<typename TrialVector_::value_type,instationary_>;
+
     public:
+
+      using IEB::instationary;
 
       using size_type        = std::size_t;
 
@@ -160,7 +166,6 @@ namespace Dune {
         Engine& _engine;
 
       };
-
 
       static constexpr bool intersectionsTwoSided()
       {
@@ -347,33 +352,41 @@ namespace Dune {
                 outsideCell(
                   extractCellContext(
                     *_lop,
-                    cellResultData(
-                      cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
-                        cellLinearizationPointData(
-                          models<Concept::PossiblyNonLinear,LOP>(),
-                          cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
-                            cellArgumentData(
-                              cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
-                                trialSpaceData(
-                                  testSpaceData(
-                                    cellGridData(
-                                      Data<CellFlavor::Outside<enable_flavors>>(*this)
-                                      )))))))))),
-                      insideCell(
-                        extractCellContext(
-                          *_lop,
-                          cellResultData(
-                            cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
-                              cellLinearizationPointData(
-                                models<Concept::PossiblyNonLinear,LOP>(),
+                    cellTimeResultData(
+                      std::bool_constant<instationary()>{},
+                      cellResultData(
+                        cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
+                          cellLinearizationPointData(
+                            models<Concept::PossiblyNonLinear,LOP>(),
+                            cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                              cellArgumentData(
                                 cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
-                                  cellArgumentData(
-                                    cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
-                                      trialSpaceData(
-                                        testSpaceData(
-                                          cellGridData(
+                                  trialSpaceData(
+                                    testSpaceData(
+                                      cellGridData(
+                                        timeData(
+                                          std::bool_constant<instationary()>{},
+                                          Data<CellFlavor::Outside<enable_flavors>>(*this)
+                                          )))))))))))),
+                  insideCell(
+                    extractCellContext(
+                      *_lop,
+                      cellTimeResultData(
+                        std::bool_constant<instationary()>{},
+                        cellResultData(
+                          cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
+                            cellLinearizationPointData(
+                              models<Concept::PossiblyNonLinear,LOP>(),
+                              cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                                cellArgumentData(
+                                  cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                                    trialSpaceData(
+                                      testSpaceData(
+                                        cellGridData(
+                                          timeData(
+                                            std::bool_constant<instationary()>{},
                                             Data<CellFlavor::Inside<enable_flavors>>(*this)
-                                            )))))))))))))));
+                                            )))))))))))))))));
       }
 
       template<typename Context>
@@ -475,6 +488,7 @@ namespace Dune {
         LOP,
         EmptyTransformation,
         EmptyTransformation,
+        false,
         Galerkin::automatic
         >;
 
@@ -492,6 +506,7 @@ namespace Dune {
         LOP,
         EmptyTransformation,
         EmptyTransformation,
+        false,
         galerkin
         >;
 

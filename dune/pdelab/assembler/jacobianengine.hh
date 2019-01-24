@@ -31,9 +31,11 @@ namespace Dune {
       typename LOP,
       typename TrialConstraints_ = EmptyTransformation,
       typename TestConstraints_ = EmptyTransformation,
+      bool instationary_ = false,
       Galerkin galerkin = Galerkin::automatic
       >
     class JacobianEngine
+        : public InstationaryEngineBase<typename TrialVector_::value_type,instationary_>
     {
 
       static constexpr bool enable_flavors = not LocalOperator::disableFunctionSpaceFlavors<LOP>();
@@ -46,7 +48,11 @@ namespace Dune {
         enable_flavors
         >;
 
+      using IEB = InstationaryEngineBase<typename TrialVector_::value_type,instationary_>;
+
     public:
+
+      using IEB::instationary;
 
       using size_type        = std::size_t;
 
@@ -343,36 +349,44 @@ namespace Dune {
         return
           extractContext(
             *_lop,
-            skeletonJacobianData(
-              cachedSkeletonMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
-                intersectionDomainData(
-                  cellDomainData(
-                    outsideCell(
-                      extractCellContext(
-                        *_lop,
-                        cellJacobianData(
-                          cachedMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
-                            cellLinearizationPointData(
-                              models<Concept::PossiblyNonLinear,LOP>(),
-                              cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
-                                trialSpaceData(
-                                  testSpaceData(
-                                    cellGridData(
-                                      Data<CellFlavor::Outside<enable_flavors>>(*this)
-                                      )))))))),
-                      insideCell(
+            skeletonTimeJacobianData(
+              std::bool_constant<instationary()>{},
+              skeletonJacobianData(
+                cachedSkeletonMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
+                  intersectionDomainData(
+                    cellDomainData(
+                      outsideCell(
                         extractCellContext(
                           *_lop,
-                          cellJacobianData(
-                            cachedMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
-                              cellLinearizationPointData(
-                                models<Concept::PossiblyNonLinear,LOP>(),
-                                cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
-                                  trialSpaceData(
-                                    testSpaceData(
-                                      cellGridData(
-                                        Data<CellFlavor::Inside<enable_flavors>>(*this)
-                                        )))))))))))))));
+                          cellTimeJacobianData(
+                            std::bool_constant<instationary()>{},
+                            cellJacobianData(
+                              cachedMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
+                                cellLinearizationPointData(
+                                  models<Concept::PossiblyNonLinear,LOP>(),
+                                  cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                                    trialSpaceData(
+                                      testSpaceData(
+                                        cellGridData(
+                                          timeData(
+                                            Data<CellFlavor::Outside<enable_flavors>>(*this)
+                                            )))))))))),
+                        insideCell(
+                          extractCellContext(
+                            *_lop,
+                            cellTimeJacobianData(
+                              std::bool_constant<instationary()>{},
+                              cellJacobianData(
+                                cachedMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
+                                  cellLinearizationPointData(
+                                    models<Concept::PossiblyNonLinear,LOP>(),
+                                    cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                                      trialSpaceData(
+                                        testSpaceData(
+                                          cellGridData(
+                                            timeData(
+                                              Data<CellFlavor::Inside<enable_flavors>>(*this)
+                                              ))))))))))))))))));
       }
 
 
@@ -613,7 +627,7 @@ namespace Dune {
     };
 
 
-    template<typename TrialVector, typename Jacobian, typename LOP>
+      template<typename TrialVector, typename Jacobian, typename LOP>
     JacobianEngine(
         const TrialVector&,
         Jacobian&,
@@ -625,6 +639,7 @@ namespace Dune {
         LOP,
         EmptyTransformation,
         EmptyTransformation,
+        false,
         Galerkin::automatic
         >;
 
@@ -641,6 +656,7 @@ namespace Dune {
         LOP,
         EmptyTransformation,
         EmptyTransformation,
+        false,
         galerkin
         >;
 
@@ -658,6 +674,7 @@ namespace Dune {
         LOP,
         EmptyTransformation,
         EmptyTransformation,
+        false,
         Galerkin::automatic
         >;
 
