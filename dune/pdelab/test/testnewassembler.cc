@@ -224,8 +224,8 @@ namespace DG {
 
 
 //! solve problem with DG method
-template<class GV, class FEM, class Problem, int degree>
-bool runDG(const GV& gv, const FEM& fem, Problem& problem)
+template<class GV, class FEM, class Problem, class OldProblem, int degree>
+bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_problem)
 {
   // Coordinate and result type
   typedef typename Problem::Real Real;
@@ -242,15 +242,15 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   // Make local operator
   Dune::PDELab::ConvectionDiffusionDGMethod::Type m = Dune::PDELab::ConvectionDiffusionDGMethod::SIPG;
   Dune::PDELab::ConvectionDiffusionDGWeights::Type w = Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn;
-#if 1
-  typedef Dune::PDELab::ConvectionDiffusionDG<Problem,FEM> OldLOP;
-  auto old_lop = OldLOP{problem, m, w, 2.0};
-  using LOP = Dune::PDELab::LocalOperatorAdapter<OldLOP>;
-  auto lop = LOP{old_lop};
-#else
+
+  typedef Dune::PDELab::ConvectionDiffusionDG<OldProblem,FEM> OldLOP;
+  auto old_lop = OldLOP{old_problem, m, w, 2.0};
+  using LOPWrapper = Dune::PDELab::LocalOperatorAdapter<OldLOP>;
+  auto lop_wrapper = LOPWrapper{old_lop};
+
   using LOP = Dune::PDELab::ConvectionDiffusionDGNew<Problem>;
   auto lop = LOP{problem, m, w, 2.0};
-#endif
+
 
   // Constraints
   typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
@@ -263,41 +263,103 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   typedef Dune::PDELab::NewGridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop,mbe);
 
+  using OldGO = Dune::PDELab::NewGridOperator<GFS,GFS,LOPWrapper,MBE,Real,Real,Real,CC,CC>;
+  OldGO old_go(gfs,cc,gfs,cc,lop_wrapper,mbe);
+
+
   // Make a vector of degree of freedom vectors and initialize it with Dirichlet extension
   typedef typename GO::Traits::Domain U;
   U u(gfs,0.0);
   //typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
   //G g(gv,problem);
 
-  // Make linear solver
-  int ls_verbosity = 2;
-  // CG only works for symmetric operator (SIPG). In case of (NIPG) use e.g.:
-  //
-  // typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LS;
-  // LS ls(10000,ls_verbosity);
-  typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
-  LS ls(10000,ls_verbosity);
+  {
+    U r(gfs,0.0);
+    U r_old(gfs,0.0);
 
-  // Solve problem
-  typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
-  SLP slp(go,ls,u,1e-12);
-  slp.apply();
+    go.residual(u,r);
+    old_go.residual(u,r_old);
 
-  // compute L2 error if analytical solution is available
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,U> UDGF;
-  UDGF udgf(gfs,u);
-  /*
-  typedef Dune::PDELab::DifferenceSquaredAdapter<G,UDGF> DifferenceSquared;
-  DifferenceSquared differencesquared(g,udgf);
-  typename DifferenceSquared::Traits::RangeType l2errorsquared(0.0);
-  Dune::PDELab::integrateGridFunction(differencesquared,l2errorsquared,12);
-  std::cout << "l2 error squared: " << l2errorsquared << std::endl;
-  */
-  // write vtk file
-  Dune::SubsamplingVTKWriter<typename GV::GridView> vtkwriter(gv.gridView(),Dune::refinementIntervals(degree));
-  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,u);
-  //vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF>>(udgf,"u_h"));
-  vtkwriter.write("testnewassembler",Dune::VTK::appendedraw);
+    for (auto it = r.begin(), it2 = r_old.begin(), end = r.end();
+         it != end;
+         ++it, ++it2
+      )
+      if (*it != *it2)
+        return true;
+  }
+
+
+  {
+    typename GO::Traits::Jacobian j(go,0.0);
+    typename GO::Traits::Jacobian j_old(old_go,0.0);
+
+    go.jacobian(u,j);
+    old_go.jacobian(u,j_old);
+  }
+
+  {
+    // Make linear solver
+    int ls_verbosity = 2;
+    // CG only works for symmetric operator (SIPG). In case of (NIPG) use e.g.:
+    //
+    // typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LS;
+    // LS ls(10000,ls_verbosity);
+    typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
+    LS ls(10000,ls_verbosity);
+
+    // Solve problem
+    typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
+    SLP slp(go,ls,u,1e-12);
+    slp.apply();
+
+    // compute L2 error if analytical solution is available
+    typedef Dune::PDELab::DiscreteGridFunction<GFS,U> UDGF;
+    UDGF udgf(gfs,u);
+    /*
+      typedef Dune::PDELab::DifferenceSquaredAdapter<G,UDGF> DifferenceSquared;
+      DifferenceSquared differencesquared(g,udgf);
+      typename DifferenceSquared::Traits::RangeType l2errorsquared(0.0);
+      Dune::PDELab::integrateGridFunction(differencesquared,l2errorsquared,12);
+      std::cout << "l2 error squared: " << l2errorsquared << std::endl;
+    */
+    // write vtk file
+    Dune::SubsamplingVTKWriter<typename GV::GridView> vtkwriter(gv.gridView(),Dune::refinementIntervals(degree));
+    Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,u);
+    //vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF>>(udgf,"u_h"));
+    vtkwriter.write("testnewassembler",Dune::VTK::appendedraw);
+  }
+
+  {
+    // Make linear solver
+    int ls_verbosity = 2;
+    // CG only works for symmetric operator (SIPG). In case of (NIPG) use e.g.:
+    //
+    // typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 LS;
+    // LS ls(10000,ls_verbosity);
+    typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
+    LS ls(10000,ls_verbosity);
+
+    // Solve problem
+    typedef Dune::PDELab::StationaryLinearProblemSolver<OldGO,LS,U> SLP;
+    SLP slp(old_go,ls,u,1e-12);
+    slp.apply();
+
+    // compute L2 error if analytical solution is available
+    typedef Dune::PDELab::DiscreteGridFunction<GFS,U> UDGF;
+    UDGF udgf(gfs,u);
+    /*
+      typedef Dune::PDELab::DifferenceSquaredAdapter<G,UDGF> DifferenceSquared;
+      DifferenceSquared differencesquared(g,udgf);
+      typename DifferenceSquared::Traits::RangeType l2errorsquared(0.0);
+      Dune::PDELab::integrateGridFunction(differencesquared,l2errorsquared,12);
+      std::cout << "l2 error squared: " << l2errorsquared << std::endl;
+    */
+    // write vtk file
+    Dune::SubsamplingVTKWriter<typename GV::GridView> vtkwriter(gv.gridView(),Dune::refinementIntervals(degree));
+    Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,u);
+    //vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF>>(udgf,"u_h"));
+    vtkwriter.write("testnewassembler_old",Dune::VTK::appendedraw);
+  }
 
   /*
   bool test_fail = false;
@@ -332,7 +394,7 @@ int main(int argc, char** argv)
   Grid grid(L,Dune::filledArray<dim, int>(1),P,0);
 
   // Refine grid
-  grid.globalRefine(5);
+  grid.globalRefine(1);
 
   // Get GridView
   typedef Grid::LeafGridView GV;
@@ -342,13 +404,12 @@ int main(int argc, char** argv)
   ES es(gv);
 
   // Create problem
-#if 1
-  using Problem = ParameterA<ES,Real>;
-  Problem problem(es);
-#else
-   using Problem = DG::Problem<Real>;
+
+  using OldProblem = ParameterA<ES,Real>;
+  OldProblem old_problem(es);
+  using Problem = DG::Problem<Real>;
   Problem problem;
-#endif
+
 
   // Create DG space
   const int degree=1;
@@ -356,5 +417,5 @@ int main(int argc, char** argv)
   FEMDG femdg;
 
   // Solve problem
-  return runDG <ES, FEMDG, Problem, degree>(es, femdg, problem);
+  return runDG <ES, FEMDG, Problem, OldProblem, degree>(es, femdg, problem, old_problem);
 }
