@@ -7,9 +7,12 @@
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/flavor.hh>
+#include <dune/pdelab/instationary/onestepmethods.hh>
 
 namespace Dune {
   namespace PDELab {
+
+    enum class DTScaling {multiply, divide};
 
     enum class Galerkin { disable, enable, automatic };
 
@@ -81,6 +84,145 @@ namespace Dune {
 
       template<typename = Flavor::Generic>
       using TrialSpaceCache  = LFSIndexCache<TrialLocalSpace<Flavor::Generic>,TrialConstraints>;
+
+    };
+
+    template<typename Real, bool instationary_>
+    class InstationaryEngineBase
+    {
+
+    public:
+
+      using TimeReal = Real;
+
+      static constexpr bool instationary()
+      {
+        return instationary_;
+      }
+
+      TimeReal dt() const
+      {
+        return _dt;
+      }
+
+      TimeReal time() const
+      {
+        return _time;
+      }
+
+      TimeReal t0() const
+      {
+        return _t0;
+      }
+
+      void setOneStepMethod(OneStep::Method<TimeReal> one_step_method)
+      {
+        _one_step_method = &one_step_method;
+      }
+
+      const OneStep::Method<TimeReal>& oneStepMethod() const
+      {
+        assert(_one_step_method);
+        return *_one_step_method;
+      }
+
+      void startStep(TimeReal t0, TimeReal dt)
+      {
+        _stage = 0;
+        _time = _t0 = t0;
+        _dt = dt;
+
+        _timestep_factor = 1.0;
+        _timestep_time_factor = 1.0;
+        switch (_scaling)
+        {
+        case DTScaling::divide:
+          _timestep_time_factor /= _dt;
+          break;
+        case DTScaling::multiply:
+          _timestep_factor = dt;
+          break;
+        default:
+          DUNE_THROW(AssemblyError,"Unknown time step scaling method");
+        }
+      }
+
+      Real weight() const
+      {
+        return _weight;
+      }
+
+      Real timeWeight() const
+      {
+        return _time_weight;
+      }
+
+      Real timestepFactor() const
+      {
+        return _timestep_factor;
+      }
+
+      Real timestepTimeFactor() const
+      {
+        return _timestep_time_factor;
+      }
+
+      int stage() const
+      {
+        return _stage;
+      }
+
+      void setStage(int stage)
+      {
+        _stage = stage;
+      }
+
+      template<typename Assembler, typename TrialVector>
+      void acceptStage(Assembler&, const TrialVector&)
+      {
+        ++_stage;
+        updateWeights();
+      }
+
+      void updateWeights()
+      {
+        if (instationary())
+        {
+          _weight = oneStepMethod().weight(_stage,_stage) * _timestep_factor;
+          _time_weight = oneStepMethod().timeDerivativeWeight(_stage,_stage) * _timestep_time_factor;
+        }
+        else
+        {
+          _weight = 1.0;
+          _time_weight = 0.0;
+        }
+      }
+
+    protected:
+
+      void setWeight(Real weight)
+      {
+        _weight = weight;
+      }
+
+      void setTimeWeight(Real time_weight)
+      {
+        _time_weight = time_weight;
+      }
+
+    private:
+
+      const OneStep::Method<Real>* _one_step_method = nullptr;
+      int _stage = 0;
+      bool _stage_accept_mode = false;
+      DTScaling _scaling = DTScaling::divide;
+      TimeReal _time = 0.0;
+      TimeReal _t0 = 0.0;
+      TimeReal _dt = 0.0;
+      Real _weight = 1.0;
+      Real _time_weight = 1.0;
+      TimeReal _timestep_factor = 1.0;
+      TimeReal _timestep_time_factor = 1.0;
 
     };
 
