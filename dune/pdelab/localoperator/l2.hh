@@ -15,6 +15,7 @@
 #include <dune/pdelab/localoperator/flags.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
 #include <dune/pdelab/localoperator/blockdiagonal.hh>
+#include <dune/pdelab/localoperator/guardedcalls.hh>
 
 namespace Dune {
   namespace PDELab {
