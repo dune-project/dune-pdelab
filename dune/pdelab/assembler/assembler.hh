@@ -36,6 +36,12 @@ namespace Dune {
       }
 
       template<typename Engine>
+      decltype(auto) assemble(Engine&& engine, std::enable_if_t<std::is_same_v<Engine,std::decay_t<Engine>>,int> = 0) const
+      {
+        return assemble(engine);
+      }
+
+      template<typename Engine>
       decltype(auto) assemble(Engine& engine) const
       {
         constexpr bool visit_periodic_intersections = Engine::visitPeriodicIntersections();
