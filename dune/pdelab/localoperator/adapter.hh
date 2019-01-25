@@ -193,7 +193,7 @@ namespace Dune {
       std::enable_if_t<Std::to_true_v<Context> and LOP::doPatternBoundary>
       boundaryPattern(Context& ctx) const
       {
-        auto& pattern = ctx.inside().jacobian();
+        auto& pattern = ctx.inside().pattern();
         _lop.pattern_boundary(
           ctx.inside().trial().functionSpace(),
           ctx.inside().test().functionSpace(),
