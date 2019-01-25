@@ -233,6 +233,41 @@ namespace Dune {
         , _test_constraints(&test_constraints)
       {}
 
+      template<typename LOP_>
+      ResidualEngine(
+        LOP_& lop,
+        std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,std::integral_constant<Galerkin,galerkin>> = std::integral_constant<Galerkin,galerkin>{}
+        )
+        : _lop(&lop)
+        , _argument(nullptr)
+        , _residual(nullptr)
+        , _trial_constraints(nullptr)
+        , _test_constraints(nullptr)
+      {}
+
+      ResidualEngine(
+        LOP& lop,
+        const TrialConstraints& trial_constraints,
+        const TestConstraints& test_constraints,
+        std::integral_constant<Galerkin,galerkin> = std::integral_constant<Galerkin,galerkin>{}
+        )
+        : _lop(&lop)
+        , _argument(nullptr)
+        , _residual(nullptr)
+        , _trial_constraints(&trial_constraints)
+        , _test_constraints(&test_constraints)
+      {}
+
+      void setArgument(const TrialVector& argument)
+      {
+        _argument = &argument;
+      }
+
+      void setResidual(TestVector& residual)
+      {
+        _residual = &residual;
+      }
+
       TestVector& residual()
       {
         if (_stage_accept_mode)
