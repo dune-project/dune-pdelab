@@ -775,12 +775,6 @@ namespace Dune {
         return LocalIndex(Base::localIndex(index));
       }
 
-    private:
-      // we don't support getChild yet, so let's hide it!
-      template<int i>
-      void getChild () const;
-      template<int i>
-      void child () const;
     };
 
     //! \} group GridFunctionSpace
