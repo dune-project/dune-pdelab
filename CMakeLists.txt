@@ -4,10 +4,6 @@ project("dune-pdelab" C CXX)
 # general stuff
 cmake_minimum_required(VERSION 3.7)
 
-set(CMAKE_BUILD_RPATH
-  $ENV{INTEL_TBB_ROOT}/lib
-  )
-
 # guess dune-common build dir
 if(NOT (dune-common_DIR OR dune-common_ROOT OR
         "${CMAKE_PREFIX_PATH}" MATCHES ".*dune-common.*"))
