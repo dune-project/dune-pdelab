@@ -32,7 +32,8 @@ namespace Dune{
     template<typename GFSU, typename GFSV, typename LOP,
              typename MB, typename DF, typename RF, typename JF,
              typename CU=Dune::PDELab::EmptyTransformation,
-             typename CV=Dune::PDELab::EmptyTransformation
+             typename CV=Dune::PDELab::EmptyTransformation,
+             bool instationary_ = false
              >
     class NewGridOperator
       : OnlyMovable
@@ -109,6 +110,43 @@ namespace Dune{
         //! The global assembler of the grid operator.
         using Assembler = Dune::PDELab::Assembler<EntitySet>;
 
+        using PatternEngine = Dune::PDELab::PatternEngine<
+          GFSU,
+          GFSV,
+          LOP,
+          MB,
+          JF,
+          CU,
+          CV
+          >;
+
+        using ResidualEngine = Dune::PDELab::ResidualEngine<
+          Domain,
+          Range,
+          LOP,
+          CU,
+          CV,
+          instationary_
+          >;
+
+        using JacobianEngine = Dune::PDELab::JacobianEngine<
+          Domain,
+          Jacobian,
+          LOP,
+          CU,
+          CV,
+          instationary_
+          >;
+
+        using ApplyJacobianEngine = Dune::PDELab::ApplyJacobianEngine<
+          Domain,
+          Range,
+          LOP,
+          CU,
+          CV,
+          instationary_
+          >;
+
       };
 
       template <typename MFT>
@@ -170,16 +208,16 @@ namespace Dune{
         return _cv;
       }
 
-      LOP& localOperator()
+      LOP& localOperator() const
       {
-        return _lop;
+        return *_lop;
       }
-
+/*
       const LOP& localOperator() const
       {
         return *_lop;
       }
-
+*/
       //! Get dimension of space u
       typename GFSU::Traits::SizeType globalSizeU () const
       {
@@ -207,10 +245,9 @@ namespace Dune{
         Dune::PDELab::copy_nonconstrained_dofs(trialConstraints(),xold,x);
       }
 
-      //! Fill pattern of jacobian matrix
-      auto matrixPattern() const
+      auto matrixPatternEngine() const
       {
-        auto engine = PatternEngine(
+        return typename Traits::PatternEngine(
           trialGridFunctionSpace(),
           testGridFunctionSpace(),
           localOperator(),
@@ -219,63 +256,77 @@ namespace Dune{
           testConstraints(),
           JF()
           );
-        return assembler().assemble(engine);
+      }
+
+      //! Fill pattern of jacobian matrix
+      auto matrixPattern() const
+      {
+        return assembler().assemble(matrixPatternEngine());
+      }
+
+      auto residualEngine() const
+      {
+        return typename Traits::ResidualEngine(
+          localOperator(),
+          trialConstraints(),
+          testConstraints()
+          );
       }
 
       //! Assemble residual
       void residual(const Domain & x, Range & r) const
       {
-        auto engine = ResidualEngine(
-          x,
-          r,
+        auto engine = residualEngine();
+        engine.setArgument(x);
+        engine.setResidual(r);
+        assembler().assemble(engine);
+      }
+
+      auto jacobianEngine() const
+      {
+        return typename Traits::JacobianEngine(
           localOperator(),
           trialConstraints(),
           testConstraints()
           );
-        assembler().assemble(engine);
       }
 
       //! Assembler jacobian
       void jacobian(const Domain & x, Jacobian & a) const
       {
-        auto engine = JacobianEngine(
-          x,
-          a,
+        auto engine = jacobianEngine();
+        engine.setLinearizationPoint(x);
+        engine.setJacobian(a);
+        assembler().assemble(engine);
+      }
+
+      auto applyJacobianEngine() const
+      {
+        return typename Traits::ApplyJacobianEngine(
           localOperator(),
           trialConstraints(),
           testConstraints()
           );
-        assembler().assemble(engine);
       }
 
       //! Apply jacobian matrix without explicitly assembling it
       void jacobian_apply(const Domain & z, Range & r) const
       {
-        auto engine = ApplyJacobianEngine(
-          z,
-          z,
-          r,
-          localOperator(),
-          trialConstraints(),
-          testConstraints()
-          );
+        auto engine = applyJacobianEngine();
+        engine.setArgument(z);
+        engine.setResult(r);
         assembler().assemble(engine);
       }
 
       //! Apply jacobian matrix without explicitly assembling it
       void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r) const
       {
-        auto engine = ApplyJacobianEngine(
-          x,
-          z,
-          r,
-          localOperator(),
-          trialConstraints(),
-          testConstraints()
-          );
+        auto engine = applyJacobianEngine();
+        engine.setArgument(x);
+        engine.setLinearizationPoint(z);
+        engine.setResult(r);
         assembler().assemble(engine);
       }
-
 
       void make_consistent(Jacobian& a) const
       {
@@ -311,7 +362,7 @@ namespace Dune{
         CV&
         > _cv;
 
-      LOP* _lop;
+      mutable LOP* _lop;
 
       shared_ptr<BorderDOFExchanger> _dof_exchanger;
 
