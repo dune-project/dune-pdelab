@@ -27,7 +27,7 @@ namespace Dune {
     TypeTree::SimplePowerNodeTransformation<
       PowerLocalFunctionSpace,
       lfs_to_finite_elements<Context>,
-      TypeTree::PowerNode
+      PowerFiniteElementWrapper
       >
     registerNodeTransformation(PowerLocalFunctionSpace* plfs, lfs_to_finite_elements<Context>* t, PowerLocalFunctionSpaceTag* tag);
 
@@ -35,7 +35,7 @@ namespace Dune {
     TypeTree::SimpleCompositeNodeTransformation<
       CompositeLocalFunctionSpace,
       lfs_to_finite_elements<Context>,
-      TypeTree::CompositeNode
+      CompositeFiniteElementWrapper
       >
     registerNodeTransformation(CompositeLocalFunctionSpace* plfs, lfs_to_finite_elements<Context>* t, CompositeLocalFunctionSpaceTag* tag);
 

@@ -15,6 +15,8 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
 #include <dune/typetree/leafnode.hh>
+#include <dune/typetree/powernode.hh>
+#include <dune/typetree/compositenode.hh>
 #include <dune/typetree/traversal.hh>
 
 #include <dune/pdelab/common/checks.hh>
@@ -891,6 +893,39 @@ namespace Dune {
       {}
 
       QR& _qr;
+
+    };
+
+
+    template<typename Child, std::size_t count>
+    class PowerFiniteElementWrapper:
+      public TypeTree::PowerNode<Child,count>
+    {
+
+      using Base = TypeTree::PowerNode<Child,count>;
+
+    public:
+
+      template<typename... T>
+      PowerFiniteElementWrapper(T&&... t)
+        : Base(std::forward<T>(t)...)
+      {}
+
+    };
+
+    template<typename... Child>
+    class CompositeFiniteElementWrapper:
+      public TypeTree::CompositeNode<Child...>
+    {
+
+      using Base = TypeTree::CompositeNode<Child...>;
+
+    public:
+
+      template<typename... T>
+      CompositeFiniteElementWrapper(T&&... t)
+        : Base(std::forward<T>(t)...)
+      {}
 
     };
 
