@@ -237,9 +237,9 @@ namespace Dune {
       {
         if (_stage_accept_mode)
         {
-          assert(_residuals.size() > 0);
-          assert(_residuals.back());
-          return *_residuals.back();
+          assert(_residuals.size() > stage());
+          assert(_residuals[stage()]);
+          return *_residuals[stage()];
         }
         else
         {
@@ -254,9 +254,9 @@ namespace Dune {
         static_assert(Std::to_true_v<h> and instationary(),"Calling timeResidual() is only allowed in instationary mode");
         if (_stage_accept_mode)
         {
-          assert(_time_residuals.size() > 0);
-          assert(_time_residuals.back());
-          return *_time_residuals.back();
+          assert(_time_residuals.size() > stage());
+          assert(_time_residuals[stage()]);
+          return *_time_residuals[stage()];
         }
         else
         {
