@@ -376,7 +376,7 @@ namespace Dune {
       }
 
       template<typename Assembler>
-      void acceptStage(Assembler& assembler, const TrialVector& solution)
+      int acceptStage(Assembler& assembler, const TrialVector& solution)
       {
         _stage_accept_mode = true;
         updateWeights();
@@ -388,10 +388,10 @@ namespace Dune {
         _residual = residual;
         _time_residual = time_residual;
         _stage_accept_mode = false;
-        setStage(stage()+1);
-        updateWeights();
+        IEB::acceptStage(assembler,solution);
         if (stage() == oneStepMethod().stages())
           _argument = argument;
+        return stage();
       }
 
       void updateWeights()
