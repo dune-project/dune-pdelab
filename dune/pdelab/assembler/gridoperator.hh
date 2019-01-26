@@ -368,7 +368,7 @@ namespace Dune{
 
       mutable LOP* _lop;
 
-      shared_ptr<BorderDOFExchanger> _dof_exchanger;
+      std::shared_ptr<BorderDOFExchanger> _dof_exchanger;
 
       MB _backend;
 
