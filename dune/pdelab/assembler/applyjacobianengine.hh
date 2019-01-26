@@ -228,6 +228,36 @@ namespace Dune {
       {}
 
 
+      ApplyJacobianEngine(
+        LOP& lop,
+        const TrialConstraints& trial_constraints,
+        const TestConstraints& test_constraints,
+        std::integral_constant<Galerkin,galerkin> = std::integral_constant<Galerkin,galerkin>{}
+        )
+        : _lop(&lop)
+        , _argument(nullptr)
+        , _linearization_point(nullptr)
+        , _result(nullptr)
+        , _trial_constraints(&trial_constraints)
+        , _test_constraints(&test_constraints)
+        , _symmetric_dirichlet_constraints(false)
+      {}
+
+      template<typename LOP_>
+      ApplyJacobianEngine(
+        LOP_& lop,
+        std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,std::integral_constant<Galerkin,galerkin>> = std::integral_constant<Galerkin,galerkin>{}
+        )
+        : _lop(&lop)
+        , _argument(nullptr)
+        , _linearization_point(nullptr)
+        , _result(nullptr)
+        , _trial_constraints(&_empty_constraints)
+        , _test_constraints(&_empty_constraints)
+        , _symmetric_dirichlet_constraints(false)
+      {}
+
+
       TestVector& result()
       {
         return *_result;
