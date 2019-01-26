@@ -106,8 +106,8 @@ namespace Dune {
 
       EmptyTransformation _empty_constraints;
 
-      TrialConstraints* _trial_constraints;
-      TestConstraints* _test_constraints;
+      const TrialConstraints* _trial_constraints;
+      const TestConstraints* _test_constraints;
 
       bool _symmetric_dirichlet_constraints;
 
