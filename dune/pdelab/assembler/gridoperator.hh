@@ -106,6 +106,8 @@ namespace Dune{
         //! The type of the jacobian.
         using Jacobian = Dune::PDELab::Backend::Matrix<MB,Domain,Range,JF>;
 
+        using LocalOperator = LOP;
+
 
         //! The global assembler of the grid operator.
         using Assembler = Dune::PDELab::Assembler<EntitySet>;
@@ -148,6 +150,8 @@ namespace Dune{
           >;
 
       };
+
+      using Real = typename Traits::DomainField;
 
       template <typename MFT>
       struct MatrixContainer{
