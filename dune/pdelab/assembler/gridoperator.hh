@@ -249,9 +249,9 @@ namespace Dune{
         Dune::PDELab::copy_nonconstrained_dofs(trialConstraints(),xold,x);
       }
 
-      auto matrixPatternEngine() const
+      auto makeMatrixPatternEngine() const
       {
-        return typename Traits::PatternEngine(
+        return std::make_shared<typename Traits::PatternEngine>(
           trialGridFunctionSpace(),
           testGridFunctionSpace(),
           localOperator(),
@@ -262,74 +262,102 @@ namespace Dune{
           );
       }
 
+      auto matrixPatternEngine() const
+      {
+        if (not _matrix_pattern_engine)
+          _matrix_pattern_engine = makeMatrixPatternEngine();
+        return _matrix_pattern_engine;
+      }
+
       //! Fill pattern of jacobian matrix
       auto matrixPattern() const
       {
-        return assembler().assemble(matrixPatternEngine());
+        return assembler().assemble(*matrixPatternEngine());
       }
 
-      auto residualEngine() const
+      auto makeResidualEngine() const
       {
-        return typename Traits::ResidualEngine(
+        return std::make_shared<typename Traits::ResidualEngine>(
           localOperator(),
           trialConstraints(),
           testConstraints()
           );
+      }
+
+      auto residualEngine() const
+      {
+        if (not _residual_engine)
+          _residual_engine = makeResidualEngine();
+        return _residual_engine;
       }
 
       //! Assemble residual
       void residual(const Domain & x, Range & r) const
       {
         auto engine = residualEngine();
-        engine.setArgument(x);
-        engine.setResidual(r);
-        assembler().assemble(engine);
+        engine->setArgument(x);
+        engine->setResidual(r);
+        assembler().assemble(*engine);
       }
 
-      auto jacobianEngine() const
+      auto makeJacobianEngine() const
       {
-        return typename Traits::JacobianEngine(
+        return std::make_shared<typename Traits::JacobianEngine>(
           localOperator(),
           trialConstraints(),
           testConstraints()
           );
+      }
+
+      auto jacobianEngine() const
+      {
+        if (not _jacobian_engine)
+          _jacobian_engine = makeJacobianEngine();
+        return _jacobian_engine;
       }
 
       //! Assembler jacobian
       void jacobian(const Domain & x, Jacobian & a) const
       {
         auto engine = jacobianEngine();
-        engine.setLinearizationPoint(x);
-        engine.setJacobian(a);
-        assembler().assemble(engine);
+        engine->setLinearizationPoint(x);
+        engine->setJacobian(a);
+        assembler().assemble(*engine);
       }
 
-      auto applyJacobianEngine() const
+      auto makeApplyJacobianEngine() const
       {
-        return typename Traits::ApplyJacobianEngine(
+        return std::make_shared<typename Traits::ApplyJacobianEngine>(
           localOperator(),
           trialConstraints(),
           testConstraints()
           );
       }
 
+      auto applyJacobianEngine() const
+      {
+        if (not _apply_jacobian_engine)
+          _apply_jacobian_engine = makeApplyJacobianEngine();
+        return _apply_jacobian_engine;
+      }
+
       //! Apply jacobian matrix without explicitly assembling it
       void jacobian_apply(const Domain & z, Range & r) const
       {
         auto engine = applyJacobianEngine();
-        engine.setArgument(z);
-        engine.setResult(r);
-        assembler().assemble(engine);
+        engine->setArgument(z);
+        engine->setResult(r);
+        assembler().assemble(*engine);
       }
 
       //! Apply jacobian matrix without explicitly assembling it
       void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r) const
       {
         auto engine = applyJacobianEngine();
-        engine.setArgument(x);
-        engine.setLinearizationPoint(z);
-        engine.setResult(r);
-        assembler().assemble(engine);
+        engine->setArgument(x);
+        engine->setLinearizationPoint(z);
+        engine->setResult(r);
+        assembler().assemble(*engine);
       }
 
       void make_consistent(Jacobian& a) const
@@ -348,6 +376,36 @@ namespace Dune{
       {
         return _backend;
       }
+
+      void setOneStepMethod(OneStep::Method<typename Traits::RangeField>& osm)
+      {
+        _residual_engine()->setOneStepMethod(osm);
+        if (_jacobian_engine)
+          _jacobian_engine->setOneStepMethod(osm);
+        if (_apply_jacobian_engine)
+          _apply_jacobian_engine->setOneStepMethod(osm);
+      }
+
+      int startStep(Real t0, Real dt)
+      {
+        int stages = _residual_engine()->startStep(t0,dt);
+        if (_jacobian_engine)
+          _jacobian_engine->startStep(t0,dt);
+        if (_apply_jacobian_engine)
+          _apply_jacobian_engine->startStep(t0,dt);
+        return stages;
+      }
+
+      int acceptStage(const typename Traits::Domain& solution)
+      {
+        int next = _residual_engine()->acceptStage(assembler(),solution);
+        if (_jacobian_engine)
+          _jacobian_engine->acceptStage(assembler(),solution);
+        if (_apply_jacobian_engine)
+          _apply_jacobian_engine->acceptStage(assembler(),solution);
+        return next;
+      }
+
 
     private:
       Assembler _assembler;
@@ -371,6 +429,11 @@ namespace Dune{
       std::shared_ptr<BorderDOFExchanger> _dof_exchanger;
 
       MB _backend;
+
+      mutable std::shared_ptr<typename Traits::PatternEngine> _matrix_pattern_engine;
+      mutable std::shared_ptr<typename Traits::ResidualEngine> _residual_engine;
+      mutable std::shared_ptr<typename Traits::JacobianEngine> _jacobian_engine;
+      mutable std::shared_ptr<typename Traits::ApplyJacobianEngine> _apply_jacobian_engine;
 
     };
 
