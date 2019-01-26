@@ -166,7 +166,7 @@ namespace Dune {
         return *_one_step_method;
       }
 
-      void startStep(TimeReal t0, TimeReal dt)
+      int startStep(TimeReal t0, TimeReal dt)
       {
         _stage = 0;
         _time = _t0 = t0;
@@ -185,6 +185,7 @@ namespace Dune {
         default:
           DUNE_THROW(AssemblyError,"Unknown time step scaling method");
         }
+        return oneStepMethod().stages();
       }
 
       Real weight() const
@@ -218,10 +219,11 @@ namespace Dune {
       }
 
       template<typename Assembler, typename TrialVector>
-      void acceptStage(Assembler&, const TrialVector&)
+      int acceptStage(Assembler&, const TrialVector&)
       {
         ++_stage;
         updateWeights();
+        return _stage;
       }
 
       void updateWeights()
