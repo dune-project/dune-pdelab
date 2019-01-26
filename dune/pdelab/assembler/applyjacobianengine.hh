@@ -395,7 +395,6 @@ namespace Dune {
                                     testSpaceData(
                                       cellGridData(
                                         timeData(
-                                          std::bool_constant<instationary()>{},
                                           Data<CellFlavor::Outside<enable_flavors>>(*this)
                                           )))))))))))),
                   insideCell(
@@ -414,7 +413,6 @@ namespace Dune {
                                       testSpaceData(
                                         cellGridData(
                                           timeData(
-                                            std::bool_constant<instationary()>{},
                                             Data<CellFlavor::Inside<enable_flavors>>(*this)
                                             )))))))))))))))));
       }
