@@ -56,6 +56,9 @@ namespace Dune {
 
         using value_type = E;
 
+        using Domain = Backend::Vector<GFSU,E>;
+        using Range  = Backend::Vector<GFSV,E>;
+
 #ifndef DOXYGEN
 
         // some trickery to avoid exposing average users to the fact that there might
