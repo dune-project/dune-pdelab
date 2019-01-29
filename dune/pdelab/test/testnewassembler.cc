@@ -3,6 +3,9 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <memory>
+
 #include <dune/common/filledarray.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
@@ -22,7 +25,9 @@
 #include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
 #include <dune/pdelab/localoperator/convectiondiffusiondgnew.hh>
 #include <dune/pdelab/localoperator/adapter.hh>
+#include <dune/pdelab/localoperator/introspection.hh>
 
+#include <dune/pdelab/solver/linear.hh>
 
 template<typename GV, typename RF>
 class ParameterA
@@ -298,6 +303,65 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
   }
 
   {
+
+    auto scalar_product = 0;
+
+    using Dune::PDELab::Backend::Native;
+
+    auto go_ptr = Dune::stackobject_to_shared_ptr(go);
+
+    auto linear_operator = std::make_shared<Dune::PDELab::ISTL::AssembledLinearOperator<GO>>(go_ptr);
+
+    Dune::ParameterTree params;
+    auto preconditioner = Dune::PDELab::ISTL::makeMatrixBasedSequentialPreconditioner(
+      linear_operator,
+      [](auto& provider, auto& params) {
+        using Provider = std::decay_t<decltype(provider)>;
+        using Dune::PDELab::Backend::Native;
+        using Dune::PDELab::Backend::native;
+#if 0
+        return std::make_shared<
+          Dune::SeqILU<
+            Native<typename Provider::Matrix>,
+            Native<typename Provider::Domain>,
+            Native<typename Provider::Range>
+            >
+          >(native(provider.matrix()),1.0);
+#else
+        return std::make_shared<
+          Dune::SeqSSOR<
+            Native<typename Provider::Matrix>,
+            Native<typename Provider::Domain>,
+            Native<typename Provider::Range>
+            >
+          >(native(provider.matrix()),3,1.0);
+#endif
+      },
+      params
+      );
+
+    auto linear_solver = Dune::PDELab::ISTL::makeIterativeLinearSolver(
+      linear_operator,
+      preconditioner,
+      [](auto lin_op, auto prec, auto& params) {
+        using LinearOperator = typename decltype(lin_op)::element_type;
+        return std::make_shared<
+          Dune::CGSolver<
+            typename LinearOperator::Domain
+            >
+          >(*lin_op,*prec,1e-6,1000,1);
+      },
+      params
+      );
+
+    auto solver = Dune::PDELab::NewtonPDESolver<U,U>(
+      linear_solver,
+      std::make_shared<Dune::PDELab::GridOperatorBasedResidual<GO>>(go_ptr),
+      params
+      );
+
+    //Dune::CGSolver<U> solver(linear_operator,preconditioner,1e-12,1000,2);
+
     // Make linear solver
     int ls_verbosity = 2;
     // CG only works for symmetric operator (SIPG). In case of (NIPG) use e.g.:
@@ -310,7 +374,9 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
     // Solve problem
     typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
     SLP slp(go,ls,u,1e-12);
-    slp.apply();
+    // slp.apply();
+
+    solver.solve(u);
 
     // compute L2 error if analytical solution is available
     typedef Dune::PDELab::DiscreteGridFunction<GFS,U> UDGF;
@@ -360,6 +426,9 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
     //vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF>>(udgf,"u_h"));
     vtkwriter.write("testnewassembler_old",Dune::VTK::appendedraw);
   }
+
+  auto inspect = Dune::PDELab::Introspector(go);
+  std::cout << inspect << std::endl;
 
   /*
   bool test_fail = false;
