@@ -23,6 +23,10 @@ namespace Dune {
       : public Exception
     {};
 
+    class LinearAlgebraError
+      : public Exception
+    {};
+
     //! GridFunctionSpace-related error.
     class GridFunctionSpaceError
       : public Exception
