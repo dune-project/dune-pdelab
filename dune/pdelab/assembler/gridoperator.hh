@@ -69,8 +69,12 @@ namespace Dune{
         //! The trial grid function space.
         typedef GFSU TrialGridFunctionSpace;
 
+        using TrialSpace = GFSU;
+
         //! The test grid function space.
         typedef GFSV TestGridFunctionSpace;
+
+        using TestSpace = GFSV;
 
         using EntitySet = typename GFSU::Traits::EntitySet;
 
@@ -413,6 +417,15 @@ namespace Dune{
         return changed;
       }
 
+      const typename Traits::TrialSpace& trialSpace() const
+      {
+        return *_gfsu;
+      }
+
+      const typename Traits::TestSpace& testSpace() const
+      {
+        return *_gfsv;
+      }
 
     private:
       Assembler _assembler;
