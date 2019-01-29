@@ -325,6 +325,13 @@ namespace Dune{
         assembler().assemble(*engine);
       }
 
+      void jacobian(Jacobian & a) const
+      {
+        auto engine = jacobianEngine();
+        engine->setJacobian(a);
+        assembler().assemble(*engine);
+      }
+
       auto makeApplyJacobianEngine() const
       {
         return std::make_shared<typename Traits::ApplyJacobianEngine>(
