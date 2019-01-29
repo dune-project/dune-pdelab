@@ -155,9 +155,9 @@ namespace Dune {
         return _t0;
       }
 
-      void setOneStepMethod(OneStep::Method<TimeReal> one_step_method)
+      void setOneStepMethod(std::shared_ptr<const OneStep::Method<TimeReal>> one_step_method)
       {
-        _one_step_method = &one_step_method;
+        _one_step_method = one_step_method;
       }
 
       const OneStep::Method<TimeReal>& oneStepMethod() const
@@ -219,11 +219,14 @@ namespace Dune {
       }
 
       template<typename Assembler, typename TrialVector>
-      int acceptStage(Assembler&, const TrialVector&)
+      bool acceptStage(int stage, Assembler&, const TrialVector&)
       {
+        if (stage == _stage)
+          return false;
+        assert(stage == _stage - 1);
         ++_stage;
         updateWeights();
-        return _stage;
+        return true;;
       }
 
       void updateWeights()
@@ -254,7 +257,7 @@ namespace Dune {
 
     private:
 
-      const OneStep::Method<Real>* _one_step_method = nullptr;
+      std::shared_ptr<const OneStep::Method<Real>> _one_step_method = nullptr;
       int _stage = 0;
       bool _stage_accept_mode = false;
       DTScaling _scaling = DTScaling::divide;
