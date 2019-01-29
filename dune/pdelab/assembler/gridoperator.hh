@@ -395,7 +395,7 @@ namespace Dune{
 
       int startStep(Real t0, Real dt)
       {
-        int stages = _residual_engine()->startStep(t0,dt);
+        int stages = residualEngine()->startStep(t0,dt);
         if (_jacobian_engine)
           _jacobian_engine->startStep(t0,dt);
         if (_apply_jacobian_engine)
