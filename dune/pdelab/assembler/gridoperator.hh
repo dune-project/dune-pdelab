@@ -377,9 +377,9 @@ namespace Dune{
         return _backend;
       }
 
-      void setOneStepMethod(OneStep::Method<typename Traits::RangeField>& osm)
+      void setOneStepMethod(std::shared_ptr<OneStep::Method<typename Traits::RangeField>> osm)
       {
-        _residual_engine()->setOneStepMethod(osm);
+        residualEngine()->setOneStepMethod(osm);
         if (_jacobian_engine)
           _jacobian_engine->setOneStepMethod(osm);
         if (_apply_jacobian_engine)
@@ -396,14 +396,14 @@ namespace Dune{
         return stages;
       }
 
-      int acceptStage(const typename Traits::Domain& solution)
+      bool acceptStage(int stage, const typename Traits::Domain& solution)
       {
-        int next = _residual_engine()->acceptStage(assembler(),solution);
+        bool changed = residualEngine()->acceptStage(stage,assembler(),solution);
         if (_jacobian_engine)
-          _jacobian_engine->acceptStage(assembler(),solution);
+          changed |= _jacobian_engine->acceptStage(stage,assembler(),solution);
         if (_apply_jacobian_engine)
-          _apply_jacobian_engine->acceptStage(assembler(),solution);
-        return next;
+          changed |= _apply_jacobian_engine->acceptStage(stage,assembler(),solution);
+        return changed;
       }
 
 

@@ -116,17 +116,6 @@ namespace Dune {
       const TrialConstraints* _trial_constraints;
       const TestConstraints* _test_constraints;
 
-      void setOneStepMethod(const OneStep::Method<TimeReal>& one_step_method)
-      {
-        IEB::setOneStepMethod(one_step_method);
-        _residuals.resize(oneStepMethod().stages());
-        _time_residuals.resize(oneStepMethod().stages());
-        for (auto& r : _residuals)
-          r = std::make_shared<TestVector>(testSpace());
-        for (auto& r : _time_residuals)
-          r = std::make_shared<TestVector>(testSpace());
-      }
-
     public:
 
       template<typename CellFlavor>
@@ -375,23 +364,36 @@ namespace Dune {
         return *_lop;
       }
 
-      template<typename Assembler>
-      int acceptStage(Assembler& assembler, const TrialVector& solution)
+      void setOneStepMethod(shared_ptr<const OneStep::Method<TimeReal>> one_step_method)
       {
+        IEB::setOneStepMethod(one_step_method);
+        _residuals.resize(oneStepMethod().stages());
+        _time_residuals.resize(oneStepMethod().stages());
+        for (auto& r : _residuals)
+          r = std::make_shared<TestVector>(testSpace());
+        for (auto& r : _time_residuals)
+          r = std::make_shared<TestVector>(testSpace());
+      }
+
+      template<typename Assembler>
+      bool acceptStage(int new_stage, Assembler& assembler, const TrialVector& solution)
+      {
+        if (new_stage == stage())
+          return false;
         _stage_accept_mode = true;
         updateWeights();
         auto argument = _argument;
-        _argument = solution;
+        _argument = &solution;
         auto residual = _residual;
         auto time_residual = _time_residual;
         assembler.assemble(*this);
         _residual = residual;
         _time_residual = time_residual;
         _stage_accept_mode = false;
-        IEB::acceptStage(assembler,solution);
+        IEB::acceptStage(new_stage,assembler,solution);
         if (stage() == oneStepMethod().stages())
           _argument = argument;
-        return stage();
+        return true;
       }
 
       void updateWeights()
