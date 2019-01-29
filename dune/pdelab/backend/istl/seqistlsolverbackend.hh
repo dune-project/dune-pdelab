@@ -5,6 +5,7 @@
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/parallel/mpihelper.hh>
+#include <dune/common/parametertree.hh>
 
 #include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/solvercategory.hh>
@@ -20,6 +21,7 @@
 
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
+#include <dune/pdelab/backend/common/interface.hh>
 #include <dune/pdelab/backend/solver.hh>
 #include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrix.hh>
@@ -65,6 +67,447 @@ namespace Dune {
     private:
       GOS& gos;
     };
+
+    namespace ISTL {
+
+    template<typename Domain, typename Range>
+    class LinearOperator
+      : public Dune::LinearOperator<Domain,Range>
+      , public virtual Backend::LinearSolverComponent<Domain,Range>
+    {};
+
+    template<typename Domain, typename Range>
+    class Preconditioner
+      : public Dune::Preconditioner<Domain,Range>
+      , public virtual Backend::LinearSolverComponent<Domain,Range>
+    {};
+
+    template<typename Matrix>
+    class MatrixBasedPreconditioner
+      : public Preconditioner<typename Matrix::Domain,typename Matrix::Range>
+      , public Backend::MatrixUsingLinearSolverComponent<Matrix>
+    {
+
+      using Base = Backend::MatrixUsingLinearSolverComponent<Matrix>;
+
+    public:
+
+      MatrixBasedPreconditioner(std::shared_ptr<typename Base::MatrixProvider> matrix_provider)
+        : Base(std::move(matrix_provider))
+      {}
+
+    };
+
+    template<typename GO>
+    class OnTheFlyLinearOperator
+      : public LinearOperator<typename GO::Traits::Domain,typename GO::Traits::Range>
+    {
+
+      using Base = LinearOperator<typename GO::Traits::Domain,typename GO::Traits::Range>;
+
+    public:
+
+      using Domain        = typename GO::Traits::Domain;
+      using Range         = typename GO::Traits::Range;
+      using Field         = typename Base::Field;
+      using Real          = typename Base::Real;
+      using OneStepMethod = typename Base::OneStepMethod;
+      using domain_type   = Domain;
+      using range_type    = Range;
+      using field_type    = Field;
+
+      OnTheFlyLinearOperator(GO& go)
+        : _go(go)
+      {}
+
+      void apply(const Domain& x, Range& y) const override
+      {
+        y = 0.0;
+        _go.jacobian_apply(x,y);
+      }
+
+      void applyscaleadd(Field alpha, const Domain& x, Range& y) const override
+      {
+        if (not _temp)
+          _temp = std::make_shared<Range>(y);
+        *_temp = 0.0;
+        _go.jacobian_apply(x,*_temp);
+        y.axpy(alpha,*_temp);
+      }
+
+      void setLinearizationPoint(const Domain& linearization_point, bool keep_matrix) override
+      {
+        if (isNonLinear(_go.localOperator()))
+          _go.applyJacobianEngine()->setLinearizationPoint(linearization_point);
+      }
+
+      SolverCategory::Category category() const override
+      {
+        return SolverCategory::sequential;
+      }
+
+      void setOneStepMethod(std::shared_ptr<OneStepMethod> method) override
+      {
+        _go->setOneStepMethod(method);
+      }
+
+      int startStep(Real t0, Real dt) override
+      {
+        return _go.startStep(t0,dt);
+      }
+
+      bool acceptStage(int stage, const Domain& solution) override
+      {
+        return _go.acceptStage(stage,solution);
+      }
+
+    private:
+      GO& _go;
+      mutable std::shared_ptr<Range> _temp;
+    };
+
+
+    template<typename GO>
+    class AssembledLinearOperator
+      : public LinearOperator<typename GO::Traits::Domain,typename GO::Traits::Range>
+      , public Backend::MatrixBasedLinearSolverComponent<typename GO::Traits::Jacobian>
+    {
+
+      using Base = LinearOperator<typename GO::Traits::Domain,typename GO::Traits::Range>;
+
+    public:
+
+      using Domain        = typename GO::Traits::Domain;
+      using Range         = typename GO::Traits::Range;
+      using Matrix        = typename GO::Traits::Jacobian;
+      using Field         = typename Base::Field;
+      using Real          = typename Base::Real;
+      using OneStepMethod = typename Base::OneStepMethod;
+      using domain_type   = Domain;
+      using range_type    = Range;
+      using field_type    = Field;
+
+      AssembledLinearOperator(std::shared_ptr<GO> go)
+        : _go(std::move(go))
+      {
+        if (not isNonLinear(_go->localOperator()))
+          updateMatrix();
+      }
+
+      void setOneStepMethod(std::shared_ptr<OneStepMethod> method) override
+      {
+        _go->setOneStepMethod(method);
+      }
+
+      int startStep(Real t0, Real dt) override
+      {
+        _stage = 0;
+        return _go->startStep(t0,dt);
+      }
+
+      bool acceptStage(int stage, const Domain& solution) override
+      {
+        _go->acceptStage(stage,solution);
+        assert(_stage == stage - 1);
+        if (_stage < stage)
+        {
+          if (not isNonLinear(_go->localOperator()))
+            updateMatrix();
+          _stage = stage;
+          return true;
+        }
+        else
+        {
+          return false;
+        }
+      }
+
+      void apply(const Domain& x, Range& y) const override
+      {
+        _jacobian->mv(x,y);
+      }
+
+      void applyscaleadd(Field alpha, const Domain& x, Range& y) const override
+      {
+        _jacobian->usmv(alpha,x,y);
+      }
+
+      void setLinearizationPoint(const Domain& linearization_point, bool keep_matrix) override
+      {
+        if (isNonLinear(_go->localOperator()) and not keep_matrix)
+        {
+          _go->jacobianEngine()->setLinearizationPoint(linearization_point);
+          updateMatrix();
+        }
+      }
+
+      SolverCategory::Category category() const override
+      {
+        return SolverCategory::sequential;
+      }
+
+      void updateMatrix(bool rebuild_pattern = false) override
+      {
+        if (rebuild_pattern)
+          _jacobian.reset();
+        ensureMatrix();
+        _go->jacobian(*_jacobian);
+        for (auto dependent : this->dependents())
+          dependent->matrixUpdated(rebuild_pattern);
+      }
+
+      bool hasMatrix() const override
+      {
+        return bool(_jacobian);
+      }
+
+      const Matrix& matrix() const override
+      {
+        if (not _jacobian)
+          DUNE_THROW(LinearAlgebraError, "Matrix has not been assembled yet");
+        return *_jacobian;
+      }
+
+      const Matrix* matrixPointer() const override
+      {
+        return _jacobian.get();
+      }
+
+    private:
+
+      void ensureMatrix()
+      {
+        if (not _jacobian)
+          _jacobian = std::make_shared<Matrix>(*_go);
+      }
+
+      std::shared_ptr<GO> _go;
+      mutable std::shared_ptr<Matrix> _jacobian;
+      int _stage = 0;
+
+    };
+
+
+    template<typename Matrix_, typename Factory>
+    class MatrixBasedSequentialPreconditioner
+      : public MatrixBasedPreconditioner<Matrix_>
+    {
+
+      Factory _factory;
+
+    public:
+
+      using Matrix         = Matrix_;
+      using MatrixProvider = Backend::MatrixBasedLinearSolverComponent<Matrix>;
+      using Domain         = typename Matrix::Domain;
+      using Range          = typename Matrix::Range;
+
+      using ISTLPreconditionerPointer = decltype(
+        _factory(
+          std::declval<const MatrixProvider&>(),
+          std::declval<const ParameterTree&>()
+          )
+        );
+      using ISTLPreconditioner = typename ISTLPreconditionerPointer::element_type;
+
+      void matrixUpdated(bool pattern_updated) override
+      {
+          _prec = _factory(this->matrixProvider(),_params);
+      }
+
+      void pre(Domain& domain, Range& range) override
+      {
+        using Backend::native;
+        _prec->pre(native(domain),native(range));
+      }
+
+      void apply(Domain& domain, const Range& range) override
+      {
+        using Backend::native;
+        _prec->apply(native(domain),native(range));
+      }
+
+      void post(Domain& domain) override
+      {
+        using Backend::native;
+        _prec->post(native(domain));
+      }
+
+      SolverCategory::Category category() const override
+      {
+        return SolverCategory::sequential;
+      }
+
+      template<typename MatrixProviderPointer>
+      MatrixBasedSequentialPreconditioner(
+        MatrixProviderPointer matrix_provider,
+        const Factory& factory,
+        const ParameterTree& params
+        )
+        : MatrixBasedPreconditioner<Matrix>(std::move(matrix_provider))
+        , _factory(factory)
+        , _params(params)
+      {
+        // The subscribe call *must* happen in the most derived type, otherwise
+        // the virtual callback to matrixUpdated() will fail!
+        this->matrixProvider().subscribe(*this);
+      }
+
+    private:
+
+      std::shared_ptr<ISTLPreconditioner> _prec;
+      const ParameterTree& _params;
+
+    };
+
+    template<
+      typename MatrixProviderPointer,
+      typename Factory
+      >
+    MatrixBasedSequentialPreconditioner(
+      MatrixProviderPointer,
+      const Factory&,
+      const ParameterTree&)
+      -> MatrixBasedSequentialPreconditioner<
+        typename MatrixProviderPointer::element_type::Matrix,
+        Factory
+        >;
+
+
+    template<typename LO, typename Factory>
+    auto makeMatrixBasedSequentialPreconditioner(std::shared_ptr<LO> lo, const Factory& factory, const ParameterTree& params)
+    {
+      return std::make_shared<
+        MatrixBasedSequentialPreconditioner<
+          typename LO::Matrix,
+          Factory
+          >
+        >(lo,factory,params);
+    }
+
+    template<typename Domain_, typename Range_, typename Factory>
+    class IterativeLinearSolver
+      : public Backend::LinearSolver<Domain_,Range_>
+    {
+
+      using Base = Backend::LinearSolver<Domain_,Range_>;
+
+    public:
+
+      using Domain               = Domain_;
+      using Range                = Range_;
+      using ISTLSolver           = Dune::IterativeSolver<Domain,Range>;
+      using ISTLPreconditioner   = Dune::Preconditioner<Domain,Range>;
+      using ISTLScalarProduct    = Dune::ScalarProduct<Domain>;
+      using Preconditioner       = Preconditioner<Domain,Range>;
+      using LinearOperator       = LinearOperator<Domain,Range>;
+      using Real                 = typename Base::Real;
+      using OneStepMethod        = typename Base::OneStepMethod;
+
+      int startStep(Real t0, Real dt) override
+      {
+        int stages = _linear_operator->startStep(t0,dt);
+        _preconditioner->startStep(t0,dt);
+        return stages;
+      }
+
+      bool acceptStage(int stage, const Domain& solution) override
+      {
+        bool changed = _linear_operator->acceptStage(stage,solution);
+        changed |= _preconditioner->acceptStage(stage,solution);
+        return changed;
+      }
+
+      void setOneStepMethod(std::shared_ptr<OneStepMethod> method) override
+      {
+        _linear_operator->setOneStepMethod(method);
+        _preconditioner->setOneStepMethod(method);
+      }
+
+      void setLinearizationPoint(const Domain& linearization_point, bool keep_matrix) override
+      {
+        _linear_operator->setLinearizationPoint(linearization_point,keep_matrix);
+        _preconditioner->setLinearizationPoint(linearization_point,keep_matrix);
+      }
+
+      void solve(Domain& solution, Range& rhs) override
+      {
+        Dune::InverseOperatorResult stat;
+        _solver->apply(solution,rhs,stat);
+      }
+
+      void solve(Domain& solution, Range& rhs, Real reduction) override
+      {
+        Dune::InverseOperatorResult stat;
+        _solver->apply(solution,rhs,static_cast<double>(reduction),stat);
+      }
+
+      Real norm(const Range& range) const override
+      {
+        return range.two_norm();
+      }
+
+      IterativeLinearSolver(
+        std::shared_ptr<LinearOperator> linear_operator,
+        std::shared_ptr<Preconditioner> preconditioner,
+        const Factory& factory,
+        const ParameterTree& params
+        )
+        : _factory(factory)
+        , _linear_operator(std::move(linear_operator))
+        , _preconditioner(std::move(preconditioner))
+        , _params(params)
+        , _solver(_factory(_linear_operator,_preconditioner,_params))
+      {}
+
+    private:
+
+      Factory _factory;
+      std::shared_ptr<LinearOperator> _linear_operator;
+      std::shared_ptr<Preconditioner> _preconditioner;
+      const ParameterTree& _params;
+      std::shared_ptr<ISTLSolver> _solver;
+
+    };
+
+
+    template<
+      typename LinearOperatorPointer,
+      typename PreconditionerPointer,
+      typename Factory
+      >
+    IterativeLinearSolver(
+      LinearOperatorPointer,
+      PreconditionerPointer,
+      const Factory&,
+      const ParameterTree&)
+      -> IterativeLinearSolver<
+        typename LinearOperatorPointer::element_type::Domain,
+        typename LinearOperatorPointer::element_type::Range,
+        Factory
+        >;
+
+
+    template<typename LO, typename Preconditioner, typename Factory>
+    auto makeIterativeLinearSolver(
+      std::shared_ptr<LO> lo,
+      std::shared_ptr<Preconditioner> preconditioner,
+      const Factory& factory,
+      const ParameterTree& params)
+    {
+      return std::make_shared<
+        IterativeLinearSolver<
+          typename LO::Domain,
+          typename LO::Range,
+          Factory
+          >
+        >(lo,preconditioner,factory,params);
+    }
+
+
+
+    } // namespace ISTL
+
 
     //==============================================================================
     // Here we add some standard linear solvers conforming to the linear solver
