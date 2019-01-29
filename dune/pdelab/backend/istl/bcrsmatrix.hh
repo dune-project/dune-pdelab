@@ -298,6 +298,18 @@ namespace Dune {
           _test_space = &test_space;
         }
 
+        void mv(const Domain& x, Range& y) const
+        {
+          using Backend::native;
+          native(*this).mv(native(x),native(y));
+        }
+
+        void usmv(E alpha, const Domain& x, Range& y) const
+        {
+          using Backend::native;
+          native(*this).usmv(alpha,native(x),native(y));
+        }
+
       private:
 
         std::shared_ptr<Container> _container;
