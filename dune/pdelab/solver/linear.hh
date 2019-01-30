@@ -1,6 +1,9 @@
 #ifndef DUNE_PDELAB_SOLVER_LINEAR_HH
 #define DUNE_PDELAB_SOLVER_LINEAR_HH
 
+#include <chrono>
+
+#include <dune/logging/logger.hh>
 #include <dune/pdelab/backend/common/interface.hh>
 
 namespace Dune::PDELab {
@@ -199,8 +202,12 @@ namespace Dune::PDELab {
 
     return [=,&newton](auto& solution, auto& correction)
     {
+      auto log = newton.logger();
+      log.indent(4);
+
       if (strategy == LineSearchStrategy::none)
       {
+        log.info("line search disabled"_fmt);
         solution -= correction;
         newton.updateDefect(solution);
         return;
@@ -217,11 +224,15 @@ namespace Dune::PDELab {
 
       for (;;)
       {
+
+        log.info("trying line search damping factor: {:#16.4}"_fmt,lambda);
+
         solution.axpy(-lambda,correction);
         Real defect = newton.updateDefect(solution);
 
         if (defect <= (1.0 - lambda/4) * newton.previousDefect())
         {
+        log.info("line search converged"_fmt);
           break;
         }
 
@@ -233,12 +244,13 @@ namespace Dune::PDELab {
 
         if (++i >= max_iterations)
         {
+          log.info("max line search iterations ({}) exceeded"_fmt,max_iterations);
           switch (strategy)
           {
           case LineSearchStrategy::hackbuschReusken:
             solution = original;
             newton.updateDefect(solution);
-            DUNE_THROW(Exception,"line search filed");
+            DUNE_THROW(Exception,"line search failed");
 
           case LineSearchStrategy::hackbuschReuskenAcceptBest:
             if (best_lambda == 0.0)
@@ -253,6 +265,7 @@ namespace Dune::PDELab {
               solution.axpy(-best_lambda,correction);
               newton.updateDefect(solution);
             }
+            log.info("best damping factor found: {:#16.4}"_fmt,best_lambda);
             return;
 
           default:
@@ -265,12 +278,10 @@ namespace Dune::PDELab {
         solution = original;
       }
 
+      log.info("line search damping factor: {:#16.4}"_fmt,lambda);
+
     };
   };
-
-
-
-
 
 
   template<typename Domain_, typename Range_>
@@ -293,11 +304,23 @@ namespace Dune::PDELab {
     {
       _iteration = 0;
 
+      using Clock = std::chrono::steady_clock;
+      using Duration = Clock::duration;
+
+      auto assembler_time = Duration::zero();
+      auto linear_solver_time = Duration::zero();
+      auto line_search_time   = Duration::zero();
+
+      auto to_seconds = [](Duration duration)
+      {
+        return std::chrono::duration<double>(duration).count();
+      };
+
+      auto start_solve = Clock::now();
 
       updateDefect(solution);
       _initial_defect = _prev_defect = _defect;
-
-      _solver->setLinearizationPoint(solution,false);
+      _log.notice("Initial defect: {:12.4e}"_fmt,_initial_defect);
 
       for (auto [converged,stop_defect] = _terminate(solution) ;
            not converged ;
@@ -309,7 +332,15 @@ namespace Dune::PDELab {
         using std::min;
         using std::pow;
 
+        _log.info("Newton iteration {:3}"_fmt,_iteration);
+        _log.info("{:-<30}"_fmt,"");
+
+        auto start = Clock::now();
         _solver->setLinearizationPoint(solution, abs(_defect / _prev_defect) > _reassemble_threshold);
+        auto end = Clock::now();
+        assembler_time += end - start;
+
+        _log.info(2,"assembly time: {:30.4e}"_fmt,to_seconds(end-start));
 
         Real linear_reduction = _min_linear_reduction;
         if (not _fixed_linear_reduction)
@@ -334,9 +365,21 @@ namespace Dune::PDELab {
         _prev_defect = _defect;
 
         _correction = 0.0;
-        _solver->solve(_correction,_residual,linear_reduction);
 
+        _log.info(2,"Solving linear system..."_fmt);
+        start = Clock::now();
+        _solver->solve(_correction,_residual,linear_reduction);
+        end = Clock::now();
+        linear_solver_time += end - start;
+
+        _log.detail(2,"linear solver iterations: {:16}"_fmt,_iteration);
+        _log.detail(2,"linear defect reduction:  {:16.4e}"_fmt,_reduction);
+
+        _log.info(2,"Performing line search..."_fmt);
+        start = Clock::now();
         _line_search(solution,_correction);
+        end = Clock::now();
+        line_search_time += end - start;
 
         _reduction = _defect / _initial_defect;
         ++_iteration;
@@ -348,6 +391,11 @@ namespace Dune::PDELab {
       (*_eval_residual)(solution,_residual);
       _solver->solve(_correction,_residual);
       solution -= _correction;
+    }
+
+    Logging::Logger logger() const
+    {
+      return _log;
     }
 
     Real defect() const
@@ -404,6 +452,7 @@ namespace Dune::PDELab {
       , _reassemble_threshold(params.get<Real>("reassemble_threshold",0.0))
       , _min_linear_reduction(params.get<Real>("min_linear_reduction",1e-3))
       , _fixed_linear_reduction(params.get("fixed_linear_reduction",false))
+      , _log(Logging::logger(params))
     {}
 
   private:
@@ -425,6 +474,8 @@ namespace Dune::PDELab {
     Real _reassemble_threshold;
     bool _fixed_linear_reduction;
     Real _min_linear_reduction;
+
+    Logging::Logger _log;
 
   };
 

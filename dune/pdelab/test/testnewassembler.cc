@@ -12,6 +12,8 @@
 #include <dune/istl/solvers.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+
+#include <dune/pdelab/common/log.hh>
 #include <dune/pdelab/finiteelementmap/qkdg.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/istl.hh>
@@ -354,6 +356,9 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
       params
       );
 
+    params["logger"] = "newton";
+    params["log_level"] = "detail";
+
     auto solver = Dune::PDELab::NewtonPDESolver<U,U>(
       linear_solver,
       std::make_shared<Dune::PDELab::GridOperatorBasedResidual<GO>>(go_ptr),
@@ -425,6 +430,8 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
     Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,u);
     //vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF>>(udgf,"u_h"));
     vtkwriter.write("testnewassembler_old",Dune::VTK::appendedraw);
+
+    Dune::PDELab::log("success");
   }
 
   auto inspect = Dune::PDELab::Introspector(go);
@@ -451,7 +458,15 @@ int main(int argc, char** argv)
       std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
   }
 
+  Dune::PDELab::Logging::setup(helper.getCollectiveCommunication());
+
+  Dune::PDELab::Logging::makeLogger("newton",Dune::PDELab::LogLevel::all,Dune::PDELab::Logging::cout());
+
   bool test_fail = false;
+
+  auto log = Dune::PDELab::logger();
+
+  log.notice("This number is {:12.4e}",3.141);
 
   typedef double Real;
 
