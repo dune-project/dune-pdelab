@@ -24,6 +24,14 @@ namespace Dune {
       : public Exception
     {};
 
+    class OneStepError
+      : public Exception
+    {};
+
+    class UnknownOneStepMethod
+      : public OneStepError
+    {};
+
     class LinearAlgebraError
       : public Exception
     {};
