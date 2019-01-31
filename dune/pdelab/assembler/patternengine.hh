@@ -5,6 +5,7 @@
 #define DUNE_PDELAB_ASSEMBLER_PATTERNENGINE_HH
 
 #include <memory>
+#include <vector>
 
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
@@ -235,73 +236,95 @@ namespace Dune {
       }
 
 
-      template<typename LocalPattern, typename TestIndices, typename TrialIndices>
+      template<typename Context, typename LocalPattern, typename TestIndices, typename TrialIndices>
       std::enable_if_t<Std::to_true_v<LocalPattern> and unconstrained()>
-      scatterPattern(LocalPattern& local_pattern, const TestIndices& test_indices, const TrialIndices& trial_indices)
+      scatterPattern(
+        const Context& ctx,
+        LocalPattern& local_pattern,
+        const TestIndices& test_indices,
+        const TrialIndices& trial_indices
+        )
       {
-        for (size_type i = 0, rows = test_indices.size() ; i < rows ; ++i)
-          for (size_type j = 0, cols = trial_indices.size() ; j < cols ; ++j)
-            _pattern->add_link(test_indices.containerIndex(i),trial_indices.containerIndex(j));
+        // in fastDG mode, there can only be one entry with index (0,0)
+        if (ctx.fastDG() and local_pattern.size() > 0)
+        {
+          assert (local_pattern.size() == 1);
+          auto [i,j] = *local_pattern.begin();
+          assert (i == 0);
+          assert (j == 0);
+        }
+
+        for (auto [i,j] : local_pattern)
+          _pattern->add_link(test_indices.containerIndex(i),trial_indices.containerIndex(j));
       }
 
-
-      template<typename LocalPattern, typename TestIndices, typename TrialIndices>
+      template<typename Context, typename LocalPattern, typename TestIndices, typename TrialIndices>
       std::enable_if_t<Std::to_true_v<LocalPattern> and not unconstrained()>
-      scatterPattern(LocalPattern& local_pattern, const TestIndices& test_indices, const TrialIndices& trial_indices)
+      scatterPattern(
+        const Context& ctx,
+        LocalPattern& local_pattern,
+        const TestIndices& test_indices,
+        const TrialIndices& trial_indices
+        )
       {
-        for (size_type i = 0, rows = test_indices.size() ; i < rows ; ++i)
-          {
-            auto constrained_v = test_indices.isConstrained(i);
-            for (size_type j = 0, cols = trial_indices.size() ; j < cols ; ++j)
-              {
-                auto constrained_u = trial_indices.isConstrained(j);
-                add_diagonal_entry(*_pattern,test_indices.containerIndex(i),trial_indices.containerIndex(j));
+        // in fastDG mode, there can only be one entry with index (0,0)
+        if (ctx.fastDG() and local_pattern.size() > 0)
+        {
+          assert (local_pattern.size() == 1);
+          auto [i,j] = *local_pattern.begin();
+          assert (i == 0);
+          assert (j == 0);
+        }
 
-                if (not constrained_v)
-                  {
-                    if (constrained_u and not trial_indices.isDirichletConstraint(j))
-                      {
-                        for (auto it = trial_indices.constraintsBegin(j),
-                               end = trial_indices.constraintsEnd(j) ;
-                             it != end ;
-                             ++it)
-                          _pattern->add_link(test_indices.containerIndex(i),it->containerIndex());
-                      }
-                    else
-                      {
-                        _pattern->add_link(test_indices.containerIndex(i),trial_indices.containerIndex(j));
-                      }
-                  }
-                else if (not test_indices.isDirichletConstraint(i))
-                  {
-                    for (auto vit = test_indices.constraintsBegin(i),
-                           end = test_indices.constraintsEnd(i) ;
-                         vit != end ;
-                         ++vit)
-                      {
-                        if (not constrained_u or trial_indices.isDirichletConstraint(j))
-                          {
-                            _pattern->add_link(vit->containerIndex(),trial_indices.containerIndex(j));
-                          }
-                        else
-                          {
-                            for (auto uit = trial_indices.constraintsBegin(j),
-                                   end = trial_indices.constraintsEnd(j) ;
-                                 uit != end ;
-                                 ++uit)
-                              _pattern->add_link(vit->containerIndex(),uit->containerIndex());
-                          }
-                      }
-                  }
+        for (auto [i,j] : local_pattern)
+        {
+            auto constrained_v = test_indices.isConstrained(i);
+            auto constrained_u = trial_indices.isConstrained(j);
+
+            add_diagonal_entry(*_pattern,test_indices.containerIndex(i),trial_indices.containerIndex(j));
+
+            if (not constrained_v)
+            {
+              if (constrained_u and not trial_indices.isDirichletConstraint(j))
+              {
+                for (auto it = trial_indices.constraintsBegin(j),
+                       end = trial_indices.constraintsEnd(j) ;
+                     it != end ;
+                     ++it)
+                  _pattern->add_link(test_indices.containerIndex(i),it->containerIndex());
+              }
+              else
+              {
+                _pattern->add_link(test_indices.containerIndex(i),trial_indices.containerIndex(j));
+              }
+            }
+            else if (not test_indices.isDirichletConstraint(i))
+            {
+              for (auto vit = test_indices.constraintsBegin(i),
+                     end = test_indices.constraintsEnd(i) ;
+                   vit != end ;
+                   ++vit)
+              {
+                if (not constrained_u or trial_indices.isDirichletConstraint(j))
+                {
+                  _pattern->add_link(vit->containerIndex(),trial_indices.containerIndex(j));
+                }
                 else
                 {
-                  _pattern->add_link(test_indices.containerIndex(i),trial_indices.containerIndex(j));
+                  for (auto uit = trial_indices.constraintsBegin(j),
+                         end = trial_indices.constraintsEnd(j) ;
+                       uit != end ;
+                       ++uit)
+                    _pattern->add_link(vit->containerIndex(),uit->containerIndex());
                 }
               }
-          }
+            }
+            else
+            {
+              _pattern->add_link(test_indices.containerIndex(i),trial_indices.containerIndex(j));
+            }
+        }
       }
-
-
 
       template<typename Context>
       void start(Context& ctx)

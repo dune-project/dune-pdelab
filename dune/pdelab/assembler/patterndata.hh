@@ -14,6 +14,62 @@
 namespace Dune {
   namespace PDELab {
 
+    template<typename Index_>
+    struct PatternLink
+    {
+      using Index = Index_;
+
+      Index i = 0;
+      Index j = 0;
+
+    };
+
+    template<typename Index_>
+    class LocalPattern
+    {
+
+      using Storage    = std::vector<PatternLink<Index_>>;
+
+    public:
+
+      using Index      = Index_;
+      using Link       = typename Storage::value_type;
+      using value_type = typename Storage::value_type;
+      using size_type  = std::size_t;
+      using iterator   = typename Storage::const_iterator;
+
+      iterator begin() const
+      {
+        return _links.begin();
+      }
+
+      iterator end() const
+      {
+        return _links.end();
+      }
+
+      size_type size() const
+      {
+        return _links.size();
+      }
+
+      void clear()
+      {
+        _links.clear();
+      }
+
+      template<typename LFSV, typename LFSU>
+      void addLink(const LFSV& lfsv, Index i, const LFSU& lfsu, Index j)
+      {
+        _links.push_back({Index(lfsv.localIndex(i)),Index(lfsu.localIndex(j))});
+      }
+
+    private:
+
+      Storage _links;
+
+    };
+
     template<typename Context>
     class CellPatternData
       : public Context
@@ -22,11 +78,11 @@ namespace Dune {
     public:
 
       using Context::unbind;
-      using Pattern = LocalSparsityPattern;
+      using Pattern = LocalPattern<std::uint32_t>;
 
       Context* unbind(const typename Context::Entity&, typename Context::Index, typename Context::Index)
       {
-        Context::engine().scatterPattern(_pattern,Context::test().cache(),Context::trial().cache());
+        Context::engine().scatterPattern(*this,_pattern,Context::test().cache(),Context::trial().cache());
         _pattern.clear();
         return this;
       }
@@ -64,7 +120,7 @@ namespace Dune {
         : Context(std::move(context))
       {}
 
-      using Pattern = LocalSparsityPattern;
+      using Pattern = LocalPattern<std::uint32_t>;
 
       Pattern _pattern_io;
       Pattern _pattern_oi;
@@ -105,8 +161,8 @@ namespace Dune {
       {
         if (type == IntersectionType::skeleton or type == IntersectionType::periodic)
           {
-            Context::engine().scatterPattern(_pattern_io,Context::inside().test().cache(),Context::outside().trial().cache());
-            Context::engine().scatterPattern(_pattern_oi,Context::outside().test().cache(),Context::inside().trial().cache());
+            Context::engine().scatterPattern(*this,_pattern_io,Context::inside().test().cache(),Context::outside().trial().cache());
+            Context::engine().scatterPattern(*this,_pattern_oi,Context::outside().test().cache(),Context::inside().trial().cache());
 
             _pattern_io.clear();
             _pattern_oi.clear();
