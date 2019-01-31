@@ -319,12 +319,12 @@ namespace Dune {
                     cellTimeResultData(
                       std::bool_constant<instationary()>{},
                       cellResultData(
-                        cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
+                        vectorData<TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
                           cellLinearizationPointData(
                             models<Concept::PossiblyNonLinear,LOP>(),
-                            cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                            vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                               cellArgumentData(
-                                cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                                vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                   trialSpaceData(
                                     testSpaceData(
                                       cellGridData(
@@ -337,12 +337,12 @@ namespace Dune {
                       cellTimeResultData(
                         std::bool_constant<instationary()>{},
                         cellResultData(
-                          cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
+                          vectorData<TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
                             cellLinearizationPointData(
                               models<Concept::PossiblyNonLinear,LOP>(),
-                              cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                              vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                 cellArgumentData(
-                                  cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                                  vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                     trialSpaceData(
                                       testSpaceData(
                                         cellGridData(

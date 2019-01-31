@@ -14,6 +14,7 @@
 #include <dune/pdelab/common/intersectiontype.hh>
 #include <dune/pdelab/common/quadraturerules.hh>
 #include <dune/pdelab/common/typetraits.hh>
+#include <dune/pdelab/backend/common/aliasedvectorview.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/assembler/utility.hh>
 #include <dune/pdelab/assembler/localviewproxy.hh>
@@ -202,33 +203,62 @@ namespace Dune {
 
     };
 
-
-
     template<
-      template<typename,typename> typename LV,
       typename Vector,
       typename Flavor,
       LocalViewDataMode _mode,
       typename Field,
       typename Context
       >
-    auto cachedVectorData(const Field& initial, Context&& ctx)
+    auto vectorData(const Field& initial, Context&& ctx)
     {
-      return CachedVectorData<Context,UncachedVectorView<std::conditional_t<_mode == LocalViewDataMode::read,const Vector, Vector>,std::decay_t<decltype(ctx.cache(Flavor{}))>>,_mode>{std::move(ctx),initial};
+      if constexpr (Context::fastDG())
+      {
+        using VectorView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstAliasedVectorView<const Vector,std::decay_t<decltype(ctx.cache(Flavor{}))>>,
+          AliasedVectorView<Vector,std::decay_t<decltype(ctx.cache(Flavor{}))>>
+          >;
+        return AliasedVectorData<Context,VectorView,_mode>{std::move(ctx),initial};
+      }
+      else
+      {
+        using VectorView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstUncachedVectorView<const Vector,std::decay_t<decltype(ctx.cache(Flavor{}))>>,
+          UncachedVectorView<Vector,std::decay_t<decltype(ctx.cache(Flavor{}))>>
+          >;
+        return CachedVectorData<Context,VectorView,_mode>{std::move(ctx),initial};
+      }
     }
 
     template<
-      template<typename,typename> typename LV,
       typename Vector,
       typename Flavor,
       LocalViewDataMode _mode,
       typename Context
       >
-    auto cachedVectorData(Context&& ctx)
+    auto vectorData(Context&& ctx)
     {
-      return CachedVectorData<Context,UncachedVectorView<std::conditional_t<_mode == LocalViewDataMode::read,const Vector, Vector>,std::decay_t<decltype(ctx.cache(Flavor{}))>>,_mode>{std::move(ctx)};
+      if constexpr (Context::fastDG())
+      {
+        using VectorView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstAliasedVectorView<const Vector,std::decay_t<decltype(ctx.cache(Flavor{}))>>,
+          AliasedVectorView<Vector,std::decay_t<decltype(ctx.cache(Flavor{}))>>
+          >;
+        return AliasedVectorData<Context,VectorView,_mode>{std::move(ctx)};
+      }
+      else
+      {
+        using VectorView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstUncachedVectorView<const Vector,std::decay_t<decltype(ctx.cache(Flavor{}))>>,
+          UncachedVectorView<Vector,std::decay_t<decltype(ctx.cache(Flavor{}))>>
+          >;
+        return CachedVectorData<Context,VectorView,_mode>{std::move(ctx)};
+      }
     }
-
 
     template<typename Implementation>
     struct CellResidualData
@@ -330,7 +360,6 @@ namespace Dune {
     };
 
     template<
-      template<typename,typename> typename LV,
       typename Vector,
       typename Flavor,
       typename Context
@@ -338,15 +367,14 @@ namespace Dune {
     auto cellTimeResidualData(std::true_type, Context&& context)
     {
       using Implementation = std::decay_t<
-        decltype(cachedVectorData<LV,Vector,Flavor,LocalViewDataMode::accumulate>(std::move(context)))
+        decltype(vectorData<Vector,Flavor,LocalViewDataMode::accumulate>(std::move(context)))
         >;
       return CellTimeResidualData<Implementation>(
-        cachedVectorData<LV,Vector,Flavor,LocalViewDataMode::accumulate>(std::move(context))
+        vectorData<Vector,Flavor,LocalViewDataMode::accumulate>(std::move(context))
         );
     }
 
     template<
-      template<typename,typename> typename LV,
       typename Vector,
       typename Flavor,
       typename Context

@@ -330,7 +330,7 @@ namespace Dune {
                               cachedMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
                                 cellLinearizationPointData(
                                   models<Concept::PossiblyNonLinear,LOP>(),
-                                  cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                                  vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                     trialSpaceData(
                                       testSpaceData(
                                         cellGridData(
@@ -346,7 +346,7 @@ namespace Dune {
                                 cachedMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
                                   cellLinearizationPointData(
                                     models<Concept::PossiblyNonLinear,LOP>(),
-                                    cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                                    vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                       trialSpaceData(
                                         testSpaceData(
                                           cellGridData(

@@ -355,12 +355,12 @@ namespace Dune {
                 outsideCell(
                   extractCellContext(
                     *_lop,
-                    cellTimeResidualData<UncachedVectorView,TestVector,Flavor::Test>(
+                    cellTimeResidualData<TestVector,Flavor::Test>(
                       std::bool_constant<instationary()>{},
                       cellResidualData(
-                        cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
+                        vectorData<TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
                           cellArgumentData(
-                            cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                            vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                               trialSpaceData(
                                 testSpaceData(
                                   cellGridData(
@@ -370,12 +370,12 @@ namespace Dune {
                   insideCell(
                     extractCellContext(
                       *_lop,
-                      cellTimeResidualData<UncachedVectorView,TestVector,Flavor::Test>(
+                      cellTimeResidualData<TestVector,Flavor::Test>(
                         std::bool_constant<instationary()>{},
                         cellResidualData(
-                          cachedVectorData<UncachedVectorView,TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
+                          vectorData<TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
                             cellArgumentData(
-                              cachedVectorData<ConstUncachedVectorView,TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                              vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                 trialSpaceData(
                                   testSpaceData(
                                     cellGridData(
