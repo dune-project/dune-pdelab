@@ -142,6 +142,11 @@ namespace Dune {
           return ApplyJacobianEngine::isGalerkin();
         }
 
+        static constexpr std::bool_constant<EngineParameters::fastDG> fastDG()
+        {
+          return {};
+        }
+
         Data(Engine& engine)
           : _engine(engine)
         {}

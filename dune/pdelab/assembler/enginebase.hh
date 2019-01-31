@@ -29,6 +29,8 @@ namespace Dune {
 
       static constexpr bool instationary = instationary_;
 
+      static constexpr bool fastDG = false;
+
       template<typename TrialSpace, typename TestSpace>
       static constexpr bool galerkin =
         galerkin_ == Galerkin::automatic
