@@ -29,19 +29,27 @@ namespace Dune {
       >
     class ResidualEngine
       : public InstationaryEngineBase<typename TrialVector_::value_type,EngineParameters::instationary>
+      , public FunctionSpaceProvider<typename TrialVector_::GridFunctionSpace,
+                                     typename TestVector_::GridFunctionSpace,
+                                     TrialConstraints_,
+                                     TestConstraints_,
+                                     not LocalOperator::disableFunctionSpaceFlavors<LOP>()
+                                     >
     {
 
       static constexpr bool enable_flavors = not LocalOperator::disableFunctionSpaceFlavors<LOP>();
 
-      using Types = LocalFunctionSpaceTypes<
-        typename TestVector_::GridFunctionSpace,
+      using IEB = InstationaryEngineBase<typename TrialVector_::value_type,EngineParameters::instationary>;
+
+      using FSP = FunctionSpaceProvider<
         typename TrialVector_::GridFunctionSpace,
+        typename TestVector_::GridFunctionSpace,
         TrialConstraints_,
         TestConstraints_,
         enable_flavors
         >;
 
-      using IEB = InstationaryEngineBase<typename TrialVector_::value_type,EngineParameters::instationary>;
+      using Types = typename FSP::Types;
 
     public:
 
@@ -53,39 +61,24 @@ namespace Dune {
       using IEB::timestepFactor;
       using IEB::timestepTimeFactor;
 
+      using FSP::unconstrained;
+      using FSP::trialConstraints;
+      using FSP::testConstraints;
+
       using size_type        = std::size_t;
 
       using TrialVector      = TrialVector_;
       using TestVector       = TestVector_;
-      using TrialConstraints = TrialConstraints_;
-      using TestConstraints  = TestConstraints_;
 
       using TestSpace        = typename Types::TestSpace;
-
-      template<typename Flavor = Flavor::Generic>
-      using TestLocalSpace   = typename Types::template TestLocalSpace<Flavor>;
-
-      template<typename Flavor = Flavor::Generic>
-      using TestSpaceCache   = typename Types::template TestSpaceCache<Flavor>;
-
+      using TestConstraints  = typename Types::TestConstraints;
 
       using TrialSpace       = typename Types::TrialSpace;
-
-      template<typename Flavor = Flavor::Generic>
-      using TrialLocalSpace  = typename Types::template TrialLocalSpace<Flavor>;
-
-      template<typename Flavor = Flavor::Generic>
-      using TrialSpaceCache  = typename Types::template TrialSpaceCache<Flavor>;
-
+      using TrialConstraints = typename Types::TrialConstraints;
 
       using EntitySet        = typename TestSpace::Traits::EntitySet;
 
       using TimeReal         = typename TrialVector::value_type;
-
-      static constexpr bool unconstrained()
-      {
-        return std::is_same<TestConstraints,EmptyTransformation>::value;
-      }
 
       static constexpr
       std::bool_constant<EngineParameters::template galerkin<TrialSpace,TestSpace>>
@@ -106,11 +99,6 @@ namespace Dune {
       const TrialVector* _argument;
       TestVector* _residual      = nullptr;;
       TestVector* _time_residual = nullptr;
-
-      EmptyTransformation _empty_constraints;
-
-      const TrialConstraints* _trial_constraints;
-      const TestConstraints* _test_constraints;
 
     public:
 
@@ -209,8 +197,6 @@ namespace Dune {
         : _lop(&lop)
         , _argument(&trial_vector)
         , _residual(&test_vector)
-        , _trial_constraints(nullptr)
-        , _test_constraints(nullptr)
       {}
 
       ResidualEngine(
@@ -221,11 +207,10 @@ namespace Dune {
         const TestConstraints& test_constraints,
         EngineParameters = {}
         )
-        : _lop(&lop)
+        : FSP(&trial_constraints,&test_constraints)
+        , _lop(&lop)
         , _argument(&trial_vector)
         , _residual(&test_vector)
-        , _trial_constraints(&trial_constraints)
-        , _test_constraints(&test_constraints)
       {}
 
       template<typename LOP_>
@@ -236,8 +221,6 @@ namespace Dune {
         : _lop(&lop)
         , _argument(nullptr)
         , _residual(nullptr)
-        , _trial_constraints(nullptr)
-        , _test_constraints(nullptr)
       {}
 
       ResidualEngine(
@@ -246,11 +229,10 @@ namespace Dune {
         const TestConstraints& test_constraints,
         EngineParameters = {}
         )
-        : _lop(&lop)
+        : FSP(&trial_constraints,&test_constraints)
+        , _lop(&lop)
         , _argument(nullptr)
         , _residual(nullptr)
-        , _trial_constraints(&trial_constraints)
-        , _test_constraints(&test_constraints)
       {}
 
       void setArgument(const TrialVector& argument)
@@ -305,59 +287,9 @@ namespace Dune {
         return _residual->gridFunctionSpace();
       }
 
-      const TestConstraints& testConstraints() const
-      {
-        return *_test_constraints;
-      }
-
-      template<typename Flavor_>
-      std::enable_if_t<
-        Std::to_true_type<Flavor_>::value and enable_flavors,
-        TestSpaceCache<Flavor_>
-        >
-      makeTestSpaceCache(Flavor_) const
-      {
-        return TestSpaceCache<Flavor_>(testConstraints());
-      }
-
-      template<typename Flavor_>
-      std::enable_if_t<
-        Std::to_true_type<Flavor_>::value and not enable_flavors,
-        TestSpaceCache<Flavor::Generic>
-        >
-      makeTestSpaceCache(Flavor_) const
-      {
-        return TestSpaceCache<Flavor::Generic>(testConstraints());
-      }
-
       const TrialSpace& trialSpace() const
       {
         return _argument->gridFunctionSpace();
-      }
-
-      const TrialConstraints& trialConstraints() const
-      {
-        return *_trial_constraints;
-      }
-
-      template<typename Flavor_>
-      std::enable_if_t<
-        Std::to_true_type<Flavor_>::value and enable_flavors,
-        TrialSpaceCache<Flavor_>
-        >
-      makeTrialSpaceCache(Flavor_) const
-      {
-        return TrialSpaceCache<Flavor_>(trialConstraints());
-      }
-
-      template<typename Flavor_>
-      std::enable_if_t<
-        Std::to_true_type<Flavor_>::value and not enable_flavors,
-        TrialSpaceCache<Flavor::Generic>
-        >
-      makeTrialSpaceCache(Flavor_) const
-      {
-        return TrialSpaceCache<Flavor::Generic>(trialConstraints());
       }
 
       LOP& localOperator()

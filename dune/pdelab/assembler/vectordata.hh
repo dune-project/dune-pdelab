@@ -10,8 +10,10 @@
 #include <dune/geometry/identitygeometry.hh>
 
 #include <dune/pdelab/common/checks.hh>
+#include <dune/pdelab/common/exceptions.hh>
 #include <dune/pdelab/common/intersectiontype.hh>
 #include <dune/pdelab/common/quadraturerules.hh>
+#include <dune/pdelab/common/typetraits.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/assembler/utility.hh>
 #include <dune/pdelab/assembler/localviewproxy.hh>
@@ -119,6 +121,89 @@ namespace Dune {
     };
 
 
+    template<typename Context, typename LV, LocalViewDataMode _mode>
+    class AliasedVectorData
+      : public Context
+    {
+
+    protected:
+
+      using Context_ = Context;
+
+      struct Traits
+      {
+        using LocalView        = LV;
+        using Vector           = typename LocalView::Container;
+        using AccumulationView = LocalView;
+        using Weight           = typename AccumulationView::weight_type;
+        using value_type       = typename LV::value_type;
+      };
+
+    private:
+
+      using VectorStorage = std::conditional_t<_mode == LocalViewDataMode::read, const typename Traits::Vector, typename Traits::Vector>;
+
+    protected:
+
+      void setup(VectorStorage& vector)
+      {
+        Context::setup();
+        _local_view.attach(vector);
+      }
+
+      using Context::bind;
+      using Context::unbind;
+
+      template<typename LFSCache>
+      void bind(LFSCache& lfs_cache)
+      {
+        _local_view.bind(lfs_cache);
+      }
+
+      template<typename LFSCache>
+      void unbind(LFSCache& lfs_cache)
+      {
+        if constexpr (
+          _mode == LocalViewDataMode::write or
+          _mode == LocalViewDataMode::readWrite or
+          _mode == LocalViewDataMode::accumulate or
+          _mode == LocalViewDataMode::readAccumulate
+          )
+        {
+          _local_view.commit();
+        }
+        _local_view.unbind();
+      }
+
+      typename Traits::AccumulationView accumulationView(typename Traits::Weight weight)
+      {
+        DUNE_THROW(NotImplemented,"accumulationView not implemented");
+      }
+
+      const typename Traits::LocalView& readOnlyView()
+      {
+        return _local_view;
+      }
+
+      typename Traits::LocalView& readWriteView()
+      {
+        return _local_view;
+      }
+
+    public:
+
+      AliasedVectorData(Context&& ctx, typename Traits::value_type initial = typename Traits::value_type(0))
+        : Context(std::move(ctx))
+      {}
+
+    private:
+
+      typename Traits::LocalView _local_view;
+
+    };
+
+
+
     template<
       template<typename,typename> typename LV,
       typename Vector,
@@ -129,7 +214,7 @@ namespace Dune {
       >
     auto cachedVectorData(const Field& initial, Context&& ctx)
     {
-      return CachedVectorData<Context,LV<std::conditional_t<_mode == LocalViewDataMode::read,const Vector, Vector>,std::decay_t<decltype(ctx.cache(Flavor{}))>>,_mode>{std::move(ctx),initial};
+      return CachedVectorData<Context,UncachedVectorView<std::conditional_t<_mode == LocalViewDataMode::read,const Vector, Vector>,std::decay_t<decltype(ctx.cache(Flavor{}))>>,_mode>{std::move(ctx),initial};
     }
 
     template<
@@ -141,7 +226,7 @@ namespace Dune {
       >
     auto cachedVectorData(Context&& ctx)
     {
-      return CachedVectorData<Context,LV<std::conditional_t<_mode == LocalViewDataMode::read,const Vector, Vector>,std::decay_t<decltype(ctx.cache(Flavor{}))>>,_mode>{std::move(ctx)};
+      return CachedVectorData<Context,UncachedVectorView<std::conditional_t<_mode == LocalViewDataMode::read,const Vector, Vector>,std::decay_t<decltype(ctx.cache(Flavor{}))>>,_mode>{std::move(ctx)};
     }
 
 
@@ -451,7 +536,7 @@ namespace Dune {
       template<typename T = int>
       const typename LinearizationPoint::Container& linearizationPoint(T dummy = 0)
       {
-        static_assert(Std::to_true_type<T>::value and enabled, "Calling linearizationPoint() is not allowed for linear problems!");
+        static_assert(Std::to_true_v<T> and enabled, "Calling linearizationPoint() is not allowed for linear problems!");
 #if DUNE_PDELAB_ENABLE_CHECK_ASSEMBLY
         if (not Context_::engine().bindLinearizationPoint())
           DUNE_THROW(AssemblyError, "Not allowed to call linearizationPoint() for linear operators");

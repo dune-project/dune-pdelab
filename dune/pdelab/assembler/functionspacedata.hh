@@ -78,7 +78,7 @@ namespace Dune {
 
       Context* bind(const typename Context::Entity& element, typename Context::Index, typename Context::Index)
       {
-        _function_space.bind(element);
+        _function_space.bind(element,Context::fastDG());
         TypeTree::applyToTreePair(_function_space,_finite_elements,set_finite_elements{});
         _function_space_cache.update();
         return this;
@@ -180,7 +180,7 @@ namespace Dune {
       }
 
       TestSpaceData(Context&& ctx)
-        : Context_(std::move(ctx),ctx.engine().testSpace(),ctx.engine().makeTestSpaceCache(typename Context::Flavor::Test{}))
+        : Context_(std::move(ctx),ctx.engine().testSpace(),ctx.engine().makeTestSpaceCache(ctx))
       {}
 
     };
@@ -244,7 +244,7 @@ namespace Dune {
       }
 
       NonGalerkinTrialSpaceData(Context&& ctx)
-        : Context_(std::move(ctx),ctx.engine().trialSpace(),ctx.engine().makeTrialSpaceCache(typename Context::Flavor::Trial{}))
+        : Context_(std::move(ctx),ctx.engine().trialSpace(),ctx.engine().makeTrialSpaceCache(ctx))
       {}
 
     };

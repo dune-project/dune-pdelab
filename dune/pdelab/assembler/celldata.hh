@@ -25,16 +25,16 @@ namespace Dune {
     namespace CellFlavor {
 
       template<typename Context>
-      using TestLocalSpace  = typename Context::Engine::template TestLocalSpace<typename Context::Flavor::Test>;
+      using TestLocalSpace  = typename Context::Engine::template TestLocalSpace<Context>;
 
       template<typename Context>
-      using TestSpaceCache  = typename Context::Engine::template TestSpaceCache<typename Context::Flavor::Test>;
+      using TestSpaceCache  = typename Context::Engine::template TestSpaceCache<Context>;
 
       template<typename Context>
-      using TrialLocalSpace = typename Context::Engine::template TrialLocalSpace<typename Context::Flavor::Trial>;
+      using TrialLocalSpace = typename Context::Engine::template TrialLocalSpace<Context>;
 
       template<typename Context>
-      using TrialSpaceCache = typename Context::Engine::template TrialSpaceCache<typename Context::Flavor::Trial>;
+      using TrialSpaceCache = typename Context::Engine::template TrialSpaceCache<Context>;
 
       template<bool enable_flavors>
       struct Inside

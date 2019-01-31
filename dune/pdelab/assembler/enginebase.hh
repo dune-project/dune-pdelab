@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_ASSEMBLER_ENGINEBASE_HH
 #define DUNE_PDELAB_ASSEMBLER_ENGINEBASE_HH
 
+#include <dune/pdelab/common/typetraits.hh>
+
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/flavor.hh>
@@ -104,8 +106,8 @@ namespace Dune {
 
     };
 
-    template<typename TestSpace_,
-             typename TrialSpace_,
+    template<typename TrialSpace_,
+             typename TestSpace_,
              typename TrialConstraints_,
              typename TestConstraints_,
              bool enable_flavors>
@@ -123,27 +125,27 @@ namespace Dune {
       using TestSpace        = TestSpace_;
       using TestConstraints  = TestConstraints_;
 
-      template<typename Flavor = Flavor::Generic>
+      template<typename Context, typename Flavor>
       using TestLocalSpace   = LocalFunctionSpace<TestSpace,Flavor>;
 
-      template<typename Flavor = Flavor::Generic>
-      using TestSpaceCache   = LFSIndexCache<TestLocalSpace<Flavor>,TestConstraints>;
+      template<typename Context, typename Flavor>
+      using TestSpaceCache   = LFSIndexCache<TestLocalSpace<Context,Flavor>,TestConstraints,Context::fastDG()>;
 
 
       using TrialSpace       = TrialSpace_;
       using TrialConstraints = TrialConstraints_;
 
-      template<typename Flavor = Flavor::Generic>
+      template<typename Context, typename Flavor>
       using TrialLocalSpace = LocalFunctionSpace<TrialSpace,Flavor>;
 
-      template<typename Flavor = Flavor::Generic>
-      using TrialSpaceCache = LFSIndexCache<TrialLocalSpace<Flavor>,TrialConstraints>;
+      template<typename Context, typename Flavor>
+      using TrialSpaceCache = LFSIndexCache<TrialLocalSpace<Context,Flavor>,TrialConstraints,Context::fastDG()>;
 
     };
 
     template<
-      typename TestSpace_,
       typename TrialSpace_,
+      typename TestSpace_,
       typename TrialConstraints_,
       typename TestConstraints_
       >
@@ -153,23 +155,171 @@ namespace Dune {
       using TestSpace        = TestSpace_;
       using TestConstraints  = TestConstraints_;
 
-      template<typename = Flavor::Generic>
+      template<typename Context, typename>
       using TestLocalSpace   = LocalFunctionSpace<TestSpace,Flavor::Generic>;
 
-      template<typename = Flavor::Generic>
-      using TestSpaceCache   = LFSIndexCache<TestLocalSpace<Flavor::Generic>,TestConstraints>;
+      template<typename Context, typename>
+      using TestSpaceCache   = LFSIndexCache<TestLocalSpace<Context,Flavor::Generic>,TestConstraints,Context::fastDG()>;
 
 
       using TrialSpace       = TrialSpace_;
       using TrialConstraints = TrialConstraints_;
 
-      template<typename = Flavor::Generic>
+      template<typename Context, typename>
       using TrialLocalSpace  = LocalFunctionSpace<TrialSpace,Flavor::Generic>;
 
-      template<typename = Flavor::Generic>
-      using TrialSpaceCache  = LFSIndexCache<TrialLocalSpace<Flavor::Generic>,TrialConstraints>;
+      template<typename Context, typename>
+      using TrialSpaceCache  = LFSIndexCache<TrialLocalSpace<Context,Flavor::Generic>,TrialConstraints,Context::fastDG()>;
 
     };
+
+
+
+    template<
+      typename TrialSpace_,
+      typename TestSpace_,
+      typename TrialConstraints_,
+      typename TestConstraints_,
+      bool enable_flavors
+      >
+    class FunctionSpaceProvider {
+
+    public:
+
+      using TrialConstraints = TrialConstraints_;
+      using TestConstraints  = TestConstraints_;
+
+    protected:
+
+      using Types = LocalFunctionSpaceTypes<
+        TrialSpace_,
+        TestSpace_,
+        TrialConstraints_,
+        TestConstraints_,
+        enable_flavors
+        >;
+
+    public:
+
+      template<typename Context>
+      using TestLocalSpace   = typename Types::template TestLocalSpace<Context,
+                                                                       std::conditional_t<
+                                                                         enable_flavors,
+                                                                         typename Context::Flavor::Test,
+                                                                         Flavor::Generic
+                                                                         >
+                                                                       >;
+
+      template<typename Context>
+      using TestSpaceCache   = typename Types::template TestSpaceCache<Context,
+                                                                       std::conditional_t<
+                                                                         enable_flavors,
+                                                                         typename Context::Flavor::Test,
+                                                                         Flavor::Generic
+                                                                         >
+                                                                       >;
+
+      template<typename Context>
+      using TrialLocalSpace  = typename Types::template TrialLocalSpace<Context,
+                                                                        std::conditional_t<
+                                                                          enable_flavors,
+                                                                          typename Context::Flavor::Trial,
+                                                                          Flavor::Generic
+                                                                          >
+                                                                        >;
+
+      template<typename Context>
+      using TrialSpaceCache  = typename Types::template TrialSpaceCache<Context,
+                                                                        std::conditional_t<
+                                                                          enable_flavors,
+                                                                          typename Context::Flavor::Trial,
+                                                                          Flavor::Generic
+                                                                          >
+                                                                        >;
+
+      static constexpr bool unconstrained()
+      {
+        return std::is_same_v<TestConstraints,EmptyTransformation>;
+      }
+
+      static constexpr bool constrained()
+      {
+        return not unconstrained();
+      }
+
+      template<typename Context>
+      TestSpaceCache<Context> makeTestSpaceCache(const Context&) const
+      {
+        return TestSpaceCache<Context>(testConstraints());
+      }
+
+      template<typename Context>
+      TrialSpaceCache<Context> makeTrialSpaceCache(const Context&) const
+      {
+        return TrialSpaceCache<Context>(trialConstraints());
+      }
+
+      const TrialConstraints& trialConstraints() const
+      {
+        if constexpr (constrained())
+          return *_trial_constraints;
+        else
+          return _trial_constraints;
+      }
+
+      const TestConstraints& testConstraints() const
+      {
+        if constexpr (constrained())
+          return *_test_constraints;
+        else
+          return _test_constraints;
+      }
+
+    protected:
+
+      template<int i = 0>
+      FunctionSpaceProvider(
+        const TrialConstraints* trial_constraints,
+        const TestConstraints* test_constraints,
+        std::enable_if_t<i == 0 and constrained(),int> = 0
+        )
+        : _trial_constraints(trial_constraints)
+        , _test_constraints(test_constraints)
+      {}
+
+      template<int i = 0>
+      FunctionSpaceProvider(
+        const TrialConstraints* trial_constraints,
+        const TestConstraints* test_constraints,
+        std::enable_if_t<i == 0 and unconstrained(),int> = 0
+        )
+      {}
+
+      template<int i = 0>
+      FunctionSpaceProvider(
+        std::enable_if_t<i == 0 and unconstrained(),int> = 0
+        )
+      {}
+
+    private:
+
+      std::conditional_t<
+        std::is_same_v<TrialConstraints,EmptyTransformation>,
+        TrialConstraints,
+        const TrialConstraints*
+        > _trial_constraints;
+
+      std::conditional_t<
+        std::is_same_v<TestConstraints,EmptyTransformation>,
+        TestConstraints,
+        const TestConstraints*
+        > _test_constraints;
+
+
+    };
+
+
+
 
     template<typename Context>
     struct TimeData
