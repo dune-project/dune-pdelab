@@ -177,7 +177,7 @@ namespace Dune {
 
       typename Traits::AccumulationView accumulationView(typename Traits::Weight weight)
       {
-        DUNE_THROW(NotImplemented,"accumulationView not implemented");
+        DUNE_THROW(NotImplemented,"accumulationView() not implemented");
       }
 
       const typename Traits::LocalView& readOnlyView()
