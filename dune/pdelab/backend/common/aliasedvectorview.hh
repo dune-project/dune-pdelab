@@ -4,6 +4,7 @@
 #define DUNE_PDELAB_BACKEND_COMMON_ALIASEDVECTORVIEW_HH
 
 #include <dune/common/typetraits.hh>
+#include <dune/common/ftraits.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 
 namespace Dune {
@@ -23,7 +24,7 @@ namespace Dune {
       typedef typename LFSCache::ContainerIndex ContainerIndex;
 
       using value_type = ElementType;
-
+      using weight_type = typename FieldTraits<value_type>::real_type;
 
       ConstAliasedVectorView()
         : _container(nullptr)
