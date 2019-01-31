@@ -14,7 +14,7 @@ namespace Dune {
 
     enum class DTScaling {multiply, divide};
 
-    enum class Galerkin { disable, enable, automatic };
+    enum class Galerkin { disable = 0, enable = 1, automatic };
 
     static constexpr auto enableGalerkin = std::integral_constant<Galerkin,Galerkin::enable>{};
     static constexpr auto disableGalerkin = std::integral_constant<Galerkin,Galerkin::disable>{};
