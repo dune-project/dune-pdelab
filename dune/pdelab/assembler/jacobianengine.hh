@@ -318,7 +318,7 @@ namespace Dune {
             skeletonTimeJacobianData(
               std::bool_constant<instationary()>{},
               skeletonJacobianData(
-                cachedSkeletonMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
+                skeletonMatrixData<Jacobian,LocalViewDataMode::accumulate>(
                   intersectionDomainData(
                     cellDomainData(
                       outsideCell(
@@ -327,7 +327,7 @@ namespace Dune {
                           cellTimeJacobianData(
                             std::bool_constant<instationary()>{},
                             cellJacobianData(
-                              cachedMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
+                              matrixData<Jacobian,LocalViewDataMode::accumulate>(
                                 cellLinearizationPointData(
                                   models<Concept::PossiblyNonLinear,LOP>(),
                                   vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
@@ -343,7 +343,7 @@ namespace Dune {
                             cellTimeJacobianData(
                               std::bool_constant<instationary()>{},
                               cellJacobianData(
-                                cachedMatrixData<UncachedMatrixView,Jacobian,LocalViewDataMode::accumulate>(
+                                matrixData<Jacobian,LocalViewDataMode::accumulate>(
                                   cellLinearizationPointData(
                                     models<Concept::PossiblyNonLinear,LOP>(),
                                     vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(

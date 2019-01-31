@@ -11,7 +11,8 @@
 
 #include <dune/pdelab/common/intersectiontype.hh>
 #include <dune/pdelab/common/quadraturerules.hh>
-#include <dune/pdelab/backend/common/uncachedvectorview.hh>
+#include <dune/pdelab/backend/common/aliasedmatrixview.hh>
+#include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/assembler/utility.hh>
 #include <dune/pdelab/assembler/vectordata.hh>
 #include <dune/pdelab/gridfunctionspace/flavor.hh>
@@ -21,7 +22,7 @@ namespace Dune {
   namespace PDELab {
 
     template<typename LM>
-    struct MatrixDataTraits
+    struct CachedMatrixDataTraits
     {
       using LocalView        = LM;
       using Matrix           = typename LocalView::Container;
@@ -31,6 +32,15 @@ namespace Dune {
       using value_type       = typename LM::value_type;
     };
 
+    template<typename LM>
+    struct AliasedMatrixDataTraits
+    {
+      using LocalView        = LM;
+      using Matrix           = typename LocalView::Container;
+      using AccumulationView = LocalView;
+      using Weight           = typename AccumulationView::weight_type;
+      using value_type       = typename LM::value_type;
+    };
 
     template<typename Context, typename LM, LocalViewDataMode _mode>
     class CachedMatrixData
@@ -41,7 +51,7 @@ namespace Dune {
 
       using Context_ = Context;
 
-      using Traits = MatrixDataTraits<LM>;
+      using Traits = CachedMatrixDataTraits<LM>;
 
       void setup(typename Traits::Matrix& matrix)
       {
@@ -116,41 +126,159 @@ namespace Dune {
     };
 
 
+    template<typename Context, typename LM, LocalViewDataMode _mode>
+    class AliasedMatrixData
+      : public Context
+    {
+
+    protected:
+
+      using Context_ = Context;
+
+      using Traits = AliasedMatrixDataTraits<LM>;
+
+      void setup(typename Traits::Matrix& matrix)
+      {
+        Context::setup();
+        _local_view.attach(matrix);
+      }
+
+      using Context::bind;
+      using Context::unbind;
+
+      template<typename TestCache, typename TrialCache>
+      void bind(TestCache& test_cache, TrialCache& trial_cache)
+      {
+        _local_view.bind(test_cache,trial_cache);
+      }
+
+      template<typename TestCache, typename TrialCache>
+      void unbind(TestCache& test_cache, TrialCache& trial_cache)
+      {
+        if constexpr (
+          _mode == LocalViewDataMode::write or
+          _mode == LocalViewDataMode::readWrite or
+          _mode == LocalViewDataMode::accumulate or
+          _mode == LocalViewDataMode::readAccumulate
+          )
+        {
+          _local_view.commit();
+        }
+        _local_view.unbind();
+      }
+
+      typename Traits::AccumulationView accumulationView(typename Traits::Weight weight)
+      {
+        DUNE_THROW(NotImplemented,"accumulationView() not implemented");
+      }
+
+      const typename Traits::LocalView& readOnlyView()
+      {
+        return _local_view;
+      }
+
+      typename Traits::LocalView& readWriteView()
+      {
+        return _local_view;
+      }
+
+    public:
+
+      AliasedMatrixData(Context&& ctx, typename Traits::value_type initial = typename Traits::value_type(0))
+        : Context(std::move(ctx))
+      {}
+
+    private:
+
+      typename Traits::LocalView _local_view;
+
+    };
+
+
+
     template<
-      template<typename,typename,typename> typename LM,
       typename Matrix,
       LocalViewDataMode _mode,
       typename Field,
       typename Context>
-    auto cachedMatrixData(const Field& initial, Context&& ctx)
+    auto matrixData(const Field& initial, Context&& ctx)
     {
-      return CachedMatrixData<
-        Context,
-        LM<
-          Matrix,
-          std::decay_t<decltype(ctx.cache(Flavor::Test{}))>,
-          std::decay_t<decltype(ctx.cache(Flavor::Trial{}))>
-          >,
-        _mode
-        >{std::move(ctx),initial};
+      if (Context::fastDG())
+      {
+        using MatrixView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstAliasedMatrixView<
+            const Matrix,
+            std::decay_t<decltype(ctx.cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.cache(Flavor::Trial{}))>
+            >,
+          AliasedMatrixView<
+            Matrix,
+            std::decay_t<decltype(ctx.cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.cache(Flavor::Trial{}))>
+            >
+          >;
+        return AliasedMatrixData<Context,MatrixView,_mode>{std::move(ctx),initial};
+      }
+      else
+      {
+        using MatrixView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstUncachedMatrixView<
+            const Matrix,
+            std::decay_t<decltype(ctx.cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.cache(Flavor::Trial{}))>
+            >,
+          UncachedMatrixView<
+            Matrix,
+            std::decay_t<decltype(ctx.cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.cache(Flavor::Trial{}))>
+            >
+          >;
+        return CachedMatrixData<Context,MatrixView,_mode>{std::move(ctx),initial};
+      }
     }
 
     template<
-      template<typename,typename,typename> typename LM,
       typename Matrix,
       LocalViewDataMode _mode,
       typename Context>
-    auto cachedMatrixData(Context&& ctx)
+    auto matrixData(Context&& ctx)
     {
-      return CachedMatrixData<
-        Context,
-        LM<
-          Matrix,
-          std::decay_t<decltype(ctx.cache(Flavor::Test{}))>,
-          std::decay_t<decltype(ctx.cache(Flavor::Trial{}))>
-          >,
-        _mode
-        >{std::move(ctx)};
+      if constexpr (Context::fastDG())
+      {
+        using MatrixView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstAliasedMatrixView<
+            const Matrix,
+            std::decay_t<decltype(ctx.cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.cache(Flavor::Trial{}))>
+            >,
+          AliasedMatrixView<
+            Matrix,
+            std::decay_t<decltype(ctx.cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.cache(Flavor::Trial{}))>
+            >
+          >;
+        return AliasedMatrixData<Context,MatrixView,_mode>{std::move(ctx)};
+      }
+      else
+      {
+        using MatrixView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstUncachedMatrixView<
+            const Matrix,
+            std::decay_t<decltype(ctx.cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.cache(Flavor::Trial{}))>
+            >,
+          UncachedMatrixView<
+            Matrix,
+            std::decay_t<decltype(ctx.cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.cache(Flavor::Trial{}))>
+            >
+          >;
+        return CachedMatrixData<Context,MatrixView,_mode>{std::move(ctx)};
+      }
     }
 
     template<typename Implementation>
@@ -273,8 +401,8 @@ namespace Dune {
 
       using Context_ = Context;
 
-      using InsideOutsideTraits = MatrixDataTraits<LM_IO>;
-      using OutsideInsideTraits = MatrixDataTraits<LM_OI>;
+      using InsideOutsideTraits = CachedMatrixDataTraits<LM_IO>;
+      using OutsideInsideTraits = CachedMatrixDataTraits<LM_OI>;
 
       void setup(typename InsideOutsideTraits::Matrix& matrix)
       {
@@ -384,51 +512,260 @@ namespace Dune {
     };
 
 
+    template<typename Context, typename LM_IO, typename LM_OI, LocalViewDataMode _mode>
+    class AliasedSkeletonMatrixData
+      : public Context
+    {
+
+    protected:
+
+      using Context_ = Context;
+
+      using InsideOutsideTraits = AliasedMatrixDataTraits<LM_IO>;
+      using OutsideInsideTraits = AliasedMatrixDataTraits<LM_OI>;
+
+      void setup(typename InsideOutsideTraits::Matrix& matrix)
+      {
+        Context::setup();
+        _local_view_io.attach(matrix);
+        _local_view_oi.attach(matrix);
+      }
+
+      using Context::bind;
+      using Context::unbind;
+
+      Context* bind()
+      {
+        auto&& inside_test_cache = Context::inside().test().cache();
+        auto&& inside_trial_cache = Context::inside().trial().cache();
+        auto&& outside_test_cache = Context::outside().test().cache();
+        auto&& outside_trial_cache = Context::outside().trial().cache();
+
+        _local_view_io.bind(inside_test_cache,outside_trial_cache);
+        _local_view_oi.bind(outside_test_cache,inside_trial_cache);
+
+        return this;
+      }
+
+      Context* unbind()
+      {
+        if constexpr (
+          _mode == LocalViewDataMode::write or
+          _mode == LocalViewDataMode::readWrite or
+          _mode == LocalViewDataMode::accumulate or
+          _mode == LocalViewDataMode::readAccumulate
+          )
+        {
+          _local_view_io.commit();
+          _local_view_oi.commit();
+        }
+
+        _local_view_io.unbind();
+        _local_view_oi.unbind();
+
+        return this;
+      }
+
+      typename InsideOutsideTraits::AccumulationView insideOutsideAccumulationView(typename InsideOutsideTraits::Weight weight)
+      {
+        DUNE_THROW(NotImplemented,"accumulationView() not implemented");
+      }
+
+      typename OutsideInsideTraits::AccumulationView outsideInsideAccumulationView(typename InsideOutsideTraits::Weight weight)
+      {
+        DUNE_THROW(NotImplemented,"accumulationView() not implemented");
+      }
+
+      const typename InsideOutsideTraits::LocalView& insideOutsideReadOnlyView()
+      {
+        return _local_view_io;
+      }
+
+      typename InsideOutsideTraits::LocalView& insideOutsideReadWriteView()
+      {
+        return _local_view_io;
+      }
+
+      const typename OutsideInsideTraits::LocalView& outsideInsideReadOnlyView()
+      {
+        return _local_view_oi;
+      }
+
+      typename OutsideInsideTraits::LocalView& outsideInsideReadWriteView()
+      {
+        return _local_view_oi;
+      }
+
+    public:
+
+      AliasedSkeletonMatrixData(Context&& ctx, typename InsideOutsideTraits::value_type initial = typename InsideOutsideTraits::value_type(0))
+        : Context(std::move(ctx))
+      {}
+
+    private:
+
+      typename InsideOutsideTraits::LocalView _local_view_io;
+      typename OutsideInsideTraits::LocalView _local_view_oi;
+
+    };
+
+
     template<
-      template<typename,typename,typename> typename LM,
       typename Matrix,
       LocalViewDataMode _mode,
       typename Field,
       typename Context>
-    auto cachedSkeletonMatrixData(const Field& initial, Context&& ctx)
+    auto skeletonMatrixData(const Field& initial, Context&& ctx)
     {
-      return CachedSkeletonMatrixData<
-        Context,
-        LM<
-          Matrix,
-          std::decay_t<decltype(ctx.inside().cache(Flavor::Test{}))>,
-          std::decay_t<decltype(ctx.outside().cache(Flavor::Trial{}))>
-          >,
-        LM<
-          Matrix,
-          std::decay_t<decltype(ctx.outside().cache(Flavor::Test{}))>,
-          std::decay_t<decltype(ctx.inside().cache(Flavor::Trial{}))>
-          >,
-        _mode
-        >{std::move(ctx),initial};
+      if constexpr (Context::fastDG())
+      {
+        using InsideOutsideMatrixView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstAliasedMatrixView<
+            const Matrix,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Trial{}))>
+            >,
+          AliasedMatrixView<
+            Matrix,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Trial{}))>
+            >
+          >;
+        using OutsideInsideMatrixView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstAliasedMatrixView<
+            const Matrix,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Trial{}))>
+            >,
+          AliasedMatrixView<
+            Matrix,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Trial{}))>
+            >
+          >;
+        return AliasedSkeletonMatrixData<
+          Context,
+          InsideOutsideMatrixView,
+          OutsideInsideMatrixView,
+          _mode
+          >{std::move(ctx),initial};
+      }
+      else
+      {
+        using InsideOutsideMatrixView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstUncachedMatrixView<
+            const Matrix,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Trial{}))>
+            >,
+          UncachedMatrixView<
+            Matrix,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Trial{}))>
+            >
+          >;
+        using OutsideInsideMatrixView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstUncachedMatrixView<
+            const Matrix,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Trial{}))>
+            >,
+          UncachedMatrixView<
+            Matrix,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Trial{}))>
+            >
+          >;
+        return CachedSkeletonMatrixData<
+          Context,
+          InsideOutsideMatrixView,
+          OutsideInsideMatrixView,
+          _mode
+          >{std::move(ctx),initial};
+      }
     }
 
+
     template<
-      template<typename,typename,typename> typename LM,
       typename Matrix,
       LocalViewDataMode _mode,
       typename Context>
-    auto cachedSkeletonMatrixData(Context&& ctx)
+    auto skeletonMatrixData(Context&& ctx)
     {
-      return CachedSkeletonMatrixData<
-        Context,
-        LM<
-          Matrix,
-          std::decay_t<decltype(ctx.inside().cache(Flavor::Test{}))>,
-          std::decay_t<decltype(ctx.outside().cache(Flavor::Trial{}))>
-          >,
-        LM<
-          Matrix,
-          std::decay_t<decltype(ctx.outside().cache(Flavor::Test{}))>,
-          std::decay_t<decltype(ctx.inside().cache(Flavor::Trial{}))>
-          >,
-        _mode
-        >{std::move(ctx)};
+      if constexpr (Context::fastDG())
+      {
+        using InsideOutsideMatrixView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstAliasedMatrixView<
+            const Matrix,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Trial{}))>
+            >,
+          AliasedMatrixView<
+            Matrix,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Trial{}))>
+            >
+          >;
+        using OutsideInsideMatrixView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstAliasedMatrixView<
+            const Matrix,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Trial{}))>
+            >,
+          AliasedMatrixView<
+            Matrix,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Trial{}))>
+            >
+          >;
+        return AliasedSkeletonMatrixData<
+          Context,
+          InsideOutsideMatrixView,
+          OutsideInsideMatrixView,
+          _mode
+          >{std::move(ctx)};
+      }
+      else
+      {
+        using InsideOutsideMatrixView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstUncachedMatrixView<
+            const Matrix,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Trial{}))>
+            >,
+          UncachedMatrixView<
+            Matrix,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Trial{}))>
+            >
+          >;
+        using OutsideInsideMatrixView = std::conditional_t<
+          _mode == LocalViewDataMode::read,
+          ConstUncachedMatrixView<
+            const Matrix,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Trial{}))>
+            >,
+          UncachedMatrixView<
+            Matrix,
+            std::decay_t<decltype(ctx.outside().cache(Flavor::Test{}))>,
+            std::decay_t<decltype(ctx.inside().cache(Flavor::Trial{}))>
+            >
+          >;
+        return CachedSkeletonMatrixData<
+          Context,
+          InsideOutsideMatrixView,
+          OutsideInsideMatrixView,
+          _mode
+          >{std::move(ctx)};
+      }
     }
 
 
