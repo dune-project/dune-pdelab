@@ -33,7 +33,7 @@ namespace Dune{
              typename MB, typename DF, typename RF, typename JF,
              typename CU=Dune::PDELab::EmptyTransformation,
              typename CV=Dune::PDELab::EmptyTransformation,
-             bool instationary_ = false
+             typename Parameters = DefaultGridOperatorParameters<false,Galerkin::automatic>
              >
     class NewGridOperator
       : OnlyMovable
@@ -123,7 +123,8 @@ namespace Dune{
           MB,
           JF,
           CU,
-          CV
+          CV,
+          typename Parameters::PatternEngineParameters
           >;
 
         using ResidualEngine = Dune::PDELab::ResidualEngine<
@@ -132,7 +133,7 @@ namespace Dune{
           LOP,
           CU,
           CV,
-          instationary_
+          typename Parameters::ResidualEngineParameters
           >;
 
         using JacobianEngine = Dune::PDELab::JacobianEngine<
@@ -141,7 +142,7 @@ namespace Dune{
           LOP,
           CU,
           CV,
-          instationary_
+          typename Parameters::JacobianEngineParameters
           >;
 
         using ApplyJacobianEngine = Dune::PDELab::ApplyJacobianEngine<
@@ -150,7 +151,7 @@ namespace Dune{
           LOP,
           CU,
           CV,
-          instationary_
+          typename Parameters::ApplyJacobianEngineParameters
           >;
 
       };

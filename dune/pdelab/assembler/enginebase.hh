@@ -20,6 +20,88 @@ namespace Dune {
     static constexpr auto disableGalerkin = std::integral_constant<Galerkin,Galerkin::disable>{};
     static constexpr auto automaticGalerkin = std::integral_constant<Galerkin,Galerkin::automatic>{};
 
+
+
+
+    template<bool instationary_, Galerkin galerkin_>
+    struct DefaultEngineParametersBase
+    {
+
+      static constexpr bool instationary = instationary_;
+
+      template<typename TrialSpace, typename TestSpace>
+      static constexpr bool galerkin =
+        galerkin_ == Galerkin::automatic
+        ? std::is_same_v<TrialSpace,TestSpace>
+        : bool(galerkin_);
+
+    };
+
+
+    template<bool instationary_, Galerkin galerkin_>
+    struct DefaultResidualEngineParameters
+      : DefaultEngineParametersBase<instationary_,galerkin_>
+    {
+
+      static constexpr bool assembleVariablePart = true;
+
+      static constexpr bool assembleConstantPart = true;
+
+      static constexpr bool assembleOffDiagonalSkeletonPart = true;
+
+      static constexpr bool assembleDiagonalSkeletonPart = true;
+
+    };
+
+
+    template<bool instationary_, Galerkin galerkin_>
+    struct DefaultJacobianEngineParameters
+      : DefaultEngineParametersBase<instationary_,galerkin_>
+    {
+
+      static constexpr bool assembleVariablePart = true;
+
+      static constexpr bool assembleConstantPart = false;
+
+      static constexpr bool assembleOffDiagonalSkeletonPart = true;
+
+      static constexpr bool assembleDiagonalSkeletonPart = true;
+
+    };
+
+    template<bool instationary_, Galerkin galerkin_>
+    struct DefaultApplyJacobianEngineParameters
+      : DefaultEngineParametersBase<instationary_,galerkin_>
+    {
+
+      static constexpr bool assembleVariablePart = true;
+
+      static constexpr bool assembleConstantPart = false;
+
+      static constexpr bool assembleOffDiagonalSkeletonPart = true;
+
+      static constexpr bool assembleDiagonalSkeletonPart = true;
+
+    };
+
+    template<Galerkin galerkin_>
+    struct DefaultPatternEngineParameters
+      : DefaultEngineParametersBase<false,galerkin_>
+    {};
+
+
+    template<bool instationary_, Galerkin galerkin_>
+    struct DefaultGridOperatorParameters
+      : DefaultEngineParametersBase<instationary_,galerkin_>
+    {
+
+      using ResidualEngineParameters      = DefaultResidualEngineParameters<instationary_,galerkin_>;
+      using JacobianEngineParameters      = DefaultJacobianEngineParameters<instationary_,galerkin_>;
+      using ApplyJacobianEngineParameters = DefaultApplyJacobianEngineParameters<instationary_,galerkin_>;
+      using PatternEngineParameters       = DefaultPatternEngineParameters<galerkin_>;
+
+    };
+
     template<typename TestSpace_,
              typename TrialSpace_,
              typename TrialConstraints_,

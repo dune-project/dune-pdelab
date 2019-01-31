@@ -131,7 +131,7 @@ namespace Dune {
             // evaluate test basis functions
             auto psi = test_basis(ip);
 
-            if (not ctx.skipVariablePart())
+            if (ctx.assembleVariablePart())
               {
                 // update all variables dependent on A if A is not cell-wise constant
                 if (!cell.permeabilityIsConstantPerCell())
@@ -165,7 +165,7 @@ namespace Dune {
                 c = cell.c(ip);
               }
 
-            if (not ctx.skipConstantPart())
+            if (ctx.assembleConstantPart())
               {
                 // evaluate right hand side parameter function
                 f = cell.f(ip);
@@ -174,14 +174,15 @@ namespace Dune {
             for (auto [dof, i] : ctx.residual(test_space))
               {
                 RF r = 0.0;
-                if (not ctx.skipVariablePart())
+                if (ctx.assembleVariablePart())
                   {
+
                     auto gradpsi = test_basis.gradients(ip);
 
                     // integrate (A grad u - bu)*grad psi_i + a*u*psi_i
                     r += Agradu*gradpsi[i] - u*(b*gradpsi[i]) + c*u*psi[i];
                   }
-                if (not ctx.skipConstantPart())
+                if (ctx.assembleConstantPart())
                   {
                     // integrate -f*psi_i
                     r -= f * psi[i];
@@ -259,7 +260,7 @@ namespace Dune {
       template<typename Context>
       void skeletonIntegral(Context& ctx) const
       {
-        if (ctx.skipVariablePart())
+        if (not ctx.assembleVariablePart())
           return;
 
         // extract some useful types

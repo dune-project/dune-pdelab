@@ -18,17 +18,17 @@
 namespace Dune {
   namespace PDELab {
 
+
     template<
       typename TrialVector_,
       typename TestVector_,
       typename LOP,
       typename TrialConstraints_ = EmptyTransformation,
       typename TestConstraints_ = EmptyTransformation,
-      bool instationary_ = false,
-      Galerkin galerkin = Galerkin::automatic
+      typename EngineParameters = DefaultResidualEngineParameters<false,Galerkin::automatic>
       >
     class ResidualEngine
-        : public InstationaryEngineBase<typename TrialVector_::value_type,instationary_>
+      : public InstationaryEngineBase<typename TrialVector_::value_type,EngineParameters::instationary>
     {
 
       static constexpr bool enable_flavors = not LocalOperator::disableFunctionSpaceFlavors<LOP>();
@@ -41,7 +41,7 @@ namespace Dune {
         enable_flavors
         >;
 
-      using IEB = InstationaryEngineBase<typename TrialVector_::value_type,instationary_>;
+      using IEB = InstationaryEngineBase<typename TrialVector_::value_type,EngineParameters::instationary>;
 
     public:
 
@@ -88,11 +88,7 @@ namespace Dune {
       }
 
       static constexpr
-      std::bool_constant<
-        galerkin == Galerkin::automatic ?
-        std::is_same<TrialSpace,TestSpace>::value
-        : bool(galerkin)
-        >
+      std::bool_constant<EngineParameters::template galerkin<TrialSpace,TestSpace>>
       isGalerkin()
       {
         return {};
@@ -127,24 +123,24 @@ namespace Dune {
         using Engine = ResidualEngine;
         using EntitySet = typename Engine::EntitySet;
 
-        static constexpr bool skipVariablePart()
+        static constexpr bool assembleVariablePart()
         {
-          return false;
+          return EngineParameters::assembleVariablePart;
         }
 
-        static constexpr bool skipConstantPart()
+        static constexpr bool assembleConstantPart()
         {
-          return false;
+          return EngineParameters::assembleConstantPart;
         }
 
-        static constexpr bool skipOffDiagonalSkeletonPart()
+        static constexpr bool assembleOffDiagonalSkeletonPart()
         {
-          return false;
+          return EngineParameters::assembleOffDiagonalSkeletonPart;
         }
 
-        static constexpr bool skipDiagonalSkeletonPart()
+        static constexpr bool assembleDiagonalSkeletonPart()
         {
-          return true;
+          return EngineParameters::assembleDiagonalSkeletonPart;
         }
 
         static constexpr auto isGalerkin()
@@ -203,7 +199,7 @@ namespace Dune {
         const TrialVector& trial_vector,
         TestVector& test_vector,
         LOP_& lop,
-        std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,std::integral_constant<Galerkin,galerkin>> = std::integral_constant<Galerkin,galerkin>{}
+        std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
         )
         : _lop(&lop)
         , _argument(&trial_vector)
@@ -212,9 +208,14 @@ namespace Dune {
         , _test_constraints(nullptr)
       {}
 
-      ResidualEngine(const TrialVector& trial_vector, TestVector& test_vector, LOP& lop,
-                     const TrialConstraints& trial_constraints, const TestConstraints& test_constraints,
-                     std::integral_constant<Galerkin,galerkin> = std::integral_constant<Galerkin,galerkin>{})
+      ResidualEngine(
+        const TrialVector& trial_vector,
+        TestVector& test_vector,
+        LOP& lop,
+        const TrialConstraints& trial_constraints,
+        const TestConstraints& test_constraints,
+        EngineParameters = {}
+        )
         : _lop(&lop)
         , _argument(&trial_vector)
         , _residual(&test_vector)
@@ -225,7 +226,7 @@ namespace Dune {
       template<typename LOP_>
       ResidualEngine(
         LOP_& lop,
-        std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,std::integral_constant<Galerkin,galerkin>> = std::integral_constant<Galerkin,galerkin>{}
+        std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
         )
         : _lop(&lop)
         , _argument(nullptr)
@@ -238,7 +239,7 @@ namespace Dune {
         LOP& lop,
         const TrialConstraints& trial_constraints,
         const TestConstraints& test_constraints,
-        std::integral_constant<Galerkin,galerkin> = std::integral_constant<Galerkin,galerkin>{}
+        EngineParameters = {}
         )
         : _lop(&lop)
         , _argument(nullptr)
@@ -556,17 +557,16 @@ namespace Dune {
         LOP,
         EmptyTransformation,
         EmptyTransformation,
-        false,
-        Galerkin::automatic
+        DefaultResidualEngineParameters<false,Galerkin::automatic>
         >;
 
 
-    template<typename Argument, typename Residual, typename LOP, Galerkin galerkin>
+    template<typename Argument, typename Residual, typename LOP, typename EngineParameters>
     ResidualEngine(
         const Argument&,
         Residual&,
         LOP&,
-        std::integral_constant<Galerkin,galerkin>
+        EngineParameters
       )
       -> ResidualEngine<
         Argument,
@@ -574,8 +574,7 @@ namespace Dune {
         LOP,
         EmptyTransformation,
         EmptyTransformation,
-        false,
-        galerkin
+        EngineParameters
         >;
 
 

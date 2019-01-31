@@ -42,12 +42,12 @@ namespace Dune {
       {
         auto residual = ctx.residual();
         auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
-        Call<LOP::doAlphaVolume and not Context::skipVariablePart()>::alpha_volume(
+        Call<LOP::doAlphaVolume and Context::assembleVariablePart()>::alpha_volume(
           _lop,eg,
           ctx.trial().functionSpace(),ctx.argument(),
           ctx.test().functionSpace(),residual
           );
-        Call<LOP::doLambdaVolume and not Context::skipConstantPart()>::lambda_volume(
+        Call<LOP::doLambdaVolume and Context::assembleConstantPart()>::lambda_volume(
           _lop,eg,
           ctx.test().functionSpace(),residual
           );
@@ -59,12 +59,12 @@ namespace Dune {
       {
         auto residual = ctx.residual();
         auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
-        Call<LOP::doAlphaVolumePostSkeleton and not Context::skipVariablePart()>::alpha_volume_post_skeleton(
+        Call<LOP::doAlphaVolumePostSkeleton and Context::assembleVariablePart()>::alpha_volume_post_skeleton(
           _lop,eg,
           ctx.trial().functionSpace(),ctx.argument(),
           ctx.test().functionSpace(),residual
           );
-        Call<LOP::doLambdaVolumePostSkeleton and not Context::skipConstantPart()>::lambda_volume_post_skeleton(
+        Call<LOP::doLambdaVolumePostSkeleton and Context::assembleConstantPart()>::lambda_volume_post_skeleton(
           _lop,eg,
           ctx.test().functionSpace(),residual
           );
@@ -76,12 +76,12 @@ namespace Dune {
       {
         auto residual = ctx.inside().residual();
         auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
-        Call<LOP::doAlphaBoundary and not Context::skipVariablePart()>::alpha_boundary(
+        Call<LOP::doAlphaBoundary and Context::assembleVariablePart()>::alpha_boundary(
           _lop,ig,
           ctx.inside().trial().functionSpace(),ctx.inside().argument(),
           ctx.inside().test().functionSpace(),residual
           );
-        Call<LOP::doLambdaBoundary and not Context::skipConstantPart()>::lambda_boundary(
+        Call<LOP::doLambdaBoundary and Context::assembleConstantPart()>::lambda_boundary(
           _lop,ig,
           ctx.inside().test().functionSpace(),residual
           );
@@ -94,13 +94,13 @@ namespace Dune {
         auto inside_residual = ctx.inside().residual();
         auto outside_residual = ctx.outside().residual();
         auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
-        Call<LOP::doAlphaSkeleton and not Context::skipVariablePart()>::alpha_skeleton(
+        Call<LOP::doAlphaSkeleton and Context::assembleVariablePart()>::alpha_skeleton(
           _lop,ig,
           ctx.inside().trial().functionSpace(),ctx.inside().argument(),ctx.inside().test().functionSpace(),
           ctx.outside().trial().functionSpace(),ctx.outside().argument(),ctx.outside().test().functionSpace(),
           inside_residual,outside_residual
           );
-        Call<LOP::doLambdaSkeleton and not Context::skipConstantPart()>::lambda_skeleton(
+        Call<LOP::doLambdaSkeleton and Context::assembleConstantPart()>::lambda_skeleton(
           _lop,ig,
           ctx.inside().test().functionSpace(),ctx.outside().test().functionSpace(),
           inside_residual,outside_residual

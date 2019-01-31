@@ -29,7 +29,7 @@ namespace Dune {
       typename JF,
       typename TrialConstraints_ = EmptyTransformation,
       typename TestConstraints_ = EmptyTransformation,
-      Galerkin galerkin = Galerkin::automatic
+      typename EngineParameters = DefaultPatternEngineParameters<Galerkin::automatic>
       >
     class PatternEngine
     {
@@ -83,11 +83,7 @@ namespace Dune {
       }
 
       static constexpr
-      std::bool_constant<
-        galerkin == Galerkin::automatic ?
-        std::is_same<TrialSpace,TestSpace>::value
-        : bool(galerkin)
-        >
+      std::bool_constant<EngineParameters::template galerkin<TrialSpace,TestSpace>>
       isGalerkin()
       {
         return {};
@@ -118,26 +114,6 @@ namespace Dune {
         using Flavor = CellFlavor;
         using Engine = PatternEngine;
         using EntitySet = typename Engine::EntitySet;
-
-        static constexpr bool skipVariablePart()
-        {
-          return false;
-        }
-
-        static constexpr bool skipConstantPart()
-        {
-          return false;
-        }
-
-        static constexpr bool skipOffDiagonalSkeletonPart()
-        {
-          return false;
-        }
-
-        static constexpr bool skipDiagonalSkeletonPart()
-        {
-          return false;
-        }
 
         static constexpr auto isGalerkin()
         {
@@ -198,7 +174,7 @@ namespace Dune {
         const TrialConstraints& trial_constraints,
         const TestConstraints& test_constraints,
         JF,
-        std::integral_constant<Galerkin,galerkin> = std::integral_constant<Galerkin,galerkin>{}
+        EngineParameters = {}
         )
         : _lop(&lop)
         , _matrix_backend(matrix_backend)
@@ -215,7 +191,7 @@ namespace Dune {
         LOP_& lop,
         const MatrixBackend& matrix_backend,
         JF,
-        std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,std::integral_constant<Galerkin,galerkin>> = std::integral_constant<Galerkin,galerkin>{}
+        std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
         )
         : _lop(&lop)
         , _matrix_backend(matrix_backend)
@@ -489,7 +465,7 @@ namespace Dune {
         JF,
         EmptyTransformation,
         EmptyTransformation,
-        Galerkin::automatic
+        DefaultPatternEngineParameters<Galerkin::automatic>
         >;
 
     template<
@@ -518,17 +494,17 @@ namespace Dune {
         JF,
         TrialConstraints,
         TestConstraints,
-        Galerkin::automatic
+        DefaultPatternEngineParameters<Galerkin::automatic>
         >;
 
-    template<typename TrialSpace, typename TestSpace, typename LOP, typename MBE, typename JF, Galerkin galerkin>
+    template<typename TrialSpace, typename TestSpace, typename LOP, typename MBE, typename JF, typename EngineParameters>
     PatternEngine(
         const TrialSpace&,
         const TestSpace&,
         LOP&,
         const MBE&,
         JF,
-        std::integral_constant<Galerkin,galerkin>
+        EngineParameters
       )
       -> PatternEngine<
         TrialSpace,
@@ -538,7 +514,7 @@ namespace Dune {
         JF,
         EmptyTransformation,
         EmptyTransformation,
-        galerkin
+        EngineParameters
         >;
 
   } // namespace PDELab

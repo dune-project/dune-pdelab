@@ -31,11 +31,10 @@ namespace Dune {
       typename LOP,
       typename TrialConstraints_ = EmptyTransformation,
       typename TestConstraints_ = EmptyTransformation,
-      bool instationary_ = false,
-      Galerkin galerkin = Galerkin::automatic
+      typename EngineParameters = DefaultJacobianEngineParameters<false,Galerkin::automatic>
       >
     class JacobianEngine
-        : public InstationaryEngineBase<typename TrialVector_::value_type,instationary_>
+      : public InstationaryEngineBase<typename TrialVector_::value_type,EngineParameters::instationary>
     {
 
       static constexpr bool enable_flavors = not LocalOperator::disableFunctionSpaceFlavors<LOP>();
@@ -48,7 +47,7 @@ namespace Dune {
         enable_flavors
         >;
 
-      using IEB = InstationaryEngineBase<typename TrialVector_::value_type,instationary_>;
+      using IEB = InstationaryEngineBase<typename TrialVector_::value_type,EngineParameters::instationary>;
 
     public:
 
@@ -87,11 +86,7 @@ namespace Dune {
       }
 
       static constexpr
-      std::bool_constant<
-        galerkin == Galerkin::automatic ?
-        std::is_same<TrialSpace,TestSpace>::value
-        : bool(galerkin)
-        >
+      std::bool_constant<EngineParameters::template galerkin<TrialSpace,TestSpace>>
       isGalerkin()
       {
         return {};
@@ -122,24 +117,24 @@ namespace Dune {
         using Engine = JacobianEngine;
         using EntitySet = typename Engine::EntitySet;
 
-        static constexpr bool skipVariablePart()
+        static constexpr bool assembleVariablePart()
         {
-          return false;
+          return EngineParameters::assembleVariablePart;
         }
 
-        static constexpr bool skipConstantPart()
+        static constexpr bool assembleConstantPart()
         {
-          return true;
+          return EngineParameters::assembleConstantPart;
         }
 
-        static constexpr bool skipOffDiagonalSkeletonPart()
+        static constexpr bool assembleOffDiagonalSkeletonPart()
         {
-          return false;
+          return EngineParameters::assembleOffDiagonalSkeletonPart;
         }
 
-        static constexpr bool skipDiagonalSkeletonPart()
+        static constexpr bool assembleDiagonalSkeletonPart()
         {
-          return true;
+          return EngineParameters::assembleDiagonalSkeletonPart;
         }
 
         static constexpr auto isGalerkin()
@@ -199,7 +194,7 @@ namespace Dune {
         LOP& lop,
         const TrialConstraints& trial_constraints,
         const TestConstraints& test_constraints,
-        std::integral_constant<Galerkin,galerkin> = std::integral_constant<Galerkin,galerkin>{}
+        EngineParameters = {}
         )
         : _lop(&lop)
         , _linearization_point(&linearization_point)
@@ -214,7 +209,7 @@ namespace Dune {
         const TrialVector& linearization_point,
         Jacobian& jacobian,
         LOP_& lop,
-        std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,std::integral_constant<Galerkin,galerkin>> = std::integral_constant<Galerkin,galerkin>{}
+        std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
         )
         : _lop(&lop)
         , _linearization_point(&linearization_point)
@@ -230,7 +225,7 @@ namespace Dune {
         LOP_& lop,
         const TrialConstraints& trial_constraints,
         const TestConstraints& test_constraints,
-        std::enable_if_t<not models<Concept::PossiblyNonLinear,LOP>() and std::is_same_v<LOP_,LOP>,int> = 0
+        std::enable_if_t<not models<Concept::PossiblyNonLinear,LOP>() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
         )
         : _lop(&lop)
         , _linearization_point(nullptr)
@@ -244,7 +239,7 @@ namespace Dune {
       JacobianEngine(
         Jacobian& jacobian,
         LOP_& lop,
-        std::enable_if_t<not models<Concept::PossiblyNonLinear,LOP>() and unconstrained() and std::is_same_v<LOP_,LOP>,std::integral_constant<Galerkin,galerkin>> = std::integral_constant<Galerkin,galerkin>{}
+        std::enable_if_t<not models<Concept::PossiblyNonLinear,LOP>() and unconstrained() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
         )
         : _lop(&lop)
         , _linearization_point(nullptr)
@@ -257,7 +252,8 @@ namespace Dune {
       JacobianEngine(
         LOP& lop,
         const TrialConstraints& trial_constraints,
-        const TestConstraints& test_constraints
+        const TestConstraints& test_constraints,
+        EngineParameters = {}
         )
         : _lop(&lop)
         , _linearization_point(nullptr)
@@ -270,7 +266,7 @@ namespace Dune {
       template<typename LOP_>
       JacobianEngine(
         LOP_& lop,
-        std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,std::integral_constant<Galerkin,galerkin>> = std::integral_constant<Galerkin,galerkin>{}
+        std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
         )
         : _lop(&lop)
         , _linearization_point(nullptr)
@@ -663,7 +659,7 @@ namespace Dune {
     };
 
 
-      template<typename TrialVector, typename Jacobian, typename LOP>
+    template<typename TrialVector, typename Jacobian, typename LOP>
     JacobianEngine(
         const TrialVector&,
         Jacobian&,
@@ -675,16 +671,15 @@ namespace Dune {
         LOP,
         EmptyTransformation,
         EmptyTransformation,
-        false,
-        Galerkin::automatic
+        DefaultJacobianEngineParameters<false,Galerkin::automatic>
         >;
 
-    template<typename TrialVector, typename Jacobian, typename LOP, Galerkin galerkin>
+    template<typename TrialVector, typename Jacobian, typename LOP, typename EngineParameters>
     JacobianEngine(
         const TrialVector&,
         Jacobian&,
         LOP&,
-        std::integral_constant<Galerkin,galerkin>
+        EngineParameters
       )
       -> JacobianEngine<
         TrialVector,
@@ -692,8 +687,7 @@ namespace Dune {
         LOP,
         EmptyTransformation,
         EmptyTransformation,
-        false,
-        galerkin
+        EngineParameters
         >;
 
     template<typename Jacobian, typename LOP>
@@ -710,8 +704,7 @@ namespace Dune {
         LOP,
         EmptyTransformation,
         EmptyTransformation,
-        false,
-        Galerkin::automatic
+        DefaultJacobianEngineParameters<false,Galerkin::automatic>
         >;
 
 
