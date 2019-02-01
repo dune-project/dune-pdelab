@@ -25,7 +25,7 @@ namespace Dune {
 
 
 
-    template<bool instationary_, Galerkin galerkin_>
+    template<bool instationary_ = false, Galerkin galerkin_ = Galerkin::automatic>
     struct DefaultEngineParametersBase
     {
 
@@ -42,7 +42,7 @@ namespace Dune {
     };
 
 
-    template<bool instationary_, Galerkin galerkin_>
+    template<bool instationary_ = false, Galerkin galerkin_ = Galerkin::automatic>
     struct DefaultResidualEngineParameters
       : DefaultEngineParametersBase<instationary_,galerkin_>
     {
@@ -58,7 +58,7 @@ namespace Dune {
     };
 
 
-    template<bool instationary_, Galerkin galerkin_>
+    template<bool instationary_ = false, Galerkin galerkin_ = Galerkin::automatic>
     struct DefaultJacobianEngineParameters
       : DefaultEngineParametersBase<instationary_,galerkin_>
     {
@@ -73,7 +73,7 @@ namespace Dune {
 
     };
 
-    template<bool instationary_, Galerkin galerkin_>
+    template<bool instationary_ = false, Galerkin galerkin_ = Galerkin::automatic>
     struct DefaultApplyJacobianEngineParameters
       : DefaultEngineParametersBase<instationary_,galerkin_>
     {
@@ -88,13 +88,13 @@ namespace Dune {
 
     };
 
-    template<Galerkin galerkin_>
+    template<Galerkin galerkin_ = Galerkin::automatic>
     struct DefaultPatternEngineParameters
       : DefaultEngineParametersBase<false,galerkin_>
     {};
 
 
-    template<bool instationary_, Galerkin galerkin_>
+    template<bool instationary_ = false, Galerkin galerkin_ = Galerkin::automatic>
     struct DefaultGridOperatorParameters
       : DefaultEngineParametersBase<instationary_,galerkin_>
     {
@@ -103,6 +103,51 @@ namespace Dune {
       using JacobianEngineParameters      = DefaultJacobianEngineParameters<instationary_,galerkin_>;
       using ApplyJacobianEngineParameters = DefaultApplyJacobianEngineParameters<instationary_,galerkin_>;
       using PatternEngineParameters       = DefaultPatternEngineParameters<galerkin_>;
+
+    };
+
+
+
+
+    template<bool instationary_ = false, Galerkin galerkin_ = Galerkin::automatic>
+    struct FastDGResidualEngineParameters
+      : DefaultResidualEngineParameters<instationary_,galerkin_>
+    {
+      static constexpr bool fastDG = true;
+    };
+
+    template<bool instationary_ = false, Galerkin galerkin_ = Galerkin::automatic>
+    struct FastDGJacobianEngineParameters
+      : DefaultJacobianEngineParameters<instationary_,galerkin_>
+    {
+      static constexpr bool fastDG = true;
+    };
+
+    template<bool instationary_ = false, Galerkin galerkin_ = Galerkin::automatic>
+    struct FastDGApplyJacobianEngineParameters
+      : DefaultApplyJacobianEngineParameters<instationary_,galerkin_>
+    {
+      static constexpr bool fastDG = true;
+    };
+
+    template<Galerkin galerkin_ = Galerkin::automatic>
+    struct FastDGPatternEngineParameters
+      : DefaultPatternEngineParameters<galerkin_>
+    {
+      static constexpr bool fastDG = true;
+    };
+
+    template<bool instationary_ = false, Galerkin galerkin_ = Galerkin::automatic>
+    struct FastDGGridOperatorParameters
+      : DefaultEngineParametersBase<instationary_,galerkin_>
+    {
+
+      static constexpr bool fastDG = true;
+
+      using ResidualEngineParameters      = FastDGResidualEngineParameters<instationary_,galerkin_>;
+      using JacobianEngineParameters      = FastDGJacobianEngineParameters<instationary_,galerkin_>;
+      using ApplyJacobianEngineParameters = FastDGApplyJacobianEngineParameters<instationary_,galerkin_>;
+      using PatternEngineParameters       = FastDGPatternEngineParameters<galerkin_>;
 
     };
 
