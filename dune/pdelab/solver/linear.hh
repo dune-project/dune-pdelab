@@ -347,13 +347,13 @@ namespace Dune::PDELab {
         {
 
           /*
-            To achieve second order convergence of newton
-            we need a linear reduction of at least
-            current_defect^2/prev_defect^2.
-            For the last newton step a linear reduction of
-            1/10*end_defect/current_defect
-            is sufficient for convergence.
-          */
+           * To achieve second order convergence of newton
+           * we need a linear reduction of at least
+           * current_defect^2/prev_defect^2.
+           * For the last newton step a linear reduction of
+           * 1/10*end_defect/current_defect
+           * is sufficient for convergence.
+           */
 
           if (stop_defect / (10 * _defect) > _defect * _defect / _prev_defect * _prev_defect)
             linear_reduction = stop_defect / (10 * _defect);
