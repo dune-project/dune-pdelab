@@ -169,6 +169,12 @@ namespace Dune {
         return container()[ci];
       }
 
+      template<typename LFS>
+      ElementType& operator()(const LFS& lfs, size_type i)
+      {
+        return this->_data[lfs.localIndex(i)];
+      }
+
       ElementType* data()
       {
         return this->_data;

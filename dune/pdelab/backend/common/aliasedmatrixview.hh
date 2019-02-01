@@ -231,7 +231,7 @@ namespace Dune {
 
       ElementType& operator()(size_type i, size_type j)
       {
-        return container()(rowIndexCache().containerIndex(i),colIndexCache().containerIndex(j));
+        return data()[i * colIndexCache().size() + j];
       }
 
       ElementType& operator()(const RowDOFIndex& i, const ColDOFIndex& j)
@@ -242,6 +242,12 @@ namespace Dune {
       ElementType& operator()(const RowContainerIndex& i, const ColContainerIndex& j)
       {
         return container()(i,j);
+      }
+
+      template<typename LFSV, typename LFSU>
+      ElementType& operator()(const LFSV& lfsv, size_type i, const LFSU& lfsu, size_type j)
+      {
+        return data()[lfsv.localIndex(i) * colIndexCache().size() + lfsu.localIndex(j)];
       }
 
       ElementType& operator()(const RowContainerIndex& i, size_type j)
