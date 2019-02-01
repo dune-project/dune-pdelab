@@ -38,6 +38,7 @@ namespace Dune {
         using LocalView        = LV;
         using Vector           = typename LocalView::Container;
         using Container        = LocalVector<typename LV::value_type>;
+        using View             = Container;
         using AccumulationView = typename Container::WeightedAccumulationView;
         using Weight           = typename AccumulationView::weight_type;
         using value_type       = typename LV::value_type;
@@ -135,6 +136,7 @@ namespace Dune {
       {
         using LocalView        = LV;
         using Vector           = typename LocalView::Container;
+        using View             = LocalView;
         using AccumulationView = LocalView;
         using Weight           = typename AccumulationView::weight_type;
         using value_type       = typename LV::value_type;
@@ -275,7 +277,7 @@ namespace Dune {
       }
 
       template<typename LFS>
-      LocalVectorProxy<typename Residual::Container,LFS> residual(const LFS& lfs)
+      LocalVectorProxy<typename Residual::View,LFS> residual(const LFS& lfs)
       {
         return {Implementation::readWriteView(),lfs,Context_::engine().weight()};
       }
@@ -328,7 +330,7 @@ namespace Dune {
       }
 
       template<typename LFS>
-      LocalVectorProxy<typename Residual::Container,LFS> residual(const LFS& lfs)
+      LocalVectorProxy<typename Residual::View,LFS> residual(const LFS& lfs)
       {
         return {Implementation::readWriteView(),lfs,Context_::engine().timeWeight()};
       }
@@ -412,13 +414,13 @@ namespace Dune {
       }
 
       template<typename LFS>
-      LocalVectorProxy<typename Result::Container,LFS> result(const LFS& lfs)
+      LocalVectorProxy<typename Result::View,LFS> result(const LFS& lfs)
       {
         return {Implementation::readWriteView(),lfs,Context_::engine().weight()};
       }
 
       template<typename LFS>
-      LocalVectorProxy<typename Result::Container,LFS> residual(const LFS& lfs)
+      LocalVectorProxy<typename Result::View,LFS> residual(const LFS& lfs)
       {
         return {Implementation::readWriteView(),lfs,Context_::engine().weight()};
       }
@@ -475,13 +477,13 @@ namespace Dune {
       }
 
       template<typename LFS>
-      LocalVectorProxy<typename Result::Container,LFS> timeResult(const LFS& lfs)
+      LocalVectorProxy<typename Result::View,LFS> timeResult(const LFS& lfs)
       {
         return {Context_::ResultImplementation::readWriteView(),lfs,Context_::engine().timeWeight()};
       }
 
       template<typename LFS>
-      LocalVectorProxy<typename Result::Container,LFS> timeResidual(const LFS& lfs)
+      LocalVectorProxy<typename Result::View,LFS> timeResidual(const LFS& lfs)
       {
         return {Context_::ResultImplementation::readWriteView(),lfs,Context_::engine().timeWeight()};
       }
@@ -513,7 +515,7 @@ namespace Dune {
 
       using Argument = typename Implementation::Traits;
 
-      const typename Argument::Container& argument()
+      const typename Argument::View& argument()
       {
         return Implementation::readOnlyView();
       }
@@ -562,7 +564,7 @@ namespace Dune {
       using LinearizationPoint = typename Implementation::Traits;
 
       template<typename T = int>
-      const typename LinearizationPoint::Container& linearizationPoint(T dummy = 0)
+      const typename LinearizationPoint::View& linearizationPoint(T dummy = 0)
       {
         static_assert(Std::to_true_v<T> and enabled, "Calling linearizationPoint() is not allowed for linear problems!");
 #if DUNE_PDELAB_ENABLE_CHECK_ASSEMBLY
