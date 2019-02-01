@@ -74,6 +74,11 @@ namespace Dune {
       template<typename Context>
       void volumePattern(Context& ctx) const
       {
+        if (ctx.fastDG())
+        {
+          ctx.pattern().addLink(ctx.test().space(),0,ctx.trial().space(),0);
+          return;
+        }
         for (auto i : ctx.test().space())
           for (auto j : ctx.trial().space())
             ctx.pattern().addLink(ctx.test().space(),i,ctx.trial().space(),j);
@@ -84,6 +89,13 @@ namespace Dune {
       {
         auto& inside  = ctx.inside();
         auto& outside = ctx.outside();
+
+        if (ctx.fastDG())
+        {
+          ctx.pattern(inside,outside).addLink(inside.test().space(),0,outside.trial().space(),0);
+          ctx.pattern(outside,inside).addLink(outside.test().space(),0,inside.trial().space(),0);
+          return;
+        }
 
         auto& pattern_io = ctx.pattern(inside,outside);
         for (auto i : inside.test().space())
