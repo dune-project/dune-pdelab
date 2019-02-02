@@ -26,7 +26,7 @@ Copyright holders
 | 2016       | Tobias Leibner             |
 | 2009--2010 | Sven Marnach               |
 | 2015       | René Milk                  |
-| 2010--2018 | Steffen Müthing            |
+| 2010--2019 | Steffen Müthing            |
 | 2010--2014 | Rebecca Neumann            |
 | 2011--2015 | Adrian Ngo                 |
 | 2013--2018 | Andreas Nüßing             |
@@ -79,6 +79,16 @@ following licenses:
   can find a copy of the GNU General Public License, Version 2, in the file
   [GPL-2][3] or at http://www.gnu.org/licenses/gpl-2.0.
 
+External Libraries
+------------------
+
+PDELab contains the external [{fmt}][4] library in the subdirectory `vendor/fmt`,
+which is checked out as a Git submodule. This library is by default obtained from
+a [mirror][5] of the original repository hosted on our GitLab. {fmt} is distributed
+as part of PDELab if the build system cannot find an installed version of {fmt}.
+
+{fmt} is licensed under the BSD 2-clause. For further information about the license and
+copyright information, see [vendor/fmt/README.rst][5] and [vendor/fmt/LICENSE.rst][6]
 
 Links
 -----
@@ -86,3 +96,6 @@ Links
 [1]: GPL-3
 [2]: LGPL-3
 [3]: GPL-2
+[4]: https://fmtlib.net
+[5]: vendor/fmt/README.rst
+[6]: vendor/fmt/LICENSE.rst

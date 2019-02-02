@@ -19,6 +19,13 @@ PDELab git master (will be PDELab 2.7)
     space bases as `GridFunctionSpace` implementations has gained limited support for distributed
     computations.
 
+-   PDELab now depends on [{fmt}][] for log message formatting. The build system will use an installed library
+    if available; otherwise we vendor the library and integrate it into `libdunepdelab`.
+
+    **Important**: For the vendoring to work, you must use the `--recursive` flag when cloning the PDELab
+    repository. If you have an existing PDELab repository, run `git submodule update --init --recursive` once
+    inside that repository.
+
 
 PDELab 2.6
 ----------
@@ -674,6 +681,7 @@ Links
 [PDELab bugtracker]: https://gitlab.dune-project.org/pdelab/dune-pdelab/issues
 [PETSc]: http://www.mcs.anl.gov/petsc/
 [Eigen]: http://eigen.tuxfamily.org
+[{fmt}]: https://fmtlib.net
 [LICENSE.md]: LICENSE.md
 [convectiondiffusionfem.hh]: dune/pdelab/localoperator/convectiondiffusionfem.hh
 [convectiondiffusiondg.hh]: dune/pdelab/localoperator/convectiondiffusiondg.hh

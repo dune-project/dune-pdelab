@@ -34,12 +34,74 @@ if(NOT MINGW)
   set(clock_cc "dune/pdelab/common/clock.cc")
 endif()
 
+
+# Pull in vendored version of {fmt}
+# The original upstream repository can be found in vendor/fmt, so make sure it actually exists,
+# as people might have checked out PDELab without the --recursive switch
+# We then copy the required headers to a nested location under dune/pdelab to avoid polluting
+# the paths which belong to the upstream library and add the two compiled source files to the
+# dunepdelab library
+if(NOT TARGET fmt::fmt)
+
+  message(STATUS "Could not find installed {fmt} library, vendoring included version")
+
+  if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/vendor/fmt/src/format.cc)
+    message(FATAL_ERROR "Could not find vendored {fmt} library, did you check out the submodule?")
+  endif()
+
+  set(
+    FMT_SOURCES
+      vendor/fmt/src/format.cc
+      vendor/fmt/src/posix.cc
+    )
+
+  file(
+    GLOB FMT_HEADERS
+    vendor/fmt/include/fmt/*.h
+    )
+
+  file(
+    COPY ${FMT_HEADERS}
+    DESTINATION dune/pdelab/vendor/fmt/fmt
+    )
+
+  install(
+    FILES ${FMT_HEADERS}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/vender/fmt/fmt
+    )
+
+endif()
+
 dune_add_library(dunepdelab
   ${clock_cc}
   dune/pdelab/common/hostname.cc
   dune/pdelab/common/logtag.cc
+  ${FMT_SOURCES}
   )
 dune_target_enable_all_packages(dunepdelab)
+
+if(TARGET fmt::fmt)
+  # We are using an upstream version of {fmt}, so link against that
+  target_link_libraries(dunepdelab PUBLIC fmt::fmt)
+else()
+
+  # We need to set some preprocessor definions
+  target_compile_definitions(
+    dunepdelab
+    PRIVATE FMT_EXPORT
+    INTERFACE FMT_SHARED
+    PUBLIC DUNE_PDELAB_VENDORED_FMT=1
+    )
+
+  # Tell the compiler about the custom path of the fmt headers
+  target_include_directories(
+    dunepdelab
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/dune/pdelab/vendor/fmt>
+      $<INSTALL_INTERFACE:dune/pdelab/vendor/fmt>
+    )
+
+endif()
 
 dune_register_package_flags(LIBRARIES dunepdelab)
 

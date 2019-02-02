@@ -33,6 +33,10 @@ PDELab depends on the following software packages:
 * The dune-typetree library, version 2.7-git. You can obtain a [source package][0] or
   clone the [repository][10].
 
+* The [{fmt}][13] library, which is used for log message formatting. If you do not have
+  this library installed, PDELab will include a vendored version. For this to work
+  correctly, make sure you do a recursive checkout of the Git repositoy.
+
 * PDELab's compiler requirements differ slightly from the underlying DUNE
   libraries: We require at least GCC 5 in C++14 mode. PDELab should also work
   with very recent versions of ICC (icpc 18.0.0+) and current clang (5+).
@@ -77,3 +81,4 @@ Links
 [10]: http://gitlab.dune-project.org/pdelab/dune-typetree
 [11]: CHANGELOG.md
 [12]: LICENSE.md
+[13]: https://fmtlib.net
