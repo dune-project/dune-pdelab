@@ -103,6 +103,12 @@ else()
 
 endif()
 
+# turn off warning about string literal operator templates caused by _fmt
+target_compile_options(
+  dunepdelab
+  PUBLIC -Wno-gnu-string-literal-operator-template
+  )
+
 dune_register_package_flags(LIBRARIES dunepdelab)
 
 # Use the enable all packages feature
