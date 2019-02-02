@@ -1,6 +1,8 @@
 install(
   FILES
     fmt.hh
+    logger.hh
+    loggerbackend.hh
     logmessage.hh
     sink.hh
   DESTINATION
