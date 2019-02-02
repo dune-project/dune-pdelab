@@ -18,6 +18,10 @@ namespace Dune {
       : public Dune::Exception
     {};
 
+    //! Logging-related error.
+    class LoggingError
+      : public Exception
+    {};
 
     //! GridFunctionSpace-related error.
     class GridFunctionSpaceError

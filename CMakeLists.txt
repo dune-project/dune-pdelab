@@ -76,6 +76,7 @@ dune_add_library(dunepdelab
   ${clock_cc}
   dune/pdelab/common/hostname.cc
   dune/pdelab/common/logtag.cc
+  dune/pdelab/logging/logmessage.cc
   ${FMT_SOURCES}
   )
 dune_target_enable_all_packages(dunepdelab)
