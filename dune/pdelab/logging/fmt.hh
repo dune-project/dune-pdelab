@@ -6,6 +6,7 @@
 #include <fmt/time.h>
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
+#include <fmt/chrono.h>
 
 #include <dune/pdelab/common/checks.hh>
 
