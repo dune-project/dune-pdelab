@@ -1,6 +1,7 @@
 install(
   FILES
     consolesink.hh
+    filesinks.hh
     fmt.hh
     logger.hh
     loggerbackend.hh

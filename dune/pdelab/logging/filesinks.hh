@@ -9,6 +9,28 @@
 
 namespace Dune::PDELab {
 
+  /**
+   * \addtogroup logging
+   * \{
+   */
+
+  //! Sink for logging data to a file.
+  /**
+   * FileSink opens a given file and logs all data to that file. It is typically configured by
+   * specifying the sink type "file" in the logging configuration. It supports the following
+   * configuration keys:
+   *
+   * | Key     | Description                                                  |
+   * |-------- |--------------------------------------------------------------|
+   * | file    | The name of the log file. See below for further information. |
+   * | mode    | "truncate" or "append".                                      |
+   * | pattern | The pattern for the log message, see PatternFormatSink.      |
+   *
+   * When running programs in parallel, each rank will write to its own file: the filename will
+   * automatically be prepended with the 0-padded rank of each process. Alternatively, if the
+   * filename contains a "{}" somewhere, this placeholder will be replaced by the 0-padded rank
+   * value. In this case, the replacement also happens when running a sequential program.
+   */
   class FileSink
     : public PatternFormatSink
   {
@@ -39,6 +61,9 @@ namespace Dune::PDELab {
 
   };
 
+  /**
+   * \}
+   */
 
 } // namespace Dune::PDELab
 
