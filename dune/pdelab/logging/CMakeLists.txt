@@ -6,6 +6,7 @@ install(
     loggerbackend.hh
     logmessage.hh
     sink.hh
+    sinkmessageitems.hh
   DESTINATION
     ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/logging
   )
