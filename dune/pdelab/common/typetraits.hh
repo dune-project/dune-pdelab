@@ -5,9 +5,18 @@
 #define DUNE_PDELAB_COMMON_TYPETRAITS_HH
 
 #include <dune/common/typetraits.hh>
+#include <dune/common/std/type_traits.hh>
 #include <dune/typetree/typetraits.hh>
 
 namespace Dune {
+
+  namespace Std {
+
+    template <typename T>
+    constexpr bool to_true_type_v = to_true_type<T>::value;
+
+  }
+
   namespace PDELab {
 
     // Import AlwaysVoid from TypeTree library
