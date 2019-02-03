@@ -80,6 +80,7 @@ dune_add_library(dunepdelab
   dune/pdelab/logging/logmessage.cc
   dune/pdelab/logging/patternformatsink.cc
   dune/pdelab/logging/sink.cc
+  dune/pdelab/logging.cc
   ${FMT_SOURCES}
   )
 dune_target_enable_all_packages(dunepdelab)

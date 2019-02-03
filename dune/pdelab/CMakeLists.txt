@@ -15,3 +15,11 @@ add_subdirectory(newton)
 add_subdirectory(ordering)
 add_subdirectory(stationary)
 add_subdirectory(test)
+
+
+install(
+  FILES
+    logging.hh
+  DESTINATION
+    ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab
+  )
