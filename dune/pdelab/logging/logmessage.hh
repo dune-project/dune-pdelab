@@ -70,6 +70,13 @@ namespace Dune::PDELab {
    */
   std::string_view name(LogLevel level);
 
+  //! Returns the name of a given log level, padded to the widest width of a log level name.
+  /**
+   * \note This function will throw an exception of type LoggingError if level is not a valid
+   *       LogLevel.
+   */
+  std::string_view paddedName(LogLevel level);
+
   //! Parses the given string into the corresponding LogLevel.
   /**
    * \note This function will throw an exception of type LoggingError if name is not the name of a

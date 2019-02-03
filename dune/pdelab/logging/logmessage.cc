@@ -9,28 +9,59 @@ namespace Dune::PDELab {
 
   std::string_view name(LogLevel level)
   {
+    using namespace std::literals;
     switch (level)
     {
     case LogLevel::off:
-      return "off";
+      return "off"sv;
     case LogLevel::critical:
-      return "critical";
+      return "critical"sv;
     case LogLevel::error:
-      return "error";
+      return "error"sv;
     case LogLevel::warning:
-      return "warning";
+      return "warning"sv;
     case LogLevel::notice:
-      return "notice";
+      return "notice"sv;
     case LogLevel::info:
-      return "info";
+      return "info"sv;
     case LogLevel::detail:
-      return "detail";
+      return "detail"sv;
     case LogLevel::debug:
-      return "debug";
+      return "debug"sv;
     case LogLevel::trace:
-      return "trace";
+      return "trace"sv;
     case LogLevel::all:
-      return "all";
+      return "all"sv;
+    default:
+      DUNE_THROW(LoggingError,"Unknown log level: " << static_cast<int>(level));
+    }
+  }
+
+  std::string_view paddedName(LogLevel level)
+  {
+    using namespace std::literals;
+    switch (level)
+    {
+    case LogLevel::off:
+      return "off     "sv;
+    case LogLevel::critical:
+      return "critical"sv;
+    case LogLevel::error:
+      return "error   "sv;
+    case LogLevel::warning:
+      return "warning "sv;
+    case LogLevel::notice:
+      return "notice  "sv;
+    case LogLevel::info:
+      return "info    "sv;
+    case LogLevel::detail:
+      return "detail  "sv;
+    case LogLevel::debug:
+      return "debug   "sv;
+    case LogLevel::trace:
+      return "trace   "sv;
+    case LogLevel::all:
+      return "all     "sv;
     default:
       DUNE_THROW(LoggingError,"Unknown log level: " << static_cast<int>(level));
     }
