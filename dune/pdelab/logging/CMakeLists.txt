@@ -5,6 +5,7 @@ install(
     logger.hh
     loggerbackend.hh
     logmessage.hh
+    patternmessagesink.hh
     sink.hh
     sinkmessageitems.hh
   DESTINATION

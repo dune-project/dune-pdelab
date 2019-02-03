@@ -79,6 +79,7 @@ dune_add_library(dunepdelab
   dune/pdelab/logging/consolesink.cc
   dune/pdelab/logging/logger.cc
   dune/pdelab/logging/logmessage.cc
+  dune/pdelab/logging/patternformatsink.cc
   dune/pdelab/logging/sink.cc
   ${FMT_SOURCES}
   )
