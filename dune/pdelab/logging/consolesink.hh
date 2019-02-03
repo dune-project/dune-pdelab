@@ -4,32 +4,53 @@
 #include <cstdio>
 #include <string_view>
 
-#include <dune/pdelab/logging/sink.hh>
+#include <dune/pdelab/logging/patternformatsink.hh>
 
 namespace Dune::PDELab {
 
+  /**
+   * \addtogroup logging
+   * \{
+   */
 
+  //! A sink for writing to the console, typically stdout or stderr.
+  /**
+   * The logging system wraps stdout and stderr in two instances of this class, which are available
+   * as Logging::cout() and Logging::cerr();
+   */
   class ConsoleSink
-    : public Sink
+    : public PatternFormatSink
   {
 
   public:
 
-    ConsoleSink(std::string_view name, std::FILE* stream, LogLevel level, std::size_t widest_logger)
-      : Sink(name,level,widest_logger)
+    ConsoleSink(
+      std::string_view name,
+      std::FILE* stream,
+      const std::string& pattern,
+      LogLevel level,
+      std::size_t widest_logger
+      )
+      : PatternFormatSink(name,level,widest_logger)
       , _stream(stream)
-    {}
+    {
+      setPattern(pattern);
+    }
 
-    void process(const LogMessage& msg) override;
+    void process(const LogMessage& msg) override
+    {
+      fmt::vprint(_stream,pattern(),arguments(msg));
+    }
 
   private:
 
     std::FILE* _stream;
-    std::size_t _widest_logger = 0;
-    std::string _format = "[{1}] {0}";
-    fmt::basic_memory_buffer<char,200> _msg_buffer;
-    fmt::basic_memory_buffer<char,20> _logger_buffer;
+
   };
+
+  /**
+   * \}
+   */
 
 } // end namespace Dune::PDELab
 
