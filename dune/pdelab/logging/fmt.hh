@@ -1,6 +1,8 @@
 #ifndef DUNE_PDELAB_LOGGING_FMT_HH
 #define DUNE_PDELAB_LOGGING_FMT_HH
 
+#include <type_traits>
+
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <fmt/time.h>
@@ -92,8 +94,55 @@ namespace Dune::PDELab {
   template<typename T>
   constexpr bool is_format_string_v = is_format_string<T>::value;
 
+
+  /**
+   * \brief A fixed-type holder for a factory that produces its value only when mentioned in a fmt
+   * format string.
+   *
+   * This is a useful construct for classes that optionally offer a number of expensive-to-compute
+   * arguments to users specifying a format string, see e.g. PatternFormatSink.
+   *
+   * The {fmt} framework will detect format string arguments of this type, invoke the factory and
+   * format the result of that function call.
+   */
+  template<typename Factory>
+  struct LazyFormatArgument
+  {
+
+    LazyFormatArgument(Factory f)
+      : factory(f)
+    {}
+
+    Factory factory;
+  };
+
 } // end namespace Dune::PDELab
 
+
+#ifndef DOXYGEN
+
+namespace fmt {
+
+  template <typename Factory>
+  struct formatter<Dune::PDELab::LazyFormatArgument<Factory>>
+    : public formatter<std::decay_t<decltype(std::declval<Factory>()())>>
+  {
+
+    using Arg  = Dune::PDELab::LazyFormatArgument<Factory>;
+    using Base = formatter<std::decay_t<decltype(std::declval<Factory>()())>>;
+
+    // we just inherit the parsing from the original formatter
+
+    template <typename FormatContext>
+    auto format(const Arg& arg, FormatContext& ctx) {
+      return Base::format(arg.factory(),ctx);
+    }
+
+  };
+
+}
+
+#endif // DOXYGEN
 
 namespace Dune::Literals {
 
