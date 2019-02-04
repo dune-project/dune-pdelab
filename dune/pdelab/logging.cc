@@ -75,26 +75,6 @@ namespace Dune::PDELab {
     return sink;
   }
 
-  LoggerBackend::LoggerBackend(
-    std::string_view name,
-    LogMessage::Time startup_time,
-    bool enabled,
-    LogLevel default_level,
-    int default_indent
-    )
-    : _enabled(enabled)
-    , _startup_time(startup_time)
-    , _default_level(default_level)
-    , _default_indent(default_indent)
-    , _name(name)
-  {
-    if (_default_indent < 0)
-      DUNE_THROW(
-        LoggingError,
-        "Cannot create logger backend with negative indent " << _default_indent << ": " << _name
-        );
-  }
-
   ////////////////////////////////////////////////////////////////////////////////
   // internal structs
   ////////////////////////////////////////////////////////////////////////////////

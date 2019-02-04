@@ -38,7 +38,7 @@ namespace Dune::PDELab {
     std::string_view _name;
     fmt::basic_memory_buffer<char, 200> _buffer;
 
-    // This method is defined in logging.cc, as only the Logging class can construct LoggerBackends
+    // This method is defined in logger.cc
     LoggerBackend(
       std::string_view name,
       LogMessage::Time startup_time,
