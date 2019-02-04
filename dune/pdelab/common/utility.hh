@@ -4,7 +4,11 @@
 #ifndef DUNE_PDELAB_COMMON_UTILITY_HH
 #define DUNE_PDELAB_COMMON_UTILITY_HH
 
+#include <algorithm>
+#include <cctype>
 #include <memory>
+#include <string_view>
+#include <vector>
 
 #include <dune/common/shared_ptr.hh>
 
@@ -52,6 +56,36 @@ namespace Dune {
     }
 
 #endif // DOXYGEN
+
+    //! Trims a string_view of leading and trailing whitespace.
+    std::string_view trim(std::string_view s)
+    {
+      auto isspace = [](unsigned char c) { return std::isspace(c); };
+      auto front = std::find_if_not(begin(s),end(s),isspace);
+      auto back = std::find_if_not(rbegin(s),rend(s),isspace).base();
+      return front < back ? std::string_view(s.data() + (front - begin(s)),back-front) : std::string_view();
+    }
+
+    //! Parses a string with a list of delimited entries into a vector with the individual, trimmed entries.
+    std::vector<std::string_view> parseConfigList(std::string_view list, char delim = ',')
+    {
+      std::vector<std::string_view> result;
+      std::size_t front = 0;
+      std::size_t back = 0;
+      while ((back = list.find(delim,front)) != std::string::npos)
+      {
+        auto item = trim(list.substr(front,back-front));
+        if (not item.empty())
+          result.push_back(item);
+        front = back + 1;
+      }
+      auto item = trim(list.substr(front));
+      if (not item.empty())
+        result.push_back(item);
+      return result;
+    }
+
+
 
     //! \}
 
