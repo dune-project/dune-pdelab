@@ -190,6 +190,12 @@ namespace Dune::PDELab {
       return _relative_second_fraction;
     }
 
+    //! Returns the total number of days since the program was started.
+    int relativeDays() const
+    {
+      return std::chrono::duration_cast<std::chrono::duration<int,std::ratio<24*60*60>>>(_relative_time).count();
+    }
+
     //! Returns local time of the point in time  at which this message was logged.
     /**
      * \warning The first call to this method is rather expensive, avoid it if you don't need to
