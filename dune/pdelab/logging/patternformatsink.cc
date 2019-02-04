@@ -31,6 +31,7 @@ namespace Dune::PDELab {
       Dune::PDELab::name(msg.level()),
       paddedName(msg.level()),
       msg.relativeTime(),
+      SinkMessageItems::relativeDays(msg),
       SinkMessageItems::localTime(msg),
       SinkMessageItems::backend(msg,_logger_buffer,widestLogger()),
       name()
@@ -49,12 +50,14 @@ namespace Dune::PDELab {
       return 2;
     if (item == "reltime")
       return 3;
-    if (item == "abstime")
+    if (item == "reldays")
       return 4;
-    if (item == "backend")
+    if (item == "abstime")
       return 5;
-    if (item == "sink")
+    if (item == "backend")
       return 6;
+    if (item == "sink")
+      return 7;
     DUNE_THROW(LoggingError,"Unknown log sink pattern item: " << item);
   }
 

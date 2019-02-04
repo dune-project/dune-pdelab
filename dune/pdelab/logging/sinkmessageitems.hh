@@ -21,6 +21,14 @@ namespace Dune::PDELab {
         });
     }
 
+    inline auto relativeDays(const LogMessage& msg)
+    {
+      return LazyFormatArgument([&]()
+        {
+          return msg.relativeDays();
+        });
+    }
+
     template<typename Buffer>
     inline auto backend(const LogMessage& msg, Buffer& buffer, std::size_t width)
     {

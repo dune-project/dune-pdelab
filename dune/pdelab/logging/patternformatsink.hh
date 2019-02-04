@@ -28,6 +28,7 @@ namespace Dune::PDELab {
    * | level       | The log level of the message                                    |              |
    * | paddedlevel | The log level of the message, right-padded to the longest level |              |
    * | reltime     | The relative time since program start                           |              |
+   * | reldays     | The number of full days since program start                     |              |
    * | abstime     | The absolute system time                                        | expensive    |
    * | backend     | The name of the backend used to log the message                 | right-padded |
    * | sink        | The name of the sink currently processing the message           |              |
