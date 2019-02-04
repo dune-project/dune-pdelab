@@ -6,8 +6,10 @@
 #ifndef DUNE_PDELAB_FINITEELEMENTMAP_PK1D_HH
 #define DUNE_PDELAB_FINITEELEMENTMAP_PK1D_HH
 
+#include<dune/localfunctions/lagrange.hh>
+#include<dune/localfunctions/lagrange/equidistantpoints.hh>
+
 #include<dune/pdelab/finiteelementmap/finiteelementmap.hh>
-#include<dune/pdelab/finiteelement/pk1d.hh>
 
 namespace Dune {
 
@@ -22,12 +24,12 @@ namespace Dune {
      */
     template<class D, class R>
     class Pk1dLocalFiniteElementMap
-      : public Dune::PDELab::SimpleLocalFiniteElementMap<Pk1dLocalFiniteElement<D,R>,1>
+      : public Dune::PDELab::SimpleLocalFiniteElementMap<LagrangeLocalFiniteElement<EquidistantPointSet,1,D,R>,1>
     {
     public:
 
       Pk1dLocalFiniteElementMap (std::size_t k)
-        : Dune::PDELab::SimpleLocalFiniteElementMap<Pk1dLocalFiniteElement<D,R>,1>(Pk1dLocalFiniteElement<D,R>(k))
+        : Dune::PDELab::SimpleLocalFiniteElementMap<LagrangeLocalFiniteElement<EquidistantPointSet,1,D,R>,1>(LagrangeLocalFiniteElement<EquidistantPointSet,1,D,R>(GeometryTypes::cube(1),k))
         , _k(k)
       {}
 
