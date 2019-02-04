@@ -9,17 +9,16 @@ variables:
 # than one thread.
   OMP_NUM_THREADS: 1
 
-debian:10--gcc:
-  image: registry.dune-project.org/docker/ci/dune-pdelab-deps:git
+debian:10--gcc-17:
+  image: registry.dune-project.org/docker/ci/dune-pdelab-deps:git-debian-10-gcc-8-noassert-17
   script: duneci-standard-test
   tags:
     - "cores:4"
     - "mem:16G"
 
-debian:10--clang:
-  image: registry.dune-project.org/docker/ci/dune-pdelab-deps:git
+debian:10--clang-17:
+  image: registry.dune-project.org/docker/ci/dune-pdelab-deps:git-debian-10-clang-7-libcpp-17
   script: duneci-standard-test
-  variables: {DUNECI_OPTS: /duneci/opts.clang}
   tags:
     - "cores:4"
     - "mem:16G"
