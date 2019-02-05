@@ -1,7 +1,11 @@
 include(UsePETSc)
 include(UseEigen)
 
-find_package(fmt CONFIG)
+if (DUNE_PDELAB_FMT_FORCE_VENDOR)
+  message(STATUS "Forced vendoring of {fmt}, will not look for installed version")
+else()
+  find_package(fmt CONFIG)
+endif()
 
 function(add_dune_petsc_flags)
   if(PETSC_FOUND)

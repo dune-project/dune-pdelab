@@ -46,7 +46,12 @@ if(NOT TARGET fmt::fmt)
   message(STATUS "Could not find installed {fmt} library, vendoring included version")
 
   if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/vendor/fmt/src/format.cc)
-    message(FATAL_ERROR "Could not find vendored {fmt} library, did you check out the submodule?")
+    message(
+      FATAL_ERROR "\
+Could not find vendored {fmt} library, did you check out the submodule? Either delete the \
+dune-pdelab source directory and check it out again with \"git clone --recursive\", or run \
+the command \"git submodule update --init --recursive\" in the dune-pdelab source directory!"
+      )
   endif()
 
   set(
