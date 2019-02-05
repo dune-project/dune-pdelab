@@ -96,6 +96,24 @@ namespace Dune::PDELab {
 
   };
 
+
+  //! This sink does nothing.
+  class NullSink final
+    : public Sink
+  {
+
+  public:
+
+    //! Constructs a new NullSink with the given name.
+    NullSink(std::string_view name)
+      : Sink(name,LogLevel::off,0)
+    {}
+
+    //! Empty processing function.
+    void process(const LogMessage&) override;
+
+  };
+
   /**
    * \}
    */

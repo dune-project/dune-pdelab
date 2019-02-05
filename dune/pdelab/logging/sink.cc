@@ -7,4 +7,7 @@ namespace Dune::PDELab {
   Sink::~Sink()
   {}
 
+  void NullSink::process(const LogMessage &)
+  {}
+
 } // end namespace Dune::PDELab
