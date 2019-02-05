@@ -181,9 +181,11 @@ namespace Dune::PDELab {
  * When configuring a sink, you **must** specify the "type" of the sink. Currently, supported
  * types include
  *
- * | Name        | Description                                                                      |
- * |-------------|----------------------------------------------------------------------------------|
- * | file        | A FileSink that logs to a different file per rank.                               |
+ * | Name          | Description                                                                    |
+ * |---------------|--------------------------------------------------------------------------------|
+ * | null          | A NullSink that ignores all input.                                             |
+ * | file-per-rank | A FileSink that logs to a different file per rank.                             |
+ * | rank-0-file   | A FileSink that logs to a file on rank 0 and ignores input everywhere else.    |
  *
  * See the documentation of the created class for supported type-specific configuration keys.
  *

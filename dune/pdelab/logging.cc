@@ -26,7 +26,7 @@ namespace Dune::PDELab {
 
   // Factory function for file sinks
   // Handles splitting into multiple files on parallel runs
-  static auto fileSinkFactory(
+  static auto filePerRankSinkFactory(
     std::string_view name,
     LogLevel level,
     int widest_logger,
@@ -74,6 +74,62 @@ namespace Dune::PDELab {
     PatternFormatSink::setParameters(*sink,params);
     return sink;
   }
+
+  // Factory function for file sinks
+  // Handles splitting into multiple files on parallel runs
+  static auto rank0FileSinkFactory(
+    std::string_view name,
+    LogLevel level,
+    int widest_logger,
+    const ParameterTree& params
+    ) -> std::shared_ptr<Sink>
+  {
+    if (not params.hasKey("file"))
+      DUNE_THROW(LoggingError,"You must specify an output file name for file sink: " << name);
+    auto file_name = params["file"];
+    if (file_name.empty())
+      DUNE_THROW(LoggingError,"You must specify an output file name for file sink: " << name);
+
+    auto mode = std::ios::trunc;
+
+    if (params.hasKey("mode"))
+    {
+      auto mode_name = params["mode"];
+      if (mode_name == "truncate")
+        mode = std::ios::trunc;
+      else if (mode_name == "append")
+        mode = std::ios::ate;
+      else
+        DUNE_THROW(LoggingError,"Unknown file open mode " << mode_name << ": " << name);
+    }
+
+    auto comm = Logging::comm();
+
+    if (comm.rank() == 0)
+    {
+      auto sink = std::make_shared<FileSink>(name,level,widest_logger,file_name,mode);
+      PatternFormatSink::setParameters(*sink,params);
+      return sink;
+    }
+    else
+    {
+      return std::make_shared<NullSink>(name);
+    }
+
+  }
+
+  // Factory function for file sinks
+  // Handles splitting into multiple files on parallel runs
+  static auto nullSinkFactory(
+    std::string_view name,
+    LogLevel level,
+    int widest_logger,
+    const ParameterTree& params
+    )
+  {
+    return std::make_shared<NullSink>(name);
+  }
+
 
   ////////////////////////////////////////////////////////////////////////////////
   // internal structs
@@ -146,7 +202,9 @@ namespace Dune::PDELab {
   Logging::SinkFactoryRepository Logging::makeSinkFactoryRepository()
   {
     Logging::SinkFactoryRepository repo;
-    repo["file"] = fileSinkFactory;
+    repo["file-per-rank"] = filePerRankSinkFactory;
+    repo["rank-0-file"] = rank0FileSinkFactory;
+    repo["null"] = nullSinkFactory;
     return repo;
   }
 
