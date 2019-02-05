@@ -29,10 +29,9 @@ namespace Dune::PDELab {
         });
     }
 
-    template<typename Buffer>
-    inline auto backend(const LogMessage& msg, Buffer& buffer, std::size_t width)
+    inline auto backend(const LogMessage& msg, std::size_t width)
     {
-      return LazyFormatArgument([&,width]() -> std::string_view
+      return LazyFormatArgument([&,width,buffer=fmt::basic_memory_buffer<char, 30>()]() mutable -> std::string_view
         {
           auto logger = msg.logger().name();
           auto size = logger.size();

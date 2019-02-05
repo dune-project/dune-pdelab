@@ -116,7 +116,6 @@ namespace Dune::PDELab {
 
     std::string _input_pattern;
     std::string _pattern;
-    mutable fmt::basic_memory_buffer<char,40> _logger_buffer;
 
   };
 

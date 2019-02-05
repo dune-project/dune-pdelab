@@ -36,19 +36,20 @@ namespace Dune::PDELab {
     if (not _enabled or _sinks.empty())
       return;
 
-    auto time = LogMessage::Clock::now();
-
-    _buffer.clear();
     assert(indent >= 0);
     assert(indent <= 40);
 
+    auto time = LogMessage::Clock::now();
+
+    fmt::basic_memory_buffer<char, 200> buffer;
+
     using namespace std::literals;
     constexpr auto indent_template = "                                        "sv;
-    _buffer.append(begin(indent_template),begin(indent_template) + indent);
+    buffer.append(begin(indent_template),begin(indent_template) + indent);
 
-    fmt::vformat_to(_buffer, format, args);
+    fmt::vformat_to(buffer, format, args);
 
-    auto msg = LogMessage(logger,level,indent,{_buffer.data(),_buffer.size()},time,time - _startup_time);
+    auto msg = LogMessage(logger,level,indent,{buffer.data(),buffer.size()},time,time - _startup_time);
 
     for (auto& sink : _sinks)
     {

@@ -33,7 +33,7 @@ namespace Dune::PDELab {
       msg.relativeTime(),
       SinkMessageItems::relativeDays(msg),
       SinkMessageItems::localTime(msg),
-      SinkMessageItems::backend(msg,_logger_buffer,widestLogger()),
+      SinkMessageItems::backend(msg,widestLogger()),
       name()
       );
   }

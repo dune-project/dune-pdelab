@@ -36,7 +36,6 @@ namespace Dune::PDELab {
     LogLevel _default_level = LogLevel::notice;
     int _default_indent = 0;
     std::string_view _name;
-    fmt::basic_memory_buffer<char, 200> _buffer;
 
     // This method is defined in logger.cc
     LoggerBackend(
