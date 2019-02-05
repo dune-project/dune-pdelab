@@ -247,8 +247,8 @@ namespace Dune::PDELab {
  * \{
  */
 
-//! Central configuration of the logging system.
-class Logging {
+  //! Central configuration of the logging system.
+  class Logging {
 
 #ifndef DOXYGEN
 
@@ -420,6 +420,16 @@ class Logging {
      * problem with any of the parameters, this function will throw an exception.
      */
     static Logger logger(const Dune::ParameterTree& params);
+
+    //! Returns a logger configured according to the ParameterTree with a non-default fallback
+    /**
+     * This function is mostly intended for components that want to default to a named logger
+     * without forcing the user to create the corresponding backend. The function first tries to get
+     * a logger according to the configuration in the ParameterTree; if that configuration does not
+     * name a backend, the system tries to get the backed named in `preferred`, and if that does not
+     * exist either, it falls back to the default backend.
+     */
+    static Logger tryLogger(const Dune::ParameterTree& params, std::string_view preferred);
 
     /**
      * \}

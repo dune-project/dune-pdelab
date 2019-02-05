@@ -415,21 +415,64 @@ namespace Dune::PDELab {
 
   Logger Logging::logger(std::string_view name)
   {
-    using namespace std::literals;
-    if (name.empty())
-      name = "default"sv;
-    auto& backend = *state().backends.at(name);
-    return {backend,backend._default_level,backend._default_indent};
+    try {
+      using namespace std::literals;
+      if (name.empty())
+        name = "default"sv;
+      auto& backend = *state().backends.at(name);
+      return {backend,backend._default_level,backend._default_indent};
+    } catch (std::out_of_range&) {
+      DUNE_THROW(LoggingError,"Logger backend not found in registry: " << name);
+    }
   }
 
   Logger Logging::logger(const ParameterTree& params)
   {
-    auto log = logger(params.get<std::string>("log.backend",""));
+    try {
+      auto name = params.get<std::string>("log.backend","");
+      auto log = logger(name);
+      if (params.hasKey("log.level"))
+        log.setLevel(parseLogLevel(params["log.level"]));
+      if (params.hasKey("log.indent"))
+        log.setIndent(params.get<int>("log.indent"));
+      return log;
+    } catch (std::out_of_range&) {
+      DUNE_THROW(LoggingError,"Logger backend not found in registry: " << params.get<std::string>("log.backend",""));
+    }
+  }
+
+  Logger Logging::tryLogger(const ParameterTree& params, std::string_view preferred)
+  {
+    auto& s = state();
+    LoggerBackend* backend = nullptr;
+    if (params.hasKey("log.backend"))
+    {
+      try {
+        std::string_view name = params["log.backend"];
+        if (name.empty())
+          name = "default";
+        backend = s.backends.at(name).get();
+      } catch (std::out_of_range&) {
+        DUNE_THROW(LoggingError,"Logger backend not found in registry: " << params["log.backend"]);
+      }
+    }
+    else
+    {
+      if (auto it = s.backends.find(preferred) ; it != s.backends.end())
+        backend = it->second.get();
+      else
+        backend = s.default_backend;
+    }
+
+    auto level = backend->_default_level;
     if (params.hasKey("log.level"))
-      log.setLevel(parseLogLevel(params["log.level"]));
+      level = parseLogLevel(params["log.level"]);
+
+    auto indent = backend->_default_indent;
     if (params.hasKey("log.indent"))
-      log.setIndent(params.get<int>("log.indent"));
-    return log;
+      indent = params.get<int>("log.indent");
+
+    return {*backend,level,indent};
   }
 
   ////////////////////////////////////////////////////////////////////////////////
