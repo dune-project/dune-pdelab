@@ -192,7 +192,7 @@ namespace Dune::PDELab {
 
     // create default sinks for stdout and stderr
     {
-      std::string default_pattern = "{0}";
+      std::string default_pattern = "[{reltime:9%T}] {0}";
       auto        default_level   = LogLevel::all;
 
       auto level = default_level;
