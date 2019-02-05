@@ -322,9 +322,9 @@ namespace Dune::PDELab {
         }
 
         if (config.hasKey("extra_sinks")){
-          auto sinks = parseConfigList(params["extra_sinks"]);
+          auto sinks = parseConfigList(config["extra_sinks"]);
           for (auto name : sinks)
-            s.default_backend->_sinks.push_back(sink({begin(name),end(name)}));
+            backend._sinks.push_back(sink({begin(name),end(name)}));
         }
       }
     }
