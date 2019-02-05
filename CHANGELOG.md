@@ -20,7 +20,8 @@ PDELab git master (will be PDELab 2.7)
     computations.
 
 -   PDELab now depends on [{fmt}][] for log message formatting. The build system will use an installed library
-    if available; otherwise we vendor the library and integrate it into `libdunepdelab`.
+    if available; otherwise we vendor the library and integrate it into `libdunepdelab`. You can also force
+    the build system to vendor the library by defining the CMake variable `DUNE_PDELAB_FMT_FORCE_VENDOR=ON`.
 
     **Important**: For the vendoring to work, you must use the `--recursive` flag when cloning the PDELab
     repository. If you have an existing PDELab repository, run `git submodule update --init --recursive` once
