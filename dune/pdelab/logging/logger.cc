@@ -36,8 +36,8 @@ namespace Dune::PDELab {
     if (not _enabled or _sinks.empty())
       return;
 
-    assert(indent >= 0);
-    assert(indent <= 40);
+    DUNE_PDELAB_CHECK_LOGGER(indent >= 0);
+    DUNE_PDELAB_CHECK_LOGGER(indent <= 40);
 
     auto time = LogMessage::Clock::now();
 
