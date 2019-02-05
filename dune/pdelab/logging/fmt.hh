@@ -110,10 +110,10 @@ namespace Dune::PDELab {
   {
 
     LazyFormatArgument(Factory f)
-      : factory(f)
+      : factory(std::move(f))
     {}
 
-    Factory factory;
+    mutable Factory factory;
   };
 
 } // end namespace Dune::PDELab
