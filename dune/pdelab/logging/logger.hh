@@ -300,14 +300,14 @@ namespace Dune::PDELab {
     //! Increases the default indentation of this logger by the given value.
     void indent(int additional_indent)
     {
-      assert(additional_indent >= 0);
+      DUNE_PDELAB_CHECK_LOGGER(_indent + additional_indent >= 0);
       _indent += additional_indent;
     }
 
     //! Creates a new logger with additional indentation
     Logger indented(int additional_indent)
     {
-      assert(_indent + additional_indent >= 0);
+      DUNE_PDELAB_CHECK_LOGGER(_indent + additional_indent >= 0);
       return {*_backend,_level,_indent + additional_indent};
     }
 
@@ -320,7 +320,7 @@ namespace Dune::PDELab {
     //! Sets the default indentation of messages logged with this Logger.
     void setIndent(int indent)
     {
-      assert(indent >= 0);
+      DUNE_PDELAB_CHECK_LOGGER(indent >= 0);
       _indent = indent;
     }
 
