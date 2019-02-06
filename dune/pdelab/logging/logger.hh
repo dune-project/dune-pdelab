@@ -304,6 +304,13 @@ namespace Dune::PDELab {
       _indent += additional_indent;
     }
 
+    //! Creates a new logger with additional indentation
+    Logger indented(int additional_indent)
+    {
+      assert(_indent + additional_indent >= 0);
+      return {*_backend,_level,_indent + additional_indent};
+    }
+
     //! Sets the maximum log level at which this Logger will actually process log messages.
     void setLevel(LogLevel level)
     {
