@@ -24,6 +24,9 @@ debian:10--gcc:
   tags:
     - "cores:4"
     - "mem:16G"
+  artifacts:
+    reports:
+      junit: Testing/cmake.xml
 
 debian:10--clang:
   <<: *common
@@ -32,3 +35,6 @@ debian:10--clang:
   tags:
     - "cores:4"
     - "mem:16G"
+  artifacts:
+    reports:
+      junit: Testing/cmake.xml
