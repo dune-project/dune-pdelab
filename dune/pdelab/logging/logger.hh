@@ -87,11 +87,11 @@ namespace Dune::PDELab {
      * \{
      */
 
-    //! Logs the given log message with the default LogLevel::notice.
+    //! Logs the given log message with the default level of the Logger.
     template<typename... Args>
     void operator()(format_string_view format, Args&&... args)
     {
-      if (_level >= LogLevel::notice) {
+      if (_default_level <= _level) {
         handle(LogLevel::notice,_indent,format,fmt::make_format_args(std::forward<Args>(args)...));
       }
     }
@@ -127,10 +127,10 @@ namespace Dune::PDELab {
       // but never run it.
       if (false)
         fmt::format(format,std::forward<Args>(args)...);
-      if (_level >= LogLevel::info)
+      if (_default_level <= _level)
       {
         std::string_view raw_format(format);
-        handle(LogLevel::info,_indent,raw_format,fmt::make_format_args(std::forward<Args>(args)...));
+        handle(_default_level,_indent,raw_format,fmt::make_format_args(std::forward<Args>(args)...));
       }
     }
 
@@ -262,6 +262,12 @@ namespace Dune::PDELab {
       return _level;
     }
 
+    //! Returns the default log level at which this Logger will log messages.
+    LogLevel defaultLevel() const
+    {
+      return _default_level;
+    }
+
     //! Returns the default indentation of messages logged with this Logger.
     int indent() const
     {
@@ -317,6 +323,12 @@ namespace Dune::PDELab {
       _level = level;
     }
 
+    //! Sets tthe default log level at which this Logger will log messages.
+    void setDefaultLevel(LogLevel default_level)
+    {
+      _default_level = default_level;
+    }
+
     //! Sets the default indentation of messages logged with this Logger.
     void setIndent(int indent)
     {
@@ -367,10 +379,11 @@ namespace Dune::PDELab {
   private:
 
     //! Internal constructor from a backend.
-    Logger(LoggerBackend& backend, LogLevel level, int indent)
+    Logger(LoggerBackend& backend, LogLevel level, int indent, LogLevel default_level = LogLevel::notice)
       : _level(level)
       , _indent(indent)
       , _backend(&backend)
+      , _default_level(default_level)
     {}
 
     //! Method for handling the actual logging.
@@ -384,6 +397,7 @@ namespace Dune::PDELab {
     LogLevel _level = LogLevel::all;
     int _indent = 0;
     LoggerBackend* _backend = nullptr;
+    LogLevel _default_level = LogLevel::notice;
 
   };
 
