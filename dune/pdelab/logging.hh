@@ -18,48 +18,45 @@ namespace Dune::PDELab {
 
 /**
  * \addtogroup logging Logging Infrastructure
- * \brief Logging of status and error messages to different targets with
- * ParameterTree-based configuration.
+ * \brief Logging of status and error messages to different targets with ParameterTree-based
+ * configuration.
  *
  * # Overview
  *
- * PDELab has a powerful, flexible logging system for reporting the current
- * status of a running program. The system revolves around a small number of
- * components:
+ * PDELab has a powerful, flexible logging system for reporting the current status of a running
+ * program. The system revolves around a small number of components:
  *
- * - The Logger is the most important class for normal users. Messages are
- * logged with the help of a Logger. Loggers are lightweight objects with value
- * semantics, so you can (and should) copy them around. Loggers can also be
- * default-constructed into an invalid state and then assigned a valid logger at
- * a later time.
+ * - The Logger is the most important class for normal users. Messages are logged with the help of a
+ *     Logger. Loggers are lightweight objects with value semantics, so you can (and should) copy
+ *     them around. Loggers can also be default-constructed into an invalid state and then assigned
+ *     a valid logger at a later time.
  *
- * - The logger backend is a mostly invisible component to which a Logger
- * forwards its log messages. Logger backends are long-lived singletons stored
- * in the logging system that carry information like the list of attached sinks
- * and defaults for new Loggers. Many Loggers can share a single logger backend,
- * and every Logger is attached to exactly one backend.
+ * - The logger backend is a mostly invisible component to which a Logger forwards its log messages.
+ *     Logger backends are long-lived singletons stored in the logging system that carry information
+ *     like the list of attached sinks and defaults for new Loggers. Many Loggers can share a single
+ *     logger backend, and every Logger is attached to exactly one backend.
  *
- * - The Sink is a class that is responsible for actually storing a log message
- * somewhere. It gets passed preprocessed log messages in the form of a
- * LogMessage object and has to write them to the terminal, a file, over the
- * network or whatever you come up with. Like backends, Sinks are managed by the
- * logging system, but you can obtain a shared_ptr to a registered sink and
- * interact with it, e.g. to change its configuration. Unlike backends, Sinks
- * can also be removed from the logging system by calling Logging::retireSink().
- * Even after retiring a sink, backends can keep using it safely until they
- * don't it any longer. There are two default Sinks connected to stdout and
- * stderr, which you can obtain via Logging::cout() and Logging::cerr().
+ * - The Sink is a class that is responsible for actually storing a log message somewhere. It gets
+ *     passed preprocessed log messages in the form of a LogMessage object and has to write them to
+ *     the terminal, a file, over the network or whatever you come up with. Like backends, Sinks are
+ *     managed by the logging system, but you can obtain a shared_ptr to a registered sink and
+ *     interact with it, e.g. to change its configuration. Unlike backends, Sinks can also be
+ *     removed from the logging system by calling Logging::retireSink(). Even after retiring a sink,
+ *     backends can keep using it safely until they don't it any longer. There are two default Sinks
+ *     connected to stdout and stderr, which you can obtain via Logging::cout() and Logging::cerr().
  *
- * - The configuration of the logging system is handled by calling static
- * functions on the central class Logging. This class contains the central
- * registries for sinks and logger backends. It must be initialized by calling
- * Logging::init() before using any part of the logging system. During
- *     initialization, it parses a ParameterTree and creates sinks and backends
- * according to the given configuration. It is also possible to register new
- * types of sinks with this configuration system. Moreover, Logging also lets
- * you centrally disable all console output, which is very convenient for
- *     parallel programs. The system mutes itself by default for all parallel
- * ranks except 0.
+ * - The configuration of the logging system is handled by calling static functions on the central
+ *     class Logging. This class contains the central registries for sinks and logger backends. It
+ *     must be initialized by calling Logging::init() before using any part of the logging system.
+ *     During initialization, it parses a ParameterTree and creates sinks and backends according to
+ *     the given configuration. It is also possible to register new types of sinks with this
+ *     configuration system. Moreover, Logging also lets you centrally disable all console output,
+ *     which is very convenient for parallel programs. The system mutes itself by default for all
+ *     parallel ranks except 0.
+ *
+ * - There will always be parts of your programs that stupidly write their output to `std::cout` et.
+ *     al. The logging system can optionally capture this output as well, turning it into one log
+ *     message per line of output.
  *
  * # Usage
  *
