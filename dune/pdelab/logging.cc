@@ -16,6 +16,7 @@
 #include <dune/pdelab/common/utility.hh>
 #include <dune/pdelab/logging.hh>
 #include <dune/pdelab/logging/loggerbackend.hh>
+#include <dune/pdelab/logging/loggingstreambuffer.hh>
 #include <dune/pdelab/logging/filesinks.hh>
 
 namespace Dune::PDELab {
@@ -165,6 +166,9 @@ namespace Dune::PDELab {
     // to state() that got passed a pointer to a comm object, which only happens in
     // init(). This allows us to catch uninitialized usage of the system.
     State(const CollectiveCommunication* comm_)
+      : cout_buf(true)
+      , cerr_buf(true)
+      , clog_buf(true)
     {
       if (not comm_)
         DUNE_THROW(LoggingError,"You must call Dune::PDELab::Logging::init() before using the logging system");
@@ -183,6 +187,12 @@ namespace Dune::PDELab {
     LogLevel unmuted_cerr = LogLevel::all;
     std::optional<CollectiveCommunication> comm;
     LogMessage::Time startup_time = LogMessage::Clock::now();
+    LoggingStreamBuffer cout_buf;
+    LoggingStreamBuffer cerr_buf;
+    LoggingStreamBuffer clog_buf;
+    std::streambuf* orig_cout_buf = nullptr;
+    std::streambuf* orig_cerr_buf = nullptr;
+    std::streambuf* orig_clog_buf = nullptr;
 
   };
 
@@ -394,6 +404,55 @@ namespace Dune::PDELab {
         logger().info("Muted console log sinks on MPI ranks > 0"_fmt);
     }
 
+    if (params.hasKey("redirect"))
+    {
+      auto level = parseLogLevel(params["redirect"]);
+
+      if (not (s.backends.count("cout") > 0))
+        Logging::registerBackend("cout",s.default_backend->_default_level);
+      Logging::redirectCout("cout",level);
+
+      if (not (s.backends.count("cerr") > 0))
+        Logging::registerBackend("cerr",s.default_backend->_default_level);
+      Logging::redirectCerr("cerr",level);
+
+      if (not (s.backends.count("clog") > 0))
+        Logging::registerBackend("clog",s.default_backend->_default_level);
+      Logging::redirectClog("clog",level);
+    }
+    else if (params.hasSub("redirect"))
+    {
+      auto& redirects = params.sub("redirect");
+
+      if (redirects.hasSub("cout"))
+      {
+        auto& config = params.sub("cout");
+        auto backend = config.get<std::string>("backend","");
+        auto level   = parseLogLevel(config.get<std::string>("level","notice"));
+        auto buffered = config.get("buffered",true);
+        Logging::redirectCout(backend,level,buffered);
+      }
+
+      if (redirects.hasSub("cerr"))
+      {
+        auto& config = params.sub("cerr");
+        auto backend = config.get<std::string>("backend","");
+        auto level   = parseLogLevel(config.get<std::string>("level","notice"));
+        auto buffered = config.get("buffered",true);
+        Logging::redirectCerr(backend,level,buffered);
+      }
+
+      if (redirects.hasSub("clog"))
+      {
+        auto& config = params.sub("clog");
+        auto backend = config.get<std::string>("backend","");
+        auto level   = parseLogLevel(config.get<std::string>("level","notice"));
+        auto buffered = config.get("buffered",true);
+        Logging::redirectClog(backend,level,buffered);
+      }
+    }
+
+
     logger().notice("Logging system initialized"_fmt);
   }
 
@@ -499,7 +558,7 @@ namespace Dune::PDELab {
     }
   }
 
-  Logger Logging::tryLogger(const ParameterTree& params, std::string_view preferred)
+  Logger Logging::componentLogger(const ParameterTree& params, std::string_view preferred)
   {
     auto& s = state();
     LoggerBackend* backend = nullptr;
@@ -638,6 +697,104 @@ namespace Dune::PDELab {
     s.cout->setLevel(s.unmuted_cout);
     s.cerr->setLevel(s.unmuted_cerr);
     s.muted = false;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Standard C++ stream redirection
+  ////////////////////////////////////////////////////////////////////////////////
+
+
+  void Logging::redirectCout(std::string_view backend, LogLevel level, bool buffered)
+  {
+    auto& s = state();
+    Logger logger = Logging::logger(backend);
+    logger.setDefaultLevel(level);
+    s.cout_buf.setLogger(logger);
+    s.cout_buf.setLineBuffered(buffered);
+    if (not s.orig_cout_buf)
+      s.orig_cout_buf = std::cout.rdbuf();
+    std::cout.rdbuf(&s.cout_buf);
+    Logging::logger().notice("Redirected std::cout to backend {} with level {}, buffered: {}"_fmt,backend,level,buffered);
+  }
+
+  void Logging::redirectCerr(std::string_view backend, LogLevel level, bool buffered)
+  {
+    auto& s = state();
+    Logger logger = Logging::logger(backend);
+    logger.setDefaultLevel(level);
+    s.cerr_buf.setLogger(logger);
+    s.cerr_buf.setLineBuffered(buffered);
+    if (not s.orig_cerr_buf)
+      s.orig_cerr_buf = std::cerr.rdbuf();
+    std::cerr.rdbuf(&s.cerr_buf);
+    Logging::logger().notice("Redirected std::cerr to backend {} with level {}, buffered: {}"_fmt,backend,level,buffered);
+  }
+
+  void Logging::redirectClog(std::string_view backend, LogLevel level, bool buffered)
+  {
+    auto& s = state();
+    Logger logger = Logging::logger(backend);
+    logger.setDefaultLevel(level);
+    s.clog_buf.setLogger(logger);
+    s.clog_buf.setLineBuffered(buffered);
+    if (not s.orig_clog_buf)
+      s.orig_clog_buf = std::clog.rdbuf();
+    std::clog.rdbuf(&s.clog_buf);
+    Logging::logger().notice("Redirected std::clog to backend {} with level {}, buffered: {}"_fmt,backend,level,buffered);
+  }
+
+  void Logging::restoreCout()
+  {
+    auto& s = state();
+    if (s.orig_cout_buf)
+    {
+      std::cout.rdbuf(s.orig_cout_buf);
+      s.orig_cout_buf = nullptr;
+      Logging::logger().notice("Stopped redirection of std::cout"_fmt);
+    }
+    else
+      Logging::logger().warning("Cannot stop redirection of std::cout, not redirected at the moment"_fmt);
+  }
+
+  void Logging::restoreCerr()
+  {
+    auto& s = state();
+    if (s.orig_cerr_buf)
+    {
+      std::cerr.rdbuf(s.orig_cerr_buf);
+      s.orig_cerr_buf = nullptr;
+      Logging::logger().notice("Stopped redirection of std::cerr"_fmt);
+    }
+    else
+      Logging::logger().warning("Cannot stop redirection of std::cerr, not redirected at the moment"_fmt);
+  }
+
+  void Logging::restoreClog()
+  {
+    auto& s = state();
+    if (s.orig_clog_buf)
+    {
+      std::clog.rdbuf(s.orig_clog_buf);
+      s.orig_clog_buf = nullptr;
+      Logging::logger().notice("Stopped redirection of std::clog"_fmt);
+    }
+    else
+      Logging::logger().warning("Cannot stop redirection of std::clog, not redirected at the moment"_fmt);
+  }
+
+  bool Logging::isCoutRedirected()
+  {
+    return state().orig_cout_buf;
+  }
+
+  bool Logging::isCerrRedirected()
+  {
+    return state().orig_cerr_buf;
+  }
+
+  bool Logging::isClogRedirected()
+  {
+    return state().orig_clog_buf;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
