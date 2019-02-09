@@ -229,4 +229,31 @@ namespace Dune::PDELab {
 
 } // end namespace Dune::PDELab
 
+
+#ifndef DOXYGEN
+
+namespace fmt {
+
+  // make it possible to format a LogLevel in a log message
+
+  template <>
+  struct formatter<Dune::PDELab::LogLevel>
+    : public formatter<std::string_view>
+  {
+
+    using Base = formatter<std::string_view>;
+
+    // we just inherit the parsing from the original formatter
+
+    template <typename FormatContext>
+    auto format(Dune::PDELab::LogLevel level, FormatContext& ctx) {
+      return Base::format(name(level),ctx);
+    }
+
+  };
+
+} // namespace fmt
+
+#endif // DOXYGEN
+
 #endif // DUNE_PDELAB_LOGGING_LOGMESSAGE_HH
