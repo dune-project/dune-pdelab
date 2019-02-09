@@ -5,6 +5,7 @@ install(
     fmt.hh
     logger.hh
     loggerbackend.hh
+    loggingstreambuffer.hh
     logmessage.hh
     patternmessagesink.hh
     sink.hh

@@ -82,6 +82,7 @@ dune_add_library(dunepdelab
   dune/pdelab/common/hostname.cc
   dune/pdelab/common/logtag.cc
   dune/pdelab/logging/logger.cc
+  dune/pdelab/logging/loggingstreambuffer.cc
   dune/pdelab/logging/logmessage.cc
   dune/pdelab/logging/patternformatsink.cc
   dune/pdelab/logging/sink.cc
