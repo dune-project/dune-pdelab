@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <dune/pdelab/common/destructiblesingletonholder.hh>
 #include <dune/pdelab/common/utility.hh>
 #include <dune/pdelab/logging.hh>
 #include <dune/pdelab/logging/loggerbackend.hh>
@@ -209,19 +210,22 @@ namespace Dune::PDELab {
 
   // This function does the one-time setup for the sink factory, mostly
   // registering default factories.
-  Logging::SinkFactoryRepository Logging::makeSinkFactoryRepository()
+  std::unique_ptr<Logging::SinkFactoryRepository> Logging::makeSinkFactoryRepository()
   {
-    Logging::SinkFactoryRepository repo;
+    auto result = std::make_unique<Logging::SinkFactoryRepository>();
+    auto& repo = *result;
     repo["file-per-rank"] = filePerRankSinkFactory;
     repo["rank-0-file"] = rank0FileSinkFactory;
     repo["null"] = nullSinkFactory;
-    return repo;
+    return std::move(result);
   }
 
   Logging::SinkFactoryRepository& Logging::sinkFactoryRepository()
   {
-    static SinkFactoryRepository repository = makeSinkFactoryRepository();
-    return repository;
+    auto& holder = destructibleSingleton<SinkFactoryRepository>(makeSinkFactoryRepository);
+    if (not holder)
+      holder.create();
+    return holder.get();
   }
 
   Logging::SinkFactory& Logging::sinkFactory(const std::string& name)
@@ -229,10 +233,17 @@ namespace Dune::PDELab {
     return sinkFactoryRepository().at(name);
   }
 
+  std::unique_ptr<Logging::State> Logging::makeState(const CollectiveCommunication* comm)
+  {
+    return std::make_unique<State>(comm);
+  }
+
   Logging::State& Logging::state(const CollectiveCommunication* comm)
   {
-    static State state(comm);
-    return state;
+    auto& holder = destructibleSingleton<State>(makeState);
+    if (not holder)
+      holder.create(comm);
+    return holder.get();
   }
 
   LoggerBackend& Logging::backend(std::string_view name)
@@ -255,7 +266,12 @@ namespace Dune::PDELab {
 
   void Logging::init(const CollectiveCommunication& comm, const ParameterTree& params)
   {
-    // initialize singleton
+    using namespace std::literals;
+
+    // initialize sink factory registry singleton if necessary
+    sinkFactoryRepository();
+
+    // initialize state singleton
     auto& s = state(&comm);
 
     // create default sinks for stdout and stderr
@@ -464,7 +480,24 @@ namespace Dune::PDELab {
     // We need to manually format the time, as doing so is not constexpr
     auto time_string = fmt::format("{:%a %F %T %Z}",local_time);
     logger().notice("Logging system initialized at {}"_fmt,time_string);
+  }
 
+  void Logging::shutdown()
+  {
+    if (isCoutRedirected())
+      restoreCout();
+    if (isCerrRedirected())
+      restoreCerr();
+    if (isClogRedirected())
+      restoreClog();
+    state().logger.notice("Shutting down logging system"_fmt);
+    destructibleSingleton<State>(makeState).destroy();
+    destructibleSingleton<SinkFactoryRepository>(makeSinkFactoryRepository).destroy();
+  }
+
+  bool Logging::initialized()
+  {
+    return destructibleSingleton<State>(makeState);
   }
 
   // Make not to use state() in here, this function must work before init().

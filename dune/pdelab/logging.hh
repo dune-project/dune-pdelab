@@ -315,13 +315,16 @@ namespace Dune::PDELab {
 
 
     // Create initial sink factory repository and register default sinks
-    static SinkFactoryRepository makeSinkFactoryRepository();
+    static std::unique_ptr<SinkFactoryRepository> makeSinkFactoryRepository();
 
     // Access the sink factory repository
     static SinkFactoryRepository& sinkFactoryRepository();
 
     // Get sink factory with given name
     static SinkFactory& sinkFactory(const std::string& name);
+
+    // Create internal logging system state
+    static std::unique_ptr<State> makeState(const CollectiveCommunication* comm);
 
     // Access the internal logging system state
     static State& state(const CollectiveCommunication* = nullptr);
@@ -356,6 +359,19 @@ namespace Dune::PDELab {
      *
      */
     static void init(const CollectiveCommunication& comm, const ParameterTree& params = {});
+
+    //! Shuts the logging system down
+    /**
+     * This function completely stops the logging system, removing all components, restoring the std streams and
+     * unregistering all sink factories. After calling this method, any attempt to use a still-existing logging
+     * component causes undefined behavior. Moreover, before calling any functions on Logging again, you must reinitialize
+     * the logging system by calling init(). After that call, you must obtain new logging components from the system,
+     * the old ones remain broken.
+     */
+    static void shutdown();
+
+    //! Returns whether the logging system is currently initialized.
+    static bool initialized();
 
     //! Registers a new SinkFactory.
     /**
