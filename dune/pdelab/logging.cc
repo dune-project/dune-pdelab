@@ -452,8 +452,19 @@ namespace Dune::PDELab {
       }
     }
 
+    std::time_t startup_time = std::chrono::system_clock::to_time_t(s.startup_time);
+    std::tm local_time;
+#ifdef DUNE_HAVE_LOCALTIME_R
+    localtime_r(&startup_time,&local_time);
+#else
+    std::tm* tm = std::localtime(&startup_time);
+    std::memcpy(&local_time,tm,sizeof(std::tm));
+#endif
 
-    logger().notice("Logging system initialized"_fmt);
+    // We need to manually format the time, as doing so is not constexpr
+    auto time_string = fmt::format("{:%a %F %T %Z}",local_time);
+    logger().notice("Logging system initialized at {}"_fmt,time_string);
+
   }
 
   // Make not to use state() in here, this function must work before init().
