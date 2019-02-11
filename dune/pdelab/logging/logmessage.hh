@@ -199,7 +199,7 @@ namespace Dune::PDELab {
     //! Returns local time of the point in time  at which this message was logged.
     /**
      * \warning The first call to this method is rather expensive, avoid it if you don't need to
-     *          know the absolute point im time at which log messages occured. It might be a better
+     *          know the absolute point in time at which log messages occured. It might be a better
      *          alternative to record the relative time since program start instead. The return
      *          value is cached internally, so subsequent calls to this method on a given LogMessage
      *          are cheap.
