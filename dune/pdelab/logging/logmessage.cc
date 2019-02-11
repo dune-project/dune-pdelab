@@ -99,8 +99,12 @@ namespace Dune::PDELab {
     {
       _local_time.emplace();
       std::time_t now = std::chrono::system_clock::to_time_t(time());
+#ifdef DUNE_HAVE_LOCALTIME_R
+      localtime_r(&now,&(*_local_time));
+#else
       std::tm* tm = std::localtime(&now);
       std::memcpy(&(*_local_time),tm,sizeof(std::tm));
+#endif
     }
     return *_local_time;
   }

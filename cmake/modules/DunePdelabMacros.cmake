@@ -7,6 +7,9 @@ else()
   find_package(fmt CONFIG)
 endif()
 
+include(CheckSymbolExists)
+check_symbol_exists(localtime_r time.h DUNE_HAVE_LOCALTIME_R)
+
 function(add_dune_petsc_flags)
   if(PETSC_FOUND)
     cmake_parse_arguments(ADD_PETSC "SOURCE_ONLY;OBJECT" "" "" ${ARGN})

@@ -53,4 +53,7 @@
 /* Define to 1 if sequential UG has been found */
 #cmakedefine PDELAB_SEQUENTIAL_UG 1
 
+/* Defined if localtime_r() is available */
+#cmakedefine DUNE_HAVE_LOCALTIME_R 1
+
 /* end dune-pdelab */
