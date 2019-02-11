@@ -239,9 +239,15 @@ namespace Dune::PDELab {
  *
  * The logging system itself supports the following configuration keys:
  *
- * | Key         | Description                                                                      |
- * |-------------|----------------------------------------------------------------------------------|
- * | muted       | Overrides the default behavior of muting all MPI ranks with `comm.rank() > 0`    |
+ * | Key              | Description                                                                  |
+ * |------------------|------------------------------------------------------------------------------|
+ * | muted            | Overrides the default behavior of muting all MPI ranks with `comm.rank() > 0`|
+ * | internal.backend | The backend used for internal log messages of the logging system             |
+ * | internal.level   | The maximum enabled log level for internal log messages                      |
+ *
+ * If you do not specify configuration for the internal logging, the system defaults to a backend
+ * called "logger" and a maximum log level of "notice". If the backend does not exist, it will be
+ * created with its configuration copied from the default backend.
  *
  * ## Redirection of C++ Standard Streams
  *

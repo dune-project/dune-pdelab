@@ -188,6 +188,7 @@ namespace Dune::PDELab {
     LogLevel unmuted_cerr = LogLevel::all;
     std::optional<CollectiveCommunication> comm;
     LogMessage::Time startup_time = LogMessage::Clock::now();
+    Logger logger;
     LoggingStreamBuffer cout_buf;
     LoggingStreamBuffer cerr_buf;
     LoggingStreamBuffer clog_buf;
@@ -413,12 +414,27 @@ namespace Dune::PDELab {
       }
     }
 
+    // configure internal logger for logging system itself
+    {
+      auto level = parseLogLevel(params.get("internal.level","notice"));
+      auto backend = params.get("internal.backend","logging");
+
+      // create default-configured logging backend if necessary
+      if (backend == "logging" and s.backends.count("logging") == 0)
+        Logging::registerBackend("logging",s.default_backend->_default_level);
+
+      s.logger = logger(backend);
+      s.logger.setLevel(level);
+    }
+
     if (params.get("muted",s.comm->rank() > 0))
     {
       mute();
       if (s.comm->size() > 0)
-        logger().info("Muted console log sinks on MPI ranks > 0"_fmt);
+        s.logger.info("Muted console log sinks on MPI ranks > 0"_fmt);
     }
+
+    // from here on out, it is allowed to log messages
 
     if (params.hasKey("redirect"))
     {
@@ -479,7 +495,7 @@ namespace Dune::PDELab {
 
     // We need to manually format the time, as doing so is not constexpr
     auto time_string = fmt::format("{:%a %F %T %Z}",local_time);
-    logger().notice("Logging system initialized at {}"_fmt,time_string);
+    s.logger.notice("Logging system initialized at {}"_fmt,time_string);
   }
 
   void Logging::shutdown()
@@ -758,7 +774,7 @@ namespace Dune::PDELab {
     if (not s.orig_cout_buf)
       s.orig_cout_buf = std::cout.rdbuf();
     std::cout.rdbuf(&s.cout_buf);
-    Logging::logger().notice("Redirected std::cout to backend {} with level {}, buffered: {}"_fmt,backend,level,buffered);
+    s.logger.info("Redirected std::cout to backend {} with level {}, buffered: {}"_fmt,backend,level,buffered);
   }
 
   void Logging::redirectCerr(std::string_view backend, LogLevel level, bool buffered)
@@ -771,7 +787,7 @@ namespace Dune::PDELab {
     if (not s.orig_cerr_buf)
       s.orig_cerr_buf = std::cerr.rdbuf();
     std::cerr.rdbuf(&s.cerr_buf);
-    Logging::logger().notice("Redirected std::cerr to backend {} with level {}, buffered: {}"_fmt,backend,level,buffered);
+    s.logger.info("Redirected std::cerr to backend {} with level {}, buffered: {}"_fmt,backend,level,buffered);
   }
 
   void Logging::redirectClog(std::string_view backend, LogLevel level, bool buffered)
@@ -784,7 +800,7 @@ namespace Dune::PDELab {
     if (not s.orig_clog_buf)
       s.orig_clog_buf = std::clog.rdbuf();
     std::clog.rdbuf(&s.clog_buf);
-    Logging::logger().notice("Redirected std::clog to backend {} with level {}, buffered: {}"_fmt,backend,level,buffered);
+    s.logger.info("Redirected std::clog to backend {} with level {}, buffered: {}"_fmt,backend,level,buffered);
   }
 
   void Logging::restoreCout()
@@ -794,10 +810,10 @@ namespace Dune::PDELab {
     {
       std::cout.rdbuf(s.orig_cout_buf);
       s.orig_cout_buf = nullptr;
-      Logging::logger().notice("Stopped redirection of std::cout"_fmt);
+      s.logger.notice("Stopped redirection of std::cout"_fmt);
     }
     else
-      Logging::logger().warning("Cannot stop redirection of std::cout, not redirected at the moment"_fmt);
+      s.logger.info("Cannot stop redirection of std::cout, not redirected at the moment"_fmt);
   }
 
   void Logging::restoreCerr()
@@ -807,10 +823,10 @@ namespace Dune::PDELab {
     {
       std::cerr.rdbuf(s.orig_cerr_buf);
       s.orig_cerr_buf = nullptr;
-      Logging::logger().notice("Stopped redirection of std::cerr"_fmt);
+      s.logger.info("Stopped redirection of std::cerr"_fmt);
     }
     else
-      Logging::logger().warning("Cannot stop redirection of std::cerr, not redirected at the moment"_fmt);
+      s.logger.warning("Cannot stop redirection of std::cerr, not redirected at the moment"_fmt);
   }
 
   void Logging::restoreClog()
@@ -820,10 +836,10 @@ namespace Dune::PDELab {
     {
       std::clog.rdbuf(s.orig_clog_buf);
       s.orig_clog_buf = nullptr;
-      Logging::logger().notice("Stopped redirection of std::clog"_fmt);
+      s.logger.info("Stopped redirection of std::clog"_fmt);
     }
     else
-      Logging::logger().warning("Cannot stop redirection of std::clog, not redirected at the moment"_fmt);
+      s.logger.warning("Cannot stop redirection of std::clog, not redirected at the moment"_fmt);
   }
 
   bool Logging::isCoutRedirected()
