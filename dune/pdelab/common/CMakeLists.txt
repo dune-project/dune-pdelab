@@ -7,6 +7,7 @@ install(FILES benchmarkhelper.hh
               checks.hh
               ${clock_hh}
               crossproduct.hh
+              destructiblesingletonholder.hh
               dofindex.hh
               elementmapper.hh
               exceptions.hh
