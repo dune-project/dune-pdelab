@@ -160,8 +160,8 @@ namespace Dune::PDELab {
     //! Returns the index of a named log message item.
     static std::size_t itemIndex(std::string_view item);
 
-    //! Parses the ParameterTree for applicable parameters and applies then to the given ParameterSink.
-    static void setParameters(PatternFormatSink& sink, const ParameterTree& params);
+    //! Parses the ParameterTree for applicable parameters and applies then to this sink.
+    void setPatternFormatParameters(const ParameterTree& params);
 
   private:
 

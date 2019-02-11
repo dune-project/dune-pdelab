@@ -72,7 +72,7 @@ namespace Dune::PDELab {
 
     auto sink = std::make_shared<FileSink>(name,level,widest_logger,file_name,mode);
 
-    PatternFormatSink::setParameters(*sink,params);
+    sink->setPatternFormatParameters(params);
     return sink;
   }
 
@@ -109,7 +109,7 @@ namespace Dune::PDELab {
     if (comm.rank() == 0)
     {
       auto sink = std::make_shared<FileSink>(name,level,widest_logger,file_name,mode);
-      PatternFormatSink::setParameters(*sink,params);
+      sink->setPatternFormatParameters(params);
       return sink;
     }
     else

@@ -223,10 +223,10 @@ namespace Dune::PDELab {
   }
 
 
-  void PatternFormatSink::setParameters(PatternFormatSink& sink, const ParameterTree& params)
+  void PatternFormatSink::setPatternFormatParameters(const ParameterTree& params)
   {
     if (params.hasKey("pattern"))
-      sink.setPattern(params["pattern"]);
+      setPattern(params["pattern"]);
   }
 
 
