@@ -2,6 +2,7 @@
 #define DUNE_PDELAB_LOGGING_PATTERNFORMATSINK_HH
 
 #include <cstdio>
+#include <functional>
 #include <string_view>
 
 #include <dune/common/parametertree.hh>
@@ -55,14 +56,62 @@ namespace Dune::PDELab {
    * You can set the pattern via the ParameterTree key "pattern".
    *
    * As a programmer, you use this class by inheriting from it. In your `process()` implementation,
-   * you call pattern() and arguments() and pass those to a version of `fmt::vformat()` or
-   * `fmt::vprint()`.
+   * create a named instance of `Arguments` and pass it to a version of `fmt::vformat()` or
+   * `fmt::vprint()`, together with the pattern obtained by calling `pattern()`.
    */
   class PatternFormatSink
     : public Sink
   {
 
-  public:
+  protected:
+
+    static constexpr std::size_t ArgumentDataBufferSize = 200;
+    static constexpr std::size_t ArgumentArgsBufferSize = 200;
+
+    //! Stores the required arguments for the pattern.
+    /**
+     * This class provides opaque storage for the format arguments required by
+     * the current pattern. An object of this type should be constructed in
+     * derived classes before formatting the pattern. This type implicitly casts
+     * to `fmt::format_args`, which can be used passed to the {fmt} formatting
+     * functions.
+     *
+     * \note You **must** create a named object of this type; trying to feed a
+     *       temporary object to {}fmt} will cause a compiler error.
+     */
+    class Arguments
+    {
+
+      fmt::format_args _args;
+      std::function<void()> _cleanup;
+      char* _data_buffer[ArgumentDataBufferSize];
+      char* _args_buffer[ArgumentArgsBufferSize];
+
+    public:
+
+      //! Create argument store for the given LogMessage and PatternFormatSink.
+      Arguments(const LogMessage&, const PatternFormatSink&);
+
+      //! Arguments cannot be copied or moved.
+      Arguments(const Arguments&) = delete;
+
+      //! Arguments cannot be copied or moved.
+      Arguments& operator=(const Arguments&) = delete;
+
+      //! Free any resources allocated by Arguments.
+      ~Arguments()
+      {
+        if (_cleanup)
+          _cleanup();
+      }
+
+      //! Named variables of type Arguments cast implicitly into `fmt::format_args`.
+      operator fmt::format_args&() &
+      {
+        return _args;
+      }
+
+    };
 
     //! Constructs a PatternFormatSink with the default pattern "{reltime:9%M:%S} {msg}".
     PatternFormatSink(
@@ -72,7 +121,9 @@ namespace Dune::PDELab {
       );
 
     //! Constructs a {fmt} argument list from the LogMessage that can be used to format the stored pattern.
-    fmt::format_args arguments(const LogMessage& msg) const;
+    Arguments arguments(const LogMessage& msg) const;
+
+  public:
 
     //! Returns the {fmt} format pattern for formatting the log messages for this sink.
     /**

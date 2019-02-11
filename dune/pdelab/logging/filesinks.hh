@@ -51,7 +51,8 @@ namespace Dune::PDELab {
 
     void process(const LogMessage& msg)
     {
-      fmt::vprint(_file, fmt::to_string_view(pattern()), arguments(msg));
+      PatternFormatSink::Arguments args(msg,*this);
+      fmt::vprint(_file, fmt::to_string_view(pattern()), args);
     }
 
   private:

@@ -39,7 +39,8 @@ namespace Dune::PDELab {
 
     void process(const LogMessage& msg) override
     {
-      fmt::vprint(_stream,pattern(),arguments(msg));
+      PatternFormatSink::Arguments args(msg,*this);
+      fmt::vprint(_stream,pattern(),args);
     }
 
   private:
