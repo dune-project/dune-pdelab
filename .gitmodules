@@ -1,0 +1,3 @@
+[submodule "vendor/vectorclass"]
+	path = vendor/vectorclass
+	url = https://github.com/darealshinji/vectorclass.git
