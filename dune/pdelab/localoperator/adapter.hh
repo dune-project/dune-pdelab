@@ -24,7 +24,7 @@ namespace Dune {
       template<typename S, typename I>
       void dump_timers(S& timestream, I ident, bool flag) const
       {
-         LOP::dump_timers(timestream, ident, flag);
+         _lop.dump_timers(timestream, ident, flag);
       }
 
       static constexpr bool disableFunctionSpaceFlavors()
