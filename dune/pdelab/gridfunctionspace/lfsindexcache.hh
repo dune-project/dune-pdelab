@@ -290,15 +290,37 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
-      LFSIndexCacheBase(const LFS& lfs, const C& constraints, bool enable_constraints_caching)
-        : _lfs(lfs)
+      LFSIndexCacheBase(const C& constraints, bool enable_constraints_caching)
+        : _lfs(nullptr)
         , _enable_constraints_caching(enable_constraints_caching)
-        , _container_indices(lfs.maxSize())
-        , _dof_flags(lfs.maxSize(),0)
-        , _constraints_iterators(lfs.maxSize())
         , _inverse_cache_built(false)
-        , _gfs_constraints(constraints)
+        , _gfs_constraints(&constraints)
+      {}
+
+      LFSIndexCacheBase(const LFS& lfs, const C& constraints, bool enable_constraints_caching)
+        : LFSIndexCacheBase(constraints,enable_constraints_caching)
       {
+        attach(lfs);
+      }
+
+      void attach(const LFS& lfs)
+      {
+        assert(not attached());
+        _container_indices.resize(lfs.maxSize());
+        _dof_flags.assign(lfs.maxSize(),0);
+        _constraints_iterators.resize(lfs.maxSize());
+        _lfs = &lfs;
+      }
+
+      void detach()
+      {
+        assert(attached());
+        _lfs = nullptr;
+      }
+
+      bool attached() const
+      {
+        return _lfs;
       }
 
       void update()
@@ -306,7 +328,7 @@ namespace Dune {
         if(fast) {
           _container_indices[0].resize(2);
           _container_indices[0][0] = 0;
-          _container_indices[0][1] = LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(_lfs.dofIndex(0));
+          _container_indices[0][1] = LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(_lfs->dofIndex(0));
         }
         else {
 
@@ -322,7 +344,7 @@ namespace Dune {
           typedef ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount> LeafSizeVector;
           LeafSizeVector leaf_sizes;
           leaf_sizes.resize(TypeTree::TreeInfo<LFS>::leafCount);
-          extract_lfs_leaf_sizes(_lfs,leaf_sizes.begin());
+          extract_lfs_leaf_sizes(*_lfs,leaf_sizes.begin());
 
           // perform the actual mapping
           map_dof_indices_to_container_indices<
@@ -331,20 +353,20 @@ namespace Dune {
             typename LeafSizeVector::const_iterator,
             TypeTree::TreeInfo<Ordering>::depth,
             fast
-            > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs.subSpaceDepth());
-          TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
+            > index_mapper(_lfs->_dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs->subSpaceDepth());
+          TypeTree::applyToTree(_lfs->gridFunctionSpace().ordering(),index_mapper);
 
           if (_enable_constraints_caching)
             {
               _constraints.resize(0);
               std::vector<std::pair<size_type,typename C::const_iterator> > non_dirichlet_constrained_dofs;
               size_type constraint_entry_count = 0;
-              size_type end = fast ? 1 : _lfs.size();
+              size_type end = fast ? 1 : _lfs->size();
               for (size_type i = 0; i < end; ++i)
                 {
                   const CI& container_index = _container_indices[i];
-                  const typename C::const_iterator cit = _gfs_constraints.find(container_index);
-                  if (cit == _gfs_constraints.end())
+                  const typename C::const_iterator cit = _gfs_constraints->find(container_index);
+                  if (cit == _gfs_constraints->end())
                     {
                       _dof_flags[i] = DOF_NONCONSTRAINED;
                       continue;
@@ -386,7 +408,7 @@ namespace Dune {
 
       const DI& dofIndex(size_type i) const
       {
-        return _lfs.dofIndex(i);
+        return _lfs->dofIndex(i);
       }
 
       const CI& containerIndex(size_type i) const
@@ -401,7 +423,7 @@ namespace Dune {
 
         // i did not exist in the cache, map it into the newly inserted container index
         if (r.second)
-            _lfs.gridFunctionSpace().ordering().mapIndex(i.view(),r.first->second);
+            _lfs->gridFunctionSpace().ordering().mapIndex(i.view(),r.first->second);
 
         // return cached container index
         return r.first->second;
@@ -431,12 +453,12 @@ namespace Dune {
 
       const LocalFunctionSpace& localFunctionSpace() const
       {
-        return _lfs;
+        return *_lfs;
       }
 
       size_type size() const
       {
-        return _lfs.size();
+        return _lfs->size();
       }
 
       std::pair<size_type,bool> localIndex(const ContainerIndex& ci) const
@@ -531,7 +553,7 @@ namespace Dune {
 
       }
 
-      const LFS& _lfs;
+      const LFS* _lfs;
       const bool _enable_constraints_caching;
       CIVector _container_indices;
       std::vector<unsigned char> _dof_flags;
@@ -543,7 +565,7 @@ namespace Dune {
       mutable bool _inverse_cache_built;
       mutable InverseMap _inverse_map;
 
-      const C& _gfs_constraints;
+      const C* _gfs_constraints;
 
     };
 
@@ -586,26 +608,42 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
-      explicit LFSIndexCacheBase(const LFS& lfs)
-        : _lfs(lfs)
-        , _container_indices(lfs.maxSize())
+      template<typename C = int>
+      LFSIndexCacheBase(const C& = 0, bool = false)
+        : _lfs(nullptr)
+      {}
+
+      template<typename C = int>
+      explicit LFSIndexCacheBase(const LFS& lfs, const C& = 0, bool = false)
+        : LFSIndexCacheBase()
       {
+        attach(lfs);
       }
 
-      template<typename C>
-      LFSIndexCacheBase(const LFS& lfs, const C& c, bool enable_constraints_caching)
-        : _lfs(lfs)
-        , _container_indices(lfs.maxSize())
+      void attach(const LFS& lfs)
       {
+        assert(not attached());
+        _container_indices.resize(lfs.maxSize());
+        _lfs = &lfs;
       }
 
+      void detach()
+      {
+        assert(attached());
+        _lfs = nullptr;
+      }
+
+      bool attached() const
+      {
+        return _lfs;
+      }
 
       void update()
       {
         if(fast) {
           _container_indices[0].resize(2);
           _container_indices[0][0] = 0;
-          _container_indices[0][1] = LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(_lfs.dofIndex(0));
+          _container_indices[0][1] = LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(_lfs->dofIndex(0));
         }
         else {
 
@@ -618,7 +656,7 @@ namespace Dune {
           typedef ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount> LeafSizeVector;
           LeafSizeVector leaf_sizes;
           leaf_sizes.resize(TypeTree::TreeInfo<LFS>::leafCount);
-          extract_lfs_leaf_sizes(_lfs,leaf_sizes.begin());
+          extract_lfs_leaf_sizes(*_lfs,leaf_sizes.begin());
 
           // perform the actual mapping
           map_dof_indices_to_container_indices<
@@ -627,14 +665,14 @@ namespace Dune {
             typename LeafSizeVector::const_iterator,
             TypeTree::TreeInfo<Ordering>::depth,
             fast
-            > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs.subSpaceDepth());
-          TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
+            > index_mapper(_lfs->_dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs->subSpaceDepth());
+          TypeTree::applyToTree(_lfs->gridFunctionSpace().ordering(),index_mapper);
         }
       }
 
       const DI& dofIndex(size_type i) const
       {
-        return _lfs.dofIndex(i);
+        return _lfs->dofIndex(i);
       }
 
       const CI& containerIndex(size_type i) const
@@ -649,7 +687,7 @@ namespace Dune {
 
         // i did not exist in the cache, map it into the newly inserted container index
         if (r.second)
-            _lfs.gridFunctionSpace().ordering().mapIndex(i.view(),r.first->second);
+            _lfs->gridFunctionSpace().ordering().mapIndex(i.view(),r.first->second);
 
         // return cached container index
         return r.first->second;
@@ -677,12 +715,12 @@ namespace Dune {
 
       const LocalFunctionSpace& localFunctionSpace() const
       {
-        return _lfs;
+        return *_lfs;
       }
 
       size_type size() const
       {
-        return _lfs.size();
+        return _lfs->size();
       }
 
       bool constraintsCachingEnabled() const
@@ -692,7 +730,7 @@ namespace Dune {
 
     private:
 
-      const LFS& _lfs;
+      const LFS* _lfs;
       CIVector _container_indices;
       mutable CIMap _container_index_map;
       const ConstraintsVector _constraints;
@@ -745,12 +783,34 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
+      LFSIndexCacheBase(const C& constraints)
+        : _lfs(nullptr)
+        , _gfs_constraints(&constraints)
+      {}
+
       LFSIndexCacheBase(const LFS& lfs, const C& constraints)
-        : _lfs(lfs)
-        , _dof_flags(lfs.maxSize())
-        , _constraints_iterators(lfs.maxSize())
-        , _gfs_constraints(constraints)
+        : LFSIndexCacheBase(constraints)
       {
+        attach(lfs);
+      }
+
+      bool attached() const
+      {
+        return _lfs;
+      }
+
+      void attach(const LFS& lfs)
+      {
+        assert(not attached());
+        _dof_flags.assign(lfs.maxSize(),0);
+        _constraints_iterators.resize(lfs.maxSize());
+        _lfs = &lfs;
+      }
+
+      void detach()
+      {
+        assert(attached());
+        _lfs = nullptr;
       }
 
       void update()
@@ -763,11 +823,11 @@ namespace Dune {
           _constraints.resize(0);
           std::vector<std::pair<size_type,typename C::const_iterator> > non_dirichlet_constrained_dofs;
           size_type constraint_entry_count = 0;
-          for (size_type i = 0; i < _lfs.size(); ++i)
+          for (size_type i = 0; i < _lfs->size(); ++i)
             {
-              const DI& dof_index = _lfs.dofIndex(i);
-              const typename C::const_iterator cit = _gfs_constraints.find(dof_index);
-              if (cit == _gfs_constraints.end())
+              const DI& dof_index = _lfs->dofIndex(i);
+              const typename C::const_iterator cit = _gfs_constraints->find(dof_index);
+              if (cit == _gfs_constraints->end())
                 {
                   _dof_flags[i] = DOF_NONCONSTRAINED;
                   continue;
@@ -808,12 +868,12 @@ namespace Dune {
 
       const DI& dofIndex(size_type i) const
       {
-        return _lfs.dofIndex(i);
+        return _lfs->dofIndex(i);
       }
 
       CI containerIndex(size_type i) const
       {
-        return CI(_lfs.dofIndex(i)[0]);
+        return CI(_lfs->dofIndex(i)[0]);
       }
 
       const CI& containerIndex(const DI& i) const
@@ -845,24 +905,24 @@ namespace Dune {
 
       const LocalFunctionSpace& localFunctionSpace() const
       {
-        return _lfs;
+        return *_lfs;
       }
 
       size_type size() const
       {
-        return _lfs.size();
+        return _lfs->size();
       }
 
     private:
 
-      const LFS& _lfs;
+      const LFS* _lfs;
       CIVector _container_indices;
       std::vector<unsigned char> _dof_flags;
       std::vector<std::pair<ConstraintsIterator,ConstraintsIterator> > _constraints_iterators;
       mutable CIMap _container_index_map;
       ConstraintsVector _constraints;
 
-      const C& _gfs_constraints;
+      const C* _gfs_constraints;
 
     };
 
@@ -907,17 +967,34 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
-      explicit LFSIndexCacheBase(const LFS& lfs)
-        : _lfs(lfs)
+      template<typename C = int>
+      explicit LFSIndexCacheBase(const C& = 0)
+        : _lfs(nullptr)
+      {}
+
+      template<typename C = int>
+      explicit LFSIndexCacheBase(const LFS& lfs, const C& = 0)
+        : LFSIndexCacheBase()
       {
+        attach(lfs);
       }
 
-      template<typename C>
-      LFSIndexCacheBase(const LFS& lfs, const C& c)
-        : _lfs(lfs)
+      bool attached() const
       {
+        return _lfs;
       }
 
+      void attach(const LFS& lfs)
+      {
+        assert(not attached());
+        _lfs = &lfs;
+      }
+
+      void detach()
+      {
+        assert(attached());
+        _lfs = nullptr;
+      }
 
       void update()
       {
@@ -926,7 +1003,7 @@ namespace Dune {
 
       CI containerIndex(size_type i) const
       {
-        return CI(_lfs.dofIndex(i)[0]);
+        return CI(_lfs->dofIndex(i)[0]);
       }
 
       CI containerIndex(const DI& i) const
@@ -956,17 +1033,17 @@ namespace Dune {
 
       const LocalFunctionSpace& localFunctionSpace() const
       {
-        return _lfs;
+        return *_lfs;
       }
 
       size_type size() const
       {
-        return _lfs.size();
+        return _lfs->size();
       }
 
     private:
 
-      const LFS& _lfs;
+      const LFS* _lfs;
       mutable CIMap _container_index_map;
       const ConstraintsVector _constraints;
 
@@ -980,16 +1057,15 @@ namespace Dune {
 
     public:
 
-      template<typename CC>
-      LFSIndexCache(const LFS& lfs, const CC& c, bool enable_constraints_caching = !std::is_same<C,EmptyTransformation>::value)
+      template<typename CC = int>
+      explicit LFSIndexCache(const LFS& lfs, const CC& c = 0, bool enable_constraints_caching = !std::is_same<C,EmptyTransformation>::value)
         : LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag,fast>(lfs,c,enable_constraints_caching)
-      {
-      }
+      {}
 
-      explicit LFSIndexCache(const LFS& lfs)
-        : LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag,fast>(lfs)
-      {
-      }
+      template<typename CC = int>
+      explicit LFSIndexCache(const CC& c = 0, bool enable_constraints_caching = !std::is_same<C,EmptyTransformation>::value)
+        : LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag,fast>(c,enable_constraints_caching)
+      {}
 
     };
 

@@ -39,6 +39,8 @@ namespace Dune {
 
       typedef E ElementType;
 
+      using value_type = E;
+
       typedef RowCache RowIndexCache;
       typedef ColCache ColIndexCache;
 

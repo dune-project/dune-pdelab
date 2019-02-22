@@ -123,7 +123,7 @@ namespace Dune {
        * \endcode
        *
        **/
-      template<typename Backend, typename VU, typename VV, typename E>
+      template<typename Backend, typename VU, typename VV, typename E = typename VU::Field>
       using Matrix = typename impl::BackendMatrixSelector<Backend, VU, VV, E>::Type;
 
 

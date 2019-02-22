@@ -14,6 +14,17 @@ namespace Dune {
 
     namespace ISTL {
 
+#ifndef DOXYGEN
+
+      namespace Impl {
+
+        template<typename M, typename GFSV, typename GFSU, typename Tag>
+        struct build_bcrs_pattern_type;
+
+      }
+
+#endif // DOXYGEN
+
       template<typename GFSV, typename GFSU, typename C, typename Stats>
       class BCRSMatrix
         : public Backend::impl::Wrapper<C>
@@ -33,14 +44,20 @@ namespace Dune {
         typedef GFSU TrialGridFunctionSpace;
         typedef GFSV TestGridFunctionSpace;
 
+        using TrialSpace = GFSU;
+        using TestSpace  = GFSV;
+
         typedef typename GFSV::Ordering::Traits::ContainerIndex RowIndex;
         typedef typename GFSU::Ordering::Traits::ContainerIndex ColIndex;
 
-        typedef typename ISTL::build_pattern_type<C,GFSV,GFSU,typename GFSV::Ordering::ContainerAllocationTag>::type Pattern;
+        typedef typename ISTL::Impl::build_bcrs_pattern_type<C,GFSV,GFSU,typename GFSV::Ordering::ContainerAllocationTag>::type Pattern;
 
         typedef Stats PatternStatistics;
 
         using value_type = E;
+
+        using Domain = Backend::Vector<GFSU,E>;
+        using Range  = Backend::Vector<GFSV,E>;
 
 #ifndef DOXYGEN
 
@@ -69,6 +86,8 @@ namespace Dune {
         template<typename GO>
         explicit BCRSMatrix (const GO& go)
           : _container(std::make_shared<Container>())
+          , _trial_space(&go.trialGridFunctionSpace())
+          , _test_space(&go.testGridFunctionSpace())
         {
           _stats = go.matrixBackend().buildPattern(go,*this);
         }
@@ -85,6 +104,8 @@ namespace Dune {
         template<typename GO>
         BCRSMatrix (const GO& go, Container& container)
           : _container(Dune::stackobject_to_shared_ptr(container))
+          , _trial_space(&go.trialGridFunctionSpace())
+          , _test_space(&go.testGridFunctionSpace())
         {
           _stats = go.matrixBackend().buildPattern(go,*this);
         }
@@ -92,6 +113,8 @@ namespace Dune {
         template<typename GO>
         BCRSMatrix (const GO& go, const E& e)
           : _container(std::make_shared<Container>())
+          , _trial_space(&go.trialGridFunctionSpace())
+          , _test_space(&go.testGridFunctionSpace())
         {
           _stats = go.matrixBackend().buildPattern(go,*this);
           (*_container) = e;
@@ -99,15 +122,21 @@ namespace Dune {
 
         //! Creates an BCRSMatrix without allocating an underlying ISTL matrix.
         explicit BCRSMatrix (Backend::unattached_container = Backend::unattached_container())
+          : _trial_space(nullptr)
+          , _test_space(nullptr)
         {}
 
         //! Creates an BCRSMatrix with an empty underlying ISTL matrix.
         explicit BCRSMatrix (Backend::attached_container)
           : _container(std::make_shared<Container>())
+          , _trial_space(nullptr)
+          , _test_space(nullptr)
         {}
 
         BCRSMatrix(const BCRSMatrix& rhs)
           : _container(std::make_shared<Container>(*(rhs._container)))
+          , _trial_space(rhs._trial_space)
+          , _test_space(rhs._test_space)
         {}
 
         BCRSMatrix& operator=(const BCRSMatrix& rhs)
@@ -123,6 +152,8 @@ namespace Dune {
             {
               _container = std::make_shared<Container>(*(rhs._container));
             }
+          _trial_space = rhs._trial_space;
+          _test_space = rhs._test_space;
           return *this;
         }
 
@@ -251,9 +282,39 @@ namespace Dune {
           ISTL::write_matrix_element_if_exists_to_block(diagonal_entry,ISTL::container_tag(*_container),*_container,ri,ri,ri.size()-1,ri.size()-1);
         }
 
+        const TrialSpace& trialSpace() const
+        {
+          return *_trial_space;
+        }
+
+        const TestSpace& testSpace() const
+        {
+          return *_test_space;
+        }
+
+        void attach(const TrialSpace& trial_space, const TestSpace& test_space)
+        {
+          _trial_space = &trial_space;
+          _test_space = &test_space;
+        }
+
+        void mv(const Domain& x, Range& y) const
+        {
+          using Backend::native;
+          native(*this).mv(native(x),native(y));
+        }
+
+        void usmv(E alpha, const Domain& x, Range& y) const
+        {
+          using Backend::native;
+          native(*this).usmv(alpha,native(x),native(y));
+        }
+
       private:
 
         std::shared_ptr<Container> _container;
+        const TrialSpace* _trial_space;
+        const TestSpace* _test_space;
         std::vector<PatternStatistics> _stats;
 
       };

@@ -5,9 +5,18 @@
 #define DUNE_PDELAB_COMMON_TYPETRAITS_HH
 
 #include <dune/common/typetraits.hh>
+#include <dune/common/std/type_traits.hh>
 #include <dune/typetree/typetraits.hh>
 
 namespace Dune {
+
+  namespace Std {
+
+    template<typename T>
+    constexpr bool to_true_v = to_true_type<T>::value;
+
+  }
+
   namespace PDELab {
 
     // Import AlwaysVoid from TypeTree library
@@ -43,6 +52,15 @@ namespace Dune {
 
     template<typename T>
     using IsGridFunction = std::integral_constant<bool,impl::IsGridFunction<std::decay_t<T>>::value>;
+
+    struct OnlyMovable
+    {
+      OnlyMovable() = default;
+      OnlyMovable(const OnlyMovable&) = delete;
+      OnlyMovable(OnlyMovable&&) = default;
+      OnlyMovable& operator=(const OnlyMovable&) = delete;
+      OnlyMovable& operator=(OnlyMovable&&) = delete;
+    };
 
   } // end namespace PDELab
 } // end namespace Dune

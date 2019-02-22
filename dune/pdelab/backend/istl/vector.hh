@@ -39,6 +39,7 @@ namespace Dune {
         typedef typename Container::size_type size_type;
 
         using value_type = E;
+        using Field = E;
 
         typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
 

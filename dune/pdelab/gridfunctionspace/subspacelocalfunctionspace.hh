@@ -47,6 +47,8 @@ namespace Dune {
 
       public:
 
+        using Flavor = typename LFS::Flavor;
+
         typedef typename LFS::Traits Traits;
 
         template<typename... T>
@@ -92,29 +94,29 @@ namespace Dune {
     // specialized version of LocalFunctionSpace interface class
     // This class injects SubSpaceLocalFunctionSpaceNode as an intermediate base class
     // to fix the DOFIndex handling in bind().
-    template <typename BaseGFS, typename SubSpaceTreePath>
-    class LocalFunctionSpace<gfs::GridFunctionSubSpace<BaseGFS,SubSpaceTreePath>, AnySpaceTag>
+    template <typename BaseGFS, typename SubSpaceTreePath, typename Flavor>
+    class LocalFunctionSpace<gfs::GridFunctionSubSpace<BaseGFS,SubSpaceTreePath>, Flavor>
       : public gfs::SubSpaceLocalFunctionSpaceNode<gfs::GridFunctionSubSpace<BaseGFS,SubSpaceTreePath>,
                                                    typename TypeTree::TransformTree<
                                                      gfs::GridFunctionSubSpace<BaseGFS,SubSpaceTreePath>,
-                                                     gfs_to_lfs<gfs::GridFunctionSubSpace<
-                                                                  BaseGFS,
-                                                                  SubSpaceTreePath
-                                                                  >
-                                                                >
+                                                     gfs_to_lfs<
+                                                       gfs_to_lfs_params<
+                                                         gfs::GridFunctionSubSpace<
+                                                           BaseGFS,
+                                                           SubSpaceTreePath
+                                                           >,
+                                                         Flavor
+                                                         >
+                                                       >
                                                      >::Type
                                                    >
     {
 
       typedef gfs::GridFunctionSubSpace<BaseGFS,SubSpaceTreePath> GFS;
 
-      typedef gfs::SubSpaceLocalFunctionSpaceNode<
-        GFS,
-        typename TypeTree::TransformTree<
-          GFS,
-          gfs_to_lfs<GFS>
-          >::Type
-        > BaseT;
+      using Transformation = TypeTree::TransformTree<GFS,gfs_to_lfs<gfs_to_lfs_params<GFS,Flavor>>>;
+
+      using Base = gfs::SubSpaceLocalFunctionSpaceNode<GFS,typename Transformation::type>;
 
       template<typename>
       friend struct PropagateGlobalStorageVisitor;
@@ -131,21 +133,21 @@ namespace Dune {
     public:
 
       LocalFunctionSpace(const GFS & gfs)
-        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
+        : Base(Transformation::transform(gfs))
       {
         this->_dof_indices = &(this->_dof_index_storage);
         this->setup(*this);
       }
 
       LocalFunctionSpace(std::shared_ptr<const GFS> pgfs)
-        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform_storage(pgfs))
+        : Base(Transformation::transform_storage(pgfs))
       {
         this->_dof_indices = &(this->_dof_index_storage);
         this->setup(*this);
       }
 
       LocalFunctionSpace(const LocalFunctionSpace & lfs)
-        : BaseT(lfs)
+        : Base(lfs)
       {
         // We need to reset the DOFIndex storage pointers in the new LFS tree,
         // as they are still pointing to the _dof_index_storage of the

@@ -3,6 +3,7 @@
 
 #include <utility>
 #include <tuple>
+#include <string_view>
 
 #include <dune/common/version.hh>
 #include <dune/grid/common/partitionset.hh>
@@ -17,7 +18,8 @@ namespace Dune {
       processor = 0, //!< processor boundary intersection (neighbor() == false && boundary() == false) or outside entity not in EntitySet
       skeleton = 1,  //!< skeleton intersection (neighbor() == true && boundary() == false)
       boundary = 2,  //!< domain boundary intersection (neighbor() == false && boundary() == true)
-      periodic = 3   //!< periodic boundary intersection (neighbor() == true && boundary() == true)
+      periodic = 3,  //!< periodic boundary intersection (neighbor() == true && boundary() == true)
+      invalid  = 127
 
     };
 
@@ -56,6 +58,24 @@ namespace Dune {
         return std::make_tuple(type,decltype(is.outside()){});
     }
 
+    constexpr std::string_view label(IntersectionType it)
+    {
+      switch (it)
+        {
+        case IntersectionType::processor:
+          return "processor";
+        case IntersectionType::skeleton:
+          return "skeleton";
+        case IntersectionType::boundary:
+          return "boundary";
+        case IntersectionType::periodic:
+          return "periodic";
+        case IntersectionType::invalid:
+          return "invalid";
+        default:
+          return "illegal";
+        }
+    }
 
   } // namespace PDELab
 } // namespace Dune

@@ -66,6 +66,7 @@ namespace Dune {
       using CodimMask = std::bitset<GV::dimension + 1>;
 
       using CoordinateField = typename Grid::ctype;
+      using Field = CoordinateField;
 
       constexpr static Index invalidIndex()
       {
@@ -122,6 +123,7 @@ namespace Dune {
       using CollectiveCommunication = typename Traits::CollectiveCommunication;
       using CodimMask = typename Traits::CodimMask;
       using CoordinateField = typename Traits::CoordinateField;
+      using Field = typename Traits::Field;
       using size_type = typename Traits::size_type;
       using dim_type = typename Traits::dim_type;
 

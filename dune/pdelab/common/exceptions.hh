@@ -18,6 +18,14 @@ namespace Dune {
       : public Dune::Exception
     {};
 
+    //! Assembly-related error.
+    class AssemblyError
+      : public Exception
+    {};
+
+    class LinearAlgebraError
+      : public Exception
+    {};
 
     //! GridFunctionSpace-related error.
     class GridFunctionSpaceError
