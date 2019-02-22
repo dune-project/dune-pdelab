@@ -156,6 +156,16 @@ namespace Dune {
         return _container.base();
       }
 
+      typename BaseContainer::value_type* data()
+      {
+        return base().data();
+      }
+
+      const typename BaseContainer::value_type* data() const
+      {
+        return base().data();
+      }
+
       //! Constructor
       WeightedMatrixAccumulationView(Container& container, weight_type weight)
         : _container(container)
@@ -421,6 +431,16 @@ namespace Dune {
           const BaseContainer& base() const
           {
             return _container;
+          }
+
+          typename BaseContainer::value_type* data()
+          {
+            return base().data();
+          }
+
+          const typename BaseContainer::value_type* data() const
+          {
+            return base().data();
           }
 
           //! Direct (unmapped) access to the (i,j)-th entry of the matrix.

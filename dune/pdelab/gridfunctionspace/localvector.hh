@@ -148,6 +148,16 @@ namespace Dune {
         return _container.base();
       }
 
+      typename BaseContainer::value_type* data()
+      {
+        return base().data();
+      }
+
+      const typename BaseContainer::value_type* data() const
+      {
+        return base().data();
+      }
+
     private:
       C& _container;
       weight_type _weight;
@@ -274,6 +284,16 @@ namespace Dune {
       const BaseContainer& base() const
       {
         return _container;
+      }
+
+      typename BaseContainer::value_type* data()
+      {
+        return base().data();
+      }
+
+      const typename BaseContainer::value_type* data() const
+      {
+        return base().data();
       }
 
       //! Default constructor.
