@@ -6,7 +6,6 @@
 
 #include <dune/pdelab/backend/istl/geneo/subdomainbasis.hh>
 #include <dune/pdelab/backend/istl/geneo/arpackpp_geneo.hh>
-#include <dune/istl/cholmod.hh>
 #include <random>
 
 #include <dune/istl/matrixmarket.hh>
