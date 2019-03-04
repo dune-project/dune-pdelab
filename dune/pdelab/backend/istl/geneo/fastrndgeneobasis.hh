@@ -98,10 +98,12 @@ namespace Dune {
 
           // Apply D^-1/2
           for (int j = 0; j < ext.N(); j++) {
-            if (native(AF_exterior)[j][j] != 1.0)
-              ext[j] = distribution(generator) / std::sqrt(native(AF_exterior)[j][j]);
+              for(int j_block = 0; j_block < ISTLM::block_type::rows; j_block++){
+            if (native(AF_exterior)[j][j][j_block][j_block] != 1.0)
+              ext[j][j_block] = distribution(generator) / std::sqrt(native(AF_exterior)[j][j][j_block][j_block]);
             else
-              ext[j] = 0.0;
+              ext[j][j_block] = 0.0;
+          }
           }
           timer_rnd.stop();
 
