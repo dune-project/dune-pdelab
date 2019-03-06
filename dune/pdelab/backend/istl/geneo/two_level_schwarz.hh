@@ -37,7 +37,7 @@ namespace Dune {
           \param n The number of iterations to perform.
           \param w The relaxation factor.
         */
-        TwoLevelOverlappingAdditiveSchwarz (const GFS& gfs, const M& AF, const M_EXTERIOR& AF_exterior, std::shared_ptr<CoarseSpace<X> > coarse_space, bool coarse_space_active = true, bool hybrid = false, int verbosity = 0)
+        TwoLevelOverlappingAdditiveSchwarz (const GFS& gfs, const M& AF, const M_EXTERIOR& AF_exterior, std::shared_ptr<CoarseSpace<X> > coarse_space, const X& part_unity, bool restrictedMode = true, bool coarse_space_active = true, bool hybrid = false, int verbosity = 0)
           : verbosity_(verbosity),
             hybrid_(hybrid),
             coarse_space_active_(coarse_space_active),
@@ -46,6 +46,8 @@ namespace Dune {
             AF_exterior_(AF_exterior),
             solverf_(Dune::PDELab::Backend::native(AF),false),
             coarse_space_(coarse_space),
+            part_unity_(part_unity),
+            restrictedMode_(restrictedMode),
             coarse_solver_ (*coarse_space_->get_coarse_system()),
             coarse_defect_(coarse_space_->basis_size(), coarse_space_->basis_size()),
             prolongated_(gfs_, 0.0)
@@ -74,6 +76,16 @@ namespace Dune {
             solverf_.apply(v,b,result);
 
             Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs_,v);
+
+            if (restrictedMode_) {
+              std::transform(
+                v.begin(),v.end(),
+                             part_unity_.begin(),
+                v.begin(),
+                std::multiplies<>()
+              );
+            }
+
             // Just add local results and return in 1-level Schwarz case
             gfs_.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
 
@@ -82,6 +94,24 @@ namespace Dune {
             Y b(d); // need copy, since solver overwrites right hand side
             Dune::InverseOperatorResult result;
             solverf_.apply(v,b,result);
+
+            if (restrictedMode_) {
+              using Dune::PDELab::Backend::native;
+              for (int j = 0; j < v.N(); j++) {
+                for(int j_block = 0; j_block < ISTLM::block_type::rows; j_block++){
+                  if (native(part_unity_)[j][j_block] == 0.0)
+                    native(v)[j][j_block] *= .5;
+                  else
+                    native(v)[j][j_block] *= native(part_unity_)[j][j_block];
+                }
+              }
+              /*std::transform(
+                v.begin(),v.end(),
+                             part_unity_.begin(),
+                             v.begin(),
+                             std::multiplies<>()
+              );*/
+            }
 
             gfs_.gridView().comm().barrier();
             Dune::Timer timer_coarse_solve;
@@ -112,6 +142,15 @@ namespace Dune {
             Y b(d); // need copy, since solver overwrites right hand side
             Dune::InverseOperatorResult result;
             solverf_.apply(v,b,result);
+
+            if (restrictedMode_) {
+              std::transform(
+                v.begin(),v.end(),
+                             part_unity_.begin(),
+                             v.begin(),
+                             std::multiplies<>()
+              );
+            }
 
             Dune::PDELab::AddDataHandle<GFS,X> corr_addh(gfs_,v);
             gfs_.gridView().communicate(corr_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
@@ -233,6 +272,9 @@ namespace Dune {
 
         double coarse_time_ = 0.0;
         int apply_calls_ = 0;
+
+        bool restrictedMode_;
+        const X& part_unity_;
 
         const GFS& gfs_;
         Dune::UMFPack<ISTLM> solverf_;
