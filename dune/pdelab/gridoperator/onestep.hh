@@ -6,6 +6,7 @@
 #include <tuple>
 
 #include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
 #include <dune/pdelab/gridoperator/onestep/localassembler.hh>
 #include <dune/pdelab/instationary/onestep.hh>
@@ -214,6 +215,15 @@ namespace Dune{
 
         // Copy non-constrained dofs from old time step
         Dune::PDELab::copy_nonconstrained_dofs(local_assembler.trialConstraints(),xold,x);
+
+        // If there are Dirichlet-constrained DOFs on processor boundaries, we need to make
+        // those DOFs consistent again
+        auto es = trialGridFunctionSpace().entitySet();
+        if (es.comm().size() > 1)
+        {
+          CopyDataHandle<typename Traits::TrialGridFunctionSpace,X> data_handle(trialGridFunctionSpace(),x);
+          es.communicate(data_handle,InteriorBorder_All_Interface,ForwardCommunication);
+        }
       }
 
       //! set time stepping method
