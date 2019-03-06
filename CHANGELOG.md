@@ -19,6 +19,10 @@ PDELab git master (will be PDELab 2.7)
     space bases as `GridFunctionSpace` implementations has gained limited support for distributed
     computations.
 
+-   The `OneStepGridOperator` has been fixed to correctly handle Dirichlet-constrained DOFs in the overlap
+    region when re-interpolating boundary condition values between stages (i.e. whenn you call the version of
+    `apply()` on the `OneStepMethod` that takes a boundary value function).
+
 
 PDELab 2.6
 ----------
