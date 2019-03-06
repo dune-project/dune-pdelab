@@ -98,21 +98,27 @@ namespace Dune {
 
           // Apply D^-1/2
           for (int j = 0; j < ext.N(); j++) {
-              for(int j_block = 0; j_block < ISTLM::block_type::rows; j_block++){
-            if (native(AF_exterior)[j][j][j_block][j_block] != 1.0)
-              ext[j][j_block] = distribution(generator) / std::sqrt(native(AF_exterior)[j][j][j_block][j_block]);
-            else
-              ext[j][j_block] = 0.0;
-          }
+            for(int j_block = 0; j_block < ISTLM::block_type::rows; j_block++){
+              if (native(AF_exterior)[j][j][j_block][j_block] != 1.0)
+                ext[j][j_block] = distribution(generator) / std::sqrt(native(AF_exterior)[j][j][j_block][j_block]);
+              else
+                ext[j][j_block] = 0.0;
+            }
           }
           timer_rnd.stop();
 
-          std::transform(
+
+          for (int j = 0; j < ext.N(); j++) {
+            for(int j_block = 0; j_block < ISTLM::block_type::rows; j_block++){
+              ext[j][j_block] *= native(part_unity)[j][j_block];
+            }
+          }
+          /*std::transform(
             ext.begin(),ext.end(),
                          part_unity.begin(),
                          ext.begin(),
                          std::multiplies<>()
-          );
+          );*/
 
           for (int reiter = 0; reiter < reiterations; reiter++) {
 
@@ -120,23 +126,33 @@ namespace Dune {
             native(ovlp_mat).mv(ext, temp);
             ext = temp;
 
-            std::transform(
+            for (int j = 0; j < ext.N(); j++) {
+              for(int j_block = 0; j_block < ISTLM::block_type::rows; j_block++){
+                ext[j][j_block] *= native(part_unity)[j][j_block];
+              }
+            }
+            /*std::transform(
               ext.begin(),ext.end(),
                            part_unity.begin(),
                            ext.begin(),
                            std::multiplies<>()
-            );
+            );*/
 
             //cgsolver.apply(temp, ext, result);
             source_inverse.apply(temp, ext, result);
             ext = temp;
 
-            std::transform(
+            for (int j = 0; j < ext.N(); j++) {
+              for(int j_block = 0; j_block < ISTLM::block_type::rows; j_block++){
+                ext[j][j_block] *= native(part_unity)[j][j_block];
+              }
+            }
+            /*std::transform(
               ext.begin(),ext.end(),
                            part_unity.begin(),
                            ext.begin(),
                            std::multiplies<>()
-            );
+            );*/
 
           }
 
