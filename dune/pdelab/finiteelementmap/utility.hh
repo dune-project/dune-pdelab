@@ -31,16 +31,27 @@ namespace Dune {
       constexpr std::size_t _femBlockSize(std::true_type)
       {
         constexpr int dim = FEM::dimension;
+        std::size_t size = 0;
         for (int d = 0 ; d <= dim ; ++d)
           {
-            std::size_t size = FEM::size(GeometryTypes::none(d));
-            if (size > 0)
-              return size;
+            std::size_t gt_size = FEM::size(GeometryTypes::none(d));
+            if (gt_size > 0)
+            {
+              if (size > 0 and size != gt_size)
+                return 0;
+              else
+                size = gt_size;
+            }
             for (unsigned int topology_id = 0 ; topology_id < (1 << dim) ; ++topology_id)
               {
-                std::size_t size = FEM::size(GeometryType(topology_id,d));
-                if (size > 0)
-                  return size;
+                std::size_t gt_size = FEM::size(GeometryType(topology_id,d));
+                if (gt_size > 0)
+                {
+                  if (size > 0 and size != gt_size)
+                    return 0;
+                  else
+                    size = gt_size;
+                }
               }
           }
         return 0;
