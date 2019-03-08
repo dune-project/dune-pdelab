@@ -99,10 +99,18 @@ struct test<2,true> {
     typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,CON,VBE> P0GFS;
     P0GFS p0gfs(gv,p0fem);
     typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM,CON,VBE> GFS1;
+    {
+      GFS1 gfs1(gv,q12dfem);
+      check_ordering(gfs1);
+    }
     GFS1 gfs1(gv,q12dfem);
     typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,CON,VBE> GFS2;
     GFS2 gfs2(gv,q22dfem);
     typedef Dune::PDELab::GridFunctionSpace<GV,MonomFEM,CON,VBE> GFS3;
+    {
+      GFS3 gfs3(gv,monomfem);
+      check_ordering(gfs3);
+    }
     GFS3 gfs3(gv,monomfem);
 
     typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE,Dune::PDELab::InterleavedOrderingTag> P1GFS;
@@ -118,10 +126,21 @@ struct test<2,true> {
 
     typedef Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed> NVBE;
 
-    typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,NVBE,Dune::PDELab::InterleavedOrderingTag> PGFS;
+    using EVBE  = Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::none,1>;
+    using EGFS  = Dune::PDELab::GridFunctionSpace<GV,Q12DFEM,CON,EVBE>;
+    EGFS egfs(gv,q12dfem);
+    using EPGFS = Dune::PDELab::PowerGridFunctionSpace<EGFS,3,VBE,Dune::PDELab::InterleavedOrderingTag>;
+    {
+      EPGFS epgfs(egfs,egfs,egfs,VBE(),{{1,1,1}});
+      check_ordering(epgfs);
+    }
+
+    EPGFS epgfs(egfs,egfs,egfs,VBE(),{{1,1,1}});
+    typedef Dune::PDELab::PowerGridFunctionSpace<EPGFS,2,NVBE,Dune::PDELab::InterleavedOrderingTag> PGFS;
     std::vector<std::size_t> p_gfs_block_sizes(2);
     std::fill(p_gfs_block_sizes.begin(),p_gfs_block_sizes.end(),3);
-    PGFS pgfs(p1gfs,p1gfs,NVBE(),p_gfs_block_sizes);
+    PGFS pgfs(epgfs,epgfs,NVBE(),p_gfs_block_sizes);
+
 
     typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE,Dune::PDELab::EntityBlockedOrderingTag> P2GFS;
     P2GFS p2gfs(gfs1,gfs1,gfs1);
@@ -129,17 +148,15 @@ struct test<2,true> {
     typedef Dune::PDELab::PowerGridFunctionSpace<P2GFS,2,NVBE,Dune::PDELab::EntityBlockedOrderingTag> P3GFS;
     P3GFS p3gfs(p2gfs,p2gfs,NVBE());
 
-
-    // check_ordering(gfs1);
-    check_ordering(gfs3);
-    return;
     check_ordering(pgfs);
-    check_ordering(p3gfs);
+    //check_ordering(p3gfs);
 
     typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE,Dune::PDELab::EntityBlockedOrderingTag> EBPGFS1;
+    {
+      EBPGFS1 ebpgfs1(gfs1);
+      check_ordering(ebpgfs1);
+    }
     EBPGFS1 ebpgfs1(gfs1);
-
-    check_ordering(ebpgfs1);
 
     typedef Dune::PDELab::CompositeGridFunctionSpace<
       VBE,
@@ -209,63 +226,52 @@ void testleafgridfunction(const GV& gv)
 
 int main(int argc, char** argv)
 {
-  try{
-    //Maybe initialize Mpi
-    Dune::MPIHelper::instance(argc, argv);
+  //Maybe initialize Mpi
+  Dune::MPIHelper::instance(argc, argv);
 
-    // 2D
-    {
-      std::cout << "2D tests" << std::endl;
-      // need a grid in order to test grid functions
-      // typedef Dune::YaspGrid<2> Grid;
-      typedef Dune::ALUGrid<2,2,Dune::cube,Dune::nonconforming> Grid;
-      Dune::FieldVector<double,2> l(0.0);
-      Dune::FieldVector<double,2> u(1.0);
-      std::array<unsigned int,2> N = {{1,1}};
-      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(l,u,N);
-      grid->globalRefine(1);
+  // 2D
+  {
+    std::cout << "2D tests" << std::endl;
+    // need a grid in order to test grid functions
+    // typedef Dune::YaspGrid<2> Grid;
+    typedef Dune::ALUGrid<2,2,Dune::cube,Dune::nonconforming> Grid;
+    Dune::FieldVector<double,2> l(0.0);
+    Dune::FieldVector<double,2> u(1.0);
+    std::array<unsigned int,2> N = {{1,1}};
+    std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(l,u,N);
+    grid->globalRefine(1);
 
-      std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
-      testleafgridfunction<true>(grid->leafGridView());
-    }
-
-    {
-      std::cout << "2D tests" << std::endl;
-      // need a grid in order to test grid functions
-      // typedef Dune::YaspGrid<2> Grid;
-      typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::conforming> Grid;
-      Dune::FieldVector<double,2> l(0.0);
-      Dune::FieldVector<double,2> u(1.0);
-      std::array<unsigned int,2> N = {{1,1}};
-      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(l,u,N);
-      grid->globalRefine(1);
-
-      std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
-      testleafgridfunction<false>(grid->leafGridView());
-    }
-
-    // 3D
-    {
-      std::cout << "3D tests" << std::endl;
-      // need a grid in order to test grid functions
-      Dune::FieldVector<double,3> L(1.0);
-      std::array<int,3> N(Dune::filledArray<3,int>(1));
-      Dune::YaspGrid<3> grid(L,N);
-      grid.globalRefine(1);
-
-      testleafgridfunction<true>(grid.leafGridView());
-    }
-
-    // test passed
-    return 0;
-
+    std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
+    testleafgridfunction<true>(grid->leafGridView());
   }
-  catch (Dune::Exception &e){
-    std::cerr << "Dune reported error: " << e << std::endl;
-    return 1;
+
+  {
+    std::cout << "2D tests" << std::endl;
+    // need a grid in order to test grid functions
+    // typedef Dune::YaspGrid<2> Grid;
+    typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::conforming> Grid;
+    Dune::FieldVector<double,2> l(0.0);
+    Dune::FieldVector<double,2> u(1.0);
+    std::array<unsigned int,2> N = {{1,1}};
+    std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(l,u,N);
+    grid->globalRefine(1);
+
+    std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
+    testleafgridfunction<false>(grid->leafGridView());
   }
-  catch (...){
-    std::cerr << "Unknown exception thrown!" << std::endl;
-    return 1;
+
+  // 3D
+  {
+    std::cout << "3D tests" << std::endl;
+    // need a grid in order to test grid functions
+    Dune::FieldVector<double,3> L(1.0);
+    std::array<int,3> N(Dune::filledArray<3,int>(1));
+    Dune::YaspGrid<3> grid(L,N);
+    grid.globalRefine(1);
+
+    testleafgridfunction<true>(grid.leafGridView());
   }
+
+  // test passed
+  return 0;
 }
