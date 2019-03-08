@@ -209,63 +209,52 @@ void testleafgridfunction(const GV& gv)
 
 int main(int argc, char** argv)
 {
-  try{
-    //Maybe initialize Mpi
-    Dune::MPIHelper::instance(argc, argv);
+  //Maybe initialize Mpi
+  Dune::MPIHelper::instance(argc, argv);
 
-    // 2D
-    {
-      std::cout << "2D tests" << std::endl;
-      // need a grid in order to test grid functions
-      // typedef Dune::YaspGrid<2> Grid;
-      typedef Dune::ALUGrid<2,2,Dune::cube,Dune::nonconforming> Grid;
-      Dune::FieldVector<double,2> l(0.0);
-      Dune::FieldVector<double,2> u(1.0);
-      std::array<unsigned int,2> N = {{1,1}};
-      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(l,u,N);
-      grid->globalRefine(1);
+  // 2D
+  {
+    std::cout << "2D tests" << std::endl;
+    // need a grid in order to test grid functions
+    // typedef Dune::YaspGrid<2> Grid;
+    typedef Dune::ALUGrid<2,2,Dune::cube,Dune::nonconforming> Grid;
+    Dune::FieldVector<double,2> l(0.0);
+    Dune::FieldVector<double,2> u(1.0);
+    std::array<unsigned int,2> N = {{1,1}};
+    std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(l,u,N);
+    grid->globalRefine(1);
 
-      std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
-      testleafgridfunction<true>(grid->leafGridView());
-    }
-
-    {
-      std::cout << "2D tests" << std::endl;
-      // need a grid in order to test grid functions
-      // typedef Dune::YaspGrid<2> Grid;
-      typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::conforming> Grid;
-      Dune::FieldVector<double,2> l(0.0);
-      Dune::FieldVector<double,2> u(1.0);
-      std::array<unsigned int,2> N = {{1,1}};
-      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(l,u,N);
-      grid->globalRefine(1);
-
-      std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
-      testleafgridfunction<false>(grid->leafGridView());
-    }
-
-    // 3D
-    {
-      std::cout << "3D tests" << std::endl;
-      // need a grid in order to test grid functions
-      Dune::FieldVector<double,3> L(1.0);
-      std::array<int,3> N(Dune::filledArray<3,int>(1));
-      Dune::YaspGrid<3> grid(L,N);
-      grid.globalRefine(1);
-
-      testleafgridfunction<true>(grid.leafGridView());
-    }
-
-    // test passed
-    return 0;
-
+    std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
+    testleafgridfunction<true>(grid->leafGridView());
   }
-  catch (Dune::Exception &e){
-    std::cerr << "Dune reported error: " << e << std::endl;
-    return 1;
+
+  {
+    std::cout << "2D tests" << std::endl;
+    // need a grid in order to test grid functions
+    // typedef Dune::YaspGrid<2> Grid;
+    typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::conforming> Grid;
+    Dune::FieldVector<double,2> l(0.0);
+    Dune::FieldVector<double,2> u(1.0);
+    std::array<unsigned int,2> N = {{1,1}};
+    std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(l,u,N);
+    grid->globalRefine(1);
+
+    std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
+    testleafgridfunction<false>(grid->leafGridView());
   }
-  catch (...){
-    std::cerr << "Unknown exception thrown!" << std::endl;
-    return 1;
+
+  // 3D
+  {
+    std::cout << "3D tests" << std::endl;
+    // need a grid in order to test grid functions
+    Dune::FieldVector<double,3> L(1.0);
+    std::array<int,3> N(Dune::filledArray<3,int>(1));
+    Dune::YaspGrid<3> grid(L,N);
+    grid.globalRefine(1);
+
+    testleafgridfunction<true>(grid.leafGridView());
   }
+
+  // test passed
+  return 0;
 }
