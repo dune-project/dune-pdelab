@@ -25,6 +25,7 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/ordering/interleavedordering.hh>
 
 #include <dune/pdelab/backend/istl.hh>
@@ -47,11 +48,21 @@ void check_ordering(const GFS& gfs)
 
       std::vector<typename GFS::Ordering::Traits::DOFIndex> vdi(lfs.size());
       std::vector<typename GFS::Ordering::Traits::ContainerIndex> vci(lfs.size());
+      std::array<std::size_t,Dune::TypeTree::TreeInfo<GFS>::leafCount> leaf_sizes;
+      std::fill(begin(leaf_sizes),end(leaf_sizes),0);
       for (unsigned i = 0; i < lfs.size(); ++i)
       {
         vdi[i] = lfs.dofIndex(i);
       }
-      ordering.map_lfs_indices(vdi.begin(),vdi.end(),vci.begin());
+      Dune::PDELab::map_dof_indices_to_container_indices<
+        typename decltype(vdi)::iterator,
+        typename decltype(vci)::iterator,
+        typename decltype(leaf_sizes)::iterator,
+        Dune::TypeTree::TreeInfo<GFS>::depth,
+        false
+        > visitor(begin(vdi),begin(vci),begin(leaf_sizes));
+
+      Dune::TypeTree::applyToTree(ordering,visitor);
 
       for (unsigned i = 0; i < lfs.size(); ++i)
       {
@@ -126,8 +137,7 @@ struct test<2,true> {
 
     typedef Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed> NVBE;
 
-    using EVBE  = Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::none,1>;
-    using EGFS  = Dune::PDELab::GridFunctionSpace<GV,Q12DFEM,CON,EVBE>;
+    using EGFS  = Dune::PDELab::GridFunctionSpace<GV,Q12DFEM,CON,VBE>;
     EGFS egfs(gv,q12dfem);
     using EPGFS = Dune::PDELab::PowerGridFunctionSpace<EGFS,3,VBE,Dune::PDELab::InterleavedOrderingTag>;
     {
