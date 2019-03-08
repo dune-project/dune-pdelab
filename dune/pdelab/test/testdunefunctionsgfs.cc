@@ -288,9 +288,9 @@ void solveParallelPoissonProblem()
   GO go(gridFunctionSpace,cc,gridFunctionSpace,cc,lop,mbe);
 
   // Select a linear solver backend NEW IN PARALLEL
-  typedef PDELab::ISTLBackend_CG_AMG_SSOR<GO> LS;
+  typedef PDELab::ISTLBackend_OVLP_CG_SSORk<GridFunctionSpace,CC> LS;
   int verbose = 0;
-  LS ls(gridFunctionSpace,100,verbose);
+  LS ls(gridFunctionSpace,cc,100,5,verbose);
 
   // solve nonlinear problem
   PDELab::Newton<GO,LS,Z> newton(go,z,ls);
