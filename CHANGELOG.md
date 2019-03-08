@@ -77,6 +77,10 @@ PDELab 2.6
     is the same, however zeroed out away from the overlap region. Tools are provided to easily reuse the usual
     discretization matrix assembly. For an example, see the GenEO unit test included in PDELab.
 
+-   The `OneStepGridOperator` has been fixed to correctly handle Dirichlet-constrained DOFs in the overlap
+    region when re-interpolating boundary condition values between stages (i.e. when you call the version of
+    `apply()` on the `OneStepMethod` that takes a boundary value function). Backported from 2.7.
+
 
 PDELab 2.5
 ----------
