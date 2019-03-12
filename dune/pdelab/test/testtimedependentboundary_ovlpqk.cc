@@ -288,7 +288,7 @@ void driver (const GV& gv, const FEM& fem)
   if (error > 1E-18) // error is still squared, scale the tolerance accordingly
   {
     std::cout << "Too big error " << error << " in testtimedependentboundary_ovlpqk.cc" << std::endl;
-    throw;
+    std::abort();
   }
   // std::cout << "On rank " << gfs.gridView().comm().rank() << " the error is: " << error << "." << std::endl;
 } // end driver
@@ -298,13 +298,13 @@ void driver (const GV& gv, const FEM& fem)
 //===============================================================
 int main(int argc, char** argv)
 {
-  try{
+  // try{
     // initialize MPI, finalize is done automatically on exit
     Dune::MPIHelper::instance(argc,argv);
     if(Dune::MPIHelper::isFake)
     {
       std::cout<< "This is a sequential program. Designed for testing a parallel program with overlapping grid." << std::endl;
-      throw;
+      std::abort();
     }
 
     // read ini file
@@ -329,15 +329,15 @@ int main(int argc, char** argv)
     typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,degree> FEM;
     FEM fem(gv);
     driver(gv,fem);
-  }
-  catch (Dune::Exception &e)
-  {
-    std::cerr << "Dune reported error: " << e << std::endl;
-    return 1;
-  }
-  catch (...)
-  {
-    std::cerr << "Unknown exception thrown!" << std::endl;
-    return 1;
-  }
+  // }
+  // catch (Dune::Exception &e)
+  // {
+  //   std::cerr << "Dune reported error: " << e << std::endl;
+  //   return 1;
+  // }
+  // catch (...)
+  // {
+  //   std::cerr << "Unknown exception thrown!" << std::endl;
+  //   return 1;
+  // }
 }
