@@ -56,6 +56,45 @@ namespace Dune {
         if (nev_arpack < nev)
           DUNE_THROW(Dune::Exception,"nev_arpack is less then nev!");*/
 
+        std::default_random_engine generator;
+        std::normal_distribution<double> distribution;
+
+        int testspace_size = nev * 2;
+        std::vector<std::shared_ptr<X> > testspace(testspace_size);
+        for (int i = 0; i < testspace_size; i++) {
+          testspace[i] = std::make_shared<X>(gfs, 0.0);
+          X& testvec = *(testspace[i]);
+
+          for (int j = 0; j < AF_exterior.N(); j++) {
+            for(int j_block = 0; j_block < ISTLM::block_type::rows; j_block++){
+              if (native(AF_exterior)[j][j][j_block][j_block] != 1.0)
+                native(testvec)[j][j_block] = distribution(generator) / std::sqrt(native(AF_exterior)[j][j][j_block][j_block]);
+              else
+                native(testvec)[j][j_block] = 0.0;
+            }
+          }
+          for (int j = 0; j < AF_exterior.N(); j++) {
+            for(int j_block = 0; j_block < ISTLM::block_type::rows; j_block++){
+              native(testvec)[j][j_block] *= native(part_unity)[j][j_block];
+            }
+          }
+          //if (verbose > 0) std::cout << "testevec init norm: " << (testspace[i])->two_norm() << std::endl;
+        }
+
+        {
+          X proj(gfs, 0.0);
+          double maxnorm = 0.0;
+          for (int ti = 0; ti < testspace_size; ti++) {
+            X& testvec = *(testspace[ti]);
+            /*native(AF_ovlp).mv(native(testvec), native(proj));
+             *              double factor = proj * testvec;*/
+            double factor = matDotProduct(AF_ovlp, testvec, testvec, proj);
+            maxnorm = std::max(maxnorm, factor);
+          }
+          maxnorm = std::sqrt(maxnorm);
+          if (verbose > 0) std::cout << "maxnorm: " << maxnorm << std::endl;
+        }
+
         // X * A_0 * X
         M ovlp_mat(AF_ovlp);
         for (auto row_iter = native(ovlp_mat).begin(); row_iter != native(ovlp_mat).end(); row_iter++) {
@@ -83,8 +122,6 @@ namespace Dune {
         MPI_Barrier (MPI_COMM_WORLD);
         if (verbose > 0) std::cout << "source_inverse: " << timer.elapsed() << std::endl; timer.reset();
 
-        std::default_random_engine generator;
-        std::normal_distribution<double> distribution(5.0,2.0);
 
         Dune::InverseOperatorResult result;
 
@@ -161,6 +198,57 @@ namespace Dune {
             ext.begin(),ext.end(),
                          native(*this->local_basis[i]).begin()
           );
+
+
+          // Gram-Schmidt
+
+          std::vector<double> squarednorms(0);
+          X scaled(gfs, 0.0);
+          for (int gi = 0; gi <= i; gi++) { // TODO: Orthonormalisierung bzgl range product?
+            for (int gj = 0; gj < gi; gj++) {
+
+              // ovlp_mat als sk.prod?
+              double f = matDotProduct(AF_ovlp, *this->local_basis[gi], *this->local_basis[gj], scaled) / squarednorms[gj];//(*this->local_basis[j] * *this->local_basis[j]);
+              scaled = *this->local_basis[gj]; // axpy instead?
+              scaled *= f;
+              *this->local_basis[gi] -= scaled;
+              //if (verbose > 1)
+              //  std::cout << "scale " << f << "\t to " << *this->local_basis[i] * *this->local_basis[j] << std::endl;
+            }
+            squarednorms.push_back(matDotProduct(AF_ovlp, *this->local_basis[gi], *this->local_basis[gi], scaled));
+          }
+
+
+          // Project out of test space
+
+          X proj(gfs, 0.0);
+          for (int bi = i; bi <= i; bi++) {
+            for (int ti = 0; ti < testspace_size; ti++) {
+              X& testvec = *(testspace[ti]);
+              //if (verbose > 0) std::cout << "testevec new norm: " << (testspace[i])->two_norm() << std::endl;
+
+              /*native(AF_ovlp).mv(native(testvec), native(proj));
+              double factor = native(proj).dot(native(*this->local_basis[bi]));*/
+              double factor = matDotProduct(AF_ovlp, *this->local_basis[bi], testvec, proj)
+                            / matDotProduct(AF_ovlp, *this->local_basis[bi], *this->local_basis[bi], proj);
+              //if (verbose > 0) std::cout << native(*(testspace[ti])).two_norm();
+              testvec.axpy(-factor, *this->local_basis[bi]);
+              //if (verbose > 0) std::cout << "\t" << native(testvec).two_norm() << "\t by factor " << -factor << std::endl;
+            }
+          }
+          {
+            double maxnorm = 0.0;
+            for (int ti = 0; ti < testspace_size; ti++) {
+              X& testvec = *(testspace[ti]);
+              /*native(AF_ovlp).mv(native(testvec), native(proj));
+              double factor = proj * testvec;*/
+              double factor = matDotProduct(AF_ovlp, testvec, testvec, proj);
+              maxnorm = std::max(maxnorm, factor);
+            }
+            maxnorm = std::sqrt(maxnorm);
+            if (verbose > 0) std::cout << "maxnorm: " << maxnorm << std::endl;
+          }
+
         }
         MPI_Barrier (MPI_COMM_WORLD);
         if (verbose > 0) std::cout << "rnd basis: " << timer.elapsed() << std::endl; timer.reset();
@@ -174,14 +262,14 @@ namespace Dune {
           for (int j = 0; j < i; j++) {
 
             // ovlp_mat als sk.prod?
-            double f = dotProduct(AF_exterior, *this->local_basis[i], *this->local_basis[j], scaled) / squarednorms[j];//(*this->local_basis[j] * *this->local_basis[j]);
+            double f = matDotProduct(AF_ovlp, *this->local_basis[i], *this->local_basis[j], scaled) / squarednorms[j];//(*this->local_basis[j] * *this->local_basis[j]);
             scaled = *this->local_basis[j]; // axpy instead?
             scaled *= f;
             *this->local_basis[i] -= scaled;
             //if (verbose > 1)
             //  std::cout << "scale " << f << "\t to " << *this->local_basis[i] * *this->local_basis[j] << std::endl;
           }
-          squarednorms.push_back(dotProduct(AF_exterior, *this->local_basis[i], *this->local_basis[i], scaled));
+          squarednorms.push_back(matDotProduct(AF_ovlp, *this->local_basis[i], *this->local_basis[i], scaled));
         }
 
         /*X scaled(gfs, 0.0);
