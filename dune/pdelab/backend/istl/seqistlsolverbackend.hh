@@ -399,8 +399,8 @@ namespace Dune {
       using ISTLSolver           = Dune::IterativeSolver<Domain,Range>;
       using ISTLPreconditioner   = Dune::Preconditioner<Domain,Range>;
       using ISTLScalarProduct    = Dune::ScalarProduct<Domain>;
-      using Preconditioner       = Preconditioner<Domain,Range>;
-      using LinearOperator       = LinearOperator<Domain,Range>;
+      using Preconditioner       = ISTL::Preconditioner<Domain,Range>;
+      using LinearOperator       = ISTL::LinearOperator<Domain,Range>;
       using Real                 = typename Base::Real;
       using OneStepMethod        = typename Base::OneStepMethod;
 
