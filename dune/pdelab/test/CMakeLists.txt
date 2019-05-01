@@ -42,6 +42,8 @@ if(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
   dune_add_test(SOURCES testgeneo.cc
                 MPI_RANKS 2
                 TIMEOUT 300)
+  dune_symlink_to_source_files(FILES config.ini plot.py batch.sbatch)
+
 endif(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
 
 dune_add_test(SOURCES testdglegendre.cc)

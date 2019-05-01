@@ -2,6 +2,9 @@
 #include "config.h"
 #endif
 
+#include <dune/common/parametertree.hh>
+Dune::ParameterTree configuration;
+
 #include <dune/pdelab/boilerplate/pdelab.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionadapter.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
@@ -20,24 +23,70 @@ class GenericEllipticProblem
 public:
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
+  GenericEllipticProblem() {
+    perm1 = 1e0;
+    perm2 = configuration.get<double>("contrast");
+    layer_thickness = 1.0 / (double)configuration.get<int>("layers");
+    layer_model = configuration.get<bool>("layer_model");
+  }
+
+  //! tensor diffusion constant per cell? return false if you want more than one evaluation of A per cell.
+  static constexpr bool permeabilityIsConstantPerCell()
+  {
+    return true;
+  }
+
   //! tensor diffusion coefficient
   typename Traits::PermTensorType
   A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    typename Traits::DomainType xglobal = e.geometry().global(x);
+    if (layer_model) {
+      typename Traits::DomainType xglobal = e.geometry().global(x);
 
-    RF perm1 = 1e0;
-    RF perm2 = 1e6;
-    RF layer_thickness = 1.0 / 20.0;
+      RF coeff = (int)std::floor(xglobal[1] / layer_thickness) % 2 == 0 ? perm1 : perm2;
 
-    RF coeff = (int)std::floor(xglobal[1] / layer_thickness) % 2 == 0 ? perm1 : perm2;
+      typename Traits::PermTensorType I;
+      I[0][0] = coeff;
+      I[0][1] = 0;
+      I[1][0] = 0;
+      I[1][1] = coeff;
+      return I;
+    } else {
 
-    typename Traits::PermTensorType I;
-    I[0][0] = coeff;
-    I[0][1] = 0;
-    I[1][0] = 0;
-    I[1][1] = coeff;
-    return I;
+      typename Traits::DomainType xglobal = e.geometry().global(x);
+      int num1 = floor(8*xglobal[0]);
+      int num2 = floor(8*xglobal[1]);
+      RF coeff = 0.0;
+      if ( (num1 % 2 == 0) && (num2 % 2 == 0) )
+        coeff = 0.1*perm2*(num2+1.0);
+      else
+        coeff = 1.0;
+
+      RF duct1_b = 0.9*xglobal[0];
+      RF duct1_t = duct1_b + 0.1;
+      if ( (xglobal[1]>duct1_b) && (xglobal[1]<duct1_t))
+        coeff = coeff + 0.2 * perm2;
+
+      RF duct2_b = -1.0*xglobal[0] + 0.5;
+      RF duct2_t = duct2_b + 0.1;
+      if ( (xglobal[1]>duct2_b) && (xglobal[1]<duct2_t))
+        coeff = coeff + 0.5 * perm2;
+
+      RF duct3_b = 4.0*xglobal[0] - 2.0 ;
+      RF duct3_t = duct3_b + 0.1;
+      if ( (xglobal[1]>duct3_b) && (xglobal[1]<duct3_t))
+        coeff = coeff + 0.2 * perm2;
+
+      RF eps = 1.0;
+      RF th = 0;
+      typename Traits::PermTensorType I;
+      th=th*M_PI/180.0;
+      I[0][0]=coeff*(pow(cos(th),2.0) + pow(sin(th),2.0)*eps);
+      I[0][1]=coeff*sin(2.0*th)*(eps-1.0)/2.0;
+      I[1][0]=coeff*sin(2.0*th)*(eps-1.0)/2.0;
+      I[1][1]=coeff*(pow(sin(th),2.0) + pow(cos(th),2.0)*eps);
+      return I;
+    }
   }
 
   //! velocity field
@@ -66,7 +115,7 @@ public:
   bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     typename Traits::DomainType xglobal = is.geometry().global(x);
-    if (!(xglobal[1]<1E-6 || xglobal[1]>1.0-1E-6))
+    if (!(xglobal[1]<1E-5 || xglobal[1]>1.0-1E-5))
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
     else
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
@@ -77,7 +126,7 @@ public:
   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
-    if (xglobal[1] > 1.0-1E-6)
+    if (xglobal[1] > 1.0-1E-5)
       return 1.0;
     else
       return 0.0;
@@ -96,12 +145,17 @@ public:
   {
     return 0.0;
   }
+private:
+  RF perm1, perm2, layer_thickness;
+  bool layer_model;
 };
 
 void driver(std::string basis_type, std::string part_unity_type) {
 
-  int cells = 100;
-  int overlap = 1;
+  Dune::Timer timer_full;
+
+  int cells = configuration.get<int>("cells");
+  int overlap = configuration.get<int>("overlap");
 
   // define parameters
   const unsigned int dim = 2;
@@ -117,11 +171,17 @@ void driver(std::string basis_type, std::string part_unity_type) {
   std::bitset<dim> B(false);
 
   typedef Dune::YaspFixedSizePartitioner<dim> YP;
-  std::array<int,dim> yasppartitions = {2, 1};
-  auto yp = new YP(yasppartitions);
+  std::array<int,dim> yasppartitions;
 
-  auto grid = std::make_shared<GM>(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication(),yp);
-
+  std::shared_ptr<GM> grid = nullptr;
+  if (configuration.get<bool>("extend_domain_with_procs")) {
+    yasppartitions = {Dune::MPIHelper::getCollectiveCommunication().size() / 2, 2};
+    L[0] *= Dune::MPIHelper::getCollectiveCommunication().size();
+    auto yp = new YP(yasppartitions);
+    grid = std::make_shared<GM>(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication(),yp);
+  } else {
+    grid = std::make_shared<GM>(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication());
+  }
 
   // make problem parameters
   typedef GenericEllipticProblem<GM::LevelGridView,NumberType> Problem;
@@ -249,6 +309,8 @@ void driver(std::string basis_type, std::string part_unity_type) {
   // choose another value to achieve a good balance between condition bound and
   // global basis size
   double eigenvalue_threshold = (double)overlap / (cells + overlap);
+  if (!configuration.get<bool>("use_threshold"))
+    eigenvalue_threshold = -1;
 
   int verb=0;
   if (gfs.gridView().comm().rank()==0) verb=2;
@@ -269,20 +331,24 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
 
   // Choose how many eigenvalues to compute
-  int nev = 10;
-  int nev_arpack = 10;
+  int nev = configuration.get<int>("nev");
+  int nev_arpack = configuration.get<int>("nev_arpack");
+
+  if (verb > 0) std::cout << "Basis setup" << std::endl;
+  Dune::Timer timer_setup;
 
   // Construct per-subdomain basis functions
   std::shared_ptr<Dune::PDELab::SubdomainBasis<V> > subdomain_basis;
   if (basis_type == "geneo")
     subdomain_basis = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb);
-  else if (basis_type == "lipton_babuska")
-    subdomain_basis = std::make_shared<Dune::PDELab::LiptonBabuskaBasis<GFS,M_EXTERIOR,V,V,1> >(gfs, AF_exterior, AF_ovlp, -1, *part_unity, nev, nev_arpack);
+  //else if (basis_type == "lipton_babuska")
+  //  subdomain_basis = std::make_shared<Dune::PDELab::LiptonBabuskaBasis<GFS,M_EXTERIOR,V,V,1> >(gfs, AF_exterior, AF_ovlp, -1, *part_unity, nev, nev_arpack);
   else if (basis_type == "part_unity") // We can't test this one, it does not lead to sufficient error reduction. Let's instantiate it anyway for test's sake.
     subdomain_basis = std::make_shared<Dune::PDELab::SubdomainBasis<V> >(*part_unity);
   else
     DUNE_THROW(Dune::Exception, "Unkown selection in test driver!");
 
+  if (verb > 0) std::cout << "Basis setup finished: G=" << timer_setup.elapsed() << std::endl;
 
   // Fuse per-subdomain basis functions to a global coarse space
   auto coarse_space = std::make_shared<Dune::PDELab::SubdomainProjectedCoarseSpace<GFS,M_EXTERIOR,V,PIH> >(gfs, AF_exterior, subdomain_basis, pihf);
@@ -294,11 +360,14 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
   // now solve defect equation A*v = d using a CG solver with our shiny preconditioner
   V v(gfs,0.0);
-  auto solver_ref = std::make_shared<Dune::CGSolver<V> >(*popf,ospf,*prec,1E-6,1000,verb,true);
+  auto solver_ref = std::make_shared<Dune::CGSolver<V> >(*popf,ospf,*prec,1E-6,1000,verb,configuration.get<bool>("condition_estimate"));
   Dune::InverseOperatorResult result;
   solver_ref->apply(v,d,result);
   x -= v;
 
+  if (verb > 0) std::cout << "CG solver finished: S=" << result.elapsed << std::endl;
+
+  if (verb > 0) std::cout << "Solver finished: F=" << timer_full.elapsed() << std::endl;
 
   // Write solution to VTK
   Dune::VTKWriter<GV> vtkwriter(gfs.gridView());
@@ -313,6 +382,10 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
 int main(int argc, char **argv)
 {
+  Dune::ParameterTreeParser parser;
+  parser.readINITree("config.ini",configuration);
+  parser.readOptions(argc, argv, configuration);
+
   using Dune::PDELab::Backend::native;
 
   try{
@@ -320,8 +393,8 @@ int main(int argc, char **argv)
     Dune::MPIHelper::instance(argc,argv);
 
     driver("geneo", "standard");
-    driver("geneo", "sarkis");
-    driver("lipton_babuska", "standard");
+    //driver("geneo", "sarkis");
+    //driver("lipton_babuska", "standard");
 
     return 0;
   }
