@@ -654,7 +654,7 @@ namespace Dune {
         watch.reset();
         Dune::InverseOperatorResult stat;
 
-        Solver<VectorType> solver(*oop,*amg,reduction,maxiter,verbose);
+        Solver<VectorType> solver(*oop,*amg,reduction,maxiter,verbose,configuration.get<bool>("condition_estimate"));
         solver.apply(Backend::native(z),Backend::native(r),stat);
         stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;

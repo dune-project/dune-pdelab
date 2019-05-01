@@ -1209,7 +1209,7 @@ namespace Dune {
           stats.directCoarseLevelSolver=amg->usesDirectCoarseLevelSolver();
         }
         watch.reset();
-        Solver<VectorType> solver(oop,sp,*amg,RF(reduction),maxiter,verb);
+        Solver<VectorType> solver(oop,sp,*amg,RF(reduction),maxiter,verb,configuration.get<bool>("condition_estimate"));
         Dune::InverseOperatorResult stat;
 
         solver.apply(Backend::native(z),Backend::native(r),stat);

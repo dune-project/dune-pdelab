@@ -114,7 +114,7 @@ config = {
 # Layers
 permutations = OrderedDict([
   ("contrast", ["1e1", "1e2", "1e3", "1e4", "1e5", "1e6"]),
-  ("nev", list(range(3,10)))
+  ("nev", ["-1"] + list(range(3,10)))
 ])
 run(
   bincall = bincall,
@@ -130,7 +130,7 @@ config["layer_model"] = "false"
 nev =  list(range(3,10))
 permutations = OrderedDict([
   ("contrast", ["1e1", "1e2", "1e3", "1e4", "1e5", "1e6"]),
-  ("nev", nev)
+  ("nev", ["-1"] + nev)
 ])
 run(
   bincall = bincall,
