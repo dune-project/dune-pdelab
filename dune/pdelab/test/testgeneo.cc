@@ -27,7 +27,7 @@ public:
     perm1 = 1e0;
     perm2 = configuration.get<double>("contrast");
     layer_thickness = 1.0 / (double)configuration.get<int>("layers");
-    layer_model = configuration.get<bool>("layer_model");
+    model = configuration.get<std::string>("model");
   }
 
   //! tensor diffusion constant per cell? return false if you want more than one evaluation of A per cell.
@@ -40,7 +40,7 @@ public:
   typename Traits::PermTensorType
   A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    if (layer_model) {
+    if (model == "layers") {
       typename Traits::DomainType xglobal = e.geometry().global(x);
 
       RF coeff = (int)std::floor(xglobal[1] / layer_thickness) % 2 == 0 ? perm1 : perm2;
@@ -51,7 +51,18 @@ public:
       I[1][0] = 0;
       I[1][1] = coeff;
       return I;
-    } else {
+    } else if (model == "layers_diagonal") {
+      typename Traits::DomainType xglobal = e.geometry().global(x);
+
+      RF coeff = (int)std::floor((xglobal[1]+xglobal[0]*layer_thickness) / layer_thickness) % 2 == 0 ? perm1 : perm2;
+
+      typename Traits::PermTensorType I;
+      I[0][0] = coeff;
+      I[0][1] = 0;
+      I[1][0] = 0;
+      I[1][1] = coeff;
+      return I;
+    } else if (model == "skyscrapers") {
 
       typename Traits::DomainType xglobal = e.geometry().global(x);
       int num1 = floor(8*xglobal[0]);
@@ -86,6 +97,8 @@ public:
       I[1][0]=coeff*sin(2.0*th)*(eps-1.0)/2.0;
       I[1][1]=coeff*(pow(sin(th),2.0) + pow(cos(th),2.0)*eps);
       return I;
+    } else {
+      DUNE_THROW(Dune::Exception,"Unknown model set!");
     }
   }
 
@@ -147,7 +160,7 @@ public:
   }
 private:
   RF perm1, perm2, layer_thickness;
-  bool layer_model;
+  std::string model;
 };
 
 void driver(std::string basis_type, std::string part_unity_type) {
