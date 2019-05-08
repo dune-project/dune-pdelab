@@ -81,7 +81,6 @@ namespace Dune::PDELab::Backend {
 
     void subscribe(Dependent& dependent)
     {
-      auto& ti = typeid(dependent);
       _dependents.insert(&dependent);
       if (hasMatrix())
         dependent.matrixUpdated(true);

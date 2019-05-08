@@ -462,7 +462,7 @@ namespace Dune::PDELab::OneStep {
 
       private:
 
-        friend class Methods;
+        friend struct Methods;
         using repo_iterator = typename Repository::const_iterator;
 
         iterator(repo_iterator it)
