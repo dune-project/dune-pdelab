@@ -159,12 +159,12 @@ namespace Dune {
     struct LocalFunctionSpaceTypes;
 
     template<
-      typename TestSpace_,
       typename TrialSpace_,
+      typename TestSpace_,
       typename TrialConstraints_,
       typename TestConstraints_
       >
-    struct LocalFunctionSpaceTypes<TestSpace_,TrialSpace_,TrialConstraints_,TestConstraints_,true>
+    struct LocalFunctionSpaceTypes<TrialSpace_,TestSpace_,TrialConstraints_,TestConstraints_,true>
     {
 
       using TestSpace        = TestSpace_;
@@ -194,7 +194,7 @@ namespace Dune {
       typename TrialConstraints_,
       typename TestConstraints_
       >
-    struct LocalFunctionSpaceTypes<TestSpace_,TrialSpace_,TrialConstraints_,TestConstraints_,false>
+    struct LocalFunctionSpaceTypes<TrialSpace_,TestSpace_,TrialConstraints_,TestConstraints_,false>
     {
 
       using TestSpace        = TestSpace_;
