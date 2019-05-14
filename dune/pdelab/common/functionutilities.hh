@@ -23,6 +23,37 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
+
+    //! Integrate a GridFunction
+    /**
+     * \code
+     * #include <dune/pdelab/common/functionutilities.hh>
+     * \endcode
+     *
+     * Integrate a GridFunction over the domain given by the GridFunction's
+     * GridView.  In the parallel case, this function integrates over the
+     * Interior_Partition only.  If the accumulated result over all processors
+     * result is required, use something like
+     * \code
+     * integrateGridFunction(gf, sum);
+     * sum = gf.getGridView().comm().sum(sum);
+     * \endcode
+     *
+     * \tparam GF Type of the GridFunction.
+     * \param gf     The GridFunction object.
+     * \param qorder Quadrature order to use.  If the GridFunction is
+     *               element-wise polynomial, then this is the order of the
+     *               highest-order monom needed to represent the function.
+     * \returns      Resulting integral.
+     */
+    template<typename GF>
+    typename GF::Traits::RangeType integrateGridFunction(const GF& gf,
+                               unsigned qorder = 1) {
+      typename GF::Traits::RangeType sum;
+      integrateGridFunction(gf, sum, qorder);
+      return sum;
+    }
+
     //! Integrate a GridFunction
     /**
      * \code
