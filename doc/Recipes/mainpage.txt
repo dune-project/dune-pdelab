@@ -1,0 +1,20 @@
+ 
+/**
+ * @defgroup pdelab_recipes PDELab Recipes
+ * @{
+ * \page all_recipes PDELab Recipes
+ * These recipes are short examples on how to achieve common tasks in PDELab.
+ *
+ * <br>For complete examples solving PDEs, please refer to the dune-pdelab-tutorials module.
+ *
+ * Grid functions
+ * ==============
+ * - \subpage recipe-integrating-grid-functions
+ * - \subpage recipe-grid-function-operations
+ *
+ * PDE discretization
+ * ==============
+ * - \subpage recipe-linear-system-assembly
+
+ * @}
+ */
