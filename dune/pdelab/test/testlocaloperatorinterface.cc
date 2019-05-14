@@ -28,10 +28,7 @@
 
 #include <dune/grid/yaspgrid.hh>
 
-#include<dune/pdelab/backend/istl.hh>
-#include<dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/finiteelementmap/qkdg.hh>
-#include <dune/pdelab/localoperator/interface.hh>
+#include <dune/pdelab.hh>
 
 int main(int argc, char** argv)
 {

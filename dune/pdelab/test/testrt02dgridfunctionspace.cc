@@ -23,11 +23,7 @@
 #include <dune/grid/uggrid/uggridfactory.hh>
 #endif
 
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
+#include <dune/pdelab.hh>
 
 template<typename GV>
 void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")

@@ -6,10 +6,7 @@
 #include "config.h"
 #endif
 
-#include <dune/pdelab/boilerplate/pdelab.hh>
-#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
-
-#include<dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/pdelab.hh>
 
 #include "testnonoverlappingsinglephaseflow-boilerplate-problem.hh"
 

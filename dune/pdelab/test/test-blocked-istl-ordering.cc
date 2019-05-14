@@ -21,13 +21,7 @@
 
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/finiteelementmap/qkdg.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
-#include <dune/pdelab/gridoperator/gridoperator.hh>
-#include <dune/pdelab/localoperator/l2.hh>
-
-#include <dune/pdelab/backend/istl.hh>
+#include <dune/pdelab.hh>
 
 template<typename FlatGFS, typename BlockedGFS>
 void check_blocked_backend(const FlatGFS& flat_gfs, const BlockedGFS& blocked_gfs)

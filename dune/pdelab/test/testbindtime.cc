@@ -3,7 +3,7 @@
 #endif
 #include <iostream>
 #include <dune/common/classname.hh>
-#include <dune/pdelab/function/bindtime.hh>
+#include <dune/pdelab.hh>
 
 int main()
 {

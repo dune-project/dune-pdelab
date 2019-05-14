@@ -62,14 +62,7 @@
 // SUPERLU_NTYPE==3 std::complex<double>
 #include<dune/istl/umfpack.hh>
 
-#include<dune/pdelab/finiteelementmap/qkfem.hh>
-#include<dune/pdelab/constraints/common/constraints.hh>
-#include<dune/pdelab/constraints/conforming.hh>
-#include<dune/pdelab/gridoperator/gridoperator.hh>
-#include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include<dune/pdelab/backend/istl.hh>
-#include<dune/pdelab/gridfunctionspace/vtk.hh>
-#include<dune/pdelab/stationary/linearproblem.hh>
+#include <dune/pdelab.hh>
 
 #include"testcomplexnumbers-problem.hh"
 #include"helmholtzoperator.hh"

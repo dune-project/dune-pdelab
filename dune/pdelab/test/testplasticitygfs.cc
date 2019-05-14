@@ -11,18 +11,7 @@
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/finiteelementmap/pkqkfem.hh>
-#include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
-#include <dune/pdelab/gridoperator/gridoperator.hh>
-
-#include <dune/pdelab/localoperator/defaultimp.hh>
-#include <dune/pdelab/localoperator/flags.hh>
-#include <dune/pdelab/localoperator/idefault.hh>
-#include <dune/pdelab/localoperator/pattern.hh>
+#include <dune/pdelab.hh>
 
 using namespace Dune;
 

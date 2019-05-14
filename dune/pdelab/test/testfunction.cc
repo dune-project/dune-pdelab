@@ -11,13 +11,7 @@
 
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/common/vtkexport.hh>
-
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/function/discretegridviewfunction.hh>
+#include <dune/pdelab.hh>
 
 // an analytic scalar function
 template<typename T>

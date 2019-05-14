@@ -7,9 +7,8 @@
 #include <cstdlib>
 
 #include <dune/grid/yaspgrid.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/backend/istl.hh>
+
+#include <dune/pdelab.hh>
 
 
 /*

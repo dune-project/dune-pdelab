@@ -25,12 +25,7 @@
 #include <dune/grid/uggrid.hh>
 #endif
 
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/finiteelementmap/pkfem.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/gridfunctionspace/interpolate.hh>
+#include <dune/pdelab.hh>
 
 #include "gridexamples.hh"
 #include "l2difference.hh"

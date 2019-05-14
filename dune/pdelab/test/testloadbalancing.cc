@@ -15,13 +15,7 @@
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 
-#include<dune/pdelab/adaptivity/adaptivity.hh>
-#include<dune/pdelab/backend/istl.hh>
-#include<dune/pdelab/common/functionutilities.hh>
-#include<dune/pdelab/finiteelementmap/pkfem.hh>
-#include<dune/pdelab/gridfunctionspace/vtk.hh>
-
-#include<dune/pdelab/gridfunctionspace/loadbalance.hh>
+#include <dune/pdelab.hh>
 
 // Analytic function
 template<typename GV, typename RF>

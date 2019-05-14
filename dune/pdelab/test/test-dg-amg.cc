@@ -2,13 +2,8 @@
 #include <config.h>
 #endif
 
-#include <dune/pdelab/boilerplate/pdelab.hh>
 #include <dune/istl/matrixmatrix.hh>
-#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
-#include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
-#include <dune/pdelab/localoperator/l2.hh>
-
-#include <dune/pdelab/backend/istl.hh>
+#include <dune/pdelab.hh>
 
 /** Parameter class for the stationary convection-diffusion equation of the following form:
  *

@@ -37,7 +37,7 @@ namespace Dune {
 
     //! traits class for two phase parameter class
     template<typename GV, typename RF>
-    struct ConvectionDiffusionParameterTraits
+    struct NonLinearConvectionDiffusionParameterTraits
     {
       //! \brief the grid view
       using GridViewType = GV;
@@ -73,7 +73,7 @@ namespace Dune {
 
     //! base class for parameter class
     template<class T, class Imp>
-    class ConvectionDiffusionParameterInterface
+    class NonLinearConvectionDiffusionParameterInterface
     {
     public:
       using Traits = T;
@@ -151,7 +151,7 @@ namespace Dune {
 
     /*! Adapter that extracts boundary condition type function from parameter class
 
-      \tparam T  model of ConvectionDiffusionParameterInterface
+      \tparam T  model of NonLinearConvectionDiffusionParameterInterface
     */
     template<typename T>
     class BCTypeParam_CD
@@ -179,7 +179,7 @@ namespace Dune {
 
     /*! Adapter that extracts Dirichlet boundary conditions from parameter class
 
-      \tparam T  model of ConvectionDiffusionParameterInterface
+      \tparam T  model of NonLinearConvectionDiffusionParameterInterface
     */
     template<typename T>
     class DirichletBoundaryCondition_CD
@@ -218,7 +218,7 @@ namespace Dune {
     /** a local operator for solving the convection-diffusion equation defined above
      *
      * with conforming finite elements on all types of grids in any dimension
-     * \tparam T model of ConvectionDiffusionParameterInterface
+     * \tparam T model of NonLinearConvectionDiffusionParameterInterface
      */
     template<typename T>
     class NonLinearConvectionDiffusionFEM :

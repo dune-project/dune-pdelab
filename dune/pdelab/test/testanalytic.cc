@@ -7,8 +7,7 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab.hh>
 
 // beautiful version for analytic functions
 template<typename GV, typename RF>

@@ -12,15 +12,7 @@
 
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/finiteelementmap/p0fem.hh>
-#include <dune/pdelab/finiteelementmap/pkfem.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/finiteelementmap/qkdg.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/pdelab.hh>
 
 template<int codim, typename GFS>
 void print_info(const GFS& gfs)
