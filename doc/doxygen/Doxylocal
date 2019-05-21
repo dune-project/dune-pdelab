@@ -1,5 +1,8 @@
 INPUT   += @srcdir@/mainpage.txt \
            @srcdir@/modules.txt \
-           @top_srcdir@/dune
+           @top_srcdir@/dune \
+           @top_srcdir@/doc/Recipes \
+           @top_srcdir@/doc/Recipes/mainpage.txt
 EXCLUDE += @top_srcdir@/dune/pdelab/test
 EXTRA_PACKAGES = amsmath, amssymb
+EXAMPLE_PATH += @top_srcdir@/doc/Recipes

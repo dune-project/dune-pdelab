@@ -2,16 +2,13 @@
 
 \section intro Introduction
 
-Welcome to the pdelab documentation pages. This documentation has been
-generated using Doxygen, a free source code documentation system for
-documenting C/C++ code.
+Welcome to the PDELab documentation pages.
 
-\section mods Modules
+Good starting points are:
+- DUNE website at https://www.dune-project.org for general information
+- @ref pdelab_recipes for short references of frequently used techniques
+- Full tutorials in the dune-pdelab-tutorials module at https://www.dune-project.org/modules/dune-pdelab-tutorials/
 
-The best way to start is from the page \subpage modules which gives
-you access to the documentation by category.
 
 */
 
-/** \page modules Modules
-*/
