@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     typedef Dune::YaspGrid<dim> Grid;
     Grid grid(L,N);
 
-    //! [Defining functions]
+    // [Defining functions]
     auto analyticFunction1 = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& x){
       return exp(-(x*x));
     });
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 
 
     {
-      //! [Instantiating DifferenceSquaredAdapter]
+      // [Instantiating DifferenceSquaredAdapter]
       Dune::PDELab::DifferenceSquaredAdapter difference(analyticFunction1, analyticFunction2);
       //! [Instantiating DifferenceSquaredAdapter]
       auto integral = Dune::PDELab::integrateGridFunction(difference,10);
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
     }
 
     {
-      //! [Defining operations]
+      // [Defining operations]
       auto difference = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& element, const auto& xlocal){
         Dune::FieldVector<double,1> y1;
         analyticFunction1.evaluate(element, xlocal, y1);
@@ -85,7 +85,7 @@ int main(int argc, char** argv)
         return y2.two_norm2();
       });
       //! [Defining operations]
-      //! [Compute integral]
+      // [Compute integral]
       auto integral = Dune::PDELab::integrateGridFunction(difference,10);
       //! [Compute integral]
       std::cout << "Integral: " << integral << std::endl;
