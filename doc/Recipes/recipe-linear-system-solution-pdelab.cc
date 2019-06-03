@@ -11,46 +11,42 @@
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/gridfunctionspace/dunefunctionsgridfunctionspace.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
+#include <dune/pdelab/stationary/linearproblem.hh>
 
 /**
- * \page recipe-linear-system-assembly Assembling a linear system from a PDE
+ * \page recipe-linear-system-solution-pdelab Solving a linear system within PDELab
  *
- * This recipe shows how to assemble a linear system of equations discretizing
- * a PDE.
+ * Here we show how to solve a linear system of equations originating from a PDE using PDELab.
  *
- * In particular, we start from a LocalOperator representing the PDE's bilinear form. Rather
- * than defining one by ourselves, we use one already provided in PDELab. Further, we assume
- * that a GridFunctionSpace and Constraints have already been set up.
- * \snippet recipe-linear-system-assembly.cc LocalOperator
+ * First, we set up a GridOperator as in @ref recipe-linear-system-assembly
+ * \snippet recipe-linear-system-solution-pdelab.cc Grid operator
  *
- * This per-element LocalOperator can now be plugged into a GridOperator, which is capable
- * of assembling a matrix for the entire domain.
- * \snippet recipe-linear-system-assembly.cc Grid operator
- *
- * Next, we set up our degree of freedom vector.
- * \snippet recipe-linear-system-assembly.cc Make degree of freedom vector
+ * Next, we set up our degree of freedom vector
+ * \snippet recipe-linear-system-solution-pdelab.cc Make degree of freedom vector
  *
  * and ensure it matches the Dirichlet boundary conditions at constrained degrees of freedom.
  * In addition to specifying Dirichlet constrained degrees of freedom, it also serves as
  * initial guess at unconstrained ones.
- * \snippet recipe-linear-system-assembly.cc Set it to match boundary conditions
+ * \snippet recipe-linear-system-solution-pdelab.cc Set it to match boundary conditions
  *
- * Now, from the GridOperator, we can assemble our residual vector depending
- * on our initial guess
- * \snippet recipe-linear-system-assembly.cc Residual assembly
+ * Now we choose the preconditioner and solver we want to use
+ * \snippet recipe-linear-system-solution-pdelab.cc Linear solver backend
  *
- * and print it to console.
- * \snippet recipe-linear-system-assembly.cc Residual output
+ * and plug it into a StationaryLinearProblemSolver. This takes care of assembling
+ * as well as solving the system.
+ * \snippet recipe-linear-system-solution-pdelab.cc Assemble and solve linear problem
  *
- * Likewise, we can assemble our matrix which again depends on the initial guess
- * \snippet recipe-linear-system-assembly.cc Matrix assembly
- * and print it as well.
- * \snippet recipe-linear-system-assembly.cc Matrix output
-
- * Full example code: @ref recipe-linear-system-assembly.cc
- * \example recipe-linear-system-assembly.cc
- * See explanation at @ref recipe-linear-system-assembly
+ * Finally, let's print the result to console via
+ * \snippet recipe-linear-system-solution-pdelab.cc Solution output
+ *
+ * There is a number of alternative solvers and preconditioners available we could use instead, for example this one:
+ * \snippet recipe-linear-system-solution-pdelab.cc Linear solver backend 2
+ *
+ * Full example code: @ref recipe-linear-system-solution-pdelab.cc
+ * \example recipe-linear-system-solution-pdelab.cc
+ * See explanation at @ref recipe-linear-system-solution-pdelab
  */
+
 
 
 /** Parameter class for the stationary convection-diffusion equation of the following form:
@@ -194,18 +190,16 @@ int main(int argc, char **argv)
     // make function space with constraints
     typedef Dune::PDELab::GridFunctionSpace<GM::LeafGridView,FEM,
     Dune::PDELab::ConformingDirichletConstraints,
-    Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>
-    > GFS;
+    Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>> GFS;
     GFS gfs(grid.leafGridView(),fem);
 
     typedef typename GFS::template ConstraintsContainer<NumberType>::Type CC;
     CC cc;
     Dune::PDELab::constraints(bctype,gfs,cc);
 
-    // [LocalOperator]
+    // assembler for finite elemenent problem
     typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
     LOP lop(problem);
-    //! [LocalOperator]
 
     typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
     // [Grid operator]
@@ -223,27 +217,27 @@ int main(int argc, char **argv)
     Dune::PDELab::interpolate(g,gfs,x);
     //! [Set it to match boundary conditions]
 
+    // [Linear solver backend]
+    typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GO> LS;
+    LS ls(100,3);
+    //! [Linear solver backend]
 
-    // [Residual assembly]
-    X d(gfs,0.0);
-    go.residual(x,d);
-    //! [Residual assembly]
+    {
+    // [Linear solver backend 2]
+    typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
+    //! [Linear solver backend 2]
+    }
+
+    // [Assemble and solve linear problem]
+    typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,X> SLP;
+    SLP slp(go,ls,x,1e-10);
+    slp.apply(); // here all the work is done!
+    //! [Assemble and solve linear problem]
 
     using Dune::PDELab::Backend::native;
-    // [Residual output]
-    Dune::printvector(std::cout, native(d), "Residual vector", "");
-    //! [Residual output]
-
-    // [Matrix assembly]
-    typedef GO::Jacobian M;
-    M A(go);
-    go.jacobian(x,A);
-    //! [Matrix assembly]
-
-    // [Matrix output]
-    Dune::printmatrix(std::cout, native(A), "Stiffness matrix", "");
-    //! [Matrix output]
-
+    // [Solution output]
+    Dune::printvector(std::cout, native(x), "Solution", "");
+    //! [Solution output]
 
     return 0;
   }
