@@ -13,44 +13,44 @@
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
 
 /**
- * \page recipe-linear-system-assembly Assembling a linear system from a PDE
+ * \page recipe-linear-system-solution-istl Solving a linear system using ISTL
  *
- * This recipe shows how to assemble a linear system of equations discretizing
- * a PDE.
+ * Here we show how to solve a linear system of equations originating from a PDE directly using ISTL instead of PDELab's abstractions.
  *
- * In particular, we start from a LocalOperator representing the PDE's bilinear form. Rather
- * than defining one by ourselves, we use one already provided in PDELab. Further, we assume
- * that a GridFunctionSpace and Constraints have already been set up.
- * \snippet recipe-linear-system-assembly.cc LocalOperator
+ * Note that generally, we recommend going the all-PDELab route as explained in @ref recipe-linear-system-solution-pdelab.
  *
- * This per-element LocalOperator can now be plugged into a GridOperator, which is capable
- * of assembling a matrix for the entire domain.
- * \snippet recipe-linear-system-assembly.cc Grid operator
+ * First, we assemble our residual as in @ref recipe-linear-system-assembly
+ * \snippet recipe-linear-system-solution-istl.cc Assemble residual
  *
- * Next, we set up our degree of freedom vector.
- * \snippet recipe-linear-system-assembly.cc Make degree of freedom vector
+ * as well as the system matrix we want to solve:
+ * \snippet recipe-linear-system-solution-istl.cc Assemble matrix
  *
- * and ensure it matches the Dirichlet boundary conditions at constrained degrees of freedom.
- * In addition to specifying Dirichlet constrained degrees of freedom, it also serves as
- * initial guess at unconstrained ones.
- * \snippet recipe-linear-system-assembly.cc Set it to match boundary conditions
+ * So far, these are data types provided by PDELab. We can access the underlying ISTL data types via
+ * \snippet recipe-linear-system-solution-istl.cc Extract ISTL types
  *
- * Now, from the GridOperator, we can assemble our residual vector depending
- * on our initial guess
- * \snippet recipe-linear-system-assembly.cc Residual assembly
+ * and the ISTL vectors or matrices behind a PDELab object via:
+ * \snippet recipe-linear-system-solution-istl.cc Access to ISTL objects
  *
- * and print it to console.
- * \snippet recipe-linear-system-assembly.cc Residual output
+ * Now we can wrap our matrix in a LinearOperator object
+ * \snippet recipe-linear-system-solution-istl.cc Define operator
  *
- * Likewise, we can assemble our matrix which again depends on the initial guess
- * \snippet recipe-linear-system-assembly.cc Matrix assembly
- * and print it as well.
- * \snippet recipe-linear-system-assembly.cc Matrix output
-
- * Full example code: @ref recipe-linear-system-assembly.cc
- * \example recipe-linear-system-assembly.cc
- * See explanation at @ref recipe-linear-system-assembly
+ * and pass that into our desired solver along with a preconditioner of our choice.
+ * \snippet recipe-linear-system-solution-istl.cc Define preconditioner and solver
+ *
+ * Applying the solver now returns the solution of the defect problem, i.e. A*v=d.
+ * \snippet recipe-linear-system-solution-istl.cc Run solver
+ *
+ * Finally, we can subtract that from our initial guess to obtain the solution of A*x=b:
+ * \snippet recipe-linear-system-solution-istl.cc Subtract defect correction
+ *
+ * In the end, let's print the solution to console.
+ * \snippet recipe-linear-system-solution-istl.cc Solution output
+ *
+ * Full example code: @ref recipe-linear-system-solution-istl.cc
+ * \example recipe-linear-system-solution-istl.cc
+ * See explanation at @ref recipe-linear-system-solution-istl
  */
+
 
 
 /** Parameter class for the stationary convection-diffusion equation of the following form:
@@ -191,21 +191,18 @@ int main(int argc, char **argv)
     typedef Dune::PDELab::QkLocalFiniteElementMap<GM::LeafGridView,DF,NumberType,1> FEM;
     FEM fem(grid.leafGridView());
 
-    // make function space with constraints
     typedef Dune::PDELab::GridFunctionSpace<GM::LeafGridView,FEM,
     Dune::PDELab::ConformingDirichletConstraints,
-    Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>
-    > GFS;
+    Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>> GFS;
     GFS gfs(grid.leafGridView(),fem);
 
     typedef typename GFS::template ConstraintsContainer<NumberType>::Type CC;
     CC cc;
     Dune::PDELab::constraints(bctype,gfs,cc);
 
-    // [LocalOperator]
+    // local operator for finite elemenent problem
     typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
     LOP lop(problem);
-    //! [LocalOperator]
 
     typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
     // [Grid operator]
@@ -223,27 +220,49 @@ int main(int argc, char **argv)
     Dune::PDELab::interpolate(g,gfs,x);
     //! [Set it to match boundary conditions]
 
-
-    // [Residual assembly]
+    // [Assemble residual]
     X d(gfs,0.0);
     go.residual(x,d);
-    //! [Residual assembly]
+    //! [Assemble residual]
 
-    using Dune::PDELab::Backend::native;
-    // [Residual output]
-    Dune::printvector(std::cout, native(d), "Residual vector", "");
-    //! [Residual output]
-
-    // [Matrix assembly]
+    // [Assemble matrix]
     typedef GO::Jacobian M;
     M A(go);
     go.jacobian(x,A);
-    //! [Matrix assembly]
+    //! [Assemble matrix]
 
-    // [Matrix output]
-    Dune::printmatrix(std::cout, native(A), "Stiffness matrix", "");
-    //! [Matrix output]
+    // [Extract ISTL types]
+    typedef Dune::PDELab::Backend::Native<M> ISTLM;
+    typedef Dune::PDELab::Backend::Native<X> ISTLX;
+    //! [Extract ISTL types]
 
+    // [Access to ISTL objects]
+    using Dune::PDELab::Backend::native;
+    //! [Access to ISTL objects]
+
+    // [Define operator]
+    typedef Dune::MatrixAdapter<ISTLM,ISTLX,ISTLX> Operator;
+    Operator matrixop(native(A));
+    //! [Define operator]
+
+    // [Define preconditioner and solver]
+    Dune::SeqJac<ISTLM,ISTLX,ISTLX> preconditioner(native(A), 1, .5);
+    Dune::CGSolver<ISTLX> solver(matrixop, preconditioner, 1e-3, 10, 2);
+    //! [Define preconditioner and solver]
+
+    // [Run solver]
+    X v(gfs,0.0);
+    Dune::InverseOperatorResult res;
+    solver.apply(native(v), native(d), res);
+    //! [Run solver]
+
+    // [Subtract defect correction]
+    x -= v;
+    //! [Subtract defect correction]
+
+    // [Solution output]
+    Dune::printvector(std::cout, native(x), "Solution", "");
+    //! [Solution output]
 
     return 0;
   }
