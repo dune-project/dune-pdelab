@@ -15,6 +15,10 @@
  * PDE discretization
  * ==============
  * - \subpage recipe-linear-system-assembly
-
+ *
+ * Parallelism
+ * ==============
+ * - \subpage recipe-communication
+ *
  * @}
  */

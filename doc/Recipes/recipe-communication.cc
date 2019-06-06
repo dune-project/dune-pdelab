@@ -1,0 +1,279 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// always include the config file
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+// C++ includes
+#include<math.h>
+#include<iostream>
+// dune-common includes
+#include<dune/common/parallel/mpihelper.hh>
+#include<dune/common/parametertreeparser.hh>
+#include<dune/common/timer.hh>
+// dune-geometry includes
+#include<dune/geometry/referenceelements.hh>
+#include<dune/geometry/quadraturerules.hh>
+// dune-grid includes
+#include<dune/grid/onedgrid.hh>
+#include<dune/grid/yaspgrid.hh>
+#include<dune/grid/utility/structuredgridfactory.hh>
+#include<dune/grid/io/file/vtk/vtkwriter.hh>
+#include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include<dune/grid/io/file/gmshreader.hh>
+#if HAVE_UG
+#include<dune/grid/uggrid.hh>
+#endif
+#if HAVE_DUNE_ALUGRID
+#include<dune/alugrid/grid.hh>
+#include<dune/alugrid/dgf.hh>
+#include<dune/grid/io/file/dgfparser/dgfparser.hh>
+#endif
+// dune-istl included by pdelab
+// dune-pdelab includes
+#include<dune/pdelab/common/function.hh>
+#include<dune/pdelab/common/vtkexport.hh>
+#include<dune/pdelab/finiteelementmap/pkfem.hh>
+#include<dune/pdelab/constraints/common/constraints.hh>
+#include<dune/pdelab/constraints/common/constraintsparameters.hh>
+#include<dune/pdelab/constraints/conforming.hh>
+#include<dune/pdelab/function/callableadapter.hh>
+#include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include<dune/pdelab/gridfunctionspace/interpolate.hh>
+#include<dune/pdelab/gridfunctionspace/vtk.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
+#include<dune/pdelab/localoperator/defaultimp.hh>
+#include<dune/pdelab/localoperator/pattern.hh>
+#include<dune/pdelab/localoperator/flags.hh>
+#include<dune/pdelab/localoperator/variablefactories.hh>
+#include<dune/pdelab/backend/istl.hh>
+#include<dune/pdelab/stationary/linearproblem.hh>
+#include<dune/pdelab/newton/newton.hh>
+
+/**
+ * \page recipe-communication Communication in parallel programs
+ *
+ * This recipe explains two types of communication available in GridView:
+ * neighbourwise communication designed for domain decomposition methods,
+ * and CollectiveCommunication.
+ *
+ * Parallel solvers in DUNE already use the communication, so it is often
+ * possible to run parallel models without communicating explicitly.
+ *
+ * For complete communication preview check section 4 in
+ * <a href="https://www.dune-project.org/modules/dune-pdelab-tutorials/">tutorial06</a>.
+ *
+ * \section neighbourwise-communication Neighbourwise communication
+ *
+ * This type of communication is designed to communicate shared degrees
+ * of freedom between domains. The communication happens only between
+ * neighbouring domains, and only at specified parts of their overlap region.
+ *
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
+ * template <class DataHandleImp, class DataType>
+ * void Dune::GridView<ViewTraits>::communicate(CommDataHandleIF<DataHandleImp,DataType> &dh, InterfaceType iftype, CommunicationDirection dir) const
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *
+ * The communicate function is accessible from GridView object
+ * \snippet recipe-communication.cc Define gv
+ *
+ * To tell the method what data to communicate, we provide data handle (dh)
+ * encapsulating the data vector,
+ * \snippet recipe-communication.cc Define DataHandle
+ *
+ * and InterfaceType describing which entities are sent and received.
+ *
+ * \snippet recipe-communication.cc Communication type
+ * InteriorBorder_InteriorBorder_Interface: send/receive interior and border entities        \\
+ * InteriorBorder_All_Interface:            send interior and border, receive all entities   \\
+ * Overlap_OverlapFront_Interface:          send overlap, receive overlap and front entities \\
+ * Overlap_All_Interface:                   send overlap, receive all entities               \\
+ * All_All_Interface:                       send all and receive all entities
+ *
+ * \section collective-communication Collective communication
+ *
+ * This type of communication shares data between all ranks. Offers
+ * many MPI methods, for example
+ *
+ *   \begin{tabular}{l|p{7cm}}
+ *     \hline
+ *     Method name & Description\\\hline
+ *     \lstinline!rank! & obtain number (rank) of this process\\
+ *     \lstinline!size! & obtain number of processes \\
+ *     \lstinline!barrier! & wait until all process arrived at the barrier\\
+ *     \lstinline!min! & global min of local values\\
+ *     \lstinline!max! & global max of local values\\
+ *     \lstinline!sum! & global sum of local values\\
+ *     \lstinline!allreduce! & Compute something over all processes for each component of an array \\
+ *     &and return result in every process\\
+ *     \lstinline!broadcast! & broadcast from one process to all other processes\\
+ *     \lstinline!scatter! & scatter individual data from root process to all other tasks\\
+ *     \lstinline!gather, allgather! & gather data on root process (and distribute it to all other tasks)\\
+ *     \hline
+ *   \end{tabular}
+ *
+ * The communication object is a part of the GridView
+ *
+ * \snippet recipe-communication.cc Collective communication object
+ *
+ * Most methods take a constant reference and return that type. We need to use
+ * a variable as an argument, and not forget to store the result.
+ *
+ * \snippet recipe-communication.cc Collective communication
+ *
+ * Full example code: @ref recipe-communication.cc
+ * \example recipe-communication.cc
+ * See explanation at @ref recipe-communication
+*/
+
+
+/**
+ * Taken 6.6.2019 from tutorial06/exercise/solution/solution06-2.cc
+ * Added commentaries, changed data[i] to store (100^rank) instead of (rank).
+ * Removed ParameterTree and dependancy on .ini file.
+*/
+#ifndef COMMUNICATE_HH
+#define COMMUNICATE_HH
+
+template <typename GV>
+void communicate(const GV& gv, int codim, int communicationType){
+
+  // // Get a set of indices for entities of current grid view. Note: You
+  // // only get indices for faces of this processor.
+  // typedef typename GV::IndexSet IndexSet;
+  // const IndexSet& indexSet = gv.indexSet();
+
+  // // Get the amount of codim 1 entities on this rank and create a data
+  // // vector of this size. In the 2D case codim 1 entities are the
+  // // edges.
+  // int cdim=codim;
+  // const int dataSize = indexSet.size(cdim);
+  // std::vector<int> data(dataSize, 0.0);
+
+  using RF = double; // RangeField
+  using CON = Dune::PDELab::NoConstraints;
+  using VBE = Dune::PDELab::ISTL::VectorBackend<>;
+  using FEM = Dune::PDELab::PkLocalFiniteElementMap<GV,RF,RF,1>;
+  FEM fem(gv);
+  using GFS = Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE>;
+  GFS gfs(gv,fem);
+  using Z = Dune::PDELab::Backend::Vector<GFS, RF>; // data type
+  Z z(gfs);
+  //! [Define DataHandle]
+  using DH = Dune::PDELab::AddDataHandle<GFS,Z>;
+  DH dh(gfs,z);
+  //! [Define DataHandle]
+
+  // Create collective communication object
+  //! [Collective communication object]
+  auto comm = gv.comm();
+  //! [Collective communication object]
+  // Store the 100^rank of the current processor as data for each edge.
+  //! [Get rank]
+  int myrank = comm().rank();
+  //! [Get rank]
+  for(int i=0 ; i<dataSize; ++i){
+    data[i] = 1;
+    for(int j=0 ; j<myrank; ++j)
+      data[i] *= 100;
+  }
+
+  // Different communication types for DataHandles:
+  //
+  // InteriorBorder_InteriorBorder_Interface: send/receive interior and border entities
+  // InteriorBorder_All_Interface:            send interior and border, receive all entities
+  // Overlap_OverlapFront_Interface:          send overlap, receive overlap and front entities
+  // Overlap_All_Interface:                   send overlap, receive all entities
+  // All_All_Interface:                       send all and receive all entities
+  //! [Communication type]
+  switch (communicationType){
+    case 1:  gv.communicate(dh, Dune::InteriorBorder_InteriorBorder_Interface ,Dune::ForwardCommunication); break;
+    case 2:  gv.communicate(dh, Dune::InteriorBorder_All_Interface            ,Dune::ForwardCommunication); break;
+    case 3:  gv.communicate(dh, Dune::Overlap_OverlapFront_Interface          ,Dune::ForwardCommunication); break;
+    case 4:  gv.communicate(dh, Dune::Overlap_All_Interface                   ,Dune::ForwardCommunication); break;
+    default: gv.communicate(dh, Dune::All_All_Interface                       ,Dune::ForwardCommunication);
+  }
+  //! [Communication type]
+
+  // Calculate the sum of the data vector
+  int sum(0);
+  for(std::size_t i=0 ; i<data.size(); ++i){
+    sum += data[i];
+  }
+
+  // If we are on rank 0 print the results.
+  if (myrank==0){
+    std::cout << std::endl;
+    std::cout << "== Output for rank " << myrank << std::endl;
+    std::cout << std::endl;
+    std::cout << "Each rank stores value equal to 100 powered to its rank. The sum will" << std::endl;
+    std::cout << "clearly show how many codim entities from which ranks are communicated." << std::endl;
+    std::cout << "The size of the data vector is equal to the number of all codim entities of this processor." << std::endl;
+    std::cout << std::endl;
+    std::cout << "Sum of the data vector: " << sum << std::endl;
+    std::cout << "Size of the data vector: " << data.size() << std::endl;
+  }
+
+  // Find the maximal and total sum on all ranks:
+  int globmax{0};
+  int globsum{0};
+  //! [Collective communication]
+  globmax = comm().max(sum);
+  globsum = comm().sum(sum);
+  //! [Collective communication]
+  if (myrank==0){
+    std::cout << "Maximal sum on all ranks is " << globmax << std::endl;
+    std::cout << "Total sum on all ranks is " << globsum << std::endl;
+  }
+}
+
+#endif
+
+
+//===============================================================
+// Main program with grid setup
+//===============================================================
+int main(int argc, char** argv)
+{
+  try{
+    // Maybe initialize Mpi
+    Dune::MPIHelper&
+      helper = Dune::MPIHelper::instance(argc, argv);
+    if(Dune::MPIHelper::isFake)
+      std::cout<< "This is a sequential program." << std::endl;
+    else
+      std::cout << "Parallel code run on "
+                << helper.size() << " process(es)" << std::endl;
+
+    // read ini file
+    const int overlap = 2;
+    const int refinement = 0;
+
+    // Create 2D YaspGrid
+    constexpr int dim=2;
+    typedef Dune::YaspGrid<dim> Grid;
+    typedef Grid::ctype DF;
+    Dune::FieldVector<DF,dim> L{1.,1.};
+    std::array<int,dim> N{16,16};
+    std::bitset<dim> B(false); // periodic boundary (left-right, up-bottom)
+    std::shared_ptr<Grid> gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));//,Dune::MPIHelper::getCollectiveCommunication()));
+    gridp->refineOptions(false); // keep overlap in cells
+    gridp->globalRefine(refinement);
+    //! [Define gv]
+    typedef Grid::LeafGridView GV;
+    GV gv=gridp->leafGridView();
+    //! [Define gv]
+
+    int codim = 0;
+    int communicationType = 1;
+    communicate(gv,codim,communicationType);
+  }
+  catch (Dune::Exception &e){
+    std::cerr << "Dune reported error: " << e << std::endl;
+    return 1;
+  }
+  catch (...){
+    std::cerr << "Unknown exception thrown!" << std::endl;
+    return 1;
+  }
+}
