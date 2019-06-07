@@ -74,7 +74,7 @@
  * void Dune::GridView<ViewTraits>::communicate(CommDataHandleIF<DataHandleImp,DataType> &dh, InterfaceType iftype, CommunicationDirection dir) const
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
- * The communicate function is accessible from GridView object
+ * The communicate function is accessible from <a href="https://dune-project.org/doxygen/master/group__GIGridView.html">GridView</a> object
  * \snippet recipe-communication.cc Define gv
  *
  * To tell the method what data to communicate, we provide data handle (dh)
@@ -95,22 +95,21 @@
  * This type of communication shares data between all ranks. Offers
  * many MPI methods, for example
  *
- *   \begin{tabular}{l|p{7cm}}
- *     \hline
- *     Method name & Description\\\hline
- *     \lstinline!rank! & obtain number (rank) of this process\\
- *     \lstinline!size! & obtain number of processes \\
- *     \lstinline!barrier! & wait until all process arrived at the barrier\\
- *     \lstinline!min! & global min of local values\\
- *     \lstinline!max! & global max of local values\\
- *     \lstinline!sum! & global sum of local values\\
- *     \lstinline!allreduce! & Compute something over all processes for each component of an array \\
- *     &and return result in every process\\
- *     \lstinline!broadcast! & broadcast from one process to all other processes\\
- *     \lstinline!scatter! & scatter individual data from root process to all other tasks\\
- *     \lstinline!gather, allgather! & gather data on root process (and distribute it to all other tasks)\\
- *     \hline
- *   \end{tabular}
+ * <table>
+ * <caption>Table of collective communication functions</caption>
+ * <tr><th> Method name   <th>  Description
+ * <tr><td>\lstinline rank       <td> obtain number (rank) of this process
+ * <tr><td>\lstinline size       <td> obtain number of processes
+ * <tr><td>\lstinline barrier    <td> wait until all process arrived at the barrier
+ * <tr><td>\lstinline min        <td> global min of local values
+ * <tr><td>\lstinline max        <td> global max of local values
+ * <tr><td>\lstinline sum        <td> global sum of local values
+ * <tr><td>\lstinline allreduce  <td> compute something over all processes for each component of
+ *                                    an array and return result in every process
+ * <tr><td>\lstinline broadcast  <td> broadcast from one process to all other processes
+ * <tr><td>\lstinline scatter    <td> scatter individual data from root process to all other tasks
+ * <tr><td>\lstinline gather, allgather  <td> gather data on root process (and distribute it to all other tasks)
+ * </table>
  *
  * The communication object is a part of the GridView
  *
@@ -148,16 +147,16 @@ void communicate(const GV& gv, int communicationType){
   GFS gfs(gv,fem);
   using Z = Dune::PDELab::Backend::Vector<GFS, RF>; // data type
   Z z(gfs);
-  //! [Define DataHandle]
+  // [Define DataHandle]
   using DH = Dune::PDELab::AddDataHandle<GFS,Z>;
   DH dh(gfs,z);
   //! [Define DataHandle]
 
   // Create collective communication object
-  //! [Collective communication object]
+  // [Collective communication object]
   auto comm = gv.comm();
   //! [Collective communication object]
-  //! [Get rank]
+  // [Get rank]
   int myrank = comm().rank();
   //! [Get rank]
   // Store the 100^rank of the current processor as data for each element.
@@ -175,7 +174,7 @@ void communicate(const GV& gv, int communicationType){
   // Overlap_OverlapFront_Interface:          send overlap, receive overlap and front entities
   // Overlap_All_Interface:                   send overlap, receive all entities
   // All_All_Interface:                       send all and receive all entities
-  //! [Communication type]
+  // [Communication type]
   switch (communicationType){
     case 1:  gv.communicate(dh, Dune::InteriorBorder_InteriorBorder_Interface ,Dune::ForwardCommunication); break;
     case 2:  gv.communicate(dh, Dune::InteriorBorder_All_Interface            ,Dune::ForwardCommunication); break;
@@ -207,7 +206,7 @@ void communicate(const GV& gv, int communicationType){
   // Find the maximal and total sum on all ranks:
   int globmax{0};
   int globsum{0};
-  //! [Collective communication]
+  // [Collective communication]
   globmax = comm().max(sum);
   globsum = comm().sum(sum);
   //! [Collective communication]
