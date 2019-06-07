@@ -67,7 +67,7 @@
  *
  * This type of communication is designed to communicate shared degrees
  * of freedom between domains. The communication happens only between
- * neighbouring domains, and only at specified parts of their overlap region.
+ * neighbouring domains, and only at specified parts they have in common.
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
  * template <class DataHandleImp, class DataType>
@@ -84,11 +84,14 @@
  * and InterfaceType describing which entities are sent and received.
  *
  * \snippet recipe-communication.cc Communication type
- * InteriorBorder_InteriorBorder_Interface: send/receive interior and border entities        \\
- * InteriorBorder_All_Interface:            send interior and border, receive all entities   \\
- * Overlap_OverlapFront_Interface:          send overlap, receive overlap and front entities \\
- * Overlap_All_Interface:                   send overlap, receive all entities               \\
- * All_All_Interface:                       send all and receive all entities
+ * <table>
+ * <caption>Table of interface types</caption>
+ * <tr> <td> InteriorBorder_InteriorBorder_Interface <td> send/receive interior and border entities
+ * <tr> <td> InteriorBorder_All_Interface            <td> send interior and border, receive all entities
+ * <tr> <td> Overlap_OverlapFront_Interface          <td> send overlap, receive overlap and front entities
+ * <tr> <td> Overlap_All_Interface                   <td> send overlap, receive all entities
+ * <tr> <td> All_All_Interface                       <td> send all and receive all entities
+ * </table>
  *
  * \section collective-communication Collective communication
  *
