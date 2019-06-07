@@ -23,21 +23,23 @@
 /**
  * \page recipe-blocking Setting up blocked data structures
  *
- * When solving vector-valued PDEs it the result at each grid point must be a vector.
+ * When solving vector-valued PDEs the result at each grid point must be a vector.
  * When doing this the ordering of the global indices can be chosen, e.g.
- * Lexiographic or entity blocked. For many solvers, e.g. AMG, the ordering makes a
+ * lexicographic or entity blocked. For many solvers, e.g. AMG, the ordering makes a
  * difference in the efficiency of the solver. Further options, such as choosing to aggregate
  * over the blocks and specifying the norm to be used can produce faster results.
  *
  * First, we have to define one or more scalar grid function spaces to combine
  * \snippet recipe-blocking.cc Scalar grid function space
  *
- * There are two ways to define a vector-valued grid function space, let's first define
- * a power grid function space with lexiographic ordering
+ * There are two ways to define a vector-valued grid function space. If all scalar grid function
+ * spaces are the same a power grid function space can be used. In contrast a composite grid function
+ * space allows for different scalar grid function spaces. Both can be used with different blocking.
+ *
+ * Let's first define a power grid function space with lexiographic ordering
  * \snippet recipe-blocking.cc Lexiographic blocked type
  *
- * And then a composite grid function space, which allows different scalar grid function spaces
- * for different components with entity blocked ordering
+ * And then a composite grid function space with entity blocked ordering
  * \snippet recipe-blocking.cc Entity blocked type
  *
  * Full example code: @ref recipe-blocking.cc
