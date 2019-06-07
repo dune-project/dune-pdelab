@@ -131,24 +131,13 @@
  * Taken 6.6.2019 from tutorial06/exercise/solution/solution06-2.cc
  * Added commentaries, changed data[i] to store (100^rank) instead of (rank).
  * Removed ParameterTree and dependancy on .ini file.
+ * Removed customized DataHandle, use default one.
 */
 #ifndef COMMUNICATE_HH
 #define COMMUNICATE_HH
 
 template <typename GV>
-void communicate(const GV& gv, int codim, int communicationType){
-
-  // // Get a set of indices for entities of current grid view. Note: You
-  // // only get indices for faces of this processor.
-  // typedef typename GV::IndexSet IndexSet;
-  // const IndexSet& indexSet = gv.indexSet();
-
-  // // Get the amount of codim 1 entities on this rank and create a data
-  // // vector of this size. In the 2D case codim 1 entities are the
-  // // edges.
-  // int cdim=codim;
-  // const int dataSize = indexSet.size(cdim);
-  // std::vector<int> data(dataSize, 0.0);
+void communicate(const GV& gv, int communicationType){
 
   using RF = double; // RangeField
   using CON = Dune::PDELab::NoConstraints;
@@ -168,14 +157,15 @@ void communicate(const GV& gv, int codim, int communicationType){
   //! [Collective communication object]
   auto comm = gv.comm();
   //! [Collective communication object]
-  // Store the 100^rank of the current processor as data for each edge.
   //! [Get rank]
   int myrank = comm().rank();
   //! [Get rank]
-  for(int i=0 ; i<dataSize; ++i){
-    data[i] = 1;
+  // Store the 100^rank of the current processor as data for each element.
+  using Dune::PDELab::Backend::native;
+  for(auto& v : native(z)){
+    v = 1;
     for(int j=0 ; j<myrank; ++j)
-      data[i] *= 100;
+      v *= 100;
   }
 
   // Different communication types for DataHandles:
@@ -206,9 +196,9 @@ void communicate(const GV& gv, int codim, int communicationType){
     std::cout << std::endl;
     std::cout << "== Output for rank " << myrank << std::endl;
     std::cout << std::endl;
-    std::cout << "Each rank stores value equal to 100 powered to its rank. The sum will" << std::endl;
-    std::cout << "clearly show how many codim entities from which ranks are communicated." << std::endl;
-    std::cout << "The size of the data vector is equal to the number of all codim entities of this processor." << std::endl;
+    std::cout << "Each process stores values equal to 100 powered to its rank. The sum will" << std::endl;
+    std::cout << "clearly show how many entities from which ranks are communicated to rank " << myrank << "." << std::endl;
+    std::cout << "The size of the data vector is equal to the number of all entities of this processor." << std::endl;
     std::cout << std::endl;
     std::cout << "Sum of the data vector: " << sum << std::endl;
     std::cout << "Size of the data vector: " << data.size() << std::endl;
@@ -264,9 +254,8 @@ int main(int argc, char** argv)
     GV gv=gridp->leafGridView();
     //! [Define gv]
 
-    int codim = 0;
     int communicationType = 1;
-    communicate(gv,codim,communicationType);
+    communicate(gv,communicationType);
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
