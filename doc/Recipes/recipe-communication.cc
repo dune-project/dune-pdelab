@@ -33,6 +33,7 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/finiteelementmap/pkfem.hh>
+#include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/constraints/common/constraintsparameters.hh>
 #include<dune/pdelab/constraints/conforming.hh>
@@ -107,7 +108,7 @@
  * <tr><td>\lstinline min        <td> global min of local values
  * <tr><td>\lstinline max        <td> global max of local values
  * <tr><td>\lstinline sum        <td> global sum of local values
- * <tr><td>\lstinline allreduce  <td> compute something over all processes for each component of
+ * <tr><td>\lstinline allreduce  <td> compute something over all processes for each component of \n
  *                                    an array and return result in every process
  * <tr><td>\lstinline broadcast  <td> broadcast from one process to all other processes
  * <tr><td>\lstinline scatter    <td> scatter individual data from root process to all other tasks
@@ -141,10 +142,10 @@
 template <typename GV>
 void communicate(const GV& gv, int communicationType){
 
-  using RF = double; // RangeField
+  using RF = int; // RangeField
   using CON = Dune::PDELab::NoConstraints;
   using VBE = Dune::PDELab::ISTL::VectorBackend<>;
-  using FEM = Dune::PDELab::PkLocalFiniteElementMap<GV,RF,RF,1>;
+  using FEM = Dune::PDELab::QkLocalFiniteElementMap<GV,RF,RF,1>;
   FEM fem(gv);
   using GFS = Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE>;
   GFS gfs(gv,fem);
@@ -160,14 +161,17 @@ void communicate(const GV& gv, int communicationType){
   auto comm = gv.comm();
   //! [Collective communication object]
   // [Get rank]
-  int myrank = comm().rank();
+  int myrank = comm.rank();
   //! [Get rank]
-  // Store the 100^rank of the current processor as data for each element.
+  // Store the 100^rank or rank of the current processor as data for each element.
   using Dune::PDELab::Backend::native;
+  int size{0};
   for(auto& v : native(z)){
     v = 1;
+    ++size;
     for(int j=0 ; j<myrank; ++j)
-      v *= 100;
+      // v *= 1000; // makes it easy to see which ranks communicated ths entity
+      v += 1; // makes VTK outputs readable
   }
 
   // Different communication types for DataHandles:
@@ -187,36 +191,46 @@ void communicate(const GV& gv, int communicationType){
   }
   //! [Communication type]
 
-  // Calculate the sum of the data vector
-  int sum(0);
-  for(std::size_t i=0 ; i<data.size(); ++i){
-    sum += data[i];
-  }
+  // Calculate the sum of the data vector on this rank
+  int sum = z.one_norm();
 
   // If we are on rank 0 print the results.
   if (myrank==0){
     std::cout << std::endl;
     std::cout << "== Output for rank " << myrank << std::endl;
     std::cout << std::endl;
-    std::cout << "Each process stores values equal to 100 powered to its rank. The sum will" << std::endl;
-    std::cout << "clearly show how many entities from which ranks are communicated to rank " << myrank << "." << std::endl;
+    std::cout << "Each process stores values equal to 1000 powered to its rank, or only rank." << std::endl;
+    std::cout << "The sum shows how many entities are communicated and from which ranks they are." << std::endl;
     std::cout << "The size of the data vector is equal to the number of all entities of this processor." << std::endl;
     std::cout << std::endl;
     std::cout << "Sum of the data vector: " << sum << std::endl;
-    std::cout << "Size of the data vector: " << data.size() << std::endl;
+    std::cout << "Size of the data vector: " << size << std::endl;
   }
 
   // Find the maximal and total sum on all ranks:
   int globmax{0};
   int globsum{0};
   // [Collective communication]
-  globmax = comm().max(sum);
-  globsum = comm().sum(sum);
+  globmax = comm.max(sum);
+  globsum = comm.sum(sum);
   //! [Collective communication]
   if (myrank==0){
     std::cout << "Maximal sum on all ranks is " << globmax << std::endl;
     std::cout << "Total sum on all ranks is " << globsum << std::endl;
   }
+
+  // Make a grid function out of z
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,Z> ZDGF;
+  ZDGF zdgf(gfs,z);
+  // prepare VTK writer and write the file,
+  int subsampling{1};
+  using VTKWRITER = Dune::SubsamplingVTKWriter<GV>;
+  VTKWRITER vtkwriter(gv,Dune::refinementIntervals(subsampling));
+  std::string filename="recipe-communication";
+  std::string outputname="commType_"+std::to_string(communicationType);
+  typedef Dune::PDELab::VTKGridFunctionAdapter<ZDGF> VTKF;
+  vtkwriter.addVertexData(std::shared_ptr<VTKF>(new VTKF(zdgf,outputname)));
+  vtkwriter.write(filename,Dune::VTK::appendedraw);
 }
 
 #endif
