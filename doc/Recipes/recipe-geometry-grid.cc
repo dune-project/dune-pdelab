@@ -22,17 +22,18 @@
 /**
  * \page recipe-geometry-grid Transforming a cartesian mesh
  *
- * A Gridtransformation is a user-defined function which gives the transformations
- * of points x in the base cartesian grid to the final geometry
+ * A grid transformation is a user-defined function which gives the transformation
+ * of a point x in the base cartesian grid to a final geometry:
+ *
  * \f$ y = F(x) : \Omega -> \hat \Omega. \f$
  *
- * First, let's set up a grid on [0,1]²
+ * First, let's set up a rectangular grid:
  * \snippet recipe-geometry-grid.cc Setting up grid
  *
- * Then, lets define a function that maps the grid to a new geometry
+ * Then, lets define a function that maps the grid to a new geometry:
  * \snippet recipe-geometry-grid.cc Define function
  *
- * Finally, lets map our initial grid using the GridTransformation we defined
+ * Finally, lets map our initial grid using the GridTransformation we defined:
  * \snippet recipe-geometry-grid.cc Mapping grid
  *
  * Full example code: @ref recipe-geometry-grid.cc
@@ -136,7 +137,7 @@ class GridTransformation
     void evaluate(const DomainVector &x, RangeVector &y) const{
         y = x;
         if(x[0] < 0.8)
-            y[1] = (1.0 - x[0]) * (x[1] - 1.0);
+            y[1] = (1.0 + 5.0/4.0 * (sin(M_PI/18.0) - 1.0) * x[0]) * (x[1] - 1.0);
         else
             y[1] = sin((x[0] - 0.6)/3.6 * M_PI) * (x[1] - 1.0);
         if(x[0] > 3.8)
@@ -152,7 +153,7 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc, argv);
 
     // [Setting up grid]
-    constexpr unsigned int dim = 2;
+    const unsigned int dim = 2;
     Dune::FieldVector<double,dim> L = {4.0,2.0};
     std::array<int,dim> N ={64,32};
 
