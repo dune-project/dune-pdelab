@@ -664,6 +664,9 @@ namespace Dune {
               TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self));
               break;
 
+            default:
+              DUNE_THROW(InvalidStateException,"Encountered invalid intersection type");
+
             }
             ++intersection_index;
           }
