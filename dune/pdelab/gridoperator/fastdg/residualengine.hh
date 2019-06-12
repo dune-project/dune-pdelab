@@ -218,7 +218,7 @@ namespace Dune{
       {
         //global_rl_view.add(rl);
         global_rl_view.commit();
-        global_rl_view.unnbind();
+        global_rl_view.unbind();
       }
 
       template<typename IG, typename LFSVC>
