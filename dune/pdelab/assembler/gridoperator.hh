@@ -168,9 +168,9 @@ namespace Dune{
         : _assembler(gfsu.entitySet())
         , _gfsu(&gfsu)
         , _gfsv(&gfsv)
-        , _lop(&lop)
         , _cu(cu)
         , _cv(cv)
+        , _lop(&lop)
         , _dof_exchanger(std::make_shared<BorderDOFExchanger>(*this))
         , _backend(mb)
       {}
