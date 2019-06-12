@@ -254,7 +254,7 @@ namespace Dune {
 
       constexpr bool bindLinearizationPoint() const
       {
-        return isNonLinear(localOperator());
+        return isNonlinear(localOperator());
       }
 
       const TrialVector& coefficient() const
@@ -270,7 +270,7 @@ namespace Dune {
       const TrialVector& linearizationPoint() const
       {
 #if DUNE_PDELAB_ENABLE_CHECK_ASSEMBLY
-        if (not isNonLinear(localOperator()))
+        if (not isNonlinear(localOperator()))
           DUNE_THROW(AssemblyError, "Not allowed to call linearizationPoint() for linear operators");
 #endif
         return *_linearization_point;
@@ -279,7 +279,7 @@ namespace Dune {
       void setLinearizationPoint(const TrialVector& linearization_point)
       {
 #if DUNE_PDELAB_ENABLE_CHECK_ASSEMBLY
-        if (not isNonLinear(localOperator()))
+        if (not isNonlinear(localOperator()))
           DUNE_THROW(AssemblyError, "Not allowed to call setLinearizationPoint() for linear operators");
 #endif
         _linearization_point = &linearization_point;

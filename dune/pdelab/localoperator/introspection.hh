@@ -106,7 +106,7 @@ namespace Dune::PDELab {
 
     constexpr bool nonLinear() const
     {
-      return isNonLinear(localOperator());
+      return isNonlinear(localOperator());
     }
 
     constexpr static bool start()

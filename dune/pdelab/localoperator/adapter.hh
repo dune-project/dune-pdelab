@@ -31,7 +31,7 @@ namespace Dune {
         return LOP::doSkeletonTwoSided;
       }
 
-      static constexpr bool isNonLinear()
+      static constexpr bool isNonlinear()
       {
         return true;
       }

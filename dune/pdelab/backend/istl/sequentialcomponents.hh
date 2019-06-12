@@ -87,7 +87,7 @@ namespace Dune::PDELab::ISTL::Experimental {
 
     void setLinearizationPoint(const Domain& linearization_point, bool keep_matrix) override
     {
-      if (isNonLinear(_go.localOperator()))
+      if (isNonlinear(_go.localOperator()))
         _go.applyJacobianEngine()->setLinearizationPoint(linearization_point);
     }
 
@@ -140,7 +140,7 @@ namespace Dune::PDELab::ISTL::Experimental {
     AssembledLinearOperator(std::shared_ptr<GO> go)
       : _go(std::move(go))
     {
-      if (not isNonLinear(_go->localOperator()))
+      if (not isNonlinear(_go->localOperator()))
         updateMatrix();
     }
 
@@ -161,7 +161,7 @@ namespace Dune::PDELab::ISTL::Experimental {
       assert(_stage == stage - 1);
       if (_stage < stage)
       {
-        if (not isNonLinear(_go->localOperator()))
+        if (not isNonlinear(_go->localOperator()))
           updateMatrix();
         _stage = stage;
         return true;
@@ -184,7 +184,7 @@ namespace Dune::PDELab::ISTL::Experimental {
 
     void setLinearizationPoint(const Domain& linearization_point, bool keep_matrix) override
     {
-      if (isNonLinear(_go->localOperator()) and not keep_matrix)
+      if (isNonlinear(_go->localOperator()) and not keep_matrix)
       {
         _go->jacobianEngine()->setLinearizationPoint(linearization_point);
         updateMatrix();
@@ -282,7 +282,7 @@ namespace Dune::PDELab::ISTL::Experimental {
       , _allow_assembly(allow_assembly)
       , _time_dependent(time_dependent)
     {
-      if (_mode == LinearizedOperatorMode::assembled and not isNonLinear(_go->localOperator()))
+      if (_mode == LinearizedOperatorMode::assembled and not isNonlinear(_go->localOperator()))
         updateMatrix();
     }
 
@@ -303,7 +303,7 @@ namespace Dune::PDELab::ISTL::Experimental {
       assert(_stage == stage - 1);
       if (_stage < stage)
       {
-        if (not isNonLinear(_go->localOperator()) and _time_dependent)
+        if (not isNonlinear(_go->localOperator()) and _time_dependent)
           updateMatrix();
         _stage = stage;
         return true;
@@ -338,7 +338,7 @@ namespace Dune::PDELab::ISTL::Experimental {
 
     void setLinearizationPoint(const Domain& linearization_point, bool keep_matrix) override
     {
-      if (isNonLinear(_go->localOperator()))
+      if (isNonlinear(_go->localOperator()))
       {
         _go->jacobianEngine()->setLinearizationPoint(linearization_point);
         if (_jacobian and not keep_matrix) {
@@ -376,7 +376,7 @@ namespace Dune::PDELab::ISTL::Experimental {
       {
         if (_mode != LinearizedOperatorMode::assembled)
           _log.warning("Requested matrix of linearized operator in matrix-free mode"_fmt);
-        if (isNonLinear(_go->localOperator()))
+        if (isNonlinear(_go->localOperator()))
           ensureMatrix();
         else
           updateMatrix();

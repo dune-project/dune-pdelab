@@ -140,7 +140,7 @@ namespace Dune {
 
       void setLinearizationPoint(const Domain& linearization_point, bool keep_matrix) override
       {
-        if (isNonLinear(_go.localOperator()))
+        if (isNonlinear(_go.localOperator()))
           _go.applyJacobianEngine()->setLinearizationPoint(linearization_point);
       }
 
@@ -193,7 +193,7 @@ namespace Dune {
       AssembledLinearOperator(std::shared_ptr<GO> go)
         : _go(std::move(go))
       {
-        if (not isNonLinear(_go->localOperator()))
+        if (not isNonlinear(_go->localOperator()))
           updateMatrix();
       }
 
@@ -214,7 +214,7 @@ namespace Dune {
         assert(_stage == stage - 1);
         if (_stage < stage)
         {
-          if (not isNonLinear(_go->localOperator()))
+          if (not isNonlinear(_go->localOperator()))
             updateMatrix();
           _stage = stage;
           return true;
@@ -237,7 +237,7 @@ namespace Dune {
 
       void setLinearizationPoint(const Domain& linearization_point, bool keep_matrix) override
       {
-        if (isNonLinear(_go->localOperator()) and not keep_matrix)
+        if (isNonlinear(_go->localOperator()) and not keep_matrix)
         {
           _go->jacobianEngine()->setLinearizationPoint(linearization_point);
           updateMatrix();
