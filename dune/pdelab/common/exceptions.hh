@@ -18,6 +18,10 @@ namespace Dune {
       : public Dune::Exception
     {};
 
+    //! Error when an invalid argument was passed to a function.
+    class InvalidArgument
+      : public Exception
+    {};
 
     //! Assembly-related error.
     class AssemblyError
