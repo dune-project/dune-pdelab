@@ -13,6 +13,7 @@
 #include<dune/pdelab/localoperator/flags.hh>
 #include<dune/pdelab/localoperator/idefault.hh>
 #include<dune/pdelab/localoperator/defaultimp.hh>
+#include<dune/pdelab/localoperator/guardedcalls.hh>
 #include<dune/pdelab/finiteelement/localbasiscache.hh>
 
 #include"convectiondiffusionparameter.hh"
@@ -120,7 +121,7 @@ namespace Dune {
 
         // short cuts for cell, bases and function spaces
         auto& cell = ctx.cell();
-        auto& trial_space = ctx.trial().functionSpace();
+        auto& trial_space = ctx.cell().trial().functionSpace();
         auto& test_space = ctx.test().functionSpace();
         auto& trial_basis = ctx.trial().basis();
         auto& test_basis = ctx.test().basis();
@@ -129,6 +130,7 @@ namespace Dune {
         auto intorder = intorderadd + quadrature_factor * std::max(trial_basis.order(),test_basis.order());
 
         auto A = cell.A(cell.centroid());
+
 
         // variables for quantities used inside the quadrature loop
         Range u;
@@ -157,7 +159,7 @@ namespace Dune {
                 // evaluate u
                 u = 0.0;
                 for (size_type i=0 ; i < trial_space.size() ; ++i)
-                  u += cell.argument()(trial_space,i) * phi[i];
+                  u += cell.coefficient()(trial_space,i) * phi[i];
 
                 // evaluate gradient of basis functions
                 auto gradphi = trial_basis.gradients(ip);
@@ -165,7 +167,7 @@ namespace Dune {
                 // compute gradient of u
                 gradu = 0.0;
                 for (size_type i = 0 ; i < trial_space.size() ; ++i)
-                  gradu.axpy(cell.argument()(trial_space,i),gradphi[i]);
+                  gradu.axpy(cell.coefficient()(trial_space,i),gradphi[i]);
 
                 // compute A * gradient of u
                 A.mv(gradu,Agradu);
@@ -201,6 +203,14 @@ namespace Dune {
                   }
                 dof += r*ip.weight();
               }
+            if constexpr(Context::instationary() and ctx.assembleVariablePart())
+            {
+              for (auto [dof, i] : ctx.timeResidual(test_space))
+              {
+                dof += u * psi[i];
+              }
+
+            }
           }
       }
 
@@ -370,10 +380,10 @@ namespace Dune {
             // evaluate u
             u_s=0.0;
             for (size_type i = 0 ; i < inside.trial().basis().size() ; ++i)
-              u_s += inside.argument()(inside.trial().space(),i) * phi_s[i];
+              u_s += inside.coefficient()(inside.trial().space(),i) * phi_s[i];
             u_n=0.0;
             for (size_type i = 0 ; i < outside.trial().basis().size() ; ++i)
-              u_n += outside.argument()(outside.trial().space(),i) * phi_n[i];
+              u_n += outside.coefficient()(outside.trial().space(),i) * phi_n[i];
 
             // evaluate gradient of basis functions
             auto gradphi_s = inside.trial().basis().gradients(ip);
@@ -384,10 +394,10 @@ namespace Dune {
             // compute gradient of u
             gradu_s = 0.0;
             for (size_type i = 0 ; i < inside.trial().space().size() ; ++i)
-              gradu_s.axpy(inside.argument()(inside.trial().space(),i),gradphi_s[i]);
+              gradu_s.axpy(inside.coefficient()(inside.trial().space(),i),gradphi_s[i]);
             gradu_n = 0.0;
             for (size_type i = 0 ; i < outside.trial().space().size() ; ++i)
-              gradu_n.axpy(outside.argument()(outside.trial().space(),i),gradphi_n[i]);
+              gradu_n.axpy(outside.coefficient()(outside.trial().space(),i),gradphi_n[i]);
 
             // evaluate velocity field and upwinding, assume H(div) velocity field => may choose any side
             b = inside.b(ip);
@@ -416,17 +426,17 @@ namespace Dune {
 
             // diffusion term
             auto term2 =  -(omega_s*(An_F_s*gradu_s) + omega_n*(An_F_n*gradu_n)) * ip.weight();
-            for (size_type i = 0 ; i < inside_residual.size() ; ++i)
-              inside_residual.accumulate(i,term2 * psi_s[i]);
-            for (size_type i = 0 ; i < outside_residual.size() ; ++i)
-              outside_residual.accumulate(i,-term2 * psi_n[i]);
+            for (auto [dof, i] : inside_residual)
+              dof += term2 * psi_s[i];
+            for (auto [dof, i] : outside_residual)
+              dof -= term2 * psi_n[i];
 
             // (non-)symmetric IP term
             auto term3 = (u_s-u_n) * ip.weight();
-            for (size_type i = 0 ; i < inside.trial().space().size() ; ++i)
-              inside_residual.accumulate(inside.trial().space(),i,term3 * theta * omega_s * (An_F_s * gradpsi_s[i]));
-            for (size_type i = 0 ; i < outside.trial().space().size() ; ++i)
-              outside_residual.accumulate(outside.trial().space(),i,term3 * theta * omega_n * (An_F_n * gradpsi_n[i]));
+            for (auto [dof, i] : inside_residual)
+              dof += term3 * theta * omega_s * (An_F_s * gradpsi_s[i]);
+            for (auto [dof, i] : outside_residual)
+              dof += term3 * theta * omega_n * (An_F_n * gradpsi_n[i]);
 
             // standard IP term integral
             auto term4 = penalty_factor * (u_s-u_n) * ip.weight();
@@ -665,8 +675,8 @@ namespace Dune {
                 auto j = ctx.j(ip);
 
                 // integrate
-                for (size_type i = 0 ; i < ctx.test().space().size() ; ++i)
-                  cell.residual().accumulate(ctx.test().space(),i,j * psi_s[i] * ip.weight());
+                for (auto [dof, i] : ctx.residual(ctx.test().space()))
+                  dof += j * psi_s[i] * ip.weight();
 
                 continue;
               }
@@ -674,7 +684,7 @@ namespace Dune {
             // evaluate u
             RF u_s = 0.0;
             for (size_type i = 0 ; i < ctx.trial().space().size() ; ++i)
-              u_s += cell.argument()(ctx.trial().space(),i) * phi_s[i];
+              u_s += cell.coefficient()(ctx.trial().space(),i) * phi_s[i];
 
             // evaluate velocity field and upwinding, assume H(div) velocity field => choose any side
             auto b = cell.b(ip);
@@ -690,15 +700,14 @@ namespace Dune {
 
                 // convection term
                 auto term1 = u_s * normalflux * ip.weight();
-                for (size_type i = 0 ; i < ctx.test().space().size() ; ++i)
-                  cell.residual().accumulate(ctx.test().space(),i,term1 * psi_s[i]);
 
                 // evaluate flux boundary condition
                 auto o = ctx.o(ip) * ip.weight();
+                term1 += o;
 
                 // integrate
-                for (size_type i = 0 ; i < ctx.test().space().size() ; ++i)
-                  cell.residual().accumulate(ctx.test().space(),i,o * psi_s[i]);
+                for (auto [dof,i] : ctx.residual(ctx.test().space()))
+                  dof += term1 * psi_s[i];
 
                 continue;
               }
@@ -711,7 +720,7 @@ namespace Dune {
             // compute gradient of u
             Gradient gradu_s(0.0);
             for (size_type i = 0 ; i < cell.trial().space().size(); ++i)
-              gradu_s.axpy(cell.argument()(cell.trial().space(),i),gradphi_s[i]);
+              gradu_s.axpy(cell.coefficient()(cell.trial().space(),i),gradphi_s[i]);
 
             // evaluate Dirichlet boundary condition
             auto g = cell.g(ip);
@@ -731,23 +740,23 @@ namespace Dune {
 
             // convection term
             auto term1 = (omegaup_s*u_s + omegaup_n*g) * normalflux * ip.weight();
-            for (size_type i = 0 ; i < ctx.test().space().size() ; ++i)
-              cell.residual().accumulate(ctx.test().space(),i,term1 * psi_s[i]);
+            for (auto [dof, i] :ctx.residual(ctx.test().space()))
+              dof += term1 * psi_s[i];
 
             // diffusion term
             auto term2 = (An_F_s*gradu_s) * ip.weight();
-            for (size_type i = 0 ; i < ctx.test().space().size() ; ++i)
-              cell.residual().accumulate(ctx.test().space(),i,-term2 * psi_s[i]);
+            for (auto [dof, i] : ctx.residual(ctx.test().space()))
+              dof -= term2 * psi_s[i];
 
             // (non-)symmetric IP term
             auto term3 = (u_s-g) * ip.weight();
-            for (size_type i = 0 ; i < ctx.test().space().size() ; ++i)
-              cell.residual().accumulate(ctx.test().space(),i,term3 * theta * (An_F_s*gradpsi_s[i]));
+            for (auto [dof, i] : ctx.residual(ctx.test().space()))
+              dof += term3 * theta * (An_F_s*gradpsi_s[i]);
 
             // standard IP term
             auto term4 = penalty_factor * (u_s-g) * ip.weight();
-            for (size_type i = 0 ; i < ctx.test().space().size() ; ++i)
-              cell.residual().accumulate(ctx.test().space(),i,term4 * psi_s[i]);
+            for (auto [dof, i] : ctx.residual(ctx.test().space()))
+              dof += term4 * psi_s[i];
           }
       }
 
@@ -883,9 +892,7 @@ namespace Dune {
         : public Ctx
       {
 
-        CellCache(Ctx&& ctx)
-          : Ctx(std::move(ctx))
-        {}
+        using Ctx::Ctx;
 
         std::vector<LocalOperator::Gradient<Ctx>> Agradphi;
       };
