@@ -534,7 +534,7 @@ namespace Dune {
       template<typename X, typename Container>
       void operator()(const X& x, Container& y) const
       {
-        static_assert(Std::to_true_v<X> and not std::is_same_v<Range,int>,"basis does not support reference gradients");
+        static_assert(Std::to_true_type_v<X> and not std::is_same_v<Range,int>,"basis does not support reference gradients");
         _basis_wrapper->native().evaluateJacobian(BasisWrapper::Context::Flavor::quadratureCoordinate(x),y);
       }
 

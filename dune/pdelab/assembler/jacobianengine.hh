@@ -374,7 +374,7 @@ namespace Dune {
 
       template<typename LocalContainer, typename View>
       std::enable_if_t<
-        Std::to_true_v<LocalContainer> and unconstrained()
+        Std::to_true_type_v<LocalContainer> and unconstrained()
         >
       scatterJacobian(LocalContainer& local_container, View& view)
       {
@@ -383,7 +383,7 @@ namespace Dune {
 
       template<typename LocalContainer, typename View>
       std::enable_if_t<
-        Std::to_true_v<LocalContainer> and not unconstrained()
+        Std::to_true_type_v<LocalContainer> and not unconstrained()
         >
       scatterJacobian(LocalContainer& local_container, View& view)
       {

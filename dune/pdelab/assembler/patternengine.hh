@@ -237,7 +237,7 @@ namespace Dune {
 
 
       template<typename Context, typename LocalPattern, typename TestIndices, typename TrialIndices>
-      std::enable_if_t<Std::to_true_v<LocalPattern> and unconstrained()>
+      std::enable_if_t<Std::to_true_type_v<LocalPattern> and unconstrained()>
       scatterPattern(
         const Context& ctx,
         LocalPattern& local_pattern,
@@ -259,7 +259,7 @@ namespace Dune {
       }
 
       template<typename Context, typename LocalPattern, typename TestIndices, typename TrialIndices>
-      std::enable_if_t<Std::to_true_v<LocalPattern> and not unconstrained()>
+      std::enable_if_t<Std::to_true_type_v<LocalPattern> and not unconstrained()>
       scatterPattern(
         const Context& ctx,
         LocalPattern& local_pattern,

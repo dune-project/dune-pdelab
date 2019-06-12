@@ -572,7 +572,7 @@ namespace Dune {
       template<typename T = int>
       const typename LinearizationPoint::View& linearizationPoint(T dummy = 0)
       {
-        static_assert(Std::to_true_v<T> and enabled, "Calling linearizationPoint() is not allowed for linear problems!");
+        static_assert(Std::to_true_type_v<T> and enabled, "Calling linearizationPoint() is not allowed for linear problems!");
 #if DUNE_PDELAB_ENABLE_CHECK_ASSEMBLY
         if (not Context_::engine().bindLinearizationPoint())
           DUNE_THROW(AssemblyError, "Not allowed to call linearizationPoint() for linear operators");
