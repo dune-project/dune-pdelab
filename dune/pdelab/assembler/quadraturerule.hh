@@ -3,9 +3,11 @@
 #ifndef DUNE_PDELAB_ASSEMBLER_QUADRATURERULE_HH
 #define DUNE_PDELAB_ASSEMBLER_QUADRATURERULE_HH
 
+#include <cstddef>
 #include <optional>
 
 #include <dune/common/iteratorfacades.hh>
+#include <dune/common/reservedvector.hh>
 
 #include <dune/geometry/quadraturerules.hh>
 #include <dune/geometry/identitygeometry.hh>
@@ -34,6 +36,10 @@ namespace Dune {
       using InsideJacobianInverseTransposed  = JacobianInverseTransposed;
       using OutsideJacobianTransposed        = int;
       using OutsideJacobianInverseTransposed = int;
+      using EmbeddingDescriptor              = ReservedVector<
+        LocalCoordinate,
+        (1 << (Geometry::mydimension-1))
+        >;
 
       static constexpr int dimLocal = Geometry::mydimension;
       static constexpr int dimWorld = Geometry::coorddimension;
@@ -69,9 +75,9 @@ namespace Dune {
         : _global(&geo)
       {}
 
-      size_type insideDescriptor() const
+      EmbeddingDescriptor insideDescriptor() const
       {
-        return 0;
+        return {};
       }
 
     private:

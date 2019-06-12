@@ -368,7 +368,7 @@ namespace Dune {
       struct Key
       {
         std::size_t type;
-        std::size_t index;
+        typename Context::Embedding::EmbeddingDescriptor index;
         std::size_t order;
 
         inline friend std::size_t hash_value(const Key& key)

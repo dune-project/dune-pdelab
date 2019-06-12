@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <optional>
 
+#include <dune/common/reservedvector.hh>
+
 #include <dune/geometry/identitygeometry.hh>
 
 #include <dune/typetree/childextraction.hh>
@@ -320,6 +322,12 @@ namespace Dune {
 
     public:
 
+      // TODO: The upper bound here is kind of a hack!
+      using EmbeddingDescriptor = Dune::ReservedVector<
+        typename Context::EntitySet::Intersection::Geometry::GlobalCoordinate,
+        (1 << Context::EntitySet::Intersection::Geometry::mydimension)
+        >;
+
       class IntersectionDomain
       {
 
@@ -360,6 +368,7 @@ namespace Dune {
           using InsideJacobianInverseTransposed  = typename Context::Inside::Embedding::JacobianInverseTransposed;
           using OutsideJacobianTransposed        = typename Context::Outside::Embedding::JacobianTransposed;
           using OutsideJacobianInverseTransposed = typename Context::Outside::Embedding::JacobianInverseTransposed;
+          using EmbeddingDescriptor              = typename IntersectionDomainData::EmbeddingDescriptor;
 
           const Global& global() const
           {
@@ -406,12 +415,22 @@ namespace Dune {
             return _data.outside().embedding().global().jacobianInverseTransposed(p.outside());
           }
 
-          size_type insideDescriptor() const
+          EmbeddingDescriptor insideDescriptor() const
+          {
+            return _data.insideDescriptor();
+          }
+
+          EmbeddingDescriptor outsideDescriptor() const
+          {
+            return _data.outsideDescriptor();
+          }
+
+          size_type insideIndex() const
           {
             return _data.intersection().indexInInside();
           }
 
-          size_type outsideDescriptor() const
+          size_type outsideIndex() const
           {
             return _data.intersection().indexInOutside();
           }
@@ -570,6 +589,8 @@ namespace Dune {
         _geometry.reset();
         _geometry_in_inside.reset();
         _geometry_in_outside.reset();
+        _inside_descriptor.reset();
+        _outside_descriptor.reset();
         return this;
       }
 
@@ -607,6 +628,32 @@ namespace Dune {
           return *_geometry_in_outside;
       }
 
+      const EmbeddingDescriptor& insideDescriptor() const
+      {
+        assert(_intersection);
+        if (not _inside_descriptor)
+        {
+          auto& geo = intersectionGeometryInInside();
+          _inside_descriptor.emplace();
+          for (auto i = 0, corners = geo.corners() ; i < corners ; ++i)
+            _inside_descriptor->push_back(geo.corner(i));
+        }
+        return *_inside_descriptor;
+      }
+
+      const EmbeddingDescriptor& outsideDescriptor() const
+      {
+        assert(_intersection);
+        if (not _inside_descriptor)
+        {
+          auto& geo = intersectionGeometryInOutside();
+          _outside_descriptor.emplace();
+          for (auto i = 0, corners = geo.corners() ; i < corners ; ++i)
+            _outside_descriptor->push_back(geo.corner(i));
+        }
+        return *_outside_descriptor;
+      }
+
     private:
 
       const typename IntersectionDomain::Intersection* _intersection;
@@ -615,6 +662,8 @@ namespace Dune {
       mutable std::optional<typename IntersectionDomain::Embedding::Global> _geometry;
       mutable std::optional<typename IntersectionDomain::Embedding::Inside> _geometry_in_inside;
       mutable std::optional<typename IntersectionDomain::Embedding::Outside> _geometry_in_outside;
+      mutable std::optional<EmbeddingDescriptor> _inside_descriptor;
+      mutable std::optional<EmbeddingDescriptor> _outside_descriptor;
 
     };
 
