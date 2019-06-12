@@ -9,5 +9,9 @@
 #include <dune/pdelab/backend/istl/ovlp_amg_dg_backend.hh>
 #include <dune/pdelab/backend/istl/cg_to_dg_prolongation.hh>
 #include <dune/pdelab/backend/istl/utility.hh>
+#include <dune/pdelab/backend/istl/preconditioners.hh>
+#include <dune/pdelab/backend/istl/solvers.hh>
+
+
 
 #endif // DUNE_PDELAB_BACKEND_ISTL_HH

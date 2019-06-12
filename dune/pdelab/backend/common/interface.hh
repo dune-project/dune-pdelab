@@ -79,15 +79,15 @@ namespace Dune::PDELab::Backend {
       return nullptr;
     }
 
-    void subscribe(Dependent& dependent)
+    virtual void subscribe(Dependent& dependent)
     {
-      auto& ti = typeid(dependent);
+      //auto& ti = typeid(dependent);
       _dependents.insert(&dependent);
       if (hasMatrix())
         dependent.matrixUpdated(true);
     }
 
-    void unsubscribe(Dependent& dependent)
+    virtual void unsubscribe(Dependent& dependent)
     {
       _dependents.erase(&dependent);
     }
@@ -126,6 +126,11 @@ namespace Dune::PDELab::Backend {
       return *_matrix_provider;
     }
 
+    const std::shared_ptr<MatrixProvider> matrixProviderPointer() const
+    {
+      return _matrix_provider;
+    }
+
     const Matrix& matrix() const
     {
       return matrixProvider().matrix();
@@ -138,10 +143,6 @@ namespace Dune::PDELab::Backend {
     }
 
   protected:
-
-    MatrixUsingLinearSolverComponent(std::shared_ptr<MatrixProvider> matrix_provider)
-      : _matrix_provider(std::move(matrix_provider))
-    {}
 
     void setMatrixProvider(std::shared_ptr<MatrixProvider> matrix_provider)
     {
@@ -176,5 +177,36 @@ namespace Dune::PDELab::Backend {
   };
 
 } // namespace Dune::PDELab::Backend
+
+namespace Dune::PDELab {
+
+  template<typename Domain_, typename Range_>
+  struct PDESolver
+    : public Backend::TimestepAwareComponent<Domain_>
+  {
+
+    using Domain = Domain_;
+    using Range  = Range_;
+
+    virtual void solve(Domain& domain) = 0;
+
+  };
+
+  template<typename Domain_, typename Range_>
+  struct ResidualEvaluator
+    : public Backend::TimestepAwareComponent<Domain_>
+  {
+
+    using Domain = Domain_;
+    using Range  = Range_;
+
+    virtual void operator()(const Domain& domain, Range& range) = 0;
+
+    virtual Range makeRange() = 0;
+    virtual Domain makeDomain() = 0;
+
+  };
+
+} // namespace Dune::PDELab
 
 #endif // DUNE_PDELAB_BACKEND_COMMON_INTERFACE_H

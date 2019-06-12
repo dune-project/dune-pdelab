@@ -19,6 +19,8 @@
 #include <dune/istl/superlu.hh>
 #include <dune/istl/umfpack.hh>
 
+#include <dune/logging/logger.hh>
+
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/backend/common/interface.hh>
@@ -109,6 +111,7 @@ namespace Dune {
 
       using Domain        = typename GO::Traits::Domain;
       using Range         = typename GO::Traits::Range;
+      using Matrix        = typename GO::Traits::Jacobian;
       using Field         = typename Base::Field;
       using Real          = typename Base::Real;
       using OneStepMethod = typename Base::OneStepMethod;
@@ -148,7 +151,7 @@ namespace Dune {
 
       void setOneStepMethod(std::shared_ptr<OneStepMethod> method) override
       {
-        _go->setOneStepMethod(method);
+        _go.setOneStepMethod(method);
       }
 
       int startStep(Real t0, Real dt) override
@@ -288,6 +291,88 @@ namespace Dune {
     };
 
 
+    template<typename Domain_, typename Range_, typename Factory>
+    class MatrixFreeSequentialPreconditioner
+      : public Preconditioner<Domain_,Range_>
+    {
+
+    public:
+
+      using Domain             = Domain_;
+      using Range              = Range_;
+
+      using ISTLPreconditioner = typename Dune::Preconditioner<Backend::Native<Domain>,Backend::Native<Range>>;
+      using LinearOperator     = Dune::PDELab::ISTL::LinearOperator<Domain_,Range_>;
+
+      void pre(Domain& domain, Range& range) override
+      {
+        using Backend::native;
+        _prec->pre(native(domain),native(range));
+      }
+
+      void apply(Domain& domain, const Range& range) override
+      {
+        using Backend::native;
+        _prec->apply(native(domain),native(range));
+      }
+
+      void post(Domain& domain) override
+      {
+        using Backend::native;
+        _prec->post(native(domain));
+      }
+
+      SolverCategory::Category category() const override
+      {
+        return SolverCategory::sequential;
+      }
+
+      MatrixFreeSequentialPreconditioner(
+        std::shared_ptr<LinearOperator> lin_op,
+        Factory factory,
+        const ParameterTree& params
+        )
+        : _lin_op(std::move(lin_op))
+        , _factory(std::move(factory))
+        , _prec(_factory(_lin_op,params,std::shared_ptr<ISTLPreconditioner>(nullptr)))
+      {}
+
+    private:
+
+      std::shared_ptr<LinearOperator> _lin_op;
+      Factory _factory;
+      std::shared_ptr<ISTLPreconditioner> _prec;
+
+    };
+
+    template<
+      typename LinearOperator,
+      typename Factory
+      >
+    MatrixFreeSequentialPreconditioner(
+      std::shared_ptr<LinearOperator>,
+      Factory,
+      const ParameterTree&)
+      -> MatrixFreeSequentialPreconditioner<
+        typename LinearOperator::Domain,
+        typename LinearOperator::Range,
+        Factory
+        >;
+
+
+    template<typename LO, typename Factory>
+    auto makeMatrixFreeSequentialPreconditioner(std::shared_ptr<LO> lo, const Factory& factory, const ParameterTree& params)
+    {
+      return std::make_shared<
+        MatrixFreeSequentialPreconditioner<
+          typename LO::Domain,
+          typename LO::Range,
+          Factory
+          >
+        >(lo,factory,params);
+    }
+
+
     template<typename Matrix_, typename Factory>
     class MatrixBasedSequentialPreconditioner
       : public MatrixBasedPreconditioner<Matrix_>
@@ -302,17 +387,18 @@ namespace Dune {
       using Domain         = typename Matrix::Domain;
       using Range          = typename Matrix::Range;
 
+      using ISTLPreconditioner = typename Dune::Preconditioner<Backend::Native<Domain>,Backend::Native<Range>>;
+
       using ISTLPreconditionerPointer = decltype(
         _factory(
-          std::declval<const MatrixProvider&>(),
-          std::declval<const ParameterTree&>()
+          std::declval<std::shared_ptr<MatrixProvider>>(),
+          std::declval<std::shared_ptr<ISTLPreconditioner>>()
           )
         );
-      using ISTLPreconditioner = typename ISTLPreconditionerPointer::element_type;
 
       void matrixUpdated(bool pattern_updated) override
       {
-          _prec = _factory(this->matrixProvider(),_params);
+        _prec = _factory(this->matrixProviderPointer(),_prec);
       }
 
       void pre(Domain& domain, Range& range) override
@@ -344,13 +430,10 @@ namespace Dune {
         const Factory& factory,
         const ParameterTree& params
         )
-        : MatrixBasedPreconditioner<Matrix>(std::move(matrix_provider))
-        , _factory(factory)
+        : _factory(factory)
         , _params(params)
       {
-        // The subscribe call *must* happen in the most derived type, otherwise
-        // the virtual callback to matrixUpdated() will fail!
-        this->matrixProvider().subscribe(*this);
+        this->setMatrixProvider(matrix_provider);
       }
 
     private:
@@ -399,8 +482,8 @@ namespace Dune {
       using ISTLSolver           = Dune::IterativeSolver<Domain,Range>;
       using ISTLPreconditioner   = Dune::Preconditioner<Domain,Range>;
       using ISTLScalarProduct    = Dune::ScalarProduct<Domain>;
-      using Preconditioner       = Preconditioner<Domain,Range>;
-      using LinearOperator       = LinearOperator<Domain,Range>;
+      using Preconditioner       = Dune::PDELab::ISTL::Preconditioner<Domain,Range>;
+      using LinearOperator       = Dune::PDELab::ISTL::LinearOperator<Domain,Range>;
       using Real                 = typename Base::Real;
       using OneStepMethod        = typename Base::OneStepMethod;
 
@@ -451,13 +534,15 @@ namespace Dune {
         std::shared_ptr<LinearOperator> linear_operator,
         std::shared_ptr<Preconditioner> preconditioner,
         const Factory& factory,
-        const ParameterTree& params
+        const ParameterTree& params,
+        Logging::Logger log
         )
         : _factory(factory)
         , _linear_operator(std::move(linear_operator))
         , _preconditioner(std::move(preconditioner))
         , _params(params)
-        , _solver(_factory(_linear_operator,_preconditioner,_params))
+        , _log(log)
+        , _solver(_factory(_linear_operator,_preconditioner,_params,_log))
       {}
 
     private:
@@ -466,6 +551,7 @@ namespace Dune {
       std::shared_ptr<LinearOperator> _linear_operator;
       std::shared_ptr<Preconditioner> _preconditioner;
       const ParameterTree& _params;
+      Logging::Logger _log;
       std::shared_ptr<ISTLSolver> _solver;
 
     };
@@ -501,7 +587,7 @@ namespace Dune {
           typename LO::Range,
           Factory
           >
-        >(lo,preconditioner,factory,params);
+        >(lo,preconditioner,factory,params,Logging::Logger());
     }
 
 

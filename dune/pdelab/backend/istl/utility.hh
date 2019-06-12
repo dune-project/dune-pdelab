@@ -6,6 +6,8 @@
 #include <dune/common/typetraits.hh>
 #include <dune/common/deprecated.hh>
 
+#include <dune/logging.hh>
+
 #include <dune/pdelab/backend/istl/tags.hh>
 
 namespace Dune {
@@ -68,6 +70,32 @@ namespace Dune {
       struct nesting_depth
         : public impl::nesting_depth<T,0,typename tags::container<T>::type::base_tag>
       {};
+
+      inline int logLevelToVerbosity(Logging::LogLevel level)
+      {
+        using namespace Dune::Logging;
+        switch (level)
+        {
+        case LogLevel::off:
+        case LogLevel::critical:
+        case LogLevel::error:
+        case LogLevel::warning:
+        case LogLevel::notice:
+          return 0;
+        case LogLevel::info:
+          return 1;
+        case LogLevel::detail:
+          return 2;
+        case LogLevel::debug:
+          return 3;
+        case LogLevel::trace:
+          return 4;
+        case LogLevel::all:
+          return 99;
+        default:
+          return 0;
+        }
+      }
 
     } // namespace ISTL
   } // namespace PDELab
