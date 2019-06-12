@@ -480,6 +480,10 @@ namespace Dune {
           !std::is_same<
             typename LFS::Traits::GridFunctionSpace::Traits::GridView,
             typename vtk_writer_traits<VTKWriter>::GridView
+            >::value and
+          !std::is_same<
+            typename LFS::Traits::GridFunctionSpace::Traits::EntitySet,
+            typename vtk_writer_traits<VTKWriter>::GridView
             >::value
           >::type
         post(const LFS& lfs, TreePath tp)
@@ -492,6 +496,10 @@ namespace Dune {
           !std::is_same<
             typename LFS::Traits::GridFunctionSpace::Traits::GridView,
             typename vtk_writer_traits<VTKWriter>::GridView
+            >::value and
+          !std::is_same<
+            typename LFS::Traits::GridFunctionSpace::Traits::EntitySet,
+            typename vtk_writer_traits<VTKWriter>::GridView
             >::value
           >::type
         leaf(const LFS& lfs, TreePath tp)
@@ -503,6 +511,10 @@ namespace Dune {
         typename std::enable_if<
           std::is_same<
             typename LFS::Traits::GridFunctionSpace::Traits::GridView,
+            typename vtk_writer_traits<VTKWriter>::GridView
+            >::value or
+          std::is_same<
+            typename LFS::Traits::GridFunctionSpace::Traits::EntitySet,
             typename vtk_writer_traits<VTKWriter>::GridView
             >::value
           >::type
@@ -517,6 +529,10 @@ namespace Dune {
         typename std::enable_if<
           std::is_same<
             typename LFS::Traits::GridFunctionSpace::Traits::GridView,
+            typename vtk_writer_traits<VTKWriter>::GridView
+            >::value or
+          std::is_same<
+            typename LFS::Traits::GridFunctionSpace::Traits::EntitySet,
             typename vtk_writer_traits<VTKWriter>::GridView
             >::value
           >::type
