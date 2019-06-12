@@ -3,7 +3,8 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_DUNEFUNCTIONSLOCALFUNCTIONSPACE_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_DUNEFUNCTIONSLOCALFUNCTIONSPACE_HH
 
-#include<vector>
+#include <cassert>
+#include <vector>
 
 #include <dune/common/stdstreams.hh>
 #include <dune/common/rangeutilities.hh>
@@ -174,8 +175,9 @@ namespace Dune {
           return *_gfs;
         }
 
-        void bind(const typename GFS::Traits::EntitySet::template Codim<0>::Entity& e)
+        void bind(const typename GFS::Traits::EntitySet::template Codim<0>::Entity& e, bool fast = false)
         {
+          assert((not fast) && "dune-functions function space does not support fast DG mode yet.");
           _local_view.bind(e);
         }
 
