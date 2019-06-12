@@ -145,7 +145,7 @@ namespace Dune::PDELab::OneStep {
    * ExplicitOneStepMethod
    * \tparam R C++ type of the floating point parameters
    */
-  auto oneStepTheta = [](auto field, const Dune::ParameterTree& params)
+  constexpr inline auto oneStepTheta = [](auto field, const Dune::ParameterTree& params)
   {
     using R = decltype(field);
     auto theta = params.get<R>("theta");
@@ -170,7 +170,7 @@ namespace Dune::PDELab::OneStep {
    *
    * \tparam R C++ type of the floating point parameters
    */
-  auto explicitEuler = [](auto field, const Dune::ParameterTree& params)
+  constexpr inline auto explicitEuler = [](auto field, const Dune::ParameterTree& params)
   {
     Dune::ParameterTree p2(params);
     p2["theta"] = "0.0";
@@ -185,7 +185,7 @@ namespace Dune::PDELab::OneStep {
    *
    * \tparam R C++ type of the floating point parameters
    */
-  auto implicitEuler = [](auto field, const Dune::ParameterTree& params)
+  constexpr inline auto implicitEuler = [](auto field, const Dune::ParameterTree& params)
   {
     Dune::ParameterTree p2(params);
     p2["theta"] = "1.0";
@@ -200,7 +200,7 @@ namespace Dune::PDELab::OneStep {
    *
    * \tparam R C++ type of the floating point parameters
    */
-  auto heun = [](auto field, const Dune::ParameterTree& params)
+  constexpr inline auto heun = [](auto field, const Dune::ParameterTree& params)
   {
     using R = decltype(field);
     // FIXME: Make this work for non-standard types
@@ -226,7 +226,7 @@ namespace Dune::PDELab::OneStep {
    *
    * \tparam R C++ type of the floating point parameters
    */
-  auto shu3 = [](auto field, const Dune::ParameterTree& params)
+  constexpr inline auto shu3 = [](auto field, const Dune::ParameterTree& params)
   {
     // FIXME: Make this work for non-standard types
     using R = decltype(field);
@@ -254,7 +254,7 @@ namespace Dune::PDELab::OneStep {
    *
    * \tparam R C++ type of the floating point parameters
    */
-  auto rk4 = [](auto field, const Dune::ParameterTree& params)
+  constexpr inline auto rk4 = [](auto field, const Dune::ParameterTree& params)
   {
     // FIXME: Make this work for non-standard types
     using R = decltype(field);
@@ -284,7 +284,7 @@ namespace Dune::PDELab::OneStep {
    *
    * \tparam R C++ type of the floating point parameters
    */
-  auto alexander2 = [](auto field, const Dune::ParameterTree& params)
+  constexpr inline auto alexander2 = [](auto field, const Dune::ParameterTree& params)
   {
     // FIXME: Make this work for non-standard types
     using R = decltype(field);
@@ -314,7 +314,7 @@ namespace Dune::PDELab::OneStep {
    *
    * \tparam R C++ type of the floating point parameters
    */
-  auto fractionalStep = [](auto field, const Dune::ParameterTree& params)
+  constexpr inline auto fractionalStep = [](auto field, const Dune::ParameterTree& params)
   {
     // FIXME: Make this work for non-standard types
     using R = decltype(field);
@@ -350,7 +350,7 @@ namespace Dune::PDELab::OneStep {
    *
    * \tparam R C++ type of the floating point parameters
    */
-  auto alexander3 = [](auto field, const Dune::ParameterTree& params)
+  constexpr inline auto alexander3 = [](auto field, const Dune::ParameterTree& params)
   {
     // FIXME: Make this work for non-standard types
     using R = decltype(field);
