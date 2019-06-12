@@ -62,6 +62,12 @@ namespace Dune {
       using value_type = typename LV::value_type;
       using weight_type = typename LV::weight_type;
 
+      using maybe_const_value_type = std::conditional_t<
+        std::is_const_v<LV>,
+        const value_type,
+        value_type
+        >;
+
       using Proxy = DOFAccumulationProxy<value_type,weight_type>;
 
       class iterator
@@ -171,6 +177,16 @@ namespace Dune {
         return *_lv;
       }
 
+      maybe_const_value_type* data()
+      {
+        return view().data();
+      }
+
+      const value_type* data() const
+      {
+        return view().data();
+      }
+
       const LV& view() const
       {
         return *_lv;
@@ -181,7 +197,7 @@ namespace Dune {
         return *_lfs;
       }
 
-      LocalVectorProxy(LV& lv, const LFS& lfs, weight_type weight)
+      LocalVectorProxy(LV& lv, const LFS& lfs, weight_type weight = 0.0)
         : _lv(&lv)
         , _lfs(&lfs)
         , _weight(weight)
@@ -454,6 +470,16 @@ namespace Dune {
       const LM& view() const
       {
         return *_lm;
+      }
+
+      value_type* data()
+      {
+        return view().data();
+      }
+
+      const value_type* data() const
+      {
+        return view().data();
       }
 
       const TestSpace& testSpace() const

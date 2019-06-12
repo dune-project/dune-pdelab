@@ -59,6 +59,23 @@ namespace Dune {
         return local();
       }
 
+      LocalCoordinate inside(const LocalCoordinate& local) const
+      {
+        return local;
+      }
+
+      template<typename P>
+      InsideJacobianTransposed jacobianTransposed(const P& p) const
+      {
+        return global().jacobianTransposed(p.inside());
+      }
+
+      template<typename P>
+      InsideJacobianInverseTransposed jacobianInverseTransposed(const P& p) const
+      {
+        return global().jacobianInverseTransposed(p.inside());
+      }
+
       template<typename P>
       InsideJacobianTransposed insideJacobianTransposed(const P& p) const
       {
@@ -69,6 +86,12 @@ namespace Dune {
       InsideJacobianInverseTransposed insideJacobianInverseTransposed(const P& p) const
       {
         return global().jacobianInverseTransposed(p.inside());
+      }
+
+      template<typename P>
+      Field integrationElement(const P& p) const
+      {
+        return global().integrationElement(p.local());
       }
 
       CellEmbedding(const Geometry& geo)
@@ -86,26 +109,42 @@ namespace Dune {
 
     };
 
-    template<typename Embedding_>
-    class EmbeddedPoint
+
+
+    template<typename Embedding_, typename Derived>
+    class GeometryCachingPoint
     {
 
     public:
 
-      using Embedding        = Embedding_;
-      using LocalCoordinate  = typename Embedding::Global::LocalCoordinate;
-      using CellCoordinate   = typename Embedding::Inside::GlobalCoordinate;
-      using GlobalCoordinate = typename Embedding::Global::GlobalCoordinate;
-      using Field            = typename Embedding::Field;
+      using Embedding                        = Embedding_;
+      using Field                            = typename Embedding::Field;
+      using LocalCoordinate                  = typename Embedding::LocalCoordinate;
+      using CellCoordinate                   = typename Embedding::CellCoordinate;
+      using GlobalCoordinate                 = typename Embedding::GlobalCoordinate;
+      using JacobianTransposed               = typename Embedding::JacobianTransposed;
+      using JacobianInverseTransposed        = typename Embedding::JacobianInverseTransposed;
+      using InsideJacobianTransposed         = typename Embedding::InsideJacobianTransposed;
+      using InsideJacobianInverseTransposed  = typename Embedding::InsideJacobianInverseTransposed;
+      using OutsideJacobianTransposed        = typename Embedding::OutsideJacobianTransposed;
+      using OutsideJacobianInverseTransposed = typename Embedding::OutsideJacobianInverseTransposed;
 
       const LocalCoordinate& local() const
       {
-        return _local;
+        return static_cast<const Derived&>(*this).local();
       }
 
       operator const LocalCoordinate&() const
       {
         return local();
+      }
+
+      Field integrationElement() const
+      {
+        if (!_integration_element)
+          return _integration_element.emplace(embedding().integrationElement(*this));
+        else
+          return *_integration_element;
       }
 
       const CellCoordinate& cell() const
@@ -116,7 +155,7 @@ namespace Dune {
       const CellCoordinate& inside() const
       {
         if (!_inside)
-          return _inside.emplace(_embedding.inside().global(local()));
+          return _inside.emplace(embedding().inside(local()));
         else
           return *_inside;
       }
@@ -124,7 +163,7 @@ namespace Dune {
       const CellCoordinate& outside() const
       {
         if (!_outside)
-          return _outside.emplace(_embedding.outside().global(local()));
+          return _outside.emplace(embedding().outside(local()));
         else
           return *_outside;
       }
@@ -132,22 +171,73 @@ namespace Dune {
       const GlobalCoordinate& global() const
       {
         if (!_global)
-          return _global.emplace(_embedding.global().global(local()));
+          return _global.emplace(embedding().global(local()));
         else
           return *_global;
       }
 
-      Embedding embedding() const
+      const JacobianTransposed& jacobianTransposed() const
       {
-        return _embedding;
+        if (!_jacobian_transposed)
+          return _jacobian_transposed.emplace(embedding().jacobianTransposed(*this));
+        else
+          return *_jacobian_transposed;
       }
 
-      EmbeddedPoint(const LocalCoordinate& local, const Embedding& embedding)
-        : _local(local)
-        , _embedding(embedding)
-      {}
+      const JacobianInverseTransposed& jacobianInverseTransposed() const
+      {
+        if (!_jacobian_inverse_transposed)
+          return _jacobian_inverse_transposed.emplace(embedding().jacobianInverseTransposed(*this));
+        else
+          return *_jacobian_inverse_transposed;
+      }
 
-      friend std::ostream& operator<<(std::ostream& os, const EmbeddedPoint& p)
+      const InsideJacobianTransposed& insideJacobianTransposed() const
+      {
+        if (!_inside_jacobian_transposed)
+          return _inside_jacobian_transposed.emplace(embedding().insideJacobianTransposed(*this));
+        else
+          return *_inside_jacobian_transposed;
+      }
+
+      const InsideJacobianInverseTransposed& insideJacobianInverseTransposed() const
+      {
+        if (!_inside_jacobian_inverse_transposed)
+          return _inside_jacobian_inverse_transposed.emplace(embedding().insideJacobianInverseTransposed(*this));
+        else
+          return *_inside_jacobian_inverse_transposed;
+      }
+
+      const OutsideJacobianTransposed& outsideJacobianTransposed() const
+      {
+        if (!_outside_jacobian_transposed)
+          return _outside_jacobian_transposed.emplace(embedding().outsideJacobianTransposed(*this));
+        else
+          return *_outside_jacobian_transposed;
+      }
+
+      const OutsideJacobianInverseTransposed& outsideJacobianInverseTransposed() const
+      {
+        if (!_outside_jacobian_inverse_transposed)
+          return _outside_jacobian_inverse_transposed.emplace(embedding().outsideJacobianInverseTransposed(*this));
+        else
+          return *_outside_jacobian_inverse_transposed;
+      }
+
+      const GlobalCoordinate& unitOuterNormal() const
+      {
+        if (!_unit_outer_normal)
+          return _unit_outer_normal.emplace(embedding().unitOuterNormal(*this));
+        else
+          return *_unit_outer_normal;
+      }
+
+      Embedding embedding() const
+      {
+        return static_cast<const Derived&>(*this).embedding();
+      }
+
+      friend std::ostream& operator<<(std::ostream& os, const GeometryCachingPoint& p)
       {
         os << "EP(local=" << p.local()
            << ", inside=" << p.inside()
@@ -158,10 +248,50 @@ namespace Dune {
 
     private:
 
-      LocalCoordinate _local;
       mutable std::optional<CellCoordinate> _inside;
       mutable std::optional<CellCoordinate> _outside;
       mutable std::optional<GlobalCoordinate> _global;
+      mutable std::optional<Field> _integration_element;
+      mutable std::optional<JacobianTransposed> _jacobian_transposed;
+      mutable std::optional<JacobianInverseTransposed> _jacobian_inverse_transposed;
+      mutable std::optional<InsideJacobianTransposed> _inside_jacobian_transposed;
+      mutable std::optional<InsideJacobianInverseTransposed> _inside_jacobian_inverse_transposed;
+      mutable std::optional<OutsideJacobianTransposed> _outside_jacobian_transposed;
+      mutable std::optional<OutsideJacobianInverseTransposed> _outside_jacobian_inverse_transposed;
+      mutable std::optional<GlobalCoordinate> _unit_outer_normal;
+
+    };
+
+
+
+    template<typename Embedding_>
+    class EmbeddedPoint
+      : public GeometryCachingPoint<Embedding_,EmbeddedPoint<Embedding_>>
+    {
+
+    public:
+
+      using Embedding        = Embedding_;
+      using LocalCoordinate  = typename Embedding::Global::LocalCoordinate;
+
+      const LocalCoordinate& local() const
+      {
+        return _local;
+      }
+
+      const Embedding& embedding() const
+      {
+        return _embedding;
+      }
+
+      EmbeddedPoint(const LocalCoordinate& local, const Embedding& embedding)
+        : _local(local)
+        , _embedding(embedding)
+      {}
+
+    private:
+
+      LocalCoordinate _local;
       Embedding _embedding;
 
     };
