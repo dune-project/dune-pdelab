@@ -300,7 +300,7 @@ namespace Dune{
       void residual(const Domain & x, Range & r) const
       {
         auto engine = residualEngine();
-        engine->setArgument(x);
+        engine->setCoefficient(x);
         engine->setResidual(r);
         assembler().assemble(*engine);
       }
@@ -357,7 +357,7 @@ namespace Dune{
       void jacobian_apply(const Domain & z, Range & r) const
       {
         auto engine = applyJacobianEngine();
-        engine->setArgument(z);
+        engine->setCoefficient(z);
         engine->setResult(r);
         assembler().assemble(*engine);
       }
@@ -366,7 +366,7 @@ namespace Dune{
       void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r) const
       {
         auto engine = applyJacobianEngine();
-        engine->setArgument(x);
+        engine->setCoefficient(x);
         engine->setLinearizationPoint(z);
         engine->setResult(r);
         assembler().assemble(*engine);

@@ -507,22 +507,28 @@ namespace Dune {
     }
 
     template<typename Implementation>
-    struct CellArgumentData
+    struct CellCoefficientData
       : public Implementation
     {
 
       using Context_ = typename Implementation::Context_;
 
-      using Argument = typename Implementation::Traits;
+      using Coefficient = typename Implementation::Traits;
 
-      const typename Argument::View& argument()
+      const typename Coefficient::View& coefficient()
       {
         return Implementation::readOnlyView();
       }
 
+      template<typename LFS>
+      LocalVectorProxy<const typename Coefficient::View,LFS> coefficient(const LFS& lfs)
+      {
+        return {Implementation::readOnlyView(),lfs};
+      }
+
       void setup()
       {
-        Implementation::setup(Context_::engine().argument());
+        Implementation::setup(Context_::engine().coefficient());
       }
 
       using Context_::bind;
@@ -540,16 +546,16 @@ namespace Dune {
         return this;
       }
 
-      CellArgumentData(Implementation&& implementation)
+      CellCoefficientData(Implementation&& implementation)
         : Implementation(std::move(implementation))
       {}
 
     };
 
     template<typename Implementation>
-    auto cellArgumentData(Implementation&& implementation)
+    auto cellCoefficientData(Implementation&& implementation)
     {
-      return CellArgumentData<Implementation>(std::move(implementation));
+      return CellCoefficientData<Implementation>(std::move(implementation));
     }
 
 

@@ -88,7 +88,7 @@ namespace Dune {
 
       LOP* _lop;
 
-      const TrialVector* _argument;
+      const TrialVector* _coefficient;
       const TrialVector* _linearization_point;
       TestVector* _result;
 
@@ -183,7 +183,7 @@ namespace Dune {
       }
 
       ApplyJacobianEngine(
-        const TrialVector& argument,
+        const TrialVector& coefficient,
         const TrialVector& linearization_point,
         TestVector& result,
         LOP& lop,
@@ -193,7 +193,7 @@ namespace Dune {
         )
         : FSP(&trial_constraints,&test_constraints)
         , _lop(&lop)
-        , _argument(&argument)
+        , _coefficient(&coefficient)
         , _linearization_point(&linearization_point)
         , _result(&result)
         , _symmetric_dirichlet_constraints(false)
@@ -201,14 +201,14 @@ namespace Dune {
 
       template<typename LOP_>
       ApplyJacobianEngine(
-        const TrialVector& argument,
+        const TrialVector& coefficient,
         const TrialVector& linearization_point,
         TestVector& result,
         LOP_& lop,
         std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
         )
         : _lop(&lop)
-        , _argument(&argument)
+        , _coefficient(&coefficient)
         , _linearization_point(&linearization_point)
         , _result(&result)
         , _symmetric_dirichlet_constraints(false)
@@ -223,7 +223,7 @@ namespace Dune {
         )
         : FSP(&trial_constraints,&test_constraints)
         , _lop(&lop)
-        , _argument(nullptr)
+        , _coefficient(nullptr)
         , _linearization_point(nullptr)
         , _result(nullptr)
         , _symmetric_dirichlet_constraints(false)
@@ -235,7 +235,7 @@ namespace Dune {
         std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
         )
         : _lop(&lop)
-        , _argument(nullptr)
+        , _coefficient(nullptr)
         , _linearization_point(nullptr)
         , _result(nullptr)
         , _symmetric_dirichlet_constraints(false)
@@ -257,14 +257,14 @@ namespace Dune {
         return isNonLinear(localOperator());
       }
 
-      const TrialVector& argument() const
+      const TrialVector& coefficient() const
       {
-        return *_argument;
+        return *_coefficient;
       }
 
-      void setArgument(const TrialVector& argument)
+      void setCoefficient(const TrialVector& coefficient)
       {
-        _argument = &argument;
+        _coefficient = &coefficient;
       }
 
       const TrialVector& linearizationPoint() const
@@ -292,7 +292,7 @@ namespace Dune {
 
       const TrialSpace& trialSpace() const
       {
-        return _argument->gridFunctionSpace();
+        return _coefficient->gridFunctionSpace();
       }
 
       LOP& localOperator()
@@ -323,7 +323,7 @@ namespace Dune {
                           cellLinearizationPointData(
                             models<Concept::PossiblyNonLinear,LOP>(),
                             vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
-                              cellArgumentData(
+                              cellCoefficientData(
                                 vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                   trialSpaceData(
                                     testSpaceData(
@@ -341,7 +341,7 @@ namespace Dune {
                             cellLinearizationPointData(
                               models<Concept::PossiblyNonLinear,LOP>(),
                               vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
-                                cellArgumentData(
+                                cellCoefficientData(
                                   vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                     trialSpaceData(
                                       testSpaceData(

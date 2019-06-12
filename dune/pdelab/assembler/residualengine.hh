@@ -96,7 +96,7 @@ namespace Dune {
       std::vector<std::shared_ptr<TestVector>> _residuals;
       std::vector<std::shared_ptr<TestVector>> _time_residuals;
 
-      const TrialVector* _argument;
+      const TrialVector* _coefficient;
       TestVector* _residual      = nullptr;;
       TestVector* _time_residual = nullptr;
 
@@ -195,7 +195,7 @@ namespace Dune {
         std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
         )
         : _lop(&lop)
-        , _argument(&trial_vector)
+        , _coefficient(&trial_vector)
         , _residual(&test_vector)
       {}
 
@@ -209,7 +209,7 @@ namespace Dune {
         )
         : FSP(&trial_constraints,&test_constraints)
         , _lop(&lop)
-        , _argument(&trial_vector)
+        , _coefficient(&trial_vector)
         , _residual(&test_vector)
       {}
 
@@ -219,7 +219,7 @@ namespace Dune {
         std::enable_if_t<unconstrained() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
         )
         : _lop(&lop)
-        , _argument(nullptr)
+        , _coefficient(nullptr)
         , _residual(nullptr)
       {}
 
@@ -231,13 +231,13 @@ namespace Dune {
         )
         : FSP(&trial_constraints,&test_constraints)
         , _lop(&lop)
-        , _argument(nullptr)
+        , _coefficient(nullptr)
         , _residual(nullptr)
       {}
 
-      void setArgument(const TrialVector& argument)
+      void setCoefficient(const TrialVector& coefficient)
       {
-        _argument = &argument;
+        _coefficient = &coefficient;
       }
 
       void setResidual(TestVector& residual)
@@ -263,7 +263,7 @@ namespace Dune {
       template<typename h = int>
       TestVector& timeResidual()
       {
-        static_assert(Std::to_true_v<h> and instationary(),"Calling timeResidual() is only allowed in instationary mode");
+        static_assert(Std::to_true_type_v<h> and instationary(),"Calling timeResidual() is only allowed in instationary mode");
         if (_stage_accept_mode)
         {
           assert(_time_residuals.size() > stage());
@@ -277,9 +277,9 @@ namespace Dune {
         }
       }
 
-      const TrialVector& argument() const
+      const TrialVector& coefficient() const
       {
-        return *_argument;
+        return *_coefficient;
       }
 
       const TestSpace& testSpace() const
@@ -289,7 +289,7 @@ namespace Dune {
 
       const TrialSpace& trialSpace() const
       {
-        return _argument->gridFunctionSpace();
+        return _coefficient->gridFunctionSpace();
       }
 
       LOP& localOperator()
@@ -320,8 +320,8 @@ namespace Dune {
           return false;
         _stage_accept_mode = true;
         updateWeights();
-        auto argument = _argument;
-        _argument = &solution;
+        auto coefficient = _coefficient;
+        _coefficient = &solution;
         auto residual = _residual;
         auto time_residual = _time_residual;
         assembler.assemble(*this);
@@ -330,7 +330,7 @@ namespace Dune {
         _stage_accept_mode = false;
         IEB::acceptStage(new_stage,assembler,solution);
         if (stage() == oneStepMethod().stages())
-          _argument = argument;
+          _coefficient = coefficient;
         return true;
       }
 
@@ -345,43 +345,65 @@ namespace Dune {
       }
 
       template<typename Assembler>
-      auto context(const Assembler& assembler)
+      auto insideCellContext(const Assembler& assembler)
+      {
+        return
+          insideCell(
+            extractCellContext(
+              *_lop,
+              cellTimeResidualData<TestVector,Flavor::Test>(
+                std::bool_constant<instationary()>{},
+                cellResidualData(
+                  vectorData<TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
+                    cellCoefficientData(
+                      vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                        trialSpaceData(
+                          testSpaceData(
+                            cellGridData(
+                              timeData(
+                                Data<CellFlavor::Inside<enable_flavors>>(*this)
+                                )))))))))));
+      }
+
+      template<typename Assembler, typename InsideCellContext>
+      auto cellContext(const Assembler& assembler, InsideCellContext inside_cell_context)
+      {
+        return
+          cellDomainData(
+            outsideCell(
+              extractCellContext(
+                *_lop,
+                cellTimeResidualData<TestVector,Flavor::Test>(
+                  std::bool_constant<instationary()>{},
+                  cellResidualData(
+                    vectorData<TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
+                      cellCoefficientData(
+                        vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
+                          trialSpaceData(
+                            testSpaceData(
+                              cellGridData(
+                                timeData(
+                                  Data<CellFlavor::Outside<enable_flavors>>(*this)
+                                  )))))))))),
+              std::forward<InsideCellContext>(inside_cell_context)
+              ));
+      }
+
+      template<typename Assembler, typename CellContext>
+      auto intersectionContext(const Assembler& assembler, CellContext cell_context)
       {
         return
           extractContext(
             *_lop,
             intersectionDomainData(
-              cellDomainData(
-                outsideCell(
-                  extractCellContext(
-                    *_lop,
-                    cellTimeResidualData<TestVector,Flavor::Test>(
-                      std::bool_constant<instationary()>{},
-                      cellResidualData(
-                        vectorData<TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
-                          cellArgumentData(
-                            vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
-                              trialSpaceData(
-                                testSpaceData(
-                                  cellGridData(
-                                    timeData(
-                                      Data<CellFlavor::Outside<enable_flavors>>(*this)
-                                      )))))))))),
-                  insideCell(
-                    extractCellContext(
-                      *_lop,
-                      cellTimeResidualData<TestVector,Flavor::Test>(
-                        std::bool_constant<instationary()>{},
-                        cellResidualData(
-                          vectorData<TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
-                            cellArgumentData(
-                              vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
-                                trialSpaceData(
-                                  testSpaceData(
-                                    cellGridData(
-                                      timeData(
-                                        Data<CellFlavor::Inside<enable_flavors>>(*this)
-                                        )))))))))))))));
+              std::forward<CellContext>(cell_context)
+              ));
+      }
+
+      template<typename Assembler>
+      auto context(const Assembler& assembler)
+      {
+        return intersectionContext(assembler,cellContext(assembler,insideCellContext(assembler)));
       }
 
       template<typename Context>
@@ -482,14 +504,14 @@ namespace Dune {
 
     };
 
-    template<typename Argument, typename Residual, typename LOP>
+    template<typename Coefficient, typename Residual, typename LOP>
     ResidualEngine(
-        const Argument&,
+        const Coefficient&,
         Residual&,
         LOP&
       )
       -> ResidualEngine<
-        Argument,
+        Coefficient,
         Residual,
         LOP,
         EmptyTransformation,
@@ -498,15 +520,15 @@ namespace Dune {
         >;
 
 
-    template<typename Argument, typename Residual, typename LOP, typename EngineParameters>
+    template<typename Coefficient, typename Residual, typename LOP, typename EngineParameters>
     ResidualEngine(
-        const Argument&,
+        const Coefficient&,
         Residual&,
         LOP&,
         EngineParameters
       )
       -> ResidualEngine<
-        Argument,
+        Coefficient,
         Residual,
         LOP,
         EmptyTransformation,

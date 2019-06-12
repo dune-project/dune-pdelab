@@ -37,14 +37,14 @@ namespace Dune {
       }
 
       template<typename Context>
-      std::enable_if_t<Std::to_true_v<Context> and (LOP::doAlphaVolume or LOP::doLambdaVolume)>
+      std::enable_if_t<Std::to_true_type_v<Context> and (LOP::doAlphaVolume or LOP::doLambdaVolume)>
       volumeIntegral(Context& ctx) const
       {
         auto residual = ctx.residual();
         auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
         Call<LOP::doAlphaVolume and Context::assembleVariablePart()>::alpha_volume(
           _lop,eg,
-          ctx.trial().functionSpace(),ctx.argument(),
+          ctx.trial().functionSpace(),ctx.coefficient(),
           ctx.test().functionSpace(),residual
           );
         Call<LOP::doLambdaVolume and Context::assembleConstantPart()>::lambda_volume(
@@ -54,14 +54,14 @@ namespace Dune {
       }
 
       template<typename Context>
-      std::enable_if_t<Std::to_true_v<Context> and (LOP::doAlphaVolumePostSkeleton or LOP::doLambdaVolumePostSkeleton)>
+      std::enable_if_t<Std::to_true_type_v<Context> and (LOP::doAlphaVolumePostSkeleton or LOP::doLambdaVolumePostSkeleton)>
       volumeIntegralPostIntersections(Context& ctx) const
       {
         auto residual = ctx.residual();
         auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
         Call<LOP::doAlphaVolumePostSkeleton and Context::assembleVariablePart()>::alpha_volume_post_skeleton(
           _lop,eg,
-          ctx.trial().functionSpace(),ctx.argument(),
+          ctx.trial().functionSpace(),ctx.coefficient(),
           ctx.test().functionSpace(),residual
           );
         Call<LOP::doLambdaVolumePostSkeleton and Context::assembleConstantPart()>::lambda_volume_post_skeleton(
@@ -71,14 +71,14 @@ namespace Dune {
       }
 
       template<typename Context>
-      std::enable_if_t<Std::to_true_v<Context> and (LOP::doAlphaBoundary or LOP::doLambdaBoundary)>
+      std::enable_if_t<Std::to_true_type_v<Context> and (LOP::doAlphaBoundary or LOP::doLambdaBoundary)>
       boundaryIntegral(Context& ctx) const
       {
         auto residual = ctx.inside().residual();
         auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
         Call<LOP::doAlphaBoundary and Context::assembleVariablePart()>::alpha_boundary(
           _lop,ig,
-          ctx.inside().trial().functionSpace(),ctx.inside().argument(),
+          ctx.inside().trial().functionSpace(),ctx.inside().coefficient(),
           ctx.inside().test().functionSpace(),residual
           );
         Call<LOP::doLambdaBoundary and Context::assembleConstantPart()>::lambda_boundary(
@@ -88,7 +88,7 @@ namespace Dune {
       }
 
       template<typename Context>
-      std::enable_if_t<Std::to_true_v<Context> and (LOP::doAlphaSkeleton or LOP::doLambdaSkeleton)>
+      std::enable_if_t<Std::to_true_type_v<Context> and (LOP::doAlphaSkeleton or LOP::doLambdaSkeleton)>
       skeletonIntegral(Context& ctx) const
       {
         auto inside_residual = ctx.inside().residual();
@@ -96,8 +96,8 @@ namespace Dune {
         auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
         Call<LOP::doAlphaSkeleton and Context::assembleVariablePart()>::alpha_skeleton(
           _lop,ig,
-          ctx.inside().trial().functionSpace(),ctx.inside().argument(),ctx.inside().test().functionSpace(),
-          ctx.outside().trial().functionSpace(),ctx.outside().argument(),ctx.outside().test().functionSpace(),
+          ctx.inside().trial().functionSpace(),ctx.inside().coefficient(),ctx.inside().test().functionSpace(),
+          ctx.outside().trial().functionSpace(),ctx.outside().coefficient(),ctx.outside().test().functionSpace(),
           inside_residual,outside_residual
           );
         Call<LOP::doLambdaSkeleton and Context::assembleConstantPart()>::lambda_skeleton(
@@ -107,8 +107,64 @@ namespace Dune {
           );
       }
 
+
       template<typename Context>
-      std::enable_if_t<Std::to_true_v<Context> and LOP::doAlphaVolume>
+      std::enable_if_t<Std::to_true_type_v<Context> and LOP::doAlphaVolume>
+      volumeApplyJacobian(Context& ctx) const
+      {
+        auto result = ctx.result();
+        auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
+        Call<LOP::doAlphaVolume and Context::assembleVariablePart()>::jacobian_apply_volume(
+          _lop,eg,
+          ctx.trial().functionSpace(),ctx.coefficient(),
+          ctx.test().functionSpace(),result
+          );
+      }
+
+      template<typename Context>
+      std::enable_if_t<Std::to_true_type_v<Context> and LOP::doAlphaVolumePostSkeleton>
+      volumeApplyJacobianPostIntersections(Context& ctx) const
+      {
+        auto result = ctx.result();
+        auto eg = ElementGeometry<typename Context::Entity>(ctx.entity());
+        Call<LOP::doAlphaVolumePostSkeleton and Context::assembleVariablePart()>::jacobian_apply_volume_post_skeleton(
+          _lop,eg,
+          ctx.trial().functionSpace(),ctx.coefficient(),
+          ctx.test().functionSpace(),result
+          );
+      }
+
+      template<typename Context>
+      std::enable_if_t<Std::to_true_type_v<Context> and LOP::doAlphaBoundary>
+      boundaryApplyJacobian(Context& ctx) const
+      {
+        auto result = ctx.inside().result();
+        auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
+        Call<LOP::doAlphaBoundary and Context::assembleVariablePart()>::jacobian_apply_boundary(
+          _lop,ig,
+          ctx.inside().trial().functionSpace(),ctx.inside().coefficient(),
+          ctx.inside().test().functionSpace(),result
+          );
+      }
+
+      template<typename Context>
+      std::enable_if_t<Std::to_true_type_v<Context> and LOP::doAlphaSkeleton>
+      skeletonApplyJacobian(Context& ctx) const
+      {
+        auto inside_result = ctx.inside().result();
+        auto outside_result = ctx.outside().result();
+        auto ig = IntersectionGeometry<typename Context::Domain::Intersection>(ctx.domain().intersection(),ctx.domain().index());
+        Call<LOP::doAlphaSkeleton and Context::assembleVariablePart()>::jacobian_apply_skeleton(
+          _lop,ig,
+          ctx.inside().trial().functionSpace(),ctx.inside().coefficient(),ctx.inside().test().functionSpace(),
+          ctx.outside().trial().functionSpace(),ctx.outside().coefficient(),ctx.outside().test().functionSpace(),
+          inside_result,outside_result
+          );
+      }
+
+
+      template<typename Context>
+      std::enable_if_t<Std::to_true_type_v<Context> and LOP::doAlphaVolume>
       volumeJacobian(Context& ctx) const
       {
         auto jacobian = ctx.inside().jacobian();
@@ -121,7 +177,7 @@ namespace Dune {
       }
 
       template<typename Context>
-      std::enable_if_t<Std::to_true_v<Context> and LOP::doAlphaVolumePostSkeleton>
+      std::enable_if_t<Std::to_true_type_v<Context> and LOP::doAlphaVolumePostSkeleton>
       volumeJacobianPostIntersections(Context& ctx) const
       {
         auto jacobian = ctx.inside().jacobian();
@@ -134,7 +190,7 @@ namespace Dune {
       }
 
       template<typename Context>
-      std::enable_if_t<Std::to_true_v<Context> and LOP::doAlphaBoundary>
+      std::enable_if_t<Std::to_true_type_v<Context> and LOP::doAlphaBoundary>
       boundaryJacobian(Context& ctx) const
       {
         auto jacobian = ctx.inside().jacobian();
@@ -147,7 +203,7 @@ namespace Dune {
       }
 
       template<typename Context>
-      std::enable_if_t<Std::to_true_v<Context> and LOP::doAlphaSkeleton>
+      std::enable_if_t<Std::to_true_type_v<Context> and LOP::doAlphaSkeleton>
       skeletonJacobian(Context& ctx) const
       {
         auto jac_ss = ctx.inside().jacobian();
@@ -166,7 +222,7 @@ namespace Dune {
 
 
       template<typename Context>
-      std::enable_if_t<Std::to_true_v<Context> and LOP::doPatternVolume>
+      std::enable_if_t<Std::to_true_type_v<Context> and LOP::doPatternVolume>
       volumePattern(Context& ctx) const
       {
         auto& pattern = ctx.inside().pattern();
@@ -178,7 +234,7 @@ namespace Dune {
       }
 
       template<typename Context>
-      std::enable_if_t<Std::to_true_v<Context> and LOP::doPatternVolumePostSkeleton>
+      std::enable_if_t<Std::to_true_type_v<Context> and LOP::doPatternVolumePostSkeleton>
       volumePatternPostIntersections(Context& ctx) const
       {
         auto& pattern = ctx.inside().pattern();
@@ -190,7 +246,7 @@ namespace Dune {
       }
 
       template<typename Context>
-      std::enable_if_t<Std::to_true_v<Context> and LOP::doPatternBoundary>
+      std::enable_if_t<Std::to_true_type_v<Context> and LOP::doPatternBoundary>
       boundaryPattern(Context& ctx) const
       {
         auto& pattern = ctx.inside().pattern();
@@ -202,7 +258,7 @@ namespace Dune {
       }
 
       template<typename Context>
-      std::enable_if_t<Std::to_true_v<Context> and LOP::doPatternSkeleton>
+      std::enable_if_t<Std::to_true_type_v<Context> and LOP::doPatternSkeleton>
       skeletonPattern(Context& ctx) const
       {
         auto& pattern_sn = ctx.pattern(ctx.inside(),ctx.outside());
