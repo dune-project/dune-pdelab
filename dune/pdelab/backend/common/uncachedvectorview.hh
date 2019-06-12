@@ -22,6 +22,8 @@ namespace Dune {
       typedef typename LFSCache::DOFIndex DOFIndex;
       typedef typename LFSCache::ContainerIndex ContainerIndex;
 
+      using value_type = ElementType;
+
 
       ConstUncachedVectorView()
         : _container(nullptr)
