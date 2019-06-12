@@ -6,6 +6,7 @@
 
 #include <dune/common/typetraits.hh>
 #include <dune/typetree/typetraits.hh>
+#include <dune/logging/type_traits.hh>
 
 namespace Dune {
   namespace PDELab {
