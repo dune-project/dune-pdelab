@@ -266,8 +266,8 @@ namespace Dune::PDELab::ISTL::Experimental {
       using Vector       = Native<typename Provider::Domain>;
       using Operator     = Dune::MatrixAdapter<Matrix,Vector,Vector>;
       using Smoother     = Dune::SeqSSOR<Matrix,Vector,Vector,1>;
-      using SmootherArgs = typename Dune::Amg::SmootherTraits<Smoother>::Arguments;
-      using AMG          = Dune::Amg::AMG<Operator,Vector,Smoother>;
+      //using SmootherArgs = typename Dune::Amg::SmootherTraits<Smoother>::Arguments;
+      //using AMG          = Dune::Amg::AMG<Operator,Vector,Smoother>;
       using Parameters   = Dune::Amg::Parameters;
 
       static_assert(std::is_same_v<Vector,Native<typename Provider::Range>>,"range and domain must be the same");
