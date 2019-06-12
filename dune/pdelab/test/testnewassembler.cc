@@ -5,7 +5,9 @@
 #endif
 
 #include <memory>
+#include <thread>
 
+#include <dune/common/parametertreeparser.hh>
 #include <dune/common/filledarray.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
@@ -13,10 +15,12 @@
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 
-#include <dune/pdelab/common/log.hh>
+#include <dune/logging.hh>
 #include <dune/pdelab/finiteelementmap/qkdg.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/istl.hh>
+#include <dune/pdelab/backend/istl/preconditioners.hh>
+#include <dune/pdelab/backend/istl/solvers.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
 #include <dune/pdelab/stationary/linearproblem.hh>
@@ -30,6 +34,10 @@
 #include <dune/pdelab/localoperator/introspection.hh>
 
 #include <dune/pdelab/solver/linear.hh>
+
+//#define INSTANTIATE_TEMPLATES 1
+
+//#include "testnewassembler-instantiations.cc"
 
 template<typename GV, typename RF>
 class ParameterA
@@ -139,9 +147,7 @@ namespace DG {
 
     public:
 
-      ProblemContext(Context&& ctx)
-        : Context(std::move(ctx))
-      {}
+      using Context::Context;
 
       using Traits = Dune::PDELab::NewConvectionDiffusionParameterTraits<Context>;
 
@@ -232,8 +238,11 @@ namespace DG {
 
 //! solve problem with DG method
 template<class GV, class FEM, class Problem, class OldProblem, int degree>
-bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_problem)
+bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_problem, const Dune::ParameterTree& params)
 {
+
+  using namespace Dune::Literals;
+
   // Coordinate and result type
   typedef typename Problem::Real Real;
   const int dim = GV::Grid::dimension;
@@ -241,7 +250,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
   // Make grid function space
   typedef Dune::PDELab::NoConstraints CON;
   const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-  typedef Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,blocksize> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed> VBE;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE> GFS;
   GFS gfs(gv,fem);
   gfs.name("u_h");
@@ -267,7 +276,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
 
   // GridOperator
   // typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
-  typedef Dune::PDELab::NewGridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
+  typedef Dune::PDELab::NewGridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC,Dune::PDELab::FastDGGridOperatorParameters<>> GO;
   GO go(gfs,cc,gfs,cc,lop,mbe);
 
   using OldGO = Dune::PDELab::NewGridOperator<GFS,GFS,LOPWrapper,MBE,Real,Real,Real,CC,CC>;
@@ -304,6 +313,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
     old_go.jacobian(u,j_old);
   }
 
+
   {
 
     auto scalar_product = 0;
@@ -314,57 +324,40 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
 
     auto linear_operator = std::make_shared<Dune::PDELab::ISTL::AssembledLinearOperator<GO>>(go_ptr);
 
-    Dune::ParameterTree params;
+    using MatrixProvider = Dune::PDELab::Backend::MatrixBasedLinearSolverComponent<typename GO::Traits::Jacobian>;
+
+    Dune::PDELab::OneStep::method<double>("rk4");
+
+    /*
     auto preconditioner = Dune::PDELab::ISTL::makeMatrixBasedSequentialPreconditioner(
       linear_operator,
-      [](auto& provider, auto& params) {
-        using Provider = std::decay_t<decltype(provider)>;
-        using Dune::PDELab::Backend::Native;
-        using Dune::PDELab::Backend::native;
-#if 0
-        return std::make_shared<
-          Dune::SeqILU<
-            Native<typename Provider::Matrix>,
-            Native<typename Provider::Domain>,
-            Native<typename Provider::Range>
-            >
-          >(native(provider.matrix()),1.0);
-#else
-        return std::make_shared<
-          Dune::SeqSSOR<
-            Native<typename Provider::Matrix>,
-            Native<typename Provider::Domain>,
-            Native<typename Provider::Range>
-            >
-          >(native(provider.matrix()),3,1.0);
-#endif
-      },
-      params
+      Dune::PDELab::ISTL::PreconditionerRepository<MatrixProvider>().get(params.sub("solver.preconditioner")),
+      params.sub("solver.preconditioner")
       );
+    */
 
+    /*
     auto linear_solver = Dune::PDELab::ISTL::makeIterativeLinearSolver(
       linear_operator,
       preconditioner,
-      [](auto lin_op, auto prec, auto& params) {
-        using LinearOperator = typename decltype(lin_op)::element_type;
-        return std::make_shared<
-          Dune::CGSolver<
-            typename LinearOperator::Domain
-            >
-          >(*lin_op,*prec,1e-6,1000,1);
-      },
-      params
+      Dune::PDELab::ISTL::SolverRepository<U>().get(params["solver.type"]),
+      params.sub("solver")
       );
+    */
 
-    params["logger"] = "newton";
-    params["log_level"] = "detail";
+    /*
+    auto linear_solver = Dune::PDELab::ISTL::makeIterativeLinearSolver(
+      Dune::PDELab::ISTL::LinearSolverRepository<typename GO::Traits::Jacobian>().get(params.sub("solver"))(linear_operator);
+    */
 
+    //auto linear_solver = Dune::PDELab::ISTL::makeIterativeLinearSolver(linear_operator,params.sub("solver"));
+/*
     auto solver = Dune::PDELab::NewtonPDESolver<U,U>(
       linear_solver,
       std::make_shared<Dune::PDELab::GridOperatorBasedResidual<GO>>(go_ptr),
       params
       );
-
+*/
     //Dune::CGSolver<U> solver(linear_operator,preconditioner,1e-12,1000,2);
 
     // Make linear solver
@@ -381,7 +374,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
     SLP slp(go,ls,u,1e-12);
     // slp.apply();
 
-    solver.solve(u);
+    //solver.solve(u);
 
     // compute L2 error if analytical solution is available
     typedef Dune::PDELab::DiscreteGridFunction<GFS,U> UDGF;
@@ -431,7 +424,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
     //vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<UDGF>>(udgf,"u_h"));
     vtkwriter.write("testnewassembler_old",Dune::VTK::appendedraw);
 
-    Dune::PDELab::log("success");
+    Dune::Logging::log("success"_fmt);
   }
 
   auto inspect = Dune::PDELab::Introspector(go);
@@ -458,15 +451,27 @@ int main(int argc, char** argv)
       std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
   }
 
-  Dune::PDELab::Logging::setup(helper.getCollectiveCommunication());
+  Dune::ParameterTree params;
 
-  Dune::PDELab::Logging::makeLogger("newton",Dune::PDELab::LogLevel::all,Dune::PDELab::Logging::cout());
+  if (argc > 1)
+    Dune::ParameterTreeParser::readINITree(argv[1], params);
+
+  using namespace Dune::Literals;
+  using namespace std::literals;
+
+  using Logging = Dune::Logging::Logging;
+
+  Logging::init(helper.getCollectiveCommunication(),params.sub("logging"));
+  std::this_thread::sleep_for(500ms);
+  Logging::redirectCout("default");
+
+  Logging::registerBackend("newton", Dune::Logging::LogLevel::detail);
 
   bool test_fail = false;
 
-  auto log = Dune::PDELab::logger();
+  auto log = Dune::Logging::logger();
 
-  log.notice("This number is {:12.4e}",3.141);
+  log.notice("This number is {:12.4e}"_fmt,3.141);
 
   typedef double Real;
 
@@ -475,7 +480,7 @@ int main(int argc, char** argv)
   Dune::FieldVector<Real,dim> L(1.0);
   std::bitset<dim> P(false);
   typedef Dune::YaspGrid<dim> Grid;
-  Grid grid(L,Dune::filledArray<dim, int>(1),P,0);
+  Grid grid(L,Dune::filledArray<dim, int>(params.get("mesh.size",1)),P,0);
 
   // Refine grid
   grid.globalRefine(1);
@@ -501,5 +506,5 @@ int main(int argc, char** argv)
   FEMDG femdg;
 
   // Solve problem
-  return runDG <ES, FEMDG, Problem, OldProblem, degree>(es, femdg, problem, old_problem);
+  return runDG <ES, FEMDG, Problem, OldProblem, degree>(es, femdg, problem, old_problem, params);
 }
