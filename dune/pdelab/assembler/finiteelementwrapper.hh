@@ -784,9 +784,6 @@ namespace Dune {
       void bind(const Native& basis)
       {
         _basis = &basis;
-        _values_qp_index = invalid_index;
-        _gradients_qp_index = invalid_index;
-        _reference_gradients_qp_index = invalid_index;
         _values.bind(*this);
         _reference_gradients.bind(*this);
         _gradients.bind(*this);
@@ -795,6 +792,9 @@ namespace Dune {
       template<typename QR>
       void beginQuadrature(QR& qr)
       {
+        _values_qp_index = invalid_index;
+        _gradients_qp_index = invalid_index;
+        _reference_gradients_qp_index = invalid_index;
         _values.beginQuadrature(qr);
         _reference_gradients.beginQuadrature(qr);
         _gradients.beginQuadrature(qr);
