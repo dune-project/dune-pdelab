@@ -21,7 +21,7 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename LM>
+    template<typename LM, LocalViewDataMode _mode>
     struct CachedMatrixDataTraits
     {
       using LocalView        = LM;
@@ -31,9 +31,12 @@ namespace Dune {
       using AccumulationView = typename Container::WeightedAccumulationView;
       using Weight           = typename AccumulationView::weight_type;
       using value_type       = typename LM::value_type;
+
+      static constexpr LocalViewDataMode dataMode = _mode;
+
     };
 
-    template<typename LM>
+    template<typename LM, LocalViewDataMode _mode>
     struct AliasedMatrixDataTraits
     {
       using LocalView        = LM;
@@ -42,6 +45,9 @@ namespace Dune {
       using AccumulationView = LocalView;
       using Weight           = typename AccumulationView::weight_type;
       using value_type       = typename LM::value_type;
+
+      static constexpr LocalViewDataMode dataMode = _mode;
+
     };
 
     template<typename Context, typename LM, LocalViewDataMode _mode>
@@ -53,7 +59,7 @@ namespace Dune {
 
       using Context_ = Context;
 
-      using Traits = CachedMatrixDataTraits<LM>;
+      using Traits = CachedMatrixDataTraits<LM,_mode>;
 
       void setup(typename Traits::Matrix& matrix)
       {
@@ -137,7 +143,7 @@ namespace Dune {
 
       using Context_ = Context;
 
-      using Traits = AliasedMatrixDataTraits<LM>;
+      using Traits = AliasedMatrixDataTraits<LM,_mode>;
 
       void setup(typename Traits::Matrix& matrix)
       {
@@ -308,7 +314,7 @@ namespace Dune {
         std::is_same_v<typename TestSpace::Flavor,typename Context_::Flavor::Test> and
         (std::is_same_v<typename TrialSpace::Flavor,typename Context_::Flavor::Trial> or
          (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,typename Context_::Flavor::Test>)),
-        LocalMatrixProxy<typename Jacobian::View,TestSpace,TrialSpace>
+          LocalMatrixProxy<typename Jacobian::View,TestSpace,TrialSpace,Jacobian::dataMode>
         >
       jacobian(const TestSpace& test_space, const TrialSpace& trial_space)
       {
@@ -369,7 +375,7 @@ namespace Dune {
         std::is_same_v<typename TestSpace::Flavor,typename Context_::Flavor::Test> and
         (std::is_same_v<typename TrialSpace::Flavor,typename Context_::Flavor::Trial> or
          (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,typename Context_::Flavor::Test>)),
-        LocalMatrixProxy<typename Jacobian::View,TestSpace,TrialSpace>
+        LocalMatrixProxy<typename Jacobian::View,TestSpace,TrialSpace,Jacobian::dataMode>
         >
       timeJacobian(const TestSpace& test_space, const TrialSpace& trial_space)
       {
@@ -403,8 +409,8 @@ namespace Dune {
 
       using Context_ = Context;
 
-      using InsideOutsideTraits = CachedMatrixDataTraits<LM_IO>;
-      using OutsideInsideTraits = CachedMatrixDataTraits<LM_OI>;
+      using InsideOutsideTraits = CachedMatrixDataTraits<LM_IO,_mode>;
+      using OutsideInsideTraits = CachedMatrixDataTraits<LM_OI,_mode>;
 
       void setup(typename InsideOutsideTraits::Matrix& matrix)
       {
@@ -523,8 +529,8 @@ namespace Dune {
 
       using Context_ = Context;
 
-      using InsideOutsideTraits = AliasedMatrixDataTraits<LM_IO>;
-      using OutsideInsideTraits = AliasedMatrixDataTraits<LM_OI>;
+      using InsideOutsideTraits = AliasedMatrixDataTraits<LM_IO,_mode>;
+      using OutsideInsideTraits = AliasedMatrixDataTraits<LM_OI,_mode>;
 
       void setup(typename InsideOutsideTraits::Matrix& matrix)
       {
@@ -831,7 +837,7 @@ namespace Dune {
         std::is_same_v<typename TestSpace::Flavor,Flavor::InsideTest> and
         (std::is_same_v<typename TrialSpace::Flavor,Flavor::InsideTrial> or
          (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,Flavor::InsideTest>)),
-        LocalMatrixProxy<typename Context_::Inside::Jacobian::View,TestSpace,TrialSpace>
+        LocalMatrixProxy<typename Context_::Inside::Jacobian::View,TestSpace,TrialSpace,Context_::Inside::Jacobian::dataMode>
         >
       jacobian(const TestSpace& test_space, const TrialSpace& trial_space)
       {
@@ -843,7 +849,7 @@ namespace Dune {
         std::is_same_v<typename TestSpace::Flavor,Flavor::OutsideTest> and
         (std::is_same_v<typename TrialSpace::Flavor,Flavor::OutsideTrial> or
          (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,Flavor::OutsideTest>)),
-        LocalMatrixProxy<typename Context_::Outside::Jacobian::View,TestSpace,TrialSpace>
+        LocalMatrixProxy<typename Context_::Outside::Jacobian::View,TestSpace,TrialSpace,Context_::Outside::Jacobian::dataMode>
         >
       jacobian(const TestSpace& test_space, const TrialSpace& trial_space)
       {
@@ -855,7 +861,7 @@ namespace Dune {
         std::is_same_v<typename TestSpace::Flavor,Flavor::InsideTest> and
         (std::is_same_v<typename TrialSpace::Flavor,Flavor::OutsideTrial> or
          (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,Flavor::OutsideTest>)),
-        LocalMatrixProxy<typename InsideOutsideJacobian::View,TestSpace,TrialSpace>
+        LocalMatrixProxy<typename InsideOutsideJacobian::View,TestSpace,TrialSpace,Context_::Inside::Jacobian::dataMode>
         >
       jacobian(const TestSpace& test_space, const TrialSpace& trial_space)
       {
@@ -867,7 +873,7 @@ namespace Dune {
         std::is_same_v<typename TestSpace::Flavor,Flavor::OutsideTest> and
         (std::is_same_v<typename TrialSpace::Flavor,Flavor::InsideTrial> or
          (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,Flavor::InsideTest>)),
-        LocalMatrixProxy<typename OutsideInsideJacobian::View,TestSpace,TrialSpace>
+        LocalMatrixProxy<typename OutsideInsideJacobian::View,TestSpace,TrialSpace,Context_::Outside::Jacobian::dataMode>
         >
       jacobian(const TestSpace& test_space, const TrialSpace& trial_space)
       {
@@ -982,7 +988,7 @@ namespace Dune {
         std::is_same_v<typename TestSpace::Flavor,Flavor::InsideTest> and
         (std::is_same_v<typename TrialSpace::Flavor,Flavor::InsideTrial> or
          (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,Flavor::InsideTest>)),
-        LocalMatrixProxy<typename Context_::Inside::Jacobian::View,TestSpace,TrialSpace>
+        LocalMatrixProxy<typename Context_::Inside::Jacobian::View,TestSpace,TrialSpace,Context_::Inside::Jacobian::dataMode>
         >
       timeJacobian(const TestSpace& test_space, const TrialSpace& trial_space)
       {
@@ -994,7 +1000,7 @@ namespace Dune {
         std::is_same_v<typename TestSpace::Flavor,Flavor::OutsideTest> and
         (std::is_same_v<typename TrialSpace::Flavor,Flavor::OutsideTrial> or
          (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,Flavor::OutsideTest>)),
-        LocalMatrixProxy<typename Context_::Outside::Jacobian::View,TestSpace,TrialSpace>
+        LocalMatrixProxy<typename Context_::Outside::Jacobian::View,TestSpace,TrialSpace,Context_::Outside::Jacobian::dataMode>
         >
       timeJacobian(const TestSpace& test_space, const TrialSpace& trial_space)
       {
@@ -1006,7 +1012,7 @@ namespace Dune {
         std::is_same_v<typename TestSpace::Flavor,Flavor::InsideTest> and
         (std::is_same_v<typename TrialSpace::Flavor,Flavor::OutsideTrial> or
          (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,Flavor::OutsideTest>)),
-        LocalMatrixProxy<typename InsideOutsideJacobian::View,TestSpace,TrialSpace>
+        LocalMatrixProxy<typename InsideOutsideJacobian::View,TestSpace,TrialSpace,InsideOutsideJacobian::dataMode>
         >
       timeJacobian(const TestSpace& test_space, const TrialSpace& trial_space)
       {
@@ -1018,7 +1024,7 @@ namespace Dune {
         std::is_same_v<typename TestSpace::Flavor,Flavor::OutsideTest> and
         (std::is_same_v<typename TrialSpace::Flavor,Flavor::InsideTrial> or
          (Context_::isGalerkin() and std::is_same_v<typename TrialSpace::Flavor,Flavor::InsideTest>)),
-        LocalMatrixProxy<typename OutsideInsideJacobian::View,TestSpace,TrialSpace>
+        LocalMatrixProxy<typename OutsideInsideJacobian::View,TestSpace,TrialSpace,OutsideInsideJacobian::dataMode>
         >
       timeJacobian(const TestSpace& test_space, const TrialSpace& trial_space)
       {

@@ -22,8 +22,6 @@
 namespace Dune {
   namespace PDELab {
 
-    enum class LocalViewDataMode { read, write, accumulate, readWrite, readAccumulate };
-
     template<typename Context, typename LV, LocalViewDataMode _mode>
     class CachedVectorData
       : public Context
@@ -42,6 +40,8 @@ namespace Dune {
         using AccumulationView = typename Container::WeightedAccumulationView;
         using Weight           = typename AccumulationView::weight_type;
         using value_type       = typename LV::value_type;
+
+        static constexpr LocalViewDataMode dataMode = _mode;
       };
 
     private:
@@ -140,6 +140,8 @@ namespace Dune {
         using AccumulationView = LocalView;
         using Weight           = typename AccumulationView::weight_type;
         using value_type       = typename LV::value_type;
+
+        static constexpr LocalViewDataMode dataMode = _mode;
       };
 
     private:
@@ -277,7 +279,7 @@ namespace Dune {
       }
 
       template<typename LFS>
-      LocalVectorProxy<typename Residual::View,LFS> residual(const LFS& lfs)
+      LocalVectorProxy<typename Residual::View,LFS,Residual::dataMode> residual(const LFS& lfs)
       {
         return {Implementation::readWriteView(),lfs,Context_::engine().weight()};
       }
@@ -330,7 +332,7 @@ namespace Dune {
       }
 
       template<typename LFS>
-      LocalVectorProxy<typename Residual::View,LFS> residual(const LFS& lfs)
+      LocalVectorProxy<typename Residual::View,LFS,Residual::dataMode> residual(const LFS& lfs)
       {
         return {Implementation::readWriteView(),lfs,Context_::engine().timeWeight()};
       }
@@ -414,13 +416,13 @@ namespace Dune {
       }
 
       template<typename LFS>
-      LocalVectorProxy<typename Result::View,LFS> result(const LFS& lfs)
+      LocalVectorProxy<typename Result::View,LFS,Result::dataMode> result(const LFS& lfs)
       {
         return {Implementation::readWriteView(),lfs,Context_::engine().weight()};
       }
 
       template<typename LFS>
-      LocalVectorProxy<typename Result::View,LFS> residual(const LFS& lfs)
+      LocalVectorProxy<typename Result::View,LFS,Result::dataMode> residual(const LFS& lfs)
       {
         return {Implementation::readWriteView(),lfs,Context_::engine().weight()};
       }
@@ -477,13 +479,13 @@ namespace Dune {
       }
 
       template<typename LFS>
-      LocalVectorProxy<typename Result::View,LFS> timeResult(const LFS& lfs)
+      LocalVectorProxy<typename Result::View,LFS,Result::dataMode> timeResult(const LFS& lfs)
       {
         return {Context_::ResultImplementation::readWriteView(),lfs,Context_::engine().timeWeight()};
       }
 
       template<typename LFS>
-      LocalVectorProxy<typename Result::View,LFS> timeResidual(const LFS& lfs)
+      LocalVectorProxy<typename Result::View,LFS,Result::dataMode> timeResidual(const LFS& lfs)
       {
         return {Context_::ResultImplementation::readWriteView(),lfs,Context_::engine().timeWeight()};
       }
@@ -521,7 +523,7 @@ namespace Dune {
       }
 
       template<typename LFS>
-      LocalVectorProxy<const typename Coefficient::View,LFS> coefficient(const LFS& lfs)
+      LocalVectorProxy<const typename Coefficient::View,LFS,Coefficient::dataMode> coefficient(const LFS& lfs)
       {
         return {Implementation::readOnlyView(),lfs};
       }

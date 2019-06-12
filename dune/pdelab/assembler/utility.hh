@@ -293,6 +293,8 @@ namespace Dune {
       return false;
     }
 
+    enum class LocalViewDataMode { read, write, accumulate, readWrite, readAccumulate };
+
   } // namespace PDELab
 } // namespace Dune
 

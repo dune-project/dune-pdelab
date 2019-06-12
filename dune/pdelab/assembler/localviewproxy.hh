@@ -10,36 +10,79 @@
 
 #include <dune/common/iteratorfacades.hh>
 
+#include <dune/pdelab/assembler/utility.hh>
+
 namespace Dune {
   namespace PDELab {
 
-    template<typename Field_, typename Weight_>
-    class DOFAccumulationProxy
+#ifndef DOXYGEN
+
+    namespace Impl {
+
+      template<typename Impl, bool enabled>
+      struct DOFProxyReadAccess
+      {
+        operator const typename Impl::Field&() const noexcept
+        {
+          return *static_cast<const Impl*>(this)->_data;
+        }
+      };
+
+      template<typename Impl>
+      struct DOFProxyReadAccess<Impl,false>
+      {};
+
+      template<typename Impl, bool enabled>
+      struct DOFProxyWriteAccess
+      {
+
+        auto weight() const noexcept
+        {
+          return static_cast<const Impl*>(this)->_weight;
+        }
+
+        template<typename V>
+        void operator+=(const V& value)
+        {
+          auto& impl = *static_cast<Impl*>(this);
+          *impl._data += impl._weight * value;
+        }
+
+        template<typename V>
+        void operator-=(const V& value)
+        {
+          auto& impl = *static_cast<Impl*>(this);
+          *impl._data -= impl._weight * value;
+        }
+
+      };
+
+      template<typename Impl>
+      struct DOFProxyWriteAccess<Impl,false>
+      {};
+
+    }
+
+#endif // DOXYGEN
+
+    template<typename Field_, typename Weight_, LocalViewDataMode mode>
+    class DOFProxy
+      : public Impl::DOFProxyReadAccess<DOFProxy<Field_,Weight_,mode>,mode == LocalViewDataMode::read or mode == LocalViewDataMode::readWrite or mode == LocalViewDataMode::readAccumulate>
+      , public Impl::DOFProxyWriteAccess<DOFProxy<Field_,Weight_,mode>,mode == LocalViewDataMode::write or mode == LocalViewDataMode::accumulate or mode == LocalViewDataMode::readWrite or mode == LocalViewDataMode::readAccumulate>
     {
+
+      template<typename Proxy, bool enabled>
+      friend struct Impl::DOFProxyReadAccess;
+
+      template<typename Proxy, bool enabled>
+      friend struct Impl::DOFProxyWriteAccess;
 
     public:
 
-      using Field  = Field_;
+      using Field  = std::decay_t<Field_>;
       using Weight = Weight_;
 
-      Weight weight() const
-      {
-        return _weight;
-      }
-
-      template<typename V>
-      void operator+=(const V& value)
-      {
-        *_data += _weight * value;
-      }
-
-      template<typename V>
-      void operator-=(const V& value)
-      {
-        *_data -= _weight * value;
-      }
-
-      DOFAccumulationProxy(Field& field, Weight weight) noexcept
+      DOFProxy(Field& field, Weight weight) noexcept
         : _data(&field)
         , _weight(weight)
       {}
@@ -52,7 +95,7 @@ namespace Dune {
     };
 
 
-    template<typename LV, typename LFS>
+    template<typename LV, typename LFS, LocalViewDataMode _mode>
     class LocalVectorProxy
     {
 
@@ -68,7 +111,7 @@ namespace Dune {
         value_type
         >;
 
-      using Proxy = DOFAccumulationProxy<value_type,weight_type>;
+      using Proxy = DOFProxy<maybe_const_value_type,weight_type,_mode>;
 
       class iterator
         : public RandomAccessIteratorFacade<iterator,std::pair<Proxy,size_type>,std::pair<Proxy,size_type>>
@@ -239,7 +282,7 @@ namespace Dune {
     };
 
 
-    template<typename LM, typename TestSpace, typename TrialSpace>
+    template<typename LM, typename TestSpace, typename TrialSpace, LocalViewDataMode _mode>
     class LocalMatrixProxy
     {
 
@@ -249,7 +292,13 @@ namespace Dune {
       using value_type = typename LM::value_type;
       using weight_type = typename LM::weight_type;
 
-      using Proxy = DOFAccumulationProxy<value_type,weight_type>;
+      using maybe_const_value_type = std::conditional_t<
+        std::is_const_v<LM>,
+        const value_type,
+        value_type
+        >;
+
+      using Proxy = DOFProxy<maybe_const_value_type,weight_type,_mode>;
 
       class iterator;
 
