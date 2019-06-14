@@ -683,8 +683,8 @@ namespace Dune {
 
             // evaluate u
             RF u_s = 0.0;
-            for (size_type i = 0 ; i < ctx.trial().space().size() ; ++i)
-              u_s += cell.coefficient()(ctx.trial().space(),i) * phi_s[i];
+            for (auto [c,i] : ctx.coefficient(cell.trial().space()))
+              u_s += c * phi_s[i];
 
             // evaluate velocity field and upwinding, assume H(div) velocity field => choose any side
             auto b = cell.b(ip);
