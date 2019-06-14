@@ -644,7 +644,7 @@ namespace Dune {
       const EmbeddingDescriptor& outsideDescriptor() const
       {
         assert(_intersection);
-        if (not _inside_descriptor)
+        if (not _outside_descriptor)
         {
           auto& geo = intersectionGeometryInOutside();
           _outside_descriptor.emplace();
