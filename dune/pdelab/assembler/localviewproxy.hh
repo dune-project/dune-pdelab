@@ -19,17 +19,17 @@ namespace Dune {
 
     namespace Impl {
 
-      template<typename Impl, bool enabled>
+      template<typename Impl, typename Field, bool enabled>
       struct DOFProxyReadAccess
       {
-        operator const typename Impl::Field&() const noexcept
+        operator const Field&() const noexcept
         {
           return *static_cast<const Impl*>(this)->_data;
         }
       };
 
-      template<typename Impl>
-      struct DOFProxyReadAccess<Impl,false>
+      template<typename Impl, typename Field>
+      struct DOFProxyReadAccess<Impl,Field,false>
       {};
 
       template<typename Impl, bool enabled>
@@ -67,7 +67,7 @@ namespace Dune {
 
     template<typename Field_, typename Weight_, LocalViewDataMode mode>
     class DOFProxy
-      : public Impl::DOFProxyReadAccess<DOFProxy<Field_,Weight_,mode>,mode == LocalViewDataMode::read or mode == LocalViewDataMode::readWrite or mode == LocalViewDataMode::readAccumulate>
+      : public Impl::DOFProxyReadAccess<DOFProxy<Field_,Weight_,mode>,Field_,mode == LocalViewDataMode::read or mode == LocalViewDataMode::readWrite or mode == LocalViewDataMode::readAccumulate>
       , public Impl::DOFProxyWriteAccess<DOFProxy<Field_,Weight_,mode>,mode == LocalViewDataMode::write or mode == LocalViewDataMode::accumulate or mode == LocalViewDataMode::readWrite or mode == LocalViewDataMode::readAccumulate>
     {
 
@@ -82,7 +82,7 @@ namespace Dune {
       using Field  = std::decay_t<Field_>;
       using Weight = Weight_;
 
-      DOFProxy(Field& field, Weight weight) noexcept
+      DOFProxy(Field_& field, Weight weight) noexcept
         : _data(&field)
         , _weight(weight)
       {}
@@ -193,12 +193,12 @@ namespace Dune {
         return space().size();
       }
 
-      value_type& operator[](size_type i)
+      maybe_const_value_type& operator[](size_type i)
       {
         return view()(space(),i);
       }
 
-      value_type& operator()(const LFS& lfs, size_type i)
+      maybe_const_value_type& operator()(const LFS& lfs, size_type i)
       {
         assert(&lfs == _lfs);
         return view()(lfs,i);
