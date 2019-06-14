@@ -582,6 +582,17 @@ namespace Dune {
         return Implementation::readOnlyView();
       }
 
+      template<typename LFS>
+      LocalVectorProxy<const typename Coefficient::View,LFS,Coefficient::dataMode> coefficient(const LFS& lfs)
+      {
+        static_assert(Std::to_true_type_v<LFS> and enabled, "Calling linearizationPoint(lfs) is not allowed for linear problems!");
+#if DUNE_PDELAB_ENABLE_CHECK_ASSEMBLY
+        if (not Context_::engine().bindLinearizationPoint())
+          DUNE_THROW(AssemblyError, "Not allowed to call linearizationPoint(lfs) for linear operators");
+#endif
+        return {Implementation::readOnlyView(),lfs};
+      }
+
       void setup()
       {
         if (enabled and Context_::engine().bindLinearizationPoint())
