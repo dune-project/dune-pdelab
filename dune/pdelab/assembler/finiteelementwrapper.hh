@@ -23,21 +23,7 @@
 #include <dune/pdelab/common/typetraits.hh>
 #include <dune/pdelab/assembler/utility.hh>
 
-namespace Dune {
 
-
-  template<typename F, int size>
-  inline std::size_t hash_value(const FieldVector<F,size>& v)
-  {
-    std::size_t seed = 0;
-    for (auto x : v)
-      hash_combine(seed,x);
-    return seed;
-  }
-
-}
-
-DUNE_DEFINE_HASH(DUNE_HASH_TEMPLATE_ARGS(typename F, int size),DUNE_HASH_TYPE(Dune::FieldVector<F,size>))
 
 namespace Dune {
 
