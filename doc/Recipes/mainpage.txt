@@ -15,6 +15,8 @@
  * PDE discretization
  * ==============
  * - \subpage recipe-linear-system-assembly
+ * - \subpage recipe-linear-system-solution-pdelab
+ * - \subpage recipe-linear-system-solution-istl
  *
  * Parallelism
  * ==============

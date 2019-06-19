@@ -6,7 +6,7 @@ Welcome to the PDELab documentation pages.
 
 Good starting points are:
 - DUNE website at https://www.dune-project.org for general information
-- @ref pdelab_recipes for short references of frequently used techniques
+- @ref pdelab_recipes for short references on frequently used techniques
 - Full tutorials in the dune-pdelab-tutorials module at https://www.dune-project.org/modules/dune-pdelab-tutorials/
 
 
