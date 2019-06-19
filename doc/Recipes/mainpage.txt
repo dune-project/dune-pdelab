@@ -7,6 +7,10 @@
  *
  * <br>For complete examples on solving various types of PDEs along with the respective math background, please refer to the dune-pdelab-tutorials module at https://www.dune-project.org/modules/dune-pdelab-tutorials/.
  *
+ * Meshing
+ * ==============
+ * - \subpage recipe-geometry-grid
+ *
  * Grid functions
  * ==============
  * - \subpage recipe-integrating-grid-functions
