@@ -11,6 +11,7 @@
  * ==============
  * - \subpage recipe-integrating-grid-functions
  * - \subpage recipe-grid-function-operations
+ * - \subpage recipe-blocking
  *
  * PDE discretization
  * ==============
