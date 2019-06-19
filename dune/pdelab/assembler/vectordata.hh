@@ -583,7 +583,7 @@ namespace Dune {
       }
 
       template<typename LFS>
-      LocalVectorProxy<const typename Coefficient::View,LFS,Coefficient::dataMode> coefficient(const LFS& lfs)
+      LocalVectorProxy<const typename LinearizationPoint::View,LFS,LinearizationPoint::dataMode> linearizationPoint(const LFS& lfs)
       {
         static_assert(Std::to_true_type_v<LFS> and enabled, "Calling linearizationPoint(lfs) is not allowed for linear problems!");
 #if DUNE_PDELAB_ENABLE_CHECK_ASSEMBLY
