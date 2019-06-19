@@ -42,7 +42,7 @@
  *
  * Full example code: @ref recipe-geometry-grid.cc
  * \example recipe-geometry-grid.cc
- * See explanation at @ref recipe-meshing
+ * See explanation at @ref recipe-geometry-grid
  */
 
 template<typename GV, typename RF>
