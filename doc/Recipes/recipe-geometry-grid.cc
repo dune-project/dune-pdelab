@@ -22,6 +22,10 @@
 /**
  * \page recipe-geometry-grid Transforming a cartesian mesh
  *
+ * Using GeometryGrid, one can transform an existing mesh into a different shape.
+ * This is particularly useful for modelling complex geometries based on efficient
+ * structured grids like YaspGrid.
+ * 
  * A grid transformation is a user-defined function which gives the transformation
  * of a point x in the base cartesian grid to a final geometry:
  *
