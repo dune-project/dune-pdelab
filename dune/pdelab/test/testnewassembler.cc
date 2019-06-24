@@ -261,7 +261,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
 
   typedef Dune::PDELab::ConvectionDiffusionDG<OldProblem,FEM> OldLOP;
   auto old_lop = OldLOP{old_problem, m, w, 2.0};
-  using LOPWrapper = Dune::PDELab::LocalOperatorAdapter<OldLOP>;
+  using LOPWrapper = Dune::PDELab::Experimental::LocalOperatorAdapter<OldLOP>;
   auto lop_wrapper = LOPWrapper{old_lop};
 
   using LOP = Dune::PDELab::ConvectionDiffusionDGNew<Problem>;
@@ -276,10 +276,10 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
 
   // GridOperator
   // typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC> GO;
-  typedef Dune::PDELab::NewGridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC,Dune::PDELab::FastDGGridOperatorParameters<>> GO;
+  typedef Dune::PDELab::Experimental::GridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC,Dune::PDELab::Experimental::FastDGGridOperatorParameters<>> GO;
   GO go(gfs,cc,gfs,cc,lop,mbe);
 
-  using OldGO = Dune::PDELab::NewGridOperator<GFS,GFS,LOPWrapper,MBE,Real,Real,Real,CC,CC>;
+  using OldGO = Dune::PDELab::Experimental::GridOperator<GFS,GFS,LOPWrapper,MBE,Real,Real,Real,CC,CC>;
   OldGO old_go(gfs,cc,gfs,cc,lop_wrapper,mbe);
 
 
@@ -427,7 +427,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem, OldProblem& old_probl
     Dune::Logging::log("success"_fmt);
   }
 
-  auto inspect = Dune::PDELab::Introspector(go);
+  auto inspect = Dune::PDELab::Experimental::Introspector(go);
   std::cout << inspect << std::endl;
 
   /*
