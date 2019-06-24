@@ -9,7 +9,7 @@
 #include <dune/pdelab/assembler/context.hh>
 #include <dune/pdelab/localoperator/guardedcalls.hh>
 
-namespace Dune::PDELab {
+namespace Dune::PDELab::Experimental {
 
   namespace Introspection {
 
@@ -411,6 +411,6 @@ namespace Dune::PDELab {
   };
 
 
-} // namespace Dune::PDELab
+} // namespace Dune::PDELab::Experimental
 
 #endif // DUNE_PDELAB_LOCALOPERATOR_INTROSPECTION_HH
