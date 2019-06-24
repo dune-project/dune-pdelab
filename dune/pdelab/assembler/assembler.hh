@@ -9,236 +9,234 @@
 
 #include <dune/pdelab/common/intersectiontype.hh>
 
-namespace Dune {
-  namespace PDELab {
+namespace Dune::PDELab::Experimental {
 
-    template<typename ES>
-    class Assembler
+  template<typename ES>
+  class Assembler
+  {
+
+  public:
+
+    using EntitySet = ES;
+
+    const EntitySet& entitySet() const
     {
+      return _es;
+    }
 
-    public:
+    Assembler(const EntitySet& es)
+      : _es(es)
+    {}
 
-      using EntitySet = ES;
+    template<typename T>
+    static constexpr const T& make_const_ref(const T& t)
+    {
+      return t;
+    }
 
-      const EntitySet& entitySet() const
+    template<typename Engine>
+    decltype(auto) assemble(Engine&& engine, std::enable_if_t<std::is_same_v<Engine,std::decay_t<Engine>>,int> = 0) const
+    {
+      return assemble(engine);
+    }
+
+    template<typename Engine>
+    decltype(auto) assemble(Engine& engine) const
+    {
+      constexpr bool visit_periodic_intersections = Engine::visitPeriodicIntersections();
+      constexpr bool visit_skeleton_intersections = Engine::visitSkeletonIntersections();
+      constexpr bool visit_boundary_intersections = Engine::visitBoundaryIntersections();
+      constexpr bool visit_processor_intersections = Engine::visitProcessorIntersections();
+      constexpr bool visit_intersections =
+                  visit_periodic_intersections or
+                  visit_skeleton_intersections or
+                  visit_boundary_intersections or
+                  visit_processor_intersections;
+      constexpr bool intersections_two_sided [[maybe_unused]] = Engine::intersectionsTwoSided();
+
+      using Index = typename EntitySet::IndexSet::Index;
+
+      auto &entity_set = _es;
+      auto &index_set = _es.indexSet();
+
+      auto invalid_element_storage = typename EntitySet::template Codim<0>::Entity{};
+      const typename EntitySet::template Codim<0>::Entity& invalid_element = invalid_element_storage;
+      constexpr auto invalid_index [[maybe_unused]] = std::decay_t<decltype(index_set)>::invalidIndex();
+
+      auto ctx = makeContext(engine.context(*this));
+      ctx.setup();
+
+      engine.start(ctx);
+
+      for (const auto& element : elements(entity_set))
       {
-        return _es;
-      }
 
-      Assembler(const EntitySet& es)
-        : _es(es)
-      {}
+        auto entity_index = index_set.index(element);
+        auto unique_index = index_set.uniqueIndex(element);
 
-      template<typename T>
-      static constexpr const T& make_const_ref(const T& t)
-      {
-        return t;
-      }
+        if (not engine.skipCell(ctx,element,entity_index))
+        {
 
-      template<typename Engine>
-      decltype(auto) assemble(Engine&& engine, std::enable_if_t<std::is_same_v<Engine,std::decay_t<Engine>>,int> = 0) const
-      {
-        return assemble(engine);
-      }
+          engine.startCell(ctx,element,entity_index);
 
-      template<typename Engine>
-      decltype(auto) assemble(Engine& engine) const
-      {
-        constexpr bool visit_periodic_intersections = Engine::visitPeriodicIntersections();
-        constexpr bool visit_skeleton_intersections = Engine::visitSkeletonIntersections();
-        constexpr bool visit_boundary_intersections = Engine::visitBoundaryIntersections();
-        constexpr bool visit_processor_intersections = Engine::visitProcessorIntersections();
-        constexpr bool visit_intersections =
-          visit_periodic_intersections or
-          visit_skeleton_intersections or
-          visit_boundary_intersections or
-          visit_processor_intersections;
-        constexpr bool intersections_two_sided [[maybe_unused]] = Engine::intersectionsTwoSided();
+          ctx.bind(element,entity_index,unique_index);
 
-        using Index = typename EntitySet::IndexSet::Index;
+          engine.volume(ctx);
 
-        auto &entity_set = _es;
-        auto &index_set = _es.indexSet();
-
-        auto invalid_element_storage = typename EntitySet::template Codim<0>::Entity{};
-        const typename EntitySet::template Codim<0>::Entity& invalid_element = invalid_element_storage;
-        constexpr auto invalid_index [[maybe_unused]] = std::decay_t<decltype(index_set)>::invalidIndex();
-
-        auto ctx = makeContext(engine.context(*this));
-        ctx.setup();
-
-        engine.start(ctx);
-
-        for (const auto& element : elements(entity_set))
+          if constexpr (visit_intersections)
           {
+            engine.startIntersections(ctx);
 
-            auto entity_index = index_set.index(element);
-            auto unique_index = index_set.uniqueIndex(element);
+            Index intersection_index = 0;
 
-            if (not engine.skipCell(ctx,element,entity_index))
+            for (const auto& intersection : intersections(_es,element))
+            {
+              auto intersection_data = classifyIntersection(entity_set,intersection);
+              auto intersection_type = std::get<0>(intersection_data);
+              auto& outside_element = std::get<1>(intersection_data);
+
+              switch(intersection_type)
               {
+              case IntersectionType::skeleton:
+                if constexpr (visit_skeleton_intersections)
+                {
+                  auto entity_idn = index_set.index(outside_element);
+                  auto unique_idn = index_set.uniqueIndex(outside_element);
+                  // The final condition in here makes sure that the intersection will be visited even if the engine decides to skip
+                  // the outside element
+                  bool visit_face = intersections_two_sided or unique_index < unique_idn or engine.skipCell(ctx,outside_element,entity_idn);
 
-                engine.startCell(ctx,element,entity_index);
-
-                ctx.bind(element,entity_index,unique_index);
-
-                engine.volume(ctx);
-
-                if constexpr (visit_intersections)
+                  if (visit_face)
                   {
-                    engine.startIntersections(ctx);
+                    ctx.bind(
+                      std::integral_constant<IntersectionType,IntersectionType::skeleton>{},
+                      intersection,
+                      intersection_index,
+                      outside_element,
+                      entity_idn,
+                      unique_idn
+                      );
 
-                    Index intersection_index = 0;
+                    engine.skeleton(ctx);
 
-                    for (const auto& intersection : intersections(_es,element))
-                      {
-                        auto intersection_data = classifyIntersection(entity_set,intersection);
-                        auto intersection_type = std::get<0>(intersection_data);
-                        auto& outside_element = std::get<1>(intersection_data);
-
-                        switch(intersection_type)
-                          {
-                          case IntersectionType::skeleton:
-                            if constexpr (visit_skeleton_intersections)
-                              {
-                                auto entity_idn = index_set.index(outside_element);
-                                auto unique_idn = index_set.uniqueIndex(outside_element);
-                                // The final condition in here makes sure that the intersection will be visited even if the engine decides to skip
-                                // the outside element
-                                bool visit_face = intersections_two_sided or unique_index < unique_idn or engine.skipCell(ctx,outside_element,entity_idn);
-
-                                if (visit_face)
-                                  {
-                                    ctx.bind(
-                                      std::integral_constant<IntersectionType,IntersectionType::skeleton>{},
-                                      intersection,
-                                      intersection_index,
-                                      outside_element,
-                                      entity_idn,
-                                      unique_idn
-                                      );
-
-                                    engine.skeleton(ctx);
-
-                                    ctx.unbind(
-                                      std::integral_constant<IntersectionType,IntersectionType::skeleton>{},
-                                      intersection,
-                                      intersection_index,
-                                      outside_element,
-                                      entity_idn,
-                                      unique_idn
-                                      );
-                                  }
-                              }
-                            break;
-                          case IntersectionType::periodic:
-                            if (visit_periodic_intersections)
-                              {
-                                auto entity_idn = index_set.index(outside_element);
-                                auto unique_idn = index_set.uniqueIndex(outside_element);
-                                bool visit_face = intersections_two_sided or unique_index < unique_idn or engine.skipCell(ctx,outside_element,entity_idn);
-
-                                if (visit_face)
-                                  {
-                                    ctx.bind(
-                                      std::integral_constant<IntersectionType,IntersectionType::periodic>{},
-                                      intersection,
-                                      intersection_index,
-                                      outside_element,
-                                      entity_idn,
-                                      unique_idn
-                                      );
-
-                                    engine.periodic(ctx);
-
-                                    ctx.unbind(
-                                      std::integral_constant<IntersectionType,IntersectionType::periodic>{},
-                                      intersection,
-                                      intersection_index,
-                                      outside_element,
-                                      entity_idn,
-                                      unique_idn
-                                      );
-                                  }
-                              }
-                            break;
-                          case IntersectionType::boundary:
-                            if (visit_boundary_intersections)
-                              {
-                                ctx.bind(
-                                  std::integral_constant<IntersectionType,IntersectionType::boundary>{},
-                                  intersection,
-                                  intersection_index,
-                                  element,
-                                  invalid_index,
-                                  invalid_index
-                                  );
-
-                                engine.boundary(ctx);
-
-                                ctx.unbind(
-                                  std::integral_constant<IntersectionType,IntersectionType::boundary>{},
-                                  intersection,
-                                  intersection_index,
-                                  invalid_element,
-                                  invalid_index,
-                                  invalid_index
-                                  );
-                              }
-                            break;
-                          case IntersectionType::processor:
-                            if (visit_processor_intersections)
-                              {
-                                ctx.bind(
-                                  std::integral_constant<IntersectionType,IntersectionType::processor>{},
-                                  intersection,
-                                  intersection_index,
-                                  invalid_element,
-                                  invalid_index,
-                                  invalid_index
-                                  );
-
-                                engine.processor(ctx);
-
-                                ctx.unbind(
-                                  std::integral_constant<IntersectionType,IntersectionType::processor>{},
-                                  intersection,
-                                  intersection_index,
-                                  invalid_element,
-                                  invalid_index,
-                                  invalid_index
-                                  );
-                              }
-                            break;
-                          default:
-                            DUNE_THROW(Dune::Exception,"Encountered invalid intersection type during assembly");
-                          }
-                        ++intersection_index;
-                      }
-
-                    engine.finishIntersections(ctx);
-
+                    ctx.unbind(
+                      std::integral_constant<IntersectionType,IntersectionType::skeleton>{},
+                      intersection,
+                      intersection_index,
+                      outside_element,
+                      entity_idn,
+                      unique_idn
+                      );
                   }
+                }
+                break;
+              case IntersectionType::periodic:
+                if (visit_periodic_intersections)
+                {
+                  auto entity_idn = index_set.index(outside_element);
+                  auto unique_idn = index_set.uniqueIndex(outside_element);
+                  bool visit_face = intersections_two_sided or unique_index < unique_idn or engine.skipCell(ctx,outside_element,entity_idn);
 
-                engine.volumePostIntersections(ctx);
+                  if (visit_face)
+                  {
+                    ctx.bind(
+                      std::integral_constant<IntersectionType,IntersectionType::periodic>{},
+                      intersection,
+                      intersection_index,
+                      outside_element,
+                      entity_idn,
+                      unique_idn
+                      );
 
-                ctx.unbind(element,entity_index,unique_index);
+                    engine.periodic(ctx);
 
-                engine.finishCell(ctx,element,entity_index);
+                    ctx.unbind(
+                      std::integral_constant<IntersectionType,IntersectionType::periodic>{},
+                      intersection,
+                      intersection_index,
+                      outside_element,
+                      entity_idn,
+                      unique_idn
+                      );
+                  }
+                }
+                break;
+              case IntersectionType::boundary:
+                if (visit_boundary_intersections)
+                {
+                  ctx.bind(
+                    std::integral_constant<IntersectionType,IntersectionType::boundary>{},
+                    intersection,
+                    intersection_index,
+                    element,
+                    invalid_index,
+                    invalid_index
+                    );
+
+                  engine.boundary(ctx);
+
+                  ctx.unbind(
+                    std::integral_constant<IntersectionType,IntersectionType::boundary>{},
+                    intersection,
+                    intersection_index,
+                    invalid_element,
+                    invalid_index,
+                    invalid_index
+                    );
+                }
+                break;
+              case IntersectionType::processor:
+                if (visit_processor_intersections)
+                {
+                  ctx.bind(
+                    std::integral_constant<IntersectionType,IntersectionType::processor>{},
+                    intersection,
+                    intersection_index,
+                    invalid_element,
+                    invalid_index,
+                    invalid_index
+                    );
+
+                  engine.processor(ctx);
+
+                  ctx.unbind(
+                    std::integral_constant<IntersectionType,IntersectionType::processor>{},
+                    intersection,
+                    intersection_index,
+                    invalid_element,
+                    invalid_index,
+                    invalid_index
+                    );
+                }
+                break;
+              default:
+                DUNE_THROW(Dune::Exception,"Encountered invalid intersection type during assembly");
               }
+              ++intersection_index;
+            }
+
+            engine.finishIntersections(ctx);
+
           }
-        engine.finish(ctx);
 
-        return engine.result(ctx);
+          engine.volumePostIntersections(ctx);
+
+          ctx.unbind(element,entity_index,unique_index);
+
+          engine.finishCell(ctx,element,entity_index);
+        }
       }
+      engine.finish(ctx);
 
-    private:
+      return engine.result(ctx);
+    }
 
-      EntitySet _es;
+  private:
 
-    };
+    EntitySet _es;
 
-  } // namespace PDELab
-} // namespace Dune
+  };
+
+} // namespace Dune::PDELab::Experimental
 
 #endif // DUNE_PDELAB_ASSEMBLER_ASSEMBLER_HH
