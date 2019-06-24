@@ -99,12 +99,12 @@ namespace Dune::PDELab::Experimental {
       return not decltype(LocalOperator::disableFunctionSpaceFlavors(makeLocalOperator())){};
     }
 
-    constexpr static bool possiblyNonLinear()
+    constexpr static bool possiblyNonlinear()
     {
-      return models<Concept::PossiblyNonLinear,typename GridOperator::Traits::LocalOperator>();
+      return models<Concept::PossiblyNonlinear,typename GridOperator::Traits::LocalOperator>();
     }
 
-    constexpr bool nonLinear() const
+    constexpr bool nonlinear() const
     {
       return isNonlinear(localOperator());
     }
@@ -356,8 +356,8 @@ namespace Dune::PDELab::Experimental {
 
       info.emplace_back("intersectionsTwoSided",stringize(inspect.intersectionsTwoSided()));
       info.emplace_back("functionSpaceFlavors",stringize(inspect.functionSpaceFlavors()));
-      info.emplace_back("possiblyNonLinear",stringize(inspect.possiblyNonLinear()));
-      info.emplace_back("nonLinear",stringize(inspect.nonLinear()));
+      info.emplace_back("possiblyNonlinear",stringize(inspect.possiblyNonlinear()));
+      info.emplace_back("nonlinear",stringize(inspect.nonlinear()));
 
       info.emplace_back("","");
       info.emplace_back("start()",stringize(inspect.start()));

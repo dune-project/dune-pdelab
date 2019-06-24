@@ -42,7 +42,7 @@ namespace Dune {
         );
       };
 
-      struct PossiblyNonLinear
+      struct PossiblyNonlinear
       {
         template<class LocalOperator>
         auto require(const LocalOperator& lop) -> decltype(
@@ -298,14 +298,14 @@ namespace Dune {
     }
 
     template<typename LOP>
-    constexpr std::enable_if_t<models<Concept::PossiblyNonLinear,LOP>(),bool>
+    constexpr std::enable_if_t<models<Concept::PossiblyNonlinear,LOP>(),bool>
     isNonlinear(const LOP& lop)
     {
       return lop.isNonlinear();
     }
 
     template<typename LOP>
-    constexpr std::enable_if_t<not models<Concept::PossiblyNonLinear,LOP>(),bool>
+    constexpr std::enable_if_t<not models<Concept::PossiblyNonlinear,LOP>(),bool>
     isNonlinear(const LOP& lop)
     {
       return false;

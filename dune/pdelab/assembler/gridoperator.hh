@@ -42,7 +42,7 @@ namespace Dune::PDELab::Experimental {
     using EntitySet = typename GFSU::Traits::EntitySet;
 
     //! The global assembler type
-    using Assembler = Dune::PDELab::Assembler<EntitySet>;
+    using Assembler = PDELab::Experimental::Assembler<EntitySet>;
 
     //! The type of the domain (solution).
     using Domain = Dune::PDELab::Backend::Vector<GFSU,DF>;
@@ -113,9 +113,9 @@ namespace Dune::PDELab::Experimental {
 
 
       //! The global assembler of the grid operator.
-      using Assembler = Dune::PDELab::Assembler<EntitySet>;
+      using Assembler = PDELab::Experimental::Assembler<EntitySet>;
 
-      using PatternEngine = Dune::PDELab::PatternEngine<
+      using PatternEngine = PDELab::Experimental::PatternEngine<
         GFSU,
         GFSV,
         LOP,
@@ -126,7 +126,7 @@ namespace Dune::PDELab::Experimental {
         typename Parameters::PatternEngineParameters
         >;
 
-      using ResidualEngine = Dune::PDELab::ResidualEngine<
+      using ResidualEngine = PDELab::Experimental::ResidualEngine<
         Domain,
         Range,
         LOP,
@@ -135,7 +135,7 @@ namespace Dune::PDELab::Experimental {
         typename Parameters::ResidualEngineParameters
         >;
 
-      using JacobianEngine = Dune::PDELab::JacobianEngine<
+      using JacobianEngine = PDELab::Experimental::JacobianEngine<
         Domain,
         Jacobian,
         LOP,
@@ -144,7 +144,7 @@ namespace Dune::PDELab::Experimental {
         typename Parameters::JacobianEngineParameters
         >;
 
-      using ApplyJacobianEngine = Dune::PDELab::ApplyJacobianEngine<
+      using ApplyJacobianEngine = PDELab::Experimental::ApplyJacobianEngine<
         Domain,
         Range,
         LOP,
@@ -216,12 +216,12 @@ namespace Dune::PDELab::Experimental {
       return _cv;
     }
 
-    LOP& localOperator() const
+    LOP& localOperator()
     {
       return *_lop;
     }
 
-    const LOP& localOperator() const
+    LOP& localOperator() const
     {
       return *_lop;
     }

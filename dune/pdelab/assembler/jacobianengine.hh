@@ -214,7 +214,7 @@ namespace Dune::PDELab::Experimental {
       LOP_& lop,
       const TrialConstraints& trial_constraints,
       const TestConstraints& test_constraints,
-      std::enable_if_t<not models<Concept::PossiblyNonLinear,LOP>() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
+      std::enable_if_t<not models<Concept::PossiblyNonlinear,LOP>() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
       )
       : FSP(&trial_constraints,&test_constraints)
       , _lop(&lop)
@@ -227,7 +227,7 @@ namespace Dune::PDELab::Experimental {
     JacobianEngine(
       Jacobian& jacobian,
       LOP_& lop,
-      std::enable_if_t<not models<Concept::PossiblyNonLinear,LOP>() and unconstrained() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
+      std::enable_if_t<not models<Concept::PossiblyNonlinear,LOP>() and unconstrained() and std::is_same_v<LOP_,LOP>,EngineParameters> = {}
       )
       : _lop(&lop)
       , _linearization_point(nullptr)
@@ -328,7 +328,7 @@ namespace Dune::PDELab::Experimental {
                           cellJacobianData(
                             matrixData<Jacobian,LocalViewDataMode::accumulate>(
                               cellLinearizationPointData(
-                                models<Concept::PossiblyNonLinear,LOP>(),
+                                models<Concept::PossiblyNonlinear,LOP>(),
                                 vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                   trialSpaceData(
                                     testSpaceData(
@@ -344,7 +344,7 @@ namespace Dune::PDELab::Experimental {
                             cellJacobianData(
                               matrixData<Jacobian,LocalViewDataMode::accumulate>(
                                 cellLinearizationPointData(
-                                  models<Concept::PossiblyNonLinear,LOP>(),
+                                  models<Concept::PossiblyNonlinear,LOP>(),
                                   vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                                     trialSpaceData(
                                       testSpaceData(

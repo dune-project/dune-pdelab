@@ -15,7 +15,7 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/functionutilities.hh>
 #include<dune/pdelab/constraints/common/constraintsparameters.hh>
-#include<dune/pdelab/localoperator/guardedcalls.hh>
+#include<dune/pdelab/localoperator/utility.hh>
 
 namespace Dune {
   namespace PDELab {

@@ -506,7 +506,7 @@ namespace Dune::PDELab::Experimental {
     using size_type        = typename Native::size_type;
     using Index            = size_type;
 
-    using QuadraturePoint  = QuadraturePoint<QuadratureRule>;
+    using QuadraturePoint  = PDELab::Experimental::QuadraturePoint<QuadratureRule>;
     using value_type       = QuadraturePoint;
 
     class iterator

@@ -320,7 +320,7 @@ namespace Dune::PDELab::Experimental {
                     cellResultData(
                       vectorData<TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
                         cellLinearizationPointData(
-                          models<Concept::PossiblyNonLinear,LOP>(),
+                          models<Concept::PossiblyNonlinear,LOP>(),
                           vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                             cellCoefficientData(
                               vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
@@ -338,7 +338,7 @@ namespace Dune::PDELab::Experimental {
                       cellResultData(
                         vectorData<TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
                           cellLinearizationPointData(
-                            models<Concept::PossiblyNonLinear,LOP>(),
+                            models<Concept::PossiblyNonlinear,LOP>(),
                             vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                               cellCoefficientData(
                                 vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
