@@ -108,11 +108,11 @@ namespace Dune {
 
         if (ctx.fastDG())
         {
-          ctx.pattern(inside,inside).addLink(inside.test().space(),0,inside.trial().space(),0);
+          inside.pattern().addLink(inside.test().space(),0,inside.trial().space(),0);
           return;
         }
 
-        auto& pattern = ctx.pattern(inside,inside);
+        auto& pattern = inside.pattern();
         for (auto i : inside.test().space())
           for (auto j : inside.trial().space())
             pattern.addLink(inside.test().space(),i,inside.trial().space(),j);

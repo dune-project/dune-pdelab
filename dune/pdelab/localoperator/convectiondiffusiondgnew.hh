@@ -46,7 +46,8 @@ namespace Dune {
     class ConvectionDiffusionDGNew :
       //public Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >,
       public Dune::PDELab::FullSkeletonPattern,
-      public Dune::PDELab::FullVolumePattern
+      public Dune::PDELab::FullVolumePattern,
+      public Dune::PDELab::FullBoundaryPattern
     //public Dune::PDELab::InstationaryLocalOperatorDefaultMethods<typename T::Traits::RangeFieldType>
     {
       //enum { dim = T::Traits::GridViewType::dimension };
