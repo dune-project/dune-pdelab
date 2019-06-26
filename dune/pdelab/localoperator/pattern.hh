@@ -23,6 +23,21 @@ namespace Dune {
           for (size_t j=0; j<lfsu.size(); ++j)
             pattern.addLink(lfsv,i,lfsu,j);
       }
+
+
+      template<typename Context>
+      void volumePattern(Context& ctx) const
+      {
+        if (ctx.fastDG())
+        {
+          ctx.pattern().addLink(ctx.test().space(),0,ctx.trial().space(),0);
+          return;
+        }
+        for (auto i : ctx.test().space())
+          for (auto j : ctx.trial().space())
+            ctx.pattern().addLink(ctx.test().space(),i,ctx.trial().space(),j);
+      }
+
    };
 
     //! sparsity pattern generator
@@ -44,6 +59,31 @@ namespace Dune {
           for (unsigned int j=0; j<lfsu_s.size(); ++j)
             pattern_ns.addLink(lfsv_n,i,lfsu_s,j);
       }
+
+      template<typename Context>
+      void skeletonPattern(Context& ctx) const
+      {
+        auto& inside  = ctx.inside();
+        auto& outside = ctx.outside();
+
+        if (ctx.fastDG())
+        {
+          ctx.pattern(inside,outside).addLink(inside.test().space(),0,outside.trial().space(),0);
+          ctx.pattern(outside,inside).addLink(outside.test().space(),0,inside.trial().space(),0);
+          return;
+        }
+
+        auto& pattern_io = ctx.pattern(inside,outside);
+        for (auto i : inside.test().space())
+          for (auto j : outside.trial().space())
+            pattern_io.addLink(inside.test().space(),i,outside.trial().space(),j);
+
+        auto& pattern_oi = ctx.pattern(outside,inside);
+        for (auto i : outside.test().space())
+          for (auto j : inside.trial().space())
+            pattern_oi.addLink(outside.test().space(),i,inside.trial().space(),j);
+      }
+
    };
 
     //! sparsity pattern generator
@@ -59,6 +99,24 @@ namespace Dune {
         for (unsigned int i=0; i<lfsv_s.size(); ++i)
           for (unsigned int j=0; j<lfsu_s.size(); ++j)
             pattern_ss.addLink(lfsv_s,i,lfsu_s,j);
+      }
+
+      template<typename Context>
+      void boundaryPattern(Context& ctx) const
+      {
+        auto& inside  = ctx.inside();
+
+        if (ctx.fastDG())
+        {
+          ctx.pattern(inside,inside).addLink(inside.test().space(),0,inside.trial().space(),0);
+          return;
+        }
+
+        auto& pattern = ctx.pattern(inside,inside);
+        for (auto i : inside.test().space())
+          for (auto j : inside.trial().space())
+            pattern.addLink(inside.test().space(),i,inside.trial().space(),j);
+
       }
    };
 
