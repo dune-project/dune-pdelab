@@ -4,6 +4,7 @@ install(
     assembler.hh
     context.hh
     elementdata.hh
+    elementembedding.hh
     enginebase.hh
     finiteelementwrapper.hh
     functionspacedata.hh
