@@ -11,7 +11,7 @@
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/assembler/context.hh>
-#include <dune/pdelab/assembler/celldata.hh>
+#include <dune/pdelab/assembler/elementdata.hh>
 #include <dune/pdelab/assembler/functionspacedata.hh>
 #include <dune/pdelab/assembler/vectordata.hh>
 #include <dune/pdelab/assembler/patterndata.hh>
@@ -94,12 +94,12 @@ namespace Dune::PDELab::Experimental {
 
   public:
 
-    template<typename CellFlavor>
+    template<typename ElementFlavor>
     struct Data
       : public Context::RootContext
     {
 
-      using Flavor = CellFlavor;
+      using Flavor = ElementFlavor;
       using Engine = PatternEngine;
       using EntitySet = typename Engine::EntitySet;
 
@@ -217,20 +217,20 @@ namespace Dune::PDELab::Experimental {
       return
         skeletonPatternData(
           intersectionDomainData(
-            cellDomainData(
-              outsideCell(
-                cellPatternData(
+            elementDomainData(
+              outsideElement(
+                elementPatternData(
                   trialSpaceData(
                     testSpaceData(
-                      cellGridData(
-                        Data<CellFlavor::Outside<enable_flavors>>(*this)
+                      elementGridData(
+                        Data<ElementFlavor::Outside<enable_flavors>>(*this)
                         )))),
-                insideCell(
-                  cellPatternData(
+                insideElement(
+                  elementPatternData(
                     trialSpaceData(
                       testSpaceData(
-                        cellGridData(
-                          Data<CellFlavor::Inside<enable_flavors>>(*this)
+                        elementGridData(
+                          Data<ElementFlavor::Inside<enable_flavors>>(*this)
                           )))))))));
     }
 
@@ -333,27 +333,27 @@ namespace Dune::PDELab::Experimental {
     }
 
     template<typename Context, typename Element, typename Index>
-    bool skipCell(Context& ctx, const Element& element, Index index) const
+    bool skipElement(Context& ctx, const Element& element, Index index) const
     {
-      return invoke_or(LocalOperator::skipCell(),false,*_lop,ctx,element,index);
+      return invoke_or(LocalOperator::skipElement(),false,*_lop,ctx,element,index);
     }
 
     template<typename Context, typename Element, typename Index>
-    void startCell(Context& ctx, const Element& element, Index index) const
+    void startElement(Context& ctx, const Element& element, Index index) const
     {
-      invoke_if_possible(LocalOperator::startCell(),*_lop,ctx,element,index);
+      invoke_if_possible(LocalOperator::startElement(),*_lop,ctx,element,index);
     }
 
     template<typename Context>
     void volume(Context& ctx)
     {
-      invoke_if_possible(LocalOperator::volumePattern(),*_lop,ctx.cellContext());
+      invoke_if_possible(LocalOperator::volumePattern(),*_lop,ctx.elementContext());
     }
 
     template<typename Context>
     void startIntersections(Context& ctx)
     {
-      invoke_if_possible(LocalOperator::startIntersections(),*_lop,ctx.cellContext());
+      invoke_if_possible(LocalOperator::startIntersections(),*_lop,ctx.elementContext());
     }
 
     template<typename Context>
@@ -383,18 +383,18 @@ namespace Dune::PDELab::Experimental {
     template<typename Context>
     void finishIntersections(Context& ctx)
     {
-      invoke_if_possible(LocalOperator::finishIntersections(),*_lop,ctx.cellContext());
+      invoke_if_possible(LocalOperator::finishIntersections(),*_lop,ctx.elementContext());
     }
     template<typename Context>
     void volumePostIntersections(Context& ctx)
     {
-      invoke_if_possible(LocalOperator::volumePatternPostIntersections(),*_lop,ctx.cellContext());
+      invoke_if_possible(LocalOperator::volumePatternPostIntersections(),*_lop,ctx.elementContext());
     }
 
     template<typename Context, typename Element, typename Index>
-    void finishCell(Context& ctx, const Element& element, Index index) const
+    void finishElement(Context& ctx, const Element& element, Index index) const
     {
-      invoke_if_possible(LocalOperator::finishCell(),*_lop,ctx,element,index);
+      invoke_if_possible(LocalOperator::finishElement(),*_lop,ctx,element,index);
     }
 
     template<typename Context>

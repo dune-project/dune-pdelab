@@ -289,7 +289,7 @@ namespace Dune::PDELab::Experimental {
   }
 
   template<typename Implementation>
-  struct CellJacobianData
+  struct ElementJacobianData
     : public Implementation
   {
 
@@ -340,7 +340,7 @@ namespace Dune::PDELab::Experimental {
       return this;
     }
 
-    CellJacobianData(Implementation&& implementation)
+    ElementJacobianData(Implementation&& implementation)
       : Implementation(std::move(implementation))
     {
       static_assert(std::is_same_v<typename Context_::Test,typename Context_::Trial>,"foo");
@@ -350,13 +350,13 @@ namespace Dune::PDELab::Experimental {
   };
 
   template<typename Implementation>
-  auto cellJacobianData(Implementation&& implementation)
+  auto elementJacobianData(Implementation&& implementation)
   {
-    return CellJacobianData<Implementation>(std::move(implementation));
+    return ElementJacobianData<Implementation>(std::move(implementation));
   }
 
   template<typename Context>
-  struct CellTimeJacobianData
+  struct ElementTimeJacobianData
     : public Context
   {
 
@@ -381,20 +381,20 @@ namespace Dune::PDELab::Experimental {
       return {Jacobian::readWriteView(),test_space,trial_space,Context_::engine().timeWeight()};
     }
 
-    CellTimeJacobianData(Context&& context)
+    ElementTimeJacobianData(Context&& context)
       : Context(std::move(context))
     {}
 
   };
 
   template<typename Context>
-  auto cellTimeJacobianData(std::true_type,Context&& context)
+  auto elementTimeJacobianData(std::true_type,Context&& context)
   {
-    return CellTimeJacobianData<Context>(std::move(context));
+    return ElementTimeJacobianData<Context>(std::move(context));
   }
 
   template<typename Context>
-  auto cellTimeJacobianData(std::false_type,Context&& context)
+  auto elementTimeJacobianData(std::false_type,Context&& context)
   {
     return std::move(context);
   }

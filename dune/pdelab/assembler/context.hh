@@ -63,24 +63,24 @@ namespace Dune::PDELab::Experimental {
     }
 
     template<typename Context>
-    class CellContext
+    class ElementContext
       : public Context
     {
 
     public:
 
-      using Domain = typename Context::CellDomain;
+      using Domain = typename Context::ElementDomain;
 
       Domain domain()
       {
-        return Context::cellDomain();
+        return Context::elementDomain();
       }
 
-      CellContext(Context&& ctx)
+      ElementContext(Context&& ctx)
         : Context(std::move(ctx))
       {}
 
-      CellContext& cellContext()
+      ElementContext& elementContext()
       {
         return *this;
       }
@@ -162,7 +162,7 @@ namespace Dune::PDELab::Experimental {
     template<typename Context_>
     auto makeContext(Context_&& ctx)
     {
-      return Context<IntersectionContext<CellContext<Context_>>>{{{std::move(ctx)}}};
+      return Context<IntersectionContext<ElementContext<Context_>>>{{{std::move(ctx)}}};
     }
 
   }

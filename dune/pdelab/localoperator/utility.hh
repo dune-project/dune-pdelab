@@ -42,7 +42,7 @@ namespace Dune::PDELab {
       };
 
       template<typename Ctx>
-      struct extract_local_test_space<Experimental::Context::CellContext<Ctx>>
+      struct extract_local_test_space<Experimental::Context::ElementContext<Ctx>>
       {
         using type = typename Ctx::Test::FunctionSpace;
       };

@@ -15,7 +15,7 @@
 namespace Dune::PDELab::Experimental {
 
   template<typename Geometry>
-  class CellEmbedding
+  class ElementEmbedding
   {
 
   public:
@@ -23,11 +23,11 @@ namespace Dune::PDELab::Experimental {
     using size_type                        = std::size_t;
     using Global                           = Geometry;
     using Field                            = typename Geometry::ctype;
-    using Cell                             = IdentityGeometry<Field,Geometry::mydimension>;
-    using Local                            = Cell;
-    using Inside                           = Cell;
+    using Element                          = IdentityGeometry<Field,Geometry::mydimension>;
+    using Local                            = Element;
+    using Inside                           = Element;
     using LocalCoordinate                  = typename Geometry::LocalCoordinate;
-    using CellCoordinate                   = LocalCoordinate;
+    using ElementCoordinate                = LocalCoordinate;
     using GlobalCoordinate                 = typename Geometry::GlobalCoordinate;
     using JacobianTransposed               = typename Geometry::JacobianTransposed;
     using JacobianInverseTransposed        = typename Geometry::JacobianInverseTransposed;
@@ -48,12 +48,12 @@ namespace Dune::PDELab::Experimental {
       return *_global;
     }
 
-    Cell local() const
+    Element local() const
     {
       return Local(global().type());
     }
 
-    Cell inside() const
+    Element inside() const
     {
       return local();
     }
@@ -93,7 +93,7 @@ namespace Dune::PDELab::Experimental {
       return global().integrationElement(p.local());
     }
 
-    CellEmbedding(const Geometry& geo)
+    ElementEmbedding(const Geometry& geo)
       : _global(&geo)
     {}
 
@@ -119,7 +119,7 @@ namespace Dune::PDELab::Experimental {
     using Embedding                        = Embedding_;
     using Field                            = typename Embedding::Field;
     using LocalCoordinate                  = typename Embedding::LocalCoordinate;
-    using CellCoordinate                   = typename Embedding::CellCoordinate;
+    using ElementCoordinate                = typename Embedding::ElementCoordinate;
     using GlobalCoordinate                 = typename Embedding::GlobalCoordinate;
     using JacobianTransposed               = typename Embedding::JacobianTransposed;
     using JacobianInverseTransposed        = typename Embedding::JacobianInverseTransposed;
@@ -146,12 +146,12 @@ namespace Dune::PDELab::Experimental {
         return *_integration_element;
     }
 
-    const CellCoordinate& cell() const
+    const ElementCoordinate& element() const
     {
       return inside();
     }
 
-    const CellCoordinate& inside() const
+    const ElementCoordinate& inside() const
     {
       if (!_inside)
         return _inside.emplace(embedding().inside(local()));
@@ -159,7 +159,7 @@ namespace Dune::PDELab::Experimental {
         return *_inside;
     }
 
-    const CellCoordinate& outside() const
+    const ElementCoordinate& outside() const
     {
       if (!_outside)
         return _outside.emplace(embedding().outside(local()));
@@ -247,8 +247,8 @@ namespace Dune::PDELab::Experimental {
 
   private:
 
-    mutable std::optional<CellCoordinate> _inside;
-    mutable std::optional<CellCoordinate> _outside;
+    mutable std::optional<ElementCoordinate> _inside;
+    mutable std::optional<ElementCoordinate> _outside;
     mutable std::optional<GlobalCoordinate> _global;
     mutable std::optional<Field> _integration_element;
     mutable std::optional<JacobianTransposed> _jacobian_transposed;
@@ -306,14 +306,14 @@ namespace Dune::PDELab::Experimental {
     using Embedding                 = typename Rule::Embedding;
     using Native                    = typename Rule::Native::value_type;
     using LocalCoordinate           = typename Rule::LocalCoordinate;
-    using CellCoordinate            = typename Rule::CellCoordinate;
+    using ElementCoordinate         = typename Rule::ElementCoordinate;
     using GlobalCoordinate          = typename Rule::GlobalCoordinate;
     using Index                     = typename Rule::Index;
     using Field                     = typename Rule::Field;
     using JacobianTransposed        = typename Embedding::JacobianTransposed;
     using JacobianInverseTransposed = typename Embedding::JacobianInverseTransposed;
-    using InsideJacobianTransposed        = typename Embedding::InsideJacobianTransposed;
-    using InsideJacobianInverseTransposed = typename Embedding::InsideJacobianInverseTransposed;
+    using InsideJacobianTransposed         = typename Embedding::InsideJacobianTransposed;
+    using InsideJacobianInverseTransposed  = typename Embedding::InsideJacobianInverseTransposed;
     using OutsideJacobianTransposed        = typename Embedding::OutsideJacobianTransposed;
     using OutsideJacobianInverseTransposed = typename Embedding::OutsideJacobianInverseTransposed;
 
@@ -355,12 +355,12 @@ namespace Dune::PDELab::Experimental {
         return *_integration_element;
     }
 
-    const CellCoordinate& cell() const
+    const ElementCoordinate& element() const
     {
       return inside();
     }
 
-    const CellCoordinate& inside() const
+    const ElementCoordinate& inside() const
     {
       if (!_inside)
         return _inside.emplace(_rule.inside(local()));
@@ -368,7 +368,7 @@ namespace Dune::PDELab::Experimental {
         return *_inside;
     }
 
-    const CellCoordinate& outside() const
+    const ElementCoordinate& outside() const
     {
       if (!_outside)
         return _outside.emplace(_rule.outside(local()));
@@ -470,8 +470,8 @@ namespace Dune::PDELab::Experimental {
 
     const Native& _qp;
     Index _index;
-    mutable std::optional<CellCoordinate> _inside;
-    mutable std::optional<CellCoordinate> _outside;
+    mutable std::optional<ElementCoordinate> _inside;
+    mutable std::optional<ElementCoordinate> _outside;
     mutable std::optional<GlobalCoordinate> _global;
     mutable std::optional<Field> _integration_element;
     mutable std::optional<JacobianTransposed> _jacobian_transposed;
@@ -494,20 +494,20 @@ namespace Dune::PDELab::Experimental {
 
   public:
 
-    using Context          = Context_;
-    using Native           = QR;
-    using Embedding        = Embedding_;
-    using Field            = typename Native::value_type::Field;
-    using LocalCoordinate  = typename Native::value_type::Vector;
-    using CellCoordinate   = typename Embedding::Cell::GlobalCoordinate;
-    using GlobalCoordinate = typename Embedding::Global::GlobalCoordinate;
+    using Context           = Context_;
+    using Native            = QR;
+    using Embedding         = Embedding_;
+    using Field             = typename Native::value_type::Field;
+    using LocalCoordinate   = typename Native::value_type::Vector;
+    using ElementCoordinate = typename Embedding::Element::GlobalCoordinate;
+    using GlobalCoordinate  = typename Embedding::Global::GlobalCoordinate;
 
     //! The size type used by the container.
-    using size_type        = typename Native::size_type;
-    using Index            = size_type;
+    using size_type         = typename Native::size_type;
+    using Index             = size_type;
 
-    using QuadraturePoint  = PDELab::Experimental::QuadraturePoint<QuadratureRule>;
-    using value_type       = QuadraturePoint;
+    using QuadraturePoint   = PDELab::Experimental::QuadraturePoint<QuadratureRule>;
+    using value_type        = QuadraturePoint;
 
     class iterator
       : public RandomAccessIteratorFacade<iterator,QuadraturePoint,QuadraturePoint>
@@ -678,12 +678,12 @@ namespace Dune::PDELab::Experimental {
 
   private:
 
-    CellCoordinate inside(const LocalCoordinate& coord) const
+    ElementCoordinate inside(const LocalCoordinate& coord) const
     {
       return _embedding.inside().global(coord);
     }
 
-    CellCoordinate outside(const LocalCoordinate& coord) const
+    ElementCoordinate outside(const LocalCoordinate& coord) const
     {
       return _embedding.outside().global(coord);
     }

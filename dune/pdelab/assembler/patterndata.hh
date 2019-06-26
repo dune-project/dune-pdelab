@@ -70,7 +70,7 @@ namespace Dune::PDELab::Experimental {
   };
 
   template<typename Context>
-  class CellPatternData
+  class ElementPatternData
     : public Context
   {
 
@@ -91,7 +91,7 @@ namespace Dune::PDELab::Experimental {
       return _pattern;
     }
 
-    CellPatternData(Context&& context)
+    ElementPatternData(Context&& context)
       : Context(std::move(context))
     {}
 
@@ -102,9 +102,9 @@ namespace Dune::PDELab::Experimental {
   };
 
   template<typename Context>
-  auto cellPatternData(Context&& context)
+  auto elementPatternData(Context&& context)
   {
-    return CellPatternData<Context>(std::move(context));
+    return ElementPatternData<Context>(std::move(context));
   }
 
 

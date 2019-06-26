@@ -48,7 +48,7 @@ namespace Dune::PDELab::Experimental {
     using type = typename T::Traits::JacobianType;
   };
 
-  template<typename FE, typename Cell>
+  template<typename FE, typename Element>
   class FiniteElementWrapper;
 
   struct EvaluationProvider
@@ -420,7 +420,7 @@ namespace Dune::PDELab::Experimental {
       std::size_t size = _basis_wrapper->size();
       auto reference_gradients = _basis_wrapper->referenceGradients(x);
 
-      auto jac = BasisWrapper::Context::Flavor::cellJacobianInverseTransposed(x);
+      auto jac = BasisWrapper::Context::Flavor::elementJacobianInverseTransposed(x);
 
       for(std::size_t i = 0 ; i < size ; ++i)
         jac.mv(reference_gradients[i][0],y[i]);

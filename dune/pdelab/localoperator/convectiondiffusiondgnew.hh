@@ -120,8 +120,8 @@ namespace Dune {
         using size_type = std::size_t;
 
         // short cuts for cell, bases and function spaces
-        auto& cell = ctx.cell();
-        auto& trial_space = ctx.cell().trial().functionSpace();
+        auto& cell = ctx.element();
+        auto& trial_space = ctx.element().trial().functionSpace();
         auto& test_space = ctx.test().functionSpace();
         auto& trial_basis = ctx.trial().basis();
         auto& test_basis = ctx.test().basis();
@@ -227,7 +227,7 @@ namespace Dune {
         using size_type = std::size_t;
 
         // short cuts for cell, bases and function spaces
-        auto& cell = ctx.cell();
+        auto& cell = ctx.element();
         auto domain = ctx.domain();
         auto& trial_space = ctx.trial().functionSpace();
         auto& test_space = ctx.test().functionSpace();
@@ -612,7 +612,7 @@ namespace Dune {
         using size_type = std::size_t;
 
         auto domain = ctx.domain();
-        auto& cell   = ctx.cell();
+        auto& cell   = ctx.element();
 
         // dimensions
         auto order    = std::max(ctx.trial().basis().order(),ctx.test().basis().order());
@@ -775,7 +775,7 @@ namespace Dune {
         using RF = LocalOperator::RangeField<Context>;
 
         auto domain = ctx.domain();
-        auto& cell  = ctx.cell();
+        auto& cell  = ctx.element();
 
         // dimensions
         auto order    = std::max(ctx.trial().basis().order(),ctx.test().basis().order());
@@ -888,7 +888,7 @@ namespace Dune {
       */
 
       template<typename Ctx>
-      struct CellCache
+      struct ElementCache
         : public Ctx
       {
 
@@ -898,7 +898,7 @@ namespace Dune {
       };
 
       template<typename Ctx>
-      using CellContext = typename Problem::template ProblemContext<CellCache<Ctx>>;
+      using ElementContext = typename Problem::template ProblemContext<ElementCache<Ctx>>;
 
       template<typename Ctx>
       using Context = typename Problem::template ProblemContext<Ctx>;

@@ -74,10 +74,11 @@ namespace Dune::PDELab::Experimental {
         auto entity_index = index_set.index(element);
         auto unique_index = index_set.uniqueIndex(element);
 
-        if (not engine.skipCell(ctx,element,entity_index))
+        if (not engine.skipElement(ctx,element,entity_index))
+
         {
 
-          engine.startCell(ctx,element,entity_index);
+          engine.startElement(ctx,element,entity_index);
 
           ctx.bind(element,entity_index,unique_index);
 
@@ -104,7 +105,7 @@ namespace Dune::PDELab::Experimental {
                   auto unique_idn = index_set.uniqueIndex(outside_element);
                   // The final condition in here makes sure that the intersection will be visited even if the engine decides to skip
                   // the outside element
-                  bool visit_face = intersections_two_sided or unique_index < unique_idn or engine.skipCell(ctx,outside_element,entity_idn);
+                  bool visit_face = intersections_two_sided or unique_index < unique_idn or engine.skipElement(ctx,outside_element,entity_idn);
 
                   if (visit_face)
                   {
@@ -135,7 +136,7 @@ namespace Dune::PDELab::Experimental {
                 {
                   auto entity_idn = index_set.index(outside_element);
                   auto unique_idn = index_set.uniqueIndex(outside_element);
-                  bool visit_face = intersections_two_sided or unique_index < unique_idn or engine.skipCell(ctx,outside_element,entity_idn);
+                  bool visit_face = intersections_two_sided or unique_index < unique_idn or engine.skipElement(ctx,outside_element,entity_idn);
 
                   if (visit_face)
                   {
@@ -223,7 +224,7 @@ namespace Dune::PDELab::Experimental {
 
           ctx.unbind(element,entity_index,unique_index);
 
-          engine.finishCell(ctx,element,entity_index);
+          engine.finishElement(ctx,element,entity_index);
         }
       }
       engine.finish(ctx);

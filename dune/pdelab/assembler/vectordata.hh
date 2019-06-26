@@ -264,7 +264,7 @@ namespace Dune::PDELab::Experimental {
   }
 
   template<typename Implementation>
-  struct CellResidualData
+  struct ElementResidualData
     : public Implementation
   {
 
@@ -303,21 +303,21 @@ namespace Dune::PDELab::Experimental {
       return this;
     }
 
-    CellResidualData(Implementation&& implementation)
+    ElementResidualData(Implementation&& implementation)
       : Implementation(std::move(implementation))
     {}
 
   };
 
   template<typename Implementation>
-  auto cellResidualData(Implementation&& implementation)
+  auto elementResidualData(Implementation&& implementation)
   {
-    return CellResidualData<Implementation>(std::move(implementation));
+    return ElementResidualData<Implementation>(std::move(implementation));
   }
 
 
   template<typename Implementation>
-  struct CellTimeResidualData
+  struct ElementTimeResidualData
     : public Implementation
   {
 
@@ -356,7 +356,7 @@ namespace Dune::PDELab::Experimental {
       return this;
     }
 
-    CellTimeResidualData(Implementation&& implementation)
+    ElementTimeResidualData(Implementation&& implementation)
       : Implementation(std::move(implementation))
     {}
 
@@ -367,12 +367,12 @@ namespace Dune::PDELab::Experimental {
     typename Flavor,
     typename Context
     >
-  auto cellTimeResidualData(std::true_type, Context&& context)
+  auto elementTimeResidualData(std::true_type, Context&& context)
   {
     using Implementation = std::decay_t<
       decltype(vectorData<Vector,Flavor,LocalViewDataMode::accumulate>(std::move(context)))
       >;
-    return CellTimeResidualData<Implementation>(
+    return ElementTimeResidualData<Implementation>(
       vectorData<Vector,Flavor,LocalViewDataMode::accumulate>(std::move(context))
       );
   }
@@ -382,14 +382,14 @@ namespace Dune::PDELab::Experimental {
     typename Flavor,
     typename Context
     >
-  auto cellTimeResidualData(std::false_type, Context&& context)
+  auto elementTimeResidualData(std::false_type, Context&& context)
   {
     return std::move(context);
   }
 
 
   template<typename Implementation>
-  struct CellResultData
+  struct ElementResultData
     : public Implementation
   {
 
@@ -446,21 +446,21 @@ namespace Dune::PDELab::Experimental {
       return this;
     }
 
-    CellResultData(Implementation&& implementation)
+    ElementResultData(Implementation&& implementation)
       : Implementation(std::move(implementation))
     {}
 
   };
 
   template<typename Implementation>
-  auto cellResultData(Implementation&& implementation)
+  auto elementResultData(Implementation&& implementation)
   {
-    return CellResultData<Implementation>(std::move(implementation));
+    return ElementResultData<Implementation>(std::move(implementation));
   }
 
 
   template<typename Context>
-  struct CellTimeResultData
+  struct ElementTimeResultData
     : public Context
   {
 
@@ -489,26 +489,26 @@ namespace Dune::PDELab::Experimental {
       return {Context_::ResultImplementation::readWriteView(),lfs,Context_::engine().timeWeight()};
     }
 
-    CellTimeResultData(Context&& context)
+    ElementTimeResultData(Context&& context)
       : Context(std::move(context))
     {}
 
   };
 
   template<typename Context>
-  auto cellTimeResultData(std::true_type, Context&& context)
+  auto elementTimeResultData(std::true_type, Context&& context)
   {
-    return CellTimeResultData<Context>(std::move(context));
+    return ElementTimeResultData<Context>(std::move(context));
   }
 
   template<typename Context>
-  auto cellTimeResultData(std::false_type, Context&& context)
+  auto elementTimeResultData(std::false_type, Context&& context)
   {
     return std::move(context);
   }
 
   template<typename Implementation>
-  struct CellCoefficientData
+  struct ElementCoefficientData
     : public Implementation
   {
 
@@ -547,21 +547,21 @@ namespace Dune::PDELab::Experimental {
       return this;
     }
 
-    CellCoefficientData(Implementation&& implementation)
+    ElementCoefficientData(Implementation&& implementation)
       : Implementation(std::move(implementation))
     {}
 
   };
 
   template<typename Implementation>
-  auto cellCoefficientData(Implementation&& implementation)
+  auto elementCoefficientData(Implementation&& implementation)
   {
-    return CellCoefficientData<Implementation>(std::move(implementation));
+    return ElementCoefficientData<Implementation>(std::move(implementation));
   }
 
 
   template<bool enabled, typename Implementation>
-  struct CellLinearizationPointData
+  struct ElementLinearizationPointData
     : public Implementation
   {
 
@@ -616,16 +616,16 @@ namespace Dune::PDELab::Experimental {
       return this;
     }
 
-    CellLinearizationPointData(Implementation&& implementation)
+    ElementLinearizationPointData(Implementation&& implementation)
       : Implementation(std::move(implementation))
     {}
 
   };
 
   template<bool enabled, typename Implementation>
-  auto cellLinearizationPointData(std::bool_constant<enabled>, Implementation&& implementation)
+  auto elementLinearizationPointData(std::bool_constant<enabled>, Implementation&& implementation)
   {
-    return CellLinearizationPointData<enabled,Implementation>(std::move(implementation));
+    return ElementLinearizationPointData<enabled,Implementation>(std::move(implementation));
   }
 
 } // namespace Dune::PDELab::Experimental

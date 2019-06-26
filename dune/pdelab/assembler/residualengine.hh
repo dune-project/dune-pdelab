@@ -8,7 +8,7 @@
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/assembler/context.hh>
-#include <dune/pdelab/assembler/celldata.hh>
+#include <dune/pdelab/assembler/elementdata.hh>
 #include <dune/pdelab/assembler/functionspacedata.hh>
 #include <dune/pdelab/assembler/vectordata.hh>
 #include <dune/pdelab/localoperator/guardedcalls.hh>
@@ -100,12 +100,12 @@ namespace Dune::PDELab::Experimental {
 
   public:
 
-    template<typename CellFlavor>
+    template<typename ElementFlavor>
     struct Data
       : public Context::RootContext
     {
 
-      using Flavor = CellFlavor;
+      using Flavor = ElementFlavor;
       using Engine = ResidualEngine;
       using EntitySet = typename Engine::EntitySet;
 
@@ -343,65 +343,65 @@ namespace Dune::PDELab::Experimental {
     }
 
     template<typename Assembler>
-    auto insideCellContext(const Assembler& assembler)
+    auto insideElementContext(const Assembler& assembler)
     {
       return
-        insideCell(
-          extractCellContext(
+        insideElement(
+          extractElementContext(
             *_lop,
-            cellTimeResidualData<TestVector,Flavor::Test>(
+            elementTimeResidualData<TestVector,Flavor::Test>(
               std::bool_constant<instationary()>{},
-              cellResidualData(
+              elementResidualData(
                 vectorData<TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
-                  cellCoefficientData(
+                  elementCoefficientData(
                     vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                       trialSpaceData(
                         testSpaceData(
-                          cellGridData(
+                          elementGridData(
                             timeData(
-                              Data<CellFlavor::Inside<enable_flavors>>(*this)
+                              Data<ElementFlavor::Inside<enable_flavors>>(*this)
                               )))))))))));
     }
 
-    template<typename Assembler, typename InsideCellContext>
-    auto cellContext(const Assembler& assembler, InsideCellContext inside_cell_context)
+    template<typename Assembler, typename InsideElementContext>
+    auto elementContext(const Assembler& assembler, InsideElementContext inside_element_context)
     {
       return
-        cellDomainData(
-          outsideCell(
-            extractCellContext(
+        elementDomainData(
+          outsideElement(
+            extractElementContext(
               *_lop,
-              cellTimeResidualData<TestVector,Flavor::Test>(
+              elementTimeResidualData<TestVector,Flavor::Test>(
                 std::bool_constant<instationary()>{},
-                cellResidualData(
+                elementResidualData(
                   vectorData<TestVector,Flavor::Test,LocalViewDataMode::accumulate>(
-                    cellCoefficientData(
+                    elementCoefficientData(
                       vectorData<TrialVector,Flavor::Trial,LocalViewDataMode::read>(
                         trialSpaceData(
                           testSpaceData(
-                            cellGridData(
+                            elementGridData(
                               timeData(
-                                Data<CellFlavor::Outside<enable_flavors>>(*this)
+                                Data<ElementFlavor::Outside<enable_flavors>>(*this)
                                 )))))))))),
-            std::forward<InsideCellContext>(inside_cell_context)
+            std::forward<InsideElementContext>(inside_element_context)
             ));
     }
 
-    template<typename Assembler, typename CellContext>
-    auto intersectionContext(const Assembler& assembler, CellContext cell_context)
+    template<typename Assembler, typename ElementContext>
+    auto intersectionContext(const Assembler& assembler, ElementContext element_context)
     {
       return
         extractContext(
           *_lop,
           intersectionDomainData(
-            std::forward<CellContext>(cell_context)
+            std::forward<ElementContext>(element_context)
             ));
     }
 
     template<typename Assembler>
     auto context(const Assembler& assembler)
     {
-      return intersectionContext(assembler,cellContext(assembler,insideCellContext(assembler)));
+      return intersectionContext(assembler,elementContext(assembler,insideElementContext(assembler)));
     }
 
     template<typename Context>
@@ -411,27 +411,27 @@ namespace Dune::PDELab::Experimental {
     }
 
     template<typename Context, typename Element, typename Index>
-    bool skipCell(Context& ctx, const Element& element, Index index) const
+    bool skipElement(Context& ctx, const Element& element, Index index) const
     {
-      return invoke_or(LocalOperator::skipCell(),false,*_lop,ctx,element,index);
+      return invoke_or(LocalOperator::skipElement(),false,*_lop,ctx,element,index);
     }
 
     template<typename Context, typename Element, typename Index>
-    void startCell(Context& ctx, const Element& element, Index index) const
+    void startElement(Context& ctx, const Element& element, Index index) const
     {
-      invoke_if_possible(LocalOperator::startCell(),*_lop,ctx,element,index);
+      invoke_if_possible(LocalOperator::startElement(),*_lop,ctx,element,index);
     }
 
     template<typename Context>
     void volume(Context& ctx)
     {
-      invoke_if_possible(LocalOperator::volumeIntegral(),*_lop,ctx.cellContext());
+      invoke_if_possible(LocalOperator::volumeIntegral(),*_lop,ctx.elementContext());
     }
 
     template<typename Context>
     void startIntersections(Context& ctx)
     {
-      invoke_if_possible(LocalOperator::startIntersections(),*_lop,ctx.cellContext());
+      invoke_if_possible(LocalOperator::startIntersections(),*_lop,ctx.elementContext());
     }
 
     template<typename Context>
@@ -461,19 +461,19 @@ namespace Dune::PDELab::Experimental {
     template<typename Context>
     void finishIntersections(Context& ctx)
     {
-      invoke_if_possible(LocalOperator::finishIntersections(),*_lop,ctx.cellContext());
+      invoke_if_possible(LocalOperator::finishIntersections(),*_lop,ctx.elementContext());
     }
 
     template<typename Context>
     void volumePostIntersections(Context& ctx)
     {
-      invoke_if_possible(LocalOperator::volumeIntegralPostIntersections(),*_lop,ctx.cellContext());
+      invoke_if_possible(LocalOperator::volumeIntegralPostIntersections(),*_lop,ctx.elementContext());
     }
 
     template<typename Context, typename Element, typename Index>
-    void finishCell(Context& ctx, const Element& element, Index index) const
+    void finishElement(Context& ctx, const Element& element, Index index) const
     {
-      invoke_if_possible(LocalOperator::finishCell(),*_lop,ctx,element,index);
+      invoke_if_possible(LocalOperator::finishElement(),*_lop,ctx,element,index);
     }
 
     template<typename Context>

@@ -12,7 +12,7 @@
 
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/assembler/utility.hh>
-#include <dune/pdelab/assembler/celldata.hh>
+#include <dune/pdelab/assembler/elementdata.hh>
 #include <dune/pdelab/assembler/finiteelementwrapper.hh>
 #include <dune/pdelab/assembler/quadraturerule.hh>
 
@@ -158,11 +158,11 @@ namespace Dune::PDELab::Experimental {
 
   template<typename Context>
   struct TestSpaceData
-    : public FunctionSpaceData<Context,CellFlavor::TestLocalSpace<Context>,CellFlavor::TestSpaceCache<Context>>
+    : public FunctionSpaceData<Context,ElementFlavor::TestLocalSpace<Context>,ElementFlavor::TestSpaceCache<Context>>
   {
 
     // avoid introducing name Context_, otherwise mayhem may occur
-    using Context_ = FunctionSpaceData<Context,CellFlavor::TestLocalSpace<Context>,CellFlavor::TestSpaceCache<Context>>;
+    using Context_ = FunctionSpaceData<Context,ElementFlavor::TestLocalSpace<Context>,ElementFlavor::TestSpaceCache<Context>>;
 
     using Test = Context_;
 
@@ -223,10 +223,10 @@ namespace Dune::PDELab::Experimental {
 
   template<typename Context>
   struct NonGalerkinTrialSpaceData
-    : public FunctionSpaceData<Context,CellFlavor::TrialLocalSpace<Context>,CellFlavor::TrialSpaceCache<Context>>
+    : public FunctionSpaceData<Context,ElementFlavor::TrialLocalSpace<Context>,ElementFlavor::TrialSpaceCache<Context>>
   {
 
-    using Context_ = FunctionSpaceData<Context,CellFlavor::TrialLocalSpace<Context>,CellFlavor::TrialSpaceCache<Context>>;
+    using Context_ = FunctionSpaceData<Context,ElementFlavor::TrialLocalSpace<Context>,ElementFlavor::TrialSpaceCache<Context>>;
 
     using Trial = Context_;
 

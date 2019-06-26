@@ -30,24 +30,24 @@ namespace Dune::PDELab::Experimental {
              };
     }
 
-    inline constexpr auto skipCell()
+    inline constexpr auto skipElement()
     {
-      return [&](const auto& lop, auto& ctx, const auto& element, auto index) -> decltype(lop.skipCell(ctx,element,index)) {
-               return lop.skipCell(ctx,element,index);
+      return [&](const auto& lop, auto& ctx, const auto& element, auto index) -> decltype(lop.skipElement(ctx,element,index)) {
+               return lop.skipElement(ctx,element,index);
              };
     }
 
-    inline constexpr auto startCell()
+    inline constexpr auto startElement()
     {
-      return [&](const auto& lop, auto& ctx, const auto& element, auto index) -> decltype(lop.startCell(ctx,element,index)) {
-               return lop.startCell(ctx,element,index);
+      return [&](const auto& lop, auto& ctx, const auto& element, auto index) -> decltype(lop.startElement(ctx,element,index)) {
+               return lop.startElement(ctx,element,index);
              };
     }
 
-    inline constexpr auto finishCell()
+    inline constexpr auto finishElement()
     {
-      return [&](const auto& lop, auto& ctx, const auto& element, auto index) -> decltype(lop.finishCell(ctx,element,index)) {
-               return lop.finishCell(ctx,element,index);
+      return [&](const auto& lop, auto& ctx, const auto& element, auto index) -> decltype(lop.finishElement(ctx,element,index)) {
+               return lop.finishElement(ctx,element,index);
              };
     }
 

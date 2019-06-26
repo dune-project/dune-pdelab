@@ -2,8 +2,8 @@ install(
   FILES
     applyjacobianengine.hh
     assembler.hh
-    celldata.hh
     context.hh
+    elementdata.hh
     enginebase.hh
     finiteelementwrapper.hh
     functionspacedata.hh

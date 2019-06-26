@@ -129,31 +129,31 @@ namespace Dune::PDELab::Experimental {
           )){};
     }
 
-    constexpr static bool skipCell()
+    constexpr static bool skipElement()
     {
       return decltype(
         invocable(
-          LocalOperator::skipCell(),
+          LocalOperator::skipElement(),
           makeLocalOperator(),
           Introspection::residualContext(makeGridOperator()
             ))){};
     }
 
-    constexpr static bool startCell()
+    constexpr static bool startElement()
     {
       return decltype(
         invocable(
-          LocalOperator::startCell(),
+          LocalOperator::startElement(),
           makeLocalOperator(),
           Introspection::residualContext(makeGridOperator()
             ))){};
     }
 
-    constexpr static bool finishCell()
+    constexpr static bool finishElement()
     {
       return decltype(
         invocable(
-          LocalOperator::finishCell(),
+          LocalOperator::finishElement(),
           makeLocalOperator(),
           Introspection::residualContext(makeGridOperator()
             ))){};
@@ -362,9 +362,9 @@ namespace Dune::PDELab::Experimental {
       info.emplace_back("","");
       info.emplace_back("start()",stringize(inspect.start()));
       info.emplace_back("finish()",stringize(inspect.finish()));
-      info.emplace_back("skipCell()",stringize(inspect.skipCell()));
-      info.emplace_back("startCell()",stringize(inspect.startCell()));
-      info.emplace_back("finishCell()",stringize(inspect.finishCell()));
+      info.emplace_back("skipElement()",stringize(inspect.skipElement()));
+      info.emplace_back("startElement()",stringize(inspect.startElement()));
+      info.emplace_back("finishElement()",stringize(inspect.finishElement()));
       info.emplace_back("startIntersections()",stringize(inspect.startIntersections()));
       info.emplace_back("finishIntersections()",stringize(inspect.finishIntersections()));
 

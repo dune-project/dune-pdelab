@@ -219,14 +219,14 @@ namespace Dune {
     namespace Impl {
 
       template<typename Target, typename Context>
-      auto extractCellContext(PriorityTag<2>, Target& target, Context&& ctx)
-        -> decltype(typename Target::template CellContext<Context>(std::move(ctx)))
+      auto extractElementContext(PriorityTag<2>, Target& target, Context&& ctx)
+        -> decltype(typename Target::template ElementContext<Context>(std::move(ctx)))
       {
-        return typename Target::template CellContext<Context>(std::move(ctx));
+        return typename Target::template ElementContext<Context>(std::move(ctx));
       }
 
       template<typename Target, typename Context>
-      auto extractCellContext(PriorityTag<1>, Target& target, Context&& ctx)
+      auto extractElementContext(PriorityTag<1>, Target& target, Context&& ctx)
         -> Context&&
       {
         return std::move(ctx);
@@ -235,9 +235,9 @@ namespace Dune {
     }
 
     template<typename Target, typename Context>
-    auto extractCellContext(Target& target, Context&& ctx)
+    auto extractElementContext(Target& target, Context&& ctx)
     {
-      return Impl::extractCellContext(PriorityTag<2>{},target, std::move(ctx));
+      return Impl::extractElementContext(PriorityTag<2>{},target, std::move(ctx));
     }
 
 

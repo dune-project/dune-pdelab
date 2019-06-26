@@ -1,7 +1,7 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
-#ifndef DUNE_PDELAB_ASSEMBLER_CELLDATA_HH
-#define DUNE_PDELAB_ASSEMBLER_CELLDATA_HH
+#ifndef DUNE_PDELAB_ASSEMBLER_ELEMENTDATA_HH
+#define DUNE_PDELAB_ASSEMBLER_ELEMENTDATA_HH
 
 #include <cassert>
 #include <type_traits>
@@ -23,7 +23,7 @@
 
 namespace Dune::PDELab::Experimental {
 
-  namespace CellFlavor {
+  namespace ElementFlavor {
 
     template<typename Context>
     using TestLocalSpace  = typename Context::Engine::template TestLocalSpace<Context>;
@@ -48,13 +48,13 @@ namespace Dune::PDELab::Experimental {
       }
 
       template<typename QP>
-      static constexpr auto& cellJacobianTransposed(const QP& qp)
+      static constexpr auto& elementJacobianTransposed(const QP& qp)
       {
         return qp.insideJacobianTransposed();
       }
 
       template<typename QP>
-      static constexpr auto& cellJacobianInverseTransposed(const QP& qp)
+      static constexpr auto& elementJacobianInverseTransposed(const QP& qp)
       {
         return qp.insideJacobianInverseTransposed();
       }
@@ -85,13 +85,13 @@ namespace Dune::PDELab::Experimental {
       }
 
       template<typename QP>
-      static constexpr auto& cellJacobianTransposed(const QP& qp)
+      static constexpr auto& elementJacobianTransposed(const QP& qp)
       {
         return qp.outsideJacobianTransposed();
       }
 
       template<typename QP>
-      static constexpr auto& cellJacobianInverseTransposed(const QP& qp)
+      static constexpr auto& elementJacobianInverseTransposed(const QP& qp)
       {
         return qp.outsideJacobianInverseTransposed();
       }
@@ -115,7 +115,7 @@ namespace Dune::PDELab::Experimental {
   }
 
   template<typename Context>
-  class CellGridData
+  class ElementGridData
     : public Context
   {
 
@@ -125,7 +125,7 @@ namespace Dune::PDELab::Experimental {
     using Entity    = typename EntitySet::template Codim<0>::Entity;
     using Index     = typename EntitySet::IndexSet::Index;
     using Geometry  = typename Entity::Geometry;
-    using Embedding = CellEmbedding<Geometry>;
+    using Embedding = ElementEmbedding<Geometry>;
     static constexpr int dimWorld = Geometry::coorddimension;
 
     const Entity& entity() const
@@ -205,7 +205,7 @@ namespace Dune::PDELab::Experimental {
       return this;
     }
 
-    CellGridData(Context&& ctx)
+    ElementGridData(Context&& ctx)
       : Context(std::move(ctx))
       , _entity(nullptr)
       , _entity_index(EntitySet::IndexSet::invalidIndex())
@@ -222,23 +222,23 @@ namespace Dune::PDELab::Experimental {
   };
 
   template<typename Context>
-  auto cellGridData(Context&& ctx)
+  auto elementGridData(Context&& ctx)
   {
-    return CellGridData<Context>{std::move(ctx)};
+    return ElementGridData<Context>{std::move(ctx)};
   }
 
 
   template<typename Context>
-  class CellDomainData
+  class ElementDomainData
     : public Context
   {
 
   public:
 
-    class CellDomain
+    class ElementDomain
     {
 
-      friend class CellDomainData;
+      friend class ElementDomainData;
 
     public:
 
@@ -252,7 +252,7 @@ namespace Dune::PDELab::Experimental {
 
     public:
 
-      // re-use the cell embedding
+      // re-use the element embedding
       using Embedding = typename Context::Embedding;
 
       Embedding embedding() const
@@ -286,31 +286,31 @@ namespace Dune::PDELab::Experimental {
         return QuadratureRule(_data,rule,embedding());
       }
 
-      CellDomain(CellDomainData& data)
+      ElementDomain(ElementDomainData& data)
         : _data(data)
       {}
 
     private:
 
-      CellDomainData& _data;
+      ElementDomainData& _data;
 
     };
 
-    CellDomain cellDomain()
+    ElementDomain elementDomain()
     {
       return {*this};
     }
 
-    CellDomainData(Context&& ctx)
+    ElementDomainData(Context&& ctx)
       : Context(std::move(ctx))
     {}
 
   };
 
   template<typename Context>
-  auto cellDomainData(Context&& ctx)
+  auto elementDomainData(Context&& ctx)
   {
-    return CellDomainData<Context>{std::move(ctx)};
+    return ElementDomainData<Context>{std::move(ctx)};
   }
 
 
@@ -355,12 +355,12 @@ namespace Dune::PDELab::Experimental {
         using Field                            = typename IntersectionDomain::Field;
         using Intersection                     = typename Context::EntitySet::Intersection;
         using Global                           = typename Intersection::Geometry;
-        using Cell                             = typename Intersection::LocalGeometry;
+        using Element                          = typename Intersection::LocalGeometry;
         using Inside                           = typename Intersection::LocalGeometry;
         using Outside                          = typename Intersection::LocalGeometry;
         using LocalCoordinate                  = typename Global::LocalCoordinate;
         using GlobalCoordinate                 = typename Global::GlobalCoordinate;
-        using CellCoordinate                   = typename Inside::GlobalCoordinate;
+        using ElementCoordinate                = typename Inside::GlobalCoordinate;
         using JacobianTransposed               = typename Global::JacobianTransposed;
         using JacobianInverseTransposed        = typename Global::JacobianInverseTransposed;
         using InsideJacobianTransposed         = typename Context::Inside::Embedding::JacobianTransposed;
@@ -674,7 +674,7 @@ namespace Dune::PDELab::Experimental {
 
 
   template<typename Context>
-  class InsideCell
+  class InsideElement
     : public Context
   {
 
@@ -687,14 +687,14 @@ namespace Dune::PDELab::Experimental {
 
   public:
 
-    using Inside    = InsideCell;
-    using Cell      = InsideCell;
+    using Inside    = InsideElement;
+    using Element      = InsideElement;
 
-    InsideCell(Context&& ctx)
+    InsideElement(Context&& ctx)
       : Context(std::move(ctx))
     {}
 
-    Cell& cell()
+    Element& element()
     {
       return *this;
     }
@@ -712,20 +712,20 @@ namespace Dune::PDELab::Experimental {
   };
 
   template<typename Context>
-  auto insideCell(Context&& ctx)
+  auto insideElement(Context&& ctx)
   {
-    return InsideCell<Context>{std::move(ctx)};
+    return InsideElement<Context>{std::move(ctx)};
   }
 
 
-  template<typename Context, typename CellContext>
-  class OutsideCell
+  template<typename Context, typename ElementContext>
+  class OutsideElement
     : public Context
   {
 
     struct OutsideTraits
     {
-      using EntitySet    = typename CellContext::EntitySet;
+      using EntitySet    = typename ElementContext::EntitySet;
       using Entity       = typename EntitySet::template Codim<0>::Entity;
       using Intersection = typename EntitySet::Intersection;
       using Index        = typename EntitySet::IndexSet::Index;
@@ -733,7 +733,7 @@ namespace Dune::PDELab::Experimental {
 
   public:
 
-    using Outside = CellContext;
+    using Outside = ElementContext;
 
   private:
 
@@ -741,9 +741,9 @@ namespace Dune::PDELab::Experimental {
 
   public:
 
-    OutsideCell(Context&& ctx, CellContext&& cell_ctx)
+    OutsideElement(Context&& ctx, ElementContext&& element_ctx)
       : Context(std::move(ctx))
-      , _outside(std::move(cell_ctx))
+      , _outside(std::move(element_ctx))
     {}
 
     Outside& outside()
@@ -896,12 +896,12 @@ namespace Dune::PDELab::Experimental {
 
   };
 
-  template<typename CellContext, typename Context>
-  auto outsideCell(CellContext&& cell_ctx, Context&& ctx)
+  template<typename ElementContext, typename Context>
+  auto outsideElement(ElementContext&& element_ctx, Context&& ctx)
   {
-    return OutsideCell<Context,CellContext>{std::move(ctx),std::move(cell_ctx)};
+    return OutsideElement<Context,ElementContext>{std::move(ctx),std::move(element_ctx)};
   }
 
 } // namespace Dune::PDELab::Experimental
 
-#endif // DUNE_PDELAB_ASSEMBLER_CELLDATA_HH
+#endif // DUNE_PDELAB_ASSEMBLER_ELEMENTDATA_HH
