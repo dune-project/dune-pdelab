@@ -391,6 +391,12 @@ namespace Dune::PDELab::Experimental {
         }
 
         template<typename P>
+        GlobalCoordinate unitOuterNormal(const LocalCoordinate& local) const
+        {
+          return _data.intersection().unitOuterNormal(local);
+        }
+
+        template<typename P>
         InsideJacobianTransposed insideJacobianTransposed(const P& p) const
         {
           return _data.inside().embedding().global().jacobianTransposed(p.inside());
@@ -688,7 +694,7 @@ namespace Dune::PDELab::Experimental {
   public:
 
     using Inside    = InsideElement;
-    using Element      = InsideElement;
+    using Element   = InsideElement;
 
     InsideElement(Context&& ctx)
       : Context(std::move(ctx))
