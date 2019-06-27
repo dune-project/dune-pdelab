@@ -508,6 +508,11 @@ namespace Dune::PDELab::Experimental {
         return intersection().unitOuterNormal(p.local());
       }
 
+      typename Embedding::GlobalCoordinate unitOuterNormal(const typename Embedding::LocalCoordinate& local) const
+      {
+        return intersection().unitOuterNormal(local);
+      }
+
       bool bound() const
       {
         return _data._intersection;
