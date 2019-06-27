@@ -874,44 +874,44 @@ void driver (const GV& gv, const FEM& fem, Param& param)
   using CC = typename GFSC::template ConstraintsContainer<RF>::Type;
   CF cf;
   CC cc;
+  Dune::PDELab::constraints(gfs,cf);
+  Dune::PDELab::constraints(gfsc,cc);
 
   // Make instationary grid operator for flow
   using MBE = Dune::PDELab::ISTL::BCRSMatrixBackend<>;
-  MBE mbef((int)10);
+  MBE mbe((int)10);
   using LOPF = LOP_spatial_flow<Param>;
   LOPF lopf(param);
   using GOF0 = Dune::PDELab::GridOperator<GFS,GFS,LOPF,MBE,RF,RF,RF,CF,CF>;
-  GOF0 gof0(gfs,cf,gfs,cf,lopf,mbef);
+  GOF0 gof0(gfs,cf,gfs,cf,lopf,mbe);
   using TLOPF = LOP_time_flow<Param>;
   TLOPF tlopf(param);
   using GOF1 = Dune::PDELab::GridOperator<GFS,GFS,TLOPF,MBE,RF,RF,RF,CF,CF>;
-  GOF1 gof1(gfs,cf,gfs,cf,tlopf,mbef);
+  GOF1 gof1(gfs,cf,gfs,cf,tlopf,mbe);
   using IGOF = Dune::PDELab::OneStepGridOperator<GOF0,GOF1>;
   IGOF igof(gof0,gof1);
   // same for contaminant transport
-  MBE mbec((int)10);
   constexpr bool convection{true};
   using LOPC = LOP_spatial_contaminant<Param,GFS,Z,GFSC,ZC,convection>;
   LOPC lopc(param,gfs,zfdata,gfsc,zcdata);
   using GOC0 = Dune::PDELab::GridOperator<GFSC,GFSC,LOPC,MBE,RF,RF,RF,CC,CC>;
-  GOC0 goc0(gfsc,cc,gfsc,cc,lopc,mbec);
+  GOC0 goc0(gfsc,cc,gfsc,cc,lopc,mbe);
   using TLOPC = LOP_time_contaminant<Param,GFS,Z,convection>;
   TLOPC tlopc(param,gfs,zfdata,z);
   using GOC1 = Dune::PDELab::GridOperator<GFSC,GFSC,TLOPC,MBE,RF,RF,RF,CC,CC>;
-  GOC1 goc1(gfsc,cc,gfsc,cc,tlopc,mbec);
+  GOC1 goc1(gfsc,cc,gfsc,cc,tlopc,mbe);
   using IGOC = Dune::PDELab::OneStepGridOperator<GOC0,GOC1>;
   IGOC igoc(goc0,goc1);
   // same for contaminant transport
-  MBE mbed((int)10);
   constexpr bool diffusion{false};
   using LOPD = LOP_spatial_contaminant<Param,GFS,Z,GFSC,ZC,diffusion>;
   LOPD lopd(param,gfs,zfdata,gfsc,zcdata);
   using GOD0 = Dune::PDELab::GridOperator<GFSC,GFSC,LOPD,MBE,RF,RF,RF,CC,CC>;
-  GOD0 god0(gfsc,cc,gfsc,cc,lopd,mbed);
+  GOD0 god0(gfsc,cc,gfsc,cc,lopd,mbe);
   using TLOPD = LOP_time_contaminant<Param,GFS,Z,diffusion>;
   TLOPD tlopd(param,gfs,zfdata,z);
   using GOD1 = Dune::PDELab::GridOperator<GFSC,GFSC,TLOPD,MBE,RF,RF,RF,CC,CC>;
-  GOD1 god1(gfsc,cc,gfsc,cc,tlopd,mbed);
+  GOD1 god1(gfsc,cc,gfsc,cc,tlopd,mbe);
   using IGOD = Dune::PDELab::OneStepGridOperator<GOD0,GOD1>;
   IGOD igod(god0,god1);
 
@@ -1211,11 +1211,11 @@ int main(int argc, char** argv)
     L[0] = 0.1;
     L[1] = 0.1;
     std::array<int,dim> N;
-    N[0] = 33;
-    N[1] = 33;
+    N[0] = 16;
+    N[1] = 16;
     std::bitset<dim> periodic(false);
     int overlap=1;
-    int refinement = 2;
+    int refinement = 1;
     YaspPartition<dim> yp;
     std::shared_ptr<Grid> gridp = std::shared_ptr<Grid>(new Grid(L,N,periodic,overlap,Dune::MPIHelper::getCollectiveCommunication(),&yp));
     gridp->refineOptions(false); // keep overlap in cells
