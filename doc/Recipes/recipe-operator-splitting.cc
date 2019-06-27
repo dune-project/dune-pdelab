@@ -136,7 +136,7 @@ template <typename Number, typename LType>
 class Parameters
 {
   Number time = 0.;
-  Number finaltime = 10.;
+  Number finaltime = 1.; // reduced to get a reasonable testing run time
   Number dt = 0.2;
   Number othertime = 0.; // used in contaminant temporal part to find out which flow data should be loaded
   Number grav = -9.81; // negative, acts in a direction (0,-1)
@@ -1065,7 +1065,7 @@ void driver (const GV& gv, const FEM& fem, Param& param)
         }
         else
         {
-          if (split_iter >= 10)
+          if (split_iter >= 5)
           {
             if (verbose>=1)
               std::cout << "max operator splitting iteration number reached, current errors: " << sperrC0 << ", " << sperrC1 << ", reseting time step" << std::endl;
