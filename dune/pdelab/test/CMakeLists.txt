@@ -4,7 +4,7 @@ dune_add_test(SOURCES testanalytic.cc)
 
 dune_add_test(SOURCES testbindtime.cc)
 
-# 2019-06-27 Steffen This doesn't compile right now, disabling 
+# 2019-06-27 Steffen This doesn't compile right now, disabling
 #dune_add_test(NAME testcomplexnumbers-istl
 #              SOURCES testcomplexnumbers.cc
 #              COMPILE_DEFINITIONS SUPERLU_NTYPE=3
@@ -45,6 +45,13 @@ if(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
                 MPI_RANKS 2
                 TIMEOUT 300)
 endif(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
+
+if(SuiteSparse_UMFPACK_FOUND AND UG_FOUND)
+  dune_add_test(SOURCES testschwarznonoverlapping.cc
+                MPI_RANKS 4
+                TIMEOUT 300)
+endif()
+
 
 dune_add_test(SOURCES testdglegendre.cc)
 
