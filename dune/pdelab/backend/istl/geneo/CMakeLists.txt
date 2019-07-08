@@ -11,5 +11,7 @@ install(FILES
   subdomainbasis.hh
   subdomainprojectedcoarsespace.hh
   two_level_schwarz.hh
+  schwarznonoverlapping.hh
+  overlaptools.hh
 
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/backend/istl/geneo)

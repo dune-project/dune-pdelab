@@ -1,0 +1,386 @@
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
+#ifndef DUNE_PDELAB_SCHWARZNONOVERLAPPING_GRIDS_HH
+#define DUNE_PDELAB_SCHWARZNONOVERLAPPING_GRIDS_HH
+
+// dune-istl includes
+#include<dune/istl/bvector.hh>
+#include<dune/istl/bcrsmatrix.hh>
+#include<dune/istl/operators.hh>
+#include<dune/istl/preconditioners.hh>
+#include<dune/istl/solvers.hh>
+#include<dune/istl/io.hh>
+#if HAVE_SUITESPARSE_UMFPACK
+#include<dune/istl/umfpack.hh>
+#endif
+
+// dune-common includes
+#include"overlaptools.hh"
+
+namespace Dune {
+  namespace PDELab {
+
+#if HAVE_SUITESPARSE_UMFPACK
+    template<typename GV, typename CollectiveCommunication, typename GlobalId, typename Matrix, typename Vector>
+    class NonoverlappingSchwarzPreconditioner : public Dune::Preconditioner<Vector,Vector>
+    {
+      // some types we need
+      using EPIS = Dune::PDELab::ExtendedParallelIndexSet<CollectiveCommunication,GlobalId,Matrix>;
+      using Attribute = typename EPIS::Attribute;
+      //enum Attribute {interior,border,overlap};
+      using AttributedLocalIndex = Dune::ParallelLocalIndex<Attribute>;
+      using ParallelIndexSet = Dune::ParallelIndexSet<GlobalId,AttributedLocalIndex,256>;
+      using RemoteIndices = Dune::RemoteIndices<ParallelIndexSet>;
+      using ExactSolver = Dune::UMFPack<Matrix>;
+      using LocalIndex = typename Vector::size_type;
+      using FieldType = typename Vector::field_type;
+      using VectorBlockType = typename Vector::block_type;
+      using MatrixBlockType = typename Matrix::block_type;
+      using ScalarVector = Dune::BlockVector<Dune::FieldVector<FieldType,1>>;
+
+      enum {components = Vector::block_type::dimension};
+
+      // data
+      //const GV& gv; // we will eliminate that soon
+      const CollectiveCommunication& comm; // collective communication object
+      int rank;     // my rank
+      int p;        // number of subdomains in total
+      int overlapsize;// overlap in terms of graph distance
+      size_t N_orig; // number of degrees of freedom in the input
+      size_t N_prec; // number of degrees of freedom of vectors used in preconditioner
+      std::shared_ptr<ScalarVector> pu;  // improved partition of unity
+      std::shared_ptr<ExactSolver> subdomainsolver; // umfpack solver for subdomain problem
+      std::shared_ptr<ExactSolver> coarsesolver;    // umfpack solver for coarse problem (solved by every rank
+      typename Vector::field_type* floating; // vector with size p storing 1 if subdomain is floating and 0 else
+      bool coarsespace; // true if we are working with a coarse space
+      std::vector<LocalIndex> new2old_localindex; // maps new local index to a local index in the original input
+      std::shared_ptr<ParallelIndexSet> pis; // newly built up index set
+      std::shared_ptr<RemoteIndices> si; // shared index information
+      std::shared_ptr<Dune::Interface> allinterface; // communication interface
+      std::shared_ptr<Dune::BufferedCommunicator> communicator; // build all to all communicator once
+
+      template<typename V>
+      struct AddGatherScatter
+      {
+        static typename V::value_type gather(const V& a, int i)
+        {
+          return a[i]; // I am sending my value
+        }
+        static void scatter (V& a, typename V::value_type v, int i)
+        {
+          a[i]+=v; // add what I receive to my value
+        }
+      };
+
+    public:
+      //! \brief The domain type of the preconditioner.
+      typedef Vector domain_type;
+      //! \brief The range type of the preconditioner.
+      typedef Vector range_type;
+      //! \brief The field type of the preconditioner.
+      typedef typename Vector::field_type field_type;
+
+      // define the category
+      virtual Dune::SolverCategory::Category category() const
+      {
+        return Dune::SolverCategory::nonoverlapping;
+      }
+
+      //! \brief Constructor.
+      NonoverlappingSchwarzPreconditioner (//const GV& gv_,                         // we want to eliminate that completely!
+                                           const CollectiveCommunication& comm_,    // collective communication object
+                                           const std::vector<int>& neighbors,       // ranks with whom we share degrees of freedom
+                                           const Matrix& A,                         // matrix assembled on interior elements and with dirichlet rows replaced
+                                           bool floatingSubdomain,                  // true if this subdomain has no connection to the Dirichlet boundary
+                                           //const std::vector<bool>& dirichlet,      // vector of flags stating if a degree of freedom is constrained
+                                           const std::vector<Dune::PartitionType>& partitiontype,  // vector giving partitiontype for each degree of freedom
+                                           const std::vector<GlobalId>& globalid,   // maps local index to globally unique id
+                                           int avg_,                                // average number of matrix entries
+                                           int overlap_,                            // layers of overlap to add
+                                           bool coarsespace_)                       // set to true if a coarse space should be built and used
+      : //gv(gv_),
+        comm(comm_),
+        rank(comm.rank()),
+        p(comm.size()),
+        overlapsize(overlap_),
+        N_orig(A.N()),
+        coarsespace(coarsespace_)
+      {
+        // handle the case p=1 so we do not have to care anymore
+        if (p==1)
+          {
+            N_prec = N_orig;
+            subdomainsolver = std::shared_ptr<ExactSolver>(new ExactSolver(A,0));
+            pu = std::shared_ptr<ScalarVector>(new ScalarVector(N_prec));
+            for (typename ScalarVector::size_type i=0; i<pu->N(); i++)
+              (*pu)[i] = 1.0;
+            for (size_t i=0; i<N_orig; i++)
+              new2old_localindex.push_back(i);
+            return;
+          }
+
+        // construct the new way
+        EPIS epis(comm,neighbors,A,partitiontype,globalid,overlapsize,false);
+        pis = epis.parallelIndexSet();
+        si = epis.remoteIndices();
+        new2old_localindex = epis.extendedToOriginalLocalIndex();
+        N_prec = pis->size(); // this now the new size after adding overlap
+
+        // construct stiffness matrix on overlapping set
+        auto M = Dune::PDELab::copyAndExtendMatrix(epis,A,avg_,globalid);
+
+        // compute LU decomposition
+        subdomainsolver = std::shared_ptr<ExactSolver>(new ExactSolver(*M,0));
+
+        // construct partition of unity in a scalar vector
+        pu = Dune::PDELab::makePartitionOfUnity(epis,*M,overlapsize);
+        for (typename ScalarVector::size_type i=0; i<pu->N(); i++)
+          (*pu)[i] = std::sqrt((*pu)[i]); // we expect to store the square root
+
+        // construct owner partition scalar vector
+        auto owner = Dune::PDELab::makeOwner(epis,*M,overlapsize);
+
+        // print matrices
+        // for (int i=0; i<p; i++)
+        //   {
+        //     comm.barrier();
+        //     if (rank==i) {
+        //       std::cout << "rank " << rank << std::endl;
+        //       Dune::printmatrix(std::cout,*M,"M","row",8,1);
+        //     }
+        //   }
+
+        // for fun construct a matrix with neumann boundary conditions
+        //auto Mneumann = std::shared_ptr<Matrix>(new Matrix(*M)); // make a copy of M
+        //Dune::PDELab::addNonlocalEntriesToDiagonal(epis,*Mneumann,*owner);
+        // print matrices
+        // for (int i=0; i<p; i++)
+        //   {
+        //     comm.barrier();
+        //     if (rank==i) {
+        //       std::cout << "rank " << rank << std::endl;
+        //       Dune::printmatrix(std::cout,*Mneumann,"Mneumann","row",8,1);
+        //     }
+        //   }
+        // comm.barrier();
+        //ExactSolver xxx(*Mneumann,1);
+
+        // build up communication interface using all atributes (thankfully ghosts are out of the way :-)) for later use
+        Dune::AllSet<Attribute> allAttribute;
+        allinterface = std::shared_ptr<Dune::Interface>(new Dune::Interface());
+        allinterface->build(*si,allAttribute,allAttribute); // all to all communication
+
+        // build up buffered communicator allowing communication over a dof vector
+        communicator = std::shared_ptr<Dune::BufferedCommunicator>(new Dune::BufferedCommunicator());
+        communicator->build<Vector>(*allinterface);
+
+        // now build the Nicolaides coarse space, but only if really needed
+        if (!coarsespace) return;
+
+        // build up rows of coarse grid matrix in O(p) algorithm
+        MatrixBlockType* myrow = new MatrixBlockType[p]; // my row of coarse grid matrix
+        for (int j=0; j<p; j++) // loop over columns of the coarse grid operator
+          for (int J=0; J<components; J++)
+            {
+              // prepare column j, component J
+              Vector r(N_prec);
+              r = 0.0;
+              if (rank==j)
+                for (typename Vector::size_type i=0; i<r.N(); i++) r[i][J] = (*pu)[i] * (*pu)[i]; // initialize with partition of unity
+              communicator->forward<AddGatherScatter<Vector>>(r,r); // make function known in other subdomains
+
+              // multiply with M
+              Vector z(N_prec);
+              M->mv(r,z);
+              for (typename Vector::size_type i=0; i<z.N(); i++) z[i] *= (*owner)[i]; // the product is correct in all owners
+              communicator->forward<AddGatherScatter<Vector>>(z,z); // now everybody has correct values of A*r_j
+
+              // now we have the whole column (j,J) of A in all processors and every one can compute the scalar product with its pu
+              for (int I=0; I<components; I++)
+                {
+                  r = 0.0;
+                  for (typename Vector::size_type i=0; i<r.N(); i++) r[i][I] = (*pu)[i] * (*pu)[i];
+                  myrow[j][I][J] = r*z;
+                }
+            }
+
+        // make a BCRSMatrix out of the rows
+        int avg = std::pow(5.0,GV::dimension);
+        Matrix A0(p,p,avg,0.1,Matrix::implicit);
+        MatrixBlockType* row = new MatrixBlockType[p];
+        for (int i=0; i<p; i++)
+          {
+            if (rank==i) for (int j=0; j<p; j++) row[j] = myrow[j]; // send my row
+            comm.broadcast(row,p,i);
+            for (int j=0; j<p; j++)
+              if (std::abs(row[j].frobenius_norm())>1e-15)
+                A0.entry(i,j) = row[j];
+          }
+        auto stats0 = A0.compress();
+        //if (rank==0) Dune::printmatrix(std::cout,A0,"A0","row",8,1);
+
+        // make floating subdomains known to everyone
+        floating = new field_type[p];
+        for (int j=0; j<p; j++) floating[j] = 0.0;
+        if (floatingSubdomain)
+          floating[rank] = 1.0;
+        comm.sum(floating,p);
+        // if (rank==0)
+        //   for (int j=0; j<p; j++)
+        //     std::cout << "floating[" << j << "] = " << floating[j] << std::endl;
+
+        // eliminate non-floating subdomains from coarse system
+        for (size_t i=0; i<A0.N(); i++)
+          {
+            auto cIt = A0[i].begin();
+            auto cEndIt = A0[i].end();
+            for (; cIt!=cEndIt; ++cIt)
+              {
+                auto j = cIt.index();
+                if (i==j)
+                  {
+                    // this is a diagonal block
+                    if (floating[i]==0.0)
+                      for (int k=0; k<components; k++)
+                        for (int l=0; l<components; l++)
+                          (*cIt)[k][l] = (k==l) ? 1.0 : 0.0;
+                  }
+                else
+                  {
+                    // this is an offdiagonal block
+                    if (floating[i]==0.0 || floating[j]==0.0) *cIt = 0.0;
+                  }
+              }
+          }
+        //if (rank==0) Dune::printmatrix(std::cout,A0,"A0","row",8,1);
+
+        // compute LU decomposition of coarse matrix
+        coarsesolver = std::shared_ptr<ExactSolver>(new ExactSolver(A0,0));
+
+        // delete temporary vectors
+        delete [] row;
+        delete [] myrow;
+      }
+
+      template<typename T>
+      void getPartitionOfUnity (T& vec)
+      {
+        for (typename Vector::size_type i=0; i<new2old_localindex.size(); i++)
+          vec[new2old_localindex[i]] = (*pu)[i][0]*(*pu)[i][0];
+      }
+
+      template<typename T>
+      void getPartitionOfUnity (T& vec, int j)
+      {
+        // fill with PU in rank j
+        ScalarVector x(N_prec);
+        if (pu->N()!=x.size()) { std::cout << "size in getPartitionOfUnity not matching" << std::endl; exit(1); }
+        if (rank==j)
+          for (typename ScalarVector::size_type i=0; i<x.size(); i++)
+            x[i] = (*pu)[i]*(*pu)[i];
+        else
+          x = 0.0;
+
+        // add up to communicate to all others
+        communicator->forward<AddGatherScatter<ScalarVector>>(x,x);
+
+        // pick out on interior and border
+        for (typename ScalarVector::size_type i=0; i<new2old_localindex.size(); i++)
+          vec[new2old_localindex[i]] = x[i];
+      }
+
+      ~NonoverlappingSchwarzPreconditioner ()
+      {
+        if (coarsespace && p>1) delete [] floating;
+      }
+
+      /*!
+        \brief Prepare the preconditioner.
+      */
+      virtual void pre (Vector& x, Vector& b)
+      {
+      }
+
+      /*!
+        \brief Apply the precondioner.
+      */
+      virtual void apply (Vector& v, const Vector& d)
+      {
+        // copy defect to a vector with the new local index set
+        Vector d2(N_prec);
+        d2 = 0.0;
+        for (typename Vector::size_type i=0; i<new2old_localindex.size(); i++)
+          d2[i] = d[new2old_localindex[i]]; // pick out interior and border; input defect is additive
+        //std::cout << rank << ": preconditioner before communication" << std::endl;
+        if (p>1) communicator->forward<AddGatherScatter<Vector>>(d2,d2); // make it consistent
+        //std::cout << rank << ": preconditioner after communication" << std::endl;
+
+        // coarse grid correction
+        Vector z(N_prec);
+        z = 0.0;
+        if (coarsespace && p>1)
+          {
+            // assemble rhs of coarse problem
+            VectorBlockType* d0 = new VectorBlockType[p];
+            for (int i=0; i<p; i++) d0[i] = 0.0;
+            for (typename Vector::size_type i=0; i<N_prec; i++)
+              d0[rank].axpy((*pu)[i]*(*pu)[i],d2[i]);
+            comm.sum(d0,p);
+            Vector R0d(p);
+            for (int i=0; i<p; i++)
+              {
+                R0d[i] = d0[i];
+                R0d[i] *= floating[i]; // zero rhs for non-floating domains
+              }
+            delete [] d0;
+
+            // solve coarse problem
+            Vector  v0(p);
+            v0 = 0.0;
+            Dune::InverseOperatorResult stat;
+            coarsesolver->apply(v0,R0d,stat);
+            // if (rank==0)
+            //   {
+            //     for (int i=0; i<p; i++)
+            //       std::cout << "v0[" << i << "] = " << v0[i] << std::endl;
+            //   }
+
+            // assemble correction from subdomains
+            for (typename Vector::size_type i=0; i<z.N(); i++)
+              z[i].axpy((*pu)[i]*(*pu)[i],v0[rank]);
+          }
+
+        // solve subdomain problem
+        for (typename Vector::size_type i=0; i<d2.N(); i++)
+          d2[i] *= (*pu)[i]; // apply prescaling
+        Dune::InverseOperatorResult stat;
+        Vector v2(N_prec);
+        v2 = 0.0;
+        subdomainsolver->apply(v2,d2,stat);
+        for (typename Vector::size_type i=0; i<v2.N(); i++)
+          v2[i] *= (*pu)[i]; // post scaling with partition of unity
+        if (coarsespace && p>1) v2 += z;
+
+        // add up corrections
+        if (p>1) communicator->forward<AddGatherScatter<Vector>>(v2,v2);
+
+        // write back result to old index set
+        for (typename Vector::size_type i=0; i<new2old_localindex.size(); i++)
+          v[new2old_localindex[i]] = v2[i];
+      }
+
+      /*!
+        \brief Clean up.
+      */
+      virtual void post (Vector& x)
+      {
+      }
+
+    };
+#endif
+
+
+  } // namespace PDELab
+} // namespace Dune
+
+#endif // DUNE_PDELAB_SCHWARZNONOVERLAPPING_GRIDS_HH
