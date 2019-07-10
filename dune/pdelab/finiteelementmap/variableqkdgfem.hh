@@ -21,7 +21,7 @@ namespace Dune {
         template<typename C>
         static void init(C & c)
         {
-          typedef Dune::QkDGLocalFiniteElement<D,R,p,d> LFE;
+          typedef Dune::QkDGLagrangeLocalFiniteElement<D,R,p,d> LFE;
           typedef typename C::value_type ptr;
           c[p] = ptr(new LocalFiniteElementVirtualImp<LFE>(LFE()));
 
@@ -36,12 +36,12 @@ namespace Dune {
       };
     }
 
-    //! FiniteElementMap which provides QkDGLocalFiniteElement instances, depending on the local polynomial degree
+    //! FiniteElementMap which provides QkDGLagrangeLocalFiniteElement instances, depending on the local polynomial degree
     //! \ingroup FiniteElementMap
     template<class M, class D, class R, int d, int maxP=6>
     class VariableQkDGLocalFiniteElementMap
     {
-      typedef typename QkDGLocalFiniteElement<D,R,0,d>::Traits::LocalBasisType::Traits T;
+      typedef typename QkDGLagrangeLocalFiniteElement<D,R,0,d>::Traits::LocalBasisType::Traits T;
       //! Type of finite element from local functions
       typedef LocalFiniteElementVirtualInterface<T> FiniteElementType;
     public:

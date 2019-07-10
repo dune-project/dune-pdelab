@@ -10,14 +10,7 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
 
-#include  <dune/pdelab/finiteelementmap/qkfem.hh>
-#include  <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include  <dune/pdelab/gridfunctionspace/subspace.hh>
-#include  <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include  <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include  <dune/pdelab/common/function.hh>
-#include  <dune/pdelab/common/vtkexport.hh>
-#include  <dune/pdelab/backend/istl.hh>
+#include <dune/pdelab.hh>
 
 // generate a Q1 function and output it
 template<class GV>

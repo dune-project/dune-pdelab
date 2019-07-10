@@ -11,7 +11,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
-#include <dune/pdelab/common/clock.hh>
+#include <dune/pdelab.hh>
 
 int main(int argc, char** argv) {
   try{

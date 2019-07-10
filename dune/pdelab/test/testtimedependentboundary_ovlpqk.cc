@@ -17,24 +17,8 @@
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/io/file/vtk.hh>
 #include <dune/grid/io/file/gmshreader.hh>
-// dune-istl included by pdelab
-// dune-pdelab includes
-#include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/function/callableadapter.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
-#include <dune/pdelab/gridoperator/gridoperator.hh>
-#include <dune/pdelab/gridoperator/onestep.hh>
-#include <dune/pdelab/stationary/linearproblem.hh>
-#include <dune/pdelab/backend/istl.hh>
-// loca operator and parameter class for this test case:
-#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
-#include <dune/pdelab/localoperator/l2.hh>
+
+#include <dune/pdelab.hh>
 
 #include <vector>
 #include <map>

@@ -7,7 +7,7 @@
 
 #include <dune/common/exceptions.hh>
 
-#include <dune/pdelab/gridoperator/common/localmatrix.hh>
+#include <dune/pdelab.hh>
 
 void test()
 {

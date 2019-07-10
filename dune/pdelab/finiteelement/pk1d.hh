@@ -37,7 +37,7 @@ namespace Dune {
       std::size_t n;         // the number of basis functions
       std::vector<R> s;      // Lagrange points on the reference interval
     public:
-      typedef Dune::LocalBasisTraits<D,1,Dune::FieldVector<D,1>,R,1,Dune::FieldVector<R,1>,Dune::FieldMatrix<R,1,1>, 1> Traits;
+      typedef Dune::LocalBasisTraits<D,1,Dune::FieldVector<D,1>,R,1,Dune::FieldVector<R,1>,Dune::FieldMatrix<R,1,1>> Traits;
 
       //! \brief make a basis object for given polynomial degree
       Pk1dLocalBasis (std::size_t k_) : gt(Dune::GeometryType::cube,1), k(k_), n(k_+1), s(n)

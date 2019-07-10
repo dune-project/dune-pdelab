@@ -29,22 +29,7 @@
 #include<dune/istl/io.hh>
 #include<dune/istl/superlu.hh>
 
-#include<dune/pdelab/common/function.hh>
-#include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/pkfem.hh>
-#include<dune/pdelab/constraints/common/constraints.hh>
-#include<dune/pdelab/constraints/conforming.hh>
-#include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
-#include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/vtk.hh>
-#include<dune/pdelab/gridoperator/gridoperator.hh>
-#include<dune/pdelab/backend/istl.hh>
-#include<dune/pdelab/stationary/linearproblem.hh>
-
-#include<dune/pdelab/adaptivity/adaptivity.hh>
+#include <dune/pdelab.hh>
 
 #include<dune/pdelab/test/testadaptivity-bctype.hh>
 #include<dune/pdelab/test/testadaptivity-bcextension.hh>

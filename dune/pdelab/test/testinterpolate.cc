@@ -9,12 +9,7 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/functions/gridfunctions/analyticgridviewfunction.hh>
-#include <dune/pdelab/finiteelementmap/p0fem.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/gridfunctionspace/interpolate.hh>
+#include <dune/pdelab.hh>
 
 double x_component_A(const Dune::FieldVector<double,2> & x)
 {

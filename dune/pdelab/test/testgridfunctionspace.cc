@@ -12,11 +12,7 @@
 
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/finiteelementmap/p0fem.hh>
-#include <dune/pdelab/finiteelementmap/pkfem.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab.hh>
 
 // test function trees
 template<int dim>

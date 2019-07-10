@@ -6,8 +6,7 @@
 #endif
 #include <iostream>
 
-#include <dune/pdelab/finiteelementmap/opbfem.hh>
-
+#include <dune/pdelab.hh>
 
 namespace Dune {
 
