@@ -35,7 +35,7 @@
  * \snippet recipe-blocking.cc Entity blocked type
  *
  * Full example code: @ref recipe-blocking.cc
- * \example recipe-grid-blocking.cc
+ * \example recipe-blocking.cc
  * See explanation at @ref recipe-blocking
  */
 
