@@ -377,6 +377,11 @@ namespace Dune {
 
     } // end namespace OverlapTools
 
+
+    // Attribute type for communication and transfering partition type from the grid
+    enum EPISAttribute {interior=0,border=1,overlap=2,front=3,ghost=4};
+
+
     /** A class extending a given index set by adding overlap with respect to a matrix graph
      *
      * \tparam CollectiveCommunication     Type collective communication
@@ -388,8 +393,7 @@ namespace Dune {
     {
     public:
       // make enum type for attributes public
-      enum Attribute {interior,border,overlap};
-      using AttributedLocalIndex = Dune::ParallelLocalIndex<Attribute>;
+      using AttributedLocalIndex = Dune::ParallelLocalIndex<EPISAttribute>;
       using ParallelIndexSet = Dune::ParallelIndexSet<GlobalId,AttributedLocalIndex,256>;
       using RemoteIndices = Dune::RemoteIndices<ParallelIndexSet>;
       using LocalIndex = typename Matrix::size_type;
@@ -522,7 +526,7 @@ namespace Dune {
       ExtendedParallelIndexSet (const CollectiveCommunication& comm_,    // collective communication object
                                 const std::vector<int>& neighbors,       // ranks with whom we possibly ever share degrees of freedom
                                 const Matrix& A,                         // matrix assembled on interior elements and with dirichlet rows replaced
-                                const std::vector<Dune::PartitionType>& partitiontype,  // vector giving partitiontype for each degree of freedom
+                                const std::vector<EPISAttribute>& partitiontype,   // vector giving partitiontype for each degree of freedom
                                 const std::vector<GlobalId>& globalid,   // vector mapping local index to globally unique id
                                 int overlap_,                            // layers of overlap to add
                                 bool verbose=false)                      // be verbose if true
@@ -533,7 +537,7 @@ namespace Dune {
         // this is needed later to make all indices public that are potentially in the overlap
         std::vector<int> dist(N_orig);
         for (size_t i=0; i<N_orig; i++)
-          dist[i] = (partitiontype[i]==Dune::BorderEntity) ? 0 : (overlapsize+1);
+          dist[i] = (partitiontype[i]==EPISAttribute::border) ? 0 : (overlapsize+1);
         for (int round=0; round<overlapsize; round++)
           for (size_t i=0; i<N_orig; i++)
             {
@@ -554,14 +558,12 @@ namespace Dune {
         pis->beginResize();
         for (size_t i=0; i<N_orig; i++)
           {
-            if (partitiontype[i]==Dune::GhostEntity)
+            if (partitiontype[i]==EPISAttribute::ghost)
               {
                 old2new_localindex[i] = N_orig; // this index will be out of bounds to indicate that it was a ghost
                 continue; // skip ghosts
               }
-            Attribute attr;
-            if (partitiontype[i]==Dune::InteriorEntity) attr=interior;
-            if (partitiontype[i]==Dune::BorderEntity) attr=border;
+            EPISAttribute attr=partitiontype[i];
             new2old_localindex.push_back(i);
             old2new_localindex[i] = new2old_localindex.size()-1;
             pis->add(globalid[i],AttributedLocalIndex(new2old_localindex.size()-1,attr,dist[i]<=overlapsize));
@@ -582,7 +584,7 @@ namespace Dune {
             tempsi.template rebuild<false>(); // find shared indices
 
             // build communication interface
-            Dune::AllSet<Attribute> allAttribute;
+            Dune::AllSet<EPISAttribute> allAttribute;
             Dune::Interface tempinterface;
             tempinterface.build(tempsi,allAttribute,allAttribute);
 
@@ -680,7 +682,7 @@ namespace Dune {
                                                  int avg, const std::vector<GlobalId>& globalid)
     {
       // build up communication interface using all atributes (thankfully ghosts are out of the way :-))
-      Dune::AllSet<typename ExtendedParallelIndexSet::Attribute> allAttribute;
+      Dune::AllSet<EPISAttribute> allAttribute;
       Dune::Interface allinterface;
       allinterface.build(*epis.remoteIndices(),allAttribute,allAttribute); // all to all communication
       Dune::VariableSizeCommunicator<> varcommunicator(allinterface);
@@ -719,7 +721,7 @@ namespace Dune {
     void addNonlocalEntriesToDiagonal (const ExtendedParallelIndexSet& epis, Matrix& M, const ScalarVector& owner)
     {
       // build up communication interface using all atributes (thankfully ghosts are out of the way :-))
-      Dune::AllSet<typename ExtendedParallelIndexSet::Attribute> allAttribute;
+      Dune::AllSet<EPISAttribute> allAttribute;
       Dune::Interface allinterface;
       allinterface.build(*epis.remoteIndices(),allAttribute,allAttribute); // all to all communication
       Dune::VariableSizeCommunicator<> varcommunicator(allinterface);
@@ -739,7 +741,7 @@ namespace Dune {
       using ParallelIndexSet = typename ExtendedParallelIndexSet::ParallelIndexSet;
 
       // communicator
-      Dune::AllSet<typename ExtendedParallelIndexSet::Attribute> allAttribute;
+      Dune::AllSet<EPISAttribute> allAttribute;
       Dune::Interface allinterface;
       allinterface.build(*epis.remoteIndices(),allAttribute,allAttribute); // all to all communication
       Dune::VariableSizeCommunicator<> varcommunicator(allinterface);
@@ -787,7 +789,7 @@ namespace Dune {
       using ParallelIndexSet = typename ExtendedParallelIndexSet::ParallelIndexSet;
 
       // communicator
-      Dune::AllSet<typename ExtendedParallelIndexSet::Attribute> allAttribute;
+      Dune::AllSet<EPISAttribute> allAttribute;
       Dune::Interface allinterface;
       allinterface.build(*epis.remoteIndices(),allAttribute,allAttribute); // all to all communication
       Dune::VariableSizeCommunicator<> varcommunicator(allinterface);

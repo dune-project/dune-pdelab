@@ -409,9 +409,14 @@ int main(int argc, char **argv)
         }
 
     // provide a partitionType for each degree of freedom. Should be interior, border or ghost
-    std::vector<Dune::PartitionType> partitiontype(indexset.size(dimension));
+    std::vector<Dune::PDELab::EPISAttribute> partitiontype(indexset.size(dimension));
     for (const auto& v : vertices(gv,Dune::Partitions::all))
-      partitiontype[indexset.index(v)] = v.partitionType();
+      {
+        if (v.partitionType()==Dune::InteriorEntity) partitiontype[indexset.index(v)] = Dune::PDELab::EPISAttribute::interior;
+        if (v.partitionType()==Dune::BorderEntity) partitiontype[indexset.index(v)] = Dune::PDELab::EPISAttribute::border;
+        if (v.partitionType()==Dune::OverlapEntity) partitiontype[indexset.index(v)] = Dune::PDELab::EPISAttribute::overlap;
+        if (v.partitionType()==Dune::GhostEntity) partitiontype[indexset.index(v)] = Dune::PDELab::EPISAttribute::ghost;
+      }
 
     // provide global id for each dof
     auto& globalidset = gv.grid().globalIdSet();
@@ -432,7 +437,7 @@ int main(int argc, char **argv)
     // preconditioner
     auto coarsespace = true;
     using CC = typename GV::CollectiveCommunication;
-    Dune::PDELab::NonoverlappingSchwarzPreconditioner<GV,CC,GlobalId,Matrix,Vector>
+    Dune::PDELab::NonoverlappingSchwarzPreconditioner<CC,GlobalId,Matrix,Vector>
       preconditioner(gv.comm(),allmyneighborsvec,A,floating,partitiontype,globalid,avg,overlap,coarsespace);
 
     // solver

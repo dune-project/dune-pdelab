@@ -21,13 +21,12 @@ namespace Dune {
   namespace PDELab {
 
 #if HAVE_SUITESPARSE_UMFPACK
-    template<typename GV, typename CollectiveCommunication, typename GlobalId, typename Matrix, typename Vector>
+    template<typename CollectiveCommunication, typename GlobalId, typename Matrix, typename Vector>
     class NonoverlappingSchwarzPreconditioner : public Dune::Preconditioner<Vector,Vector>
     {
       // some types we need
       using EPIS = Dune::PDELab::ExtendedParallelIndexSet<CollectiveCommunication,GlobalId,Matrix>;
-      using Attribute = typename EPIS::Attribute;
-      //enum Attribute {interior,border,overlap};
+      using Attribute = EPISAttribute;
       using AttributedLocalIndex = Dune::ParallelLocalIndex<Attribute>;
       using ParallelIndexSet = Dune::ParallelIndexSet<GlobalId,AttributedLocalIndex,256>;
       using RemoteIndices = Dune::RemoteIndices<ParallelIndexSet>;
@@ -41,7 +40,6 @@ namespace Dune {
       enum {components = Vector::block_type::dimension};
 
       // data
-      //const GV& gv; // we will eliminate that soon
       const CollectiveCommunication& comm; // collective communication object
       int rank;     // my rank
       int p;        // number of subdomains in total
@@ -87,13 +85,11 @@ namespace Dune {
       }
 
       //! \brief Constructor.
-      NonoverlappingSchwarzPreconditioner (//const GV& gv_,                         // we want to eliminate that completely!
-                                           const CollectiveCommunication& comm_,    // collective communication object
+      NonoverlappingSchwarzPreconditioner (const CollectiveCommunication& comm_,    // collective communication object
                                            const std::vector<int>& neighbors,       // ranks with whom we share degrees of freedom
                                            const Matrix& A,                         // matrix assembled on interior elements and with dirichlet rows replaced
                                            bool floatingSubdomain,                  // true if this subdomain has no connection to the Dirichlet boundary
-                                           //const std::vector<bool>& dirichlet,      // vector of flags stating if a degree of freedom is constrained
-                                           const std::vector<Dune::PartitionType>& partitiontype,  // vector giving partitiontype for each degree of freedom
+                                           const std::vector<EPISAttribute>& partitiontype,  // vector giving partitiontype for each degree of freedom
                                            const std::vector<GlobalId>& globalid,   // maps local index to globally unique id
                                            int avg_,                                // average number of matrix entries
                                            int overlap_,                            // layers of overlap to add
@@ -205,7 +201,7 @@ namespace Dune {
             }
 
         // make a BCRSMatrix out of the rows
-        int avg = std::pow(5.0,GV::dimension);
+        int avg = 2.5*avg_;
         Matrix A0(p,p,avg,0.1,Matrix::implicit);
         MatrixBlockType* row = new MatrixBlockType[p];
         for (int i=0; i<p; i++)
