@@ -23,6 +23,8 @@ PDELab git master (will be PDELab 2.7)
     region when re-interpolating boundary condition values between stages (i.e. whenn you call the version of
     `apply()` on the `OneStepMethod` that takes a boundary value function).
 
+-   There is now a convenience header `dune/pdelab.hh` which includes the entire module. It can replace
+    the usual bulk of includes, improves copy-pastability of PDELab code and makes life easier for beginners.
 
 PDELab 2.6
 ----------
