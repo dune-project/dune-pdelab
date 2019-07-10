@@ -9,15 +9,7 @@
 
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/common/functionutilities.hh>
-#include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/function/callableadapter.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionadapter.hh>
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/gridoperator/gridoperator.hh>
-#include <dune/pdelab/localoperator/linearelasticity.hh>
+#include <dune/pdelab.hh>
 
 
 /**
@@ -43,7 +35,7 @@
  * \snippet recipe-blocking.cc Entity blocked type
  *
  * Full example code: @ref recipe-blocking.cc
- * \example recipe-grid-blocking.cc
+ * \example recipe-blocking.cc
  * See explanation at @ref recipe-blocking
  */
 
