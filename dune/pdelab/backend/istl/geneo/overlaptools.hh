@@ -562,9 +562,10 @@ namespace Dune {
               continue; // skip ghosts
             }
           EPISAttribute attr=partitiontype[i];
+          bool pub = (partitiontype[i]==EPISAttribute::overlap)||(dist[i]<=overlapsize);
           new2old_localindex.push_back(i);
           old2new_localindex[i] = new2old_localindex.size()-1;
-          pis->add(globalid[i],AttributedLocalIndex(new2old_localindex.size()-1,attr,dist[i]<=overlapsize));
+          pis->add(globalid[i],AttributedLocalIndex(new2old_localindex.size()-1,attr,pub));
         }
       pis->endResize();
       if (verbose)
