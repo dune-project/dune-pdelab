@@ -233,6 +233,14 @@ sum = gf.getGridView().comm().sum(sum);
         eval_all(val);
       }
 
+      //! MPI rank of coordinate
+      /**
+       * \return The MPI rank on whose subgrid the evaluated coordinate lies
+       */
+      int getEvalRank() {
+        return evalRank;
+      }
+
     private:
       std::shared_ptr<const GF> gfsp;
       const GF *gfp;
