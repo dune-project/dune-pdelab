@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_SCHWARZNONOVERLAPPING_GRIDS_HH
-#define DUNE_PDELAB_SCHWARZNONOVERLAPPING_GRIDS_HH
+#ifndef DUNE_ISTL_SCHWARZNONOVERLAPPING_GRIDS_HH
+#define DUNE_ISTL_SCHWARZNONOVERLAPPING_GRIDS_HH
 
 // dune-istl includes
 #include<dune/istl/bvector.hh>
@@ -18,14 +18,13 @@
 #include"overlaptools.hh"
 
 namespace Dune {
-  namespace PDELab {
 
 #if HAVE_SUITESPARSE_UMFPACK
     template<typename CollectiveCommunication, typename GlobalId, typename Matrix, typename Vector>
     class NonoverlappingSchwarzPreconditioner : public Dune::Preconditioner<Vector,Vector>
     {
       // some types we need
-      using EPIS = Dune::PDELab::ExtendedParallelIndexSet<CollectiveCommunication,GlobalId,Matrix>;
+      using EPIS = Dune::ExtendedParallelIndexSet<CollectiveCommunication,GlobalId,Matrix>;
       using Attribute = EPISAttribute;
       using AttributedLocalIndex = Dune::ParallelLocalIndex<Attribute>;
       using ParallelIndexSet = Dune::ParallelIndexSet<GlobalId,AttributedLocalIndex,256>;
@@ -123,18 +122,18 @@ namespace Dune {
         N_prec = pis->size(); // this now the new size after adding overlap
 
         // construct stiffness matrix on overlapping set
-        auto M = Dune::PDELab::copyAndExtendMatrix(epis,A,avg_,globalid);
+        auto M = Dune::copyAndExtendMatrix(epis,A,avg_,globalid);
 
         // compute LU decomposition
         subdomainsolver = std::shared_ptr<ExactSolver>(new ExactSolver(*M,0));
 
         // construct partition of unity in a scalar vector
-        pu = Dune::PDELab::makePartitionOfUnity(epis,*M,overlapsize);
+        pu = Dune::makePartitionOfUnity(epis,*M,overlapsize);
         for (typename ScalarVector::size_type i=0; i<pu->N(); i++)
           (*pu)[i] = std::sqrt((*pu)[i]); // we expect to store the square root
 
         // construct owner partition scalar vector
-        auto owner = Dune::PDELab::makeOwner(epis,*M,overlapsize);
+        auto owner = Dune::makeOwner(epis,*M,overlapsize);
 
         // print matrices
         // for (int i=0; i<p; i++)
@@ -148,7 +147,7 @@ namespace Dune {
 
         // for fun construct a matrix with neumann boundary conditions
         //auto Mneumann = std::shared_ptr<Matrix>(new Matrix(*M)); // make a copy of M
-        //Dune::PDELab::addNonlocalEntriesToDiagonal(epis,*Mneumann,*owner);
+        //Dune::addNonlocalEntriesToDiagonal(epis,*Mneumann,*owner);
         // print matrices
         // for (int i=0; i<p; i++)
         //   {
@@ -375,8 +374,6 @@ namespace Dune {
     };
 #endif
 
-
-  } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_SCHWARZNONOVERLAPPING_GRIDS_HH
+#endif // DUNE_ISTL_SCHWARZNONOVERLAPPING_GRIDS_HH
