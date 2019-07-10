@@ -7,10 +7,7 @@
 
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/gridfunctionspace/dunefunctionsgridfunctionspace.hh>
-#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
+#include <dune/pdelab.hh>
 
 /**
  * \page recipe-linear-system-assembly Assembling a linear system from a PDE

@@ -9,9 +9,7 @@
 
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/common/functionutilities.hh>
-#include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/function/callableadapter.hh>
+#include <dune/pdelab.hh>
 
 /**
  * \page recipe-integrating-grid-functions Integrating grid functions

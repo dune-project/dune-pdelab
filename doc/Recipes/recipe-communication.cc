@@ -28,28 +28,8 @@
 #include<dune/alugrid/dgf.hh>
 #include<dune/grid/io/file/dgfparser/dgfparser.hh>
 #endif
-// dune-istl included by pdelab
-// dune-pdelab includes
-#include<dune/pdelab/common/function.hh>
-#include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/finiteelementmap/pkfem.hh>
-#include<dune/pdelab/finiteelementmap/qkfem.hh>
-#include<dune/pdelab/constraints/common/constraints.hh>
-#include<dune/pdelab/constraints/common/constraintsparameters.hh>
-#include<dune/pdelab/constraints/conforming.hh>
-#include<dune/pdelab/function/callableadapter.hh>
-#include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/gridfunctionspace/vtk.hh>
-#include<dune/pdelab/gridoperator/gridoperator.hh>
-#include<dune/pdelab/localoperator/defaultimp.hh>
-#include<dune/pdelab/localoperator/pattern.hh>
-#include<dune/pdelab/localoperator/flags.hh>
-#include<dune/pdelab/localoperator/variablefactories.hh>
-#include<dune/pdelab/backend/istl.hh>
-#include<dune/pdelab/stationary/linearproblem.hh>
-#include<dune/pdelab/newton/newton.hh>
+
+#include <dune/pdelab.hh>
 
 /**
  * \page recipe-communication Communication in parallel programs

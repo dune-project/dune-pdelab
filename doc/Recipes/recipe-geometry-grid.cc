@@ -10,14 +10,8 @@
 #include <dune/grid/geometrygrid/grid.hh>
 
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
-#include <dune/pdelab/common/vtkexport.hh>
 
-#include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/gridfunctionspace/dunefunctionsgridfunctionspace.hh>
-#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
-#include <dune/pdelab/stationary/linearproblem.hh>
+#include <dune/pdelab.hh>
 
 /**
  * \page recipe-geometry-grid Transforming a cartesian mesh
