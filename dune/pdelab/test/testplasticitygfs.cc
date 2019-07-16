@@ -151,6 +151,6 @@ int main(int argc, char* argv[]) try {
   std::cout << "Matrix type: " << className<MatrixType>() << std::endl;
   std::cout << "Vector type: " << className<VectorType>() << std::endl;
 
-} catch (Exception e) {
+} catch (Exception const& e) {
   std::cout << e << std::endl;
 }
