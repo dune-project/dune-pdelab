@@ -106,7 +106,7 @@ namespace Dune {
         It is assumed that the vectors are consistent on the interior+border
         partition.
       */
-      virtual field_type dot (const X& x, const X& y) override
+      virtual field_type dot (const X& x, const X& y) const override
       {
         // do local scalar product on unique partition
         field_type sum = helper.disjointDot(x,y);
@@ -118,7 +118,7 @@ namespace Dune {
       /*! \brief Norm of a right-hand side vector.
         The vector must be consistent on the interior+border partition
       */
-      virtual double norm (const X& x) override
+      virtual double norm (const X& x) const override
       {
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
