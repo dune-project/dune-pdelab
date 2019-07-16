@@ -442,12 +442,12 @@ namespace Dune {
         : implementation(implementation_)
       {}
 
-      virtual typename X::Container::field_type dot(const X& x, const X& y) override
+      virtual typename X::Container::field_type dot(const X& x, const X& y) const override
       {
         return implementation.dot(x,y);
       }
 
-      virtual typename X::Container::field_type norm (const X& x) override
+      virtual typename X::Container::field_type norm (const X& x) const override
       {
         using namespace std;
         return sqrt(static_cast<double>(this->dot(x,x)));
