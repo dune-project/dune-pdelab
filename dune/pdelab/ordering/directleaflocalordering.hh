@@ -130,6 +130,8 @@ namespace Dune {
 
     private:
 
+      static constexpr auto GT_UNUSED = ~std::size_t(0);
+
       typedef FiniteElementInterfaceSwitch<
       typename FEM::Traits::FiniteElement
       > FESwitch;
@@ -179,7 +181,7 @@ namespace Dune {
 
         _codim_used.reset();
         _gt_used.assign(GlobalGeometryTypeIndex::size(dim),false);
-        _gt_dof_sizes.assign(GlobalGeometryTypeIndex::size(dim),0);
+        _gt_dof_sizes.assign(GlobalGeometryTypeIndex::size(dim),GT_UNUSED);
         _local_gt_dof_sizes.resize(GlobalGeometryTypeIndex::size(dim));
         _max_local_size = 0;
         _fixed_size_possible = true;
@@ -253,22 +255,13 @@ namespace Dune {
           {
             for (size_type i = 0; i < _local_gt_dof_sizes.size(); ++i)
               {
-                if (_local_gt_dof_sizes[i] > 0)
-                  {
-                    if (_gt_dof_sizes[i] == 0)
-                      _gt_dof_sizes[i] = _local_gt_dof_sizes[i];
-                    else if (_gt_dof_sizes[i] != _local_gt_dof_sizes[i])
-                      {
-                        _fixed_size_possible = false;
-                        break;
-                      }
-                  }
-                else
-                  {
-                    // catch special case where some grid entities sometimes don't have any DOFs associated with
-                    // them, but are const size if there are any DOFs, i.e. a pattern of #(DOFs) == 0 || #(DOFs) == c > 0
-                    _fixed_size_possible = _fixed_size_possible && (_gt_dof_sizes[i] == 0);
-                  }
+                if (_gt_dof_sizes[i] == GT_UNUSED)
+                  _gt_dof_sizes[i] = _local_gt_dof_sizes[i];
+                else if (_gt_dof_sizes[i] != _local_gt_dof_sizes[i])
+                {
+                  _fixed_size_possible = false;
+                  break;
+                }
               }
           }
       }
@@ -278,6 +271,10 @@ namespace Dune {
       {
         if (_fixed_size_possible)
           {
+            // set size of unused geometry types to 0
+            for (auto& size : _gt_dof_sizes)
+              if (size == GT_UNUSED)
+                size = 0;
             // free per-entity offsets
             _entity_dof_offsets = std::vector<typename Traits::SizeType>();
             _fixed_size = true;
