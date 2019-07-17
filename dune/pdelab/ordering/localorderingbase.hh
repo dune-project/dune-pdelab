@@ -56,6 +56,8 @@ namespace Dune {
 
       typedef LocalOrderingTraits<ES,DI,CI> Traits;
 
+      static constexpr auto GT_UNUSED = ~std::size_t(0);
+
     protected:
 
       typedef impl::GridFunctionSpaceOrderingData<typename Traits::SizeType> GFSData;
