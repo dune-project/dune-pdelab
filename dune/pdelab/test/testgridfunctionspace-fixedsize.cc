@@ -222,7 +222,7 @@ private:
 template <class GFS, class FEM>
 bool testSize(const GFS& gfs, const FEM& fem)
 {
-  std::cout << "ordering fixedSize: " << gfs.ordering().fixedSize(0) << "\n";
+  std::cout << "ordering fixedSize: " << gfs.ordering().fixedSize() << "\n";
   std::cout << "ordering size: " << gfs.ordering().size() << "\n";
   std::cout << "ordering blockCount: " << gfs.ordering().blockCount() << "\n";
 
@@ -240,7 +240,7 @@ bool testSize(const GFS& gfs, const FEM& fem)
  * correct
  */
 template <int dim>
-bool testPredicate(std::size_t cells, std::function<bool(std::size_t)> predicate)
+bool testPredicate(std::size_t cells, bool should_be_fixed_size,  std::function<bool(std::size_t)> predicate)
 {
   Dune::FieldVector<double, dim> L(1.0);
   std::array<int, dim> N(Dune::filledArray<dim, int>(cells));
@@ -254,7 +254,7 @@ bool testPredicate(std::size_t cells, std::function<bool(std::size_t)> predicate
   FEM fem(gv, predicate);
   GFS gfs(gv, fem);
   gfs.update();
-  return testSize(gfs, fem);
+  return testSize(gfs, fem) and gfs.ordering().fixedSize() == should_be_fixed_size;
 }
 
 int main(int argc, char** argv)
@@ -265,24 +265,36 @@ int main(int argc, char** argv)
 
     const std::size_t cells = 15;
 
+    // In these two basic scenarios, PDELab should detect that the ordering actually is fixed
+    // size and switch to fixed size mode after collecting the size information
+    std::cout << "testing 2D all cells active" << std::endl;
+    if (!testPredicate<2>(cells, true, [](auto i) { return true; })) {
+      return -1;
+    }
+    std::cout << "testing 2D all cells disabled" << std::endl;
+    if (!testPredicate<2>(cells, true, [](auto i) { return false; })) {
+      return -1;
+    }
+
+
     // in the following we test different scenarios of a grid function space with a finite element
     // that has 0 or c number of DOFs on different entities, where c is a constant. Wether an entity
     // has 0 DOFs is determined by the predicates provided below.
 
     std::cout << "testing 1D alternating sizes" << std::endl;
-    if (!testPredicate<1>(cells, [](auto i) { return i % 2 == 0; })) {
+    if (!testPredicate<1>(cells, false, [](auto i) { return i % 2 == 0; })) {
       return -1;
     }
     std::cout << "testing 2D alternating sizes" << std::endl;
-    if (!testPredicate<2>(cells, [](auto i) { return i % 2 == 0; })) {
+    if (!testPredicate<2>(cells, false, [](auto i) { return i % 2 == 0; })) {
       return -1;
     }
     std::cout << "testing 1D empty fem at the end" << std::endl;
-    if (!testPredicate<1>(cells, [cells](auto i) { return i > cells / 2; })) {
+    if (!testPredicate<1>(cells, false, [cells](auto i) { return i > cells / 2; })) {
       return -1;
     }
     std::cout << "testing 1D empty fem at the beginning" << std::endl;
-    if (!testPredicate<1>(cells, [cells](auto i) { return i <= cells / 2; })) {
+    if (!testPredicate<1>(cells, false, [cells](auto i) { return i <= cells / 2; })) {
       return -1;
     }
     return 0;
