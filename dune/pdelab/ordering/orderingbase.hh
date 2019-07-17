@@ -206,6 +206,11 @@ namespace Dune {
         return _codim_used.test(codim);
       }
 
+      bool fixedSize() const
+      {
+        return _fixed_size;
+      }
+
       bool fixedSize(typename Traits::SizeType codim) const
       {
         return _codim_fixed_size.test(codim);
