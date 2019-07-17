@@ -180,7 +180,7 @@ namespace Dune {
           {
             node._codim_used.reset();
             node._gt_used.assign(Dune::GlobalGeometryTypeIndex::size(dim),false);
-            node._gt_dof_offsets.assign(Dune::GlobalGeometryTypeIndex::size(dim) * std::max(node._child_count,static_cast<std::size_t>(1)),0);
+            node._gt_dof_offsets.assign(Dune::GlobalGeometryTypeIndex::size(dim) * std::max(node._child_count,static_cast<std::size_t>(1)),Node::GT_UNUSED);
             node._gt_entity_offsets.assign(Dune::GlobalGeometryTypeIndex::size(dim) + 1,0);
           }
       }
@@ -331,6 +331,10 @@ namespace Dune {
       {
         if (!node._fixed_size)
           {
+            // mask out GT_UNUSED for geometry types that really weren't used
+            for (auto& size : node._gt_dof_offsets)
+              if (size == Node::GT_UNUSED)
+                size = 0;
             if (node._fixed_size_possible)
               {
                 node._entity_dof_offsets = std::vector<typename Node::Traits::SizeType>();
