@@ -392,6 +392,15 @@ namespace Dune {
       PowerGridFunction (T& t)
         : BaseT(t) {}
 
+      /**
+       * @brief Construct a new Power Grid Function object
+       *
+       * @param container      array of pointers to the child grid functions
+       */
+      PowerGridFunction (const std::array<shared_ptr<T>,k>& container)
+        : BaseT(container)
+      {}
+
       /** \brief Initialize all children with different function objects
        *
        *  This constructor is only available in the non-specialized version

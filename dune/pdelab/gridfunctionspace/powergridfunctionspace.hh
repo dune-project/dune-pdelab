@@ -91,6 +91,20 @@ namespace Dune {
         , ImplementationBase(backend,ordering_tag)
       {}
 
+      /**
+       * @brief Construct a new Power Grid Function Space object
+       *
+       * @param container       array of pointers to the child spaces
+       * @param backend         backend object
+       * @param ordering_tag    ordering tag object
+       */
+      PowerGridFunctionSpace (const std::array<shared_ptr<T>,k>& container,
+                              const Backend& backend = Backend(),
+                              const OrderingTag ordering_tag = OrderingTag())
+        : BaseT(container)
+        , ImplementationBase(backend,ordering_tag)
+      {}
+
       PowerGridFunctionSpace (T& c0,
                               T& c1,
                               const Backend& backend = Backend(),
