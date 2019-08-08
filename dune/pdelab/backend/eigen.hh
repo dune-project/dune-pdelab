@@ -3,6 +3,8 @@
 #ifndef DUNE_PDELAB_BACKEND_EIGEN_HH
 #define DUNE_PDELAB_BACKEND_EIGEN_HH
 
+#if HAVE_EIGEN
+
 #include <dune/pdelab/backend/eigen/descriptors.hh>
 #include <dune/pdelab/backend/eigen/vector.hh>
 #include <dune/pdelab/backend/eigen/matrix.hh>
@@ -16,4 +18,5 @@ namespace Dune {
     }
   }
 }
+#endif //HAVE_EIGEN
 #endif // DUNE_PDELAB_BACKEND_EIGEN_HH
