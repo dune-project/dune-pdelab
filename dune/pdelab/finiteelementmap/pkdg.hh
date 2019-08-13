@@ -16,7 +16,7 @@ namespace Dune {
 
       template<typename GV, typename D, typename R, unsigned int k, unsigned int d>
       class PkDGLocalFiniteElementMap
-        : public SimpleLocalFiniteElementMap<Dune::PkLocalFiniteElement<D,R,d,k>,d>
+        : public SimpleLocalFiniteElementMap<Dune::PkDGLocalFiniteElement<D,R,d,k>,d>
       {
 
       public:
