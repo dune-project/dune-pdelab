@@ -355,6 +355,8 @@ namespace Dune {
 
     struct PowerGridFunctionTag {};
 
+    struct DynamicPowerGridFunctionTag {};
+
     /** \brief product of identical functions
      *
      *  This collects k instances of T in a \ref GridFunctionTree.
@@ -505,6 +507,172 @@ namespace Dune {
       }
 
       PowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3,
+                         T& c4,
+                         T& c5,
+                         T& c6,
+                         T& c7,
+                         T& c8,
+                         T& c9)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
+      {
+      }
+
+#endif // DOXYGEN
+    };
+
+    /** \brief product of identical functions
+     *
+     *  This collects k instances of T in a \ref GridFunctionTree.
+     *
+     *  \tparam T The type of the children of this node in the tree.
+     *  \tparam k The number of children this node has.
+     */
+    template<class T>
+    class DynamicPowerGridFunction
+      : public TypeTree::DynamicPowerNode<T>
+    {
+
+      typedef TypeTree::DynamicPowerNode<T> BaseT;
+
+    public:
+
+      typedef PowerCompositeGridFunctionTraits<typename T::GridViewType> Traits;
+
+      typedef DynamicPowerGridFunctionTag ImplementationTag;
+
+      //! record the GridView
+      typedef typename T::GridViewType GridViewType;
+
+      //! Set the time in all leaf nodes of this function tree
+      template <typename TT>
+      void setTime(TT time){
+        PowerCompositeSetTimeVisitor<TT> visitor(time);
+        TypeTree::applyToTree(*this,visitor);
+      }
+
+      DynamicPowerGridFunction()
+      {}
+
+      /**
+       * @brief Construct a new Power Grid Function object
+       *
+       * @param container vector of pointers to child grid functions
+       */
+      DynamicPowerGridFunction (const std::vector<shared_ptr<T>>& container)
+        : BaseT(container) {}
+
+      //! Construct a DynamicPowerGridFunction with k clones of the function t
+      DynamicPowerGridFunction (T& t)
+        : BaseT(t) {}
+
+      /** \brief Initialize all children with different function objects
+       *
+       *  This constructor is only available in the non-specialized version
+       *
+       *  \param t Points to an array of pointers to function objects of type
+       *           T.  The function pointed to by the first pointer will be
+       *           used to initialize the first child, the second pointer for
+       *           the second child and so on.
+       */
+      // TODO: DynamicPowerGridFunction (T** t) : ...
+
+#ifdef DOXYGEN
+      /** \brief Initialize all children with different function objects
+       *
+       *  Currently there exist specializations for 2 <= k <= 9.  Each
+       *  specialization has a constructor which takes the initializers for
+       *  its children as arguments.
+       *
+       *  @param t0 The initializer for the first child.
+       *  @param t1 The initializer for the second child.
+       *  @param ... more initializers
+       */
+      DynamicPowerGridFunction (T& t0, T& t1, ...)
+      {
+      }
+
+#else
+
+      DynamicPowerGridFunction (T& c0,
+                         T& c1)
+        : BaseT(c0,c1)
+      {
+      }
+
+      DynamicPowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2)
+        : BaseT(c0,c1,c2)
+      {
+      }
+
+      DynamicPowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3)
+        : BaseT(c0,c1,c2,c3)
+      {
+      }
+
+      DynamicPowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3,
+                         T& c4)
+        : BaseT(c0,c1,c2,c3,c4)
+      {
+      }
+
+      DynamicPowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3,
+                         T& c4,
+                         T& c5)
+        : BaseT(c0,c1,c2,c3,c4,c5)
+      {
+      }
+
+      DynamicPowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3,
+                         T& c4,
+                         T& c5,
+                         T& c6)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6)
+      {
+      }
+
+      DynamicPowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3,
+                         T& c4,
+                         T& c5,
+                         T& c6,
+                         T& c7)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7)
+      {
+      }
+
+      DynamicPowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3,
+                         T& c4,
+                         T& c5,
+                         T& c6,
+                         T& c7,
+                         T& c8)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8)
+      {
+      }
+
+      DynamicPowerGridFunction (T& c0,
                          T& c1,
                          T& c2,
                          T& c3,

@@ -14,6 +14,9 @@ namespace PDELab {
   struct PowerDifferentiableFunctionTag : public DifferentiableFunctionBaseTag {};
   struct PowerDifferentiableFunctionLocalViewTag : public DifferentiableFunctionLocalViewBaseTag {};
 
+  struct DynamicPowerDifferentiableFunctionTag : public DifferentiableFunctionBaseTag {};
+  struct DynamicPowerDifferentiableFunctionLocalViewTag : public DifferentiableFunctionLocalViewBaseTag {};
+
   struct CompositeDifferentiableFunctionTag : public DifferentiableFunctionBaseTag {};
   struct CompositeDifferentiableFunctionLocalViewTag : public DifferentiableFunctionLocalViewBaseTag {};
 
