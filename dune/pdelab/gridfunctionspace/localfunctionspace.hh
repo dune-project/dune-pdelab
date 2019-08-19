@@ -449,6 +449,92 @@ namespace Dune {
       >
     registerNodeTransformation(PowerGridFunctionSpace* pgfs, gfs_to_lfs<Params>* t, PowerGridFunctionSpaceTag* tag);
 
+    //=======================================
+    // local function space base: dynamic power implementation
+    //=======================================
+
+    //! traits for multi component local function space
+    template<typename GFS, typename DOFIndex, typename N>
+    struct DynamicPowerCompositeLocalFunctionSpaceTraits : public GridViewLocalFunctionSpaceBaseTraits<GFS,DOFIndex>
+    {
+      //! type of local function space node
+      typedef N NodeType;
+    };
+
+    // local function space for a power grid function space
+    template<typename GFS, typename DOFIndex, typename ChildLFS>
+    class DynamicPowerLocalFunctionSpaceNode :
+      public GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>,
+      public TypeTree::DynamicPowerNode<ChildLFS>
+    {
+      typedef GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
+      typedef TypeTree::DynamicPowerNode<ChildLFS> TreeNode;
+
+      template<typename>
+      friend struct PropagateGlobalStorageVisitor;
+
+      template<typename>
+      friend struct ClearSizeVisitor;
+
+      template<typename,bool>
+      friend struct ComputeSizeVisitor;
+
+      template<typename,bool>
+      friend struct FillIndicesVisitor;
+
+    public:
+      typedef DynamicPowerCompositeLocalFunctionSpaceTraits<GFS,DOFIndex,DynamicPowerLocalFunctionSpaceNode> Traits;
+
+      typedef DynamicPowerLocalFunctionSpaceTag ImplementationTag;
+
+      //! \brief initialize with grid function space
+      template<typename Transformation>
+      DynamicPowerLocalFunctionSpaceNode (std::shared_ptr<const GFS> gfs,
+                                   const Transformation& t,
+                                   const std::vector<std::shared_ptr<ChildLFS>>& children)
+        : BaseT(gfs)
+        , TreeNode(children)
+      {}
+
+      template<typename Transformation>
+      DynamicPowerLocalFunctionSpaceNode (const GFS& gfs,
+                                   const Transformation& t,
+                                   const std::vector<std::shared_ptr<ChildLFS>>& children)
+        : BaseT(stackobject_to_shared_ptr(gfs))
+        , TreeNode(children)
+      {}
+
+      //! \brief bind local function space to entity
+      template<bool fast = false>
+      void bind (const typename Traits::Element& e, std::integral_constant<bool,fast> fast_ = std::integral_constant<bool,fast>{})
+      {
+        // call method on base class, this avoid the barton neckman trick
+        BaseT::bind(*this,e,fast_);
+      }
+
+    };
+
+
+    // transformation template, we need a custom template in order to inject the DOFIndex type into the LocalFunctionSpace
+    template<typename SourceNode, typename Transformation>
+    struct dynamic_power_gfs_to_lfs_template
+    {
+      template<typename TC>
+      struct result
+      {
+        typedef DynamicPowerLocalFunctionSpaceNode<SourceNode,typename Transformation::DOFIndex,TC> type;
+      };
+    };
+
+    // register PowerGFS -> LocalFunctionSpace transformation
+    template<typename DynamicPowerGridFunctionSpace, typename Params>
+    TypeTree::TemplatizedGenericDynamicPowerNodeTransformation<
+      DynamicPowerGridFunctionSpace,
+      gfs_to_lfs<Params>,
+      dynamic_power_gfs_to_lfs_template<DynamicPowerGridFunctionSpace,gfs_to_lfs<Params> >::template result
+      >
+    registerNodeTransformation(DynamicPowerGridFunctionSpace* pgfs, gfs_to_lfs<Params>* t, DynamicPowerGridFunctionSpaceTag* tag);
+
 
     //=======================================
     // local function space base: composite implementation

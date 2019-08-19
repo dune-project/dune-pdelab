@@ -239,6 +239,22 @@ namespace Dune {
     };
 
 
+    // Helper to use static or dynamic sized vectors
+    template<typename size_type, typename LFS, bool d = TypeTree::TreeInfo<LFS>::dynamic>
+    struct LFSContainerHelper;
+
+    template<typename size_type, typename LFS>
+    struct LFSContainerHelper<size_type,LFS,true>
+    {
+      using type = std::vector<size_type>;
+    };
+
+    template<typename size_type, typename LFS>
+    struct LFSContainerHelper<size_type,LFS,false>
+    {
+      using type = ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount>;
+    };
+
 
     template<typename LFS, typename C, typename CacheTag, bool fast>
     class LFSIndexCacheBase
@@ -263,6 +279,7 @@ namespace Dune {
       typedef DOFIndex DI;
       typedef std::size_t size_type;
 
+      typedef typename LFSContainerHelper<size_type,LFS>::type OffsetContainer;
       typedef std::vector<CI> CIVector;
       typedef std::unordered_map<DI,CI> CIMap;
 
@@ -299,6 +316,8 @@ namespace Dune {
         , _inverse_cache_built(false)
         , _gfs_constraints(constraints)
       {
+        _offsets.resize(lfs.degree());
+        _extended_offsets.resize(lfs.degree());
       }
 
       void update()
@@ -319,9 +338,9 @@ namespace Dune {
           _inverse_cache_built = false;
 
           // extract size for all leaf spaces (into a flat list)
-          typedef ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount> LeafSizeVector;
+          using LeafSizeVector = typename LFSContainerHelper<size_type,LFS>::type;
           LeafSizeVector leaf_sizes;
-          leaf_sizes.resize(TypeTree::TreeInfo<LFS>::leafCount);
+          leaf_sizes.resize(TypeTree::leafCount(_lfs));
           extract_lfs_leaf_sizes(_lfs,leaf_sizes.begin());
 
           // perform the actual mapping
@@ -538,15 +557,14 @@ namespace Dune {
       std::vector<std::pair<ConstraintsIterator,ConstraintsIterator> > _constraints_iterators;
       mutable CIMap _container_index_map;
       ConstraintsVector _constraints;
-      mutable std::array<size_type,TypeTree::StaticDegree<LFS>::value> _offsets;
-      mutable std::array<size_type,TypeTree::StaticDegree<LFS>::value> _extended_offsets;
+      mutable OffsetContainer _offsets;
+      mutable OffsetContainer _extended_offsets;
       mutable bool _inverse_cache_built;
       mutable InverseMap _inverse_map;
 
       const C& _gfs_constraints;
 
     };
-
 
     template<typename LFS, typename CacheTag, bool fast>
     class LFSIndexCacheBase<LFS,EmptyTransformation,CacheTag,fast>
@@ -563,6 +581,7 @@ namespace Dune {
       typedef DOFIndex DI;
       typedef std::size_t size_type;
 
+      typedef typename LFSContainerHelper<size_type,LFS>::type OffsetContainer;
       typedef std::vector<CI> CIVector;
       typedef std::unordered_map<DI,CI> CIMap;
 
@@ -615,9 +634,10 @@ namespace Dune {
             it->clear();
 
           // extract size for all leaf spaces (into a flat list)
-          typedef ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount> LeafSizeVector;
+          using LeafSizeVector = typename LFSContainerHelper<size_type,LFS>::type;
           LeafSizeVector leaf_sizes;
-          leaf_sizes.resize(TypeTree::TreeInfo<LFS>::leafCount);
+          leaf_sizes.resize(TypeTree::leafCount(_lfs));
+
           extract_lfs_leaf_sizes(_lfs,leaf_sizes.begin());
 
           // perform the actual mapping

@@ -195,6 +195,9 @@ namespace Dune {
     //! Tag denoting a PowerLocalFunctionSpace
     struct PowerLocalFunctionSpaceTag {};
 
+    //! Tag denoting a DynamicPowerLocalFunctionSpace
+    struct DynamicPowerLocalFunctionSpaceTag {};
+
     //! Tag denoting a CompositeLocalFunctionSpace
     struct CompositeLocalFunctionSpaceTag {};
 
