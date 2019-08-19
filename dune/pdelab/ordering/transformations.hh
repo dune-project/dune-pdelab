@@ -98,6 +98,28 @@ namespace Dune {
       >
     registerNodeTransformation(GridFunctionSpace*, gfs_to_ordering<Params>*, PowerGridFunctionSpaceTag*);
 
+    // Declare DynamicPowerGFS to ordering descriptor and register transformation
+
+    template<typename GFS, typename Transformation, typename OrderingTag>
+    struct dynamic_power_gfs_to_ordering_descriptor
+      : public TypeTree::meta_function
+    {
+      typedef decltype(
+        register_dynamic_power_gfs_to_ordering_descriptor(
+          TypeTree::declptr<GFS>(),
+          TypeTree::declptr<Transformation>(),
+          TypeTree::declptr<OrderingTag>()
+          )
+        ) type;
+    };
+
+    template<typename GridFunctionSpace, typename Params>
+    dynamic_power_gfs_to_ordering_descriptor<
+      GridFunctionSpace,
+      gfs_to_ordering<Params>,
+      typename GridFunctionSpace::OrderingTag
+      >
+    registerNodeTransformation(GridFunctionSpace*, gfs_to_ordering<Params>*, DynamicPowerGridFunctionSpaceTag*);
 
     // Declare LeafGFS to ordering descriptor and register transformation
 
@@ -160,6 +182,18 @@ namespace Dune {
       >
     registerNodeTransformation(GFS*, gfs_to_local_ordering<Params>*, PowerGridFunctionSpaceTag*);
 
+    // Declare DynamicPowerGFS to local ordering descriptor and register transformation
+
+   template<typename GFS, typename Transformation, typename OrderingTag>
+   struct dynamic_power_gfs_to_local_ordering_descriptor;
+
+    template<typename GFS, typename Params>
+    dynamic_power_gfs_to_local_ordering_descriptor<
+      GFS,
+      gfs_to_local_ordering<Params>,
+      typename GFS::OrderingTag
+      >
+    registerNodeTransformation(GFS*, gfs_to_local_ordering<Params>*, DynamicPowerGridFunctionSpaceTag*);
 
     // Declare LeafGFS to local ordering descriptor and register transformation
 

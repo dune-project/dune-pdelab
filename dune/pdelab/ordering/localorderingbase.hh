@@ -268,8 +268,8 @@ namespace Dune {
         , _fixed_size_possible(false)
         , _container_blocked(container_blocked)
         , _max_local_size(0)
-        , _child_count(TypeTree::degree(node))
-        , _children(TypeTree::degree(node),nullptr)
+        , _child_count(node.degree())
+        , _children(node.degree(),nullptr)
         , _gfs_data(gfs_data)
       {
         TypeTree::applyToTree(node,extract_child_bases<LocalOrderingBase>(_children));

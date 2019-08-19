@@ -185,6 +185,94 @@ namespace Dune {
 
     // the generic registration for PowerGridFunctionSpace happens in transformations.hh
 
+    template<typename DI, typename CI, typename Child>
+    class DynamicPowerLexicographicOrdering
+      : public TypeTree::DynamicPowerNode<Child>
+      , public lexicographic_ordering::Base<DI,
+                                            CI,
+                                            DynamicPowerLexicographicOrdering<DI,CI,Child>
+                                            >
+    {
+      typedef TypeTree::DynamicPowerNode<Child> Node;
+
+      typedef lexicographic_ordering::Base<DI,
+                                           CI,
+                                           DynamicPowerLexicographicOrdering<DI,CI,Child>
+                                           > Base;
+
+    public:
+
+      //! Construct ordering object
+      /**
+       * In general, an ordering object is not properly setup after
+       * construction.  This must be done by a seperate call to update() after
+       * all the children have been properly set up.
+       *
+       * \note This constructor must be present for ordering objects not at
+       *       the leaf of the tree.
+       */
+      DynamicPowerLexicographicOrdering(bool container_blocked, const typename Node::NodeStorage& children, typename Base::GFSData* gfs_data)
+        : Node(children)
+        , Base(*this,container_blocked,gfs_data)
+        , k(children.size())
+      { }
+
+      void update()
+      {
+        for (std::size_t i = 0; i < k; ++i)
+          {
+            this->child(i).update();
+          }
+        Base::update();
+      }
+
+      std::string name() const { return "DynamicPowerLexicographicOrdering"; }
+
+    private:
+      std::size_t k;
+    };
+
+
+    template<typename GFS, typename Transformation>
+    struct dynamic_power_gfs_to_lexicographic_ordering_descriptor
+    {
+
+      static const bool recursive = true;
+
+      template<typename TC>
+      struct result
+      {
+
+        typedef DynamicPowerLexicographicOrdering<
+          typename Transformation::DOFIndex,
+          typename Transformation::ContainerIndex,
+          TC
+          > type;
+
+        typedef std::shared_ptr<type> storage_type;
+
+      };
+
+      template<typename TC>
+      static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const std::vector<std::shared_ptr<TC>>& children)
+      {
+        return typename result<TC>::type(gfs.backend().blocked(gfs),children,const_cast<GFS*>(&gfs));
+      }
+
+      template<typename TC>
+      static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t, const std::vector<std::shared_ptr<TC>>& children)
+      {
+        return std::make_shared<typename result<TC>::type>(gfs->backend().blocked(*gfs),children,const_cast<GFS*>(gfs.get()));
+      }
+
+    };
+
+    template<typename GFS, typename Transformation>
+    dynamic_power_gfs_to_lexicographic_ordering_descriptor<GFS,Transformation>
+    register_dynamic_power_gfs_to_ordering_descriptor(GFS*,Transformation*,LexicographicOrderingTag*);
+
+    // the generic registration for DynamicPowerGridFunctionSpace happens in transformations.hh
+
 
     //! Interface for merging index spaces
     template<typename DI, typename CI, typename... Children>
@@ -273,6 +361,8 @@ namespace Dune {
     template<typename GFS, typename Transformation>
     composite_gfs_to_lexicographic_ordering_descriptor<GFS,Transformation>
     register_composite_gfs_to_ordering_descriptor(GFS*,Transformation*,LexicographicOrderingTag*);
+
+    // the generic registration for CompositeLexicographicOrdering happens in transformations.hh
 
    //! \} group Ordering
   } // namespace PDELab
