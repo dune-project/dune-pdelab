@@ -23,6 +23,8 @@ namespace Dune {
 
     struct GridFunctionSpaceTag : public FunctionSpaceTag {};
 
+    struct DynamicPowerGridFunctionSpaceTag : public GridFunctionSpaceTag {};
+
     struct PowerGridFunctionSpaceTag : public GridFunctionSpaceTag {};
 
     struct VectorGridFunctionSpaceTag : public PowerGridFunctionSpaceTag {};

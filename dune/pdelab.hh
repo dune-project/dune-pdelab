@@ -9,6 +9,7 @@
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/dynamicpowergridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
