@@ -74,7 +74,7 @@ namespace Dune {
         // TODO: remove once we use C++20
         template<class T>
         struct identity {
-          constexpr T&& operator()( T&& t ) const noexcept {return std::forward<T>(t);}
+          constexpr const T& operator()(const T& t ) const noexcept {return t;}
         };
       }
       //! Helper class for common data of a DGFTree.
@@ -629,7 +629,7 @@ namespace Dune {
                            const NameGenerator& name_generator = vtk::defaultNameScheme(),
                            const Predicate& predicate = Predicate())
     {
-      typedef vtk::DGFTreeCommonData<GFS,X,Predicate> Data;
+      typedef vtk::DGFTreeCommonData<GFS,X,Predicate,typename GFS::Traits::GridView> Data;
       vtk::OutputCollector<VTKWriter,Data> collector(vtk_writer,std::make_shared<Data>(gfs,x,gfs.gridView()),predicate);
       collector.addSolution(name_generator);
       return collector;
