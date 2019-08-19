@@ -185,7 +185,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   typedef typename M::Container ISTL_M;
   typedef typename V::Container ISTL_V;
   Dune::MatrixAdapter<ISTL_M,ISTL_V,ISTL_V> opa(native(m));
-  Dune::SeqILU0<ISTL_M,ISTL_V,ISTL_V> ilu0(native(m),1e-2);
+  Dune::SeqILU<ISTL_M,ISTL_V,ISTL_V> ilu0(native(m),1e-2);
 
   Dune::CGSolver<ISTL_V> solver(opa,ilu0,1E-20,5000,2);
   Dune::InverseOperatorResult stat;
