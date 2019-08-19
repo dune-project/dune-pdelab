@@ -139,11 +139,9 @@
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/common/aliasedvectorview.hh>
 #include <dune/pdelab/backend/solver.hh>
-#include <dune/pdelab/backend/eigen.hh>
-#include <dune/pdelab/backend/eigen/solvers.hh>
-#include <dune/pdelab/backend/eigen/descriptors.hh>
-#include <dune/pdelab/backend/eigen/vector.hh>
-#include <dune/pdelab/backend/eigen/matrix.hh>
+#if HAVE_EIGEN
+  #include <dune/pdelab/backend/eigen.hh>
+#endif // HAVE_EIGEN
 #include <dune/pdelab/backend/istl/utility.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrix.hh>
 #include <dune/pdelab/backend/istl/ovlp_amg_dg_backend.hh>
@@ -182,6 +180,12 @@
 #include <dune/pdelab/backend/simple/vector.hh>
 #include <dune/pdelab/backend/simple/matrix.hh>
 #include <dune/pdelab/backend/simple.hh>
+#if HAVE_EIGEN
+  #include <dune/pdelab/backend/eigen/solvers.hh>
+  #include <dune/pdelab/backend/eigen/descriptors.hh>
+  #include <dune/pdelab/backend/eigen/vector.hh>
+  #include <dune/pdelab/backend/eigen/matrix.hh>
+#endif // HAVE_EIGEN
 #include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/ordering/leaflocalordering.hh>
 #include <dune/pdelab/ordering/localorderingbase.hh>
