@@ -16,6 +16,7 @@ namespace Dune {
     // forward decl of Tag defined in function.hh
     struct GridFunctionTag;
     struct PowerGridFunctionTag;
+    struct DynamicPowerGridFunctionTag;
     struct CompositeGridFunctionTag;
 
 #ifndef DOXYGEN
@@ -34,7 +35,8 @@ namespace Dune {
         using A = TypeTree::ImplementationTag<T>;
         static const bool value = std::is_same<A, GridFunctionTag>::value ||
           std::is_same<A, PowerGridFunctionTag>::value ||
-          std::is_same<A, CompositeGridFunctionTag>::value;
+          std::is_same<A, CompositeGridFunctionTag>::value ||
+          std::is_same<A, DynamicPowerGridFunctionTag>::value;;
       };
 
     } // namespace impl
