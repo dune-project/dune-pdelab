@@ -6,6 +6,7 @@
 #include <functional>
 
 #include <dune/common/exceptions.hh>
+#include <dune/common/std/functional.hh>
 
 #include <dune/geometry/typeindex.hh>
 
@@ -70,15 +71,15 @@ namespace Dune {
       template<typename VTKWriter, typename Data>
       struct OutputCollector;
 
-      namespace {
-        // TODO: remove once we use C++20
-        template<class T>
-        struct identity {
-          constexpr const T& operator()(const T& t ) const noexcept {return t;}
-        };
-      }
+      // namespace {
+      //   // TODO: remove once we use C++20
+      //   struct identity {
+      //     template<class T>
+      //     constexpr T&& operator()(T&& t ) const noexcept {return std::forward<T>(t);}
+      //   };
+      // }
       //! Helper class for common data of a DGFTree.
-      template<typename GFS, typename X, typename Pred, typename GV, typename ET = identity<typename GV::template Codim<0>::Entity>>
+      template<typename GFS, typename X, typename Pred, typename GV, typename ET = Std::identity>
       struct DGFTreeCommonData
       {
 
@@ -109,8 +110,8 @@ namespace Dune {
         typedef GV GridView;
         typedef ET EntityTransformation;
 
-        DGFTreeCommonData(const GFS& gfs, const X& x, const GV& gv, const ET& et)
-          : _et(et)
+        DGFTreeCommonData(const GFS& gfs, const X& x, const GV& gv, const ET& entity_transformation)
+          : _entity_transformation(entity_transformation)
           , _gv(gv)
           , _lfs(gfs)
           , _lfs_cache(_lfs)
@@ -135,7 +136,8 @@ namespace Dune {
           if (_current_cell_index == cell_index)
             return;
 
-          _lfs.bind(_et(cell));
+          // Cell& transformed_cell = _entity_transformation(cell);
+          _lfs.bind(_entity_transformation(cell));
           _lfs_cache.update();
           _x_view.bind(_lfs_cache);
           _x_view.read(_x_local);
@@ -143,7 +145,7 @@ namespace Dune {
           _current_cell_index = cell_index;
         }
 
-        ET _et;
+        ET _entity_transformation;
         GV _gv;
         LFS _lfs;
         LFSCache _lfs_cache;
