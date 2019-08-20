@@ -71,14 +71,24 @@ namespace Dune {
       template<typename VTKWriter, typename Data>
       struct OutputCollector;
 
-      // namespace {
-      //   // TODO: remove once we use C++20
-      //   struct identity {
-      //     template<class T>
-      //     constexpr T&& operator()(T&& t ) const noexcept {return std::forward<T>(t);}
-      //   };
-      // }
-      //! Helper class for common data of a DGFTree.
+      /**
+       * @brief Helper class for common data of a DGFTree.
+       *
+       * @tparam GFS      GridFunctionSpace type
+       * @tparam X        Vector type
+       * @tparam Pred     Predicate for deciding which nodes will be written
+       * @tparam GV       GridView to write the vtk data
+       * @tparam ET       Entity transformation
+       *
+       * @note If GV is not the same as the GFS gridview, the entity transformation
+       * must be able to take an entity from the GFS grid view and return an entity
+       * from the VTK grid view. For instance, for a multidomain grid, the following
+       * etity transformation would make possible to write data from GFS with a host
+       * domain grid view into a one of the subdomains of the multidomain grid:
+       * @code{.cpp}
+       *   auto etity_transformation = [&](auto e){return grid->multiDomainEntity(e);};
+       * @endcode
+       */
       template<typename GFS, typename X, typename Pred, typename GV, typename ET = Std::identity>
       struct DGFTreeCommonData
       {
