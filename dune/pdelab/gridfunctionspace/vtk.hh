@@ -77,10 +77,10 @@ namespace Dune {
        * @tparam GFS      GridFunctionSpace type
        * @tparam X        Vector type
        * @tparam Pred     Predicate for deciding which nodes will be written
-       * @tparam GV       GridView to write the vtk data
+       * @tparam GV       GridView type used for entity binding
        * @tparam ET       Entity transformation
        *
-       * @note If GV is not the same as the GFS gridview, the entity transformation
+       * @note If GV is not the same as the GFS grid view, the entity transformation
        * must be able to take an entity from the GFS grid view and return an entity
        * from the VTK grid view. For instance, for a multidomain grid, the following
        * etity transformation would make possible to write data from GFS with a host
@@ -89,7 +89,7 @@ namespace Dune {
        *   auto etity_transformation = [&](auto e){return grid->multiDomainEntity(e);};
        * @endcode
        */
-      template<typename GFS, typename X, typename Pred, typename GV, typename ET = Std::identity>
+      template<typename GFS, typename X, typename Pred, typename GV = typename GFS::Traits::GridView, typename ET = Std::identity>
       struct DGFTreeCommonData
       {
 
@@ -102,13 +102,19 @@ namespace Dune {
         template<typename, typename>
         friend struct OutputCollector;
 
-        typedef LocalFunctionSpace<GFS> LFS;
-        typedef LFSIndexCache<LFS> LFSCache;
-        typedef typename X::template ConstLocalView<LFSCache> XView;
-        typedef LocalVector<typename X::ElementType> XLocalVector;
+        using LFS = LocalFunctionSpace<GFS>;
+        using LFSCache = LFSIndexCache<LFS>;
+        using XView = typename X::template ConstLocalView<LFSCache>;
+        using XLocalVector = LocalVector<typename X::ElementType>;
         using Cell = typename GV::template Codim<0>::Entity;
-        using IndexSet = typename GV::IndexSet;
-        typedef typename IndexSet::IndexType size_type;
+        using GFSCell = decltype(std::declval<ET>()(std::declval<const Cell&>()));
+        using EntitySet = typename GFS::Traits::EntitySet;
+        using IndexSet = typename EntitySet::Traits::IndexSet;
+        using size_type = typename IndexSet::IndexType;
+
+        //! cache entities only when they are a temporary object
+        static constexpr bool cache_entity = not std::is_reference_v<GFSCell>;
+        using CellCache = std::decay_t<GFSCell>;
 
         static const auto dim = GV::dimension;
 
@@ -120,34 +126,71 @@ namespace Dune {
         typedef GV GridView;
         typedef ET EntityTransformation;
 
-        DGFTreeCommonData(const GFS& gfs, const X& x, const GV& gv, const ET& entity_transformation)
-          : _entity_transformation(entity_transformation)
+        /**
+         * @brief Construct a new DGFTreeCommonData object
+         *
+         * @param gfs             grid function space
+         * @param x               coefficient vector associated with the gfs
+         * @param gv              grid view used for entity binding
+         * @param entity_transf   entity transformation to the grid view used in the gfs
+         */
+        DGFTreeCommonData(const GFS& gfs, const X& x, const GV& gv, const ET& entity_transf)
+          : _entity_transf(entity_transf)
           , _gv(gv)
           , _lfs(gfs)
           , _lfs_cache(_lfs)
           , _x_view(x)
           , _x_local(_lfs.maxSize())
-          , _index_set(_gv.indexSet())
+          , _index_set(gfs.entitySet().indexSet())
           , _current_cell_index(std::numeric_limits<size_type>::max())
         {}
 
+        /**
+         * @brief Construct a new DGFTreeCommonData object
+         *
+         * @param gfs             grid function space
+         * @param x               coefficient vector associated with the gfs
+         * @param gv              grid view used for entity binding
+         *
+         * @note Only available if entity transformation is default constructible
+         */
         template<typename = std::enable_if_t<std::is_default_constructible_v<ET>,int>>
         DGFTreeCommonData(const GFS& gfs, const X& x, const GV& gv)
           : DGFTreeCommonData(gfs,x,gv,ET{})
         {}
 
+        //! Returns the grid view used for data binding
         GridView gridView() {return _gv;}
+
+      private:
+
+        //! cache entity when necessary
+        template<class E>
+        const CellCache& cacheCell(const E& cell)
+        {
+          if (cache_entity)
+          {
+            _cached_cell = cell;
+            return _cached_cell;
+          }
+          else
+            return cell;
+        }
 
       public:
 
         void bind(const Cell& cell)
         {
-          auto cell_index = _index_set.index(cell);
+          // transform cell to the gfs cell and cache it if necessary
+          const CellCache& gfs_cell = cacheCell(_entity_transf(cell));
+
+          // avoid duplicated binds
+          auto cell_index = _index_set.uniqueIndex(gfs_cell);
           if (_current_cell_index == cell_index)
             return;
 
-          // Cell& transformed_cell = _entity_transformation(cell);
-          _lfs.bind(_entity_transformation(cell));
+          // actual databinding
+          _lfs.bind(gfs_cell);
           _lfs_cache.update();
           _x_view.bind(_lfs_cache);
           _x_view.read(_x_local);
@@ -155,8 +198,9 @@ namespace Dune {
           _current_cell_index = cell_index;
         }
 
-        ET _entity_transformation;
+        ET _entity_transf;
         GV _gv;
+        CellCache _cached_cell;
         LFS _lfs;
         LFSCache _lfs_cache;
         XView _x_view;
@@ -641,7 +685,7 @@ namespace Dune {
                            const NameGenerator& name_generator = vtk::defaultNameScheme(),
                            const Predicate& predicate = Predicate())
     {
-      typedef vtk::DGFTreeCommonData<GFS,X,Predicate,typename GFS::Traits::GridView> Data;
+      typedef vtk::DGFTreeCommonData<GFS,X,Predicate> Data;
       vtk::OutputCollector<VTKWriter,Data> collector(vtk_writer,std::make_shared<Data>(gfs,x,gfs.gridView()),predicate);
       collector.addSolution(name_generator);
       return collector;
