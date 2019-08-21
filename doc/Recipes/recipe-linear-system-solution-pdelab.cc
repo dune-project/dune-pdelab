@@ -116,7 +116,6 @@ public:
   BCType
   bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& xlocal) const
   {
-    typename Traits::DomainType xglobal = is.geometry().global(xlocal);
     return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
 
