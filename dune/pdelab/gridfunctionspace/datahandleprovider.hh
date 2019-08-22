@@ -307,11 +307,11 @@ namespace Dune {
 
         get_leaf_offsets_for_entity<EntityIndex,OffsetIterator> get_offsets(ei,oit);
         TypeTree::applyToTree(gfs().ordering(),get_offsets);
-        OffsetIterator end_oit = oit + (TypeTree::TreeInfo<Ordering>::leafCount + 1);
+        OffsetIterator end_oit = oit + (TypeTree::leafCount(gfs().ordering()) + 1);
 
         // convert sizes to offsets - last entry contains total size
         std::partial_sum(oit,end_oit,oit);
-        size_type size = *(oit + TypeTree::TreeInfo<Ordering>::leafCount);
+        size_type size = *(oit + TypeTree::leafCount(gfs().ordering()));
 
         container_indices.resize(size);
         // Clear index state

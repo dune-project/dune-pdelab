@@ -240,19 +240,19 @@ namespace Dune {
 
 
     // Helper to use static or dynamic sized vectors
-    template<typename size_type, typename LFS, bool d = TypeTree::TreeInfo<LFS>::dynamic>
-    struct LFSContainerHelper;
+    template<typename size_type, typename Tree, bool d = TypeTree::TreeInfo<Tree>::dynamic>
+    struct TreeContainerHelper;
 
-    template<typename size_type, typename LFS>
-    struct LFSContainerHelper<size_type,LFS,true>
+    template<typename size_type, typename Tree>
+    struct TreeContainerHelper<size_type,Tree,true>
     {
       using type = std::vector<size_type>;
     };
 
-    template<typename size_type, typename LFS>
-    struct LFSContainerHelper<size_type,LFS,false>
+    template<typename size_type, typename Tree>
+    struct TreeContainerHelper<size_type,Tree,false>
     {
-      using type = ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount>;
+      using type = ReservedVector<size_type,TypeTree::TreeInfo<Tree>::leafCount>;
     };
 
 
@@ -279,7 +279,7 @@ namespace Dune {
       typedef DOFIndex DI;
       typedef std::size_t size_type;
 
-      typedef typename LFSContainerHelper<size_type,LFS>::type OffsetContainer;
+      typedef typename TreeContainerHelper<size_type,LFS>::type OffsetContainer;
       typedef std::vector<CI> CIVector;
       typedef std::unordered_map<DI,CI> CIMap;
 
@@ -338,7 +338,7 @@ namespace Dune {
           _inverse_cache_built = false;
 
           // extract size for all leaf spaces (into a flat list)
-          using LeafSizeVector = typename LFSContainerHelper<size_type,LFS>::type;
+          using LeafSizeVector = typename TreeContainerHelper<size_type,LFS>::type;
           LeafSizeVector leaf_sizes;
           leaf_sizes.resize(TypeTree::leafCount(_lfs));
           extract_lfs_leaf_sizes(_lfs,leaf_sizes.begin());
@@ -581,7 +581,7 @@ namespace Dune {
       typedef DOFIndex DI;
       typedef std::size_t size_type;
 
-      typedef typename LFSContainerHelper<size_type,LFS>::type OffsetContainer;
+      typedef typename TreeContainerHelper<size_type,LFS>::type OffsetContainer;
       typedef std::vector<CI> CIVector;
       typedef std::unordered_map<DI,CI> CIMap;
 
@@ -634,7 +634,7 @@ namespace Dune {
             it->clear();
 
           // extract size for all leaf spaces (into a flat list)
-          using LeafSizeVector = typename LFSContainerHelper<size_type,LFS>::type;
+          using LeafSizeVector = typename TreeContainerHelper<size_type,LFS>::type;
           LeafSizeVector leaf_sizes;
           leaf_sizes.resize(TypeTree::leafCount(_lfs));
 
