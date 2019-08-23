@@ -16,6 +16,15 @@ namespace Dune {
     template<typename FEM>
     using StaticFEMSize = decltype(FEM::size(GeometryTypes::vertex));
 
+
+    //! Metafunction that returns the type of FEM::dofIndex() iff that function exists.
+    /**
+     * This metafunction is for detecting whether a finite element map implements its own ODF index creation logic.
+     */
+    template <class FEM, class Entity, class DOFIndexIterator>
+    using HasCustomDOFIndex = decltype(std::declval<FEM>().dofIndex(0,std::declval<Entity>(),*std::declval<DOFIndexIterator>(),0));
+
+
 #ifndef DOXYGEN
 
     namespace Impl {

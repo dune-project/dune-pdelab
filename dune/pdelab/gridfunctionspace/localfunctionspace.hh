@@ -14,6 +14,7 @@
 
 #include <dune/typetree/typetree.hh>
 
+#include <dune/pdelab/finiteelementmap/utility.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 
@@ -567,9 +568,6 @@ namespace Dune {
       template<typename,bool>
       friend struct FillIndicesVisitor;
 
-      template <class FEM, class Entity, class DOFIndexIterator>
-      using create_dof_indices_t = decltype(std::declval<FEM>().dofIndex(0,std::declval<Entity>(),*std::declval<DOFIndexIterator>(),0));
-
     public:
       typedef LeafLocalFunctionSpaceTraits<GFS,DOFIndex,LeafLocalFunctionSpaceNode> Traits;
 
@@ -613,7 +611,7 @@ namespace Dune {
       void dofIndices(const Entity& e, DOFIndexIterator it, DOFIndexIterator endit, std::integral_constant<bool,fast>)
       {
         using FEM = typename GFS::Traits::FiniteElementMap;
-        constexpr bool custom_dof_index = Std::is_detected_v<create_dof_indices_t,FEM,Entity,DOFIndexIterator>;
+        constexpr bool custom_dof_index = Std::is_detected_v<HasCustomDOFIndex,FEM,Entity,DOFIndex>;
         auto accessor = typename GFS::Ordering::Traits::DOFIndexAccessor{};
 
         if (fast)

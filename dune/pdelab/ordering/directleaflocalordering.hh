@@ -4,16 +4,18 @@
 #ifndef DUNE_PDELAB_ORDERING_DIRECTLEAFLOCALORDERING_HH
 #define DUNE_PDELAB_ORDERING_DIRECTLEAFLOCALORDERING_HH
 
+#include <vector>
+#include <numeric>
+#include <cstddef>
+
 #include <dune/typetree/leafnode.hh>
 
 #include <dune/geometry/referenceelements.hh>
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
+#include <dune/pdelab/finiteelementmap/utility.hh>
 #include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
-
-#include <vector>
-#include <numeric>
 
 namespace Dune {
   namespace PDELab {
@@ -199,12 +201,26 @@ namespace Dune {
 
         auto ref_el = ReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
 
+        constexpr bool custom_dof_index = Std::is_detected_v<
+          HasCustomDOFIndex,
+          FEM,
+          typename Traits::GridView::template Codim<0>::Entity,
+          DI
+          >;
+        auto accessor = typename OrderingTraits<DI,CI>::DOFIndexAccessor{};
+
         for (std::size_t i = 0; i < coeffs.size(); ++i)
           {
             const LocalKey& key = coeffs.localKey(i);
             GeometryType gt = ref_el.type(key.subEntity(),key.codim());
+            if constexpr(custom_dof_index)
+            {
+              DI di;
+              _fem->dofIndex(accessor,cell,di,i);
+              gt = accessor.geometryType(di);
+            }
             _gt_used[GlobalGeometryTypeIndex::index(gt)] = true;
-            _codim_used.set(key.codim());
+            _codim_used.set(cell.dimension - gt.dim());
           }
       }
 
@@ -233,22 +249,47 @@ namespace Dune {
 
         FESwitch::setStore(_fe_store,_fem->find(cell));
 
+        constexpr bool custom_dof_index = Std::is_detected_v<
+          HasCustomDOFIndex,
+          FEM,
+          typename Traits::GridView::template Codim<0>::Entity,
+          DI
+          >;
+        auto accessor = typename OrderingTraits<DI,CI>::DOFIndexAccessor{};
+
         const typename FESwitch::Coefficients& coeffs =
           FESwitch::coefficients(*_fe_store);
 
         typedef typename Traits::SizeType size_type;
 
-        auto ref_el = ReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
+        auto ref_el [[maybe_unused]] = ReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
 
-        for (std::size_t i = 0; i < coeffs.size(); ++i)
+        for (size_type i = 0; i < coeffs.size(); ++i)
           {
             const LocalKey& key = coeffs.localKey(i);
-            GeometryType gt = ref_el.type(key.subEntity(),key.codim());
-            const size_type geometry_type_index = GlobalGeometryTypeIndex::index(gt);
+            GeometryType gt;
 
-            const size_type entity_index = _es.indexSet().subIndex(cell,key.subEntity(),key.codim());
-            const size_type index = _gt_entity_offsets[geometry_type_index] + entity_index;
-            _local_gt_dof_sizes[geometry_type_index] = _entity_dof_offsets[index+1] = std::max(_entity_dof_offsets[index+1],static_cast<size_type>(key.index() + 1));
+            size_type entity_index = 0;
+            size_type localkey_index = key.index();
+
+            if constexpr(custom_dof_index)
+            {
+              DI di;
+              _fem->dofIndex(accessor,cell,di,i);
+              gt = accessor.geometryType(di);
+              entity_index = accessor.entityIndex(di);
+              localkey_index = di.back();
+            }
+            else
+            {
+              gt = ref_el.type(key.subEntity(),key.codim());
+              entity_index = _es.indexSet().subIndex(cell,key.subEntity(),key.codim());
+            }
+
+            size_type geometry_type_index = GlobalGeometryTypeIndex::index(gt);
+            size_type index = _gt_entity_offsets[geometry_type_index] + entity_index;
+
+            _local_gt_dof_sizes[geometry_type_index] = _entity_dof_offsets[index+1] = std::max(_entity_dof_offsets[index+1],localkey_index + 1);
           }
 
         if (_fixed_size_possible)
