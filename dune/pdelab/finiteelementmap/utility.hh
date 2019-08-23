@@ -21,8 +21,8 @@ namespace Dune {
     /**
      * This metafunction is for detecting whether a finite element map implements its own ODF index creation logic.
      */
-    template <class FEM, class Entity, class DOFIndexIterator>
-    using HasCustomDOFIndex = decltype(std::declval<FEM>().dofIndex(0,std::declval<Entity>(),*std::declval<DOFIndexIterator>(),0));
+    template <class FEM, class Entity, class DOFIndex>
+    using HasCustomDOFIndex = decltype(std::declval<FEM>().dofIndex(0,std::declval<Entity>(),std::declval<DOFIndex&>(),0));
 
 
 #ifndef DOXYGEN

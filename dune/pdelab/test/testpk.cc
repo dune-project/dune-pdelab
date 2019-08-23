@@ -111,7 +111,7 @@ void testpk (const GV& gv)
   PkDGF pkdgf(pkgfs,pkxg);
 
   assert(p0ggfs.size() == p0gxg.N());
-  assert(p0ggfs.size() == 1); // Not working yet!
+  assert(p0ggfs.size() == 1);
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);

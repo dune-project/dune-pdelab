@@ -207,19 +207,20 @@ namespace Dune {
           typename Traits::GridView::template Codim<0>::Entity,
           DI
           >;
-        auto accessor = typename OrderingTraits<DI,CI>::DOFIndexAccessor{};
+        auto accessor [[maybe_unused]] = typename OrderingTraits<DI,CI>::DOFIndexAccessor{};
 
         for (std::size_t i = 0; i < coeffs.size(); ++i)
           {
             const LocalKey& key = coeffs.localKey(i);
             GeometryType gt = ref_el.type(key.subEntity(),key.codim());
+            std::size_t geometry_type_index = GlobalGeometryTypeIndex::index(gt);
             if constexpr(custom_dof_index)
             {
               DI di;
               _fem->dofIndex(accessor,cell,di,i);
-              gt = accessor.geometryType(di);
+              geometry_type_index = accessor.geometryType(di);
             }
-            _gt_used[GlobalGeometryTypeIndex::index(gt)] = true;
+            _gt_used[geometry_type_index] = true;
             _codim_used.set(cell.dimension - gt.dim());
           }
       }
@@ -255,7 +256,7 @@ namespace Dune {
           typename Traits::GridView::template Codim<0>::Entity,
           DI
           >;
-        auto accessor = typename OrderingTraits<DI,CI>::DOFIndexAccessor{};
+        auto accessor [[maybe_unused]] = typename OrderingTraits<DI,CI>::DOFIndexAccessor{};
 
         const typename FESwitch::Coefficients& coeffs =
           FESwitch::coefficients(*_fe_store);
@@ -269,24 +270,31 @@ namespace Dune {
             const LocalKey& key = coeffs.localKey(i);
             GeometryType gt;
 
-            size_type entity_index = 0;
+            size_type entity_index = _es.indexSet().subIndex(cell,key.subEntity(),key.codim());
             size_type localkey_index = key.index();
+            size_type geometry_type_index = 0;
 
             if constexpr(custom_dof_index)
             {
               DI di;
               _fem->dofIndex(accessor,cell,di,i);
-              gt = accessor.geometryType(di);
-              entity_index = accessor.entityIndex(di);
-              localkey_index = di.back();
+              geometry_type_index = accessor.geometryType(di);
+              localkey_index = di.treeIndex().back();
+
+              // if custom entity index differs from local key entity index
+              // we have not enough information to try fixed size
+              if (entity_index != accessor.entityIndex(di))
+              {
+                entity_index = accessor.entityIndex(di);
+                _fixed_size_possible = false;
+              }
             }
             else
             {
               gt = ref_el.type(key.subEntity(),key.codim());
-              entity_index = _es.indexSet().subIndex(cell,key.subEntity(),key.codim());
+              geometry_type_index = GlobalGeometryTypeIndex::index(gt);
             }
 
-            size_type geometry_type_index = GlobalGeometryTypeIndex::index(gt);
             size_type index = _gt_entity_offsets[geometry_type_index] + entity_index;
 
             _local_gt_dof_sizes[geometry_type_index] = _entity_dof_offsets[index+1] = std::max(_entity_dof_offsets[index+1],localkey_index + 1);
