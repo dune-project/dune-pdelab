@@ -622,16 +622,16 @@ namespace Dune {
      * @param grid        The grid we want to adapt
      * @param gfs         The ansatz grid function space
      * @param x1          The DOF container
-     * @param int_order   The integration order used in inversion of the mass matrix.
+     * @param intOrder    The integration order used in inversion of the mass matrix.
      *                    For scalar problems 2*k with k being the polynomial degree
      *                    of ansatz and test space is a suitable choice. For systems,
      *                    the same order is currently used for all components.
      */
     template<class Grid, class GFS, class X>
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1, int int_order)
+    void adaptGrid (Grid& grid, GFS& gfs, X& x1, int intOrder)
     {
       typedef L2Projection<GFS,X> Projection;
-      Projection projection(gfs,int_order);
+      Projection projection(gfs,intOrder);
 
       GridAdaptor<Grid,GFS,X,Projection> grid_adaptor(gfs);
 
@@ -657,6 +657,15 @@ namespace Dune {
     }
 
     /*! grid adaptation as a function
+     * \see adaptGrid
+     */
+    template<class Grid, class GFS, class X>
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1, int int_order)
+    {
+      adaptGrid(grid, gfs, x1, int_order);
+    }
+
+    /*! grid adaptation as a function
      *
      * @brief adapt a grid, corresponding function space and solution vectors
      *
@@ -668,10 +677,10 @@ namespace Dune {
      * @tparam Projection Projection used when Elems vanish
      */
     template<class Grid, class GFS, class X>
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2, int int_order)
+    void adaptGrid (Grid& grid, GFS& gfs, X& x1, X& x2, int intOrder)
     {
       typedef L2Projection<GFS,X> Projection;
-      Projection projection(gfs,int_order);
+      Projection projection(gfs,intOrder);
 
       GridAdaptor<Grid,GFS,X,Projection> grid_adaptor(gfs);
 
@@ -698,6 +707,16 @@ namespace Dune {
 
       // clean up
       grid.postAdapt();
+    }
+
+    /*! grid adaptation as a function
+     *
+     * \see adaptGrid
+     */
+    template<class Grid, class GFS, class X>
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2, int int_order)
+    {
+      adaptGrid(grid, gfs, x1, x2, int_order);
     }
 
 #ifndef DOXYGEN
@@ -859,7 +878,7 @@ namespace Dune {
 
 
     template<typename T>
-    void error_fraction(const T& x, typename T::ElementType alpha, typename T::ElementType beta,
+    void errorFraction(const T& x, typename T::ElementType alpha, typename T::ElementType beta,
                         typename T::ElementType& eta_alpha, typename T::ElementType& eta_beta, int verbose=0)
     {
       if (verbose>0)
@@ -909,9 +928,15 @@ namespace Dune {
         }
     }
 
+    template<typename T>
+    void error_fraction(const T& x, typename T::ElementType alpha, typename T::ElementType beta,
+                        typename T::ElementType& eta_alpha, typename T::ElementType& eta_beta, int verbose=0)
+    {
+      errorFraction(x, alpha, beta, eta_alpha, eta_beta, verbose);
+    }
 
     template<typename T>
-    void element_fraction(const T& x, typename T::ElementType alpha, typename T::ElementType beta,
+    void elementFraction(const T& x, typename T::ElementType alpha, typename T::ElementType beta,
                           typename T::ElementType& eta_alpha, typename T::ElementType& eta_beta, int verbose=0)
     {
       const int steps=20; // max number of bisection steps
@@ -960,10 +985,17 @@ namespace Dune {
         }
     }
 
+    template<typename T>
+    void element_fraction(const T& x, typename T::ElementType alpha, typename T::ElementType beta,
+                          typename T::ElementType& eta_alpha, typename T::ElementType& eta_beta, int verbose=0)
+    {
+      elementFraction(x, alpha, beta, eta_alpha, eta_beta, verbose);
+    }
+
     /** Compute error distribution
      */
     template<typename T>
-    void error_distribution(const T& x, unsigned int bins)
+    void errorDistribution(const T& x, unsigned int bins)
     {
       const int steps=30; // max number of bisection steps
       typedef typename T::ElementType NumberType;
@@ -1024,9 +1056,15 @@ namespace Dune {
         std::cout << "+++ " << k+1 << " " << count[k] << " " << eta[k] << " " << sum[k]/total_error << std::endl;
     }
 
+    template<typename T>
+    void error_distribution(const T& x, unsigned int bins)
+    {
+      errorDistribution(x, bins);
+    }
+
     template<typename Grid, typename X>
-    void mark_grid (Grid &grid, const X& x, typename X::ElementType refine_threshold,
-                    typename X::ElementType coarsen_threshold, int min_level = 0, int max_level = std::numeric_limits<int>::max(), int verbose=0)
+    void markGrid (Grid &grid, const X& x, typename X::ElementType refineThreshold,
+                    typename X::ElementType coarsenThreshold, int minLevel = 0, int maxLevel = std::numeric_limits<int>::max(), int verbose=0)
     {
       typedef typename Grid::LeafGridView GV;
 
@@ -1050,12 +1088,12 @@ namespace Dune {
           lfs_cache.update();
           x_view.bind(lfs_cache);
 
-          if (x_view[0]>=refine_threshold && cell.level() < max_level)
+          if (x_view[0]>=refineThreshold && cell.level() < maxLevel)
             {
               grid.mark(1,cell);
               refine_cnt++;
             }
-          if (x_view[0]<=coarsen_threshold && cell.level() > min_level)
+          if (x_view[0]<=coarsenThreshold && cell.level() > minLevel)
             {
               grid.mark(-1,cell);
               coarsen_cnt++;
@@ -1067,10 +1105,16 @@ namespace Dune {
                   << coarsen_cnt << " marked for coarsening" << std::endl;
     }
 
+    template<typename Grid, typename X>
+    void mark_grid (Grid &grid, const X& x, typename X::ElementType refine_threshold,
+                    typename X::ElementType coarsen_threshold, int min_level = 0, int max_level = std::numeric_limits<int>::max(), int verbose=0)
+    {
+      markGrid(grid, x, refine_threshold, coarsen_threshold, min_level, max_level, verbose);
+    }
 
     template<typename Grid, typename X>
-    void mark_grid_for_coarsening (Grid &grid, const X& x, typename X::ElementType refine_threshold,
-                                   typename X::ElementType coarsen_threshold, int verbose=0)
+    void markGridForCoarsening (Grid &grid, const X& x, typename X::ElementType refineThreshold,
+                                typename X::ElementType coarsenThreshold, int verbose=0)
     {
       typedef typename Grid::LeafGridView GV;
 
@@ -1093,12 +1137,12 @@ namespace Dune {
           lfs_cache.update();
           x_view.bind(lfs_cache);
 
-          if (x_view[0]>=refine_threshold)
+          if (x_view[0]>=refineThreshold)
             {
               grid.mark(-1,cell);
               coarsen_cnt++;
             }
-          if (x_view[0]<=coarsen_threshold)
+          if (x_view[0]<=coarsenThreshold)
             {
               grid.mark(-1,cell);
               coarsen_cnt++;
@@ -1109,6 +1153,12 @@ namespace Dune {
                   << coarsen_cnt << " marked for coarsening" << std::endl;
     }
 
+    template<typename Grid, typename X>
+    void mark_grid_for_coarsening (Grid &grid, const X& x, typename X::ElementType refine_threshold,
+                                   typename X::ElementType coarsen_threshold, int verbose=0)
+    {
+      markGridForCoarsening(grid, x, refine_threshold, coarsen_threshold, verbose);
+    }
 
     class TimeAdaptationStrategy
     {
