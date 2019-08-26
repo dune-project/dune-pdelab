@@ -792,7 +792,7 @@ namespace Dune {
      * \param xg The container with the coefficients
      */
     template<typename CG, typename XG>
-    void set_constrained_dofs(const CG& cg,
+    void setConstrainedDOFs(const CG& cg,
                               typename XG::ElementType x,
                               XG& xg)
     {
@@ -800,10 +800,29 @@ namespace Dune {
         xg[col.first] = x;
     }
 
+    //! construct constraints from given boundary condition function
+    /**
+     * \see setConstrainedDOFs
+     */
+    template<typename CG, typename XG>
+    void set_constrained_dofs(const CG& cg,
+                              typename XG::ElementType x,
+                              XG& xg)
+    {
+      setConstrainedDOFs(cg, x, xg);
+    }
+
 
 #ifndef DOXYGEN
 
     // Specialized version for unconstrained spaces
+    template<typename XG>
+    void setConstrainedDOFs(const EmptyTransformation& cg,
+                            typename XG::ElementType x,
+                            XG& xg)
+    {}
+
+    // Specialized version for unconstrained spaces -- old naming
     template<typename XG>
     void set_constrained_dofs(const EmptyTransformation& cg,
                               typename XG::ElementType x,
@@ -835,13 +854,24 @@ namespace Dune {
      *          otherwise.
      */
     template<typename CG, typename XG, typename Cmp>
-    bool check_constrained_dofs(const CG& cg, typename XG::ElementType x,
-                                XG& xg, const Cmp& cmp = Cmp())
+    bool checkConstrainedDOFs(const CG& cg, typename XG::ElementType x,
+                              XG& xg, const Cmp& cmp = Cmp())
     {
       for (const auto& col : cg)
         if(cmp.ne(xg[col.first], x))
           return false;
       return true;
+    }
+
+    /** \ check that constrained dofs match a certain value
+     *
+     * \see checkConstrainedDOFs
+     */
+    template<typename CG, typename XG, typename Cmp>
+    bool check_constrained_dofs(const CG& cg, typename XG::ElementType x,
+                                XG& xg, const Cmp& cmp = Cmp())
+    {
+      checkConstrainedDOFs(cg, x, xg, cmp);
     }
 
     //! check that constrained dofs match a certain value
@@ -864,11 +894,22 @@ namespace Dune {
      *          otherwise.
      */
     template<typename CG, typename XG>
+    bool checkConstrainedDOFs(const CG& cg, typename XG::ElementType x,
+                              XG& xg)
+    {
+      return checkConstrainedDOFs(cg, x, xg,
+                                  FloatCmpOps<typename XG::ElementType>());
+    }
+
+    /** \brief check that constrained dofs match a certain value
+     * \see checkConstrainedDOFs
+     */
+    template<typename CG, typename XG>
     bool check_constrained_dofs(const CG& cg, typename XG::ElementType x,
                                 XG& xg)
     {
-      return check_constrained_dofs(cg, x, xg,
-                                    FloatCmpOps<typename XG::ElementType>());
+      return checkConstrainedDOFs(cg, x, xg,
+                                  FloatCmpOps<typename XG::ElementType>());
     }
 
 
@@ -876,8 +917,24 @@ namespace Dune {
 
     // Specialized version for unconstrained spaces
     template<typename XG, typename Cmp>
+    bool checkConstrainedDOFs(const EmptyTransformation& cg, typename XG::ElementType x,
+                              XG& xg, const Cmp& cmp = Cmp())
+    {
+      return true;
+    }
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
     bool check_constrained_dofs(const EmptyTransformation& cg, typename XG::ElementType x,
-                                XG& xg, const Cmp& cmp = Cmp())
+                                XG& xg)
+    {
+      return true;
+    }
+
+    // Specialized version for unconstrained spaces
+    template<typename XG, typename Cmp>
+    bool checkConstrainedDOFs(const EmptyTransformation& cg, typename XG::ElementType x,
+                              XG& xg, const Cmp& cmp = Cmp())
     {
       return true;
     }
@@ -900,7 +957,7 @@ namespace Dune {
      * \endcode
      */
     template<typename CG, typename XG>
-    void constrain_residual (const CG& cg, XG& xg)
+    void constrainResidual (const CG& cg, XG& xg)
     {
       for (const auto& col : cg)
         for (const auto& row : col.second)
@@ -912,8 +969,22 @@ namespace Dune {
         xg[col.first] = typename XG::ElementType(0);
     }
 
+    /** \brief transform residual into transformed basis: r -> r~
+     * \see constrainResidual
+     */
+    template<typename CG, typename XG>
+    void constrain_residual (const CG& cg, XG& xg)
+    {
+      constrainResidual(cg, xg);
+    }
+
 
 #ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void constrainResidual (const EmptyTransformation& cg, XG& xg)
+    {}
 
     // Specialized version for unconstrained spaces
     template<typename XG>
@@ -932,14 +1003,26 @@ namespace Dune {
      * \endcode
      */
     template<typename CG, typename XG>
-    void copy_constrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
+    void copyConstrainedDOFs (const CG& cg, const XG& xgin, XG& xgout)
     {
       for (const auto& col : cg)
         xgout[col.first] = xgin[col.first];
     }
 
+    /** \see copyConstrainedDOFs
+     */
+    template<typename CG, typename XG>
+    void copy_constrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
+    {
+      copy_constrained_dofs(cg, xgin, xgou);
+    }
 
 #ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void copyConstrainedDOFs (const EmptyTransformation& cg, const XG& xgin, XG& xgout)
+    {}
 
     // Specialized version for unconstrained spaces
     template<typename XG>
@@ -956,15 +1039,29 @@ namespace Dune {
      * \todo reimplement; this is horribly inefficient
      */
     template<typename CG, typename XG>
-    void set_nonconstrained_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
+    void setNonconstrainedDOFs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
       XG tmp(xg);
       xg = x;
       copy_constrained_dofs(cg,tmp,xg);
     }
 
+    /** \see setNonconstrainedDOFs
+     */
+    template<typename CG, typename XG>
+    void set_nonconstrained_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
+    {
+      setNonconstrainedDOFs(cg, x, xg);
+    }
 
 #ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void setNonconstrainedDOFs (const EmptyTransformation& cg, typename XG::ElementType x, XG& xg)
+    {
+      xg = x;
+    }
 
     // Specialized version for unconstrained spaces
     template<typename XG>
@@ -983,15 +1080,30 @@ namespace Dune {
      * \todo reimplement; this is horribly inefficient
      */
     template<typename CG, typename XG>
-    void copy_nonconstrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
+    void copyNonconstrainedDOFs (const CG& cg, const XG& xgin, XG& xgout)
     {
       XG tmp(xgin);
       copy_constrained_dofs(cg,xgout,tmp);
       xgout = tmp;
     }
 
+    /** \see copyNonconstrainedDOFs
+     */
+    template<typename CG, typename XG>
+    void copy_nonconstrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
+    {
+      copyNonconstrainedDOFs(cg, xgin, xgout);
+    }
+
 
 #ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void copyNonconstrainedDOFs (const EmptyTransformation& cg, const XG& xgin, XG& xgout)
+    {
+      xgout = xgin;
+    }
 
     // Specialized version for unconstrained spaces
     template<typename XG>
@@ -1010,7 +1122,7 @@ namespace Dune {
      * \todo reimplement; this is horribly inefficient
      */
     template<typename CG, typename XG>
-    void set_shifted_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
+    void setShiftedDOFs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
       XG tmp(xg);
       tmp = x;
@@ -1027,8 +1139,20 @@ namespace Dune {
       xg = tmp;
     }
 
+    /** \see setShiftedDOFs
+     */
+    template<typename CG, typename XG>
+    void set_shifted_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
+    {
+      setShiftedDOFs(cg, x, xg);
+    }
 
 #ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void setShiftedDOFs (const EmptyTransformation& cg, typename XG::ElementType x, XG& xg)
+    {}
 
     // Specialized version for unconstrained spaces
     template<typename XG>
