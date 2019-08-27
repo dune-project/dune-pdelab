@@ -116,8 +116,7 @@ if(dune-alugrid_FOUND)
 
   dune_add_test(SOURCES testloadbalancing.cc
                 COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
-                # 2019-06-27 Steffen This test hangs in parallel right now, disabling parallel runs for the moment
-                # MPI_RANKS 2
+                MPI_RANKS 2
                 TIMEOUT 300)
 endif(dune-alugrid_FOUND)
 
