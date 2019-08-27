@@ -189,7 +189,7 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
 
   // <<<4.3>>> GMRes ILU0
   std::cout << "=== Using GMRes ILU0" << std::endl;
-  Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(native(m),1.0);
+  Dune::SeqILU<ISTLM,ISTLV,ISTLV> ilu0(native(m),1.0);
   Dune::RestartedGMResSolver<ISTLV> gmres_ilu0(opa, ilu0, 1E-7, 5000, 5000, 1);
   u = 0;
   b = r;
@@ -197,7 +197,7 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
 
   // <<<4.4>>> GMRes ILUn
   std::cout << "=== Using GMRes ILUn" << std::endl;
-  Dune::SeqILUn<ISTLM,ISTLV,ISTLV> ilun(native(m), 1, 1.0);
+  Dune::SeqILU<ISTLM,ISTLV,ISTLV> ilun(native(m), 1, 1.0, false);
   Dune::RestartedGMResSolver<ISTLV> gmres_ilun(opa, ilun, 1E-7, 5000, 5000, 1);
   u = 0;
   b = r;

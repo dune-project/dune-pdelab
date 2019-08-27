@@ -4,11 +4,10 @@ dune_add_test(SOURCES testanalytic.cc)
 
 dune_add_test(SOURCES testbindtime.cc)
 
-# 2019-06-27 Steffen This doesn't compile right now, disabling 
-#dune_add_test(NAME testcomplexnumbers-istl
-#              SOURCES testcomplexnumbers.cc
-#              COMPILE_DEFINITIONS SUPERLU_NTYPE=3
-#                                  USE_ISTL)
+dune_add_test(NAME testcomplexnumbers-istl
+              SOURCES testcomplexnumbers.cc
+              COMPILE_DEFINITIONS SUPERLU_NTYPE=3
+                                  USE_ISTL)
 
 dune_add_test(NAME testcomplexnumbers-istlbackend
               SOURCES testcomplexnumbers.cc
