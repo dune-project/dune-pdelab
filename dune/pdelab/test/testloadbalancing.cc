@@ -50,12 +50,11 @@ int main(int argc, char** argv)
     // load balancing problems. Simple structured grids are not suited
     // for this test.
     using Grid = Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming>;
-    Grid* grid;
     Dune::GridFactory<Grid> factory;
     if (helper.rank()==0){
       Dune::GmshReader<Grid>::read(factory, GRIDSDIR "/ldomain.msh", true, false);
     }
-    grid = factory.createGrid();
+    auto grid = factory.createGrid();
 
     // Get leaf grid view
     using GV = Grid::LeafGridView;

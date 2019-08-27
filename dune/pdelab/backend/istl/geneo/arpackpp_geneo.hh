@@ -77,8 +77,8 @@ namespace ArpackGeneo
 
       // allocate memory for auxiliary block vector objects
       // which are compatible to matrix rows / columns
-      domainBlockVector.resize(A_.N(),false);
-      rangeBlockVector.resize(A_.M(),false);
+      domainBlockVector.resize(A_.N());
+      rangeBlockVector.resize(A_.M());
     }
 
     //! Perform matrix-vector product w = A*v

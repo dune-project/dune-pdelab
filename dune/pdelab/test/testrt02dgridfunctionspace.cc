@@ -84,12 +84,10 @@ int main(int argc, char** argv)
       vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
       //vid[0] = 1; vid[1] = 3; vid[2] = 2; gf.insertElement(type, vid);
 
-      Grid *grid = gf.createGrid();
+      auto grid = gf.createGrid();
       //grid->globalRefine(1);
 
       rt02DGridFunctionSpace(grid->leafGridView(), "alberta");
-
-      Dune::GridFactory<Grid>::destroyGrid(grid);
     }
     result = 0;
 #endif // HAVE_ALBERTA
@@ -125,12 +123,10 @@ int main(int argc, char** argv)
       vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
       //vid[0] = 1; vid[1] = 3; vid[2] = 2; gf.insertElement(type, vid);
 
-      Grid *grid = gf.createGrid();
+      auto grid = gf.createGrid();
       //grid->globalRefine(1);
 
       rt02DGridFunctionSpace(grid->leafGridView(), "ug");
-
-      delete grid;
     }
     result = 0;
 #endif // HAVE_ALBERTA
