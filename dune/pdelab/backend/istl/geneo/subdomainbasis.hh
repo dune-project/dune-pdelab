@@ -39,7 +39,7 @@ namespace Dune {
         return local_basis.size();
       }
 
-    protected:
+    public:
       std::vector<std::shared_ptr<X> > local_basis;
 
     };

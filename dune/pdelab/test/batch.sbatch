@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -N 1
 #SBATCH -p haswell10c
-#SBATCH -n 10
+#SBATCH -n 20
 
 ml llvm/6.0.0
 ml openblas

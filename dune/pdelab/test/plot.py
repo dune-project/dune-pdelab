@@ -8,7 +8,7 @@ from collections import OrderedDict
 #from slurmpy import Slurm
 
 
-def run (bincall, plotprefix, configuration, permutations, extractions):
+def run (bincall, plotprefix, configuration, permutations, extractions, xlabel = ""):
 
   results = {}
   for tpl in list(itertools.product(*permutations.values())):
@@ -63,7 +63,12 @@ def run (bincall, plotprefix, configuration, permutations, extractions):
       line.set_label(" ".join(subtpl))
 
     #ax.legend()
-    plt.title(extraction)
+    plt.ylabel(extraction)
+    if (xlabel == ""):
+      plt.xlabel(list(permutations.keys())[0])
+    else:
+      plt.xlabel(xlabel)
+    #plt.title(extraction)
     plt.legend()
     fig.savefig(plotprefix + extraction + ".svg")
     fig.clf()
@@ -82,63 +87,134 @@ def run (bincall, plotprefix, configuration, permutations, extractions):
 
 
 config = {
-  "cells": "200",
+  "cells": "250",
   "subdomainsx": "10",
   "subdomainsy": "1",
   "nev": "20",
   "nev_arpack": "20",
   "overlap": "1",
   "layers": "25",
-  "contrast": "1e6",
+  "contrast": "1e5",
   "method": "geneo",
   "part_unity": "standard",
-  "hybrid": "false"
+  "hybrid": "false",
+  "coarse_only": "false",
+  "arpack_factor": "1.0",
 }
 
+config_approx = config.copy()
+config_approx["coarse_only"] = "true"
+config_approx["subdomainsx"] = "1"
+config_approx["subdomainsy"] = "10"
+
+config["layers"] = "40" # FIXME
+config["cells"] = "400" # FIXME
+config["subdomainsx"] = "10" # FIXME
+config["subdomainsy"] = "2"
+#config_approx["layers"] = "50"
+
 extractions = {
-  "Full solve" : "full solve: ",
+  "Full solve [s]" : "full solve: ",
   "Iterations" : " IT=",
-  "Basis setup" : "Basis setup: ",
-  "pCG solve" : "pCG solve: ",
-  "Basis setup" : "Basis setup: ",
-  "Orthonormalization" : "Gram-Schmidt: ",
-  "RHS setup" : "XA0X: ",
-  "Seurce inverse" : "source_inverse: "
+  "Basis setup [s]" : "Basis setup: ",
+  "Krylov solve [s]" : "pCG solve: ",
+  "Orthonormalization [s]" : "Gram-Schmidt: ",
+  "RHS setup [s]" : "XA0X: ",
+  "Source inverse [s]" : "source_inverse: ",
+  "Approximation error" : "AE: "
 }
 
 bincall = "OMP_NUM_THREADS=1 && export OMP_NUM_THREADS && make testgeneo && mpirun -x OMP_NUM_THREADS -np 10 ./testgeneo"
 
-# Scaling per Cells
+# Coarse only tests
 
-permutations = OrderedDict([
-  ("cells", ["200", "400", "600", "800"]),
-  ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2", "onelevel"]),
-])
+nev =  list(range(1,26))
 
-#run(
-#  bincall = bincall,
-#  plotprefix = "Cells ",
-#  configuration = config, permutations = permutations, extractions = extractions)
+nev_approx_skyscrapers =  list(range(3,51))
+nev_approx_layers =  list(range(2,31))
+nev_approx =  nev_approx_skyscrapers
+#nev = ["10", "15", "20", "25", "30"]
 
 
+if False:
+  permutations = OrderedDict([
+    ("nev", nev_approx),#, "20", "25", "30"]),
+    ("method", ["geneo", "fastrndgeneo"])
+  ])
 
-# Robustness wrt Contrast
+  #run(
+  #  bincall = bincall,
+  #  plotprefix = "Coarse approximation error with low-acc arpack",
+  #  configuration = config_approx, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
 
-permutations = OrderedDict([
-  ("contrast", ["1", "1e2", "1e4", "1e6"]),
-  ("nev", ["10"]),#, "20", "25", "30"]),
-  ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2", "onelevel"]),
-])
+  permutations = OrderedDict([
+    ("nev", nev_approx),#, "20", "25", "30"]),
+    ("method", ["geneo", "geneo_1e-3", "fastrndgeneo"]) #, "fastrndgeneo2"
+  ])
 
-#run(
-#  bincall = bincall,
-#  plotprefix = "Contrast 5x5",
-#  configuration = config, permutations = permutations, extractions = extractions)
+  run(
+    bincall = bincall,
+    plotprefix = "Coarse approximation error",
+    configuration = config_approx, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
+
+  config_approx["overlap"] = "15"
+  permutations = OrderedDict([
+    ("nev", nev_approx),#, "20", "25", "30"]),
+    ("method", ["geneo", "geneo_1e-3", "fastrndgeneo"]) #, "fastrndgeneo2"
+  ])
+
+  #run(
+  #  bincall = bincall,
+  #  plotprefix = "Coarse approximation error ovlp 15",
+  #  configuration = config_approx, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
+
+  config_approx["part_unity"] = "sarkis"
+  permutations = OrderedDict([
+    ("nev", nev_approx),#, "20", "25", "30"]),
+    ("method", ["geneo", "fastrndgeneo"]) #1e-3 fails! , "fastrndgeneo2"
+  ])
+
+  #run(
+  #  bincall = bincall,
+  #  plotprefix = "Coarse approximation error ovlp 15 Sarkis",
+  #  configuration = config_approx, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
+
+
+  #exit(0)
+
+  # Scaling per Cells
+
+  permutations = OrderedDict([
+    ("cells", ["200", "400", "600", "800"]),
+    ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2", "onelevel"]),
+  ])
+
+  #run(
+  #  bincall = bincall,
+  #  plotprefix = "Cells ",
+  #  configuration = config, permutations = permutations, extractions = extractions)
+
+
+
+  # Robustness wrt Contrast
+
+  permutations = OrderedDict([
+    ("contrast", ["1", "1e2", "1e4", "1e6"]),
+    ("nev", ["10"]),#, "20", "25", "30"]),
+    ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2", "onelevel"]),
+  ])
+
+  #run(
+  #  bincall = bincall,
+  #  plotprefix = "Contrast 5x5",
+  #  configuration = config, permutations = permutations, extractions = extractions)
 
 #nev = ["5", "10", "15", "20", "30", "40", "50", "60"]
-nev =  list(range(10,31))
-nev = ["10", "15", "20", "25", "30"]
+nev =  list(range(2,36,1))
+#nev = ["10", "15", "20", "25", "30"]
 #nev =  ["8", "10", "15", "20", "25", "30"]
+
+
 
 # Effectiveness/Cost of #EV
 
@@ -146,119 +222,81 @@ nev = ["10", "15", "20", "25", "30"]
 permutations = OrderedDict([
   ("nev", nev),#, "20", "25", "30"]),
   ("method", ["geneo", "geneo_1e-3", "fastrndgeneo"]),
-  ("cells", ["100"]),
   ("hybrid", ["true", "false"])
 ])
-
-#run(
-#  bincall = bincall,
-#  plotprefix = "Hybrid vs Additive EV 100 Cells ",
-#  configuration = config, permutations = permutations, extractions = extractions)
-
-
+run(
+  bincall = bincall,
+  plotprefix = "Hybrid vs Additive EV 250 Cells ",
+  configuration = config, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
 
 permutations = OrderedDict([
   ("nev", nev),#, "20", "25", "30"]),
-  ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2"]),
-  ("cells", ["100"]),
-  ("hybrid", ["true"])
+  ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2"])
 ])
+run(
+  bincall = bincall,
+  plotprefix = "EV 250 Cells ",
+  configuration = config, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
 
-#run(
-#  bincall = bincall,
-#  plotprefix = "Hybrid EV 100 Cells ",
-#  configuration = config, permutations = permutations, extractions = extractions)
+
+config["hybrid"] = "true"
+permutations = OrderedDict([
+  ("nev", nev),#, "20", "25", "30"]),
+  ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2"])
+])
+run(
+  bincall = bincall,
+  plotprefix = "Hybrid EV 250 Cells ",
+  configuration = config, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
+config["hybrid"] = "false"
+
 
 
 permutations = OrderedDict([
   ("nev", nev),#, "20", "25", "30"]),
+  ("method", ["geneo", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2"]),
+  ("hybrid", ["true", "false"])
+])
+run(
+  bincall = bincall,
+  plotprefix = "With fast2 Hybrid vs Additive EV 250 Cells ",
+  configuration = config, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
+
+
+permutations = OrderedDict([
+  ("nev", list(range(10,36,1))),#, "20", "25", "30"]),
   ("method", ["geneo", "geneo_1e-3", "fastrndgeneo"]),
-  ("cells", ["500"]),
   ("hybrid", ["true", "false"])
 ])
 
 run(
   bincall = bincall,
-  plotprefix = "Hybrid vs Additive EV 500 Cells ",
-  configuration = config, permutations = permutations, extractions = extractions)
+  plotprefix = "Many EV Hybrid vs Additive EV 250 Cells ",
+  configuration = config, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
 
 
+permutations = OrderedDict([
+  ("nev", list(range(10,36,1))),#, "20", "25", "30"]),
+  ("method", ["geneo", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2"]),
+  ("hybrid", ["true", "false"])
+])
+
+run(
+  bincall = bincall,
+  plotprefix = "With fast2 Many EV Hybrid vs Additive EV 250 Cells ",
+  configuration = config, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
+
+
+
+
+config["hybrid"] = "true"
 permutations = OrderedDict([
   ("nev", nev),#, "20", "25", "30"]),
-  ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2"]),
-  ("cells", ["500"]),
-  ("hybrid", ["true"])
-])
-
-run(
-  bincall = bincall,
-  plotprefix = "Hybrid EV 500 Cells ",
-  configuration = config, permutations = permutations, extractions = extractions)
-
-
-
-permutations = OrderedDict([
-  ("nev", ["5", "10", "15", "20", "30", "40", "50", "60"]),#, "20", "25", "30"]),
-  ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2"]),
-  ("cells", ["500"])
-])
-
-run(
-  bincall = bincall,
-  plotprefix = "EV 500 Cells ",
-  configuration = config, permutations = permutations, extractions = extractions)
-
-exit(0) # FIXME
-
-permutations = OrderedDict([
-  ("nev", ["5", "10", "15", "20", "30", "40"]),#, "20", "25", "30"]),
-  ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2"]),
-  ("cells", ["1000"])
-])
-
-run(
-  bincall = bincall,
-  plotprefix = "EV 1000 Cells ",
-  configuration = config, permutations = permutations, extractions = extractions)
-
-
-
-
-
-
-
-
-
-
-
-
-
-permutations = OrderedDict([
-  ("nev", ["5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "20", "25", "30"]),
-  ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo"]),
-  ("cells", ["800"]),
+  ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo", "fastrndgeneo2"])
 ])
 
 #run(
 #  bincall = bincall,
-#  plotprefix = "EV 800 Cells ",
-#  configuration = config,
-#  permutations = permutations,
-#  extractions = extractions
-#  )
-
-permutations = OrderedDict([
-  ("nev", ["5", "10", "15", "20", "25", "30"]),
-  ("method", ["geneo", "geneo_1e-6", "geneo_1e-3", "fastrndgeneo"]),
-  ("cells", ["800"]),
-  ("subdomainsx", ["4"]),
-  ("subdomainsy", ["4"]),
-])
-
-#run(
-#  bincall = bincall,
-#  plotprefix = "EV 800 Cells 4x4 ",
-#  configuration = config,
-#  permutations = permutations,
-#  extractions = extractions
-#  )
+#  plotprefix = "Hybrid EV 250 Cells ",
+#  configuration = config, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
+config["hybrid"] = "false"

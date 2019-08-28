@@ -22,14 +22,14 @@ Dune::ParameterTree configuration;
  * Defining a Darcy problem with alternating layers of permeability and a high contrast
  */
 template<typename GV, typename RF>
-class GenericEllipticProblem
+class GenericEllipticProblem2
 {
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
 public:
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
-  GenericEllipticProblem()
+  GenericEllipticProblem2()
   : layers(configuration.get<int>("layers")),
     contrast(configuration.get<double>("contrast")) {}
 
@@ -43,7 +43,17 @@ public:
     RF perm2 = contrast;
     RF layer_thickness = 1.0 / (double)layers;
 
-    RF coeff = (int)std::floor(xglobal[1]/ layer_thickness) % 2 == 0 ? perm1 : perm2;
+
+    int layer = (int)std::floor(xglobal[1]/ layer_thickness);
+    bool low_perm = layer % 2 == 0;
+    RF coeff;
+
+    //if (layer % 3 == 0)
+      coeff = low_perm ? perm1 : perm2;
+    /*else if (layer % 3 == 1)
+      coeff = low_perm && xglobal[0] > .1 ? perm1 : perm2;
+    else if (layer % 3 == 2)
+      coeff = low_perm && xglobal[0] < .9 ? perm1 : perm2;*/
 
     typename Traits::PermTensorType I;
     I[0][0] = coeff;
@@ -73,9 +83,10 @@ public:
   f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     typename Traits::DomainType xglobal = e.geometry().global(x);
-    return - std::exp(-std::sqrt(std::pow(xglobal[0] - 0.25, 2) + std::pow(xglobal[1] - 0.25, 2)))
-           + std::exp(-std::sqrt(std::pow(xglobal[0] - 0.75, 2) + std::pow(xglobal[1] - 0.75, 2)));
-    //return 0.0;
+    //return 1.0;//std::exp(-std::sqrt(std::pow(xglobal[0] - .5, 2) + std::pow(xglobal[1] - .5, 2)));
+    return (- std::exp(-std::sqrt(std::pow(xglobal[0] - 0.25, 2) + std::pow(xglobal[1] - 0.25, 2)))
+           + std::exp(-std::sqrt(std::pow(xglobal[0] - 0.75, 2) + std::pow(xglobal[1] - 0.75, 2)))) * 10;
+    //return 1.0;
   }
 
   BCType
@@ -139,6 +150,173 @@ private:
 
 };
 
+/*
+ * Defining a Darcy problem with alternating layers of permeability and a high contrast
+ */
+template<typename GV, typename RF>
+class GenericEllipticProblem
+{
+  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
+
+public:
+  typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
+
+  GenericEllipticProblem()
+  : layers(configuration.get<int>("layers")),
+  contrast(configuration.get<double>("contrast")) {}
+
+  //! tensor diffusion coefficient
+  typename Traits::PermTensorType
+  A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    /*typename Traits::DomainType xglobal = e.geometry().global(x);
+
+    RF perm1 = 1e0;
+    RF perm2 = contrast;
+    RF layer_thickness = 1.0 / (double)layers;
+
+
+    int layer = (int)std::floor(xglobal[1]/ layer_thickness);
+    bool low_perm = layer % 2 == 0;
+    RF coeff;
+
+    if (layer % 3 == 0)
+      coeff = low_perm ? perm1 : perm2;
+    else if (layer % 3 == 1)
+      coeff = low_perm && xglobal[0] > .1 ? perm1 : perm2;
+    else if (layer % 3 == 2)
+      coeff = low_perm && xglobal[0] < .9 ? perm1 : perm2;
+
+    typename Traits::PermTensorType I;
+    I[0][0] = coeff;
+    I[0][1] = 0;
+    I[1][0] = 0;
+    I[1][1] = coeff;
+    return I;*/
+
+    typename Traits::DomainType xglobal = e.geometry().global(x);
+    int num1 = floor(8*xglobal[0]);
+    int num2 = floor(8*xglobal[1]);
+    RF coeff = 0.0;
+    if ( (num1 % 2 == 0) && (num2 % 2 == 0) )
+      coeff = 0.1*contrast*(num2+1.0);
+    else
+      coeff = 1.0;
+
+    RF duct1_b = 0.9*xglobal[0];
+    RF duct1_t = duct1_b + 0.1;
+    if ( (xglobal[1]>duct1_b) && (xglobal[1]<duct1_t))
+      coeff = coeff + 0.2 * contrast;
+
+    RF duct2_b = -1.0*xglobal[0] + 0.5;
+    RF duct2_t = duct2_b + 0.1;
+    if ( (xglobal[1]>duct2_b) && (xglobal[1]<duct2_t))
+      coeff = coeff + 0.5 * contrast;
+
+    RF duct3_b = 4.0*xglobal[0] - 2.0 ;
+    RF duct3_t = duct3_b + 0.1;
+    if ( (xglobal[1]>duct3_b) && (xglobal[1]<duct3_t))
+      coeff = coeff + 0.2 * contrast;
+
+    RF eps = 1.0;
+    RF th = 0;
+    typename Traits::PermTensorType I;
+    th=th*M_PI/180.0;
+    I[0][0]=coeff*(pow(cos(th),2.0) + pow(sin(th),2.0)*eps);
+    I[0][1]=coeff*sin(2.0*th)*(eps-1.0)/2.0;
+    I[1][0]=coeff*sin(2.0*th)*(eps-1.0)/2.0;
+    I[1][1]=coeff*(pow(sin(th),2.0) + pow(cos(th),2.0)*eps);
+    return I;
+
+  }
+
+  //! velocity field
+  typename Traits::RangeType
+  b (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename Traits::RangeType v(0.0);
+    return v;
+  }
+
+  //! sink term
+  typename Traits::RangeFieldType
+  c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    return 0.0;
+  }
+
+  //! source term
+  typename Traits::RangeFieldType
+  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename Traits::DomainType xglobal = e.geometry().global(x);
+    //return 1.0;//std::exp(-std::sqrt(std::pow(xglobal[0] - .5, 2) + std::pow(xglobal[1] - .5, 2)));
+    //return (- std::exp(-std::sqrt(std::pow(xglobal[0] - 0.25, 2) + std::pow(xglobal[1] - 0.25, 2)))
+    //+ std::exp(-std::sqrt(std::pow(xglobal[0] - 0.75, 2) + std::pow(xglobal[1] - 0.75, 2)))) * 100;
+    return 1.0;
+  }
+
+  BCType
+  bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
+  {
+    typename Traits::DomainType xglobal = is.geometry().global(x);
+    /*if (!(xglobal[0]<1E-10 || xglobal[0]>1.0-1E-10))
+     *    return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
+     *  else
+     *    return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;*/
+    /*if (!((xglobal[1]<0.5 && xglobal[0]>1.0-1E-10) || (xglobal[1]>0.50 && xglobal[0]<1E-10)))
+     *    return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
+     *  else
+     *    return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;*/
+    //if (//(xglobal[1] < 1E-10 && xglobal[0] > 0.75) || (xglobal[1] > 1.0-1E-10 && xglobal[0] < 0.25) ||
+    //xglobal[0] < 1E-10 || xglobal[0] > 1.0-1E-10)
+    if (xglobal[1] > 1.0-1E-10 || xglobal[1] < 1E-10)
+      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
+    else
+      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
+  }
+
+  //! Dirichlet boundary condition value
+  typename Traits::RangeFieldType
+  g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename Traits::DomainType xglobal = e.geometry().global(x);
+    /*if (xglobal[1] < 1E-10 && xglobal[0] > 0.75)
+     *    return std::cos(xglobal[0] * 8* 3.141592);
+     *  else if (xglobal[1] > 1.0-1E-10 && xglobal[0] < 0.25)
+     *    return std::sin(xglobal[0] * 8 * 3.141592);
+     *  else if (xglobal[0] < 1E-10)
+     *    return std::sin(xglobal[1] * 2 * 3.141592) + 1.0;
+     *  else if (xglobal[0] > 1.0 - 1E-10)
+     *    return std::cos(xglobal[1] * 2 * 3.141592) - 1.0;
+     *  else
+     *    return 0.0;*/
+    if (xglobal[1] > 1.0-1E-10)
+      return 1.0;
+    else
+      return 0.0;
+  }
+
+  //! flux boundary condition
+  typename Traits::RangeFieldType
+  j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
+  {
+    return 0.0;
+  }
+
+  //! outflow boundary condition
+  typename Traits::RangeFieldType
+  o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
+  {
+    return 0.0;
+  }
+private:
+
+  int layers;
+  double contrast;
+
+};
+
 void driver(std::string basis_type, std::string part_unity_type) {
 
   Dune::Timer timer_assembly;
@@ -168,7 +346,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
 
   // make problem parameters
-  typedef GenericEllipticProblem<GM::LevelGridView,NumberType> Problem;
+  typedef GenericEllipticProblem2<GM::LevelGridView,NumberType> Problem;
   Problem problem;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
   BCType bctype(grid->levelGridView(grid->maxLevel()),problem);
@@ -236,7 +414,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
   // set initial guess
   V x0(gfs,0.0);
   Dune::PDELab::copy_nonconstrained_dofs(cc,x0,x);
-
+  V x_orig(x);
 
   // LocalOperator for given problem
   typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
@@ -332,6 +510,8 @@ void driver(std::string basis_type, std::string part_unity_type) {
   std::shared_ptr<Dune::PDELab::SubdomainBasis<V> > subdomain_basis;
   if (basis_type == "geneo")
     subdomain_basis = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb, 0.0);
+  else if (basis_type == "geneo_1e-1")
+    subdomain_basis = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb, 1e-1);
   else if (basis_type == "geneo_1e-3")
     subdomain_basis = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb, 1e-3);
   else if (basis_type == "geneo_1e-6")
@@ -357,34 +537,120 @@ void driver(std::string basis_type, std::string part_unity_type) {
   // Fuse per-subdomain basis functions to a global coarse space
   auto coarse_space = std::make_shared<Dune::PDELab::SubdomainProjectedCoarseSpace<GFS,M_EXTERIOR,V,PIH> >(gfs, AF_exterior, subdomain_basis, pihf);
 
-
   // Plug coarse basis into actual preconditioner
-  auto prec = std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,M_EXTERIOR,V,V>>(gfs, AF, AF_exterior, coarse_space, basis_type != "onelevel", configuration.get<bool>("hybrid"), verb);
+  bool restricted = configuration.get<bool>("hybrid"); // NOTE: hybrid and restricted mode coupled here!!
+  auto prec = std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,M_EXTERIOR,V,V>>(gfs, AF, AF_exterior, coarse_space, *part_unity, restricted, basis_type != "onelevel", configuration.get<bool>("hybrid"), verb);
+
+  std::shared_ptr<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> > subdomain_basis_full;
+  std::shared_ptr<Dune::PDELab::SubdomainProjectedCoarseSpace<GFS,M_EXTERIOR,V,PIH> > coarse_space_full;
+  std::shared_ptr<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,M_EXTERIOR,V,V> > prec_full;
+  if (configuration.get<bool>("coarse_only")) {
+    subdomain_basis_full = std::make_shared<Dune::PDELab::GenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, nev_arpack, 0.001, false, verb, 0.0);
+    coarse_space_full = std::make_shared<Dune::PDELab::SubdomainProjectedCoarseSpace<GFS,M_EXTERIOR,V,PIH> >(gfs, AF_exterior, subdomain_basis_full, pihf);
+    prec_full = std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,M_EXTERIOR,V,V>>(gfs, AF, AF_exterior, coarse_space_full, *part_unity, false, basis_type != "onelevel", configuration.get<bool>("hybrid"), verb);
+  }
+  //auto prec = std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,M_EXTERIOR,V,V>>(gfs, AF, AF_exterior, coarse_space, *part_unity, false, basis_type != "onelevel", configuration.get<bool>("hybrid"), verb);
+  //auto prec_full = prec;//std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,M_EXTERIOR,V,V>>(gfs, AF, AF_exterior, coarse_space_full, *part_unity, false, basis_type != "onelevel", configuration.get<bool>("hybrid"), verb);
 
   //Dune::Richardson<V,V> richardson();
+
+while(true) {
+  V x_orig2 = x_orig;
+  V x2 = x;
 
   Dune::Timer timer_solve;
 
   // now solve defect equation A*v = d using a CG solver with our shiny preconditioner
   V v(gfs,0.0);
-  auto solver_ref = std::make_shared<Dune::CGSolver<V> >(*popf,ospf,*prec,1E-6,1000,verb,false);
-  Dune::InverseOperatorResult result;
-  solver_ref->apply(v,d,result);
-  x -= v;
+  if (configuration.get<bool>("coarse_only")) {
+    typedef Dune::BCRSMatrix<Dune::FieldMatrix<double,1,1> > COARSE_M;
+    Dune::UMFPack<COARSE_M> coarse_solver(*coarse_space->get_coarse_system());
+
+
+
+    typedef Dune::BlockVector<Dune::FieldVector<double,1> > COARSE_V;
+    COARSE_V coarse_defect(coarse_space->basis_size(),coarse_space->basis_size());
+    V d2 = d;
+    coarse_space->restrict (d2, coarse_defect);
+    // Solve coarse system
+    COARSE_V v0(coarse_space->basis_size(),coarse_space->basis_size());
+
+    Dune::InverseOperatorResult result;
+    coarse_solver.apply(v0, coarse_defect, result);
+    // Prolongate coarse solution on local domain
+    V prolongated(gfs, 0.0);
+    coarse_space->prolongate(v0, prolongated);
+
+    Dune::PDELab::AddDataHandle<GFS,V> prolongated_addh(gfs,prolongated);
+    gfs.gridView().communicate(prolongated_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
+
+    x2 -= prolongated;
+  } else {
+    if (configuration.get<bool>("hybrid")) {
+      auto solver_ref = std::make_shared<Dune::RestartedGMResSolver<V> >(*popf,ospf,*prec,1E-6,30,1000,verb);
+      Dune::InverseOperatorResult result;
+      solver_ref->apply(v,d,result);
+      x2 -= v;
+    } else {
+      auto solver_ref = std::make_shared<Dune::CGSolver<V> >(*popf,ospf,*prec,1E-6,1000,verb,false);
+      Dune::InverseOperatorResult result;
+      solver_ref->apply(v,d,result);
+      x2 -= v;
+    }
+  }
 
   MPI_Barrier (MPI_COMM_WORLD);
   if (verb > 0) std::cout << "pCG solve: " << timer_solve.elapsed() << std::endl;
   if (verb > 0) std::cout << "full solve: " << timer_full_solve.elapsed() << std::endl;
 
+
+  if (configuration.get<bool>("coarse_only")) {
+    auto solver_ref = std::make_shared<Dune::CGSolver<V> >(*popf,ospf,*prec_full,1E-6,1000,verb,false);
+    Dune::InverseOperatorResult result;
+    V d2 = d;
+    solver_ref->apply(v,d2,result);
+    x_orig2 -= v;
+
+    typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+    DGF dgf_ref(gfs, x_orig2);
+    DGF dgf_soln(gfs, x2);
+
+    {
+    typedef Dune::PDELab::DifferenceAdapter<DGF,DGF> Difference;
+    Difference error_diff(dgf_ref,dgf_soln);
+    Dune::VTKWriter<GV> vtkwriter(gfs.gridView());
+    typedef Dune::PDELab::VTKGridFunctionAdapter<Difference> ADAPT;
+    auto adapt = std::make_shared<ADAPT>(error_diff,"error");
+    vtkwriter.addVertexData(adapt);
+    vtkwriter.write("error" + std::to_string(subdomain_basis->local_basis.size()));
+    }
+
+    typedef Dune::PDELab::DifferenceSquaredAdapter<DGF,DGF> DifferenceSquared;
+    DifferenceSquared differencesquared(dgf_ref,dgf_soln);
+    typename DifferenceSquared::Traits::RangeType error_norm_squared(0.0);
+    Dune::PDELab::integrateGridFunction (differencesquared, error_norm_squared, 10);
+
+    error_norm_squared = gfs.gridView().comm().sum(error_norm_squared);
+
+    if (gfs.gridView().comm().rank() == 0)
+      std::cout << "Approx error norm AE: " << std::sqrt(error_norm_squared) << std::endl;
+  }
+
+
+
   // Write solution to VTK
   Dune::VTKWriter<GV> vtkwriter(gfs.gridView());
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  DGF xdgf(gfs,x);
+  DGF xdgf(gfs,x2);
   typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
   auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
   vtkwriter.addVertexData(adapt);
+  DGF xdgf_orig(gfs,x_orig2);
+  if (configuration.get<bool>("coarse_only")) {
+    auto adapt_orig = std::make_shared<ADAPT>(xdgf_orig,"ref");
+    vtkwriter.addVertexData(adapt_orig);
+  }
   vtkwriter.write("testgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type);
-
 
   if  (configuration.get<bool>("write_basis", false)) {
     for (int i = 0; i < subdomain_basis->basis_size(); i++) {
@@ -401,6 +667,15 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
     }
   }
+
+  if (!configuration.get<bool>("coarse_reduction_test"))
+    break;
+  if (subdomain_basis->local_basis.size() == 1)
+    break;
+  subdomain_basis->local_basis.pop_back();
+  coarse_space = std::make_shared<Dune::PDELab::SubdomainProjectedCoarseSpace<GFS,M_EXTERIOR,V,PIH> >(gfs, AF_exterior, subdomain_basis, pihf);
+  prec = std::make_shared<Dune::PDELab::ISTL::TwoLevelOverlappingAdditiveSchwarz<GFS,M,M_EXTERIOR,V,V>>(gfs, AF, AF_exterior, coarse_space, *part_unity, false, basis_type != "onelevel", configuration.get<bool>("hybrid"), verb);
+}
 
 
 }
