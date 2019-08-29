@@ -234,7 +234,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   Dune::MatrixAdapter<typename M::Container,typename DV::Container,typename RV::Container> opa(native(m));
   //ISTLOnTheFlyOperator opb(gridoperator);
   Dune::SeqSSOR<typename M::Container,typename DV::Container,typename RV::Container> ssor(native(m),1,1.0);
-  Dune::SeqILU0<typename M::Container,typename DV::Container,typename RV::Container> ilu0(native(m),1.0);
+  Dune::SeqILU<typename M::Container,typename DV::Container,typename RV::Container> ilu0(native(m),1.0);
   Dune::Richardson<typename DV::Container,typename RV::Container> richardson(1.0);
 
 //   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
