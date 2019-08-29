@@ -51,9 +51,7 @@ int main(int argc, char** argv)
     // for this test.
     using Grid = Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming>;
     Dune::GridFactory<Grid> factory;
-    if (helper.rank()==0){
-      Dune::GmshReader<Grid>::read(factory, GRIDSDIR "/ldomain.msh", true, false);
-    }
+    Dune::GmshReader<Grid>::read(factory, GRIDSDIR "/ldomain.msh", true, false);
     auto grid = factory.createGrid();
 
     // Get leaf grid view
