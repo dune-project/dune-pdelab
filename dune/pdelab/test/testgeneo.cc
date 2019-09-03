@@ -15,6 +15,11 @@ class GenericEllipticProblem
 public:
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
+  static constexpr bool permeabilityIsConstantPerCell()
+  {
+    return true;
+  }
+
   //! tensor diffusion coefficient
   typename Traits::PermTensorType
   A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
