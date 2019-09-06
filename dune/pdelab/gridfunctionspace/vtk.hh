@@ -154,13 +154,13 @@ namespace Dune {
          *
          * @note Only available if entity transformation is default constructible
          */
-        template<typename = std::enable_if_t<std::is_default_constructible_v<ET>,int>>
+        template<class T = int, class = std::enable_if_t<std::is_default_constructible_v<ET>,T>>
         DGFTreeCommonData(const GFS& gfs, const X& x, const GV& gv)
           : DGFTreeCommonData(gfs,x,gv,ET{})
         {}
 
         //! Returns the grid view used for data binding
-        GridView gridView() {return _gv;}
+        const GridView& gridView() const {return _gv;}
 
       private:
 
@@ -281,7 +281,7 @@ namespace Dune {
         }
 
         //! get a reference to the GridView
-        const typename Traits::GridViewType& gridView() const
+        const typename Traits::GridViewType& getGridView() const
         {
           return _data->gridView();
         }
