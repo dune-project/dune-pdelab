@@ -207,7 +207,8 @@ namespace Dune
         r = 0.0;
         this->gridoperator_.residual(*this->u_, r);
         this->res_.defect = this->solver_.norm(r);
-        if (!std::isfinite(this->res_.defect))
+        using std::isfinite;
+        if (!isfinite(this->res_.defect))
           DUNE_THROW(NewtonDefectError,
                      "NewtonSolver::defect(): Non-linear defect is NaN or Inf");
       }
@@ -360,7 +361,8 @@ namespace Dune
 
               this->res_.reduction = this->res_.defect/this->res_.first_defect;
               this->res_.iterations++;
-              this->res_.conv_rate = std::pow(this->res_.reduction, 1.0/this->res_.iterations);
+              using std::pow;
+              this->res_.conv_rate = pow(this->res_.reduction, RFType(1.0)/this->res_.iterations);
 
               // store old ios flags
               ios_base_all_saver restorer(std::cout);

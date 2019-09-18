@@ -181,8 +181,9 @@ namespace Dune{
           a[i] = la.osp_method->a(la.stage,i);
           b[i] = la.osp_method->b(la.stage,i);
           d[i] = la.osp_method->d(i);
-          do0[i] = ( std::abs(b[i]) > 1E-6 );
-          do1[i] = ( std::abs(a[i]) > 1E-6 );
+          using std::abs;
+          do0[i] = ( abs(b[i]) > 1E-6 );
+          do1[i] = ( abs(a[i]) > 1E-6 );
         }
 
         // prepare local operators for stage
