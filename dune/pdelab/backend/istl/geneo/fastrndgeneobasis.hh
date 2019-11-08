@@ -85,7 +85,8 @@ namespace Dune {
           DUNE_THROW(Dune::Exception,"nev_arpack is less then nev!");*/
 
         std::default_random_engine generator;
-        generator.seed(42);
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        generator.seed(seed);
         std::normal_distribution<double> distribution;
 
         this->local_basis.resize(nev);

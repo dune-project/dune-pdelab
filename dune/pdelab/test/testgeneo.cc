@@ -520,6 +520,8 @@ void driver(std::string basis_type, std::string part_unity_type) {
     subdomain_basis = std::make_shared<Dune::PDELab::RndGenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, verb);
   else if (basis_type == "fastrndgeneo")
     subdomain_basis = std::make_shared<Dune::PDELab::FastRndGenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, verb);
+  else if (basis_type == "fastrndgeneoadaptive")
+    subdomain_basis = std::make_shared<Dune::PDELab::FastRndGenEOBasisAdaptive<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, verb);
   else if (basis_type == "fastrndgeneo2")
     subdomain_basis = std::make_shared<Dune::PDELab::FastRndGenEOBasis<GFS,M_EXTERIOR,V,1> >(gfs, AF_exterior, AF_ovlp, eigenvalue_threshold, *part_unity, nev, verb, 2);
   else if (basis_type == "lipton_babuska")

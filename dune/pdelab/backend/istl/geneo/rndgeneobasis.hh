@@ -127,6 +127,8 @@ namespace Dune {
         if (verbose > 0) std::cout << "source_inverse: " << timer.elapsed() << std::endl; timer.reset();
 
         std::default_random_engine generator;
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        generator.seed(seed);
         std::normal_distribution<double> distribution(0.0,1.0);
 
         Dune::InverseOperatorResult result;

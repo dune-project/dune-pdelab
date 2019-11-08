@@ -66,11 +66,11 @@ namespace Dune {
         MPI_Barrier (MPI_COMM_WORLD);
         if (verbose > 0) std::cout << "XA0X: " << timer.elapsed() << std::endl; timer.reset();
 
-        if (verbose > 0) {
+        /*if (verbose > 0) {
           Dune::storeMatrixMarket(native(ovlp_mat), "AF_ovlp.mm");
           Dune::storeMatrixMarket(native(AF_exterior), "AF_exterior.mm");
           Dune::storeMatrixMarket(native(part_unity), "part_unity.mm");
-        }
+        }*/
 
         timer.reset();
         Dune::UMFPack<ISTLM> source_inverse(native(AF_exterior));
@@ -85,10 +85,11 @@ namespace Dune {
           DUNE_THROW(Dune::Exception,"nev_arpack is less then nev!");*/
 
         std::default_random_engine generator;
-        generator.seed(42);
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        generator.seed(seed);
         std::normal_distribution<double> distribution;
 
-        int testspace_size = 0;// TODO: Switched off. nev * 2;
+        int testspace_size = nev * 2;// TODO: Switched off. nev * 2;
         std::vector<std::shared_ptr<X> > testspace(testspace_size);
         for (int i = 0; i < testspace_size; i++) {
           testspace[i] = std::make_shared<X>(gfs, 0.0);
@@ -117,9 +118,13 @@ namespace Dune {
           ISTLX rnd(AF_exterior.N());
           for (int j = 0; j < rnd.N(); j++) {
             for(int j_block = 0; j_block < ISTLM::block_type::rows; j_block++){
-              rnd[j][j_block] = distribution(generator);
+              if (native(part_unity)[j][j_block] == 1.0 || native(part_unity)[j][j_block] == 0.0)
+                rnd[j][j_block] = 0.0;
+              else
+                rnd[j][j_block] = distribution(generator);
             }
           }
+
           source_inverse.apply(native(testvec), rnd, result);
 
           for (int j = 0; j < AF_exterior.N(); j++) {
@@ -188,12 +193,6 @@ namespace Dune {
               ext[j][j_block] *= native(part_unity)[j][j_block];
             }
           }
-          /*std::transform(
-            ext.begin(),ext.end(),
-                         part_unity.begin(),
-                         ext.begin(),
-                         std::multiplies<>()
-          );*/
 
           for (int reiter = 0; reiter < reiterations; reiter++) {
 
@@ -206,12 +205,6 @@ namespace Dune {
                 ext[j][j_block] *= native(part_unity)[j][j_block];
               }
             }
-            /*std::transform(
-              ext.begin(),ext.end(),
-                           part_unity.begin(),
-                           ext.begin(),
-                           std::multiplies<>()
-            );*/
 
             //cgsolver.apply(temp, ext, result);
             source_inverse.apply(temp, ext, result);
@@ -309,6 +302,12 @@ namespace Dune {
             maxnorm = std::sqrt(maxnorm);
             if (verbose > 0) std::cout << "maxnorm: " << maxnorm << " from vec " << maxvec << std::endl;
             if (verbose > 0) std::cout << "onenorm: " << onenorm << std::endl;
+            double globalmaxnorm = gfs.gridView().comm().max(maxnorm);
+            double globalonenorm = gfs.gridView().comm().sum(onenorm);
+            if (i == nev-1 && gfs.gridView().comm().rank() == 0) {
+              std::cout << "maxnorm_final: " << globalmaxnorm << std::endl;
+              std::cout << "onenorm_final: " << globalonenorm / (double)testspace_size << std::endl;
+            }
           }
 
         }
