@@ -10,7 +10,7 @@ from collections import OrderedDict
 def tuple_to_string(tpl):
   return "_".join([str(x) for x in tpl])
 
-def run (bincall, plotprefix, configuration, permutations, extractions, xlabel = ""):
+def run (bincall, plotprefix, configuration, permutations, extractions, xlabel = "", ylogscale = False):
 
   results = {}
   for tpl in list(itertools.product(*permutations.values())):
@@ -76,6 +76,13 @@ def run (bincall, plotprefix, configuration, permutations, extractions, xlabel =
     else:
       plt.xlabel(xlabel)
     #plt.title(extraction)
+
+
+    if ylogscale:
+      plt.yscale('symlog')
+    #plt.xscale('symlog')
+
+
     plt.legend()
     fig.savefig(plotprefix + extraction + ".svg")
     fig.clf()
@@ -128,7 +135,9 @@ extractions = {
   "Orthonormalization [s]" : "Gram-Schmidt: ",
   "RHS setup [s]" : "XA0X: ",
   "Source inverse [s]" : "source_inverse: ",
-  "Approximation error" : "AE: "
+  "Approximation error" : "AE: ",
+  "Maxnorm" : "maxnorm_final: ",
+  "Onenorm" : "onenorm_final: ",
 }
 
 bincall = "OMP_NUM_THREADS=1 && export OMP_NUM_THREADS && make testgeneo && mpirun -x OMP_NUM_THREADS -np 10 ./testgeneo"
@@ -222,9 +231,53 @@ nev =  list(range(2,36,1))
 #nev =  ["8", "10", "15", "20", "25", "30"]
 
 
+# Abort criterion
+
+config["method"] = "fastrndgeneoadaptive"
+config["hybrid"] = "true"
+permutations = OrderedDict([
+  ("nev", nev),#, "20", "25", "30"]),
+])
+run(
+  bincall = bincall,
+  plotprefix = "Abort criterion ",
+  configuration = config, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
+config["hybrid"] = "false"
+
+#exit(0) # FIXME
+
+config["hybrid"] = "true"
+permutations = OrderedDict([
+  ("nev", nev),#, "20", "25", "30"]),
+  ("method", ["geneo", "fastrndgeneo", "fastrndgeneoadaptive"]),
+])
+run(
+  bincall = bincall,
+  plotprefix = "Cost of abort criterion ",
+  configuration = config, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
+config["hybrid"] = "false"
+
+
+
+
+
+# Scaling wrt number of cells
+config["nev"] = "20"
+config["hybrid"] = "true"
+permutations = OrderedDict([
+  ("cells", ["400", "800", "1600", "3200"]),
+  ("method", ["geneo", "geneo_1e-3", "fastrndgeneo"]),
+#  ("hybrid", ["true", "false"])
+])
+run(
+  bincall = bincall,
+  plotprefix = "Hybrid scaling cells ",
+  configuration = config, permutations = permutations, extractions = extractions, xlabel = "1/h", ylogscale = True)
+config["hybrid"] = "false"
+
+
 
 # Effectiveness/Cost of #EV
-
 
 permutations = OrderedDict([
   ("nev", nev),#, "20", "25", "30"]),
