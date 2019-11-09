@@ -7,6 +7,8 @@ import re
 from collections import OrderedDict
 #from slurmpy import Slurm
 
+def tuple_to_string(tpl):
+  return "_".join([str(x) for x in tpl])
 
 def run (bincall, plotprefix, configuration, permutations, extractions, xlabel = ""):
 
@@ -26,18 +28,23 @@ def run (bincall, plotprefix, configuration, permutations, extractions, xlabel =
     print ("Running " + str(tpl) + "\n\t" + params)
 
     #sbatch --out "test.out" batch.sbatch "params..."
-    os.system("sbatch --job-name=prmstudy --out \"out/" + str(tpl) + ".out\" batch.sbatch \"" + params + "\"")
+    use_slurm = False
+    if use_slurm:
+        os.system("sbatch --job-name=prmstudy --out \"out/" + tuple_to_string(tpl) + ".out\" batch.sbatch \"" + params + "\"")
+    else:
+        os.system("mpirun -np 20 ./testgeneo " + params + " > 'out/" + tuple_to_string(tpl)+".out'")
+
 
     #os.system (bincall + " " + params + " > out")
 
-
-  print("waiting for runs...")
-  os.system("while squeue | grep --quiet prmstudy; do sleep 3; done")
+  if use_slurm:
+      print("waiting for runs...")
+      os.system("while squeue | grep --quiet prmstudy; do sleep 3; done")
 
   for tpl in list(itertools.product(*permutations.values())):
-    print ("Reading out/" + str(tpl) + ".out")
+    print ("Reading out/" + tuple_to_string(tpl) + ".out")
 
-    with open("out/" + str(tpl) + ".out", encoding="utf-8") as f:
+    with open("out/" + tuple_to_string(tpl) + ".out", encoding="utf-8") as f:
       for line in f:
         #print(line)
         for extraction in extractions.keys():
