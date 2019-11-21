@@ -86,7 +86,7 @@ namespace Dune {
        * entity transformation would make possible to write data from GFS with a host
        * domain grid view into a one of the subdomains of the multidomain grid:
        * @code{.cpp}
-       *   auto etity_transformation = [&](auto e){return grid->multiDomainEntity(e);};
+       *   auto entity_transformation = [&](auto e){return grid->multiDomainEntity(e);};
        * @endcode
        */
       template<typename GFS, typename X, typename Pred, typename GV = typename GFS::Traits::GridView, typename ET = Std::identity>
