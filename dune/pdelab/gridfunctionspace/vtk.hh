@@ -83,7 +83,7 @@ namespace Dune {
        * @note If GV is not the same as the GFS grid view, the entity transformation
        * must be able to take an entity from the GFS grid view and return an entity
        * from the VTK grid view. For instance, for a multidomain grid, the following
-       * etity transformation would make possible to write data from GFS with a host
+       * entity transformation would make possible to write data from GFS with a host
        * domain grid view into a one of the subdomains of the multidomain grid:
        * @code{.cpp}
        *   auto etity_transformation = [&](auto e){return grid->multiDomainEntity(e);};
