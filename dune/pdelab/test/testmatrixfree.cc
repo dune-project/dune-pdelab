@@ -129,17 +129,14 @@ int main(int argc, char** argv)
     // Solve matrix free
     using ISTLOnTheFlyOperator = Dune::PDELab::OnTheFlyOperator<CoefficientVector, CoefficientVector, GridOperator>;
     ISTLOnTheFlyOperator istlOperator(gridOperator);
-    Dune::Richardson<CoefficientVector, CoefficientVector> richardson(1.0);
-    Dune::BiCGSTABSolver<CoefficientVector> solverMatrixFree(istlOperator, richardson, 1E-10, 5000, 1);
-    Dune::InverseOperatorResult stat;
-    // Evaluate residual w.r.t initial guess
+    using LinearSolverMatrixFree = Dune::PDELab::ISTLBackend_SEQ_MatrixFree_BCGS_Richardson<ISTLOnTheFlyOperator>;
+    LinearSolverMatrixFree linearSolverMatrixFree(istlOperator);
     using TrialGridFunctionSpace = typename GridOperator::Traits::TrialGridFunctionSpace;
     using W = Dune::PDELab::Backend::Vector<TrialGridFunctionSpace,typename CoefficientVector::ElementType>;
     W residual(gridOperator.testGridFunctionSpace(), 0.0);
     gridOperator.residual(coefficientVectorMatrixFree, residual);
-    // Solve the jacobian system
     CoefficientVector update(gridOperator.trialGridFunctionSpace(), 0.0);
-    solverMatrixFree.apply(update, residual, stat);
+    linearSolverMatrixFree.apply(update, residual, reduction);
     coefficientVectorMatrixFree -= update;
 
     // Visualization
