@@ -60,9 +60,9 @@ namespace Dune {
 
         BlockVector(const BlockVector& rhs)
           : _gfs(rhs._gfs)
-          , _container(std::make_shared<Container>(_gfs.ordering().blockCount()))
+          , _container(std::make_shared<Container>(_gfs->ordering().blockCount()))
         {
-          ISTL::dispatch_vector_allocation(_gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          ISTL::dispatch_vector_allocation(_gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
           (*_container) = rhs.native();
         }
 
@@ -71,15 +71,15 @@ namespace Dune {
           , _container(std::move(rhs._container))
         {}
 
-        BlockVector (const GFS& gfs, Backend::attached_container = Backend::attached_container())
+        BlockVector (std::shared_ptr<const GFS> gfs, Backend::attached_container = Backend::attached_container())
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
+          , _container(std::make_shared<Container>(gfs->ordering().blockCount()))
         {
-          ISTL::dispatch_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         }
 
         //! Creates an BlockVector without allocating an underlying ISTL vector.
-        BlockVector(const GFS& gfs, Backend::unattached_container)
+        BlockVector(std::shared_ptr<const GFS> gfs, Backend::unattached_container)
           : _gfs(gfs)
         {}
 
@@ -88,21 +88,43 @@ namespace Dune {
          * \param gfs GridFunctionSpace that determines the size and the blocking of the vector
          * \param container The actual ISTL container class
          */
-        BlockVector (const GFS& gfs, Container& container)
+        BlockVector (std::shared_ptr<const GFS> gfs, Container& container)
           : _gfs(gfs)
           , _container(stackobject_to_shared_ptr(container))
         {
-          _container->resize(gfs.ordering().blockCount());
-          ISTL::dispatch_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          _container->resize(gfs->ordering().blockCount());
+          ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         }
 
-        BlockVector (const GFS& gfs, const E& e)
+        BlockVector (std::shared_ptr<const GFS> gfs, const E& e)
           : _gfs(gfs)
           , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
         {
-          ISTL::dispatch_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
           (*_container)=e;
         }
+
+        BlockVector (const GFS& gfs, Backend::attached_container tag = Backend::attached_container())
+          : BlockVector(Dune::stackobject_to_shared_ptr(gfs), tag)
+        {}
+
+        //! Creates an BlockVector without allocating an underlying ISTL vector.
+        BlockVector(const GFS& gfs, Backend::unattached_container tag)
+          : BlockVector(Dune::stackobject_to_shared_ptr(gfs), tag)
+        {}
+
+        /** \brief Constructs an BlockVector for an explicitly given vector object
+          *
+          * \param gfs GridFunctionSpace that determines the size and the blocking of the vector
+          * \param container The actual ISTL container class
+          */
+        BlockVector (const GFS& gfs, Container& container)
+          : BlockVector(Dune::stackobject_to_shared_ptr(gfs), container)
+        {}
+
+        BlockVector (const GFS& gfs, const E& e)
+          : BlockVector(Dune::stackobject_to_shared_ptr(gfs), e)
+        {}
 
         void detach()
         {
@@ -297,11 +319,11 @@ namespace Dune {
 
         const GFS& gridFunctionSpace() const
         {
-          return _gfs;
+          return *_gfs;
         }
 
       private:
-        const GFS& _gfs;
+        std::shared_ptr<const GFS> _gfs;
         std::shared_ptr<Container> _container;
       };
 
