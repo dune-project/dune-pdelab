@@ -69,6 +69,8 @@ dune_add_test(SOURCES testpoisson.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 add_dune_alberta_flags(testpoisson)
 
+dune_add_test(SOURCES testmatrixfree.cc)
+
 dune_add_test(SOURCES testchunkedblockordering.cc)
 
 dune_add_test(SOURCES testrt0.cc
