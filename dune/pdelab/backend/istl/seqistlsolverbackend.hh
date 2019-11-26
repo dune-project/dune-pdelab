@@ -147,7 +147,7 @@ namespace Dune {
       template<class V, class W>
       void apply(V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
       {
-        Dune::Richardson<V,W> prec(0.7);
+        Dune::Richardson<V,W> prec(1.0);
         Solver<V> solver(opa_, prec, reduction, maxiter_, verbose_);
         Dune::InverseOperatorResult stat;
         solver.apply(z, r, stat);
@@ -329,6 +329,24 @@ namespace Dune {
       */
       explicit ISTLBackend_SEQ_LOOP_Jac (unsigned maxiter_=5000, int verbose_=1)
         : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::LoopSolver>(maxiter_, verbose_)
+      {}
+    };
+
+   /**
+     * @brief Backend for sequential BiCGSTAB solver with Richardson
+     * precondition (equivalent to no preconditioner for Richards with
+     * parameter=1.0).
+     */
+    class ISTLBackend_SEQ_BCGS_Richardson
+      : public ISTLBackend_SEQ_Richardson<Dune::BiCGSTABSolver>
+    {
+    public:
+      /*! \brief make a linear solver object
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_BCGS_Richardson (unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_Richardson<Dune::BiCGSTABSolver>(maxiter_, verbose_)
       {}
     };
 
