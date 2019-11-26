@@ -678,7 +678,6 @@ namespace Dune {
                            const NameGenerator& name_generator = vtk::defaultNameScheme(),
                            const Predicate& predicate = Predicate())
     {
-      std::cout << "IM SHARED_PTR CODE PFAD" << std::endl;
       typedef vtk::DGFTreeCommonData<GFS,X,Predicate> Data;
       vtk::OutputCollector<VTKWriter,Data> collector(vtk_writer, std::make_shared<Data>(gfs,x),predicate);
       collector.addSolution(name_generator);
