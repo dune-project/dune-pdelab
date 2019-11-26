@@ -71,6 +71,10 @@ namespace Dune {
     // interface required to solve linear and nonlinear problems.
     //==============================================================================
 
+    //=====================================================================
+    // First we add some base classes where the preconditioner is specified
+    //=====================================================================
+
     template<template<class> class Solver>
     class ISTLBackend_SEQ_Richardson
       : public SequentialNorm, public LinearResultStorage
@@ -84,8 +88,6 @@ namespace Dune {
       explicit ISTLBackend_SEQ_Richardson(unsigned maxiter_=5000, int verbose_=1)
         : maxiter(maxiter_), verbose(verbose_)
       {}
-
-
 
       /*! \brief solve the given linear system
 
@@ -134,8 +136,6 @@ namespace Dune {
         , maxiter_(maxiter)
         , verbose_(verbose)
       {}
-
-
 
       /*! \brief solve the given linear system
 
@@ -312,6 +312,10 @@ namespace Dune {
       unsigned maxiter;
       int verbose;
     };
+
+    //========================================
+    // Start with matrix based solver backends
+    //========================================
 
     //! \addtogroup PDELab_seqsolvers Sequential Solvers
     //! \{
@@ -985,6 +989,26 @@ namespace Dune {
     private :
       int restart, maxiter, verbose;
     };
+
+    //============================
+    // Matrix free solver backends
+    //============================
+
+    template <class Operator>
+    class ISTLBackend_SEQ_MatrixFree_BCGS_Richardson
+      : public ISTLBackend_SEQ_MatrixFree_Richardson<Operator, Dune::BiCGSTABSolver>
+    {
+    public:
+      /*! \brief make a linear solver object
+        \param[in] op_ Operator that will be passed to ISTL solver
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_MatrixFree_BCGS_Richardson (Operator& op_, unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_MatrixFree_Richardson<Operator, Dune::BiCGSTABSolver>(op_, maxiter_, verbose_)
+      {}
+    };
+
 
     //! \} group Sequential Solvers
     //! \} group Backend
