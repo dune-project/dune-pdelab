@@ -125,6 +125,8 @@
 #include <dune/pdelab/common/multiindex.hh>
 #include <dune/pdelab/common/jacobiantocurl.hh>
 #include <dune/pdelab/stationary/linearproblem.hh>
+#include <dune/pdelab/stationary/linearproblembase.hh>
+#include <dune/pdelab/stationary/matrixfreelinearproblem.hh>
 #include <dune/pdelab/constraints/noconstraints.hh>
 #include <dune/pdelab/constraints/hangingnodemanager.hh>
 #include <dune/pdelab/constraints/p0ghost.hh>
