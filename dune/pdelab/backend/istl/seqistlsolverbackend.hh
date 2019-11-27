@@ -31,7 +31,7 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-    template<typename X, typename Y, typename GOS>
+    template<typename X, typename Y, typename GO>
     class OnTheFlyOperator : public Dune::LinearOperator<X,Y>
     {
     public:
@@ -39,21 +39,21 @@ namespace Dune {
       typedef Y range_type;
       typedef typename X::field_type field_type;
 
-      OnTheFlyOperator (GOS& gos_)
-        : gos(gos_)
+      OnTheFlyOperator (const GO& go_)
+        : go(go_)
       {}
 
       virtual void apply (const X& x, Y& y) const override
       {
         y = 0.0;
-        gos.jacobian_apply(x,y);
+        go.jacobian_apply(x,y);
       }
 
       virtual void applyscaleadd (field_type alpha, const X& x, Y& y) const override
       {
         Y temp(y);
         temp = 0.0;
-        gos.jacobian_apply(x,temp);
+        go.jacobian_apply(x,temp);
         y.axpy(alpha,temp);
       }
 
@@ -63,7 +63,7 @@ namespace Dune {
       }
 
     private:
-      GOS& gos;
+      const GO& go;
     };
 
     //==============================================================================
@@ -121,18 +121,20 @@ namespace Dune {
       int verbose;
     };
 
-    template<class Operator, template<class> class Solver>
+    template<class GO, template<class> class Solver>
     class ISTLBackend_SEQ_MatrixFree_Richardson
       : public SequentialNorm, public LinearResultStorage
     {
+      using V = typename GO::Traits::Domain;
+      using W = typename GO::Traits::Range;
     public:
       /*! \brief make a linear solver object
 
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_MatrixFree_Richardson(Operator& op, unsigned maxiter=5000, int verbose=1)
-        : opa_(op)
+      explicit ISTLBackend_SEQ_MatrixFree_Richardson(const GO& go, unsigned maxiter=5000, int verbose=1)
+        : opa_(go)
         , maxiter_(maxiter)
         , verbose_(verbose)
       {}
@@ -144,7 +146,6 @@ namespace Dune {
         \param[in] r right hand side
         \param[in] reduction to be achieved
       */
-      template<class V, class W>
       void apply(V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
       {
         Dune::Richardson<V,W> prec(1.0);
@@ -159,7 +160,7 @@ namespace Dune {
       }
 
     private:
-      Operator& opa_;
+      Dune::PDELab::OnTheFlyOperator<V,W,GO> opa_;
       unsigned maxiter_;
       int verbose_;
     };
@@ -994,9 +995,9 @@ namespace Dune {
     // Matrix free solver backends
     //============================
 
-    template <class Operator>
+    template <class GO>
     class ISTLBackend_SEQ_MatrixFree_BCGS_Richardson
-      : public ISTLBackend_SEQ_MatrixFree_Richardson<Operator, Dune::BiCGSTABSolver>
+      : public ISTLBackend_SEQ_MatrixFree_Richardson<GO, Dune::BiCGSTABSolver>
     {
     public:
       /*! \brief make a linear solver object
@@ -1004,8 +1005,8 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_MatrixFree_BCGS_Richardson (Operator& op_, unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_MatrixFree_Richardson<Operator, Dune::BiCGSTABSolver>(op_, maxiter_, verbose_)
+      explicit ISTLBackend_SEQ_MatrixFree_BCGS_Richardson (const GO& go_, unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_MatrixFree_Richardson<GO, Dune::BiCGSTABSolver>(go_, maxiter_, verbose_)
       {}
     };
 
