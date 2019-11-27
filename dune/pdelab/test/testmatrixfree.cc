@@ -127,10 +127,8 @@ int main(int argc, char** argv)
     solver.apply();
 
     // Solve matrix free
-    using ISTLOnTheFlyOperator = Dune::PDELab::OnTheFlyOperator<CoefficientVector, CoefficientVector, GridOperator>;
-    ISTLOnTheFlyOperator istlOperator(gridOperator);
-    using LinearSolverMatrixFree = Dune::PDELab::ISTLBackend_SEQ_MatrixFree_BCGS_Richardson<ISTLOnTheFlyOperator>;
-    LinearSolverMatrixFree linearSolverMatrixFree(istlOperator);
+    using LinearSolverMatrixFree = Dune::PDELab::ISTLBackend_SEQ_MatrixFree_BCGS_Richardson<GridOperator>;
+    LinearSolverMatrixFree linearSolverMatrixFree(gridOperator);
     using TrialGridFunctionSpace = typename GridOperator::Traits::TrialGridFunctionSpace;
     using W = Dune::PDELab::Backend::Vector<TrialGridFunctionSpace,typename CoefficientVector::ElementType>;
     W residual(gridOperator.testGridFunctionSpace(), 0.0);
