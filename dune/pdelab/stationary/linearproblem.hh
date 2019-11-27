@@ -10,6 +10,8 @@
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/solver.hh>
 
+#include <dune/pdelab/stationary/linearproblembase.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -19,26 +21,6 @@ namespace Dune {
     // solves the problem.
     // This is only a first vanilla implementation which has to be improved.
     //===============================================================
-
-    // Status information of linear problem solver
-    template<class RFType>
-    struct StationaryLinearProblemSolverResult : LinearSolverResult<RFType>
-    {
-      RFType first_defect;       // the first defect
-      RFType defect;             // the final defect
-      double assembler_time;     // Cumulative time for matrix assembly
-      double linear_solver_time; // Cumulative time for linear solver
-      int linear_solver_iterations; // Total number of linear iterations
-
-      StationaryLinearProblemSolverResult()
-        : first_defect(0.0)
-        , defect(0.0)
-        , assembler_time(0.0)
-        , linear_solver_time(0.0)
-        , linear_solver_iterations(0)
-      {}
-
-    };
 
     template<typename GO, typename LS, typename V>
     class StationaryLinearProblemSolver
