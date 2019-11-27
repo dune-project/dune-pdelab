@@ -322,6 +322,11 @@ namespace Dune {
           return *_gfs;
         }
 
+        std::shared_ptr<const GFS> gridFunctionSpaceStorage() const
+        {
+          return _gfs;
+        }
+
       private:
         std::shared_ptr<const GFS> _gfs;
         std::shared_ptr<Container> _container;
