@@ -121,21 +121,19 @@ int main(int argc, char** argv)
     // LinearSolver linearSolver(false);
     using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_BCGS_Richardson;
     LinearSolver linearSolver;
-    using Solver = Dune::PDELab::StationaryLinearProblemSolver<GridOperator, LinearSolver, CoefficientVector>;
     const double reduction = 1e-10;
+    using Solver = Dune::PDELab::StationaryLinearProblemSolver<GridOperator, LinearSolver, CoefficientVector>;
     Solver solver(gridOperator, linearSolver, coefficientVector, reduction);
     solver.apply();
 
     // Solve matrix free
     using LinearSolverMatrixFree = Dune::PDELab::ISTLBackend_SEQ_MatrixFree_BCGS_Richardson<GridOperator>;
     LinearSolverMatrixFree linearSolverMatrixFree(gridOperator);
-    using TrialGridFunctionSpace = typename GridOperator::Traits::TrialGridFunctionSpace;
-    using W = Dune::PDELab::Backend::Vector<TrialGridFunctionSpace,typename CoefficientVector::ElementType>;
-    W residual(gridOperator.testGridFunctionSpace(), 0.0);
-    gridOperator.residual(coefficientVectorMatrixFree, residual);
-    CoefficientVector update(gridOperator.trialGridFunctionSpace(), 0.0);
-    linearSolverMatrixFree.apply(update, residual, reduction);
-    coefficientVectorMatrixFree -= update;
+    using SolverMatrixFree = Dune::PDELab::MatrixFreeStationaryLinearProblemSolver<GridOperator,
+                                                                                   LinearSolverMatrixFree,
+                                                                                   CoefficientVector>;
+    SolverMatrixFree solverMatrixFree(gridOperator, linearSolverMatrixFree, coefficientVectorMatrixFree, reduction);
+    solverMatrixFree.apply();
 
     // Visualization
     using VTKWriter = Dune::SubsamplingVTKWriter<GridView>;
