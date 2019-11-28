@@ -23,6 +23,7 @@
 #include <dune/pdelab/backend/istl/bcrsmatrix.hh>
 #include <dune/pdelab/backend/istl/parallelhelper.hh>
 #include <dune/pdelab/backend/istl/seqistlsolverbackend.hh>
+#include <dune/pdelab/backend/istl/interface.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -461,7 +462,7 @@ namespace Dune {
              template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
     class ISTLBackend_OVLP_Base
-      : public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
+      : public ISTLBackend_Base, public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -476,6 +477,8 @@ namespace Dune {
                                             int steps_=5, int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), steps(steps_), verbose(verbose_)
       {}
+
+      using ISTLBackend_Base::apply;
 
       /*! \brief solve the given linear system
 
@@ -525,7 +528,7 @@ namespace Dune {
     template<class GFS, class C,
              template<class> class Solver>
     class ISTLBackend_OVLP_ILU0_Base
-      : public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
+      : public ISTLBackend_Base, public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -538,6 +541,8 @@ namespace Dune {
       ISTLBackend_OVLP_ILU0_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000, int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), verbose(verbose_)
       {}
+
+      using ISTLBackend_Base::apply;
 
       /*! \brief solve the given linear system
 
@@ -587,7 +592,7 @@ namespace Dune {
     template<class GFS, class C,
              template<class> class Solver>
     class ISTLBackend_OVLP_ILUn_Base
-      : public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
+      : public ISTLBackend_Base, public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -601,6 +606,8 @@ namespace Dune {
       ISTLBackend_OVLP_ILUn_Base (const GFS& gfs_, const C& c_, int n_=1, unsigned maxiter_=5000, int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), n(n_), maxiter(maxiter_), verbose(verbose_)
       {}
+
+      using ISTLBackend_Base::apply;
 
       /*! \brief solve the given linear system
 
@@ -747,7 +754,7 @@ namespace Dune {
      */
     template<class GFS, class CC>
     class ISTLBackend_OVLP_GMRES_ILU0
-      : public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
+      : public ISTLBackend_Base, public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -762,6 +769,8 @@ namespace Dune {
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), cc(cc_), maxiter(maxiter_), verbose(verbose_),
           restart(restart_)
       {}
+
+      using ISTLBackend_Base::apply;
 
       /*! \brief solve the given linear system
         \param[in] A the given matrix
@@ -812,7 +821,7 @@ namespace Dune {
 
     template<class GFS, class C, template<typename> class Solver>
     class ISTLBackend_OVLP_SuperLU_Base
-      : public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
+      : public ISTLBackend_Base, public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -826,6 +835,8 @@ namespace Dune {
                                               int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), verbose(verbose_)
       {}
+
+      using ISTLBackend_Base::apply;
 
       /*! \brief solve the given linear system
 
@@ -870,7 +881,7 @@ namespace Dune {
 
     template<class GFS, class C, template<typename> class Solver>
     class ISTLBackend_OVLP_UMFPack_Base
-      : public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
+      : public ISTLBackend_Base, public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -884,6 +895,8 @@ namespace Dune {
                                               int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), verbose(verbose_)
       {}
+
+      using ISTLBackend_Base::apply;
 
       /*! \brief solve the given linear system
 
@@ -1006,7 +1019,7 @@ namespace Dune {
      */
     template<class GFS>
     class ISTLBackend_OVLP_ExplicitDiagonal
-      : public LinearResultStorage
+      : public ISTLBackend_Base, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -1035,6 +1048,8 @@ namespace Dune {
            "scenario where you need it, please implement it or report back to "
            "us.");
       }
+
+      using ISTLBackend_Base::apply;
 
       /*! \brief solve the given linear system
 
@@ -1075,7 +1090,7 @@ namespace Dune {
 
     template<class GO, int s, template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
-    class ISTLBackend_AMG : public LinearResultStorage
+    class ISTLBackend_AMG : public ISTLBackend_Base, public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef ISTL::ParallelHelper<GFS> PHELPER;
@@ -1168,6 +1183,8 @@ namespace Dune {
         PSP psp(gfs,phelper);
         return psp.norm(v);
       }
+
+      using ISTLBackend_Base::apply;
 
       /*! \brief solve the given linear system
 

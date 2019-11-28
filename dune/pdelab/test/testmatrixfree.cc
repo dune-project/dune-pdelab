@@ -116,9 +116,7 @@ int main(int argc, char** argv)
     // Copy for matrix free solution
     CoefficientVector coefficientVectorMatrixFree(coefficientVector);
 
-    // Solver matrix based
-    // using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_SuperLU;
-    // LinearSolver linearSolver(false);
+    // Solve matrix based
     using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_BCGS_Richardson;
     LinearSolver linearSolver;
     const double reduction = 1e-10;
@@ -129,9 +127,9 @@ int main(int argc, char** argv)
     // Solve matrix free
     using LinearSolverMatrixFree = Dune::PDELab::ISTLBackend_SEQ_MatrixFree_BCGS_Richardson<GridOperator>;
     LinearSolverMatrixFree linearSolverMatrixFree(gridOperator);
-    using SolverMatrixFree = Dune::PDELab::MatrixFreeStationaryLinearProblemSolver<GridOperator,
-                                                                                   LinearSolverMatrixFree,
-                                                                                   CoefficientVector>;
+    using SolverMatrixFree = Dune::PDELab::StationaryLinearProblemSolver<GridOperator,
+                                                                         LinearSolverMatrixFree,
+                                                                         CoefficientVector>;
     SolverMatrixFree solverMatrixFree(gridOperator, linearSolverMatrixFree, coefficientVectorMatrixFree, reduction);
     solverMatrixFree.apply();
 
