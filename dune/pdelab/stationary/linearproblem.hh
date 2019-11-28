@@ -10,30 +10,69 @@
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/solver.hh>
 
-#include <dune/pdelab/stationary/linearproblembase.hh>
-
 namespace Dune {
   namespace PDELab {
 
-    //===============================================================
-    // A class for solving linear stationary problems.
-    // It assembles the matrix, computes the right hand side and
-    // solves the problem.
-    // This is only a first vanilla implementation which has to be improved.
-    //===============================================================
+    /** \brief Class for storing linear stationary problem solver results
+     */
+    template<class RFType>
+    struct StationaryLinearProblemSolverResult : LinearSolverResult<RFType>
+    {
+      RFType first_defect;       // the first defect
+      RFType defect;             // the final defect
+      double assembler_time;     // Cumulative time for matrix assembly
+      double linear_solver_time; // Cumulative time for linear sovler
+      int linear_solver_iterations; // Total number of linear iterations
 
+      StationaryLinearProblemSolverResult()
+        : first_defect(0.0)
+        , defect(0.0)
+        , assembler_time(0.0)
+        , linear_solver_time(0.0)
+        , linear_solver_iterations(0)
+      {}
+    };
+
+
+    /** \brief Solve linear problems using a residual formulation
+     *
+     * This work for matrix based and matrix free solvers. It uses a residual
+     * formulation solving \f$r(u,v)=0\f$ instead of solving
+     * \f$a(u,v)=l(v)\f$. In the matrix based case this means doing the
+     * following:
+     *
+     * 1. Calculate residual: r = A z_0-b
+     * 2. Solve: A z_u = r
+     * 3. Update: z = z_0 - z_u
+     */
     template<typename GO, typename LS, typename V>
     class StationaryLinearProblemSolver
     {
+      /** \brief Field value type */
       typedef typename Dune::template FieldTraits<typename V::ElementType >::real_type Real;
+      /** \brief Typo of Jacobian matrix */
       typedef typename GO::Traits::Jacobian M;
+      /** \brief Trial grid function space */
       typedef typename GO::Traits::TrialGridFunctionSpace TrialGridFunctionSpace;
+      /** \brief Vector backend for trial grid function space */
       using W = Dune::PDELab::Backend::Vector<TrialGridFunctionSpace,typename V::ElementType>;
+      /** \brief Grid operator to solve for */
       typedef GO GridOperator;
 
     public:
+      /** \brief Class holding results */
       typedef StationaryLinearProblemSolverResult<double> Result;
 
+      /** \brief Construct new solver instance with initial guess of solution
+       *
+       * \param[in] go Grid operator representing the linear problem
+       *            to be solved
+       * \param[in] ls Linear solver backend
+       * \param[inout] x Solution vector, start with initial guess
+       * \param[in] reduction Tolerance, target relative residual reduction
+       * \param[in] min_defect Minimal absolute residual
+       * \param[in] verbose Verbosity level
+       */
       StationaryLinearProblemSolver(const GO& go, LS& ls, V& x, Real reduction, Real min_defect = 1e-99, int verbose=1)
         : _go(go)
         , _ls(ls)
@@ -45,6 +84,17 @@ namespace Dune {
         , _verbose(verbose)
       {}
 
+      /** \brief Construct new solver instance
+       *
+       * \param[in] go Grid operator representing the linear problem
+       *            to be solved
+       * \param[in] idgo Grid operator implementing the block-diagonal
+       *            inverse of go, used for preconditioning
+       * \param[in] ls Linear solver backend
+       * \param[in] reduction Tolerance, target relative residual reduction
+       * \param[in] min_defect Minimal absolute residual
+       * \param[in] verbose Verbosity level
+       */
       StationaryLinearProblemSolver (const GO& go, LS& ls, Real reduction, Real min_defect = 1e-99, int verbose=1)
         : _go(go)
         , _ls(ls)
@@ -138,57 +188,70 @@ namespace Dune {
         return _keep_matrix;
       }
 
+      //! Return result object
       const Result& result() const
       {
         return _res;
       }
 
+      //! Provide initial guess and solve linear problem
       void apply(V& x, bool reuse_matrix = false) {
         _x = &x;
         apply(reuse_matrix);
       }
 
+      //! Solve linear problem
       void apply (bool reuse_matrix = false)
       {
         Dune::Timer watch;
         double timing,assembler_time=0;
+        int rank=_go.trialGridFunctionSpace().gridView().comm().rank();
 
-        // assemble matrix; optional: assemble only on demand!
+        // Assemble matrix if necessary
         watch.reset();
-
-        if (!_jacobian)
+        if (_ls.matrixFree()){
+          if (rank==0 && _verbose>=1){
+            std::cout << "=== matrix setup not required for matrix free solvers" << std::endl;
+          }
+        }
+        else{
+          if (!_jacobian)
           {
             _jacobian = std::make_shared<M>(_go);
             timing = watch.elapsed();
-            if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
+            if (rank==0 && _verbose>=1)
               std::cout << "=== matrix setup (max) " << timing << " s" << std::endl;
             watch.reset();
             assembler_time += timing;
           }
-        else if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
-          std::cout << "=== matrix setup skipped (matrix already allocated)" << std::endl;
-
+          else if (rank==0 && _verbose>=1)
+            std::cout << "=== matrix setup skipped (matrix already allocated)" << std::endl;
+        }
         if (_hanging_node_modifications)
           {
             Dune::PDELab::set_shifted_dofs(_go.localAssembler().trialConstraints(),0.0,*_x); // set hanging node DOFs to zero
             _go.localAssembler().backtransform(*_x); // interpolate hanging nodes adjacent to Dirichlet nodes
           }
 
-        if (!reuse_matrix)
+        if (!_ls.matrixFree()){
+          if (!reuse_matrix)
           {
             (*_jacobian) = Real(0.0);
             _go.jacobian(*_x,*_jacobian);
           }
+        }
 
         timing = watch.elapsed();
         // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
-        if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
+        if (!_ls.matrixFree()){
+          if (rank==0 && _verbose>=1)
           {
             if (reuse_matrix)
               std::cout << "=== matrix assembly SKIPPED" << std::endl;
             else
               std::cout << "=== matrix assembly (max) " << timing << " s" << std::endl;
           }
+        }
 
         assembler_time += timing;
 
@@ -199,8 +262,8 @@ namespace Dune {
         _go.residual(*_x,r);  // residual is additive
 
         timing = watch.elapsed();
-        // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
-        if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
+
+        if (rank==0 && _verbose>=1)
           std::cout << "=== residual assembly (max) " << timing << " s" << std::endl;
         assembler_time += timing;
         _res.assembler_time = assembler_time;
@@ -211,7 +274,7 @@ namespace Dune {
         watch.reset();
         V z(_go.trialGridFunctionSpace(),0.0);
         auto red = std::max(_reduction,_min_defect/defect);
-        if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
+        if (rank==0 && _verbose>=1)
         {
           std::cout << "=== solving (reduction: " << red << ") ";
           if (_verbose>=1)
@@ -219,11 +282,21 @@ namespace Dune {
           else
             std::cout << std::endl;
         }
-        _ls.apply(*_jacobian,z,r,red); // solver makes right hand side consistent
+
+        // TODO: For nonlinear problems we need to set the linearization
+        // point. So far this is not supported by the matrix free solver
+        // backends.
+        //
+        // _ls.setLinearizationPoint(*_x);
+
+        if(_ls.matrixFree())
+          _ls.apply(z,r,red);
+        else
+          _ls.apply(*_jacobian,z,r,red); // solver makes right hand side consistent
         _linear_solver_result = _ls.result();
         timing = watch.elapsed();
         // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
-        if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
+        if (rank==0 && _verbose>=1)
           std::cout << timing << " s" << std::endl;
         _res.linear_solver_time = timing;
 
@@ -242,9 +315,9 @@ namespace Dune {
         *_x -= z;
         if (_hanging_node_modifications)
           _go.localAssembler().backtransform(*_x); // interpolate hanging nodes adjacent to Dirichlet nodes
-
-        if (!_keep_matrix)
-          _jacobian.reset();
+        if (!_ls.matrixFree())
+          if (!_keep_matrix)
+            _jacobian.reset();
       }
 
       //! Discard the stored Jacobian matrix.
@@ -258,16 +331,17 @@ namespace Dune {
         return _linear_solver_result;
       }
 
+      //! Return tolerance, i.e. target residual reduction
       Real reduction() const
       {
         return _reduction;
       }
 
+      //! Set tolerance, i.e. target residual reduction
       void setReduction(Real reduction)
       {
         _reduction = reduction;
       }
-
 
     private:
       const GO& _go;
