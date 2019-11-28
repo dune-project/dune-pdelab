@@ -13,6 +13,7 @@
 #include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/ovlpistlsolverbackend.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
+#include <dune/pdelab/backend/istl/interface.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -143,7 +144,7 @@ namespace Dune {
 
     */
     template<class DGGO, class CGGFS, class TransferLOP, template<class,class,class,int> class DGPrec, template<class> class Solver>
-    class ISTLBackend_SEQ_AMG_4_DG : public Dune::PDELab::LinearResultStorage
+    class ISTLBackend_SEQ_AMG_4_DG : public ISTLBackend_Base, public Dune::PDELab::LinearResultStorage
     {
       // DG grid function space
       typedef typename DGGO::Traits::TrialGridFunctionSpace GFS;
@@ -305,6 +306,8 @@ namespace Dune {
       {
         return reuse;
       }
+
+      using ISTLBackend_Base::apply;
 
       /*! \brief solve the given linear system
 
