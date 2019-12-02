@@ -35,8 +35,19 @@ namespace Dune {
       RFType reduction;          // defect reduction
       RFType conv_rate;          // convergence rate (average reduction per step)
 
-      LinearSolverResult() :
-        converged(false), iterations(0), elapsed(0.0), reduction(0.0), conv_rate(0.0) {}
+      LinearSolverResult()
+      {
+        clear();
+      }
+
+      void clear()
+      {
+        converged = false;
+        iterations = 0;
+        elapsed = 0.0;
+        reduction = 0.0;
+        conv_rate = 0.0;
+      }
     };
 
     class LinearResultStorage
