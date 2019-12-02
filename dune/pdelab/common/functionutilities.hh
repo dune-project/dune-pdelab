@@ -136,8 +136,20 @@ sum = gf.getGridView().comm().sum(sum);
        */
       template<class GFHandle>
       GridFunctionProbe(const GFHandle& gf, const Domain& xg)
+        : GridFunctionProbe(xg)
       {
         setGridFunction(gf);
+      }
+
+      /**
+       * Construct the probe object without an attached grid function object.
+       * The grid function must be set through the setGridFunction method before
+       * the first evaluation of the probe.
+       *
+       * \param xg The global coordinate the evaluate at.
+       */
+      GridFunctionProbe(const Domain& xg)
+      {
         xl = 0;
         evalRank = gfp->getGridView().comm().size();
         int myRank = gfp->getGridView().comm().rank();
