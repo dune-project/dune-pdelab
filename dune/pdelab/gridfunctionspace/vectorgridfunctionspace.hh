@@ -165,6 +165,20 @@ namespace Dune {
         , ImplementationBase(backend,ordering_tag)
       {}
 
+      VectorGridFunctionSpace(const typename Traits::GridView& gv, std::shared_ptr<const FEM> fem,
+                              const Backend& backend = Backend(), const LeafBackend& leaf_backend = LeafBackend(),
+                              const OrderingTag& ordering_tag = OrderingTag(), const LeafOrderingTag& leaf_ordering_tag = LeafOrderingTag())
+        : BaseT(create_components(typename Traits::EntitySet(gv), fem, leaf_backend, leaf_ordering_tag))
+        , ImplementationBase(backend,ordering_tag)
+      {}
+
+      VectorGridFunctionSpace(const typename Traits::EntitySet& es, std::shared_ptr<const FEM> fem,
+                                    const Backend& backend = Backend(), const LeafBackend& leaf_backend = LeafBackend(),
+                                    const OrderingTag& ordering_tag = OrderingTag(), const LeafOrderingTag& leaf_ordering_tag = LeafOrderingTag())
+              : BaseT(create_components(es, fem, leaf_backend, leaf_ordering_tag))
+              , ImplementationBase(backend,ordering_tag)
+      {}
+
       std::string name() const
       {
         return ImplementationBase::name();
