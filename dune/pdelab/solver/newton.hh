@@ -386,7 +386,7 @@ namespace Dune::PDELab
     }
 
     //! Set how much output you get
-    void setVerbosity(unsigned int verbosity)
+    void setVerbosityLevel(unsigned int verbosity)
     {
       if (_gridOperator.trialGridFunctionSpace().gridView().comm().rank()>0)
         _verbosity = 0;
@@ -518,7 +518,7 @@ namespace Dune::PDELab
     */
     void setParameters(const ParameterTree& parameterTree){
         if (parameterTree.hasKey("verbosity"))
-          setVerbosity(parameterTree.get<unsigned int>("verbosity"));
+          setVerbosityLevel(parameterTree.get<unsigned int>("verbosity"));
         if (parameterTree.hasKey("reduction"))
           setReduction(parameterTree.get<Real>("reduction"));
         if (parameterTree.hasKey("absolute_limit"))
