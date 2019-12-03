@@ -15,6 +15,12 @@ Changes
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
 
+-   The Newton solver was rewritten. The old implementation is still around with the name `OldNewton` and is
+    deprecated. The new Newton can be found in `dune/pdelab/solver/newton.hh` and works quite similar but
+    avoids the diamond inheritance pattern. If you build your own Newton by replacing some classes of the old
+    Newton you now need to overwrite the corresponding method. Another change is that Newton does not store
+    a pointer to the initial guess anymore. Instead you need to provide an initial guess when calling appyl.
+
 -   The adapter class `Experimental::GridFunctionSpace` that allows to use [dune-functions][] function
     space bases as `GridFunctionSpace` implementations has gained limited support for distributed
     computations.
