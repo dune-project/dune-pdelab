@@ -268,14 +268,14 @@ void solveParallelPoissonProblem()
   LS ls(gridFunctionSpace,cc,100,5,verbose);
 
   // solve nonlinear problem
-  PDELab::Newton<GO,LS,Z> newton(go,z,ls);
+  PDELab::Newton<GO,LS> newton(go,ls);
   newton.setReassembleThreshold(0.0);
   newton.setVerbosityLevel(2);
   newton.setReduction(1e-10);
   newton.setMinLinearReduction(1e-4);
   newton.setMaxIterations(25);
   newton.setLineSearchMaxIterations(10);
-  newton.apply();
+  newton.apply(z);
 
   // Write VTK output file
   SubsamplingVTKWriter<GV> vtkwriter(gv,refinementIntervals(1));

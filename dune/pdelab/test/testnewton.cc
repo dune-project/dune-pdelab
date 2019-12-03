@@ -5,7 +5,7 @@
 #include "dune/pdelab.hh"
 
 template <class GridView, class RangeType>
-class PoissonProblem
+class NonlinearPoissonProblem
   : public Dune::PDELab::ConvectionDiffusionModelProblem<GridView, RangeType>
 {
 public:
