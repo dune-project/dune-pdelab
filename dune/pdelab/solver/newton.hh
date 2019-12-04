@@ -406,6 +406,19 @@ namespace Dune::PDELab
         _lineSearch->setParameters(parameterTree.sub("line_search"));
     }
 
+    //! Set the termination criterion
+    void setTerminate(std::shared_ptr<TerminateInterface> terminate)
+    {
+      _terminate = terminate;
+    }
+
+    //! Set the line search
+    void setLineSearch(std::shared_ptr<LineSearchInterface<Domain>> lineSearch)
+    {
+      _lineSearch = lineSearch;
+    }
+
+
     Newton(
       const GridOperator& gridOperator,
       LinearSolver& linearSolver)
@@ -440,8 +453,8 @@ namespace Dune::PDELab
     // Vectors and Jacobi matrix we set up only once
     Range _residual;
     Domain _correction;
-    shared_ptr<Jacobian> _jacobian;
-    shared_ptr<Domain> _previousSolution;
+    std::shared_ptr<Jacobian> _jacobian;
+    std::shared_ptr<Domain> _previousSolution;
 
     std::shared_ptr<TerminateInterface> _terminate;
     std::shared_ptr<LineSearchInterface<Domain>> _lineSearch;
