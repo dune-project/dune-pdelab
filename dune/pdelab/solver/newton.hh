@@ -49,6 +49,166 @@ namespace Dune::PDELab
   class NewtonLineSearchError : public NewtonError {};
   class NewtonNotConverged : public NewtonError {};
 
+  class TerminateInterface
+  {
+  public:
+    virtual bool terminate() = 0;
+
+    //! Every abstract base class has a virtual destructor
+    virtual ~TerminateInterface () {}
+  };
+
+  template <typename Newton>
+  class DefaultTerminate : public TerminateInterface
+  {
+  public:
+    using Real = typename Newton::Real;
+
+    DefaultTerminate(Newton& newton) : _newton(newton) {}
+
+    virtual bool terminate() override
+    {
+      if (_force_iteration && _newton.result().iterations == 0)
+        return false;
+      auto converged = _newton.result().defect < _absoluteLimit || _newton.result().defect < _newton.result().first_defect * _reduction;
+      if (_newton.result().iterations >= _maxIterations && not _newton.result().converged)
+        DUNE_THROW(NewtonNotConverged,
+                   "NewtonTerminate::terminate(): Maximum iteration count reached");
+      return converged;
+    }
+  private:
+    Newton& _newton;
+    unsigned int _maxIterations = 40;
+    bool _force_iteration = false;
+    Real _reduction = 1e-8;
+    Real _absoluteLimit = 1e-12;
+  };
+
+
+  enum LineSearchStrategy
+  {
+    noLineSearch,
+    hackbuschReusken,
+    hackbuschReuskenAcceptBest
+  };
+
+  template <typename Domain>
+  class LineSearchInterface
+  {
+  public:
+    virtual void lineSearch(Domain& solution, const Domain& correction) = 0;
+  };
+
+  template <typename Newton>
+  class DefaultLineSearch : public LineSearchInterface<typename Newton::Domain>
+  {
+  public:
+    using Domain = typename Newton::Domain;
+    using Real = typename Newton::Real;
+
+    DefaultLineSearch(Newton& newton) : _newton(newton) {}
+
+    virtual void lineSearch(Domain& solution, const Domain& correction) override
+    {
+      if ((_lineSearchStrategy == noLineSearch) || (_newton.result().defect < _newton.getAbsoluteLimit())){
+        solution.axpy(-1.0, correction);
+        _newton.updateDefect(solution);
+        return;
+      }
+
+      auto verbosity = _newton.getVerbosityLevel();
+
+      if (verbosity >= 4)
+        std::cout << "      Performing line search..." << std::endl;
+      Real lambda = 1.0;
+      Real bestLambda = 0.0;
+      Real bestDefect = _newton.result().defect;
+      Real previousDefect = _newton.result().defect;
+      bool converged = false;
+
+      if (not _previousSolution)
+        _previousSolution = std::make_shared<Domain>(solution);
+      else
+        *_previousSolution = solution;
+
+      for (unsigned int iteration = 0; iteration < _lineSearchMaxIterations; ++iteration){
+        if (verbosity >= 4)
+          std::cout << "          trying line search damping factor:   "
+                    << std::setw(12) << std::setprecision(4) << std::scientific
+                    << lambda
+                    << std::endl;
+
+        solution.axpy(-lambda, correction);
+        _newton.updateDefect(solution);
+        if (verbosity >= 4){
+          if (not std::isfinite(_newton.result().defect))
+            std::cout << "          NaNs detected" << std::endl;
+        }       // ignore NaNs and try again with lower lambda
+
+        if (_newton.result().defect <= (1.0 - lambda/4) * previousDefect){
+          if (verbosity >= 4)
+            std::cout << "          line search converged" << std::endl;
+          converged = true;
+          break;
+        }
+
+        if (_newton.result().defect < bestDefect){
+          bestDefect = _newton.result().defect;
+          bestLambda = lambda;
+        }
+
+        lambda *= _lineSearchDampingFactor;
+        solution = *_previousSolution;
+      }
+
+      if (not converged){
+        if (verbosity >= 4)
+          std::cout << "          max line search iterations exceeded" << std::endl;
+
+        switch (_lineSearchStrategy){
+        case hackbuschReusken:
+          solution = *_previousSolution;
+          _newton.updateDefect(solution);
+          DUNE_THROW(NewtonLineSearchError,
+                     "NewtonLineSearch::line_search(): line search failed, "
+                     "max iteration count reached, "
+                     "defect did not improve enough");
+        case hackbuschReuskenAcceptBest:
+          if (bestLambda == 0.0){
+            solution = *_previousSolution;
+            _newton.updateDefect(solution);
+            DUNE_THROW(NewtonLineSearchError,
+                       "NewtonLineSearch::line_search(): line search failed, "
+                       "max iteration count reached, "
+                       "defect did not improve in any of the iterations");
+          }
+          if (bestLambda != lambda){
+            solution = *_previousSolution;
+            solution.axpy(-bestLambda, correction);
+            _newton.updateDefect(solution);
+            converged = true;
+          }
+        }
+      }
+
+      if (converged)
+        if (verbosity >= 4)
+          std::cout << "          line search damping factor:   "
+                    << std::setw(12) << std::setprecision(4) << std::scientific
+                    << lambda << std::endl;
+    }
+
+  private:
+    Newton& _newton;
+    std::shared_ptr<Domain> _previousSolution;
+
+    // Line search parameters
+    LineSearchStrategy _lineSearchStrategy = LineSearchStrategy::hackbuschReusken;
+    int _lineSearchMaxIterations = 10;
+    Real _lineSearchDampingFactor = 0.5;
+  };
+
+
   template <typename GridOperator_, typename LinearSolver_>
   class Newton
   {
@@ -82,110 +242,108 @@ namespace Dune::PDELab
       return _result;
     }
 
-    virtual bool terminate()
-    {
-      if (_force_iteration && _result.iterations == 0)
-        return false;
-      _result.converged = _result.defect < _absoluteLimit || _result.defect < _result.first_defect * _reduction;
-      if (_result.iterations >= _maxIterations && not _result.converged)
-        DUNE_THROW(NewtonNotConverged,
-                   "NewtonTerminate::terminate(): Maximum iteration count reached");
-      return _result.converged;
-    }
+    // virtual bool terminate()
+    // {
+    //   if (_force_iteration && _result.iterations == 0)
+    //     return false;
+    //   _result.converged = _result.defect < _absoluteLimit || _result.defect < _result.first_defect * _reduction;
+    //   if (_result.iterations >= _maxIterations && not _result.converged)
+    //     DUNE_THROW(NewtonNotConverged,
+    //                "NewtonTerminate::terminate(): Maximum iteration count reached");
+    //   return _result.converged;
+    // }
 
-    enum LineSearchStrategy
-    {
-      noLineSearch,
-      hackbuschReusken,
-      hackbuschReuskenAcceptBest
-    };
+    // virtual void lineSearch(Domain& solution)
+    // {
+    //   if ((_lineSearchStrategy == noLineSearch) || (_result.defect < _absoluteLimit)){
+    //     solution.axpy(-1.0, _correction);
+    //     updateDefect(solution);
+    //     return;
+    //   }
 
-    virtual void lineSearch(Domain& solution)
-    {
-      if ((_lineSearchStrategy == noLineSearch) || (_result.defect < _absoluteLimit)){
-        solution.axpy(-1.0, _correction);
-        updateDefect(solution);
-        return;
-      }
+    //   if (_verbosity >= 4)
+    //     std::cout << "      Performing line search..." << std::endl;
+    //   Real lambda = 1.0;
+    //   Real best_lambda = 0.0;
+    //   Real best_defect = _result.defect;
 
-      if (_verbosity >= 4)
-        std::cout << "      Performing line search..." << std::endl;
-      Real lambda = 1.0;
-      Real best_lambda = 0.0;
-      Real best_defect = _result.defect;
+    //   if (not _previousSolution)
+    //     _previousSolution = std::make_shared<Domain>(solution);
+    //   else
+    //     *_previousSolution = solution;
 
-      if (not _previousSolution)
-        _previousSolution = std::make_shared<Domain>(solution);
-      else
-        *_previousSolution = solution;
+    //   unsigned int i = 0;
+    //   while (1){
+    //     if (_verbosity >= 4)
+    //       std::cout << "          trying line search damping factor:   "
+    //                 << std::setw(12) << std::setprecision(4) << std::scientific
+    //                 << lambda
+    //                 << std::endl;
 
-      unsigned int i = 0;
-      while (1){
-        if (_verbosity >= 4)
-          std::cout << "          trying line search damping factor:   "
-                    << std::setw(12) << std::setprecision(4) << std::scientific
-                    << lambda
-                    << std::endl;
+    //         solution.axpy(-lambda, _correction);
+    //         try {
+    //           updateDefect(solution);
+    //         }
+    //         catch (NewtonDefectError&){
+    //           if (_verbosity >= 4)
+    //             std::cout << "          NaNs detected" << std::endl;
+    //         }       // ignore NaNs and try again with lower lambda
 
-            solution.axpy(-lambda, _correction);
-            try {
-              updateDefect(solution);
-            }
-            catch (NewtonDefectError&){
-              if (_verbosity >= 4)
-                std::cout << "          NaNs detected" << std::endl;
-            }       // ignore NaNs and try again with lower lambda
 
-            if (_result.defect <= (1.0 - lambda/4) * _previousDefect){
-              if (_verbosity >= 4)
-                std::cout << "          line search converged" << std::endl;
-              break;
-            }
+    //         std::cout << "palpo _result.defect: " << _result.defect << std::endl;
+    //         std::cout << "palpo _previousDefect: " << _previousDefect << std::endl;
 
-            if (_result.defect < best_defect){
-              best_defect = _result.defect;
-              best_lambda = lambda;
-            }
 
-            if (++i >= _lineSearchMaxIterations){
-              if (_verbosity >= 4)
-                std::cout << "          max line search iterations exceeded" << std::endl;
-              switch (_lineSearchStrategy){
-              case hackbuschReusken:
-                solution = *_previousSolution;
-                updateDefect(solution);
-                DUNE_THROW(NewtonLineSearchError,
-                           "NewtonLineSearch::line_search(): line search failed, "
-                           "max iteration count reached, "
-                           "defect did not improve enough");
-              case hackbuschReuskenAcceptBest:
-                if (best_lambda == 0.0){
-                  solution = *_previousSolution;
-                  updateDefect(solution);
-                  DUNE_THROW(NewtonLineSearchError,
-                             "NewtonLineSearch::line_search(): line search failed, "
-                             "max iteration count reached, "
-                             "defect did not improve in any of the iterations");
-                }
-                if (best_lambda != lambda){
-                  solution = *_previousSolution;
-                  solution.axpy(-best_lambda, _correction);
-                  updateDefect(solution);
-                }
-                break;
-              case noLineSearch:
-                break;
-              }
-                break;
-            }
-            lambda *= _lineSearchDampingFactor;
-            solution = *_previousSolution;
-      }
-      if (_verbosity >= 4)
-        std::cout << "          line search damping factor:   "
-                  << std::setw(12) << std::setprecision(4) << std::scientific
-                  << lambda << std::endl;
-    }
+    //         if (_result.defect <= (1.0 - lambda/4) * _previousDefect){
+    //           if (_verbosity >= 4)
+    //             std::cout << "          line search converged" << std::endl;
+    //           break;
+    //         }
+
+    //         if (_result.defect < best_defect){
+    //           best_defect = _result.defect;
+    //           best_lambda = lambda;
+    //         }
+
+    //         if (++i >= _lineSearchMaxIterations){
+    //           if (_verbosity >= 4)
+    //             std::cout << "          max line search iterations exceeded" << std::endl;
+    //           switch (_lineSearchStrategy){
+    //           case hackbuschReusken:
+    //             solution = *_previousSolution;
+    //             updateDefect(solution);
+    //             DUNE_THROW(NewtonLineSearchError,
+    //                        "NewtonLineSearch::line_search(): line search failed, "
+    //                        "max iteration count reached, "
+    //                        "defect did not improve enough");
+    //           case hackbuschReuskenAcceptBest:
+    //             if (best_lambda == 0.0){
+    //               solution = *_previousSolution;
+    //               updateDefect(solution);
+    //               DUNE_THROW(NewtonLineSearchError,
+    //                          "NewtonLineSearch::line_search(): line search failed, "
+    //                          "max iteration count reached, "
+    //                          "defect did not improve in any of the iterations");
+    //             }
+    //             if (best_lambda != lambda){
+    //               solution = *_previousSolution;
+    //               solution.axpy(-best_lambda, _correction);
+    //               updateDefect(solution);
+    //             }
+    //             break;
+    //           case noLineSearch:
+    //             break;
+    //           }
+    //             break;
+    //         }
+    //         lambda *= _lineSearchDampingFactor;
+    //         solution = *_previousSolution;
+    //   }
+    //   if (_verbosity >= 4)
+    //     std::cout << "          line search damping factor:   "
+    //               << std::setw(12) << std::setprecision(4) << std::scientific
+    //               << lambda << std::endl;
+    // }
 
     virtual void prepareStep(const Domain& solution)
     {
@@ -288,7 +446,7 @@ namespace Dune::PDELab
       //=========================
       // Nonlinear iteration loop
       //=========================
-      while (not terminate()){
+      while (not _terminate->terminate()){
         if(_verbosity >= 3)
           std::cout << "  Newton iteration " << _result.iterations
                     << " --------------------------------" << std::endl;
@@ -316,7 +474,8 @@ namespace Dune::PDELab
         // Do line search and update solution
         //===================================
         start = Clock::now();
-        lineSearch(solution);
+        _lineSearch->lineSearch(solution, _correction);
+        // lineSearch(solution);
         end = Clock::now();
         line_search_time += end -start;
 
@@ -380,9 +539,6 @@ namespace Dune::PDELab
       _residual = 0.0;
       _gridOperator.residual(solution, _residual);
       _result.defect =  _linearSolver.norm(_residual);
-      if(not std::isfinite(_result.defect))
-        DUNE_THROW(NewtonDefectError,
-                   "NewtonSolver::defect(): Non-linear defect is NaN or Inf");
     }
 
     //! Set how much output you get
@@ -392,6 +548,11 @@ namespace Dune::PDELab
         _verbosity = 0;
       else
         _verbosity = verbosity;
+    }
+
+    unsigned int getVerbosityLevel() const
+    {
+      return _verbosity;
     }
 
     //! Set reduction Newton needs to achieve
@@ -404,6 +565,11 @@ namespace Dune::PDELab
     void setAbsoluteLimit(Real absoluteLimit)
     {
       _absoluteLimit = absoluteLimit;
+    }
+
+    Real getAbsoluteLimit() const
+    {
+      return _absoluteLimit;
     }
 
     //! Set whether the jacobian matrix should be kept across calls to apply().
@@ -553,7 +719,10 @@ namespace Dune::PDELab
       , _linearSolver(linearSolver)
       , _residual(gridOperator.testGridFunctionSpace())
       , _correction(gridOperator.trialGridFunctionSpace())
-    {}
+    {
+      _terminate = std::make_shared<DefaultTerminate<Newton>> (*this);
+      _lineSearch = std::make_shared<DefaultLineSearch<Newton>> (*this);
+    }
 
     Newton(
       const GridOperator& gridOperator,
@@ -566,6 +735,8 @@ namespace Dune::PDELab
 
     {
       setParameters(parameterTree);
+      _terminate = std::make_shared<DefaultTerminate<Newton>> (*this);
+      _lineSearch = std::make_shared<DefaultLineSearch<Newton>> (*this);
     }
 
   private:
@@ -587,6 +758,9 @@ namespace Dune::PDELab
     Domain _correction;
     shared_ptr<Jacobian> _jacobian;
     shared_ptr<Domain> _previousSolution;
+
+    std::shared_ptr<TerminateInterface> _terminate;
+    std::shared_ptr<LineSearchInterface<Domain>> _lineSearch;
 
     // Class for storing results
     Result _result;
