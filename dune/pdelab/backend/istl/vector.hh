@@ -98,7 +98,7 @@ namespace Dune {
 
         BlockVector (std::shared_ptr<const GFS> gfs, const E& e)
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
+          , _container(std::make_shared<Container>(gfs->ordering().blockCount()))
         {
           ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
           (*_container)=e;
