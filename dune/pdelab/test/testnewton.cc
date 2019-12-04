@@ -148,13 +148,21 @@ int main(int argc, char** argv)
     Dune::PDELab::interpolate(boundaryCondition, gridFunctionSpace, coefficientVector);
     Dune::PDELab::set_nonconstrained_dofs(constraintsContainer, 0.0, coefficientVector);
 
-    // Solver
+    // Create Netwon solver
     using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_SuperLU;
     LinearSolver linearSolver(false);
     const double reduction = 1e-7;
     using Solver = Dune::PDELab::Newton<GridOperator, LinearSolver>;
     Solver solver(gridOperator, linearSolver);
-    solver.setVerbosityLevel(4);
+
+    // Set some parameters without loading parameter tree from ini file (just to show that it works)
+    Dune::ParameterTree ptree;
+    ptree["verbosity"] = "4";
+    ptree["line_search.line_search_damping_factor"] = "0.3";
+    ptree["line_search.line_search_strategy"] = "noLineSearch";
+    solver.setParameters(ptree);
+
+    // Solve PDE
     solver.apply(coefficientVector);
 
     // Visualization

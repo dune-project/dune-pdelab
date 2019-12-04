@@ -6,6 +6,9 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/ios_state.hh>
 
+#include <dune/pdelab/solver/newtonerrors.hh>
+#include <dune/pdelab/solver/newtonlinesearch.hh>
+#include <dune/pdelab/solver/newtonterminate.hh>
 #include <dune/pdelab/solver/utility.hh>
 
 namespace Dune::PDELab
@@ -42,12 +45,6 @@ namespace Dune::PDELab
     }
   }
 
-  // Exception classes used in NewtonSolver
-  class NewtonError : public Exception {};
-  class NewtonDefectError : public NewtonError {};
-  class NewtonLinearSolverError : public NewtonError {};
-  class NewtonLineSearchError : public NewtonError {};
-  class NewtonNotConverged : public NewtonError {};
 
   template <typename GridOperator_, typename LinearSolver_>
   class Newton
@@ -80,111 +77,6 @@ namespace Dune::PDELab
       if (not _resultValid)
         DUNE_THROW(NewtonError, "NewtonSolver::result() called before NewtonSolver::solve()");
       return _result;
-    }
-
-    virtual bool terminate()
-    {
-      if (_force_iteration && _result.iterations == 0)
-        return false;
-      _result.converged = _result.defect < _absoluteLimit || _result.defect < _result.first_defect * _reduction;
-      if (_result.iterations >= _maxIterations && not _result.converged)
-        DUNE_THROW(NewtonNotConverged,
-                   "NewtonTerminate::terminate(): Maximum iteration count reached");
-      return _result.converged;
-    }
-
-    enum LineSearchStrategy
-    {
-      noLineSearch,
-      hackbuschReusken,
-      hackbuschReuskenAcceptBest
-    };
-
-    virtual void lineSearch(Domain& solution)
-    {
-      if ((_lineSearchStrategy == noLineSearch) || (_result.defect < _absoluteLimit)){
-        solution.axpy(-1.0, _correction);
-        updateDefect(solution);
-        return;
-      }
-
-      if (_verbosity >= 4)
-        std::cout << "      Performing line search..." << std::endl;
-      Real lambda = 1.0;
-      Real best_lambda = 0.0;
-      Real best_defect = _result.defect;
-
-      if (not _previousSolution)
-        _previousSolution = std::make_shared<Domain>(solution);
-      else
-        *_previousSolution = solution;
-
-      unsigned int i = 0;
-      while (1){
-        if (_verbosity >= 4)
-          std::cout << "          trying line search damping factor:   "
-                    << std::setw(12) << std::setprecision(4) << std::scientific
-                    << lambda
-                    << std::endl;
-
-            solution.axpy(-lambda, _correction);
-            try {
-              updateDefect(solution);
-            }
-            catch (NewtonDefectError&){
-              if (_verbosity >= 4)
-                std::cout << "          NaNs detected" << std::endl;
-            }       // ignore NaNs and try again with lower lambda
-
-            if (_result.defect <= (1.0 - lambda/4) * _previousDefect){
-              if (_verbosity >= 4)
-                std::cout << "          line search converged" << std::endl;
-              break;
-            }
-
-            if (_result.defect < best_defect){
-              best_defect = _result.defect;
-              best_lambda = lambda;
-            }
-
-            if (++i >= _lineSearchMaxIterations){
-              if (_verbosity >= 4)
-                std::cout << "          max line search iterations exceeded" << std::endl;
-              switch (_lineSearchStrategy){
-              case hackbuschReusken:
-                solution = *_previousSolution;
-                updateDefect(solution);
-                DUNE_THROW(NewtonLineSearchError,
-                           "NewtonLineSearch::line_search(): line search failed, "
-                           "max iteration count reached, "
-                           "defect did not improve enough");
-              case hackbuschReuskenAcceptBest:
-                if (best_lambda == 0.0){
-                  solution = *_previousSolution;
-                  updateDefect(solution);
-                  DUNE_THROW(NewtonLineSearchError,
-                             "NewtonLineSearch::line_search(): line search failed, "
-                             "max iteration count reached, "
-                             "defect did not improve in any of the iterations");
-                }
-                if (best_lambda != lambda){
-                  solution = *_previousSolution;
-                  solution.axpy(-best_lambda, _correction);
-                  updateDefect(solution);
-                }
-                break;
-              case noLineSearch:
-                break;
-              }
-                break;
-            }
-            lambda *= _lineSearchDampingFactor;
-            solution = *_previousSolution;
-      }
-      if (_verbosity >= 4)
-        std::cout << "          line search damping factor:   "
-                  << std::setw(12) << std::setprecision(4) << std::scientific
-                  << lambda << std::endl;
     }
 
     virtual void prepareStep(const Domain& solution)
@@ -288,7 +180,7 @@ namespace Dune::PDELab
       //=========================
       // Nonlinear iteration loop
       //=========================
-      while (not terminate()){
+      while (not _terminate->terminate()){
         if(_verbosity >= 3)
           std::cout << "  Newton iteration " << _result.iterations
                     << " --------------------------------" << std::endl;
@@ -316,7 +208,8 @@ namespace Dune::PDELab
         // Do line search and update solution
         //===================================
         start = Clock::now();
-        lineSearch(solution);
+        _lineSearch->lineSearch(solution, _correction);
+        // lineSearch(solution);
         end = Clock::now();
         line_search_time += end -start;
 
@@ -380,9 +273,6 @@ namespace Dune::PDELab
       _residual = 0.0;
       _gridOperator.residual(solution, _residual);
       _result.defect =  _linearSolver.norm(_residual);
-      if(not std::isfinite(_result.defect))
-        DUNE_THROW(NewtonDefectError,
-                   "NewtonSolver::defect(): Non-linear defect is NaN or Inf");
     }
 
     //! Set how much output you get
@@ -394,16 +284,31 @@ namespace Dune::PDELab
         _verbosity = verbosity;
     }
 
+    unsigned int getVerbosityLevel() const
+    {
+      return _verbosity;
+    }
+
     //! Set reduction Newton needs to achieve
     void setReduction(Real reduction)
     {
       _reduction = reduction;
     }
 
+    Real getReduction() const
+    {
+      return _reduction;
+    }
+
     //! Set absolute convergence limit
     void setAbsoluteLimit(Real absoluteLimit)
     {
       _absoluteLimit = absoluteLimit;
+    }
+
+    Real getAbsoluteLimit() const
+    {
+      return _absoluteLimit;
     }
 
     //! Set whether the jacobian matrix should be kept across calls to apply().
@@ -423,45 +328,6 @@ namespace Dune::PDELab
     {
       if(_jacobian)
         _jacobian.reset();
-    }
-
-    //! Set maximum number of nonlinear Newton iterations
-    void setMaxIterations(unsigned int maxit)
-    {
-      _maxIterations = maxit;
-    }
-
-    //! Set to true if Newton should be forced to do at least one iteration
-    void setForceIteration(bool forceIteration)
-    {
-      _force_iteration = forceIteration;
-    }
-
-    //! Set line search strategy
-    void setLineSearchStrategy(LineSearchStrategy strategy)
-    {
-      _lineSearchStrategy = strategy;
-    }
-
-    //! Set line search strategy
-    void setLineSearchStrategy(std::string strategy)
-    {
-      _lineSearchStrategy = lineSearchStrategyFromName(strategy);
-    }
-
-    //! Set maximum amount of line search iterations
-    void setLineSearchMaxIterations(unsigned int maxit)
-    {
-      _lineSearchMaxIterations = maxit;
-    }
-
-    /**\brief Set damping factor in line search
-     *
-     * This will be used as multiplier if the line search did not yet converge.
-     */
-    void setLineSearchDampingFactor(Real dampingFactor)
-    {
-      _lineSearchDampingFactor = dampingFactor;
     }
 
     /**\brief set the minimal reduction in the linear solver
@@ -501,14 +367,17 @@ namespace Dune::PDELab
         example configuration:
 
         \code
-        [NewtonParameters]
+        [newton_parameters]
         reassemble_threshold = 0.1
-        line_search_max_iterations = 10
-        max_iterations = 7
         absolute_limit = 1e-6
         reduction = 1e-4
         min_linear_reduction = 1e-3
-        line_search_damping_factor  = 0.9
+
+        [newton_parameters.terminate]
+        max_iterations = 15
+
+        [newton_parameters.line_search]
+        line_search_damping_factor = 0.7
         \endcode
 
         and invocation in the code:
@@ -526,24 +395,15 @@ namespace Dune::PDELab
         if (parameterTree.hasKey("keeep_matrix"))
           setKeepMatrix(parameterTree.get<bool>("keep_matrix"));
 
-        if (parameterTree.hasKey("max_iterations"))
-          setMaxIterations(parameterTree.get<unsigned int>("max_iterations"));
-        if (parameterTree.hasKey("force_iteration"))
-          setForceIteration(parameterTree.get<bool>("force_iteration"));
-
-        if (parameterTree.hasKey("line_search_strategy"))
-          setLineSearchStrategy(parameterTree.get<std::string>("line_search_strategy"));
-        if (parameterTree.hasKey("line_search_max_iterations"))
-          setLineSearchMaxIterations(parameterTree.get<unsigned int>("line_search_max_iterations"));
-        if (parameterTree.hasKey("line_search_damping_factor"))
-          setLineSearchDampingFactor(parameterTree.get<Real>("line_search_damping_factor"));
-
         if (parameterTree.hasKey("min_linear_reduction"))
           setMinLinearReduction(parameterTree.get<Real>("min_linear_reduction"));
         if (parameterTree.hasKey("fixed_linear_reduction"))
           setFixedLinearReduction(parameterTree.get<bool>("fixed_linear_reduction"));
         if (parameterTree.hasKey("reassemble_threshold"))
           setReassembleThreshold(parameterTree.get<Real>("reassemble_threshold"));
+
+        _terminate->setParameters(parameterTree.sub("terminate"));
+        _lineSearch->setParameters(parameterTree.sub("line_search"));
     }
 
     Newton(
@@ -553,7 +413,10 @@ namespace Dune::PDELab
       , _linearSolver(linearSolver)
       , _residual(gridOperator.testGridFunctionSpace())
       , _correction(gridOperator.trialGridFunctionSpace())
-    {}
+    {
+      _terminate = std::make_shared<DefaultTerminate<Newton>> (*this);
+      _lineSearch = std::make_shared<DefaultLineSearch<Newton>> (*this);
+    }
 
     Newton(
       const GridOperator& gridOperator,
@@ -566,19 +429,11 @@ namespace Dune::PDELab
 
     {
       setParameters(parameterTree);
+      _terminate = std::make_shared<DefaultTerminate<Newton>> (*this);
+      _lineSearch = std::make_shared<DefaultLineSearch<Newton>> (*this);
     }
 
   private:
-    LineSearchStrategy lineSearchStrategyFromName (const std::string & s) {
-      if (s == "noLineSearch")
-        return noLineSearch;
-      if (s == "hackbuschReusken")
-        return hackbuschReusken;
-      if (s == "hackbuschReuskenAcceptBest")
-        return hackbuschReuskenAcceptBest;
-      DUNE_THROW(Exception, "unknown line search strategy" << s);
-    }
-
     const GridOperator& _gridOperator;
     LinearSolver& _linearSolver;
 
@@ -587,6 +442,9 @@ namespace Dune::PDELab
     Domain _correction;
     shared_ptr<Jacobian> _jacobian;
     shared_ptr<Domain> _previousSolution;
+
+    std::shared_ptr<TerminateInterface> _terminate;
+    std::shared_ptr<LineSearchInterface<Domain>> _lineSearch;
 
     // Class for storing results
     Result _result;
@@ -602,15 +460,6 @@ namespace Dune::PDELab
     Real _reduction = 1e-8;
     Real _absoluteLimit = 1e-12;
     bool _keepMatrix = true;
-
-    // User parameters for terminate()
-    unsigned int _maxIterations = 40;
-    bool _force_iteration = false;
-
-    // User parameters for lineSearch()
-    LineSearchStrategy _lineSearchStrategy = LineSearchStrategy::hackbuschReusken;
-    int _lineSearchMaxIterations = 10;
-    Real _lineSearchDampingFactor = 0.5;
 
     // User parameters for prepareStep()
     Real _minLinearReduction = 1e-3;
