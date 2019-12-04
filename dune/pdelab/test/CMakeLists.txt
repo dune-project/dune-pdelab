@@ -1,5 +1,7 @@
 add_subdirectory(fem)
 
+dune_add_test(SOURCES testjacobianapply.cc)
+
 dune_add_test(SOURCES testanalytic.cc)
 
 dune_add_test(SOURCES testbindtime.cc)
