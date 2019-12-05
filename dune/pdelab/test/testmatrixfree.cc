@@ -113,34 +113,29 @@ int main(int argc, char** argv)
     Dune::PDELab::interpolate(dirichletExtension, gridFunctionSpace, coefficientVector);
     Dune::PDELab::set_nonconstrained_dofs(constraintsContainer, 0.0, coefficientVector);
 
-/*
-    // This would be the standard way of solving this problem matrix based
-    // using the StationaryLinearProblemSolver
+    // Copy for matrix free solution
+    CoefficientVector coefficientVectorMatrixFree(coefficientVector);
 
-    // Solver
-    using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_SuperLU;
-    LinearSolver linearSolver(false);
+    // Solver matrix based
+    // using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_SuperLU;
+    // LinearSolver linearSolver(false);
+    using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_BCGS_Richardson;
+    LinearSolver linearSolver;
     using Solver = Dune::PDELab::StationaryLinearProblemSolver<GridOperator, LinearSolver, CoefficientVector>;
-    const double reduction = 1e-7;
+    const double reduction = 1e-10;
     Solver solver(gridOperator, linearSolver, coefficientVector, reduction);
     solver.apply();
-*/
 
     // Solve matrix free
-    using ISTLOnTheFlyOperator = Dune::PDELab::OnTheFlyOperator<CoefficientVector, CoefficientVector, GridOperator>;
-    ISTLOnTheFlyOperator istlOperator(gridOperator);
-    Dune::Richardson<CoefficientVector, CoefficientVector> richardson(1.0);
-    Dune::BiCGSTABSolver<CoefficientVector> solver(istlOperator, richardson, 1E-10, 5000, 2);
-    Dune::InverseOperatorResult stat;
-    // Evaluate residual w.r.t initial guess
+    using LinearSolverMatrixFree = Dune::PDELab::ISTLBackend_SEQ_MatrixFree_BCGS_Richardson<GridOperator>;
+    LinearSolverMatrixFree linearSolverMatrixFree(gridOperator);
     using TrialGridFunctionSpace = typename GridOperator::Traits::TrialGridFunctionSpace;
     using W = Dune::PDELab::Backend::Vector<TrialGridFunctionSpace,typename CoefficientVector::ElementType>;
     W residual(gridOperator.testGridFunctionSpace(), 0.0);
-    gridOperator.residual(coefficientVector, residual);
-    // Solve the jacobian system
+    gridOperator.residual(coefficientVectorMatrixFree, residual);
     CoefficientVector update(gridOperator.trialGridFunctionSpace(), 0.0);
-    solver.apply(update, residual, stat);
-    coefficientVector -= update;
+    linearSolverMatrixFree.apply(update, residual, reduction);
+    coefficientVectorMatrixFree -= update;
 
     // Visualization
     using VTKWriter = Dune::SubsamplingVTKWriter<GridView>;
@@ -148,6 +143,9 @@ int main(int argc, char** argv)
     VTKWriter vtkwriter(gridView, subint);
     std::string vtkfile("testmatrixfree");
     Dune::PDELab::addSolutionToVTKWriter(vtkwriter, gridFunctionSpace, coefficientVector,
+                                         Dune::PDELab::vtk::defaultNameScheme());
+    gridFunctionSpace.name("numerical_solution_matrix_free");
+    Dune::PDELab::addSolutionToVTKWriter(vtkwriter, gridFunctionSpace, coefficientVectorMatrixFree,
                                          Dune::PDELab::vtk::defaultNameScheme());
     vtkwriter.write(vtkfile, Dune::VTK::ascii);
 
@@ -161,13 +159,22 @@ int main(int argc, char** argv)
     DifferenceSquaredAdapter differenceSquaredAdapder(dirichletExtension, discreteGridFunction);
     DifferenceSquaredAdapter::Traits::RangeType error(0.0);
     Dune::PDELab::integrateGridFunction(differenceSquaredAdapder, error, 10);
-    std::cout << "l2errorsquared: " << error << std::endl;
+    std::cout << "l2errorsquared matrix based: " << error << std::endl;
+
+    // Error for matrix free version
+    DiscreteGridFunction discreteGridFunctionMatrixFree(gridFunctionSpace, coefficientVectorMatrixFree);
+    DifferenceSquaredAdapter differenceSquaredAdapderMatrixFree(dirichletExtension, discreteGridFunctionMatrixFree);
+    DifferenceSquaredAdapter::Traits::RangeType errorMatrixFree(0.0);
+    Dune::PDELab::integrateGridFunction(differenceSquaredAdapderMatrixFree, errorMatrixFree, 10);
+    std::cout << "l2errorsquared matrix free: " << errorMatrixFree << std::endl;
 
     // Let the test fail if the error is too large
     bool testfail(false);
     using std::abs;
     using std::isnan;
     if (isnan(error) or abs(error)>1e-7)
+      testfail = true;
+    if (isnan(error) or abs(errorMatrixFree)>1e-7)
       testfail = true;
     return testfail;
   }
