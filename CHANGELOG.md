@@ -14,6 +14,10 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   The `StationaryLinearProblemSolver` can now be used in a matrix-free way by passing the matrix-free solver
+    backend `ISTLBackend_SEQ_MatrixFree_BCGS_Richardson` to it.
+
+-   All solver backends need to inherit from `ISTLBackend_Base`.
 
 -   The adapter class `Experimental::GridFunctionSpace` that allows to use [dune-functions][] function
     space bases as `GridFunctionSpace` implementations has gained limited support for distributed
