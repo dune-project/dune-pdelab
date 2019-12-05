@@ -14,6 +14,10 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   The `StationaryLinearProblemSolver` can now be used in a matrix-free way by passing the matrix-free solver
+    backend `ISTLBackend_SEQ_MatrixFree_BCGS_Richardson` to it.
+
+-   All solver backends need to inherit from `ISTLBackend_Base`.
 
 -   The Newton solver was rewritten. The old implementation is still around with the name `OldNewton` and is
     deprecated. The new Newton can be found in `dune/pdelab/solver/newton.hh` and works quite similar but
