@@ -180,21 +180,21 @@ namespace Dune{
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
       LocalJacobianApplyAssemblerEngine & localJacobianApplyAssemblerEngine
-      (typename Traits::Residual & r, const typename Traits::Solution & x)
+      (const typename Traits::Domain & update, typename Traits::Range & result)
       {
-        jacobian_apply_engine.setResidual(r);
-        jacobian_apply_engine.setSolution(x);
+        jacobian_apply_engine.setUpdate(update);
+        jacobian_apply_engine.setResult(result);
         return jacobian_apply_engine;
       }
 
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
       LocalNonlinearJacobianApplyAssemblerEngine & localNonlinearJacobianApplyAssemblerEngine
-      (typename Traits::Residual & r, const typename Traits::Solution & x, const typename Traits::Solution & z)
+      (const typename Traits::Domain & solution, const typename Traits::Domain & update, typename Traits::Range & result)
       {
-        nonlinear_jacobian_apply_engine.setResidual(r);
-        nonlinear_jacobian_apply_engine.setSolution(x);
-        nonlinear_jacobian_apply_engine.setUpdate(z);
+        nonlinear_jacobian_apply_engine.setSolution(solution);
+        nonlinear_jacobian_apply_engine.setUpdate(update);
+        nonlinear_jacobian_apply_engine.setResult(result);
         return nonlinear_jacobian_apply_engine;
       }
 
