@@ -35,13 +35,13 @@ namespace Dune{
       //! The type of the local operator
       typedef typename LA::LocalOperator LOP;
 
-      //! The type of the residual vector
-      typedef typename LA::Traits::Residual Residual;
-      typedef typename Residual::ElementType ResidualElement;
+      //! The type of the result vector
+      typedef typename LA::Traits::Range Range;
+      typedef typename Range::ElementType RangeElement;
 
       //! The type of the solution vector
-      typedef typename LA::Traits::Solution Solution;
-      typedef typename Solution::ElementType SolutionElement;
+      typedef typename LA::Traits::Domain Domain;
+      typedef typename Domain::ElementType DomainElement;
 
       //! The local function spaces
       typedef typename LA::LFSU LFSU;
@@ -51,8 +51,8 @@ namespace Dune{
       typedef typename LA::LFSVCache LFSVCache;
       typedef typename LFSV::Traits::GridFunctionSpace GFSV;
 
-      typedef typename Solution::template ConstLocalView<LFSUCache> SolutionView;
-      typedef typename Residual::template LocalView<LFSVCache> ResidualView;
+      typedef typename Domain::template ConstLocalView<LFSUCache> DomainView;
+      typedef typename Range::template LocalView<LFSVCache> RangeView;
 
       /**
          \brief Constructor
@@ -101,20 +101,20 @@ namespace Dune{
         return localAssembler().testConstraints();
       }
 
-      //! Set current residual vector. Should be called prior to
+      //! Set current result vector. Should be called prior to
       //! assembling.
-      void setResidual(Residual & residual_)
+      void setResult(Range & result_)
       {
-        global_rl_view.attach(residual_);
-        global_rn_view.attach(residual_);
+        global_rl_view.attach(result_);
+        global_rn_view.attach(result_);
       }
 
-      //! Set current solution vector. Should be called prior to
+      //! Set current update vector. Should be called prior to
       //! assembling.
-      void setSolution(const Solution & solution_)
+      void setUpdate(const Domain & update_)
       {
-        global_sl_view.attach(solution_);
-        global_sn_view.attach(solution_);
+        global_sl_view.attach(update_);
+        global_sn_view.attach(update_);
       }
 
       //! Called immediately after binding of local function space in
@@ -298,34 +298,34 @@ namespace Dune{
       //! Reference to the local operator
       const LOP & lop;
 
-      //! Pointer to the current residual vector in which to assemble
-      ResidualView global_rl_view;
-      ResidualView global_rn_view;
+      //! Pointer to the current result vector in which to assemble
+      RangeView global_rl_view;
+      RangeView global_rn_view;
 
-      //! Pointer to the current residual vector in which to assemble
-      SolutionView global_sl_view;
-      SolutionView global_sn_view;
+      //! Pointer to the current update vector
+      DomainView global_sl_view;
+      DomainView global_sn_view;
 
       //! The local vectors and matrices as required for assembling
       //! @{
       typedef Dune::PDELab::TrialSpaceTag LocalTrialSpaceTag;
       typedef Dune::PDELab::TestSpaceTag LocalTestSpaceTag;
 
-      typedef Dune::PDELab::LocalVector<SolutionElement, LocalTrialSpaceTag> SolutionVector;
-      typedef Dune::PDELab::LocalVector<ResidualElement, LocalTestSpaceTag> ResidualVector;
+      typedef Dune::PDELab::LocalVector<DomainElement, LocalTrialSpaceTag> DomainVector;
+      typedef Dune::PDELab::LocalVector<RangeElement, LocalTestSpaceTag> RangeVector;
 
       //! Inside local coefficients
-      SolutionVector xl;
+      DomainVector xl;
       //! Outside local coefficients
-      SolutionVector xn;
-      //! Inside local residual
-      ResidualVector rl;
-      //! Outside local residual
-      ResidualVector rn;
-      //! Inside local residual weighted view
-      typename ResidualVector::WeightedAccumulationView rl_view;
-      //! Outside local residual weighted view
-      typename ResidualVector::WeightedAccumulationView rn_view;
+      DomainVector xn;
+      //! Inside local result
+      RangeVector rl;
+      //! Outside local result
+      RangeVector rn;
+      //! Inside local result weighted view
+      typename RangeVector::WeightedAccumulationView rl_view;
+      //! Outside local result weighted view
+      typename RangeVector::WeightedAccumulationView rn_view;
       //! @}
 
     }; // End of class DefaultLocalJacobianAssemblerEngine
