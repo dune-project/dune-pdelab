@@ -421,20 +421,22 @@ namespace Dune::PDELab
 
     Newton(
       const GridOperator& gridOperator,
-      LinearSolver& linearSolver)
+      LinearSolver& linearSolver,
+      const std::string& lineSearchStrategy="hackbusch_reusken")
       : _gridOperator(gridOperator)
       , _linearSolver(linearSolver)
       , _residual(gridOperator.testGridFunctionSpace())
       , _correction(gridOperator.trialGridFunctionSpace())
     {
       _terminate = std::make_shared<DefaultTerminate<Newton>> (*this);
-      _lineSearch = std::make_shared<DefaultLineSearch<Newton>> (*this);
+      _lineSearch = getLineSearch(*this, lineSearchStrategy);
     }
 
     Newton(
       const GridOperator& gridOperator,
       LinearSolver& linearSolver,
-      const ParameterTree& parameterTree)
+      const ParameterTree& parameterTree,
+      const std::string& lineSearchStrategy="hackbusch_reusken")
       : _gridOperator(gridOperator)
       , _linearSolver(linearSolver)
       , _residual(gridOperator.testGridFunctionSpace())
@@ -443,7 +445,7 @@ namespace Dune::PDELab
     {
       setParameters(parameterTree);
       _terminate = std::make_shared<DefaultTerminate<Newton>> (*this);
-      _lineSearch = std::make_shared<DefaultLineSearch<Newton>> (*this);
+      _lineSearch = getLineSearch(*this, lineSearchStrategy);
     }
 
   private:

@@ -21,17 +21,39 @@ namespace Dune::PDELab
 
 
   template <typename Newton>
-  class DefaultLineSearch : public LineSearchInterface<typename Newton::Domain>
+  class LineSearchNone : public LineSearchInterface<typename Newton::Domain>
   {
   public:
     using Domain = typename Newton::Domain;
     using Real = typename Newton::Real;
 
-    DefaultLineSearch(Newton& newton) : _newton(newton) {}
+    LineSearchNone(Newton& newton) : _newton(newton) {}
 
     virtual void lineSearch(Domain& solution, const Domain& correction) override
     {
-      if ((_lineSearchStrategy == noLineSearch) || (_newton.result().defect < _newton.getAbsoluteLimit())){
+      solution.axpy(-1.0, correction);
+      _newton.updateDefect(solution);
+    }
+
+    virtual void setParameters(const ParameterTree&) {}
+
+  private:
+    Newton& _newton;
+  };
+
+
+  template <typename Newton>
+  class LineSearchHackbuschReusken : public LineSearchInterface<typename Newton::Domain>
+  {
+  public:
+    using Domain = typename Newton::Domain;
+    using Real = typename Newton::Real;
+
+    LineSearchHackbuschReusken(Newton& newton) : _newton(newton) {}
+
+    virtual void lineSearch(Domain& solution, const Domain& correction) override
+    {
+      if ((_newton.result().defect < _newton.getAbsoluteLimit())){
         solution.axpy(-1.0, correction);
         _newton.updateDefect(solution);
         return;
@@ -86,15 +108,15 @@ namespace Dune::PDELab
         if (verbosity >= 4)
           std::cout << "          max line search iterations exceeded" << std::endl;
 
-        switch (_lineSearchStrategy){
-        case hackbuschReusken:
+        if (not _acceptBest){
           solution = *_previousSolution;
           _newton.updateDefect(solution);
           DUNE_THROW(NewtonLineSearchError,
                      "NewtonLineSearch::line_search(): line search failed, "
                      "max iteration count reached, "
                      "defect did not improve enough");
-        case hackbuschReuskenAcceptBest:
+        }
+        else{
           if (bestLambda == 0.0){
             solution = *_previousSolution;
             _newton.updateDefect(solution);
@@ -121,42 +143,58 @@ namespace Dune::PDELab
 
     virtual void setParameters(const ParameterTree& parameterTree)
     {
-      if (parameterTree.hasKey("line_search_strategy")){
-        auto strategy = parameterTree.get<std::string>("line_search_strategy");
-        _lineSearchStrategy = lineSearchStrategyFromName(strategy);
-      }
       _lineSearchMaxIterations = parameterTree.get<unsigned int>("line_search_max_iterations",
                                                                  _lineSearchMaxIterations);
       _lineSearchDampingFactor = parameterTree.get<Real>("line_search_damping_factor",
                                                          _lineSearchDampingFactor);
+      _acceptBest = parameterTree.get<bool>("line_search_accept_best",
+                                            _acceptBest);
     }
 
   private:
-    enum LineSearchStrategy
-    {
-      noLineSearch,
-      hackbuschReusken,
-      hackbuschReuskenAcceptBest
-    };
-
-    LineSearchStrategy lineSearchStrategyFromName (const std::string & s) {
-      if (s == "noLineSearch")
-        return noLineSearch;
-      if (s == "hackbuschReusken")
-        return hackbuschReusken;
-      if (s == "hackbuschReuskenAcceptBest")
-        return hackbuschReuskenAcceptBest;
-      DUNE_THROW(Exception, "unknown line search strategy" << s);
-    }
-
     Newton& _newton;
     std::shared_ptr<Domain> _previousSolution;
 
     // Line search parameters
-    LineSearchStrategy _lineSearchStrategy = LineSearchStrategy::hackbuschReusken;
     unsigned int _lineSearchMaxIterations = 10;
     Real _lineSearchDampingFactor = 0.5;
+    bool _acceptBest = false;
   };
+
+
+  enum LineSearchStrategy
+  {
+    noLineSearch,
+    hackbuschReusken
+  };
+
+
+  LineSearchStrategy lineSearchStrategyFromString(const std::string& name)
+  {
+    if (name == "noLineSearch")
+      return LineSearchStrategy::noLineSearch;
+    if (name == "hackbusch_reusken")
+      return LineSearchStrategy::hackbuschReusken;
+    DUNE_THROW(Exception,"Unkown line search strategy: " << name);
+  }
+
+
+  template <typename Newton>
+  std::shared_ptr<LineSearchInterface<typename Newton::Domain>>
+  getLineSearch(Newton& newton, const std::string& name)
+  {
+    auto strategy = lineSearchStrategyFromString(name);
+    if (strategy == LineSearchStrategy::noLineSearch){
+      auto lineSearch = std::make_shared<LineSearchNone<Newton>> (newton);
+      return lineSearch;
+    }
+    if (strategy == LineSearchStrategy::hackbuschReusken){
+      auto lineSearch = std::make_shared<LineSearchHackbuschReusken<Newton>> (newton);
+      return lineSearch;
+    }
+    DUNE_THROW(Exception,"Unkown line search strategy");
+  }
+
 } // namespace Dune::PDELab
 
 #endif

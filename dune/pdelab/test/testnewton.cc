@@ -159,7 +159,6 @@ int main(int argc, char** argv)
     Dune::ParameterTree ptree;
     ptree["verbosity"] = "4";
     ptree["line_search.line_search_damping_factor"] = "0.3";
-    ptree["line_search.line_search_strategy"] = "noLineSearch";
     solver.setParameters(ptree);
 
     // Solve PDE
