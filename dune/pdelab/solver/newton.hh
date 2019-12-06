@@ -46,6 +46,11 @@ namespace Dune::PDELab
   }
 
 
+  /** \brief Newton solver
+   *
+   * \tparam GridOperator_ Grid operator
+   * \tparam LinearSolver_ Linear solver backend
+   */
   template <typename GridOperator_, typename LinearSolver_>
   class Newton
   {
@@ -284,6 +289,7 @@ namespace Dune::PDELab
         _verbosity = verbosity;
     }
 
+    //! Get verbosity level
     unsigned int getVerbosityLevel() const
     {
       return _verbosity;
@@ -295,6 +301,7 @@ namespace Dune::PDELab
       _reduction = reduction;
     }
 
+    //! Get reduction
     Real getReduction() const
     {
       return _reduction;
@@ -364,6 +371,8 @@ namespace Dune::PDELab
 
     /** \brief Interpret a parameter tree as a set of options for the newton solver
 
+        Possible parameters:
+
         example configuration:
 
         \code
@@ -383,6 +392,14 @@ namespace Dune::PDELab
         and invocation in the code:
         \code
         newton.setParameters(param.sub("NewtonParameters"));
+        \endcode
+
+        This can also be used to set single parameters like this
+
+        \code
+        Dune::ParameterTree ptree;
+        ptree["verbosity"] = "4";
+        newton.setParameters(ptree);
         \endcode
     */
     void setParameters(const ParameterTree& parameterTree){
@@ -418,7 +435,7 @@ namespace Dune::PDELab
       _lineSearch = lineSearch;
     }
 
-
+    //! Construct Newton using default parameters
     Newton(
       const GridOperator& gridOperator,
       LinearSolver& linearSolver,
@@ -432,6 +449,7 @@ namespace Dune::PDELab
       _lineSearch = getLineSearch(*this, lineSearchStrategy);
     }
 
+    //! Construct Newton passing a parameter tree
     Newton(
       const GridOperator& gridOperator,
       LinearSolver& linearSolver,

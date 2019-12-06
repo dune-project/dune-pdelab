@@ -7,6 +7,7 @@
 
 namespace Dune::PDELab
 {
+  //! Abstract base class describing the line search interface
   template <typename Domain>
   class LineSearchInterface
   {
@@ -14,12 +15,15 @@ namespace Dune::PDELab
     //! Every abstract base class should have a virtual destructor
     virtual ~LineSearchInterface () {}
 
+    //! Do line search
     virtual void lineSearch(Domain&, const Domain&) = 0;
 
+    //! Set parametersi
     virtual void setParameters(const ParameterTree&) = 0;
   };
 
 
+  //! Class for simply updating the solution without line search
   template <typename Newton>
   class LineSearchNone : public LineSearchInterface<typename Newton::Domain>
   {
@@ -29,6 +33,7 @@ namespace Dune::PDELab
 
     LineSearchNone(Newton& newton) : _newton(newton) {}
 
+    //! Apply line search (in this case just update the solution)
     virtual void lineSearch(Domain& solution, const Domain& correction) override
     {
       solution.axpy(-1.0, correction);
@@ -42,6 +47,7 @@ namespace Dune::PDELab
   };
 
 
+  //! Class for doing Hackbusch-Reusken line sarch
   template <typename Newton>
   class LineSearchHackbuschReusken : public LineSearchInterface<typename Newton::Domain>
   {
@@ -51,6 +57,7 @@ namespace Dune::PDELab
 
     LineSearchHackbuschReusken(Newton& newton) : _newton(newton) {}
 
+    //! Do line search
     virtual void lineSearch(Domain& solution, const Domain& correction) override
     {
       if ((_newton.result().defect < _newton.getAbsoluteLimit())){
@@ -162,6 +169,7 @@ namespace Dune::PDELab
   };
 
 
+  //! Flags for different line search strategies
   enum LineSearchStrategy
   {
     noLineSearch,
@@ -169,6 +177,12 @@ namespace Dune::PDELab
   };
 
 
+  /** \brief Get a LineSearchStrategy from a string identifier
+   *
+   * \param name Identifier used to pick LineSearchStrategy
+   *
+   * Possible values for name: "noLineSearch", "hackbusch_reusken"
+   */
   LineSearchStrategy lineSearchStrategyFromString(const std::string& name)
   {
     if (name == "noLineSearch")
@@ -179,6 +193,13 @@ namespace Dune::PDELab
   }
 
 
+  /** \brief Get a pointer to a line search
+   *
+   * \tparam Newton A Newton solver
+   *
+   * \param newton Newton solver object
+   * \param name Identifier to choose line search, see lineSearchStrategyFromString()
+   */
   template <typename Newton>
   std::shared_ptr<LineSearchInterface<typename Newton::Domain>>
   getLineSearch(Newton& newton, const std::string& name)
