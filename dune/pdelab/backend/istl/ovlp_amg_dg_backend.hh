@@ -7,11 +7,11 @@
 #include <dune/istl/matrixmatrix.hh>
 
 #include <dune/grid/common/datahandleif.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrix.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/ovlpistlsolverbackend.hh>
-#include <dune/pdelab/backend/istl/interface.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/localoperator/flags.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
@@ -452,7 +452,7 @@ namespace Dune {
 template<class DGGO, class DGCC, class CGGFS, class CGCC, class TransferLOP,
          template<class,class,class,int> class DGPrec, template<class> class Solver, int s=96>
 class ISTLBackend_OVLP_AMG_4_DG :
-      public ISTLBackend_Base,
+      public SolverBackendBase,
       public Dune::PDELab::OVLPScalarProductImplementation<typename DGGO::Traits::TrialGridFunctionSpace>,
       public Dune::PDELab::LinearResultStorage
 {
@@ -653,7 +653,7 @@ public:
     pgo.jacobian(cgx,pmatrix);
   }
 
-  using ISTLBackend_Base::apply;
+  using SolverBackendBase::apply;
 
   /*! \brief solve the given linear system
 
