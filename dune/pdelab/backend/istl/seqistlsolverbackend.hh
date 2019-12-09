@@ -23,7 +23,7 @@
 #include <dune/pdelab/backend/solver.hh>
 #include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrix.hh>
-#include <dune/pdelab/backend/istl/interface.hh>
+#include <dune/pdelab/backend/interface.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -78,7 +78,7 @@ namespace Dune {
 
     template<template<class> class Solver>
     class ISTLBackend_SEQ_Richardson
-      : public ISTLBackend_Base, public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -90,7 +90,7 @@ namespace Dune {
         : maxiter(maxiter_), verbose(verbose_)
       {}
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -126,7 +126,7 @@ namespace Dune {
 
     template<class GO, template<class> class Solver>
     class ISTLBackend_SEQ_MatrixFree_Richardson
-      : public ISTLBackend_Base, public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
       using V = typename GO::Traits::Domain;
       using W = typename GO::Traits::Range;
@@ -142,7 +142,7 @@ namespace Dune {
         , verbose_(verbose)
       {}
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -178,7 +178,7 @@ namespace Dune {
     template<template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
     class ISTLBackend_SEQ_Base
-      : public ISTLBackend_Base, public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -190,7 +190,7 @@ namespace Dune {
         : maxiter(maxiter_), verbose(verbose_)
       {}
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -229,7 +229,7 @@ namespace Dune {
 
     template<template<typename> class Solver>
     class ISTLBackend_SEQ_ILU0
-      :  public ISTLBackend_Base, public SequentialNorm, public LinearResultStorage
+      :  public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -241,7 +241,7 @@ namespace Dune {
         : maxiter(maxiter_), verbose(verbose_)
        {}
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -278,7 +278,7 @@ namespace Dune {
 
     template<template<typename> class Solver>
     class ISTLBackend_SEQ_ILUn
-      :  public ISTLBackend_Base, public SequentialNorm, public LinearResultStorage
+      :  public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -291,7 +291,7 @@ namespace Dune {
         : n_(n), w_(w), maxiter(maxiter_), verbose(verbose_)
        {}
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -529,7 +529,7 @@ namespace Dune {
      * @brief Solver backend using SuperLU as a direct solver.
      */
     class ISTLBackend_SEQ_SuperLU
-      : public ISTLBackend_Base, public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -549,7 +549,7 @@ namespace Dune {
         : verbose(verbose_)
       {}
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -584,7 +584,7 @@ namespace Dune {
      * @brief Solver backend using UMFPack as a direct solver.
      */
     class ISTLBackend_SEQ_UMFPack
-      : public ISTLBackend_Base, public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -604,7 +604,7 @@ namespace Dune {
         : verbose(verbose_)
       {}
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -635,7 +635,7 @@ namespace Dune {
 
     //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
     class ISTLBackend_SEQ_ExplicitDiagonal
-      : public ISTLBackend_Base, public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -643,7 +643,7 @@ namespace Dune {
       ISTLBackend_SEQ_ExplicitDiagonal ()
       {}
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -698,7 +698,7 @@ namespace Dune {
 
     template<class GO, template<class,class,class,int> class Preconditioner, template<class> class Solver,
               bool skipBlocksizeCheck = false>
-    class ISTLBackend_SEQ_AMG : public ISTLBackend_Base, public LinearResultStorage
+    class ISTLBackend_SEQ_AMG : public SolverBackendBase, public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef typename GO::Traits::Jacobian M;
@@ -730,7 +730,7 @@ namespace Dune {
 #endif
       }
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
        /*! \brief set AMG parameters
 
@@ -962,7 +962,7 @@ namespace Dune {
     */
 
     class ISTLBackend_SEQ_GMRES_ILU0
-      : public ISTLBackend_Base, public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public :
 
@@ -976,7 +976,7 @@ namespace Dune {
         : restart(restart_), maxiter(maxiter_), verbose(verbose_)
       {}
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       /** \brief solve the given linear system
 

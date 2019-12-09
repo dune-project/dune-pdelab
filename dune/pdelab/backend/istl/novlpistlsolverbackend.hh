@@ -23,12 +23,12 @@
 
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrix.hh>
 #include <dune/pdelab/backend/istl/blockmatrixdiagonal.hh>
 #include <dune/pdelab/backend/istl/parallelhelper.hh>
 #include <dune/pdelab/backend/istl/seqistlsolverbackend.hh>
-#include <dune/pdelab/backend/istl/interface.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -327,7 +327,7 @@ namespace Dune {
 
     //! \brief Nonoverlapping parallel CG solver without preconditioner
     template<class GFS>
-    class ISTLBackend_NOVLP_CG_NOPREC : public ISTLBackend_Base
+    class ISTLBackend_NOVLP_CG_NOPREC : public SolverBackendBase
     {
       typedef ISTL::ParallelHelper<GFS> PHELPER;
 
@@ -358,7 +358,7 @@ namespace Dune {
         return psp.norm(x);
       }
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -404,7 +404,7 @@ namespace Dune {
 
     //! \brief Nonoverlapping parallel CG solver with Jacobi preconditioner
     template<class GFS>
-    class ISTLBackend_NOVLP_CG_Jacobi : public ISTLBackend_Base
+    class ISTLBackend_NOVLP_CG_Jacobi : public SolverBackendBase
     {
       typedef ISTL::ParallelHelper<GFS> PHELPER;
 
@@ -443,7 +443,7 @@ namespace Dune {
         return psp.norm(x);
       }
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       //! solve the given linear system
       /**
@@ -562,7 +562,7 @@ namespace Dune {
 
     //! \brief Nonoverlapping parallel BiCGStab solver with Jacobi preconditioner
     template<class GFS>
-    class ISTLBackend_NOVLP_BCGS_Jacobi : public ISTLBackend_Base
+    class ISTLBackend_NOVLP_BCGS_Jacobi : public SolverBackendBase
     {
       typedef ISTL::ParallelHelper<GFS> PHELPER;
 
@@ -591,7 +591,7 @@ namespace Dune {
         return psp.norm(x);
       }
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -639,7 +639,7 @@ namespace Dune {
 
     //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
     template<typename GFS>
-    class ISTLBackend_NOVLP_ExplicitDiagonal : public ISTLBackend_Base
+    class ISTLBackend_NOVLP_ExplicitDiagonal : public SolverBackendBase
     {
       typedef ISTL::ParallelHelper<GFS> PHELPER;
 
@@ -671,7 +671,7 @@ namespace Dune {
         return psp.norm(x);
       }
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -718,7 +718,7 @@ namespace Dune {
     template<class GO,
              template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
-    class ISTLBackend_NOVLP_BASE_PREC : public ISTLBackend_Base
+    class ISTLBackend_NOVLP_BASE_PREC : public SolverBackendBase
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef ISTL::ParallelHelper<GFS> PHELPER;
@@ -754,7 +754,7 @@ namespace Dune {
         return psp.norm(x);
       }
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       /*! \brief Solve the given linear system.
 
@@ -890,7 +890,7 @@ namespace Dune {
 
     template<class GO,int s, template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
-    class ISTLBackend_AMG_NOVLP : public ISTLBackend_Base, public LinearResultStorage
+    class ISTLBackend_AMG_NOVLP : public SolverBackendBase, public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef typename ISTL::ParallelHelper<GFS> PHELPER;
@@ -985,7 +985,7 @@ namespace Dune {
         return psp.norm(x);
       }
 
-      using ISTLBackend_Base::apply;
+      using SolverBackendBase::apply;
 
       void apply(M& A, V& z, V& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {

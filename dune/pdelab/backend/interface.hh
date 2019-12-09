@@ -83,7 +83,6 @@ namespace Dune {
 
 #endif // DOXYGEN
 
-
       /**
        * \brief alias of the return type of BackendVectorSelector
        *
@@ -219,6 +218,37 @@ namespace Dune {
 #endif // DOXYGEN
 
     } // namespace Backend
+
+
+      /** \brief Base class for solver backends
+       *
+       * Provide matrix based and matrix-free apply methods and a method that
+       * tells if this solver is supposed to run matrix-free.
+       */
+    class SolverBackendBase
+    {
+    public:
+      //! Matrix based apply method
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
+      {
+        DUNE_THROW(Exception, "This solver does not work matrix based.");
+      }
+
+      //! Matrix free apply method
+      template<class V, class W>
+      void apply(V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
+      {
+        DUNE_THROW(Exception, "This solver does not work matrix free.");
+      }
+
+      //! Return if this solver works matrix free
+      bool matrixFree()
+      {
+        return false;
+      }
+    };
+
   } // namespace PDELab
 } // namespace Dune
 
