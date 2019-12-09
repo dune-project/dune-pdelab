@@ -126,10 +126,11 @@ namespace Dune {
           }
 
           source_inverse.apply(native(testvec), rnd, result);
+          //testvec = rnd;
 
           for (int j = 0; j < AF_exterior.N(); j++) {
             for(int j_block = 0; j_block < ISTLM::block_type::rows; j_block++){
-              //if (native(AF_exterior)[j][j][j_block][j_block] != 1.0)
+              if (native(AF_exterior)[j][j][j_block][j_block] != 1.0)
                 native(testvec)[j][j_block] *= std::sqrt(native(AF_exterior)[j][j][j_block][j_block]);
               //else
               //  native(testvec)[j][j_block] = 0.0;

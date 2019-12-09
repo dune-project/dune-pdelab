@@ -41,12 +41,20 @@ dune_add_test(SOURCES testelasticity.cc)
 
 if(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
   dune_symlink_to_source_files(FILES config.ini)
+  dune_symlink_to_source_files(FILES configmatrixwriter.ini)
   dune_symlink_to_source_files(FILES plot.py)
   dune_symlink_to_source_files(FILES batch.sbatch)
 
   dune_add_test(SOURCES testgeneo.cc
                 MPI_RANKS 2
                 TIMEOUT 300)
+
+  dune_add_test(SOURCES testgeneomatrixwriter.cc
+                MPI_RANKS 2
+                TIMEOUT 300)
+
+  dune_symlink_to_source_files(FILES geneoeigenproblem.py)
+
 endif(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
 
 dune_add_test(SOURCES testdglegendre.cc)
