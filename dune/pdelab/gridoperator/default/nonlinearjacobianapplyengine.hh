@@ -259,7 +259,7 @@ namespace Dune{
       void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         rl_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume,LOP::isLinear>::
           nonlinear_jacobian_apply_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,zl,lfsv_cache.localFunctionSpace(),rl_view);
       }
 
@@ -269,7 +269,7 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight());
         rn_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton,LOP::isLinear>::
           nonlinear_jacobian_apply_skeleton(lop,ig,
                                             lfsu_s_cache.localFunctionSpace(),xl,zl,lfsv_s_cache.localFunctionSpace(),
                                             lfsu_n_cache.localFunctionSpace(),xn,zn,lfsv_n_cache.localFunctionSpace(),
@@ -280,7 +280,7 @@ namespace Dune{
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
         rl_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary,LOP::isLinear>::
           nonlinear_jacobian_apply_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,zl,lfsv_s_cache.localFunctionSpace(),rl_view);
       }
 
@@ -297,7 +297,7 @@ namespace Dune{
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         rl_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton,LOP::isLinear>::
           nonlinear_jacobian_apply_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),xl,zl,lfsv_cache.localFunctionSpace(),rl_view);
       }
 
