@@ -195,7 +195,7 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolume>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolume,LOP::isLinear>::
           pattern_volume(lop,lfsu_cache.localFunctionSpace(),lfsv_cache.localFunctionSpace(),localpattern);
       }
 
@@ -203,7 +203,7 @@ namespace Dune{
       void assembleUVSkeleton(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                               const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternSkeleton>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternSkeleton,LOP::isLinear>::
           pattern_skeleton(lop,
                            lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace(),
                            lfsu_n_cache.localFunctionSpace(),lfsv_n_cache.localFunctionSpace(),
@@ -213,7 +213,7 @@ namespace Dune{
       template<typename IG, typename LFSUC, typename LFSVC>
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternBoundary>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternBoundary,LOP::isLinear>::
           pattern_boundary(lop,lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace(),localpattern);
       }
 
@@ -238,7 +238,7 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolumePostSkeleton>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolumePostSkeleton,LOP::isLinear>::
           pattern_volume_post_skeleton(lop,lfsu_cache.localFunctionSpace(),lfsv_cache.localFunctionSpace(),localpattern);
       }
 
