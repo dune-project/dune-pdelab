@@ -189,6 +189,17 @@ namespace Dune{
 
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
+      LocalJacobianApplyAssemblerEngine & localJacobianApplyAssemblerEngine
+      (const typename Traits::Domain & solution, const typename Traits::Domain & update, typename Traits::Range & result)
+      {
+        jacobian_apply_engine.setSolution(solution);
+        jacobian_apply_engine.setUpdate(update);
+        jacobian_apply_engine.setResult(result);
+        return jacobian_apply_engine;
+      }
+
+      //! Returns a reference to the requested engine. This engine is
+      //! completely configured and ready to use.
       LocalNonlinearJacobianApplyAssemblerEngine & localNonlinearJacobianApplyAssemblerEngine
       (const typename Traits::Domain & solution, const typename Traits::Domain & update, typename Traits::Range & result)
       {
@@ -204,19 +215,20 @@ namespace Dune{
       //! do not belong to the assembler interface, but simplify the
       //! implementations of query methods in the engines;
       //! @{
-      static bool doAlphaVolume() { return LOP::doAlphaVolume; }
-      static bool doLambdaVolume() { return LOP::doLambdaVolume; }
-      static bool doAlphaSkeleton() { return LOP::doAlphaSkeleton; }
-      static bool doLambdaSkeleton() { return LOP::doLambdaSkeleton; }
-      static bool doAlphaBoundary()  { return LOP::doAlphaBoundary; }
-      static bool doLambdaBoundary() { return LOP::doLambdaBoundary; }
-      static bool doAlphaVolumePostSkeleton()  { return LOP::doAlphaVolumePostSkeleton; }
-      static bool doLambdaVolumePostSkeleton() { return LOP::doLambdaVolumePostSkeleton; }
-      static bool doSkeletonTwoSided()  { return LOP::doSkeletonTwoSided; }
-      static bool doPatternVolume()  { return LOP::doPatternVolume; }
-      static bool doPatternSkeleton()  { return LOP::doPatternSkeleton; }
-      static bool doPatternBoundary()  { return LOP::doPatternBoundary; }
-      static bool doPatternVolumePostSkeleton()  { return LOP::doPatternVolumePostSkeleton; }
+      static constexpr bool doAlphaVolume() { return LOP::doAlphaVolume; }
+      static constexpr bool doLambdaVolume() { return LOP::doLambdaVolume; }
+      static constexpr bool doAlphaSkeleton() { return LOP::doAlphaSkeleton; }
+      static constexpr bool doLambdaSkeleton() { return LOP::doLambdaSkeleton; }
+      static constexpr bool doAlphaBoundary()  { return LOP::doAlphaBoundary; }
+      static constexpr bool doLambdaBoundary() { return LOP::doLambdaBoundary; }
+      static constexpr bool doAlphaVolumePostSkeleton()  { return LOP::doAlphaVolumePostSkeleton; }
+      static constexpr bool doLambdaVolumePostSkeleton() { return LOP::doLambdaVolumePostSkeleton; }
+      static constexpr bool doSkeletonTwoSided()  { return LOP::doSkeletonTwoSided; }
+      static constexpr bool doPatternVolume()  { return LOP::doPatternVolume; }
+      static constexpr bool doPatternSkeleton()  { return LOP::doPatternSkeleton; }
+      static constexpr bool doPatternBoundary()  { return LOP::doPatternBoundary; }
+      static constexpr bool doPatternVolumePostSkeleton()  { return LOP::doPatternVolumePostSkeleton; }
+      static constexpr bool isLinear() { return LOP::isLinear;}
       //! @}
 
       //! Query whether to do preprocessing in the engines
