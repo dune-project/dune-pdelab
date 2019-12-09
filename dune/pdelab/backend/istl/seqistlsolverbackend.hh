@@ -79,7 +79,6 @@ namespace Dune {
     template<template<class> class Solver>
     class ISTLBackend_SEQ_Richardson
       : public ISTLBackend_Base, public SequentialNorm, public LinearResultStorage
-    //       : public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
