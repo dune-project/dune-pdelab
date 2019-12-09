@@ -191,7 +191,14 @@ namespace Dune{
       }
 
       //! Apply jacobian matrix to the vector update without explicitly assembling it
-      void nonlinear_jacobian_apply(const Domain & solution, const Domain & update, Range & result) const
+      void jacobian_apply(const Domain & solution, const Domain & update, Range & result) const
+      {
+        global_assembler.assemble(local_assembler.localJacobianApplyAssemblerEngine(solution, update, result));
+      }
+
+      //! Apply jacobian matrix to the vector update without explicitly assembling it
+      void DUNE_DEPRECATED_MSG("nonlinear_jacobian_apply(x,z,r) is deprecated. Please use jacobian_apply(solution, update, result) instead!")
+      nonlinear_jacobian_apply(const Domain & solution, const Domain & update, Range & result) const
       {
         global_assembler.assemble(local_assembler.localNonlinearJacobianApplyAssemblerEngine(solution, update, result));
       }
