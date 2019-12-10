@@ -113,9 +113,6 @@ int main(int argc, char** argv)
     Dune::PDELab::interpolate(dirichletExtension, gridFunctionSpace, coefficientVector);
     Dune::PDELab::set_nonconstrained_dofs(constraintsContainer, 0.0, coefficientVector);
 
-    // Copy for matrix free solution
-    CoefficientVector coefficientVectorMatrixFree(coefficientVector);
-
     // Solve matrix based
     using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_BCGS_Richardson;
     LinearSolver linearSolver;
@@ -123,6 +120,14 @@ int main(int argc, char** argv)
     using Solver = Dune::PDELab::StationaryLinearProblemSolver<GridOperator, LinearSolver, CoefficientVector>;
     Solver solver(gridOperator, linearSolver, coefficientVector, reduction);
     solver.apply();
+
+    //=========================
+    // {{{ Matrix-free solution
+    //=========================
+
+    // Copy of coefficient vector
+    CoefficientVector coefficientVectorMatrixFree(coefficientVector);
+    Dune::PDELab::set_nonconstrained_dofs(constraintsContainer, 0.0, coefficientVectorMatrixFree);
 
     // Solve matrix free
     using LinearSolverMatrixFree = Dune::PDELab::ISTLBackend_SEQ_MatrixFree_BCGS_Richardson<GridOperator>;
@@ -132,6 +137,10 @@ int main(int argc, char** argv)
                                                                          CoefficientVector>;
     SolverMatrixFree solverMatrixFree(gridOperator, linearSolverMatrixFree, coefficientVectorMatrixFree, reduction);
     solverMatrixFree.apply();
+
+    //====
+    // }}}
+    //====
 
     // Visualization
     using VTKWriter = Dune::SubsamplingVTKWriter<GridView>;
