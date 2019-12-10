@@ -46,10 +46,17 @@ namespace Dune::PDELab
   }
 
 
-  /** \brief Newton solver
+  /** \brief Newton solver for solving non-linear problems
    *
-   * \tparam GridOperator_ Grid operator
-   * \tparam LinearSolver_ Linear solver backend
+   * - The line search and the termination criterion can be changed at runtime
+   *   by the setTerminate() and the setLineSearch() methods.
+   *
+   * - If Newton is created using the default parameters it is an inexact
+   *   Newton since the default reduction for the linear systems is quite
+   *   high. You can change this through setMinLinearReduction()
+   *
+   * \tparam GridOperator_ Grid operator for evaluation of resdidual and Jacobian
+   * \tparam LinearSolver_ Solver backend for solving linear system of equations
    */
   template <typename GridOperator_, typename LinearSolver_>
   class Newton
@@ -142,7 +149,7 @@ namespace Dune::PDELab
                   << _linearSolver.result().reduction << std::endl;
     }
 
-    //! Provide an inital guess and solve inplace
+    //! Solve the nonlinear problem using solution as initial guess and for storing the result
     virtual void apply(Domain& solution)
     {
       // Reset solver statistics
@@ -337,71 +344,72 @@ namespace Dune::PDELab
         _jacobian.reset();
     }
 
-    /**\brief set the minimal reduction in the linear solver
-
-       \note with min_linear_reduction > 0, the linear reduction will be
-       determined as mininum of the min_linear_reduction and the
-       linear_reduction needed to achieve second order
-       Newton convergence. */
+    /**\brief Set the minimal reduction in the linear solver
+     *
+     * \note with minLinearReduction > 0, the linear reduction will be
+     * determined as mininum of the minLinearReduction and the linear reduction
+     * needed to achieve second order Newton convergence. (As long as you are
+     * not using a fixed linear reduction)
+     */
     void setMinLinearReduction(Real minLinearReduction)
     {
       _minLinearReduction = minLinearReduction;
     }
 
-    /**\brief set a fixed reduction in the linear solver (overwrites setMinLinearReduction)
-
-       \note with fixed_linear_reduction > 0, the linear reduction
-       rate will always be fixed to min_linear_reduction. */
+    /** \brief Set wether to use a fixed reduction in the linear solver
+     *
+     * \note If fixedLinearReduction is true, the linear reduction rate will
+     *  always be fixed to minLinearReduction.
+     */
     void setFixedLinearReduction(bool fixedLinearReduction)
     {
       _fixedLinearReduction = fixedLinearReduction;
     }
 
-    /**\brief set a threshold, when the linear operator is reassembled
-
-       We allow to keep the linear operator over several newton
-       iterations. If the reduction in the newton drops below a
-       given threshold the linear operator is reassembled to ensure
-       convergence.
-    */
+    /** \brief Set a threshold, when the linear operator is reassembled
+     *
+     * We allow to keep the linear operator over several newton iterations. If
+     * the reduction in the newton drops below a given threshold the linear
+     * operator is reassembled to ensure convergence.
+     */
     void setReassembleThreshold(Real reassembleThreshold)
     {
       _reassembleThreshold = reassembleThreshold;
     }
 
     /** \brief Interpret a parameter tree as a set of options for the newton solver
-
-        Possible parameters:
-
-        example configuration:
-
-        \code
-        [newton_parameters]
-        reassemble_threshold = 0.1
-        absolute_limit = 1e-6
-        reduction = 1e-4
-        min_linear_reduction = 1e-3
-
-        [newton_parameters.terminate]
-        max_iterations = 15
-
-        [newton_parameters.line_search]
-        line_search_damping_factor = 0.7
-        \endcode
-
-        and invocation in the code:
-        \code
-        newton.setParameters(param.sub("NewtonParameters"));
-        \endcode
-
-        This can also be used to set single parameters like this
-
-        \code
-        Dune::ParameterTree ptree;
-        ptree["verbosity"] = "4";
-        newton.setParameters(ptree);
-        \endcode
-    */
+     *
+     *  Possible parameters:
+     *
+     *  example configuration:
+     *
+     *  \code
+     *  [newton_parameters]
+     *  reassemble_threshold = 0.1
+     *  absolute_limit = 1e-6
+     *  reduction = 1e-4
+     *  min_linear_reduction = 1e-3
+     *
+     *  [newton_parameters.terminate]
+     *  max_iterations = 15
+     *
+     *  [newton_parameters.line_search]
+     *  line_search_damping_factor = 0.7
+     *  \endcode
+     *
+     *  and invocation in the code:
+     *  \code
+     *  newton.setParameters(param.sub("NewtonParameters"));
+     *  \endcode
+     *
+     *  This can also be used to set single parameters like this
+     *
+     *  \code
+     *  Dune::ParameterTree ptree;
+     *  ptree["verbosity"] = "4";
+     *  newton.setParameters(ptree);
+     *  \endcode
+     */
     void setParameters(const ParameterTree& parameterTree){
         if (parameterTree.hasKey("verbosity"))
           setVerbosityLevel(parameterTree.get<unsigned int>("verbosity"));
@@ -429,7 +437,10 @@ namespace Dune::PDELab
       _terminate = terminate;
     }
 
-    //! Set the line search
+    /**\brief Set the line search
+     *
+     * See getLineSearch() for already implemented line searches
+     */
     void setLineSearch(std::shared_ptr<LineSearchInterface<Domain>> lineSearch)
     {
       _lineSearch = lineSearch;
