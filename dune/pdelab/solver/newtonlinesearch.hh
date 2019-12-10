@@ -18,7 +18,7 @@ namespace Dune::PDELab
     //! Do line search
     virtual void lineSearch(Domain&, const Domain&) = 0;
 
-    //! Set parametersi
+    //! Set parameters
     virtual void setParameters(const ParameterTree&) = 0;
   };
 
@@ -33,7 +33,7 @@ namespace Dune::PDELab
 
     LineSearchNone(Newton& newton) : _newton(newton) {}
 
-    //! Apply line search (in this case just update the solution)
+    //! Do line search (in this case just update the solution)
     virtual void lineSearch(Domain& solution, const Domain& correction) override
     {
       solution.axpy(-1.0, correction);
@@ -47,7 +47,12 @@ namespace Dune::PDELab
   };
 
 
-  //! Class for doing Hackbusch-Reusken line sarch
+  /** \brief Hackbusch-Reusken line search
+   *
+   * If the parameter line_search_accept_best is set through the setParameters
+   * method this line search will simply return the best result even if it did
+   * not converge.
+   */
   template <typename Newton>
   class LineSearchHackbuschReusken : public LineSearchInterface<typename Newton::Domain>
   {
@@ -148,6 +153,19 @@ namespace Dune::PDELab
                     << lambda << std::endl;
     }
 
+
+    /* \brief Set parameters
+     *
+     * Possible parameters are:
+     *
+     * - line_search_max_iterations: Maximum number of line search iterations.
+     *
+     * - line_search_damping_factor: Multiplier to line search parameter after each iteration.
+     *
+     * - line_search_accept_best: Accept the best line search parameter if
+     *   there was any improvement, even if the convergence criterion was not
+     *   reached.
+     */
     virtual void setParameters(const ParameterTree& parameterTree)
     {
       _lineSearchMaxIterations = parameterTree.get<unsigned int>("line_search_max_iterations",
@@ -181,7 +199,7 @@ namespace Dune::PDELab
    *
    * \param name Identifier used to pick LineSearchStrategy
    *
-   * Possible values for name: "noLineSearch", "hackbusch_reusken"
+   * Possible values for name: "noLineSearch", "hackbuschReusken"
    */
   LineSearchStrategy lineSearchStrategyFromString(const std::string& name)
   {
@@ -198,7 +216,10 @@ namespace Dune::PDELab
    * \tparam Newton A Newton solver
    *
    * \param newton Newton solver object
-   * \param name Identifier to choose line search, see lineSearchStrategyFromString()
+
+   * \param name Identifier to choose line search. Possible values:
+   * - "noLineSearch": Return pointer to LineSearchNone
+   * - "hackbuschReusken": Return pointer to LineSearchHackbuschReusken
    */
   template <typename Newton>
   std::shared_ptr<LineSearchInterface<typename Newton::Domain>>
