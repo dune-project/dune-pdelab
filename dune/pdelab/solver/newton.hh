@@ -93,13 +93,19 @@ namespace Dune::PDELab
 
     virtual void prepareStep(const Domain& solution)
     {
-      _reassembled = false;
-      if (_result.defect/_previousDefect > _reassembleThreshold){
+      if (_linearSolver.matrixFree()){
         if (_verbosity>=3)
-              std::cout << "      Reassembling matrix..." << std::endl;
-        *_jacobian = Real(0.0);
-        _gridOperator.jacobian(solution, *_jacobian);
-        _reassembled = true;
+          std::cout << "      Linear solver does not require matrix assembly, so we do not reassemble." << std::endl;
+      }
+      else{
+        _reassembled = false;
+        if (_result.defect/_previousDefect > _reassembleThreshold){
+          if (_verbosity>=3)
+            std::cout << "      Reassembling matrix..." << std::endl;
+          *_jacobian = Real(0.0);
+          _gridOperator.jacobian(solution, *_jacobian);
+          _reassembled = true;
+        }
       }
 
       _linearReduction = _minLinearReduction;
@@ -130,12 +136,16 @@ namespace Dune::PDELab
       if (_verbosity >= 4)
         std::cout << "      Solving linear system..." << std::endl;
 
-      // If the jacobian was not reassembled we might save some work in the solver backend
-      Impl::setLinearSystemReuse(_linearSolver, not _reassembled);
+      // If the Jacobian was not reassembled we might save some work in the solver backend
+      if (_linearSolver.matrixFree())
+        Impl::setLinearSystemReuse(_linearSolver, not _reassembled);
 
       // Solve the linear system
       _correction = 0.0;
-      _linearSolver.apply(*_jacobian, _correction, _residual, _linearReduction);
+      if (_linearSolver.matrixFree())
+        _linearSolver.apply(_correction, _residual, _linearReduction);
+      else
+        _linearSolver.apply(*_jacobian, _correction, _residual, _linearReduction);
 
       if (not _linearSolver.result().converged)
         DUNE_THROW(NewtonLinearSolverError,
@@ -186,8 +196,17 @@ namespace Dune::PDELab
       //==========================
       // Calculate Jacobian matrix
       //==========================
-      if (not _jacobian)
-        _jacobian = std::make_shared<Jacobian>(_gridOperator);
+      if (_linearSolver.matrixFree()){
+        if (_verbosity>=2)
+          std::cout << "  Matrix setup not required for matrix-free solvers" << std::endl;
+      }
+      else{
+        if (not _jacobian){
+          _jacobian = std::make_shared<Jacobian>(_gridOperator);
+          if (_verbosity>=2)
+            std::cout << "  Calculating Jacobian matrix" << std::endl;
+        }
+      }
 
       //=========================
       // Nonlinear iteration loop
@@ -275,8 +294,9 @@ namespace Dune::PDELab
                   << "   (" << std::setprecision(4) << _result.elapsed << "s)"
                   << std::endl;
 
-      if (not _keepMatrix)
-        _jacobian.reset();
+      if (not _linearSolver.matrixFree())
+        if (not _keepMatrix)
+          _jacobian.reset();
     }
 
     //! Update _residual and defect in _result
@@ -325,21 +345,23 @@ namespace Dune::PDELab
       return _absoluteLimit;
     }
 
-    //! Set whether the jacobian matrix should be kept across calls to apply().
+    //! Set whether the Jacobian matrix should be kept across calls to apply().
     void setKeepMatrix(bool b)
     {
       _keepMatrix = b;
     }
 
-    //! Return whether the jacobian matrix is kept across calls to apply().
+    //! Return whether the Jacobian matrix is kept across calls to apply().
     bool keepMatrix() const
     {
+      assert(not _linearSolver.matrixFree());
       return _keepMatrix;
     }
 
     //! Discard the stored Jacobian matrix.
     void discardMatrix()
     {
+      assert(not _linearSolver.matrixFree());
       if(_jacobian)
         _jacobian.reset();
     }
@@ -487,6 +509,7 @@ namespace Dune::PDELab
     std::shared_ptr<Jacobian> _jacobian;
     std::shared_ptr<Domain> _previousSolution;
 
+    // Pointers to the line search and the termination criterion
     std::shared_ptr<TerminateInterface> _terminate;
     std::shared_ptr<LineSearchInterface<Domain>> _lineSearch;
 

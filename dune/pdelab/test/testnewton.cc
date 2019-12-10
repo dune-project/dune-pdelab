@@ -149,8 +149,10 @@ int main(int argc, char** argv)
     Dune::PDELab::set_nonconstrained_dofs(constraintsContainer, 0.0, coefficientVector);
 
     // Create Netwon solver
-    using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_SuperLU;
-    LinearSolver linearSolver(false);
+    // using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_SuperLU;
+    // LinearSolver linearSolver(false);
+    using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_BCGS_Richardson;
+    LinearSolver linearSolver(5000,4);
     const double reduction = 1e-7;
     using Solver = Dune::PDELab::Newton<GridOperator, LinearSolver>;
     Solver solver(gridOperator, linearSolver);
@@ -164,12 +166,38 @@ int main(int argc, char** argv)
     // Solve PDE
     solver.apply(coefficientVector);
 
+    //=========================
+    // {{{ Matrix-free solution
+    //=========================
+
+    // Copy of coefficient vector
+    CoefficientVector coefficientVectorMatrixFree(coefficientVector);
+    Dune::PDELab::set_nonconstrained_dofs(constraintsContainer, 0.0, coefficientVectorMatrixFree);
+
+    // Matrix-free linear solver backend
+    using LinearSolverMatrixFree = Dune::PDELab::ISTLBackend_SEQ_MatrixFree_BCGS_Richardson<GridOperator>;
+    LinearSolverMatrixFree linearSolverMatrixFree(gridOperator, 5000, 4);
+
+    // Matrix-free Newton
+    using SolverMatrixFree = Dune::PDELab::Newton<GridOperator, LinearSolverMatrixFree>;
+    SolverMatrixFree solverMatrixFree(gridOperator, linearSolverMatrixFree);
+    solverMatrixFree.setVerbosityLevel(4);
+    std::cout << std::endl << std::endl << std::endl;
+    solverMatrixFree.apply(coefficientVectorMatrixFree);
+
+    //====
+    // }}}
+    //====
+
     // Visualization
     using VTKWriter = Dune::SubsamplingVTKWriter<GridView>;
     Dune::RefinementIntervals subint(2);
     VTKWriter vtkwriter(gridView, subint);
     std::string vtkfile("testnewton");
     Dune::PDELab::addSolutionToVTKWriter(vtkwriter, gridFunctionSpace, coefficientVector,
+                                         Dune::PDELab::vtk::defaultNameScheme());
+    gridFunctionSpace.name("numerical_solution_matrix_free");
+    Dune::PDELab::addSolutionToVTKWriter(vtkwriter, gridFunctionSpace, coefficientVectorMatrixFree,
                                          Dune::PDELab::vtk::defaultNameScheme());
     vtkwriter.write(vtkfile, Dune::VTK::ascii);
 
@@ -184,11 +212,20 @@ int main(int argc, char** argv)
     Dune::PDELab::integrateGridFunction(differenceSquaredAdapder, error, 10);
     std::cout << "l2errorsquared: " << error << std::endl;
 
+    // Error for matrix-free version
+    DiscreteGridFunction discreteGridFunctionMatrixFree(gridFunctionSpace, coefficientVectorMatrixFree);
+    DifferenceSquaredAdapter differenceSquaredAdapderMatrixFree(boundaryCondition, discreteGridFunctionMatrixFree);
+    DifferenceSquaredAdapter::Traits::RangeType errorMatrixFree(0.0);
+    Dune::PDELab::integrateGridFunction(differenceSquaredAdapderMatrixFree, errorMatrixFree, 10);
+    std::cout << "l2errorsquared matrix free: " << errorMatrixFree << std::endl;
+
     // Let the test fail if the error is too large
     bool testfail(false);
     using std::abs;
     using std::isnan;
     if (isnan(error) or abs(error)>1e-7)
+      testfail = true;
+    if (isnan(error) or abs(errorMatrixFree)>1e-7)
       testfail = true;
     return testfail;
   }
