@@ -19,50 +19,12 @@
 #include <dune/common/parametertree.hh>
 
 #include <dune/pdelab/backend/solver.hh>
+#include <dune/pdelab/solver/newton.hh>
 
 namespace Dune
 {
   namespace PDELab
   {
-  namespace Impl
-  {
-  // Some SFinae magic to execute setReuse(bool) on a backend
-  template<typename T1, typename = void>
-  struct HasSetReuse
-  : std::false_type
-  {};
-
-  template<typename T>
-  struct HasSetReuse<T, decltype(std::declval<T>().setReuse(true), void())>
-  : std::true_type
-  {};
-
-  template<typename T>
-  inline void setLinearSystemReuse(T& solver_backend, bool reuse, std::true_type)
-  {
-    if (!solver_backend.getReuse() && reuse)
-      dwarn << "WARNING: Newton needed to override your choice to reuse the linear system in order to work!" << std::endl;
-    solver_backend.setReuse(reuse);
-  }
-
-  template<typename T>
-  inline void setLinearSystemReuse(T&, bool, std::false_type)
-  {}
-
-  template<typename T>
-  inline void setLinearSystemReuse(T& solver_backend, bool reuse)
-  {
-    setLinearSystemReuse(solver_backend, reuse, HasSetReuse<T>());
-  }
-  }
-
-    // Exception classes used in NewtonSolver
-    class NewtonError : public Exception {};
-    class NewtonDefectError : public NewtonError {};
-    class NewtonLinearSolverError : public NewtonError {};
-    class NewtonLineSearchError : public NewtonError {};
-    class NewtonNotConverged : public NewtonError {};
-
     // Status information of Newton's method
     template<class RFType>
     struct NewtonResult : LinearSolverResult<RFType>
@@ -752,24 +714,26 @@ namespace Dune
     }; // end class NewtonLineSearch
 
     template<class GOS, class S, class TrlV, class TstV = TrlV>
-    class Newton : public NewtonSolver<GOS,S,TrlV,TstV>
-                 , public NewtonTerminate<GOS,TrlV,TstV>
-                 , public NewtonLineSearch<GOS,TrlV,TstV>
-                 , public NewtonPrepareStep<GOS,TrlV,TstV>
+    class OldNewton : public NewtonSolver<GOS,S,TrlV,TstV>
+                    , public NewtonTerminate<GOS,TrlV,TstV>
+                    , public NewtonLineSearch<GOS,TrlV,TstV>
+                    , public NewtonPrepareStep<GOS,TrlV,TstV>
     {
       typedef GOS GridOperator;
       typedef S Solver;
       typedef TrlV TrialVector;
 
     public:
-      Newton(const GridOperator& go, TrialVector& u_, Solver& solver_)
+      OldNewton(const GridOperator& go, TrialVector& u_, Solver& solver_)
+        DUNE_DEPRECATED_MSG("OldNewton is deprecated. Use Newton from dune/pdelab/solver/newton.hh instead.")
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
         , NewtonSolver<GOS,S,TrlV,TstV>(go,u_,solver_)
         , NewtonTerminate<GOS,TrlV,TstV>(go,u_)
         , NewtonLineSearch<GOS,TrlV,TstV>(go,u_)
         , NewtonPrepareStep<GOS,TrlV,TstV>(go,u_)
       {}
-      Newton(const GridOperator& go, Solver& solver_)
+      OldNewton(const GridOperator& go, Solver& solver_)
+        DUNE_DEPRECATED_MSG("OldNewton is deprecated. Use Newton from dune/pdelab/solver/newton.hh instead.")
         : NewtonBase<GOS,TrlV,TstV>(go)
         , NewtonSolver<GOS,S,TrlV,TstV>(go,solver_)
         , NewtonTerminate<GOS,TrlV,TstV>(go)

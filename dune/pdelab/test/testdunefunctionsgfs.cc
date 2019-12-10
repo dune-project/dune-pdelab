@@ -268,14 +268,16 @@ void solveParallelPoissonProblem()
   LS ls(gridFunctionSpace,cc,100,5,verbose);
 
   // solve nonlinear problem
-  PDELab::Newton<GO,LS,Z> newton(go,z,ls);
-  newton.setReassembleThreshold(0.0);
-  newton.setVerbosityLevel(2);
-  newton.setReduction(1e-10);
-  newton.setMinLinearReduction(1e-4);
-  newton.setMaxIterations(25);
-  newton.setLineSearchMaxIterations(10);
-  newton.apply();
+  PDELab::Newton<GO,LS> newton(go,ls);
+  Dune::ParameterTree newtonParam;
+  newtonParam["reassemble_threshold"] = "0.0";
+  newtonParam["verbosity"] = "2";
+  newtonParam["reduction"] = "1e-10";
+  newtonParam["min_linear_reduction"] = "1e-4";
+  newtonParam["terminate.max_iterations"] = "25";
+  newtonParam["line_search.line_search_max_iterations"] = "10";
+  newton.setParameters(newtonParam);
+  newton.apply(z);
 
   // Write VTK output file
   SubsamplingVTKWriter<GV> vtkwriter(gv,refinementIntervals(1));
