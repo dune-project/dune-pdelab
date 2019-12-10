@@ -3,6 +3,8 @@
 #ifndef DUNE_PDELAB_SOLVER_NEWTONERRORS_HH
 #define DUNE_PDELAB_SOLVER_NEWTONERRORS_HH
 
+#ifndef DOXYGEN
+
 namespace Dune::PDELab
 {
   // Exception classes used in NewtonSolver
@@ -12,5 +14,7 @@ namespace Dune::PDELab
   class NewtonLineSearchError : public NewtonError {};
   class NewtonNotConverged : public NewtonError {};
 }
+
+#endif // DOXYGEN
 
 #endif

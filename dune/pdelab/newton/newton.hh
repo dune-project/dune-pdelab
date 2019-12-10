@@ -1,5 +1,10 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
+
+//
+// Note: This Newton is deprecated and will be removed for PDELab 2.8. Please
+// use the Newton from <dune/pdelab/solver/newton.hh>
+//
 #ifndef DUNE_PDELAB_NEWTON_NEWTON_HH
 #define DUNE_PDELAB_NEWTON_NEWTON_HH
 
@@ -20,6 +25,12 @@
 
 #include <dune/pdelab/backend/solver.hh>
 #include <dune/pdelab/solver/newton.hh>
+
+
+// Note: Before introducing the new Newton there was no doxygen documentation
+// for Newton at all. This means that it doesn't make any sense to have doxygen
+// documentation for the old Newton now.
+#ifndef DOXYGEN
 
 namespace Dune
 {
@@ -805,5 +816,7 @@ namespace Dune
     }; // end class Newton
   } // end namespace PDELab
 } // end namespace Dune
+
+#endif // DOXYGEN
 
 #endif // DUNE_PDELAB_NEWTON_NEWTON_HH
