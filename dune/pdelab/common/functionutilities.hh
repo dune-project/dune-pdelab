@@ -134,42 +134,38 @@ sum = gf.getGridView().comm().sum(sum);
        *           pointer, or a shared_ptr.
        * \param xg The global coordinate the evaluate at.
        */
-      template<class GFHandle>
-      GridFunctionProbe(const GFHandle& gf, const Domain& xg)
+      GridFunctionProbe(const GF& gf, const Domain& xg)
+        : gfp(Dune::stackobject_to_shared_ptr(gf))
       {
-        setGridFunction(gf);
-        xl = 0;
-        evalRank = gfp->getGridView().comm().size();
-        int myRank = gfp->getGridView().comm().rank();
-        try {
-          e.reset(new Entity
-                  (HierarchicSearch<typename GV::Grid, typename GV::IndexSet>
-                   (gfp->getGridView().grid(), gfp->getGridView().indexSet()).
-                   template findEntity<Interior_Partition>(xg)));
-          // make sure only interior entities are accepted
-          if(e->partitionType() == InteriorEntity)
-            evalRank = myRank;
-        }
-        catch(const Dune::GridError&) { /* do nothing */ }
-        evalRank = gfp->getGridView().comm().min(evalRank);
-        if(myRank == evalRank)
-          xl = e->geometry().local(xg);
-        else
-          e.reset();
-        if(myRank == 0 && evalRank == gfp->getGridView().comm().size())
-          dwarn << "Warning: GridFunctionProbe at (" << xg << ") is outside "
-                << "the grid" << std::endl;
+        hierarchic_search(gfp->getGridView(), xg);
+      }
+
+      GridFunctionProbe(std::shared_ptr<const GF> gf, const Domain& xg)
+        : gfp(gf)
+      {
+        hierarchic_search(gfp->getGridView(), xg);
+      }
+
+      /**
+       * Construct the probe object without an attached grid function object.
+       * The grid function must be set through the setGridFunction method before
+       * the first evaluation of the probe.
+       *
+       * \param xg The global coordinate the evaluate at.
+       */
+      GridFunctionProbe(const GV& gv, const Domain& xg)
+      {
+        hierarchic_search(gv, xg);
       }
 
       //! Set a new GridFunction
       /**
-       * This takes the GridFunction as a refence.  The referenced object must
+       * This takes the GridFunction as a reference.  The referenced object must
        * be valid for as long a the GridFunctionProbe is evaluated, or until
        * setGridFunction() is called again.
        */
       void setGridFunction(const GF &gf) {
-        gfsp.reset();
-        gfp = &gf;
+        gfp = Dune::stackobject_to_shared_ptr(gf);
       }
 
       //! Set a new GridFunction
@@ -180,8 +176,7 @@ sum = gf.getGridView().comm().sum(sum);
        * destruction, or the next time setGridFunction is called.
        */
       void setGridFunction(const GF *gf) {
-        gfsp.reset(gf);
-        gfp = gf;
+        gfp.reset(gf);
       }
 
       //! Set a new GridFunction
@@ -194,8 +189,7 @@ sum = gf.getGridView().comm().sum(sum);
        * holds the last reference at that time.
        */
       void setGridFunction(const std::shared_ptr<const GF> &gf) {
-        gfsp = gf;
-        gfp = &*gf;
+        gfp = gf;
       }
 
       //! evaluate the GridFunction and broadcast result to all ranks
@@ -242,8 +236,32 @@ sum = gf.getGridView().comm().sum(sum);
       }
 
     private:
-      std::shared_ptr<const GF> gfsp;
-      const GF *gfp;
+      void hierarchic_search(const GV& gv, const Domain& xg)
+      {
+        xl = 0;
+        evalRank = gv.comm().size();
+        int myRank = gv.comm().rank();
+        try {
+          e.reset(new Entity
+                  (HierarchicSearch<typename GV::Grid, typename GV::IndexSet>
+                   (gv.grid(), gv.indexSet()).
+                   template findEntity<Interior_Partition>(xg)));
+          // make sure only interior entities are accepted
+          if(e->partitionType() == InteriorEntity)
+            evalRank = myRank;
+        }
+        catch(const Dune::GridError&) { /* do nothing */ }
+        evalRank = gv.comm().min(evalRank);
+        if(myRank == evalRank)
+          xl = e->geometry().local(xg);
+        else
+          e.reset();
+        if(myRank == 0 && evalRank == gv.comm().size())
+          dwarn << "Warning: GridFunctionProbe at (" << xg << ") is outside "
+                << "the grid" << std::endl;
+      }
+
+      std::shared_ptr<const GF> gfp;
       std::shared_ptr<Entity> e;
       Domain xl;
       int evalRank;
