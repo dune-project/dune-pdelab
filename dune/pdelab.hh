@@ -261,7 +261,6 @@
 #include <dune/pdelab/gridoperator/default/jacobianengine.hh>
 #include <dune/pdelab/gridoperator/default/assembler.hh>
 #include <dune/pdelab/gridoperator/default/patternengine.hh>
-#include <dune/pdelab/gridoperator/default/nonlinearjacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/default/jacobianapplyengine.hh>
 
 #endif // DUNE_PDELAB_HH

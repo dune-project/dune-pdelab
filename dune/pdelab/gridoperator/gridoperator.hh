@@ -187,12 +187,16 @@ namespace Dune{
       //! Apply jacobian matrix to the vector update without explicitly assembling it
       void jacobian_apply(const Domain & update, Range & result) const
       {
+        if (not local_assembler.localOperator().isLinear)
+          DUNE_THROW(Dune::Exception, "Your trying to use a non linear jacobian apply for a linear problem.");
         global_assembler.assemble(local_assembler.localJacobianApplyAssemblerEngine(update, result));
       }
 
       //! Apply jacobian matrix to the vector update without explicitly assembling it
       void jacobian_apply(const Domain & solution, const Domain & update, Range & result) const
       {
+        if (local_assembler.localOperator().isLinear)
+          DUNE_THROW(Dune::Exception, "Your trying to use a non linear jacobian apply for a linear problem.");
         global_assembler.assemble(local_assembler.localJacobianApplyAssemblerEngine(solution, update, result));
       }
 
@@ -200,7 +204,9 @@ namespace Dune{
       void DUNE_DEPRECATED_MSG("nonlinear_jacobian_apply(x,z,r) is deprecated. Please use jacobian_apply(solution, update, result) instead!")
       nonlinear_jacobian_apply(const Domain & solution, const Domain & update, Range & result) const
       {
-        global_assembler.assemble(local_assembler.localNonlinearJacobianApplyAssemblerEngine(solution, update, result));
+        if (local_assembler.localOperator().isLinear)
+          DUNE_THROW(Dune::Exception, "Your trying to use a non linear jacobian apply for a linear problem.");
+        global_assembler.assemble(local_assembler.localJacobianApplyAssemblerEngine(solution, update, result));
       }
 
 
