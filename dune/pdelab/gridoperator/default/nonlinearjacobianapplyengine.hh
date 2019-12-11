@@ -35,9 +35,9 @@ namespace Dune{
       //! The type of the local operator
       typedef typename LA::LocalOperator LOP;
 
-      //! The type of the residual vector
-      typedef typename LA::Traits::Residual Residual;
-      typedef typename Residual::ElementType ResidualElement;
+      //! The type of the result vector
+      typedef typename LA::Traits::Range Range;
+      typedef typename Range::ElementType RangeElement;
 
       //! The type of the solution vector
       typedef typename LA::Traits::Solution Solution;
@@ -52,7 +52,7 @@ namespace Dune{
       typedef typename LFSV::Traits::GridFunctionSpace GFSV;
 
       typedef typename Solution::template ConstLocalView<LFSUCache> SolutionView;
-      typedef typename Residual::template LocalView<LFSVCache> ResidualView;
+      typedef typename Range::template LocalView<LFSVCache> RangeView;
 
       /**
          \brief Constructor
@@ -100,12 +100,12 @@ namespace Dune{
         return localAssembler().testConstraints();
       }
 
-      //! Set current residual vector. Should be called prior to
+      //! Set current result vector. Should be called prior to
       //! assembling.
-      void setResidual(Residual & residual_)
+      void setResult(Range & result_)
       {
-        global_rl_view.attach(residual_);
-        global_rn_view.attach(residual_);
+        global_rl_view.attach(result_);
+        global_rn_view.attach(result_);
       }
 
       //! Set current solution vector. Should be called prior to
@@ -311,15 +311,15 @@ namespace Dune{
       //! Reference to the local operator
       const LOP & lop;
 
-      //! Pointer to the current residual vector in which to assemble
-      ResidualView global_rl_view;
-      ResidualView global_rn_view;
+      //! Pointer to the current result vector in which to assemble
+      RangeView global_rl_view;
+      RangeView global_rn_view;
 
-      //! Pointer to the current residual vector in which to assemble
+      //! Pointer to the current solution vector
       SolutionView global_sl_view;
       SolutionView global_sn_view;
 
-      //! Pointer to the current residual vector in which to assemble
+      //! Pointer to the current update vector
       SolutionView global_zl_view;
       SolutionView global_zn_view;
 
@@ -329,7 +329,7 @@ namespace Dune{
       typedef Dune::PDELab::TestSpaceTag LocalTestSpaceTag;
 
       typedef Dune::PDELab::LocalVector<SolutionElement, LocalTrialSpaceTag> SolutionVector;
-      typedef Dune::PDELab::LocalVector<ResidualElement, LocalTestSpaceTag> ResidualVector;
+      typedef Dune::PDELab::LocalVector<RangeElement, LocalTestSpaceTag> RangeVector;
 
       //! Inside local coefficients
       SolutionVector xl;
@@ -340,13 +340,13 @@ namespace Dune{
       //! Outside local coefficients
       SolutionVector zn;
       //! Inside local residual
-      ResidualVector rl;
+      RangeVector rl;
       //! Outside local residual
-      ResidualVector rn;
+      RangeVector rn;
       //! Inside local residual weighted view
-      typename ResidualVector::WeightedAccumulationView rl_view;
+      typename RangeVector::WeightedAccumulationView rl_view;
       //! Outside local residual weighted view
-      typename ResidualVector::WeightedAccumulationView rn_view;
+      typename RangeVector::WeightedAccumulationView rn_view;
       //! @}
 
     }; // End of class DefaultLocalJacobianAssemblerEngine

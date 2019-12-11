@@ -184,18 +184,16 @@ namespace Dune{
         global_assembler.assemble(jacobian_engine);
       }
 
-      //! Apply jacobian matrix without explicitly assembling it
-      void jacobian_apply(const Domain & z, Range & r) const
+      //! Apply jacobian matrix to the vector update without explicitly assembling it
+      void jacobian_apply(const Domain & update, Range & result) const
       {
-        typedef typename LocalAssembler::LocalJacobianApplyAssemblerEngine JacobianApplyEngine;
-        JacobianApplyEngine & jacobian_apply_engine = local_assembler.localJacobianApplyAssemblerEngine(r,z);
-        global_assembler.assemble(jacobian_apply_engine);
+        global_assembler.assemble(local_assembler.localJacobianApplyAssemblerEngine(update, result));
       }
 
-      //! Apply jacobian matrix without explicitly assembling it
-      void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r) const
+      //! Apply jacobian matrix to the vector update without explicitly assembling it
+      void nonlinear_jacobian_apply(const Domain & solution, const Domain & update, Range & result) const
       {
-        global_assembler.assemble(local_assembler.localNonlinearJacobianApplyAssemblerEngine(r,x,z));
+        global_assembler.assemble(local_assembler.localNonlinearJacobianApplyAssemblerEngine(solution, update, result));
       }
 
 
