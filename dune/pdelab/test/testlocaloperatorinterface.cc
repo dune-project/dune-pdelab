@@ -34,12 +34,12 @@ class NonLinearLocalOperatorInterface
   : public Dune::PDELab::LocalOperatorInterface
 {
 public:
-  static const bool isLinear = false;
+  static constexpr bool isLinear = false;
 };
 
 
 template <typename GO, typename GFS>
-bool test_linear(const GO& go, const GFS& gfs)
+bool test_linear(const GO& go, const GFS& gfs, bool test_jacobian=true)
 {
     // Initialize vectors and matrices for gridoperator calls
     typename GO::Traits::Domain u(gfs,0.0);
@@ -48,7 +48,8 @@ bool test_linear(const GO& go, const GFS& gfs)
 
     // Call gridoperator methods
     go.residual(u,r);
-    go.jacobian(u,jac);
+    if (test_jacobian)
+      go.jacobian(u,jac);
     go.jacobian_apply(u,r);
 
     // For linear problems these methods should throw errors
@@ -62,7 +63,7 @@ bool test_linear(const GO& go, const GFS& gfs)
 }
 
 template <typename GO, typename GFS>
-bool test_nonlinear(const GO& go, const GFS& gfs)
+bool test_nonlinear(const GO& go, const GFS& gfs, bool test_jacobian=true)
 {
     // Initialize vectors and matrices for gridoperator calls
     typename GO::Traits::Domain u(gfs,0.0);
@@ -71,10 +72,10 @@ bool test_nonlinear(const GO& go, const GFS& gfs)
 
     // Call gridoperator methods
     go.residual(u,r);
-    go.jacobian(u,jac);
+    if (test_jacobian)
+      go.jacobian(u,jac);
     go.jacobian_apply(u,u,r);
     go.nonlinear_jacobian_apply(u,u,r);
-
 
     // For non linear problems this methods should throw errors
     bool jacobian_apply_error = false;
@@ -114,7 +115,7 @@ int main(int argc, char** argv)
     FEM fem;
     using CON = Dune::PDELab::NoConstraints;
     const int blocksize = Dune::QkStuff::QkSize<degree,dim>::value;
-    using VBE = Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,blocksize>;
+    using VBE = Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed, blocksize>;
     using GFS = Dune::PDELab::GridFunctionSpace<GV,FEM,CON,VBE>;
     GFS gfs(gv,fem);
     gfs.name("x_h");
@@ -147,27 +148,25 @@ int main(int argc, char** argv)
     NLGO nlgo(gfs,cc,gfs,cc,nllop,mbe);
     auto nonlinear_test = test_nonlinear(nlgo, gfs);
 
-    // //===============================================
-    // // Test FastDGOperator with linear local operator
-    // //===============================================
-    // using FastGO = Dune::PDELab::FastDGGridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC>;
-    // FastGO fast_go(gfs,cc,gfs,cc,lop,mbe);
-    // auto fast_linear_test = test_linear(fast_go, gfs);
+    //===============================================
+    // Test FastDGOperator with linear local operator
+    //===============================================
+    using FastGO = Dune::PDELab::FastDGGridOperator<GFS,GFS,LOP,MBE,Real,Real,Real,CC,CC>;
+    FastGO fast_go(gfs,cc,gfs,cc,lop,mbe);
+    auto fast_linear_test = test_linear(fast_go, gfs, false);
 
-    // //===================================================
-    // // Test FastDGOperator with non linear local operator
-    // //===================================================
-    // using NLFastGO = Dune::PDELab::FastDGGridOperator<GFS,GFS,NLLOP,MBE,Real,Real,Real,CC,CC>;
-    // FastGO nl_fast_go(gfs,cc,gfs,cc,nllop,mbe);
-    // auto fast_nonlinear_test = test_nonlinear(nl_fast_go, gfs);
+    //===================================================
+    // Test FastDGOperator with non linear local operator
+    //===================================================
+    using NLFastGO = Dune::PDELab::FastDGGridOperator<GFS,GFS,NLLOP,MBE,Real,Real,Real,CC,CC>;
+    NLFastGO nl_fast_go(gfs,cc,gfs,cc,nllop,mbe);
+    auto fast_nonlinear_test = test_nonlinear(nl_fast_go, gfs, false);
 
     //==================
     // Return testresult
     //==================
     bool testfail = true;
-    // if (linear_test && nonlinear_test && fast_linear_test && fast_nonlinear_test)
-    //   testfail = false;
-    if (linear_test && nonlinear_test)
+    if (linear_test && nonlinear_test && fast_linear_test && fast_nonlinear_test)
       testfail = false;
     return testfail;
   }
