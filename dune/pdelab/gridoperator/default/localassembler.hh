@@ -271,9 +271,8 @@ namespace Dune{
       //! @}
 
       bool _reconstruct_border_entries;
-
     };
 
-  }
-}
-#endif // DUNE_PDELAB_GRIDOPERATOR_DEFAULT_LOCALASSEMBLER_HH
+  } // end namespace PDELab
+} // end namespace Dune
+#endif

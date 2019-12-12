@@ -251,7 +251,6 @@ namespace Dune{
         if(local_assembler.doPostProcessing())
           Dune::PDELab::constrain_residual(local_assembler.testConstraints(),
                                            global_result_view_inside.container());
-
       }
 
       //! @}
@@ -338,7 +337,6 @@ namespace Dune{
       //! Pointer to the current result vector in which to assemble
       RangeView global_result_view_inside;
       RangeView global_result_view_outside;
-
 
       //! The local vectors and matrices as required for assembling
       //! @{

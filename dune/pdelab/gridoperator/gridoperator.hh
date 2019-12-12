@@ -209,7 +209,6 @@ namespace Dune{
         global_assembler.assemble(local_assembler.localJacobianApplyAssemblerEngine(solution, update, result));
       }
 
-
       void make_consistent(Jacobian& a) const
       {
         dof_exchanger->accumulateBorderEntries(*this,a);
