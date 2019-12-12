@@ -35,7 +35,10 @@ namespace Dune{
       //! The type of the local operator
       typedef typename LA::LocalOperator LOP;
 
-      //! The type of the residual vector
+      //! Wheter the local operator is linear
+      static constexpr bool isLinear = LOP::isLinear;
+
+      //! The type of the result vector
       typedef typename LA::Traits::Range Range;
       typedef typename Range::ElementType RangeElement;
 
@@ -82,7 +85,10 @@ namespace Dune{
       //! @}
 
       //! Public access to the wrapping local assembler
-      const LocalAssembler & localAssembler() const { return local_assembler; }
+      const LocalAssembler & localAssembler() const
+      {
+        return local_assembler;
+      }
 
       //! Trial space constraints
       const typename LocalAssembler::Traits::TrialGridFunctionSpaceConstraints& trialConstraints() const
@@ -96,20 +102,30 @@ namespace Dune{
         return localAssembler().testConstraints();
       }
 
+      //! Set current solution vector. Should be called prior to
+      //! assembling.
+      void setSolution(const Domain & solution_)
+      {
+        if (isLinear)
+          DUNE_THROW(Dune::Exception, "In the linear case the jacobian apply does not depend on the current solution and this method should never be called.");
+        global_solution_view_inside.attach(solution_);
+        global_solution_view_outside.attach(solution_);
+      }
+
+      //! Set current update vector. Should be called prior to
+      //! assembling.
+      void setUpdate(const Domain & update_)
+      {
+        global_update_view_inside.attach(update_);
+        global_update_view_outside.attach(update_);
+      }
+
       //! Set current result vector. Should be called prior to
       //! assembling.
       void setResult(Range & result_)
       {
-        global_rl_view.attach(result_);
-        global_rn_view.attach(result_);
-      }
-
-      //! Set current solution vector. Should be called prior to
-      //! assembling.
-      void setUpdate(const Domain & update_)
-      {
-        global_sl_view.attach(update_);
-        global_sn_view.attach(update_);
+        global_result_view_inside.attach(result_);
+        global_result_view_outside.attach(result_);
       }
 
       //! Called immediately after binding of local function space in
@@ -118,19 +134,23 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void onBindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
-        global_sl_view.bind(lfsu_cache);
+        if (not isLinear)
+          global_solution_view_inside.bind(lfsu_cache);
+        global_update_view_inside.bind(lfsu_cache);
       }
 
       template<typename EG, typename LFSVC>
       void onBindLFSV(const EG & eg, const LFSVC & lfsv_cache)
       {
-        global_rl_view.bind(lfsv_cache);
+        global_result_view_inside.bind(lfsv_cache);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
       void onBindLFSUVInside(const IG & ig, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
-        global_sl_view.bind(lfsu_cache);
+        if (not isLinear)
+          global_solution_view_inside.bind(lfsu_cache);
+        global_update_view_inside.bind(lfsu_cache);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -138,13 +158,15 @@ namespace Dune{
                               const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                               const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
-        global_sn_view.bind(lfsu_n_cache);
+        if (not isLinear)
+          global_solution_view_outside.bind(lfsu_n_cache);
+        global_update_view_outside.bind(lfsu_n_cache);
       }
 
       template<typename IG, typename LFSVC>
       void onBindLFSVInside(const IG & ig, const LFSVC & lfsv_cache)
       {
-        global_rl_view.bind(lfsv_cache);
+        global_result_view_inside.bind(lfsv_cache);
       }
 
       template<typename IG, typename LFSVC>
@@ -152,7 +174,7 @@ namespace Dune{
                              const LFSVC & lfsv_s_cache,
                              const LFSVC & lfsv_n_cache)
       {
-        global_rn_view.bind(lfsv_n_cache);
+        global_result_view_outside.bind(lfsv_n_cache);
       }
 
       //! @}
@@ -163,15 +185,15 @@ namespace Dune{
       template<typename EG, typename LFSVC>
       void onUnbindLFSV(const EG & eg, const LFSVC & lfsv_cache)
       {
-        global_rl_view.commit();
-        global_rl_view.unbind();
+        global_result_view_inside.commit();
+        global_result_view_inside.unbind();
       }
 
       template<typename IG, typename LFSVC>
       void onUnbindLFSVInside(const IG & ig, const LFSVC & lfsv_cache)
       {
-        global_rl_view.commit();
-        global_rl_view.unbind();
+        global_result_view_inside.commit();
+        global_result_view_inside.unbind();
       }
 
       template<typename IG, typename LFSVC>
@@ -179,8 +201,8 @@ namespace Dune{
                                const LFSVC & lfsv_s_cache,
                                const LFSVC & lfsv_n_cache)
       {
-        global_rn_view.commit();
-        global_rn_view.unbind();
+        global_result_view_outside.commit();
+        global_result_view_outside.unbind();
       }
       //! @}
 
@@ -208,7 +230,7 @@ namespace Dune{
       {
         if(local_assembler.doPostProcessing())
           Dune::PDELab::constrain_residual(local_assembler.testConstraints(),
-                                           global_rl_view.container());
+                                           global_result_view_inside.container());
       }
 
       //! @}
@@ -231,30 +253,30 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
-        global_rl_view.setWeight(local_assembler.weight());
+        global_result_view_inside.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume,LOP::isLinear>::
-          jacobian_apply_volume(lop,eg,lfsu_cache.localFunctionSpace(),global_sl_view,lfsv_cache.localFunctionSpace(),global_rl_view);
+          jacobian_apply_volume(lop,eg,lfsu_cache.localFunctionSpace(),global_solution_view_inside,global_update_view_inside,lfsv_cache.localFunctionSpace(),global_result_view_inside);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
       void assembleUVSkeleton(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                               const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
-        global_rl_view.setWeight(local_assembler.weight());
-        global_rn_view.setWeight(local_assembler.weight());
+        global_result_view_inside.setWeight(local_assembler.weight());
+        global_result_view_outside.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton,LOP::isLinear>::
           jacobian_apply_skeleton(lop,ig,
-                         lfsu_s_cache.localFunctionSpace(),global_sl_view,lfsv_s_cache.localFunctionSpace(),
-                         lfsu_n_cache.localFunctionSpace(),global_sn_view,lfsv_n_cache.localFunctionSpace(),
-                         global_rl_view,global_rn_view);
+                                  lfsu_s_cache.localFunctionSpace(),global_solution_view_inside,global_update_view_inside,lfsv_s_cache.localFunctionSpace(),
+                                  lfsu_n_cache.localFunctionSpace(),global_solution_view_outside,global_update_view_outside,lfsv_n_cache.localFunctionSpace(),
+                         global_result_view_inside,global_result_view_outside);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
-        global_rl_view.setWeight(local_assembler.weight());
+        global_result_view_inside.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary,LOP::isLinear>::
-          jacobian_apply_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),global_sl_view,lfsv_s_cache.localFunctionSpace(),global_rl_view);
+          jacobian_apply_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),global_solution_view_inside,global_update_view_inside,lfsv_s_cache.localFunctionSpace(),global_result_view_inside);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -269,9 +291,9 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
-        global_rl_view.setWeight(local_assembler.weight());
+        global_result_view_inside.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton,LOP::isLinear>::
-          jacobian_apply_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),global_sl_view,lfsv_cache.localFunctionSpace(),global_rl_view);
+          jacobian_apply_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),global_solution_view_inside,global_update_view_inside,lfsv_cache.localFunctionSpace(),global_result_view_inside);
       }
 
       //! @}
@@ -284,13 +306,17 @@ namespace Dune{
       //! Reference to the local operator
       const LOP & lop;
 
-      //! Pointer to the current residual vector in which to assemble
-      RangeView global_rl_view;
-      RangeView global_rn_view;
+      //! Pointer to the current solution vector
+      DomainView global_solution_view_inside;
+      DomainView global_solution_view_outside;
 
-      //! Pointer to the current residual vector in which to assemble
-      DomainView global_sl_view;
-      DomainView global_sn_view;
+      //! Pointer to the current update vector
+      DomainView global_update_view_inside;
+      DomainView global_update_view_outside;
+
+      //! Pointer to the current result vector in which to assemble
+      RangeView global_result_view_inside;
+      RangeView global_result_view_outside;
 
       //! The local vectors and matrices as required for assembling
       //! @{
