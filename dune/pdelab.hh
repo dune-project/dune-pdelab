@@ -258,7 +258,6 @@
 #include <dune/pdelab/gridoperator/fastdg/jacobianengine.hh>
 #include <dune/pdelab/gridoperator/fastdg/assembler.hh>
 #include <dune/pdelab/gridoperator/fastdg/patternengine.hh>
-#include <dune/pdelab/gridoperator/fastdg/nonlinearjacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/fastdg/jacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/onestep.hh>
 #include <dune/pdelab/gridoperator/default/residualengine.hh>
