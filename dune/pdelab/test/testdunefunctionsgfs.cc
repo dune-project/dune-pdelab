@@ -268,7 +268,7 @@ void solveParallelPoissonProblem()
   LS ls(gridFunctionSpace,cc,100,5,verbose);
 
   // solve nonlinear problem
-  PDELab::Newton<GO,LS> newton(go,ls);
+  PDELab::NewtonMethod<GO,LS> newton(go,ls);
   Dune::ParameterTree newtonParam;
   newtonParam["reassemble_threshold"] = "0.0";
   newtonParam["verbosity"] = "2";

@@ -59,7 +59,7 @@ namespace Dune::PDELab
    * \tparam LinearSolver_ Solver backend for solving linear system of equations
    */
   template <typename GridOperator_, typename LinearSolver_>
-  class Newton
+  class NewtonMethod
   {
   public:
     //! Type of the grid operator
@@ -87,7 +87,7 @@ namespace Dune::PDELab
     const Result& result() const
     {
       if (not _resultValid)
-        DUNE_THROW(NewtonError, "NewtonSolver::result() called before NewtonSolver::solve()");
+        DUNE_THROW(NewtonError, "NewtonMethod::result() called before NewtonMethod::solve()");
       return _result;
     }
 
@@ -139,7 +139,7 @@ namespace Dune::PDELab
 
       if (not _linearSolver.result().converged)
         DUNE_THROW(NewtonLinearSolverError,
-                   "NewtonSolver::linearSolve(): Linear solver did not converge "
+                   "NewtonMethod::linearSolve(): Linear solver did not converge "
                    "in " << _linearSolver.result().iterations << " iterations");
       if (_verbosity >= 4)
         std::cout << "          linear solver iterations:     "
@@ -447,7 +447,7 @@ namespace Dune::PDELab
     }
 
     //! Construct Newton using default parameters
-    Newton(
+    NewtonMethod(
       const GridOperator& gridOperator,
       LinearSolver& linearSolver,
       const std::string& lineSearchStrategy="hackbusch_reusken")
@@ -456,12 +456,12 @@ namespace Dune::PDELab
       , _residual(gridOperator.testGridFunctionSpace())
       , _correction(gridOperator.trialGridFunctionSpace())
     {
-      _terminate = std::make_shared<DefaultTerminate<Newton>> (*this);
+      _terminate = std::make_shared<DefaultTerminate<NewtonMethod>> (*this);
       _lineSearch = getLineSearch(*this, lineSearchStrategy);
     }
 
     //! Construct Newton passing a parameter tree
-    Newton(
+    NewtonMethod(
       const GridOperator& gridOperator,
       LinearSolver& linearSolver,
       const ParameterTree& parameterTree,
@@ -473,7 +473,7 @@ namespace Dune::PDELab
 
     {
       setParameters(parameterTree);
-      _terminate = std::make_shared<DefaultTerminate<Newton>> (*this);
+      _terminate = std::make_shared<DefaultTerminate<NewtonMethod>> (*this);
       _lineSearch = getLineSearch(*this, lineSearchStrategy);
     }
 
