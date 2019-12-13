@@ -209,7 +209,7 @@ void stationary (const GV& gv)
 #endif
 
   // <<<7>>> solve nonlinear problem
-  Dune::PDELab::Newton<GO,LS> newton(go,ls);
+  Dune::PDELab::NewtonMethod<GO,LS> newton(go,ls);
   newton.setReassembleThreshold(0.0);
   newton.setVerbosityLevel(2);
   newton.setReduction(0.9);
@@ -285,7 +285,7 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   LS ls(gfs,cc,5000,1,1);
 
   // <<<7>>> make Newton for time-dependent problem
-  typedef Dune::PDELab::Newton<IGO,LS> PDESOLVER;
+  typedef Dune::PDELab::NewtonMethod<IGO,LS> PDESOLVER;
   PDESOLVER tnewton(igo,ls);
   tnewton.setReassembleThreshold(0.0);
   tnewton.setVerbosityLevel(0);
