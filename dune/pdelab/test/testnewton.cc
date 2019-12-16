@@ -152,7 +152,7 @@ int main(int argc, char** argv)
     using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_SuperLU;
     LinearSolver linearSolver(false);
     const double reduction = 1e-7;
-    using Solver = Dune::PDELab::Newton<GridOperator, LinearSolver>;
+    using Solver = Dune::PDELab::NewtonMethod<GridOperator, LinearSolver>;
     Solver solver(gridOperator, linearSolver);
 
     // Set some parameters without loading parameter tree from ini file (just to show that it works)

@@ -725,7 +725,7 @@ namespace Dune
     }; // end class NewtonLineSearch
 
     template<class GOS, class S, class TrlV, class TstV = TrlV>
-    class OldNewton : public NewtonSolver<GOS,S,TrlV,TstV>
+    class Newton : public NewtonSolver<GOS,S,TrlV,TstV>
                     , public NewtonTerminate<GOS,TrlV,TstV>
                     , public NewtonLineSearch<GOS,TrlV,TstV>
                     , public NewtonPrepareStep<GOS,TrlV,TstV>
@@ -735,16 +735,16 @@ namespace Dune
       typedef TrlV TrialVector;
 
     public:
-      OldNewton(const GridOperator& go, TrialVector& u_, Solver& solver_)
-        DUNE_DEPRECATED_MSG("OldNewton is deprecated. Use Newton from dune/pdelab/solver/newton.hh instead.")
+      Newton(const GridOperator& go, TrialVector& u_, Solver& solver_)
+        DUNE_DEPRECATED_MSG("This Newton is deprecated. Use NewtonMethod from dune/pdelab/solver/newton.hh instead.")
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
         , NewtonSolver<GOS,S,TrlV,TstV>(go,u_,solver_)
         , NewtonTerminate<GOS,TrlV,TstV>(go,u_)
         , NewtonLineSearch<GOS,TrlV,TstV>(go,u_)
         , NewtonPrepareStep<GOS,TrlV,TstV>(go,u_)
       {}
-      OldNewton(const GridOperator& go, Solver& solver_)
-        DUNE_DEPRECATED_MSG("OldNewton is deprecated. Use Newton from dune/pdelab/solver/newton.hh instead.")
+      Newton(const GridOperator& go, Solver& solver_)
+        DUNE_DEPRECATED_MSG("This Newton is deprecated. Use NewtonMethod from dune/pdelab/solver/newton.hh instead.")
         : NewtonBase<GOS,TrlV,TstV>(go)
         , NewtonSolver<GOS,S,TrlV,TstV>(go,solver_)
         , NewtonTerminate<GOS,TrlV,TstV>(go)

@@ -896,7 +896,7 @@ void driver (const GV& gv, const FEM& fem, Param& param)
 
   // select a nonlinear solver for flow
   constexpr int newtonMaxIt{10};
-  using PDESOLVERF = Dune::PDELab::Newton<IGOF,LSF>;
+  using PDESOLVERF = Dune::PDELab::NewtonMethod<IGOF,LSF>;
   PDESOLVERF pdesolverf(igof,lsf);
   Dune::ParameterTree newtonParam;
   newtonParam["reassemble_threshold"] = "0.0";
@@ -907,10 +907,10 @@ void driver (const GV& gv, const FEM& fem, Param& param)
   newtonParam["line_search.line_search_max_iterations"] = "10";
   pdesolverf.setParameters(newtonParam);
   // select a solver for contaminant
-  using PDESOLVERC = Dune::PDELab::Newton<IGOC,LSC>;
+  using PDESOLVERC = Dune::PDELab::NewtonMethod<IGOC,LSC>;
   PDESOLVERC pdesolverc(igoc,lsc);
   pdesolverc.setParameters(newtonParam);
-  using PDESOLVERD = Dune::PDELab::Newton<IGOD,LSC>;
+  using PDESOLVERD = Dune::PDELab::NewtonMethod<IGOD,LSC>;
   PDESOLVERD pdesolverd(igod,lsc);
   pdesolverd.setParameters(newtonParam);
 

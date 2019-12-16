@@ -186,7 +186,6 @@ namespace Dune::PDELab
     bool _acceptBest = false;
   };
 
-
   //! Flags for different line search strategies
   enum LineSearchStrategy
   {
