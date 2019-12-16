@@ -153,8 +153,6 @@ namespace Dune{
         local_assembler.setStage(stage);
         PreStageEngine & prestage_engine = local_assembler.localPreStageAssemblerEngine(x);
         global_assembler.assemble(prestage_engine);
-        // using Dune::PDELab::Backend::native;
-        // Dune::printvector(std::cout,native(const_residual),"const residual","row",4,9,1);
       }
 
       //! Assemble residual
@@ -166,8 +164,6 @@ namespace Dune{
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
         ResidualEngine & residual_engine = local_assembler.localResidualAssemblerEngine(r,x);
         global_assembler.assemble(residual_engine);
-        // using Dune::PDELab::Backend::native;
-        // Dune::printvector(std::cout,native(r),"residual","row",4,9,1);
       }
 
       //! Assemble jacobian
@@ -179,8 +175,6 @@ namespace Dune{
         typedef typename LocalAssembler::LocalJacobianAssemblerEngine JacobianEngine;
         JacobianEngine & jacobian_engine = local_assembler.localJacobianAssemblerEngine(a,x);
         global_assembler.assemble(jacobian_engine);
-        // using Dune::PDELab::Backend::native;
-        // printmatrix(std::cout,native(a),"global stiffness matrix","row",9,1);
       }
 
       //! Assemble jacobian and residual simultaneously for explicit treatment
@@ -197,8 +191,23 @@ namespace Dune{
 
         ExplicitJacobianResidualEngine & jacobian_residual_engine
           = local_assembler.localExplicitJacobianResidualAssemblerEngine(a,r0,r1,x);
-
         global_assembler.assemble(jacobian_residual_engine);
+      }
+
+      //! Apply jacobian matrix to the vector update without explicitly assembling it
+      void jacobian_apply(const Domain & update, Range & result) const
+      {
+        if ((not la0.localOperator().isLinear) or (not la1.localOperator().isLinear))
+          DUNE_THROW(Dune::Exception, "Your trying to use a linear jacobian apply for a non linear problem.");
+        global_assembler.assemble(local_assembler.localJacobianApplyAssemblerEngine(update, result));
+      }
+
+      //! Apply jacobian matrix to the vector update without explicitly assembling it
+      void jacobian_apply(const Domain & solution, const Domain & update, Range & result) const
+      {
+        if (la0.localOperator().isLinear and la1.localOperator().isLinear)
+          DUNE_THROW(Dune::Exception, "Your trying to use a non linear jacobian apply for a linear problem.");
+        global_assembler.assemble(local_assembler.localJacobianApplyAssemblerEngine(solution, update, result));
       }
 
       //! Interpolate constrained values from given function f
