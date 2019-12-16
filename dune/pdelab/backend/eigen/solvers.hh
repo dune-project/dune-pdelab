@@ -8,6 +8,8 @@
 
 #include <dune/pdelab/constraints/common/constraints.hh>
 
+#include <dune/pdelab/backend/interface.hh>
+
 #include "../solver.hh"
 
 #if HAVE_EIGEN
@@ -25,7 +27,7 @@ namespace Dune {
 
   template<class PreconditionerImp>
     class EigenBackend_BiCGSTAB_Base
-      : public LinearResultStorage
+     : public SolverBackendBase, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -36,6 +38,8 @@ namespace Dune {
       explicit EigenBackend_BiCGSTAB_Base(unsigned maxiter_=5000)
         : maxiter(maxiter_)
       {}
+
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -100,7 +104,7 @@ namespace Dune {
 
     template< class Preconditioner, int UpLo >
       class EigenBackend_CG_Base
-      : public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -111,6 +115,8 @@ namespace Dune {
       explicit EigenBackend_CG_Base(unsigned maxiter_=5000)
         : maxiter(maxiter_)
       {}
+
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -189,7 +195,7 @@ namespace Dune {
     template<template<class, int> class Solver, int UpLo>
 #endif
       class EigenBackend_SPD_Base
-      : public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -199,6 +205,8 @@ namespace Dune {
         */
       explicit EigenBackend_SPD_Base()
       {}
+
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
