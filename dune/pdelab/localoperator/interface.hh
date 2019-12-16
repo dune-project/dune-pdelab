@@ -460,6 +460,9 @@ namespace Dune {
        *       at which to evaluate the Jacobian, but only the vector \c z to which
        *       the Jacobian should be applied.
        *
+       * \note Your operator should export the flag isLinear=true in this case. This
+       *       is done by default.
+       *
        * This method is controlled by the flag \ref doAlphaVolume.  For a
        * given element, it is called *before* the jacobian_apply_skeleton()
        * and/or jacobian_apply_boundary() methods are called (if they are
@@ -644,6 +647,9 @@ namespace Dune {
        * \note This method assumes that the residual is not linear and the Jacobian
        *       is not constant; the Jacobian should be evaluated for the vector \c x
        *       and applied to the vector \c z.
+       *
+       * \note Your linear operator should export the flag isLinear=false in this
+       *       case, see LocalOperatorDefaultFlags.
        *
        * This method is controlled by the flag \ref doAlphaVolume.  For a
        * given element, it is called *before* the jacobian_apply_skeleton()
