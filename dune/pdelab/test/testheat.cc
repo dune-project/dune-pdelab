@@ -11,6 +11,18 @@
 
 #include "dune/pdelab.hh"
 
+template <typename GO>
+void testGridOperatorInterface(const GO& go)
+{
+  typename GO::Traits::Domain u(go.trialGridFunctionSpace(), 0.0);
+  typename GO::Traits::Range r(go.trialGridFunctionSpace());
+  typename GO::Traits::Jacobian jac(go);
+  go.residual(u, r);
+  go.jacobian(u, jac);
+  go.jacobian_apply(u, r);
+}
+
+
 template <class GridView, class RangeType>
 class PoissonProblem
   : public Dune::PDELab::ConvectionDiffusionModelProblem<GridView, RangeType>
@@ -205,6 +217,11 @@ int main(int argc, char** argv)
     DifferenceSquaredAdapter::Traits::RangeType error(0.0);
     Dune::PDELab::integrateGridFunction(differenceSquaredAdapder, error, 10);
     std::cout << "l2errorsquared matrix based: " << error << std::endl;
+
+    //=================================
+    // Test the grid operator interface
+    //=================================
+    testGridOperatorInterface(instationaryGridOperator);
 
     // Let the test fail if the error is too large
     bool testfail(false);
