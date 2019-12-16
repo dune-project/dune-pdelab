@@ -23,6 +23,7 @@
 #include <dune/pdelab/backend/solver.hh>
 #include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrix.hh>
+#include <dune/pdelab/backend/interface.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -77,7 +78,7 @@ namespace Dune {
 
     template<template<class> class Solver>
     class ISTLBackend_SEQ_Richardson
-      : public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -88,6 +89,8 @@ namespace Dune {
       explicit ISTLBackend_SEQ_Richardson(unsigned maxiter_=5000, int verbose_=1)
         : maxiter(maxiter_), verbose(verbose_)
       {}
+
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -123,7 +126,7 @@ namespace Dune {
 
     template<class GO, template<class> class Solver>
     class ISTLBackend_SEQ_MatrixFree_Richardson
-      : public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
       using V = typename GO::Traits::Domain;
       using W = typename GO::Traits::Range;
@@ -138,6 +141,8 @@ namespace Dune {
         , maxiter_(maxiter)
         , verbose_(verbose)
       {}
+
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -159,6 +164,11 @@ namespace Dune {
         res.conv_rate  = stat.conv_rate;
       }
 
+      bool matrixFree()
+      {
+        return true;
+      }
+
     private:
       Dune::PDELab::OnTheFlyOperator<V,W,GO> opa_;
       unsigned maxiter_;
@@ -168,7 +178,7 @@ namespace Dune {
     template<template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
     class ISTLBackend_SEQ_Base
-      : public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -180,7 +190,7 @@ namespace Dune {
         : maxiter(maxiter_), verbose(verbose_)
       {}
 
-
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -219,7 +229,7 @@ namespace Dune {
 
     template<template<typename> class Solver>
     class ISTLBackend_SEQ_ILU0
-      :  public SequentialNorm, public LinearResultStorage
+      :  public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -230,6 +240,9 @@ namespace Dune {
       explicit ISTLBackend_SEQ_ILU0 (unsigned maxiter_=5000, int verbose_=1)
         : maxiter(maxiter_), verbose(verbose_)
        {}
+
+      using SolverBackendBase::apply;
+
       /*! \brief solve the given linear system
 
         \param[in] A the given matrix
@@ -265,7 +278,7 @@ namespace Dune {
 
     template<template<typename> class Solver>
     class ISTLBackend_SEQ_ILUn
-      :  public SequentialNorm, public LinearResultStorage
+      :  public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -277,6 +290,9 @@ namespace Dune {
       ISTLBackend_SEQ_ILUn (int n, double w, unsigned maxiter_=5000, int verbose_=1)
         : n_(n), w_(w), maxiter(maxiter_), verbose(verbose_)
        {}
+
+      using SolverBackendBase::apply;
+
       /*! \brief solve the given linear system
 
         \param[in] A the given matrix
@@ -513,7 +529,7 @@ namespace Dune {
      * @brief Solver backend using SuperLU as a direct solver.
      */
     class ISTLBackend_SEQ_SuperLU
-      : public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -524,7 +540,6 @@ namespace Dune {
         : verbose(verbose_)
       {}
 
-
       /*! \brief make a linear solver object
 
         \param[in] maxiter Maximum number of allowed steps (ignored)
@@ -533,6 +548,8 @@ namespace Dune {
       ISTLBackend_SEQ_SuperLU (int maxiter, int verbose_)
         : verbose(verbose_)
       {}
+
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -567,7 +584,7 @@ namespace Dune {
      * @brief Solver backend using UMFPack as a direct solver.
      */
     class ISTLBackend_SEQ_UMFPack
-      : public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -578,7 +595,6 @@ namespace Dune {
         : verbose(verbose_)
       {}
 
-
       /*! \brief make a linear solver object
 
         \param[in] maxiter Maximum number of allowed steps (ignored)
@@ -587,6 +603,8 @@ namespace Dune {
       ISTLBackend_SEQ_UMFPack (int maxiter, int verbose_)
         : verbose(verbose_)
       {}
+
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -617,13 +635,15 @@ namespace Dune {
 
     //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
     class ISTLBackend_SEQ_ExplicitDiagonal
-      : public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
       */
       ISTLBackend_SEQ_ExplicitDiagonal ()
       {}
+
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
@@ -678,7 +698,7 @@ namespace Dune {
 
     template<class GO, template<class,class,class,int> class Preconditioner, template<class> class Solver,
               bool skipBlocksizeCheck = false>
-    class ISTLBackend_SEQ_AMG : public LinearResultStorage
+    class ISTLBackend_SEQ_AMG : public SolverBackendBase, public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef typename GO::Traits::Jacobian M;
@@ -709,6 +729,8 @@ namespace Dune {
           }
 #endif
       }
+
+      using SolverBackendBase::apply;
 
        /*! \brief set AMG parameters
 
@@ -779,7 +801,6 @@ namespace Dune {
         res.reduction  = stat.reduction;
         res.conv_rate  = stat.conv_rate;
       }
-
 
       /**
        * @brief Get statistics of the AMG solver (no of levels, timings).
@@ -941,7 +962,7 @@ namespace Dune {
     */
 
     class ISTLBackend_SEQ_GMRES_ILU0
-      : public SequentialNorm, public LinearResultStorage
+      : public SolverBackendBase, public SequentialNorm, public LinearResultStorage
     {
     public :
 
@@ -954,6 +975,8 @@ namespace Dune {
       explicit ISTLBackend_SEQ_GMRES_ILU0(int restart_ = 200, int maxiter_ = 5000, int verbose_ = 1)
         : restart(restart_), maxiter(maxiter_), verbose(verbose_)
       {}
+
+      using SolverBackendBase::apply;
 
       /** \brief solve the given linear system
 

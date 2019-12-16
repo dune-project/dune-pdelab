@@ -8,6 +8,7 @@
 
 #include <dune/grid/common/datahandleif.hh>
 
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrix.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
@@ -143,7 +144,7 @@ namespace Dune {
 
     */
     template<class DGGO, class CGGFS, class TransferLOP, template<class,class,class,int> class DGPrec, template<class> class Solver>
-    class ISTLBackend_SEQ_AMG_4_DG : public Dune::PDELab::LinearResultStorage
+    class ISTLBackend_SEQ_AMG_4_DG : public SolverBackendBase, public Dune::PDELab::LinearResultStorage
     {
       // DG grid function space
       typedef typename DGGO::Traits::TrialGridFunctionSpace GFS;
@@ -305,6 +306,8 @@ namespace Dune {
       {
         return reuse;
       }
+
+      using SolverBackendBase::apply;
 
       /*! \brief solve the given linear system
 
