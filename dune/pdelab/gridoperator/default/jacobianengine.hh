@@ -229,7 +229,7 @@ namespace Dune{
       void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         al_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume,LOP::isLinear>::
           jacobian_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),al_view);
       }
 
@@ -242,7 +242,7 @@ namespace Dune{
         al_ns_view.setWeight(local_assembler.weight());
         al_nn_view.setWeight(local_assembler.weight());
 
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton,LOP::isLinear>::
           jacobian_skeleton(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),lfsu_n_cache.localFunctionSpace(),xn,lfsv_n_cache.localFunctionSpace(),al_view,al_sn_view,al_ns_view,al_nn_view);
       }
 
@@ -250,7 +250,7 @@ namespace Dune{
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
         al_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary,LOP::isLinear>::
           jacobian_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),al_view);
       }
 
@@ -276,7 +276,7 @@ namespace Dune{
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         al_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton,LOP::isLinear>::
           jacobian_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),al_view);
       }
 

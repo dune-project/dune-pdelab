@@ -14,6 +14,9 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   The `nonlinear_jacobian_apply` method of the grid operator is deprecated. Instead you should use the new
+    `jacobian_apply_method` taking the same arguments. In addition you need to set the new `isLinear` flag in
+    your local operator to true.
 
 -   The Newton solver was rewritten. The old implementation is still around with the name `OldNewton` and is
     deprecated. The new Newton can be found in `dune/pdelab/solver/newton.hh` and works quite similar but
