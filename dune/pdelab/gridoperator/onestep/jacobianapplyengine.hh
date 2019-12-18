@@ -89,7 +89,7 @@ namespace Dune{
         result = &result_;
 
         // Initialize the engines of the two wrapped local assemblers
-        assert(solution != invalid_solution);
+        assert(update != invalid_update);
         setLocalAssemblerEngineDT0
           (la.la0.localJacobianApplyAssemblerEngine(*solution,*update,*result));
         setLocalAssemblerEngineDT1
