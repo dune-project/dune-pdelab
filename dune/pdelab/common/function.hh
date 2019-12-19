@@ -526,7 +526,7 @@ namespace Dune {
     /** \brief composite functions
      *
      *  Collect instances of possibly different function types Tn within a
-     *  \ref GridFunctionTree.  This impolements a \ref GridFunctionTree
+     *  \ref GridFunctionTree.  This implements a \ref GridFunctionTree
      *
      *  \tparam Tn The base types.  Tn==EmptyChild means that slot n is
      *             unused.  Currently, up to 9 slots are supported, making 8
@@ -555,6 +555,10 @@ namespace Dune {
         : BaseT(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>(children)...)
       {
       }
+
+      CompositeGridFunction (std::shared_ptr<Children>... children)
+        : BaseT(children...)
+      {}
 
       //! Set the time in all leaf nodes of this function tree
       template <typename TT>
