@@ -6,6 +6,9 @@
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 
+#include <memory>
+
+
 namespace Dune {
   namespace PDELab {
 
@@ -37,9 +40,20 @@ namespace Dune {
         , _data(nullptr)
       {}
 
+      ConstAliasedVectorView(std::shared_ptr<V> container)
+        : _container(container.get())
+        , _lfs_cache(nullptr)
+        , _data(nullptr)
+      {}
+
       void attach(V& container)
       {
         _container = &container;
+      }
+
+      void attach(std::shared_ptr<V> container)
+      {
+        _container = container.get();
       }
 
       void detach()
@@ -139,6 +153,11 @@ namespace Dune {
       {}
 
       AliasedVectorView(Container& container)
+        : ConstAliasedVectorView<V,LFSC>(container)
+        , weight_(1.0)
+      {}
+
+      AliasedVectorView(std::shared_ptr<Container> container)
         : ConstAliasedVectorView<V,LFSC>(container)
         , weight_(1.0)
       {}
