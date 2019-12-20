@@ -2,6 +2,8 @@ add_subdirectory(fem)
 
 dune_add_test(SOURCES testnewton.cc)
 
+dune_add_test(SOURCES testinstationary.cc)
+
 dune_add_test(SOURCES testanalytic.cc)
 
 dune_add_test(SOURCES testbindtime.cc)

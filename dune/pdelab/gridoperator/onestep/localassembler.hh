@@ -6,6 +6,7 @@
 #include <dune/pdelab/gridoperator/onestep/residualengine.hh>
 #include <dune/pdelab/gridoperator/onestep/patternengine.hh>
 #include <dune/pdelab/gridoperator/onestep/jacobianengine.hh>
+#include <dune/pdelab/gridoperator/onestep/jacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/onestep/prestageengine.hh>
 #include <dune/pdelab/gridoperator/onestep/jacobianresidualengine.hh>
 
@@ -51,6 +52,7 @@ namespace Dune{
       typedef OneStepLocalPreStageAssemblerEngine<OneStepLocalAssembler> LocalPreStageAssemblerEngine;
       typedef OneStepLocalResidualAssemblerEngine<OneStepLocalAssembler> LocalResidualAssemblerEngine;
       typedef OneStepLocalJacobianAssemblerEngine<OneStepLocalAssembler> LocalJacobianAssemblerEngine;
+      typedef OneStepLocalJacobianApplyAssemblerEngine<OneStepLocalAssembler> LocalJacobianApplyAssemblerEngine;
 
       typedef typename LA1::LocalPatternAssemblerEngine LocalExplicitPatternAssemblerEngine;
       typedef OneStepExplicitLocalJacobianResidualAssemblerEngine<OneStepLocalAssembler>
@@ -60,6 +62,7 @@ namespace Dune{
       friend class OneStepLocalPreStageAssemblerEngine<OneStepLocalAssembler>;
       friend class OneStepLocalResidualAssemblerEngine<OneStepLocalAssembler>;
       friend class OneStepLocalJacobianAssemblerEngine<OneStepLocalAssembler>;
+      friend class OneStepLocalJacobianApplyAssemblerEngine<OneStepLocalAssembler>;
       friend class OneStepExplicitLocalJacobianResidualAssemblerEngine<OneStepLocalAssembler>;
       //! @}
 
@@ -96,7 +99,8 @@ namespace Dune{
           const_residual(const_residual_),
           time(0.0), dt_mode(MultiplyOperator0ByDT), stage(0),
           pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this),
-          explicit_jacobian_residual_engine(*this)
+          explicit_jacobian_residual_engine(*this),
+          jacobian_apply_engine(*this)
       { static_checks(); }
 
       //! Notifies the local assembler about the current time of
@@ -242,6 +246,27 @@ namespace Dune{
         return explicit_jacobian_residual_engine;
       }
 
+      //! Returns a reference to the requested engine. This engine is
+      //! completely configured and ready to use.
+      LocalJacobianApplyAssemblerEngine & localJacobianApplyAssemblerEngine
+      (const typename Traits::Domain & update, typename Traits::Range & result)
+      {
+        jacobian_apply_engine.setUpdate(update);
+        jacobian_apply_engine.setResult(result);
+        return jacobian_apply_engine;
+      }
+
+      //! Returns a reference to the requested engine. This engine is
+      //! completely configured and ready to use.
+      LocalJacobianApplyAssemblerEngine & localJacobianApplyAssemblerEngine
+      (const typename Traits::Domain & solution, const typename Traits::Domain & update, typename Traits::Range & result)
+      {
+        jacobian_apply_engine.setSolution(solution);
+        jacobian_apply_engine.setUpdate(update);
+        jacobian_apply_engine.setResult(result);
+        return jacobian_apply_engine;
+      }
+
       //! @}
 
     private:
@@ -296,6 +321,7 @@ namespace Dune{
       LocalResidualAssemblerEngine residual_engine;
       LocalJacobianAssemblerEngine jacobian_engine;
       LocalExplicitJacobianResidualAssemblerEngine explicit_jacobian_residual_engine;
+      LocalJacobianApplyAssemblerEngine jacobian_apply_engine;
       //! @}
     };
 
