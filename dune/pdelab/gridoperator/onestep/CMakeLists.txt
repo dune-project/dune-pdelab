@@ -1,4 +1,5 @@
 install(FILES enginebase.hh
+              jacobianapplyengine.hh
               jacobianengine.hh
               jacobianresidualengine.hh
               localassembler.hh
