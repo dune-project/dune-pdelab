@@ -253,7 +253,7 @@ public:
     //return 1.0;//std::exp(-std::sqrt(std::pow(xglobal[0] - .5, 2) + std::pow(xglobal[1] - .5, 2)));
     //return (- std::exp(-std::sqrt(std::pow(xglobal[0] - 0.25, 2) + std::pow(xglobal[1] - 0.25, 2)))
     //+ std::exp(-std::sqrt(std::pow(xglobal[0] - 0.75, 2) + std::pow(xglobal[1] - 0.75, 2)))) * 100;
-    return 1.0;
+    return 0.0;
   }
 
   BCType
@@ -346,7 +346,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
 
   // make problem parameters
-  typedef GenericEllipticProblem2<GM::LevelGridView,NumberType> Problem;
+  typedef GenericEllipticProblem<GM::LevelGridView,NumberType> Problem;
   Problem problem;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
   BCType bctype(grid->levelGridView(grid->maxLevel()),problem);
@@ -537,6 +537,21 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
 
   // Fuse per-subdomain basis functions to a global coarse space
+  int basis_size_without_augmentation = subdomain_basis->local_basis.size();
+  if (configuration.get<bool>("coarse_only") && configuration.get<bool>("dirichlet_interpol_in_coarse_only")) {
+    //subdomain_basis->local_basis.push_back(Dune::stackobject_to_shared_ptr(x_orig));
+    using Dune::PDELab::Backend::native;
+    bool nonzero = false;
+    for (auto& val : native(x_orig)) {
+      if (val != .0) {
+        nonzero = true;
+        break;
+      }
+    }
+    if (nonzero) {
+      subdomain_basis->local_basis.push_back(std::make_shared<V>(x_orig));
+    }
+  }
   auto coarse_space = std::make_shared<Dune::PDELab::SubdomainProjectedCoarseSpace<GFS,M_EXTERIOR,V,PIH> >(gfs, AF_exterior, subdomain_basis, pihf);
 
   // Plug coarse basis into actual preconditioner
@@ -604,6 +619,7 @@ while(true) {
   if (verb > 0) std::cout << "pCG solve: " << timer_solve.elapsed() << std::endl;
   if (verb > 0) std::cout << "full solve: " << timer_full_solve.elapsed() << std::endl;
 
+  std::string vtk_prefix = "testgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type + "_dir_" + (configuration.get<bool>("dirichlet_interpol_in_coarse_only") ? "true" : "false");
 
   if (configuration.get<bool>("coarse_only")) {
     auto solver_ref = std::make_shared<Dune::CGSolver<V> >(*popf,ospf,*prec_full,1E-6,1000,verb,false);
@@ -623,7 +639,7 @@ while(true) {
     typedef Dune::PDELab::VTKGridFunctionAdapter<Difference> ADAPT;
     auto adapt = std::make_shared<ADAPT>(error_diff,"error");
     vtkwriter.addVertexData(adapt);
-    vtkwriter.write("error" + std::to_string(subdomain_basis->local_basis.size()));
+    vtkwriter.write(vtk_prefix + "_error" + std::to_string(basis_size_without_augmentation));
     }
 
     typedef Dune::PDELab::DifferenceSquaredAdapter<DGF,DGF> DifferenceSquared;
@@ -651,7 +667,7 @@ while(true) {
     auto adapt_orig = std::make_shared<ADAPT>(xdgf_orig,"ref");
     vtkwriter.addVertexData(adapt_orig);
   }
-  vtkwriter.write("testgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type);
+  vtkwriter.write(vtk_prefix);
 
   if  (configuration.get<bool>("write_basis", false)) {
     for (int i = 0; i < subdomain_basis->basis_size(); i++) {
@@ -663,7 +679,7 @@ while(true) {
       typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
       auto adapt = std::make_shared<ADAPT>(xdgf,"basis");
       vtkwriter.addVertexData(adapt);
-      vtkwriter.write("testgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type
+      vtkwriter.write(vtk_prefix
                       + "_r_" + std::to_string(gfs.gridView().comm().rank()) + "_vec_" + std::to_string(i));
 
     }

@@ -20,4 +20,6 @@ ml eigen
 export=OMP_NUM_THREADS=1
 #--export=OMP_NUM_THREADS=1
 
+echo "Running with options $1"
+
 srun $SRUNOPT ./testgeneo $1

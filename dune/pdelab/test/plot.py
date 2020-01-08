@@ -114,12 +114,13 @@ config = {
   "hybrid": "false",
   "coarse_only": "false",
   "arpack_factor": "1.0",
+  "dirichlet_interpol_in_coarse_only": "false",
 }
 
 config_approx = config.copy()
 config_approx["coarse_only"] = "true"
-config_approx["subdomainsx"] = "1"
-config_approx["subdomainsy"] = "10"
+config_approx["subdomainsx"] = "4"
+config_approx["subdomainsy"] = "4"
 
 config["layers"] = "40" # FIXME
 config["cells"] = "400" # FIXME
@@ -152,7 +153,7 @@ nev_approx =  nev_approx_skyscrapers
 #nev = ["10", "15", "20", "25", "30"]
 
 
-if False:
+if True:
   permutations = OrderedDict([
     ("nev", nev_approx),#, "20", "25", "30"]),
     ("method", ["geneo", "fastrndgeneo"])
@@ -163,15 +164,21 @@ if False:
   #  plotprefix = "Coarse approximation error with low-acc arpack",
   #  configuration = config_approx, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
 
+  #config_approx["coarse_reduction_test"] = "true"
+  #config_approx["nev"] = "30"
   permutations = OrderedDict([
-    ("nev", nev_approx),#, "20", "25", "30"]),
-    ("method", ["geneo", "geneo_1e-3", "fastrndgeneo"]) #, "fastrndgeneo2"
+    #("nev", nev_approx),
+    ("nev", list(range(1,21,3))),
+
+    ("method", ["geneo", "geneo_1e-3", "fastrndgeneo"]), #, "fastrndgeneo2"
+    ("dirichlet_interpol_in_coarse_only", ["true", "false"])
   ])
 
   run(
     bincall = bincall,
     plotprefix = "Coarse approximation error",
     configuration = config_approx, permutations = permutations, extractions = extractions, xlabel = "Number of eigenvectors")
+  exit(0) #FIXME
 
   config_approx["overlap"] = "15"
   permutations = OrderedDict([
