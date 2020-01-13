@@ -17,13 +17,16 @@
 // dune-common includes
 #include"overlaptools.hh"
 
+
 namespace Dune {
 
 #if HAVE_SUITESPARSE_UMFPACK
-    template<typename CollectiveCommunication, typename GlobalId, typename Matrix, typename Vector>
+    template<typename Matrix, typename Vector, typename GridView>
     class NonoverlappingSchwarzPreconditioner : public Dune::Preconditioner<Vector,Vector>
     {
       // some types we need
+      using GlobalId = typename GridView::Grid::GlobalIdSet::IdType;
+      using CollectiveCommunication = typename GridView::CollectiveCommunication;
       using EPIS = Dune::ExtendedParallelIndexSet<CollectiveCommunication,GlobalId,Matrix>;
       using Attribute = EPISAttribute;
       using AttributedLocalIndex = Dune::ParallelLocalIndex<Attribute>;
@@ -50,7 +53,7 @@ namespace Dune {
       std::shared_ptr<ExactSolver> coarsesolver;    // umfpack solver for coarse problem (solved by every rank
       typename Vector::field_type* floating; // vector with size p storing 1 if subdomain is floating and 0 else
       bool coarsespace; // true if we are working with a coarse space
-      std::vector<LocalIndex> new2old_localindex; // maps new local index to a local index in the original input
+      //std::vector<LocalIndex> new2old_localindex; // maps new local index to a local index in the original input
       std::shared_ptr<ParallelIndexSet> pis; // newly built up index set
       std::shared_ptr<RemoteIndices> si; // shared index information
       std::shared_ptr<Dune::Interface> allinterface; // communication interface
@@ -69,6 +72,8 @@ namespace Dune {
         }
       };
 
+      std::shared_ptr<NonoverlappingOverlapAdapter<GridView, Vector, Matrix>> adapter;
+
     public:
       //! \brief The domain type of the preconditioner.
       typedef Vector domain_type;
@@ -85,8 +90,9 @@ namespace Dune {
 
       //! \brief Constructor.
       NonoverlappingSchwarzPreconditioner (const CollectiveCommunication& comm_,    // collective communication object
+                                           const GridView& gv,                         // matrix assembled on interior elements and with dirichlet rows replaced
                                            const std::vector<int>& neighbors,       // ranks with whom we share degrees of freedom
-                                           const Matrix& A,                         // matrix assembled on interior elements and with dirichlet rows replaced
+                                           const Matrix& A,
                                            bool floatingSubdomain,                  // true if this subdomain has no connection to the Dirichlet boundary
                                            const std::vector<EPISAttribute>& partitiontype,  // vector giving partitiontype for each degree of freedom
                                            const std::vector<GlobalId>& globalid,   // maps local index to globally unique id
@@ -109,31 +115,36 @@ namespace Dune {
             pu = std::shared_ptr<ScalarVector>(new ScalarVector(N_prec));
             for (typename ScalarVector::size_type i=0; i<pu->N(); i++)
               (*pu)[i] = 1.0;
-            for (size_t i=0; i<N_orig; i++)
-              new2old_localindex.push_back(i);
+            //for (size_t i=0; i<N_orig; i++)
+            //  new2old_localindex.push_back(i);
             return;
           }
 
+        //adapter = std::make_shared<NonoverlappingOverlapAdapter<Vector, CollectiveCommunication, GlobalId, Matrix>>(comm_, neighbors, A, partitiontype, globalid, avg_, overlap_);
+        adapter = std::make_shared<NonoverlappingOverlapAdapter<GridView, Vector, Matrix>>(gv, A, avg_, overlap_);
+
         // construct the new way
-        EPIS epis(comm,neighbors,A,partitiontype,globalid,overlapsize,false);
+        /*EPIS epis(comm,neighbors,A,partitiontype,globalid,overlapsize,false);
         pis = epis.parallelIndexSet();
         si = epis.remoteIndices();
-        new2old_localindex = epis.extendedToOriginalLocalIndex();
-        N_prec = pis->size(); // this now the new size after adding overlap
+        si = adapter->getRemoteIndices();*/
+        //new2old_localindex = epis.extendedToOriginalLocalIndex();
+        N_prec = adapter->getExtendedSize(); // this now the new size after adding overlap
 
         // construct stiffness matrix on overlapping set
-        auto M = Dune::copyAndExtendMatrix(epis,A,avg_,globalid);
+        std::shared_ptr<Matrix> M = adapter->extendMatrix(A);
 
         // compute LU decomposition
         subdomainsolver = std::shared_ptr<ExactSolver>(new ExactSolver(*M,0));
 
         // construct partition of unity in a scalar vector
-        pu = Dune::makePartitionOfUnity(epis,*M,overlapsize);
+        //pu = Dune::makePartitionOfUnity(epis,*M,overlapsize);
+        pu = Dune::makePartitionOfUnity(*adapter, *M);
         for (typename ScalarVector::size_type i=0; i<pu->N(); i++)
           (*pu)[i] = std::sqrt((*pu)[i]); // we expect to store the square root
 
         // construct owner partition scalar vector
-        auto owner = Dune::makeOwner(epis,*M,overlapsize);
+        auto owner = Dune::makeOwner(adapter->getEpis(),*M,overlapsize);
 
         // print matrices
         // for (int i=0; i<p; i++)
@@ -163,7 +174,7 @@ namespace Dune {
         // build up communication interface using all atributes (thankfully ghosts are out of the way :-)) for later use
         Dune::AllSet<Attribute> allAttribute;
         allinterface = std::shared_ptr<Dune::Interface>(new Dune::Interface());
-        allinterface->build(*si,allAttribute,allAttribute); // all to all communication
+        allinterface->build(*adapter->getRemoteIndices(),allAttribute,allAttribute); // all to all communication
 
         // build up buffered communicator allowing communication over a dof vector
         communicator = std::shared_ptr<Dune::BufferedCommunicator>(new Dune::BufferedCommunicator());
@@ -260,8 +271,11 @@ namespace Dune {
       template<typename T>
       void getPartitionOfUnity (T& vec)
       {
-        for (typename Vector::size_type i=0; i<new2old_localindex.size(); i++)
-          vec[new2old_localindex[i]] = (*pu)[i][0]*(*pu)[i][0];
+        adapter->restrictVector(*pu, vec);
+        for (auto& val : vec)
+          vec *= vec;
+        //for (typename Vector::size_type i=0; i<new2old_localindex.size(); i++)
+        //  vec[new2old_localindex[i]] = (*pu)[i][0]*(*pu)[i][0];
       }
 
       template<typename T>
@@ -280,8 +294,7 @@ namespace Dune {
         communicator->forward<AddGatherScatter<ScalarVector>>(x,x);
 
         // pick out on interior and border
-        for (typename ScalarVector::size_type i=0; i<new2old_localindex.size(); i++)
-          vec[new2old_localindex[i]] = x[i];
+        adapter->restrictVector(x, vec);
       }
 
       ~NonoverlappingSchwarzPreconditioner ()
@@ -303,9 +316,7 @@ namespace Dune {
       {
         // copy defect to a vector with the new local index set
         Vector d2(N_prec);
-        d2 = 0.0;
-        for (typename Vector::size_type i=0; i<new2old_localindex.size(); i++)
-          d2[i] = d[new2old_localindex[i]]; // pick out interior and border; input defect is additive
+        adapter->extendVector(d, d2);
         //std::cout << rank << ": preconditioner before communication" << std::endl;
         if (p>1) communicator->forward<AddGatherScatter<Vector>>(d2,d2); // make it consistent
         //std::cout << rank << ": preconditioner after communication" << std::endl;
@@ -346,22 +357,22 @@ namespace Dune {
           }
 
         // solve subdomain problem
-        for (typename Vector::size_type i=0; i<d2.N(); i++)
-          d2[i] *= (*pu)[i]; // apply prescaling
+        //for (typename Vector::size_type i=0; i<d2.N(); i++)
+        //  d2[i] *= (*pu)[i]; // apply prescaling
         Dune::InverseOperatorResult stat;
         Vector v2(N_prec);
         v2 = 0.0;
         subdomainsolver->apply(v2,d2,stat);
-        for (typename Vector::size_type i=0; i<v2.N(); i++)
-          v2[i] *= (*pu)[i]; // post scaling with partition of unity
+        //for (typename Vector::size_type i=0; i<v2.N(); i++)
+        //  v2[i] *= (*pu)[i]; // post scaling with partition of unity
         if (coarsespace && p>1) v2 += z;
 
         // add up corrections
         if (p>1) communicator->forward<AddGatherScatter<Vector>>(v2,v2);
 
         // write back result to old index set
-        for (typename Vector::size_type i=0; i<new2old_localindex.size(); i++)
-          v[new2old_localindex[i]] = v2[i];
+        std::cout << "size v: " << v.N() << " size v2: " << v2.N() << std::endl;
+        adapter->restrictVector(v2, v);
       }
 
       /*!

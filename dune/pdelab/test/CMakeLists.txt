@@ -44,6 +44,9 @@ if(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
   dune_add_test(SOURCES testgeneo.cc
                 MPI_RANKS 2
                 TIMEOUT 300)
+  dune_add_test(SOURCES new_testgeneo.cc
+                MPI_RANKS 2
+                TIMEOUT 300)
 endif(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
 
 if(SuiteSparse_UMFPACK_FOUND AND UG_FOUND)

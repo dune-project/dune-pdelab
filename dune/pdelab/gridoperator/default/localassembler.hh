@@ -249,7 +249,7 @@ namespace Dune{
         doPostProcessing_ = v;
       }
 
-    private:
+    protected:
 
       //! The local operator
       LOP & lop_;
@@ -277,6 +277,41 @@ namespace Dune{
       bool _reconstruct_border_entries;
 
     };
+
+    /*template<typename GO, typename LOP, bool nonoverlapping_mode = false>
+    class RestrictedLocalAssembler :
+    public DefaultLocalAssembler<GO, LOP, nonoverlapping_mode>
+    {
+    public:
+      typedef RestrictedLocalJacobianAssemblerEngine<DefaultLocalAssembler<GO, LOP, nonoverlapping_mode>> LocalJacobianAssemblerEngine;
+
+      typedef Dune::PDELab::LocalAssemblerTraits<GO> Traits;
+      typedef typename Traits::TrialGridFunctionSpaceConstraints CU;
+      typedef typename Traits::TestGridFunctionSpaceConstraints CV;
+
+      //! Constructor with empty constraints
+      RestrictedLocalAssembler (LOP & lop, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
+      : DefaultLocalAssembler<GO, LOP, nonoverlapping_mode>(lop, border_dof_exchanger)
+      {}
+
+      //! Constructor for non trivial constraints
+      RestrictedLocalAssembler (LOP & lop, const CU& cu, const CV& cv,
+                                shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
+      : DefaultLocalAssembler<GO, LOP, nonoverlapping_mode>(lop, cu, cv, border_dof_exchanger)
+      {}
+
+      LocalJacobianAssemblerEngine & localJacobianAssemblerEngine
+      (typename Traits::Jacobian & a, const typename Traits::Solution & x)
+      {
+        this->jacobian_engine.setJacobian(a);
+        this->jacobian_engine.setSolution(x);
+        return this->jacobian_engine;
+      }
+
+    protected:
+      LocalJacobianAssemblerEngine jacobian_engine;
+
+    };*/
 
   }
 }

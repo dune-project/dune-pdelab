@@ -1,11 +1,11 @@
-#ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_GENEOBASIS_HH
-#define DUNE_PDELAB_BACKEND_ISTL_GENEO_GENEOBASIS_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_NEWGENEOBASIS_HH
+#define DUNE_PDELAB_BACKEND_ISTL_GENEO_NEWGENEOBASIS_HH
 
 #include <algorithm>
 #include <functional>
 
 #include <dune/pdelab/backend/istl/geneo/subdomainbasis.hh>
-#include <dune/pdelab/backend/istl/geneo/arpackpp_geneo.hh>
+#include <dune/pdelab/backend/istl/geneo/new_arpackpp_geneo.hh>
 
 #if HAVE_ARPACKPP
 
@@ -18,8 +18,8 @@ namespace Dune {
      * This coarse space is based on generalized eigenpoblems defined on the full stiffness matrix of a subdomain and one assembled only
      * on the area where this subdomain overlaps with others.
      */
-    template<class GFS, class M, class X, int dim>
-    class GenEOBasis : public SubdomainBasis<X>
+    template<class GridView, class M, class X>
+    class NewGenEOBasis : public SubdomainBasis<X>
     {
       typedef Dune::PDELab::Backend::Native<M> ISTLM;
       typedef Dune::PDELab::Backend::Native<X> ISTLX;
@@ -39,31 +39,38 @@ namespace Dune {
        * \param add_part_unity Whether to explicitly add the partition of unity itself in the coarse basis.
        * \param verbose Verbosity value.
        */
-      GenEOBasis(const GFS& gfs, const M& AF_exterior, const M& AF_ovlp, const double eigenvalue_threshold, X& part_unity,
+      NewGenEOBasis(NonoverlappingOverlapAdapter<GridView, X, M>& adapter, const M& A, const M& A_ovlp, const X& part_unity, const double eigenvalue_threshold,
                 int& nev, int nev_arpack = -1, double shift = 0.001, bool add_part_unity = false, int verbose = 0) {
-        using Dune::PDELab::Backend::native;
 
         if (nev_arpack == -1)
           nev_arpack = std::max(nev, 2);
         if (nev_arpack < nev)
           DUNE_THROW(Dune::Exception,"nev_arpack is less then nev!");
 
+        /*std::cout << "part_unity...";
+        X part_unity = *Dune::makePartitionOfUnity(adapter, A);
+        std::cout << " done" << std::endl;*/
+
         // X * A_0 * X
-        M ovlp_mat(AF_ovlp);
-        for (auto row_iter = native(ovlp_mat).begin(); row_iter != native(ovlp_mat).end(); row_iter++) {
+        M ovlp_mat(A_ovlp);
+        for (auto row_iter = ovlp_mat.begin(); row_iter != ovlp_mat.end(); row_iter++) {
           for (auto col_iter = row_iter->begin(); col_iter != row_iter->end(); col_iter++) {
-            *col_iter *= native(part_unity)[row_iter.index()] * native(part_unity)[col_iter.index()];
+            *col_iter *= part_unity[row_iter.index()] * part_unity[col_iter.index()];
           }
         }
 
         // Setup Arpack for solving generalized eigenproblem
-        ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, X> arpack(native(AF_exterior));
+        std::cout << "ARPACK setup...";
+        NewArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, X> arpack(A);
+        std::cout << " done" << std::endl;
         double eps = 0.0;
 
         std::vector<double> eigenvalues(nev_arpack,0.0);
-        std::vector<X> eigenvectors(nev_arpack,X(gfs,0.0));
+        std::vector<X> eigenvectors(nev_arpack,X(adapter.getExtendedSize()));
 
-        arpack.computeGenNonSymMinMagnitude(native(ovlp_mat), eps, eigenvectors, eigenvalues, shift);
+        std::cout << "ARPACK solve...";
+        arpack.computeGenNonSymMinMagnitude(ovlp_mat, eps, eigenvectors, eigenvalues, shift);
+        std::cout << " done" << std::endl;
 
         // Count eigenvectors below threshold
         int cnt = -1;
@@ -75,7 +82,7 @@ namespace Dune {
             }
           }
           if (verbose > 0)
-            std::cout << "Process " << gfs.gridView().comm().rank() << " picked " << cnt << " eigenvectors" << std::endl;
+            std::cout << "Process " << adapter.gridView().comm().rank() << " picked " << cnt << " eigenvectors" << std::endl;
           if (cnt == -1)
             DUNE_THROW(Dune::Exception,"No eigenvalue above threshold - not enough eigenvalues computed!");
         } else {
@@ -117,4 +124,4 @@ namespace Dune {
 
 #endif
 
-#endif //DUNE_PDELAB_BACKEND_ISTL_GENEO_GENEOBASIS_HH
+#endif
