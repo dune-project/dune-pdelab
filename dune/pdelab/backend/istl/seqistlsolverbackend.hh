@@ -31,6 +31,16 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
+
+    /**Create ISTL operator from a grid operator object
+     *
+     * In the nonlinear case the operator need to be linearized by setting a
+     * linearization point before it can be used.
+     *
+     * \tparam X Trial vector.
+     * \tparam Y Test vector.
+     * \tparam GO Grid operator that implements the jacobian apply
+     */
     template<typename X, typename Y, typename GO>
     class OnTheFlyOperator : public Dune::LinearOperator<X,Y>
     {
@@ -38,22 +48,44 @@ namespace Dune {
       typedef X domain_type;
       typedef Y range_type;
       typedef typename X::field_type field_type;
+      static constexpr bool isLinear = GO::LocalAssembler::isLinear();
+
 
       OnTheFlyOperator (const GO& go_)
         : go(go_)
+        , u_(nullptr)
       {}
+
+      //! Set linearization point.
+      //! Must be called before apply() and applyscaleadd() for nonlinear problems.
+      void setLinearizationPoint(const X& u)
+      {
+        u_ = &u;
+      }
 
       virtual void apply (const X& x, Y& y) const override
       {
         y = 0.0;
-        go.jacobian_apply(x,y);
+        if (isLinear)
+          go.jacobian_apply(x,y);
+        else {
+          if (u_ == nullptr)
+            DUNE_THROW(Dune::InvalidStateException, "You seem to apply a nonlinear operator without setting the linearization point first!");
+          go.jacobian_apply(*u_, x, y);
+        }
       }
 
       virtual void applyscaleadd (field_type alpha, const X& x, Y& y) const override
       {
         Y temp(y);
         temp = 0.0;
-        go.jacobian_apply(x,temp);
+        if (isLinear)
+          go.jacobian_apply(x,temp);
+        else {
+          if (u_ == nullptr)
+            DUNE_THROW(Dune::InvalidStateException, "You seem to apply a nonlinear operator without setting the linearization point first!");
+          go.jacobian_apply(*u_, x, temp);
+        }
         y.axpy(alpha,temp);
       }
 
@@ -64,6 +96,7 @@ namespace Dune {
 
     private:
       const GO& go;
+      const X* u_;
     };
 
     //==============================================================================
@@ -157,6 +190,12 @@ namespace Dune {
         res.elapsed    = stat.elapsed;
         res.reduction  = stat.reduction;
         res.conv_rate  = stat.conv_rate;
+      }
+
+      //! Set position of jacobian, ust be called before apply() for nonlinear problems.
+      void setLinearizationPoint(const V& u)
+      {
+        opa_.setLinearizationPoint(u);
       }
 
     private:
