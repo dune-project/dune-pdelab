@@ -121,7 +121,15 @@ namespace Dune {
       //! Constructor
       explicit ExcluderIterator(BaseIterator baseIterator, BaseIterator baseIteratorEnd, Excluder& excluder)
       : baseIterator_(baseIterator), baseIteratorEnd_(baseIteratorEnd), excluder_(excluder)
-      {}
+      {
+        /*while (!excluder_.includeEntity(dereference())) {
+          baseIterator_.impl().increment();
+          std::cout << "Excluded!!!!" << std::endl;
+          if (baseIterator_.impl().equals(baseIteratorEnd_.impl()))
+            return;
+
+        }*/
+      }
 
       //! prefix increment
       void increment() {
@@ -148,7 +156,12 @@ namespace Dune {
 
       //! dereferencing
       Entity dereference() const {
-        //return Entity{{identityGrid_,*hostLevelIterator_}};
+        // FIXME: This fixes the case where begin() is already a not-included entity. Better to do in consturctor, crashes with UG (and maybe other grids?) though
+        while (!excluder_.includeEntity(baseIterator_.impl().dereference())) {
+          baseIterator_.impl().increment();
+          std::cout << "Excluded!!!!" << std::endl;
+        }
+
         return baseIterator_.impl().dereference();
       }
 
@@ -158,7 +171,7 @@ namespace Dune {
       }
 
     private:
-      BaseIterator baseIterator_;
+      mutable BaseIterator baseIterator_;
       BaseIterator baseIteratorEnd_;
       Excluder& excluder_;
     };
@@ -313,17 +326,23 @@ namespace Dune {
       }
 
       template<dim_type codim, PartitionIteratorType pitype>
-      typename GV::template Codim<codim>::template Partition<pitype>::Iterator
+      //typename GV::template Codim<codim>::template Partition<pitype>::Iterator
+      typename Codim<codim>::template Partition<pitype>::Iterator
       begin() const
       {
-        return gridView().template begin<codim,pitype>();
+        auto imp = typename Codim<codim>::template Partition<pitype>::ExcluderIteratorImp(gridView().template begin<codim,pitype>(), gridView().template end<codim,pitype>(), excluder_);
+        return typename Codim<codim>::template Partition<pitype>::Iterator(imp);
+        //return gridView().template begin<codim,pitype>();
       }
 
       template<dim_type codim, PartitionIteratorType pitype>
-      typename GV::template Codim<codim>::template Partition<pitype>::Iterator
+      //typename GV::template Codim<codim>::template Partition<pitype>::Iterator
+      typename Codim<codim>::template Partition<pitype>::Iterator
       end() const
       {
-        return gridView().template end<codim,pitype>();
+        auto imp = typename Codim<codim>::template Partition<pitype>::ExcluderIteratorImp(gridView().template end<codim,pitype>(), gridView().template end<codim,pitype>(), excluder_);
+        return typename Codim<codim>::template Partition<pitype>::Iterator(imp);
+        //return gridView().template end<codim,pitype>();
       }
 
       size_type size(dim_type codim) const

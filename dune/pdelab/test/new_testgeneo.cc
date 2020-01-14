@@ -15,6 +15,8 @@
 
 #include <dune/grid/utility/parmetisgridpartitioner.hh>
 
+#include <dune/istl/matrixmarket.hh>
+
 /*
  * Defining a Darcy problem with alternating layers of permeability and a high contrast
  */
@@ -133,8 +135,8 @@ public:
   template<typename LFSCache, typename Entity>
   bool assembleCell(const Entity& entity, const LFSCache & cache) const {
     //return true; // FIXME
-    if (entity.partitionType() == Dune::PartitionType::GhostEntity) // NOTE: Replaced by EntitySet excluder
-      return false;
+    //if (entity.partitionType() == Dune::PartitionType::GhostEntity) // NOTE: Replaced by EntitySet excluder
+    //  return false;
     for (std::size_t i = 0; i < cache.size(); i++)
     {
       if (partUnity_[cache.containerIndex(i)[0]] > 0.0 &&
@@ -157,11 +159,14 @@ public:
 
   template<typename Entity>
   bool includeEntity(const Entity& entity) const {
+    if (!is_on)
+      return true;
+
     if (entity.partitionType() == Dune::PartitionType::GhostEntity)
       return false;
     if (partUnity_ == nullptr)
       return true;
-
+ // TODO: LFS cache selbst anlegen?
    /* for (std::size_t i = 0; i < cache.size(); i++)
     {
       if (partUnity_[cache.containerIndex(i)[0]] > 0.0 &&
@@ -170,7 +175,12 @@ public:
     }*/
     return true;
   }
+
+  void switch_on(bool on) {
+    is_on = on;
+  }
 private:
+  bool is_on = true;
   //typedef LocalFunctionSpace<GFS, TrialSpaceTag> LFSU;
   std::shared_ptr<Vector> partUnity_ = nullptr;
 };
@@ -219,9 +229,9 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   auto grid = std::make_shared<GM>(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication());
   typedef typename GM::LeafGridView GV_;
-  auto gv_ = grid->leafGridView();*/
+  auto gv_ = grid->leafGridView();
 
-  std::cout << "grid setup: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
+  std::cout << "grid setup: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();*/
 
 
 
@@ -299,11 +309,11 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   // Construct GridOperators from LocalOperators
 
-  //typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
-  //auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC,GhostExcluder> GO;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
+  auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
+  /*typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC,GhostExcluder> GO;
   GhostExcluder ghost_excluder;
-  auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros),ghost_excluder);
+  auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros),ghost_excluder);*/
 
 
   std::cout << "problem definition: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
@@ -321,6 +331,13 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   // Assemble fine grid matrix defined without processor constraints
   M A(go);
   go.jacobian(x,A);
+
+  es_excluder.switch_on(false);
+
+  if (gfs.gridView().comm().rank()==0) {
+    using Dune::PDELab::Backend::native;
+    Dune::storeMatrixMarket(native(A), "fine_matrix.mm");
+  }
 
   std::cout << "fine assembly: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
 
@@ -384,7 +401,9 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   auto go_overlap = GO_OVLP(gfs,cc,gfs,cc,lop,MBE(nonzeros),excluder);
 
   M A_ovlp(go_overlap);
+  es_excluder.switch_on(true);
   go_overlap.jacobian(x,A_ovlp);
+  es_excluder.switch_on(false);
 
   std::cout << "local A_ovlp: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
 
@@ -424,7 +443,9 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
         *cIt = 0.0;
       }
 
+    es_excluder.switch_on(true);
     go_overlap.jacobian(x,newmat);
+    es_excluder.switch_on(false);
 
     return stackobject_to_shared_ptr(native(newmat));
   });
