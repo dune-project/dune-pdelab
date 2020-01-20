@@ -119,7 +119,7 @@ namespace Dune {
       typedef typename BaseIterator::Entity Entity;
 
       //! Constructor
-      explicit ExcluderIterator(BaseIterator baseIterator, BaseIterator baseIteratorEnd, Excluder& excluder)
+      explicit ExcluderIterator(BaseIterator baseIterator, BaseIterator baseIteratorEnd, const std::shared_ptr<Excluder>& excluder)
       : baseIterator_(baseIterator), baseIteratorEnd_(baseIteratorEnd), excluder_(excluder)
       {
         /*while (!excluder_.includeEntity(dereference())) {
@@ -134,32 +134,28 @@ namespace Dune {
       //! prefix increment
       void increment() {
         //++(baseIterator_.impl());
-        std::cout << "***********" << std::endl;
         baseIterator_.impl().increment();
         if (baseIterator_.impl().equals(baseIteratorEnd_.impl()))
           return;
-        while (!excluder_.includeEntity(dereference())) {
+        while (!excluder_->includeEntity(dereference())) {
           baseIterator_.impl().increment();
           std::cout << "Excluded!!!!" << std::endl;
           if (baseIterator_.impl().equals(baseIteratorEnd_.impl()))
             return;
 
         }
-        /*do {
-          baseIterator_.impl().increment();
-          if (baseIterator_.impl().equals(baseIteratorEnd_.impl()))
-            return;
-            //std::cout << "*************** This is the end" << std::endl;
-        } while (!excluder_.includeEntity(dereference()));// && !baseIterator_.impl().equals(baseIteratorEnd_.impl()));
-        */
       }
 
       //! dereferencing
       Entity dereference() const {
         // FIXME: This fixes the case where begin() is already a not-included entity. Better to do in consturctor, crashes with UG (and maybe other grids?) though
-        while (!excluder_.includeEntity(baseIterator_.impl().dereference())) {
+        while (!excluder_->includeEntity(baseIterator_.impl().dereference())) {
           baseIterator_.impl().increment();
           std::cout << "Excluded!!!!" << std::endl;
+          if (baseIterator_.impl().equals(baseIteratorEnd_.impl())) {
+            std::cout << "Ouch. Reached end in first excluder run!" << std::endl;
+            break;
+          }
         }
 
         return baseIterator_.impl().dereference();
@@ -173,7 +169,7 @@ namespace Dune {
     private:
       mutable BaseIterator baseIterator_;
       BaseIterator baseIteratorEnd_;
-      Excluder& excluder_;
+      const std::shared_ptr<Excluder>& excluder_;
     };
 
 
@@ -410,13 +406,17 @@ namespace Dune {
         return indexSet().gridView();
       }
 
-      OverlapEntitySet(const GridView& gv, CodimMask supported_codims, Excluder& excluder)
+      OverlapEntitySet(const GridView& gv, CodimMask supported_codims, std::shared_ptr<Excluder> excluder)
         : _index_set(std::make_shared<IndexSet>(gv,supported_codims,true)), excluder_(excluder)
       {}
 
-      explicit OverlapEntitySet(const GridView& gv, Excluder& excluder, bool initialize = true)
+      explicit OverlapEntitySet(const GridView& gv, std::shared_ptr<Excluder> excluder, bool initialize = true)
         : _index_set(std::make_shared<IndexSet>(gv,CodimMask(initialize ? ~0ull : 0ull),initialize)), excluder_(excluder)
       {}
+
+      void setExcluder(std::shared_ptr<Excluder> excluder) {
+        excluder_ = excluder;
+      }
 
       //! Reset this EntitySet, which removes all entities from it.
       void reset()
@@ -459,7 +459,7 @@ namespace Dune {
     private:
 
       std::shared_ptr<IndexSet> _index_set;
-      Excluder& excluder_;
+      std::shared_ptr<Excluder> excluder_;
 
     };
 
