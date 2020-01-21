@@ -12,15 +12,7 @@
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/finiteelementmap/p0fem.hh>
-#include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
-#include <dune/pdelab/finiteelementmap/rt0cube2dfem.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab.hh>
 
 #include "gridexamples.hh"
 

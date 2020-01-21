@@ -18,19 +18,7 @@
 #include <dune/grid/common/scsgmapper.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 
-#include <dune/pdelab/finiteelementmap/p0fem.hh>
-#include <dune/pdelab/finiteelementmap/pkfem.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/finiteelementmap/variablemonomfem.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
-#include <dune/pdelab/ordering/interleavedordering.hh>
-
-#include <dune/pdelab/backend/istl.hh>
-
-#include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab.hh>
 
 template<typename GFS>
 void check_ordering(const GFS& gfs)

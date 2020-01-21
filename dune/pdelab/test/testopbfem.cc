@@ -6,8 +6,7 @@
 #endif
 #include <iostream>
 
-#include <dune/pdelab/finiteelementmap/opbfem.hh>
-
+#include <dune/pdelab.hh>
 
 namespace Dune {
 
@@ -23,14 +22,13 @@ namespace Dune {
         // make basis
         typedef Dune::PB::OrthonormalPolynomialBasis<FieldType,k,d,bt,ComputationFieldType,basisType> PolynomialBasis;
         PolynomialBasis polynomialbasis;
-        Dune::GeometryType gt(bt,d);
         std::cout << "mass matrix test"
                   << " k=" << k
-                  << " on " << gt
+                  << " on " << bt
                   << " n=" << PolynomialBasis::n;
 
         // select quadrature rule
-        const Dune::QuadratureRule<FieldType,d>& rule = Dune::QuadratureRules<FieldType,d>::rule(gt,2*k);
+        const Dune::QuadratureRule<FieldType,d>& rule = Dune::QuadratureRules<FieldType,d>::rule(bt,2*k);
 
         // make mass matrix
         Dune::FieldMatrix<FieldType,PolynomialBasis::n,PolynomialBasis::n> massmatrix;

@@ -5,12 +5,7 @@
 #include "config.h"
 #endif
 
-
-#include <dune/pdelab/boilerplate/pdelab.hh>
-#include <dune/pdelab/common/functionutilities.hh>
-#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
-#include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionadapter.hh>
+#include <dune/pdelab.hh>
 
 /** Parameter class for the stationary convection-diffusion equation of the following form:
  *

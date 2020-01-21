@@ -43,7 +43,9 @@ namespace Dune {
       enum { doLambdaVolume  = LocalOperatorBase::doLambdaVolume };
       enum { doLambdaBoundary = LocalOperatorBase::doLambdaBoundary };
       enum { doLambdaSkeleton = LocalOperatorBase::doLambdaSkeleton };
+
       enum { doSkeletonTwoSided = LocalOperatorBase::doSkeletonTwoSided };
+      enum { isLinear = LocalOperatorBase::isLinear };
 
       template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume (const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern) const

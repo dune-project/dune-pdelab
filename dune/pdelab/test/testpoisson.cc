@@ -16,20 +16,7 @@
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 
-#include <dune/pdelab/finiteelementmap/p0fem.hh>
-#include <dune/pdelab/finiteelementmap/pkfem.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/gridoperator/gridoperator.hh>
-#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/pdelab.hh>
 
 #include"gridexamples.hh"
 
@@ -247,7 +234,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   Dune::MatrixAdapter<typename M::Container,typename DV::Container,typename RV::Container> opa(native(m));
   //ISTLOnTheFlyOperator opb(gridoperator);
   Dune::SeqSSOR<typename M::Container,typename DV::Container,typename RV::Container> ssor(native(m),1,1.0);
-  Dune::SeqILU0<typename M::Container,typename DV::Container,typename RV::Container> ilu0(native(m),1.0);
+  Dune::SeqILU<typename M::Container,typename DV::Container,typename RV::Container> ilu0(native(m),1.0);
   Dune::Richardson<typename DV::Container,typename RV::Container> richardson(1.0);
 
 //   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,

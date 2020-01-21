@@ -14,14 +14,7 @@
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
-#include <dune/pdelab/ordering/interleavedordering.hh>
-#include <dune/pdelab/ordering/chunkedblockordering.hh>
-#include <dune/pdelab/ordering/permutedordering.hh>
+#include <dune/pdelab.hh>
 
 // test chunked block ordering with a taylor hood space
 

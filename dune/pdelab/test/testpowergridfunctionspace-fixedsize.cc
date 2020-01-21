@@ -12,9 +12,7 @@
 
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/finiteelementmap/qkdg.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/ordering/chunkedblockordering.hh>
+#include <dune/pdelab.hh>
 
 // Wrapped Qk local basis which can have a zero size on some elements
 template <class T, int k, int d> struct WrappedBasis {
@@ -202,10 +200,20 @@ int main(int argc, char **argv) {
     GV gv = grid.leafGridView();
     FEM fem0(gv, 2);
     FEM fem1(gv, 3);
-    GFS gfs0(gv, fem0);
-    GFS gfs1(gv, fem1);
-    PGFS pgfs(gfs0, gfs1, PVBE(), POT(blockSize));
-    pgfs.ordering();
+    auto gfs0 = std::make_shared<GFS>(gv, fem0);
+    auto gfs1 = std::make_shared<GFS>(gv, fem1);
+
+    {
+      PGFS pgfs(*gfs0, *gfs1, PVBE(), POT(blockSize));
+      pgfs.ordering();
+    }
+
+    {
+      std::array<std::shared_ptr<GFS>,2> containter{gfs0,gfs1};
+      PGFS pgfs(containter, PVBE(), POT(blockSize));
+      pgfs.ordering();
+    }
+
     return 0;
   } catch (Dune::Exception &e) {
     std::cerr << "Dune reported error: " << e << std::endl;

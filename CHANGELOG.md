@@ -14,6 +14,18 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   The `nonlinear_jacobian_apply` method of the grid operator is deprecated. Instead you should use the new
+    `jacobian_apply_method` taking the same arguments. In addition you need to set the new `isLinear` flag in
+    your local operator to true.
+
+-   The Newton solver was rewritten. The old implementation is still around with the name `OldNewton` and is
+    deprecated. The new Newton can be found in `dune/pdelab/solver/newton.hh` and works quite similar but
+    avoids the diamond inheritance pattern. Instead the Newton solver holds objects for the line search and
+    the termination criterion which can be replaced at runtime. The prepareStep and apply methods can be
+    changed by inheriting from the Newton solver and overriding the methods.
+
+    Another change is that Newton does not store a pointer to the initial guess anymore. Instead you need to
+    provide an initial guess when calling appyl.
 
 -   The adapter class `Experimental::GridFunctionSpace` that allows to use [dune-functions][] function
     space bases as `GridFunctionSpace` implementations has gained limited support for distributed
@@ -23,6 +35,8 @@ PDELab git master (will be PDELab 2.7)
     region when re-interpolating boundary condition values between stages (i.e. whenn you call the version of
     `apply()` on the `OneStepMethod` that takes a boundary value function).
 
+-   There is now a convenience header `dune/pdelab.hh` which includes the entire module. It can replace
+    the usual bulk of includes, improves copy-pastability of PDELab code and makes life easier for beginners.
 
 PDELab 2.6
 ----------

@@ -25,14 +25,9 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/exceptions.hh>
 
-#include <dune/pdelab/localoperator/defaultimp.hh>
-#include <dune/pdelab/localoperator/flags.hh>
-
 #include <dune/grid/yaspgrid.hh>
-#include<dune/pdelab/backend/istl.hh>
 
-#include<dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/finiteelementmap/qkdg.hh>
+#include <dune/pdelab.hh>
 
 class TestNumericalJacobiansLOP
   : public Dune::PDELab::NumericalJacobianVolume<TestNumericalJacobiansLOP>,

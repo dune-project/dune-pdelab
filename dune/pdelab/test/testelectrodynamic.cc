@@ -30,21 +30,7 @@
 
 #include <dune/istl/matrixmarket.hh>
 
-#include <dune/pdelab/backend/interface.hh>
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/common/quadraturerules.hh>
-#include <dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/constraints/common/constraintsparameters.hh>
-#include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/finiteelementmap/edges0.5fem.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
-#include <dune/pdelab/gridoperator/gridoperator.hh>
-#include <dune/pdelab/localoperator/electrodynamic.hh>
-#include <dune/pdelab/localoperator/flags.hh>
-#include <dune/pdelab/localoperator/numericalresidual.hh>
-#include <dune/pdelab/localoperator/pattern.hh>
-#include <dune/pdelab/stationary/linearproblem.hh>
+#include <dune/pdelab.hh>
 
 // store physical entitiy information from GmshReader
 struct MeshInfo

@@ -101,13 +101,14 @@ namespace Dune {
         typedef X Vector;
         typedef Pred Predicate;
 
-        DGFTreeCommonData(const GFS& gfs, const X& x)
+        DGFTreeCommonData(std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x)
           : _lfs(gfs)
           , _lfs_cache(_lfs)
           , _x_view(x)
           , _x_local(_lfs.maxSize())
-          , _index_set(gfs.entitySet().indexSet())
+          , _index_set(gfs->entitySet().indexSet())
           , _current_cell_index(std::numeric_limits<size_type>::max())
+          , x(x)
         {}
 
       public:
@@ -133,6 +134,9 @@ namespace Dune {
         const IndexSet& _index_set;
         size_type _current_cell_index;
 
+        // This copy of x is stored here in order to have this object take ownership
+        // of the passed data. This is necessary to prevent a premature release.
+        std::shared_ptr<const X> x;
       };
 
 
@@ -652,11 +656,33 @@ namespace Dune {
                            const Predicate& predicate = Predicate())
     {
       typedef vtk::DGFTreeCommonData<GFS,X,Predicate> Data;
-      vtk::OutputCollector<VTKWriter,Data> collector(vtk_writer,std::make_shared<Data>(gfs,x),predicate);
+      auto data = std::make_shared<Data>(Dune::stackobject_to_shared_ptr(gfs), Dune::stackobject_to_shared_ptr(x));
+      vtk::OutputCollector<VTKWriter,Data> collector(vtk_writer, data, predicate);
       collector.addSolution(name_generator);
       return collector;
     }
 
+
+    template<typename VTKWriter,
+             typename GFS,
+             typename X,
+             typename NameGenerator = vtk::DefaultFunctionNameGenerator,
+             typename Predicate = vtk::DefaultPredicate>
+    vtk::OutputCollector<
+      VTKWriter,
+      vtk::DGFTreeCommonData<GFS,X,Predicate>
+      >
+    addSolutionToVTKWriter(VTKWriter& vtk_writer,
+                           std::shared_ptr<GFS> gfs,
+                           std::shared_ptr<X> x,
+                           const NameGenerator& name_generator = vtk::defaultNameScheme(),
+                           const Predicate& predicate = Predicate())
+    {
+      typedef vtk::DGFTreeCommonData<GFS,X,Predicate> Data;
+      vtk::OutputCollector<VTKWriter,Data> collector(vtk_writer, std::make_shared<Data>(gfs,x),predicate);
+      collector.addSolution(name_generator);
+      return collector;
+    }
 
   } // namespace PDELab
 } // namespace Dune

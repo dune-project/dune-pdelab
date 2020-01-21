@@ -5,10 +5,7 @@
 
 #include <dune/common/filledarray.hh>
 
-#include <dune/pdelab/boilerplate/pdelab.hh>
-#include <dune/pdelab/localoperator/l2.hh>
-
-#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
+#include <dune/pdelab.hh>
 
 //***********************************************************************
 //***********************************************************************

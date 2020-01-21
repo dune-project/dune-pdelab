@@ -7,7 +7,6 @@
 #include <dune/pdelab/gridoperator/default/patternengine.hh>
 #include <dune/pdelab/gridoperator/default/jacobianengine.hh>
 #include <dune/pdelab/gridoperator/default/jacobianapplyengine.hh>
-#include <dune/pdelab/gridoperator/default/nonlinearjacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
@@ -73,7 +72,6 @@ namespace Dune{
       typedef DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler> LocalResidualAssemblerEngine;
       typedef DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler> LocalJacobianAssemblerEngine;
       typedef DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalJacobianApplyAssemblerEngine;
-      typedef DefaultLocalNonlinearJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalNonlinearJacobianApplyAssemblerEngine;
 
       // friend declarations such that engines are able to call scatter_jacobian() and add_entry() from base class
       friend class DefaultLocalPatternAssemblerEngine<DefaultLocalAssembler>;
@@ -85,7 +83,6 @@ namespace Dune{
         : lop_(lop),  weight_(1.0), doPreProcessing_(true), doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
         , jacobian_apply_engine(*this)
-        , nonlinear_jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
 
@@ -96,7 +93,6 @@ namespace Dune{
           lop_(lop),  weight_(1.0), doPreProcessing_(true), doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
         , jacobian_apply_engine(*this)
-        , nonlinear_jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
 
@@ -180,22 +176,22 @@ namespace Dune{
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
       LocalJacobianApplyAssemblerEngine & localJacobianApplyAssemblerEngine
-      (typename Traits::Residual & r, const typename Traits::Solution & x)
+      (const typename Traits::Domain & update, typename Traits::Range & result)
       {
-        jacobian_apply_engine.setResidual(r);
-        jacobian_apply_engine.setSolution(x);
+        jacobian_apply_engine.setUpdate(update);
+        jacobian_apply_engine.setResult(result);
         return jacobian_apply_engine;
       }
 
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
-      LocalNonlinearJacobianApplyAssemblerEngine & localNonlinearJacobianApplyAssemblerEngine
-      (typename Traits::Residual & r, const typename Traits::Solution & x, const typename Traits::Solution & z)
+      LocalJacobianApplyAssemblerEngine & localJacobianApplyAssemblerEngine
+      (const typename Traits::Domain & solution, const typename Traits::Domain & update, typename Traits::Range & result)
       {
-        nonlinear_jacobian_apply_engine.setResidual(r);
-        nonlinear_jacobian_apply_engine.setSolution(x);
-        nonlinear_jacobian_apply_engine.setUpdate(z);
-        return nonlinear_jacobian_apply_engine;
+        jacobian_apply_engine.setSolution(solution);
+        jacobian_apply_engine.setUpdate(update);
+        jacobian_apply_engine.setResult(result);
+        return jacobian_apply_engine;
       }
 
       //! @}
@@ -204,19 +200,20 @@ namespace Dune{
       //! do not belong to the assembler interface, but simplify the
       //! implementations of query methods in the engines;
       //! @{
-      static bool doAlphaVolume() { return LOP::doAlphaVolume; }
-      static bool doLambdaVolume() { return LOP::doLambdaVolume; }
-      static bool doAlphaSkeleton() { return LOP::doAlphaSkeleton; }
-      static bool doLambdaSkeleton() { return LOP::doLambdaSkeleton; }
-      static bool doAlphaBoundary()  { return LOP::doAlphaBoundary; }
-      static bool doLambdaBoundary() { return LOP::doLambdaBoundary; }
-      static bool doAlphaVolumePostSkeleton()  { return LOP::doAlphaVolumePostSkeleton; }
-      static bool doLambdaVolumePostSkeleton() { return LOP::doLambdaVolumePostSkeleton; }
-      static bool doSkeletonTwoSided()  { return LOP::doSkeletonTwoSided; }
-      static bool doPatternVolume()  { return LOP::doPatternVolume; }
-      static bool doPatternSkeleton()  { return LOP::doPatternSkeleton; }
-      static bool doPatternBoundary()  { return LOP::doPatternBoundary; }
-      static bool doPatternVolumePostSkeleton()  { return LOP::doPatternVolumePostSkeleton; }
+      static constexpr bool doAlphaVolume() { return LOP::doAlphaVolume; }
+      static constexpr bool doLambdaVolume() { return LOP::doLambdaVolume; }
+      static constexpr bool doAlphaSkeleton() { return LOP::doAlphaSkeleton; }
+      static constexpr bool doLambdaSkeleton() { return LOP::doLambdaSkeleton; }
+      static constexpr bool doAlphaBoundary()  { return LOP::doAlphaBoundary; }
+      static constexpr bool doLambdaBoundary() { return LOP::doLambdaBoundary; }
+      static constexpr bool doAlphaVolumePostSkeleton()  { return LOP::doAlphaVolumePostSkeleton; }
+      static constexpr bool doLambdaVolumePostSkeleton() { return LOP::doLambdaVolumePostSkeleton; }
+      static constexpr bool doSkeletonTwoSided()  { return LOP::doSkeletonTwoSided; }
+      static constexpr bool doPatternVolume()  { return LOP::doPatternVolume; }
+      static constexpr bool doPatternSkeleton()  { return LOP::doPatternSkeleton; }
+      static constexpr bool doPatternBoundary()  { return LOP::doPatternBoundary; }
+      static constexpr bool doPatternVolumePostSkeleton()  { return LOP::doPatternVolumePostSkeleton; }
+      static constexpr bool isLinear() { return LOP::isLinear;}
       //! @}
 
       //! Query whether to do preprocessing in the engines
@@ -271,48 +268,11 @@ namespace Dune{
       LocalResidualAssemblerEngine residual_engine;
       LocalJacobianAssemblerEngine jacobian_engine;
       LocalJacobianApplyAssemblerEngine jacobian_apply_engine;
-      LocalNonlinearJacobianApplyAssemblerEngine nonlinear_jacobian_apply_engine;
       //! @}
 
       bool _reconstruct_border_entries;
-
     };
 
-    /*template<typename GO, typename LOP, bool nonoverlapping_mode = false>
-    class RestrictedLocalAssembler :
-    public DefaultLocalAssembler<GO, LOP, nonoverlapping_mode>
-    {
-    public:
-      typedef RestrictedLocalJacobianAssemblerEngine<DefaultLocalAssembler<GO, LOP, nonoverlapping_mode>> LocalJacobianAssemblerEngine;
-
-      typedef Dune::PDELab::LocalAssemblerTraits<GO> Traits;
-      typedef typename Traits::TrialGridFunctionSpaceConstraints CU;
-      typedef typename Traits::TestGridFunctionSpaceConstraints CV;
-
-      //! Constructor with empty constraints
-      RestrictedLocalAssembler (LOP & lop, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
-      : DefaultLocalAssembler<GO, LOP, nonoverlapping_mode>(lop, border_dof_exchanger)
-      {}
-
-      //! Constructor for non trivial constraints
-      RestrictedLocalAssembler (LOP & lop, const CU& cu, const CV& cv,
-                                shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
-      : DefaultLocalAssembler<GO, LOP, nonoverlapping_mode>(lop, cu, cv, border_dof_exchanger)
-      {}
-
-      LocalJacobianAssemblerEngine & localJacobianAssemblerEngine
-      (typename Traits::Jacobian & a, const typename Traits::Solution & x)
-      {
-        this->jacobian_engine.setJacobian(a);
-        this->jacobian_engine.setSolution(x);
-        return this->jacobian_engine;
-      }
-
-    protected:
-      LocalJacobianAssemblerEngine jacobian_engine;
-
-    };*/
-
-  }
-}
-#endif // DUNE_PDELAB_GRIDOPERATOR_DEFAULT_LOCALASSEMBLER_HH
+  } // end namespace PDELab
+} // end namespace Dune
+#endif

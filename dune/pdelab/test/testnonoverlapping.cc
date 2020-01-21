@@ -7,15 +7,7 @@
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/finiteelementmap/pkfem.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/localoperator/l2.hh>
-
-#include <dune/pdelab/gridoperator/gridoperator.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/pdelab.hh>
 
 #include <dune/istl/io.hh>
 

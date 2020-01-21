@@ -1,5 +1,10 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
+
+//
+// Note: This Newton is deprecated and will be removed for PDELab 2.8. Please
+// use the Newton from <dune/pdelab/solver/newton.hh>
+//
 #ifndef DUNE_PDELAB_NEWTON_NEWTON_HH
 #define DUNE_PDELAB_NEWTON_NEWTON_HH
 
@@ -19,50 +24,18 @@
 #include <dune/common/parametertree.hh>
 
 #include <dune/pdelab/backend/solver.hh>
+#include <dune/pdelab/solver/newton.hh>
+
+
+// Note: Before introducing the new Newton there was no doxygen documentation
+// for Newton at all. This means that it doesn't make any sense to have doxygen
+// documentation for the old Newton now.
+#ifndef DOXYGEN
 
 namespace Dune
 {
   namespace PDELab
   {
-  namespace Impl
-  {
-  // Some SFinae magic to execute setReuse(bool) on a backend
-  template<typename T1, typename = void>
-  struct HasSetReuse
-  : std::false_type
-  {};
-
-  template<typename T>
-  struct HasSetReuse<T, decltype(std::declval<T>().setReuse(true), void())>
-  : std::true_type
-  {};
-
-  template<typename T>
-  inline void setLinearSystemReuse(T& solver_backend, bool reuse, std::true_type)
-  {
-    if (!solver_backend.getReuse() && reuse)
-      dwarn << "WARNING: Newton needed to override your choice to reuse the linear system in order to work!" << std::endl;
-    solver_backend.setReuse(reuse);
-  }
-
-  template<typename T>
-  inline void setLinearSystemReuse(T&, bool, std::false_type)
-  {}
-
-  template<typename T>
-  inline void setLinearSystemReuse(T& solver_backend, bool reuse)
-  {
-    setLinearSystemReuse(solver_backend, reuse, HasSetReuse<T>());
-  }
-  }
-
-    // Exception classes used in NewtonSolver
-    class NewtonError : public Exception {};
-    class NewtonDefectError : public NewtonError {};
-    class NewtonLinearSolverError : public NewtonError {};
-    class NewtonLineSearchError : public NewtonError {};
-    class NewtonNotConverged : public NewtonError {};
-
     // Status information of Newton's method
     template<class RFType>
     struct NewtonResult : LinearSolverResult<RFType>
@@ -753,9 +726,9 @@ namespace Dune
 
     template<class GOS, class S, class TrlV, class TstV = TrlV>
     class Newton : public NewtonSolver<GOS,S,TrlV,TstV>
-                 , public NewtonTerminate<GOS,TrlV,TstV>
-                 , public NewtonLineSearch<GOS,TrlV,TstV>
-                 , public NewtonPrepareStep<GOS,TrlV,TstV>
+                    , public NewtonTerminate<GOS,TrlV,TstV>
+                    , public NewtonLineSearch<GOS,TrlV,TstV>
+                    , public NewtonPrepareStep<GOS,TrlV,TstV>
     {
       typedef GOS GridOperator;
       typedef S Solver;
@@ -763,6 +736,7 @@ namespace Dune
 
     public:
       Newton(const GridOperator& go, TrialVector& u_, Solver& solver_)
+        DUNE_DEPRECATED_MSG("This Newton is deprecated. Use NewtonMethod from dune/pdelab/solver/newton.hh instead.")
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
         , NewtonSolver<GOS,S,TrlV,TstV>(go,u_,solver_)
         , NewtonTerminate<GOS,TrlV,TstV>(go,u_)
@@ -770,6 +744,7 @@ namespace Dune
         , NewtonPrepareStep<GOS,TrlV,TstV>(go,u_)
       {}
       Newton(const GridOperator& go, Solver& solver_)
+        DUNE_DEPRECATED_MSG("This Newton is deprecated. Use NewtonMethod from dune/pdelab/solver/newton.hh instead.")
         : NewtonBase<GOS,TrlV,TstV>(go)
         , NewtonSolver<GOS,S,TrlV,TstV>(go,solver_)
         , NewtonTerminate<GOS,TrlV,TstV>(go)
@@ -841,5 +816,7 @@ namespace Dune
     }; // end class Newton
   } // end namespace PDELab
 } // end namespace Dune
+
+#endif // DOXYGEN
 
 #endif // DUNE_PDELAB_NEWTON_NEWTON_HH

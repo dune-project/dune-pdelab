@@ -11,7 +11,7 @@
 #include <dune/common/dynvector.hh>
 #include <dune/istl/bvector.hh>
 
-#include <dune/pdelab/backend/istl.hh>
+#include <dune/pdelab.hh>
 
 int main(int argc, char** argv)
 {

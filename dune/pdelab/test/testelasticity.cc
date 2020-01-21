@@ -10,20 +10,7 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/gridoperator/gridoperator.hh>
-#include <dune/pdelab/localoperator/linearelasticity.hh>
-
-#include <dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
+#include <dune/pdelab.hh>
 
 static const double szX = 10.0;
 
@@ -198,7 +185,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   typedef typename M::Container ISTL_M;
   typedef typename V::Container ISTL_V;
   Dune::MatrixAdapter<ISTL_M,ISTL_V,ISTL_V> opa(native(m));
-  Dune::SeqILU0<ISTL_M,ISTL_V,ISTL_V> ilu0(native(m),1e-2);
+  Dune::SeqILU<ISTL_M,ISTL_V,ISTL_V> ilu0(native(m),1e-2);
 
   Dune::CGSolver<ISTL_V> solver(opa,ilu0,1E-20,5000,2);
   Dune::InverseOperatorResult stat;

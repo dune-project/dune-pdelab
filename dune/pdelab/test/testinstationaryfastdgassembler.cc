@@ -14,18 +14,7 @@
 #include<dune/istl/solvers.hh>
 #include<dune/grid/yaspgrid.hh>
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
-#include<dune/pdelab/finiteelementmap/qkdg.hh>
-#include<dune/pdelab/constraints/common/constraints.hh>
-#include<dune/pdelab/backend/istl.hh>
-#include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
-#include<dune/pdelab/localoperator/convectiondiffusiondg.hh>
-#include<dune/pdelab/stationary/linearproblem.hh>
-#include<dune/pdelab/gridfunctionspace/gridfunctionadapter.hh>
-#include <dune/pdelab/localoperator/l2.hh>
-#include<dune/pdelab/gridoperator/onestep.hh>
-#include<dune/pdelab/boilerplate/pdelab.hh>
-
-#include<dune/pdelab/gridoperator/fastdg.hh>
+#include<dune/pdelab.hh>
 #include"convectiondiffusionfastdg.hh"
 #include"l2fastdg.hh"
 

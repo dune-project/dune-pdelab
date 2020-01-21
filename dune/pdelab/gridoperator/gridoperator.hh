@@ -186,20 +186,30 @@ namespace Dune{
         global_assembler.assemble(jacobian_engine);
       }
 
-      //! Apply jacobian matrix without explicitly assembling it
-      void jacobian_apply(const Domain & z, Range & r) const
+      //! Apply jacobian matrix to the vector update without explicitly assembling it
+      void jacobian_apply(const Domain & update, Range & result) const
       {
-        typedef typename LocalAssembler::LocalJacobianApplyAssemblerEngine JacobianApplyEngine;
-        JacobianApplyEngine & jacobian_apply_engine = local_assembler.localJacobianApplyAssemblerEngine(r,z);
-        global_assembler.assemble(jacobian_apply_engine);
+        if (not local_assembler.localOperator().isLinear)
+          DUNE_THROW(Dune::Exception, "Your trying to use a non linear jacobian apply for a linear problem.");
+        global_assembler.assemble(local_assembler.localJacobianApplyAssemblerEngine(update, result));
       }
 
-      //! Apply jacobian matrix without explicitly assembling it
-      void nonlinear_jacobian_apply(const Domain & x, const Domain & z, Range & r) const
+      //! Apply jacobian matrix to the vector update without explicitly assembling it
+      void jacobian_apply(const Domain & solution, const Domain & update, Range & result) const
       {
-        global_assembler.assemble(local_assembler.localNonlinearJacobianApplyAssemblerEngine(r,x,z));
+        if (local_assembler.localOperator().isLinear)
+          DUNE_THROW(Dune::Exception, "Your trying to use a non linear jacobian apply for a linear problem.");
+        global_assembler.assemble(local_assembler.localJacobianApplyAssemblerEngine(solution, update, result));
       }
 
+      //! Apply jacobian matrix to the vector update without explicitly assembling it
+      void DUNE_DEPRECATED_MSG("nonlinear_jacobian_apply(x,z,r) is deprecated. Please use jacobian_apply(solution, update, result) instead!")
+      nonlinear_jacobian_apply(const Domain & solution, const Domain & update, Range & result) const
+      {
+        if (local_assembler.localOperator().isLinear)
+          DUNE_THROW(Dune::Exception, "Your trying to use a non linear jacobian apply for a linear problem.");
+        global_assembler.assemble(local_assembler.localJacobianApplyAssemblerEngine(solution, update, result));
+      }
 
       void make_consistent(Jacobian& a) const
       {

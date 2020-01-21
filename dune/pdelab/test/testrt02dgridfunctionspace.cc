@@ -23,11 +23,7 @@
 #include <dune/grid/uggrid/uggridfactory.hh>
 #endif
 
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
+#include <dune/pdelab.hh>
 
 template<typename GV>
 void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
@@ -88,12 +84,10 @@ int main(int argc, char** argv)
       vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
       //vid[0] = 1; vid[1] = 3; vid[2] = 2; gf.insertElement(type, vid);
 
-      Grid *grid = gf.createGrid();
+      auto grid = gf.createGrid();
       //grid->globalRefine(1);
 
       rt02DGridFunctionSpace(grid->leafGridView(), "alberta");
-
-      Dune::GridFactory<Grid>::destroyGrid(grid);
     }
     result = 0;
 #endif // HAVE_ALBERTA
@@ -129,12 +123,10 @@ int main(int argc, char** argv)
       vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
       //vid[0] = 1; vid[1] = 3; vid[2] = 2; gf.insertElement(type, vid);
 
-      Grid *grid = gf.createGrid();
+      auto grid = gf.createGrid();
       //grid->globalRefine(1);
 
       rt02DGridFunctionSpace(grid->leafGridView(), "ug");
-
-      delete grid;
     }
     result = 0;
 #endif // HAVE_ALBERTA

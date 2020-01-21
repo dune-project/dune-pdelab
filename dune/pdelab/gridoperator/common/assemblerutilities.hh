@@ -44,11 +44,17 @@ namespace Dune{
       typedef typename GO::Traits::DomainField DomainField;
 
       //! The type of the domain (solution).
+      typedef typename GO::Traits::Domain Domain;
+
+      //! The type of the domain (solution).
       typedef typename GO::Traits::Domain Solution;
 
 
       //! The field type of the range (residual).
       typedef typename GO::Traits::RangeField RangeField;
+
+      //! The type of the range (residual).
+      typedef typename GO::Traits::Range Range;
 
       //! The type of the range (residual).
       typedef typename GO::Traits::Range Residual;

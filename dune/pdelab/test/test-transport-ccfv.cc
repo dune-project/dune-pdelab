@@ -27,25 +27,7 @@
 #include<dune/istl/io.hh>
 #include<dune/istl/superlu.hh>
 
-#include<dune/pdelab/constraints/p0.hh>
-#include<dune/pdelab/constraints/conforming.hh>
-#include<dune/pdelab/constraints/common/constraints.hh>
-#include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
-#include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#include<dune/pdelab/common/function.hh>
-#include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/gridoperator/gridoperator.hh>
-#include<dune/pdelab/gridoperator/onestep.hh>
-#include<dune/pdelab/backend/istl.hh>
-
-#include<dune/pdelab/localoperator/convectiondiffusionccfv.hh>
-
-#include<dune/pdelab/newton/newton.hh>
-#include<dune/pdelab/stationary/linearproblem.hh>
-#include<dune/pdelab/instationary/onestep.hh>
+#include <dune/pdelab.hh>
 
 
 //==============================================================================
@@ -227,12 +209,12 @@ void stationary (const GV& gv)
 #endif
 
   // <<<7>>> solve nonlinear problem
-  Dune::PDELab::Newton<GO,LS,V> newton(go,x,ls);
+  Dune::PDELab::NewtonMethod<GO,LS> newton(go,ls);
   newton.setReassembleThreshold(0.0);
   newton.setVerbosityLevel(2);
   newton.setReduction(0.9);
   newton.setMinLinearReduction(1e-9);
-  newton.apply();
+  newton.apply(x);
 
   // <<<8>>> graphical output
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
@@ -303,7 +285,7 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   LS ls(gfs,cc,5000,1,1);
 
   // <<<7>>> make Newton for time-dependent problem
-  typedef Dune::PDELab::Newton<IGO,LS,V> PDESOLVER;
+  typedef Dune::PDELab::NewtonMethod<IGO,LS> PDESOLVER;
   PDESOLVER tnewton(igo,ls);
   tnewton.setReassembleThreshold(0.0);
   tnewton.setVerbosityLevel(0);

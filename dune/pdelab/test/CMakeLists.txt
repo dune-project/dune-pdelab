@@ -1,14 +1,17 @@
 add_subdirectory(fem)
 
+dune_add_test(SOURCES testnewton.cc)
+
+dune_add_test(SOURCES testinstationary.cc)
+
 dune_add_test(SOURCES testanalytic.cc)
 
 dune_add_test(SOURCES testbindtime.cc)
 
-# 2019-06-27 Steffen This doesn't compile right now, disabling
-#dune_add_test(NAME testcomplexnumbers-istl
-#              SOURCES testcomplexnumbers.cc
-#              COMPILE_DEFINITIONS SUPERLU_NTYPE=3
-#                                  USE_ISTL)
+dune_add_test(NAME testcomplexnumbers-istl
+              SOURCES testcomplexnumbers.cc
+              COMPILE_DEFINITIONS SUPERLU_NTYPE=3
+                                  USE_ISTL)
 
 dune_add_test(NAME testcomplexnumbers-istlbackend
               SOURCES testcomplexnumbers.cc
@@ -83,6 +86,8 @@ dune_add_test(SOURCES testpoisson.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 add_dune_alberta_flags(testpoisson)
 
+dune_add_test(SOURCES testmatrixfree.cc)
+
 dune_add_test(SOURCES testchunkedblockordering.cc)
 
 dune_add_test(SOURCES testrt0.cc
@@ -130,8 +135,7 @@ if(dune-alugrid_FOUND)
 
   dune_add_test(SOURCES testloadbalancing.cc
                 COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
-                # 2019-06-27 Steffen This test hangs in parallel right now, disabling parallel runs for the moment
-                # MPI_RANKS 2
+                MPI_RANKS 2
                 TIMEOUT 300)
 endif(dune-alugrid_FOUND)
 

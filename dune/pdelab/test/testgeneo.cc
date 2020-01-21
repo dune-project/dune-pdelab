@@ -2,107 +2,101 @@
 #include "config.h"
 #endif
 
-#include <dune/pdelab/boilerplate/pdelab.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionadapter.hh>
-#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
-
-#include <dune/pdelab/backend/istl/geneo/geneo.hh>
+#include <dune/pdelab.hh>
 
 /*
  * Defining a Darcy problem with alternating layers of permeability and a high contrast
  */
- template<typename GV, typename RF>
- class GenericEllipticProblem
- {
-   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
+template<typename GV, typename RF>
+class GenericEllipticProblem
+{
+  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
- public:
-   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
+public:
+  typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
-   //! tensor diffusion coefficient
-   typename Traits::PermTensorType
-   A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-   {
-     typename Traits::DomainType xglobal = e.geometry().global(x);
+  static constexpr bool permeabilityIsConstantPerCell()
+  {
+    return true;
+  }
 
-     RF perm1 = 1e0;
-     RF perm2 = 1e0; // FIXME we want high contrast
-     RF layer_thickness = 1.0 / 40.0;
+  //! tensor diffusion coefficient
+  typename Traits::PermTensorType
+  A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename Traits::DomainType xglobal = e.geometry().global(x);
 
-     RF coeff = (int)std::floor(xglobal[0] / layer_thickness) % 2 == 0 ? perm1 : perm2;
+    RF perm1 = 1e0;
+    RF perm2 = 1e6;
+    RF layer_thickness = 1.0 / 20.0;
 
-     typename Traits::PermTensorType I;
-     I[0][0] = coeff;
-     I[0][1] = 0;
-     I[1][0] = 0;
-     I[1][1] = coeff;
-     return I;
-   }
+    RF coeff = (int)std::floor(xglobal[1] / layer_thickness) % 2 == 0 ? perm1 : perm2;
 
-   //! tensor diffusion constant per cell? return false if you want more than one evaluation of A per cell.
-   static constexpr bool permeabilityIsConstantPerCell()
-   {
-     return true;
-   }
+    typename Traits::PermTensorType I;
+    I[0][0] = coeff;
+    I[0][1] = 0;
+    I[1][0] = 0;
+    I[1][1] = coeff;
+    return I;
+  }
 
-   //! velocity field
-   typename Traits::RangeType
-   b (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-   {
-     typename Traits::RangeType v(0.0);
-     return v;
-   }
+  //! velocity field
+  typename Traits::RangeType
+  b (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename Traits::RangeType v(0.0);
+    return v;
+  }
 
-   //! sink term
-   typename Traits::RangeFieldType
-   c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-   {
-     return 0.0;
-   }
+  //! sink term
+  typename Traits::RangeFieldType
+  c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    return 0.0;
+  }
 
-   //! source term
-   typename Traits::RangeFieldType
-   f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-   {
-     return 1.0;
-   }
+  //! source term
+  typename Traits::RangeFieldType
+  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    return 0.0;
+  }
 
-   BCType
-   bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-   {
-     typename Traits::DomainType xglobal = is.geometry().global(x);
-     if (!(xglobal[0]<1E-6 || xglobal[0]>1.0-1E-6))
-       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
-     else
-       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
-   }
+  BCType
+  bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
+  {
+    typename Traits::DomainType xglobal = is.geometry().global(x);
+    if (!(xglobal[1]<1E-6 || xglobal[1]>1.0-1E-6))
+      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
+    else
+      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
+  }
 
-   //! Dirichlet boundary condition value
-   typename Traits::RangeFieldType
-   g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-   {
-     typename Traits::DomainType xglobal = e.geometry().global(x);
-     /*if (xglobal[0] > 1.0-1E-6)
-       return 1.0;
-     else*/
-       return 0.0; // TODO: support Dirichlet again
-   }
+  //! Dirichlet boundary condition value
+  typename Traits::RangeFieldType
+  g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename Traits::DomainType xglobal = e.geometry().global(x);
+    if (xglobal[1] > 1.0-1E-6)
+      return 1.0;
+    else
+      return 0.0;
+  }
 
-   //! flux boundary condition
-   typename Traits::RangeFieldType
-   j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-   {
-     return 0.0;
-   }
+  //! flux boundary condition
+  typename Traits::RangeFieldType
+  j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
+  {
+    return 0.0;
+  }
 
-   //! outflow boundary condition
-   typename Traits::RangeFieldType
-   o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-   {
-     return 0.0;
-   }
- };
+  //! outflow boundary condition
+  typename Traits::RangeFieldType
+  o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
+  {
+    return 0.0;
+  }
+};
 
 void driver(std::string basis_type, std::string part_unity_type) {
 

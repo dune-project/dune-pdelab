@@ -135,22 +135,13 @@ namespace Dune {
           {
             for (size_type i = 0; i < gt_sizes.size(); ++i)
               {
-                if (gt_sizes[i] > 0)
-                  {
-                    if (this->_gt_dof_offsets[i] == 0)
-                      this->_gt_dof_offsets[i] = gt_sizes[i];
-                    else if (this->_gt_dof_offsets[i] != gt_sizes[i])
-                      {
-                        this->_fixed_size_possible = false;
-                        break;
-                      }
-                  }
-                else
-                  {
-                    // catch special case where some grid entities sometimes don't have any DOFs associated with
-                    // them, but are const size if there are any DOFs, i.e. a pattern of #(DOFs) == 0 || #(DOFs) == c > 0
-                    this->_fixed_size_possible = this->_fixed_size_possible && (this->_gt_dof_offsets[i] == 0);
-                  }
+                if (this->_gt_dof_offsets[i] == this->GT_UNUSED)
+                  this->_gt_dof_offsets[i] = gt_sizes[i];
+                else if (this->_gt_dof_offsets[i] != gt_sizes[i])
+                {
+                  this->_fixed_size_possible = false;
+                  break;
+                }
               }
           }
       }

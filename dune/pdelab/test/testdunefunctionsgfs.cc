@@ -14,32 +14,7 @@
 #include <dune/functions/gridfunctions/discreteglobalbasisfunction.hh>
 #include <dune/functions/functionspacebases/hierarchicvectorwrapper.hh>
 
-#include <dune/pdelab/adaptivity/adaptivity.hh>
-#include <dune/pdelab/gridfunctionspace/dunefunctionsgridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
-#include <dune/pdelab/localoperator/linearelasticity.hh>
-#include <dune/pdelab/gridoperator/gridoperator.hh>
-
-#include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/finiteelement/localbasiscache.hh>
-#include <dune/pdelab/common/quadraturerules.hh>
-#include <dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/constraints/common/constraintsparameters.hh>
-#include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/function/callableadapter.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
-#include <dune/pdelab/localoperator/defaultimp.hh>
-#include <dune/pdelab/localoperator/pattern.hh>
-#include <dune/pdelab/localoperator/flags.hh>
-#include <dune/pdelab/localoperator/variablefactories.hh>
-#include <dune/pdelab/stationary/linearproblem.hh>
-#include <dune/pdelab/newton/newton.hh>
+#include <dune/pdelab.hh>
 
 
 using namespace Dune;
@@ -293,14 +268,16 @@ void solveParallelPoissonProblem()
   LS ls(gridFunctionSpace,cc,100,5,verbose);
 
   // solve nonlinear problem
-  PDELab::Newton<GO,LS,Z> newton(go,z,ls);
-  newton.setReassembleThreshold(0.0);
-  newton.setVerbosityLevel(2);
-  newton.setReduction(1e-10);
-  newton.setMinLinearReduction(1e-4);
-  newton.setMaxIterations(25);
-  newton.setLineSearchMaxIterations(10);
-  newton.apply();
+  PDELab::NewtonMethod<GO,LS> newton(go,ls);
+  Dune::ParameterTree newtonParam;
+  newtonParam["reassemble_threshold"] = "0.0";
+  newtonParam["verbosity"] = "2";
+  newtonParam["reduction"] = "1e-10";
+  newtonParam["min_linear_reduction"] = "1e-4";
+  newtonParam["terminate.max_iterations"] = "25";
+  newtonParam["line_search.line_search_max_iterations"] = "10";
+  newton.setParameters(newtonParam);
+  newton.apply(z);
 
   // Write VTK output file
   SubsamplingVTKWriter<GV> vtkwriter(gv,refinementIntervals(1));

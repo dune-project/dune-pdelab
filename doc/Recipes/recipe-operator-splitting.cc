@@ -25,37 +25,8 @@
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/io/file/vtk.hh>
 #include <dune/typetree/treepath.hh>
-// dune-istl included by pdelab
-// dune-pdelab includes
-#include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/common/functionutilities.hh>
-#include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/common/quadraturerules.hh>
-#include <dune/pdelab/finiteelement/localbasiscache.hh>
-#include <dune/pdelab/finiteelementmap/pkfem.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/finiteelementmap/p0fem.hh>
-#include <dune/pdelab/constraints/p0.hh>
-#include <dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/constraints/common/constraintsparameters.hh>
-#include <dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/function/callableadapter.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionadapter.hh>
-#include <dune/pdelab/gridfunctionspace/subspace.hh>
-#include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
-#include <dune/pdelab/gridoperator/gridoperator.hh>
-#include <dune/pdelab/gridoperator/onestep.hh>
-#include <dune/pdelab/localoperator/defaultimp.hh>
-#include <dune/pdelab/localoperator/pattern.hh>
-#include <dune/pdelab/localoperator/flags.hh>
-#include <dune/pdelab/localoperator/variablefactories.hh>
-#include <dune/pdelab/stationary/linearproblem.hh>
-#include <dune/pdelab/instationary/onestep.hh>
-#include <dune/pdelab/newton/newton.hh>
-#include <dune/pdelab/backend/istl.hh>
+
+#include <dune/pdelab.hh>
 
 /**
  * \page recipe-operator-splitting Operator splitting
@@ -925,31 +896,23 @@ void driver (const GV& gv, const FEM& fem, Param& param)
 
   // select a nonlinear solver for flow
   constexpr int newtonMaxIt{10};
-  using PDESOLVERF = Dune::PDELab::Newton<IGOF,LSF,Z>;
-  PDESOLVERF pdesolverf(igof,z,lsf);
-  pdesolverf.setReassembleThreshold(0.0);
-  pdesolverf.setVerbosityLevel(2);
-  pdesolverf.setReduction(1e-8);
-  pdesolverf.setMaxIterations(newtonMaxIt);
-  pdesolverf.setMinLinearReduction(1e-4);
-  pdesolverf.setLineSearchMaxIterations(10);
+  using PDESOLVERF = Dune::PDELab::NewtonMethod<IGOF,LSF>;
+  PDESOLVERF pdesolverf(igof,lsf);
+  Dune::ParameterTree newtonParam;
+  newtonParam["reassemble_threshold"] = "0.0";
+  newtonParam["verbosity"] = "2";
+  newtonParam["reduction"] = "1e-8";
+  newtonParam["min_linear_reduction"] = "1e-4";
+  newtonParam["terminate.max_iterations"] = std::to_string(newtonMaxIt);
+  newtonParam["line_search.line_search_max_iterations"] = "10";
+  pdesolverf.setParameters(newtonParam);
   // select a solver for contaminant
-  using PDESOLVERC = Dune::PDELab::Newton<IGOC,LSC,ZC>;
-  PDESOLVERC pdesolverc(igoc,zc,lsc);
-  pdesolverc.setReassembleThreshold(0.0);
-  pdesolverc.setVerbosityLevel(2);
-  pdesolverc.setReduction(1e-8);
-  pdesolverc.setMaxIterations(newtonMaxIt);
-  pdesolverc.setMinLinearReduction(1e-4);
-  pdesolverc.setLineSearchMaxIterations(10);
-  using PDESOLVERD = Dune::PDELab::Newton<IGOD,LSC,ZC>;
-  PDESOLVERD pdesolverd(igod,zc,lsc);
-  pdesolverd.setReassembleThreshold(0.0);
-  pdesolverd.setVerbosityLevel(2);
-  pdesolverd.setReduction(1e-8);
-  pdesolverd.setMaxIterations(newtonMaxIt);
-  pdesolverd.setMinLinearReduction(1e-4);
-  pdesolverd.setLineSearchMaxIterations(10);
+  using PDESOLVERC = Dune::PDELab::NewtonMethod<IGOC,LSC>;
+  PDESOLVERC pdesolverc(igoc,lsc);
+  pdesolverc.setParameters(newtonParam);
+  using PDESOLVERD = Dune::PDELab::NewtonMethod<IGOD,LSC>;
+  PDESOLVERD pdesolverd(igod,lsc);
+  pdesolverd.setParameters(newtonParam);
 
   // select and prepare time-stepping scheme
   Dune::PDELab::OneStepThetaParameter<RF> method(1.0);

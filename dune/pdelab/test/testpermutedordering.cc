@@ -14,16 +14,7 @@
 
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/finiteelementmap/p0fem.hh>
-#include <dune/pdelab/finiteelementmap/pkfem.hh>
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
-#include <dune/pdelab/ordering/interleavedordering.hh>
-#include <dune/pdelab/ordering/permutedordering.hh>
-
-#include <dune/pdelab/backend/istl.hh>
+#include <dune/pdelab.hh>
 
 template<typename GFS>
 void check_ordering_reference(const GFS& gfs)

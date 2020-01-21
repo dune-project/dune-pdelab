@@ -326,6 +326,18 @@ public:
     return *v_;
   }
 
+  //! Returns storage object of the grid function space.
+  auto gridFunctionSpaceStorage() const
+  {
+    return pgfs_;
+  }
+
+  //! Returns storage object of the dof storage vector.
+  auto dofsStorage() const
+  {
+    return v_;
+  }
+
   // TODO: Implement this using hierarchic search
   Range operator() (const Domain& x) const
   {

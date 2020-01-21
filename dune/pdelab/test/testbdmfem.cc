@@ -10,9 +10,7 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
-#include <dune/pdelab/finiteelementmap/brezzidouglasmarinifem.hh>
-#include <dune/pdelab/finiteelementmap/bdm1simplex2dfem.hh>
-#include <dune/pdelab/finiteelementmap/bdm1cube2dfem.hh>
+#include <dune/pdelab.hh>
 
 #include "gridexamples.hh"
 

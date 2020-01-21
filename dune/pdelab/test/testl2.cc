@@ -10,17 +10,7 @@
 
 #include <dune/functions/gridfunctions/analyticgridviewfunction.hh>
 
-#include <dune/pdelab/finiteelementmap/qkfem.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/gridfunctionspace/subspace.hh>
-#include <dune/pdelab/gridoperator/gridoperator.hh>
-#include <dune/pdelab/localoperator/l2.hh>
-#include <dune/pdelab/backend/istl.hh>
-#include <dune/pdelab/function/discretegridviewfunction.hh>
-
+#include <dune/pdelab.hh>
 
 /* This actually tests a number of things:
  *

@@ -10,14 +10,7 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
-#include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
-#include <dune/pdelab/finiteelementmap/rt0simplex2dfem.hh>
-#include <dune/pdelab/finiteelementmap/rt1simplex2dfem.hh>
-#include <dune/pdelab/finiteelementmap/rt0cube2dfem.hh>
-#include <dune/pdelab/finiteelementmap/rt1cube2dfem.hh>
-#include <dune/pdelab/finiteelementmap/rt2cube2dfem.hh>
-#include <dune/pdelab/finiteelementmap/rt0cube3dfem.hh>
-#include <dune/pdelab/finiteelementmap/rt1cube3dfem.hh>
+#include <dune/pdelab.hh>
 
 #include "gridexamples.hh"
 
