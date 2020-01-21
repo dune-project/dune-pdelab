@@ -86,7 +86,7 @@ namespace Dune {
       ConvectionDiffusionDG (T& param_,
                              ConvectionDiffusionDGMethod::Type method_=ConvectionDiffusionDGMethod::NIPG,
                              ConvectionDiffusionDGWeights::Type weights_=ConvectionDiffusionDGWeights::weightsOff,
-                             Real alpha_=0.0,
+                             Real alpha_=3.0,
                              int intorderadd_=0
                              )
         : Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
