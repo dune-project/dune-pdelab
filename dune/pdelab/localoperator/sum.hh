@@ -5,8 +5,8 @@
 
 #include <cstddef>
 
-#include <dune/common/forloop.hh>
-#include <dune/common/tuples.hh>
+#include <tuple>
+#include <dune/pdelab/common/forloop.hh>
 #include <dune/common/tupleutility.hh>
 #include <dune/common/typetraits.hh>
 
@@ -28,7 +28,7 @@ namespace Dune {
     template<typename Args>
     class InstationarySumLocalOperator
     {
-      static const std::size_t size = tuple_size<Args>::value;
+      static const std::size_t size = std::tuple_size<Args>::value;
 
       typedef typename ForEachType<AddPtrTypeEvaluator, Args>::Type ArgPtrs;
       typedef typename ForEachType<AddRefTypeEvaluator, Args>::Type ArgRefs;
@@ -50,13 +50,13 @@ namespace Dune {
 
       //! set the i'th component of the sum
       template<std::size_t i>
-      void setSummand(typename tuple_element<i,Args>::type& summand)
-      { get<i>(lops) = &summand; }
+      void setSummand(typename std::tuple_element<i,Args>::type& summand)
+      { std::get<i>(lops) = &summand; }
 
       //! get the i'th component of the sum
       template<std::size_t i>
-      typename tuple_element<i,Args>::type& getSummand()
-      { return *get<i>(lops); }
+      typename std::tuple_element<i,Args>::type& getSummand()
+      { return *std::get<i>(lops); }
 
       //! \} Construction and modification
 
@@ -77,66 +77,66 @@ namespace Dune {
 
       template<int i>
       struct PatternVolumeValue : public std::integral_constant
-      < bool, tuple_element<i, Args>::type::doPatternVolume>
+      < bool, std::tuple_element<i, Args>::type::doPatternVolume>
       { };
       template<int i>
       struct PatternVolumePostSkeletonValue : public std::integral_constant
-      < bool, tuple_element<i, Args>::type::doPatternVolumePostSkeleton>
+      < bool, std::tuple_element<i, Args>::type::doPatternVolumePostSkeleton>
       { };
       template<int i>
       struct PatternSkeletonValue : public std::integral_constant
-      < bool, tuple_element<i, Args>::type::doPatternSkeleton>
+      < bool, std::tuple_element<i, Args>::type::doPatternSkeleton>
       { };
       template<int i>
       struct PatternBoundaryValue : public std::integral_constant
-      < bool, tuple_element<i, Args>::type::doPatternBoundary>
+      < bool, std::tuple_element<i, Args>::type::doPatternBoundary>
       { };
 
       template<int i>
       struct AlphaVolumeValue : public std::integral_constant
-      < bool, tuple_element<i, Args>::type::doAlphaVolume>
+      < bool, std::tuple_element<i, Args>::type::doAlphaVolume>
       { };
       template<int i>
       struct AlphaVolumePostSkeletonValue : public std::integral_constant
-      < bool, tuple_element<i, Args>::type::doAlphaVolumePostSkeleton>
+      < bool, std::tuple_element<i, Args>::type::doAlphaVolumePostSkeleton>
       { };
       template<int i>
       struct AlphaSkeletonValue : public std::integral_constant
-      < bool, tuple_element<i, Args>::type::doAlphaSkeleton>
+      < bool, std::tuple_element<i, Args>::type::doAlphaSkeleton>
       { };
       template<int i>
       struct AlphaBoundaryValue : public std::integral_constant
-      < bool, tuple_element<i, Args>::type::doAlphaBoundary>
+      < bool, std::tuple_element<i, Args>::type::doAlphaBoundary>
       { };
 
       template<int i>
       struct LambdaVolumeValue : public std::integral_constant
-      < bool, tuple_element<i, Args>::type::doLambdaVolume>
+      < bool, std::tuple_element<i, Args>::type::doLambdaVolume>
       { };
       template<int i>
       struct LambdaVolumePostSkeletonValue : public std::integral_constant
-      < bool, tuple_element<i, Args>::type::doLambdaVolumePostSkeleton>
+      < bool, std::tuple_element<i, Args>::type::doLambdaVolumePostSkeleton>
       { };
       template<int i>
       struct LambdaSkeletonValue : public std::integral_constant
-      < bool, tuple_element<i, Args>::type::doLambdaSkeleton>
+      < bool, std::tuple_element<i, Args>::type::doLambdaSkeleton>
       { };
       template<int i>
       struct LambdaBoundaryValue : public std::integral_constant
-      < bool, tuple_element<i, Args>::type::doLambdaBoundary>
+      < bool, std::tuple_element<i, Args>::type::doLambdaBoundary>
       { };
 
       template<int i>
       struct OneSidedSkeletonRequiredValue : public std::integral_constant
-      < bool, ( ( tuple_element<i, Args>::type::doAlphaSkeleton ||
-                  tuple_element<i, Args>::type::doLambdaSkeleton) &&
-                ! tuple_element<i, Args>::type::doSkeletonTwoSided)>
+      < bool, ( ( std::tuple_element<i, Args>::type::doAlphaSkeleton ||
+                  std::tuple_element<i, Args>::type::doLambdaSkeleton) &&
+                ! std::tuple_element<i, Args>::type::doSkeletonTwoSided)>
       { };
       template<int i>
       struct TwoSidedSkeletonRequiredValue : public std::integral_constant
-      < bool, ( ( tuple_element<i, Args>::type::doAlphaSkeleton ||
-                  tuple_element<i, Args>::type::doLambdaSkeleton) &&
-                tuple_element<i, Args>::type::doSkeletonTwoSided)>
+      < bool, ( ( std::tuple_element<i, Args>::type::doAlphaSkeleton ||
+                  std::tuple_element<i, Args>::type::doLambdaSkeleton) &&
+                std::tuple_element<i, Args>::type::doSkeletonTwoSided)>
       { };
 
     public:
@@ -219,8 +219,8 @@ namespace Dune {
                           const LFSU& lfsu, const LFSV& lfsv,
                           LocalPattern& pattern)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doPatternVolume>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doPatternVolume>::
             pattern_volume(*get<i>(lops), lfsu, lfsv, pattern);
         }
       };
@@ -232,8 +232,8 @@ namespace Dune {
                           const LFSU& lfsu, const LFSV& lfsv,
                           LocalPattern& pattern)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doPatternVolumePostSkeleton>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doPatternVolumePostSkeleton>::
             pattern_volume_post_skeleton(*get<i>(lops), lfsu, lfsv, pattern);
         }
       };
@@ -247,8 +247,8 @@ namespace Dune {
                           LocalPattern& pattern_sn,
                           LocalPattern& pattern_ns)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doPatternSkeleton>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doPatternSkeleton>::
             pattern_skeleton(*get<i>(lops),
                              lfsu_s, lfsv_s, lfsu_n, lfsv_n,
                              pattern_sn, pattern_ns);
@@ -262,8 +262,8 @@ namespace Dune {
                           const LFSU& lfsu_s, const LFSV& lfsv_s,
                           LocalPattern& pattern_ss)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doPatternBoundary>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doPatternBoundary>::
             pattern_boundary(*get<i>(lops), lfsu_s, lfsv_s, pattern_ss);
         }
       };
@@ -352,8 +352,8 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           R& r)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolume>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doAlphaVolume>::
           alpha_volume(*get<i>(lops), eg, lfsu, x, lfsv, r);
         }
       };
@@ -366,8 +366,8 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           R& r)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
             alpha_volume_post_skeleton(*get<i>(lops), eg,
                                        lfsu, x, lfsv,
                                        r);
@@ -383,8 +383,8 @@ namespace Dune {
                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                           R& r_s, R& r_n)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaSkeleton>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doAlphaSkeleton>::
             alpha_skeleton(*get<i>(lops), ig,
                            lfsu_s, x_s, lfsv_s,
                            lfsu_n, x_n, lfsv_n,
@@ -400,8 +400,8 @@ namespace Dune {
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                           R& r_s)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaBoundary>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doAlphaBoundary>::
             alpha_boundary(*get<i>(lops), ig, lfsu_s, x_s, lfsv_s, r_s);
         }
       };
@@ -494,8 +494,8 @@ namespace Dune {
                           const LFSV& lfsv,
                           R& r)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doLambdaVolume>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doLambdaVolume>::
             lambda_volume(*get<i>(lops), eg, lfsv, r);
         }
       };
@@ -507,8 +507,8 @@ namespace Dune {
                           const LFSV& lfsv,
                           R& r)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doLambdaVolumePostSkeleton>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doLambdaVolumePostSkeleton>::
             lambda_volume_post_skeleton(*get<i>(lops), eg, lfsv, r);
         }
       };
@@ -521,8 +521,8 @@ namespace Dune {
                           const LFSV& lfsv_n,
                           R& r_s, R& r_n)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doLambdaSkeleton>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doLambdaSkeleton>::
             lambda_skeleton(*get<i>(lops), ig,
                             lfsv_s, lfsv_n,
                             r_s, r_n);
@@ -536,8 +536,8 @@ namespace Dune {
                           const LFSV& lfsv_s,
                           R& r_s)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doLambdaBoundary>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doLambdaBoundary>::
             lambda_boundary(*get<i>(lops), ig, lfsv_s, r_s);
         }
       };
@@ -615,8 +615,8 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           Y& y)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolume>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doAlphaVolume>::
             jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, lfsv, y);
         }
       };
@@ -629,8 +629,8 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           Y& y)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
             jacobian_apply_volume_post_skeleton(*get<i>(lops), eg,
                                                 lfsu, x, lfsv,
                                                 y);
@@ -646,8 +646,8 @@ namespace Dune {
                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                           Y& y_s, Y& y_n)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaSkeleton>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doAlphaSkeleton>::
           jacobian_apply_skeleton(*get<i>(lops), ig,
                                   lfsu_s, x_s, lfsv_s,
                                   lfsu_n, x_n, lfsv_n,
@@ -663,8 +663,8 @@ namespace Dune {
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                           Y& y_s)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaBoundary>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doAlphaBoundary>::
             jacobian_apply_boundary(*get<i>(lops), ig,
                                     lfsu_s, x_s, lfsv_s,
                                     y_s);
@@ -760,8 +760,8 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           LocalMatrix& mat)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolume>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doAlphaVolume>::
             jacobian_volume(*get<i>(lops), eg, lfsu, x, lfsv, mat);
         }
       };
@@ -774,8 +774,8 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           LocalMatrix& mat)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
             jacobian_volume_post_skeleton(*get<i>(lops), eg,
                                           lfsu, x, lfsv,
                                           mat);
@@ -792,8 +792,8 @@ namespace Dune {
                           LocalMatrix& mat_ss, LocalMatrix& mat_sn,
                           LocalMatrix& mat_ns, LocalMatrix& mat_nn)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaSkeleton>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doAlphaSkeleton>::
             jacobian_skeleton(*get<i>(lops), ig,
                               lfsu_s, x_s, lfsv_s,
                               lfsu_n, x_n, lfsv_n,
@@ -809,8 +809,8 @@ namespace Dune {
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                           LocalMatrix& mat_ss)
         {
-          LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-            tuple_element<i,Args>::type::doAlphaBoundary>::
+          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
+            std::tuple_element<i,Args>::type::doAlphaBoundary>::
             jacobian_boundary(*get<i>(lops), ig,
                               lfsu_s, x_s, lfsv_s, mat_ss);
         }
@@ -895,7 +895,7 @@ namespace Dune {
       //
 
       //! Export type used for time values
-      typedef typename tuple_element<0, Args>::type::RealType RealType;
+      typedef typename std::tuple_element<0, Args>::type::RealType RealType;
 
     private:
       // template meta program helpers for the methods related to instationary
