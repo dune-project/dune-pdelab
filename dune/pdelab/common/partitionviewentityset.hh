@@ -858,7 +858,7 @@ namespace Dune {
       template<typename,typename>
       friend class PartitionViewEntitySet;
 
-      template<typename,typename,typename,typename>
+      template<typename,typename,typename>
       friend class OverlapEntitySet;
 
     public:
@@ -1215,7 +1215,7 @@ namespace Dune {
       template<typename,typename>
       friend class Dune::PDELab::PartitionViewEntitySet;
 
-      template<typename,typename>
+      template<typename,typename,typename>
       friend class Dune::PDELab::OverlapEntitySet;
 
     public:
