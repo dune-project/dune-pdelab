@@ -120,7 +120,6 @@ public:
   template<typename LFSCache, typename Entity>
   bool assembleCell(const Entity& entity, const LFSCache & cache) const {
     return entity.partitionType() != Dune::PartitionType::GhostEntity;
-    //return true;
   }
 private:
 };
@@ -136,8 +135,7 @@ public:
 
   template<typename LFSCache, typename Entity>
   bool assembleCell(const Entity& entity, const LFSCache & cache) const {
-    //return true; // FIXME
-    if (entity.partitionType() == Dune::PartitionType::GhostEntity) // NOTE: Replaced by EntitySet excluder
+    if (entity.partitionType() == Dune::PartitionType::GhostEntity)
       return false;
 
     for (std::size_t i = 0; i < cache.size(); i++)
@@ -287,11 +285,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   M A(go);
   go.jacobian(x,A);
 
-  if (gfs.gridView().comm().rank()==0) {
-    using Dune::PDELab::Backend::native;
-    Dune::storeMatrixMarket(native(A), "fine_matrix.mm");
-  }
-
   std::cout << "fine assembly: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
 
   using Dune::PDELab::Backend::native;
@@ -347,12 +340,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   using ScalarVector = Dune::BlockVector<Dune::FieldVector<K,1>>;
 
 
-
-  int nev = 2;
-  //auto subdomainbasis = std::make_shared<Dune::PDELab::SubdomainBasis<Vector>>(*Dune::makePartitionOfUnity(adapter_A));
-
-
-  //gv.setExcluder(ghost_excluder);
 
   M newmat(go);
   auto extended_matrices = adapter.lambdaMultiExtendMatrix(native(A_ovlp), native(A), [&](int i){
@@ -414,36 +401,13 @@ std::cout << "Return for " << i << std::endl;
 
   std::cout << "part_unity with Dirichlet: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
 
+  int nev = 2;
   auto subdomainbasis = std::make_shared<Dune::PDELab::NewGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, -1.0, nev);
-  //auto subdomainbasis = std::make_shared<Dune::PDELab::SubdomainBasis<Vector>>(*part_unity);
+
   std::cout << "eigenproblems: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
 
 
-  {
-    V out(gfs, 0.0);
-    Vector basis_restricted(adapter.getExtendedSize());
-    adapter.restrictVector(*part_unity, basis_restricted);
-    for (int i = 0; i < native(out).N(); i++)
-      native(out)[i] = basis_restricted[i];
-    Dune::VTKWriter<GV> vtkwriter(gv);
-    typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-    DGF xdgf(gfs,out);
-    typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
-    auto adapt = std::make_shared<ADAPT>(xdgf,"PoU");
-    vtkwriter.addVertexData(adapt);
-    vtkwriter.write("newpart_unity_with_dir");
-  }
-
-  if(verb > 2) {
-    Dune::printvector(std::cout, *part_unity, "part_unity with Dirichlet", "");
-    Dune::printmatrix(std::cout, native(A), "A", "");
-    Dune::printmatrix(std::cout, *A_extended, "A_extended", "");
-    Dune::printmatrix(std::cout, native(A_ovlp), "A_ovlp", "");
-    Dune::printmatrix(std::cout, *A_ovlp_extended, "A_ovlp_extended", "");
-  }
-
   auto coarse_space = std::make_shared<Dune::PDELab::NewSubdomainProjectedCoarseSpace<GV, Matrix, Vector>>(adapter, gv, *A_extended, subdomainbasis, verbose);
-
 
   // Apply Dirichlet conditions on processor boundaries, needed for Schwarz method
   for (auto rIt=A_extended->begin(); rIt!=A_extended->end(); ++rIt)
@@ -461,21 +425,10 @@ std::cout << "Return for " << i << std::endl;
   NonoverlappingScalarProduct<GV,Vector> scalarproduct(gv,native(x));
   Dune::CGSolver<Vector> solver(linearOperator,scalarproduct,prec,1e-6,500,verbose);
 
-  //Vector b_cpy(d);
-  Vector v(native(x)); // TODO: init via size
-  // FIXME: Dirichlet unterstützen
+  Vector v(native(x));
   Dune::InverseOperatorResult stat;
   solver.apply(native(v),native(d),stat);
   native(x) -= v;
-
-  //native(x) -= x_cpy;
-
-  // now solve defect equation A*v = d using a CG solver with our shiny preconditioner
-  /*V v(gfs,0.0);
-  auto solver_ref = std::make_shared<Dune::CGSolver<V> >(*popf,ospf,*prec,1E-6,1000,verb,true);
-  Dune::InverseOperatorResult result;
-  solver_ref->apply(v,d,result);
-  x -= v;*/
 
 
   // Write solution to VTK
@@ -498,8 +451,6 @@ int main(int argc, char **argv)
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc,argv);
 
     driver("geneo", "standard", helper);
-    //driver("geneo", "sarkis");
-    //driver("lipton_babuska", "standard");
 
     return 0;
   }
