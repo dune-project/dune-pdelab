@@ -858,7 +858,7 @@ namespace Dune {
       template<typename,typename>
       friend class PartitionViewEntitySet;
 
-      template<typename,typename,typename>
+      template<typename,typename,typename,typename>
       friend class OverlapEntitySet;
 
     public:
