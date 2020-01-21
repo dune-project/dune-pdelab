@@ -144,7 +144,7 @@ public:
   /*! \brief Dot product of two vectors.
    * It is assumed that one vector is consistent and the other is additive
    */
-  virtual field_type dot (const Vector& x, const Vector& y)
+  virtual field_type dot (const Vector& x, const Vector& y) const override
   {
     field_type sum = 0.0;
     for (typename Vector::size_type i=0; i<x.N(); i++) sum += x[i]*y[i];
@@ -157,7 +157,7 @@ public:
    * This operation requires a local communication in addition
    * to make one argument consistent.
    */
-  virtual double norm (const Vector& x)
+  virtual double norm (const Vector& x) const override
   {
     // if (!check_vector_isfinite(x))
     //   std::cout << gv.comm().rank() << ": NaN in x detected in NonoverlappingScalarProduct.norm" << std::endl;
