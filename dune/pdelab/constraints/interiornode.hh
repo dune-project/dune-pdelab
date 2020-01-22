@@ -38,7 +38,7 @@ namespace Dune {
       void volume (const P& param, const EG& eg, const LFS& lfs, T& trafo) const
       {
         typedef typename EG::Entity Entity;
-        enum { dim = Entity::dimension, dimw = Entity::dimensionworld };
+        enum { dim = Entity::dimension };
 
         // update component
         typename T::RowType empty;
@@ -59,8 +59,9 @@ namespace Dune {
 
           // update constraints
           if (interior[idx])
-            trafo[i] = empty;
+              trafo[lfs.dofIndex(i)] = empty;
         }
+
       }
 
       const std::vector<bool> & interiorNodes() const
@@ -80,10 +81,10 @@ namespace Dune {
           interior[i] = true;
 
         // loop over all cells
-        for(const auto& entity : cells(gv))
+        for(const auto& entity : elements(gv))
         {
           // find boundary faces & associated vertices
-          for (const auto& intersection : intersection(gv,entity))
+          for (const auto& intersection : intersections(gv,entity))
           {
             if (intersection.boundary())
             {
