@@ -14,6 +14,18 @@
 
 namespace Dune {
   namespace PDELab {
+
+template<template<typename> typename F, typename... Args>
+constexpr auto staticCombineOr(const std::tuple<Args...> & t)
+{
+    return std::disjunction<F<Args>...>{};
+}
+
+template<typename Tuple, template<typename> typename F>
+constexpr auto combineOr() {
+    return decltype(staticCombineOr<F>(std::declval<Tuple>())){};
+}
+
     //! \addtogroup LocalOperator
     //! \ingroup PDELab
     //! \{
@@ -67,137 +79,99 @@ namespace Dune {
       //
 
     private:
-      template<typename T1, typename T2>
-      struct OrOperation
-        : public std::integral_constant<bool, T1::value || T2:: value>
-      { };
-      template<template<int> class Value>
-      struct AccFlag : public GenericForLoop<OrOperation, Value, 0, size-1>
-      { };
+      template<typename T>
+      using PatternVolumeValue = std::integral_constant<bool, T::PatternVolumeValue>;
+      template<typename T>
+      using PatternVolumePostSkeletonValue = std::integral_constant<bool, T::doPatternVolumePostSkeleton>;
+      template<typename T>
+      using PatternSkeletonValue = std::integral_constant<bool, T::doPatternSkeleton>;
+      template<typename T>
+      using PatternBoundaryValue = std::integral_constant<bool, T::doPatternBoundary>;
 
-      template<int i>
-      struct PatternVolumeValue : public std::integral_constant
-      < bool, std::tuple_element<i, Args>::type::doPatternVolume>
-      { };
-      template<int i>
-      struct PatternVolumePostSkeletonValue : public std::integral_constant
-      < bool, std::tuple_element<i, Args>::type::doPatternVolumePostSkeleton>
-      { };
-      template<int i>
-      struct PatternSkeletonValue : public std::integral_constant
-      < bool, std::tuple_element<i, Args>::type::doPatternSkeleton>
-      { };
-      template<int i>
-      struct PatternBoundaryValue : public std::integral_constant
-      < bool, std::tuple_element<i, Args>::type::doPatternBoundary>
-      { };
+      template<typename T>
+      using AlphaVolumeValue = std::integral_constant<bool, T::doAlphaVolume>;
+      template<typename T>
+      using AlphaVolumePostSkeletonValue = std::integral_constant<bool, T::doAlphaVolumePostSkeleton>;
+      template<typename T>
+      using AlphaSkeletonValue = std::integral_constant<bool, T::doAlphaSkeleton>;
+      template<typename T>
+      using AlphaBoundaryValue = std::integral_constant<bool, T::doAlphaBoundary>;
 
-      template<int i>
-      struct AlphaVolumeValue : public std::integral_constant
-      < bool, std::tuple_element<i, Args>::type::doAlphaVolume>
-      { };
-      template<int i>
-      struct AlphaVolumePostSkeletonValue : public std::integral_constant
-      < bool, std::tuple_element<i, Args>::type::doAlphaVolumePostSkeleton>
-      { };
-      template<int i>
-      struct AlphaSkeletonValue : public std::integral_constant
-      < bool, std::tuple_element<i, Args>::type::doAlphaSkeleton>
-      { };
-      template<int i>
-      struct AlphaBoundaryValue : public std::integral_constant
-      < bool, std::tuple_element<i, Args>::type::doAlphaBoundary>
-      { };
+      template<typename T>
+      using LambdaVolumeValue = std::integral_constant<bool, T::doLambdaVolume>;
+      template<typename T>
+      using LambdaVolumePostSkeletonValue = std::integral_constant<bool, T::doLambdaVolumePostSkeleton>;
+      template<typename T>
+      using LambdaSkeletonValue = std::integral_constant<bool, T::doLambdaSkeleton>;
+      template<typename T>
+      using LambdaBoundaryValue = std::integral_constant<bool, T::doLambdaBoundary>;
 
-      template<int i>
-      struct LambdaVolumeValue : public std::integral_constant
-      < bool, std::tuple_element<i, Args>::type::doLambdaVolume>
-      { };
-      template<int i>
-      struct LambdaVolumePostSkeletonValue : public std::integral_constant
-      < bool, std::tuple_element<i, Args>::type::doLambdaVolumePostSkeleton>
-      { };
-      template<int i>
-      struct LambdaSkeletonValue : public std::integral_constant
-      < bool, std::tuple_element<i, Args>::type::doLambdaSkeleton>
-      { };
-      template<int i>
-      struct LambdaBoundaryValue : public std::integral_constant
-      < bool, std::tuple_element<i, Args>::type::doLambdaBoundary>
-      { };
-
-      template<int i>
-      struct OneSidedSkeletonRequiredValue : public std::integral_constant
-      < bool, ( ( std::tuple_element<i, Args>::type::doAlphaSkeleton ||
-                  std::tuple_element<i, Args>::type::doLambdaSkeleton) &&
-                ! std::tuple_element<i, Args>::type::doSkeletonTwoSided)>
-      { };
-      template<int i>
-      struct TwoSidedSkeletonRequiredValue : public std::integral_constant
-      < bool, ( ( std::tuple_element<i, Args>::type::doAlphaSkeleton ||
-                  std::tuple_element<i, Args>::type::doLambdaSkeleton) &&
-                std::tuple_element<i, Args>::type::doSkeletonTwoSided)>
-      { };
+      template<typename T>
+      using OneSidedSkeletonRequiredValue = std::integral_constant
+      < bool, ( ( T::doAlphaSkeleton || T::doLambdaSkeleton) && ! T::doSkeletonTwoSided)>;
+      template<typename T>
+      using TwoSidedSkeletonRequiredValue = std::integral_constant
+      < bool, ( ( T::doAlphaSkeleton || T::doLambdaSkeleton) && T::doSkeletonTwoSided)>;
 
     public:
       //! \brief Whether to assemble the pattern on the elements, i.e. whether
       //!        or not pattern_volume() should be called.
       enum { doPatternVolume             =
-             AccFlag<PatternVolumeValue>::value             };
+             combineOr<Args,PatternVolumeValue>             };
       //! \brief Whether to assemble the pattern on the elements after the
       //!        skeleton has been handled, i.e. whether or not
       //!        pattern_volume_post_skeleton() should be called.
       enum { doPatternVolumePostSkeleton =
-             AccFlag<PatternVolumePostSkeletonValue>::value };
+             combineOr<Args,PatternVolumePostSkeletonValue> };
       //! \brief Whether to assemble the pattern on the interior
       //!        intersections, i.e. whether or not pattern_skeleton() should
       //!        be called.
       enum { doPatternSkeleton           =
-             AccFlag<PatternSkeletonValue>::value           };
+             combineOr<Args,PatternSkeletonValue>           };
       //! \brief Whether to assemble the pattern on the boundary
       //!        intersections, i.e. whether or not pattern_boundary() should
       //!        be called.
       enum { doPatternBoundary           =
-             AccFlag<PatternBoundaryValue>::value           };
+             combineOr<Args,PatternBoundaryValue>           };
 
       //! \brief Whether to call the local operator's alpha_volume(),
       //!        jacobian_apply_volume() and jacobian_volume().
       enum { doAlphaVolume               =
-             AccFlag<AlphaVolumeValue>::value               };
+             combineOr<Args,AlphaVolumeValue>               };
       //! \brief Whether to call the local operator's
       //!        alpha_volume_post_skeleton(),
       //!        jacobian_apply_volume_post_skeleton() and
       //!        jacobian_volume_post_skeleton().
       enum { doAlphaVolumePostSkeleton   =
-             AccFlag<AlphaVolumePostSkeletonValue>::value   };
+             combineOr<Args,AlphaVolumePostSkeletonValue>   };
       //! \brief Whether to call the local operator's alpha_skeleton(),
       //!        jacobian_apply_skeleton() and jacobian_skeleton().
       enum { doAlphaSkeleton             =
-             AccFlag<AlphaSkeletonValue>::value             };
+             combineOr<Args,AlphaSkeletonValue>             };
       //! \brief Whether to call the local operator's alpha_boundary(),
       //!        jacobian_apply_boundary() and jacobian_boundary().
       enum { doAlphaBoundary             =
-             AccFlag<AlphaBoundaryValue>::value             };
+             combineOr<Args,AlphaBoundaryValue>             };
 
       //! \brief Whether to call the local operator's lambda_volume().
       enum { doLambdaVolume              =
-             AccFlag<LambdaVolumeValue>::value              };
+             combineOr<Args,LambdaVolumeValue>              };
       //! \brief Whether to call the local operator's
       //!        lambda_volume_post_skeleton().
       enum { doLambdaVolumePostSkeleton  =
-             AccFlag<LambdaVolumePostSkeletonValue>::value  };
+             combineOr<Args,LambdaVolumePostSkeletonValue>  };
       //! \brief Whether to call the local operator's lambda_skeleton().
       enum { doLambdaSkeleton            =
-             AccFlag<LambdaSkeletonValue>::value            };
+             combineOr<Args,LambdaSkeletonValue>            };
       //! \brief Whether to call the local operator's lambda_boundary().
       enum { doLambdaBoundary            =
-             AccFlag<LambdaBoundaryValue>::value            };
+             combineOr<Args,LambdaBoundaryValue>            };
 
       //! \brief Whether to visit the skeleton methods from both sides
       enum { doSkeletonTwoSided          =
-             AccFlag<TwoSidedSkeletonRequiredValue>::value  };
-      static_assert(!(AccFlag<OneSidedSkeletonRequiredValue>::value &&
-                      AccFlag<TwoSidedSkeletonRequiredValue>::value),
+             combineOr<Args,TwoSidedSkeletonRequiredValue>  };
+      static_assert(!(combineOr<Args,OneSidedSkeletonRequiredValue> &&
+                      combineOr<Args,TwoSidedSkeletonRequiredValue>),
                     "Some summands require a one-sided skelton, others a "
                     "two-sided skeleton.  This is not supported.");
 
