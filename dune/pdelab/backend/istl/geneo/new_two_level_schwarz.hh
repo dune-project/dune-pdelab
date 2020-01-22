@@ -24,7 +24,7 @@ namespace Dune {
       * \brief Two level overlapping Schwarz preconditioner with arbitrary coarse space.
       */
       //template<class GFS, class M, class X, class Y>
-      template<typename GridView, typename ScalarMatrix, typename Matrix, typename Vector>
+      template<typename GridView, typename ScalarMatrix, typename Matrix, typename ScalarVector, typename Vector, int block_size=1>
       class NewTwoLevelOverlappingAdditiveSchwarz
        : public Dune::Preconditioner<Vector,Vector>
       {
@@ -113,20 +113,23 @@ namespace Dune {
 
           Vector b_cpy(b);// FIXME: Avoid this
           for (auto rIt=A_.begin(); rIt!=A_.end(); ++rIt) {
-            bool isDirichlet = true;
-            for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt)
-            {
-              //if (rIt.index() == cIt.index() && *cIt != 1.0
-              //  || rIt.index() != cIt.index() && *cIt != 0.0) {
-              if (rIt.index() != cIt.index() && *cIt != 0.0) {
-                isDirichlet = false;
-              break;
-                }
-            }
-            if (isDirichlet) {
-              b_cpy[rIt.index()] = .0;
-              b[rIt.index()] = .0;
-            }
+              for(int block_i = 0; block_i < block_size; block_i++){
+                  bool isDirichlet = true;
+                  for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt)
+                  {
+                      for(int block_j = 0; block_j < block_size; block_j++){
+                          if ((rIt.index() != cIt.index() || block_i!=block_j) && (*cIt)[block_i][block_j] != 0.0) {
+                              isDirichlet = false;
+                              break;
+                          }
+                      }
+                      if(!isDirichlet) break;
+                  }
+                  if (isDirichlet) {
+                      b_cpy[rIt.index()] = .0;
+                      b[rIt.index()] = .0;
+                  }
+              }
           }
           if (verbosity_ > 2) Dune::printvector(std::cout, b_cpy, "defect (Dirichlet applied) ", "", 1, 10, 17);
 
@@ -156,7 +159,7 @@ namespace Dune {
 
             if (verbosity_ > 2) Dune::printvector(std::cout, coarse_defect_, "coarse_defect_ ", "", 1, 10, 17);
 
-            Vector v0(coarse_space_->basis_size());
+            ScalarVector v0(coarse_space_->basis_size());
             coarse_solver_.apply(v0, coarse_defect_, result);
             if (verbosity_ > 2) Dune::printvector(std::cout, v0, "v0 ", "");
             coarse_space_->prolongate(v0, prolongated_);
@@ -219,7 +222,7 @@ namespace Dune {
         std::shared_ptr<CoarseSpace<Vector> > coarse_space_;
         Dune::UMFPack<ScalarMatrix> coarse_solver_;
 
-        Vector coarse_defect_;
+        ScalarVector coarse_defect_;
         Vector prolongated_;
 
         const Matrix& A_;

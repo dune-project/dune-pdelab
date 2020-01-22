@@ -418,7 +418,7 @@ std::cout << "Return for " << i << std::endl;
       }
     }
 
-  Dune::PDELab::ISTL::NewTwoLevelOverlappingAdditiveSchwarz<GV, Matrix, Vector> prec(adapter, *A_extended, coarse_space, true, verb);
+  Dune::PDELab::ISTL::NewTwoLevelOverlappingAdditiveSchwarz<GV, Matrix, Matrix, Vector,Vector> prec(adapter, *A_extended, coarse_space, true, verb);
 
 
   NonoverlappingOperator<GV, Matrix,Vector> linearOperator(gv,native(A));
