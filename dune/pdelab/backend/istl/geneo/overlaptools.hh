@@ -1061,8 +1061,8 @@ namespace Dune {
   }
 
 
-  template<typename ExtendedParallelIndexSet, typename Matrix>
-  std::shared_ptr<Dune::BlockVector<Dune::FieldVector<typename Matrix::field_type,1>>>
+  template<typename ExtendedParallelIndexSet, typename Matrix, typename Vector, int block_size=1>
+  std::shared_ptr<Dune::BlockVector<Dune::FieldVector<typename Matrix::field_type,block_size>>>
   makePartitionOfUnity (const ExtendedParallelIndexSet& epis, const Matrix& M, int overlapsize)
   {
     using FieldType = typename Matrix::field_type;
@@ -1104,8 +1104,8 @@ namespace Dune {
       //sumdistance[i] += 1.0; // add 1 as actually the first vertex is already inside
       sumdistance[i] += .0; // add 1 as actually the first vertex is already inside
     communicator.forward<OverlapTools::AddGatherScatter<ScalarVector>>(sumdistance,sumdistance);
-    auto pu = std::shared_ptr<ScalarVector>(new ScalarVector(M.N()));
-    for (typename ScalarVector::size_type i=0; i<pu->N(); i++)
+    auto pu = std::shared_ptr<Vector>(new Vector(M.N()));
+    for (typename Vector::size_type i=0; i<pu->N(); i++)
       //(*pu)[i] = (distance[i]+1.0)/sumdistance[i];
       (*pu)[i] = (distance[i]+.0)/sumdistance[i];
 
@@ -1365,9 +1365,12 @@ namespace Dune {
     //std::shared_ptr<Matrix> M_;
   };
 
-  template<typename GridView, typename Vector, typename Matrix>
-  std::shared_ptr<Dune::BlockVector<Dune::FieldVector<typename Vector::field_type,1>>> makePartitionOfUnity(NonoverlappingOverlapAdapter<GridView, Vector, Matrix>& adapter, const Matrix& A) {
-    return Dune::makePartitionOfUnity(adapter.getEpis(), A, adapter.getEpis().overlapSize());
+  template<typename GridView, typename Matrix, typename Vector, int block_size=1>
+  std::shared_ptr<Dune::BlockVector<Dune::FieldVector<typename Vector::field_type,block_size>>> makePartitionOfUnity(NonoverlappingOverlapAdapter<GridView, Vector, Matrix>& adapter, const Matrix& A) {
+    using GlobalId = typename GridView::Grid::GlobalIdSet::IdType;
+    using CollectiveCommunication = typename GridView::CollectiveCommunication;
+    using EPIS = Dune::ExtendedParallelIndexSet<CollectiveCommunication,GlobalId,Matrix>;
+    return Dune::makePartitionOfUnity<EPIS, Matrix, Vector, block_size>(adapter.getEpis(), A, adapter.getEpis().overlapSize());
   }
 }
 

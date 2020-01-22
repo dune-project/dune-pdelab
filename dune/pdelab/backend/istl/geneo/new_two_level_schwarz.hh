@@ -24,7 +24,7 @@ namespace Dune {
       * \brief Two level overlapping Schwarz preconditioner with arbitrary coarse space.
       */
       //template<class GFS, class M, class X, class Y>
-      template<typename GridView, typename Matrix, typename Vector>
+      template<typename GridView, typename ScalarMatrix, typename Matrix, typename Vector>
       class NewTwoLevelOverlappingAdditiveSchwarz
        : public Dune::Preconditioner<Vector,Vector>
       {
@@ -217,7 +217,7 @@ namespace Dune {
         //const GFS& gfs_;
         Dune::UMFPack<Matrix> solverf_;
         std::shared_ptr<CoarseSpace<Vector> > coarse_space_;
-        Dune::UMFPack<Matrix> coarse_solver_;
+        Dune::UMFPack<ScalarMatrix> coarse_solver_;
 
         Vector coarse_defect_;
         Vector prolongated_;
