@@ -293,98 +293,15 @@ namespace Dune {
       }
     };
 
+    /** \brief Specialization of LocalAssemblerCallSwitch for the non-linear case
 
+        We derive from the linear case and only replace those calls which differ, namely all jacobian_apply* calls.
+        Compared to the linear case these methods now also pass the linearization point x to the local operator.
+     */
     template<typename LA>
-    struct LocalAssemblerCallSwitch<LA,true,false>
+    struct LocalAssemblerCallSwitch<LA,true,false> :
+      public LocalAssemblerCallSwitch<LA,true,true>
     {
-      //================
-      // Pattern methods
-      //================
-      template<typename LFSU, typename LFSV, typename LocalPattern>
-      static void pattern_volume (const LA& la, const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern)
-      {
-        la.pattern_volume(lfsu,lfsv,pattern);
-      }
-      template<typename LFSU, typename LFSV, typename LocalPattern>
-      static void pattern_volume_post_skeleton
-      ( const LA& la,
-        const LFSU& lfsu, const LFSV& lfsv,
-        LocalPattern& pattern)
-      {
-        la.pattern_volume_post_skeleton(lfsu,lfsv,pattern);
-      }
-      template<typename LFSU, typename LFSV, typename LocalPattern>
-      static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s,
-        const LFSU& lfsu_n, const LFSV& lfsv_n,
-        LocalPattern& pattern_sn,
-        LocalPattern& pattern_ns)
-      {
-        la.pattern_skeleton(lfsu_s,lfsv_s,lfsu_n,lfsv_n,
-          pattern_sn, pattern_ns);
-      }
-      template<typename LFSU, typename LFSV, typename LocalPattern>
-      static void pattern_boundary(const LA& la,
-        const LFSU& lfsu_s, const LFSV& lfsv_s,
-        LocalPattern& pattern_ss)
-      {
-        la.pattern_boundary(lfsu_s,lfsv_s,pattern_ss);
-      }
-
-      //==============
-      // Alpha methods
-      //==============
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-      static void alpha_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
-      {
-        la.alpha_volume(eg,lfsu,x,lfsv,r);
-      }
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-      static void alpha_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
-      {
-        la.alpha_volume_post_skeleton(eg,lfsu,x,lfsv,r);
-      }
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-      static void alpha_skeleton (const LA& la, const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        R& r_s, R& r_n)
-      {
-        la.alpha_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,r_s,r_n);
-      }
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-      static void alpha_boundary (const LA& la, const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        R& r_s)
-      {
-        la.alpha_boundary(ig,lfsu_s,x_s,lfsv_s,r_s);
-      }
-
-      //===============
-      // Lambda methods
-      //===============
-      template<typename EG, typename LFSV, typename R>
-      static void lambda_volume (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
-      {
-        la.lambda_volume(eg,lfsv,r);
-      }
-      template<typename EG, typename LFSV, typename R>
-      static void lambda_volume_post_skeleton (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
-      {
-        la.lambda_volume_post_skeleton(eg,lfsv,r);
-      }
-      template<typename IG, typename LFSV, typename R>
-      static void lambda_skeleton(const LA& la, const IG& ig,
-        const LFSV& lfsv_s, const LFSV& lfsv_n,
-        R& r_s, R& r_n)
-      {
-        la.lambda_skeleton(ig, lfsv_s, lfsv_n, r_s, r_n);
-      }
-      template<typename IG, typename LFSV, typename R>
-      static void lambda_boundary (const LA& la, const IG& ig, const LFSV& lfsv, R& r)
-      {
-        la.lambda_boundary(ig,lfsv,r);
-      }
-
       //=======================
       // Jacobian apply methods
       //=======================
@@ -412,37 +329,6 @@ namespace Dune {
         Y& y_s)
       {
         la.jacobian_apply_boundary(ig,lfsu_s,x_s,z_s,lfsv_s,y_s);
-      }
-
-      //=================
-      // Jacobian methods
-      //=================
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-      static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
-      {
-        la.jacobian_volume(eg,lfsu,x,lfsv,mat);
-      }
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-      static void jacobian_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
-      {
-        la.jacobian_volume_post_skeleton(eg,lfsu,x,lfsv,mat);
-      }
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
-      static void jacobian_skeleton (const LA& la, const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        M & mat_ss, M & mat_sn,
-        M & mat_ns, M & mat_nn)
-      {
-        la.jacobian_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,
-          mat_ss, mat_sn, mat_ns, mat_nn);
-      }
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
-      static void jacobian_boundary (const LA& la, const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        M & mat_ss)
-      {
-        la.jacobian_boundary(ig,lfsu_s,x_s,lfsv_s,mat_ss);
       }
     };
 
