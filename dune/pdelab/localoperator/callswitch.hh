@@ -9,9 +9,8 @@
 namespace Dune {
   namespace PDELab {
 
-
     // compile time switching of function call
-    template<typename LA, bool doIt, bool isLinear>
+    template<typename LA, bool doIt, bool isLinear = LA::isLinear>
     struct LocalAssemblerCallSwitch
     {
       //================
