@@ -1083,21 +1083,33 @@ namespace Dune {
     OverlapTools::CountNonlocalEdgesDataHandle<ParallelIndexSet,Matrix,ScalarVector> nonlocaledgesdh(M,*epis.parallelIndexSet(),distance);
     varcommunicator.forward(nonlocaledgesdh);
 
+
+
     // now compute distance of each vertex to the boundary up to distance 2*overlapsize
-    for (typename ScalarVector::size_type i=0; i<distance.N(); i++)
+    for (typename ScalarVector::size_type i=0; i<distance.N(); i++){
       if (distance[i]!=0.0)
         distance[i] = 0.0; // this is a boundary dof
       else
         distance[i] = 2*overlapsize+1.0;
+    }
+
     for (int round=0; round<2*overlapsize; round++)
       for (typename ScalarVector::size_type i=0; i<distance.N(); i++)
-        {
-          auto cIt = M[i].begin();
-          auto cEndIt = M[i].end();
-          for (; cIt!=cEndIt; ++cIt)
-            distance[i] = std::min(distance[i],distance[cIt.index()]+1.0);
-        }
+      {
+        auto cIt = M[i].begin();
+        auto cEndIt = M[i].end();
+        for (; cIt!=cEndIt; ++cIt)
+          distance[i] = std::min(distance[i],distance[cIt.index()]+1.0);
+      }
 
+    auto pu = std::shared_ptr<Vector>(new Vector(M.N()));
+    for (typename Vector::size_type i=0; i<pu->N(); i++){
+      (*pu)[i] = (distance[i][0]+.0);///sumdistance[i];
+      std::cout << (*pu)[i] << std::endl;
+    }
+    return pu;
+
+    /*
     // now we may compute the partition of unity as in the stability proof of additive Schwarz
     ScalarVector sumdistance(distance);
     for (typename ScalarVector::size_type i=0; i<sumdistance.N(); i++)
@@ -1105,11 +1117,13 @@ namespace Dune {
       sumdistance[i] += .0; // add 1 as actually the first vertex is already inside
     communicator.forward<OverlapTools::AddGatherScatter<ScalarVector>>(sumdistance,sumdistance);
     auto pu = std::shared_ptr<Vector>(new Vector(M.N()));
-    for (typename Vector::size_type i=0; i<pu->N(); i++)
+    for (typename Vector::size_type i=0; i<pu->N(); i++){
       //(*pu)[i] = (distance[i]+1.0)/sumdistance[i];
-      (*pu)[i] = (distance[i]+.0)/sumdistance[i];
-
-    return pu;
+      //std::cout << (*pu)[i] << std::endl;
+      (*pu)[i] = (distance[i][0]+.0)/sumdistance[i];
+      std::cout << (*pu)[i] << std::endl;
+    }
+    return pu;*/
   }
 
   template<typename ExtendedParallelIndexSet, typename Matrix>
