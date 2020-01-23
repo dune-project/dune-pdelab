@@ -6,7 +6,6 @@
 #include <cstddef>
 
 #include <tuple>
-#include <dune/pdelab/common/forloop.hh>
 #include <dune/common/tupleutility.hh>
 #include <dune/common/typetraits.hh>
 
@@ -46,6 +45,13 @@ constexpr auto combineOr() {
       typedef typename ForEachType<AddRefTypeEvaluator, Args>::Type ArgRefs;
 
       ArgPtrs lops;
+
+      template<template<int> typename F, typename... Args2>
+      void applyLops(Args2 &&... args)
+      {
+        Hybrid::forEach(Std::make_index_sequence<size-1>{},
+          [&](auto i){F<i>::apply(lops, std::forward<Args2>(args)...);});
+      }
 
     public:
       //////////////////////////////////////////////////////////////////////
@@ -254,8 +260,7 @@ constexpr auto combineOr() {
       ( const LFSU& lfsu, const LFSV& lfsv,
         LocalPattern& pattern) const
       {
-        ForLoop<PatternVolumeOperation, 0, size-1>::
-          apply(lops, lfsu, lfsv, pattern);
+        applyLops<PatternVolumeOperation>(lfsu, lfsv, pattern);
       }
 
       //! \brief get an element's contribution to the sparsity pattern after
@@ -270,8 +275,7 @@ constexpr auto combineOr() {
       ( const LFSU& lfsu, const LFSV& lfsv,
         LocalPattern& pattern) const
       {
-        ForLoop<PatternVolumePostSkeletonOperation, 0, size-1>::
-          apply(lops, lfsu, lfsv, pattern);
+        applyLops<PatternVolumePostSkeletonOperation>(lfsu, lfsv, pattern);
       }
 
       //! get an internal intersection's contribution to the sparsity pattern
@@ -287,9 +291,9 @@ constexpr auto combineOr() {
         LocalPattern& pattern_sn,
         LocalPattern& pattern_ns) const
       {
-        ForLoop<PatternSkeletonOperation, 0, size-1>::
-          apply(lops, lfsu_s, lfsv_s, lfsu_n, lfsv_n,
-                pattern_sn, pattern_ns);
+        applyLops<PatternSkeletonOperation>(
+          lfsu_s, lfsv_s, lfsu_n, lfsv_n,
+          pattern_sn, pattern_ns);
       }
 
       //! get a boundary intersection's contribution to the sparsity pattern
@@ -303,8 +307,7 @@ constexpr auto combineOr() {
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
         LocalPattern& pattern_ss) const
       {
-        ForLoop<PatternBoundaryOperation, 0, size-1>::
-          apply(lops, lfsu_s, lfsv_s, pattern_ss);
+        applyLops<PatternBoundaryOperation>(lfsu_s, lfsv_s, pattern_ss);
       }
 
       //! \} Methods for the sparsity pattern
@@ -393,8 +396,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         R& r) const
       {
-        ForLoop<AlphaVolumeOperation, 0, size-1>::
-          apply(lops, eg, lfsu, x, lfsv, r);
+        applyLops<AlphaVolumeOperation>(eg, lfsu, x, lfsv, r);
       }
 
       //! \brief get an element's contribution to alpha after the
@@ -410,8 +412,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         R& r) const
       {
-        ForLoop<AlphaVolumePostSkeletonOperation, 0, size-1>::
-          apply(lops, eg, lfsu, x, lfsv, r);
+        applyLops<AlphaVolumePostSkeletonOperation>(eg, lfsu, x, lfsv, r);
       }
 
       //! get an internal intersections's contribution to alpha
@@ -427,8 +428,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
         R& r_s, R& r_n) const
       {
-        ForLoop<AlphaSkeletonOperation, 0, size-1>::
-          apply(lops, ig,
+        applyLops<AlphaSkeletonOperation>(ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
                 r_s, r_n);
@@ -446,8 +446,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         R& r_s) const
       {
-        ForLoop<AlphaVolumePostSkeletonOperation, 0, size-1>::
-          apply(lops, ig, lfsu_s, x_s, lfsv_s, r_s);
+        applyLops<AlphaVolumePostSkeletonOperation>(ig, lfsu_s, x_s, lfsv_s, r_s);
       }
 
       //! \} Methods for the residual -- non-constant parts
@@ -525,8 +524,7 @@ constexpr auto combineOr() {
       template<typename EG, typename LFSV, typename R>
       void lambda_volume(const EG& eg, const LFSV& lfsv, R& r) const
       {
-        ForLoop<LambdaVolumeOperation, 0, size-1>::
-          apply(lops, eg, lfsv, r);
+        applyLops<LambdaVolumeOperation>(eg, lfsv, r);
       }
 
       //! \brief get an element's contribution to lambda after the
@@ -540,8 +538,7 @@ constexpr auto combineOr() {
                                        const LFSV& lfsv,
                                        R& r) const
       {
-        ForLoop<LambdaVolumePostSkeletonOperation, 0, size-1>::
-          apply(lops, eg, lfsv, r);
+        applyLops<LambdaVolumePostSkeletonOperation>(eg, lfsv, r);
       }
 
       //! get an internal intersections's contribution to lambda
@@ -554,8 +551,7 @@ constexpr auto combineOr() {
                            const LFSV& lfsv_s, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
       {
-        ForLoop<LambdaSkeletonOperation, 0, size-1>::
-          apply(lops, ig, lfsv_s, lfsv_n, r_s, r_n);
+        applyLops<LambdaSkeletonOperation>(ig, lfsv_s, lfsv_n, r_s, r_n);
       }
 
       //! get a boundary intersections's contribution to lambda
@@ -566,8 +562,7 @@ constexpr auto combineOr() {
       template<typename IG, typename LFSV, typename R>
       void lambda_boundary(const IG& ig, const LFSV& lfsv_s, R& r_s) const
       {
-        ForLoop<LambdaBoundaryOperation, 0, size-1>::
-          apply(lops, ig, lfsv_s, r_s);
+        applyLops<LambdaBoundaryOperation>(ig, lfsv_s, r_s);
       }
 
       //! \} Methods for the residual -- constant parts
@@ -658,8 +653,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         Y& y) const
       {
-        ForLoop<JacobianApplyVolumeOperation, 0, size-1>::
-          apply(lops, eg, lfsu, x, lfsv, y);
+        applyLops<JacobianApplyVolumeOperation>(eg, lfsu, x, lfsv, y);
       }
 
       //! \brief apply an element's jacobian after the intersections have been
@@ -675,8 +669,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         Y& y) const
       {
-        ForLoop<JacobianApplyVolumePostSkeletonOperation, 0, size-1>::
-          apply(lops, eg, lfsu, x, lfsv, y);
+        applyLops<JacobianApplyVolumePostSkeletonOperation>(eg, lfsu, x, lfsv, y);
       }
 
       //! apply an internal intersections's jacobians
@@ -692,8 +685,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
         Y& y_s, Y& y_n) const
       {
-        ForLoop<JacobianApplySkeletonOperation, 0, size-1>::
-          apply(lops, ig,
+        applyLops<JacobianApplySkeletonOperation>(ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
                 y_s, y_n);
@@ -711,8 +703,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         Y& y_s) const
       {
-        ForLoop<JacobianApplyBoundaryOperation, 0, size-1>::
-          apply(lops, ig, lfsu_s, x_s, lfsv_s, y_s);
+        applyLops<JacobianApplyBoundaryOperation>(ig, lfsu_s, x_s, lfsv_s, y_s);
       }
 
       //! \} Methods for the application of the jacobian
@@ -803,8 +794,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         LocalMatrix& mat) const
       {
-        ForLoop<JacobianVolumeOperation, 0, size-1>::
-          apply(lops, eg, lfsu, x, lfsv, mat);
+        applyLops<JacobianVolumeOperation>(eg, lfsu, x, lfsv, mat);
       }
 
       //! get an element's jacobian after the intersections have been handled
@@ -819,8 +809,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         LocalMatrix& mat) const
       {
-        ForLoop<JacobianVolumePostSkeletonOperation, 0, size-1>::
-          apply(lops, eg, lfsu, x, lfsv, mat);
+        applyLops<JacobianVolumePostSkeletonOperation>(eg, lfsu, x, lfsv, mat);
       }
 
       //! apply an internal intersections's jacobians
@@ -837,8 +826,7 @@ constexpr auto combineOr() {
         LocalMatrix& mat_ss, LocalMatrix& mat_sn,
         LocalMatrix& mat_ns, LocalMatrix& mat_nn) const
       {
-        ForLoop<JacobianSkeletonOperation, 0, size-1>::
-          apply(lops, ig,
+        applyLops<JacobianSkeletonOperation>(ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
                 mat_ss, mat_sn, mat_ns, mat_nn);
@@ -856,8 +844,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         LocalMatrix& mat_ss) const
       {
-        ForLoop<JacobianBoundaryOperation, 0, size-1>::
-          apply(lops, ig, lfsu_s, x_s, lfsv_s, mat_ss);
+        applyLops<JacobianBoundaryOperation>(ig, lfsu_s, x_s, lfsv_s, mat_ss);
       }
 
       //! \} Methods to extract the jacobian
@@ -910,7 +897,7 @@ constexpr auto combineOr() {
       //! set time for subsequent evaluation
       void setTime (RealType t)
       {
-        ForLoop<SetTimeOperation, 0, size-1>::apply(lops, t);
+        applyLops<SetTimeOperation>(t);
       }
 
       //! get current time
@@ -922,19 +909,19 @@ constexpr auto combineOr() {
       //! to be called once before each time step
       void preStep (RealType time, RealType dt, int stages)
       {
-        ForLoop<PreStepOperation, 0, size-1>::apply(lops, time, dt, stages);
+        applyLops<PreStepOperation>(time, dt, stages);
       }
 
       //! to be called once at the end of each time step
       void postStep ()
       {
-        ForLoop<PostStepOperation, 0, size-1>::apply(lops);
+        applyLops<PostStepOperation>(lops);
       }
 
       //! to be called once before each stage
       void preStage (RealType time, int r)
       {
-        ForLoop<PreStageOperation, 0, size-1>::apply(lops, time, r);
+        applyLops<PreStageOperation>(time, r);
       }
 
       //! get current stage
@@ -946,7 +933,7 @@ constexpr auto combineOr() {
       //! to be called once at the end of each stage
       void postStage ()
       {
-        ForLoop<PostStageOperation, 0, size-1>::apply(lops);
+        applyLops<PostStageOperation>(lops);
       }
 
       //! to be called after stage 1
@@ -957,7 +944,7 @@ constexpr auto combineOr() {
        */
       RealType suggestTimestep (RealType dt) const
       {
-        ForLoop<SuggestTimestepOperation, 0, size-1>::apply(lops, dt);
+        applyLops<SuggestTimestepOperation>(dt);
         return dt;
       }
 
