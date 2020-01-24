@@ -46,11 +46,11 @@ constexpr auto combineOr() {
 
       ArgPtrs lops;
 
-      template<template<int> typename F, typename... Args2>
-      void applyLops(Args2 &&... args)
+      template<typename F, typename... Args2>
+      void applyLops(F && f, Args2 &&... args)
       {
         Hybrid::forEach(Std::make_index_sequence<size-1>{},
-          [&](auto i){F<i>::apply(lops, std::forward<Args2>(args)...);});
+          [&](auto i){f(getSummand<i>(), std::forward<Args2>(args)...);});
       }
 
     public:
@@ -189,66 +189,6 @@ constexpr auto combineOr() {
       //! \{
       //
 
-    private:
-      // template meta program helpers for the pattern_* methods
-
-      template<int i>
-      struct PatternVolumeOperation {
-        template<typename LFSU, typename LFSV, typename LocalPattern>
-        static void apply(const ArgPtrs& lops,
-                          const LFSU& lfsu, const LFSV& lfsv,
-                          LocalPattern& pattern)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doPatternVolume>::
-            pattern_volume(*get<i>(lops), lfsu, lfsv, pattern);
-        }
-      };
-
-      template<int i>
-      struct PatternVolumePostSkeletonOperation {
-        template<typename LFSU, typename LFSV, typename LocalPattern>
-        static void apply(const ArgPtrs& lops,
-                          const LFSU& lfsu, const LFSV& lfsv,
-                          LocalPattern& pattern)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doPatternVolumePostSkeleton>::
-            pattern_volume_post_skeleton(*get<i>(lops), lfsu, lfsv, pattern);
-        }
-      };
-
-      template<int i>
-      struct PatternSkeletonOperation {
-        template<typename LFSU, typename LFSV, typename LocalPattern>
-        static void apply(const ArgPtrs& lops,
-                          const LFSU& lfsu_s, const LFSV& lfsv_s,
-                          const LFSU& lfsu_n, const LFSV& lfsv_n,
-                          LocalPattern& pattern_sn,
-                          LocalPattern& pattern_ns)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doPatternSkeleton>::
-            pattern_skeleton(*get<i>(lops),
-                             lfsu_s, lfsv_s, lfsu_n, lfsv_n,
-                             pattern_sn, pattern_ns);
-        }
-      };
-
-      template<int i>
-      struct PatternBoundaryOperation {
-        template<typename LFSU, typename LFSV, typename LocalPattern>
-        static void apply(const ArgPtrs& lops,
-                          const LFSU& lfsu_s, const LFSV& lfsv_s,
-                          LocalPattern& pattern_ss)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doPatternBoundary>::
-            pattern_boundary(*get<i>(lops), lfsu_s, lfsv_s, pattern_ss);
-        }
-      };
-
-    public:
       //! get an element's contribution to the sparsity pattern
       /**
        * \note Summands with zero weight don't contribute to the sparsity
@@ -260,7 +200,7 @@ constexpr auto combineOr() {
       ( const LFSU& lfsu, const LFSV& lfsv,
         LocalPattern& pattern) const
       {
-        applyLops<PatternVolumeOperation>(lfsu, lfsv, pattern);
+        applyLops(LocalOperatorApply::patternVolume, lfsu, lfsv, pattern);
       }
 
       //! \brief get an element's contribution to the sparsity pattern after
@@ -275,7 +215,7 @@ constexpr auto combineOr() {
       ( const LFSU& lfsu, const LFSV& lfsv,
         LocalPattern& pattern) const
       {
-        applyLops<PatternVolumePostSkeletonOperation>(lfsu, lfsv, pattern);
+        applyLops(LocalOperatorApply::patternVolumePostSkeleton, lfsu, lfsv, pattern);
       }
 
       //! get an internal intersection's contribution to the sparsity pattern
@@ -291,7 +231,7 @@ constexpr auto combineOr() {
         LocalPattern& pattern_sn,
         LocalPattern& pattern_ns) const
       {
-        applyLops<PatternSkeletonOperation>(
+        applyLops(LocalOperatorApply::patternSkeleton,
           lfsu_s, lfsv_s, lfsu_n, lfsv_n,
           pattern_sn, pattern_ns);
       }
@@ -307,7 +247,7 @@ constexpr auto combineOr() {
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
         LocalPattern& pattern_ss) const
       {
-        applyLops<PatternBoundaryOperation>(lfsu_s, lfsv_s, pattern_ss);
+        applyLops(LocalOperatorApply::patternBoundary, lfsu_s, lfsv_s, pattern_ss);
       }
 
       //! \} Methods for the sparsity pattern
@@ -318,72 +258,6 @@ constexpr auto combineOr() {
       //! \{
       //
 
-    private:
-      // template meta program helpers for the alpha_* methods
-
-      template<int i>
-      struct AlphaVolumeOperation {
-        template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename R>
-        static void apply(const ArgPtrs& lops, const EG& eg,
-                          const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          R& r)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doAlphaVolume>::
-          alpha_volume(*get<i>(lops), eg, lfsu, x, lfsv, r);
-        }
-      };
-
-      template<int i>
-      struct AlphaVolumePostSkeletonOperation {
-        template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename R>
-        static void apply(const ArgPtrs& lops, const EG& eg,
-                          const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          R& r)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
-            alpha_volume_post_skeleton(*get<i>(lops), eg,
-                                       lfsu, x, lfsv,
-                                       r);
-        }
-      };
-
-      template<int i>
-      struct AlphaSkeletonOperation {
-        template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename R>
-        static void apply(const ArgPtrs& lops, const IG& ig,
-                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                          const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                          R& r_s, R& r_n)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doAlphaSkeleton>::
-            alpha_skeleton(*get<i>(lops), ig,
-                           lfsu_s, x_s, lfsv_s,
-                           lfsu_n, x_n, lfsv_n,
-                           r_s, r_n);
-        }
-      };
-
-      template<int i>
-      struct AlphaBoundaryOperation {
-        template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename R>
-        static void apply(const ArgPtrs& lops, const IG& ig,
-                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                          R& r_s)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doAlphaBoundary>::
-            alpha_boundary(*get<i>(lops), ig, lfsu_s, x_s, lfsv_s, r_s);
-        }
-      };
-
-    public:
       //! get an element's contribution to alpha
       /**
        * \note Summands with zero weight don't contribute to the residual, and
@@ -396,7 +270,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         R& r) const
       {
-        applyLops<AlphaVolumeOperation>(eg, lfsu, x, lfsv, r);
+        applyLops(LocalOperatorApply::alphaVolume, eg, lfsu, x, lfsv, r);
       }
 
       //! \brief get an element's contribution to alpha after the
@@ -412,7 +286,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         R& r) const
       {
-        applyLops<AlphaVolumePostSkeletonOperation>(eg, lfsu, x, lfsv, r);
+        applyLops(LocalOperatorApply::alphaVolumePostSkeleton, eg, lfsu, x, lfsv, r);
       }
 
       //! get an internal intersections's contribution to alpha
@@ -428,7 +302,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
         R& r_s, R& r_n) const
       {
-        applyLops<AlphaSkeletonOperation>(ig,
+        applyLops(LocalOperatorApply::alphaSkeleton, ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
                 r_s, r_n);
@@ -446,7 +320,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         R& r_s) const
       {
-        applyLops<AlphaVolumePostSkeletonOperation>(ig, lfsu_s, x_s, lfsv_s, r_s);
+        applyLops(LocalOperatorApply::alphaVolumePostSkeleton, ig, lfsu_s, x_s, lfsv_s, r_s);
       }
 
       //! \} Methods for the residual -- non-constant parts
@@ -457,65 +331,6 @@ constexpr auto combineOr() {
       //! \{
       //
 
-    private:
-      // template meta program helpers for the lambda_* methods
-
-      template<int i>
-      struct LambdaVolumeOperation {
-        template<typename EG, typename LFSV, typename R>
-        static void apply(const ArgPtrs& lops, const EG& eg,
-                          const LFSV& lfsv,
-                          R& r)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doLambdaVolume>::
-            lambda_volume(*get<i>(lops), eg, lfsv, r);
-        }
-      };
-
-      template<int i>
-      struct LambdaVolumePostSkeletonOperation {
-        template<typename EG, typename LFSV, typename R>
-        static void apply(const ArgPtrs& lops, const EG& eg,
-                          const LFSV& lfsv,
-                          R& r)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doLambdaVolumePostSkeleton>::
-            lambda_volume_post_skeleton(*get<i>(lops), eg, lfsv, r);
-        }
-      };
-
-      template<int i>
-      struct LambdaSkeletonOperation {
-        template<typename IG, typename LFSV, typename R>
-        static void apply(const ArgPtrs& lops, const IG& ig,
-                          const LFSV& lfsv_s,
-                          const LFSV& lfsv_n,
-                          R& r_s, R& r_n)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doLambdaSkeleton>::
-            lambda_skeleton(*get<i>(lops), ig,
-                            lfsv_s, lfsv_n,
-                            r_s, r_n);
-        }
-      };
-
-      template<int i>
-      struct LambdaBoundaryOperation {
-        template<typename IG, typename LFSV, typename R>
-        static void apply(const ArgPtrs& lops, const IG& ig,
-                          const LFSV& lfsv_s,
-                          R& r_s)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doLambdaBoundary>::
-            lambda_boundary(*get<i>(lops), ig, lfsv_s, r_s);
-        }
-      };
-
-    public:
       //! get an element's contribution to lambda
       /**
        * \note Summands with zero weight don't contribute to the residual, and
@@ -524,7 +339,7 @@ constexpr auto combineOr() {
       template<typename EG, typename LFSV, typename R>
       void lambda_volume(const EG& eg, const LFSV& lfsv, R& r) const
       {
-        applyLops<LambdaVolumeOperation>(eg, lfsv, r);
+        applyLops(LocalOperatorApply::lambdaVolume, eg, lfsv, r);
       }
 
       //! \brief get an element's contribution to lambda after the
@@ -538,7 +353,7 @@ constexpr auto combineOr() {
                                        const LFSV& lfsv,
                                        R& r) const
       {
-        applyLops<LambdaVolumePostSkeletonOperation>(eg, lfsv, r);
+        applyLops(LocalOperatorApply::lambdaVolumePostSkeleton, eg, lfsv, r);
       }
 
       //! get an internal intersections's contribution to lambda
@@ -551,7 +366,7 @@ constexpr auto combineOr() {
                            const LFSV& lfsv_s, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
       {
-        applyLops<LambdaSkeletonOperation>(ig, lfsv_s, lfsv_n, r_s, r_n);
+        applyLops(LocalOperatorApply::lambdaSkeleton, ig, lfsv_s, lfsv_n, r_s, r_n);
       }
 
       //! get a boundary intersections's contribution to lambda
@@ -562,7 +377,7 @@ constexpr auto combineOr() {
       template<typename IG, typename LFSV, typename R>
       void lambda_boundary(const IG& ig, const LFSV& lfsv_s, R& r_s) const
       {
-        applyLops<LambdaBoundaryOperation>(ig, lfsv_s, r_s);
+        applyLops(LocalOperatorApply::lambdaBoundary, ig, lfsv_s, r_s);
       }
 
       //! \} Methods for the residual -- constant parts
@@ -573,74 +388,6 @@ constexpr auto combineOr() {
       //! \{
       //
 
-    private:
-      // template meta program helpers for the jacobian_apply_* methods
-
-      template<int i>
-      struct JacobianApplyVolumeOperation {
-        template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename Y>
-        static void apply(const ArgPtrs& lops, const EG& eg,
-                          const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          Y& y)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doAlphaVolume>::
-            jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, lfsv, y);
-        }
-      };
-
-      template<int i>
-      struct JacobianApplyVolumePostSkeletonOperation {
-        template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename Y>
-        static void apply(const ArgPtrs& lops, const EG& eg,
-                          const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          Y& y)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
-            jacobian_apply_volume_post_skeleton(*get<i>(lops), eg,
-                                                lfsu, x, lfsv,
-                                                y);
-        }
-      };
-
-      template<int i>
-      struct JacobianApplySkeletonOperation {
-        template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename Y>
-        static void apply(const ArgPtrs& lops, const IG& ig,
-                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                          const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                          Y& y_s, Y& y_n)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doAlphaSkeleton>::
-          jacobian_apply_skeleton(*get<i>(lops), ig,
-                                  lfsu_s, x_s, lfsv_s,
-                                  lfsu_n, x_n, lfsv_n,
-                                  y_s, y_n);
-        }
-      };
-
-      template<int i>
-      struct JacobianApplyBoundaryOperation {
-        template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename Y>
-        static void apply(const ArgPtrs& lops, const IG& ig,
-                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                          Y& y_s)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doAlphaBoundary>::
-            jacobian_apply_boundary(*get<i>(lops), ig,
-                                    lfsu_s, x_s, lfsv_s,
-                                    y_s);
-        }
-      };
-
-    public:
       //! apply an element's jacobian
       /**
        * \note Summands with zero weight don't contribute to the jacobian, and
@@ -653,7 +400,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         Y& y) const
       {
-        applyLops<JacobianApplyVolumeOperation>(eg, lfsu, x, lfsv, y);
+        applyLops(LocalOperatorApply::jacobianApplyVolume, eg, lfsu, x, lfsv, y);
       }
 
       //! \brief apply an element's jacobian after the intersections have been
@@ -669,7 +416,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         Y& y) const
       {
-        applyLops<JacobianApplyVolumePostSkeletonOperation>(eg, lfsu, x, lfsv, y);
+        applyLops(LocalOperatorApply::jacobianApplyVolumePostSkeleton, eg, lfsu, x, lfsv, y);
       }
 
       //! apply an internal intersections's jacobians
@@ -685,7 +432,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
         Y& y_s, Y& y_n) const
       {
-        applyLops<JacobianApplySkeletonOperation>(ig,
+        applyLops(LocalOperatorApply::jacobianApplySkeleton, ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
                 y_s, y_n);
@@ -703,7 +450,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         Y& y_s) const
       {
-        applyLops<JacobianApplyBoundaryOperation>(ig, lfsu_s, x_s, lfsv_s, y_s);
+        applyLops(LocalOperatorApply::jacobianApplyBoundary, ig, lfsu_s, x_s, lfsv_s, y_s);
       }
 
       //! \} Methods for the application of the jacobian
@@ -714,74 +461,6 @@ constexpr auto combineOr() {
       //! \{
       //
 
-    private:
-      // template meta program helpers for the jacobian_apply_* methods
-
-      template<int i>
-      struct JacobianVolumeOperation {
-        template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename LocalMatrix>
-        static void apply(const ArgPtrs& lops, const EG& eg,
-                          const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          LocalMatrix& mat)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doAlphaVolume>::
-            jacobian_volume(*get<i>(lops), eg, lfsu, x, lfsv, mat);
-        }
-      };
-
-      template<int i>
-      struct JacobianVolumePostSkeletonOperation {
-        template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename LocalMatrix>
-        static void apply(const ArgPtrs& lops, const EG& eg,
-                          const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          LocalMatrix& mat)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
-            jacobian_volume_post_skeleton(*get<i>(lops), eg,
-                                          lfsu, x, lfsv,
-                                          mat);
-        }
-      };
-
-      template<int i>
-      struct JacobianSkeletonOperation {
-        template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename LocalMatrix>
-        static void apply(const ArgPtrs& lops, const IG& ig,
-                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                          const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                          LocalMatrix& mat_ss, LocalMatrix& mat_sn,
-                          LocalMatrix& mat_ns, LocalMatrix& mat_nn)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doAlphaSkeleton>::
-            jacobian_skeleton(*get<i>(lops), ig,
-                              lfsu_s, x_s, lfsv_s,
-                              lfsu_n, x_n, lfsv_n,
-                              mat_ss, mat_sn, mat_ns, mat_nn);
-        }
-      };
-
-      template<int i>
-      struct JacobianBoundaryOperation {
-        template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename LocalMatrix>
-        static void apply(const ArgPtrs& lops, const IG& ig,
-                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                          LocalMatrix& mat_ss)
-        {
-          LocalAssemblerCallSwitch<typename std::tuple_element<i,Args>::type,
-            std::tuple_element<i,Args>::type::doAlphaBoundary>::
-            jacobian_boundary(*get<i>(lops), ig,
-                              lfsu_s, x_s, lfsv_s, mat_ss);
-        }
-      };
-
-    public:
       //! get an element's jacobian
       /**
        * \note Summands with zero weight don't contribute to the jacobian, and
@@ -794,7 +473,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         LocalMatrix& mat) const
       {
-        applyLops<JacobianVolumeOperation>(eg, lfsu, x, lfsv, mat);
+        applyLops(LocalOperatorApply::jacobianVolume, eg, lfsu, x, lfsv, mat);
       }
 
       //! get an element's jacobian after the intersections have been handled
@@ -809,7 +488,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         LocalMatrix& mat) const
       {
-        applyLops<JacobianVolumePostSkeletonOperation>(eg, lfsu, x, lfsv, mat);
+        applyLops(LocalOperatorApply::jacobianVolumePostSkeleton, eg, lfsu, x, lfsv, mat);
       }
 
       //! apply an internal intersections's jacobians
@@ -826,7 +505,7 @@ constexpr auto combineOr() {
         LocalMatrix& mat_ss, LocalMatrix& mat_sn,
         LocalMatrix& mat_ns, LocalMatrix& mat_nn) const
       {
-        applyLops<JacobianSkeletonOperation>(ig,
+        applyLops(LocalOperatorApply::jacobianSkeleton, ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
                 mat_ss, mat_sn, mat_ns, mat_nn);
@@ -844,7 +523,7 @@ constexpr auto combineOr() {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         LocalMatrix& mat_ss) const
       {
-        applyLops<JacobianBoundaryOperation>(ig, lfsu_s, x_s, lfsv_s, mat_ss);
+        applyLops(LocalOperatorApply::jacobianBoundary, ig, lfsu_s, x_s, lfsv_s, mat_ss);
       }
 
       //! \} Methods to extract the jacobian
@@ -862,42 +541,50 @@ constexpr auto combineOr() {
       // template meta program helpers for the methods related to instationary
       // stuff
 
-      template<int i> struct SetTimeOperation {
-        static void apply(ArgPtrs& lops, RealType t)
-        { get<i>(lops)->setTime(t); }
-      };
+      struct Apply {
+      template<typename LOP>
+      static void setTime(const LOP& lop, RealType t)
+      {
+        lop.setTime(t);
+      }
 
-      template<int i> struct PreStepOperation {
-        static void apply(ArgPtrs& lops,
+      template<typename LOP>
+      static void preStep(const LOP& lop,
                           RealType time, RealType dt, int stages)
-        { get<i>(lops)->preStep(time, dt, stages); }
-      };
+      {
+        lop.preStep(time, dt, stages);
+      }
 
-      template<int i> struct PostStepOperation {
-        static void apply(ArgPtrs& lops)
-        { get<i>(lops)->postStep(); }
-      };
+      template<typename LOP>
+      static void postStep(const LOP& lop)
+      {
+        lop.postStep();
+      }
 
-      template<int i> struct PreStageOperation {
-        static void apply(ArgPtrs& lops, RealType time, int r)
-        { get<i>(lops)->preStage(time, r); }
-      };
+      template<typename LOP>
+      static void preStage(const LOP& lop, RealType time, int r)
+      {
+        lop.preStage(time, r);
+      }
 
-      template<int i> struct PostStageOperation {
-        static void apply(ArgPtrs& lops)
-        { get<i>(lops)->postStage(); }
-      };
+      template<typename LOP>
+      static void postStage(const LOP& lop)
+      {
+        lop.postStage();
+      }
 
-      template<int i> struct SuggestTimestepOperation {
-        static void apply(ArgPtrs& lops, RealType& dt)
-        { dt = get<i>(lops)->suggestTimestep(dt); }
+      template<typename LOP>
+      static RealType suggestTimestep(const LOP& lop, RealType & dt)
+      {
+        dt = std::min(dt,lop.suggestTimestep(dt));
+      }
       };
 
     public:
       //! set time for subsequent evaluation
       void setTime (RealType t)
       {
-        applyLops<SetTimeOperation>(t);
+        applyLops(Apply::setTime, t);
       }
 
       //! get current time
@@ -909,19 +596,19 @@ constexpr auto combineOr() {
       //! to be called once before each time step
       void preStep (RealType time, RealType dt, int stages)
       {
-        applyLops<PreStepOperation>(time, dt, stages);
+        applyLops(Apply::preStep, time, dt, stages);
       }
 
       //! to be called once at the end of each time step
       void postStep ()
       {
-        applyLops<PostStepOperation>(lops);
+        applyLops(Apply::postStep, lops);
       }
 
       //! to be called once before each stage
       void preStage (RealType time, int r)
       {
-        applyLops<PreStageOperation>(time, r);
+        applyLops(Apply::preStage, time, r);
       }
 
       //! get current stage
@@ -933,7 +620,7 @@ constexpr auto combineOr() {
       //! to be called once at the end of each stage
       void postStage ()
       {
-        applyLops<PostStageOperation>(lops);
+        applyLops(Apply::postStage, lops);
       }
 
       //! to be called after stage 1
@@ -944,14 +631,13 @@ constexpr auto combineOr() {
        */
       RealType suggestTimestep (RealType dt) const
       {
-        applyLops<SuggestTimestepOperation>(dt);
+        applyLops(Apply::suggestTimestep, dt);
         return dt;
       }
 
       //! \} Methods for instationary problems
     };
 
-    //! \} group LocalOperatorDefaultImp
   }
 }
 
