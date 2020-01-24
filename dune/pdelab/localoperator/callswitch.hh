@@ -9,9 +9,13 @@
 namespace Dune {
   namespace PDELab {
 
+    namespace Impl {
+
+    /** \internal */
+
     // compile time switching of function call
     template<typename LA, bool doIt, bool isLinear = LA::isLinear>
-    struct LocalAssemblerCallSwitch
+    struct LocalAssemblerCallSwitchHelper
     {
       //================
       // Pattern methods
@@ -142,7 +146,7 @@ namespace Dune {
 
 
     template<typename LA>
-    struct LocalAssemblerCallSwitch<LA,true,true>
+    struct LocalAssemblerCallSwitchHelper<LA,true,true>
     {
       //================
       // Pattern methods
@@ -293,14 +297,14 @@ namespace Dune {
       }
     };
 
-    /** \brief Specialization of LocalAssemblerCallSwitch for the non-linear case
+    /** \brief Specialization of LocalAssemblerCallSwitchHelper for the non-linear case
 
         We derive from the linear case and only replace those calls which differ, namely all jacobian_apply* calls.
         Compared to the linear case these methods now also pass the linearization point x to the local operator.
      */
     template<typename LA>
-    struct LocalAssemblerCallSwitch<LA,true,false> :
-      public LocalAssemblerCallSwitch<LA,true,true>
+    struct LocalAssemblerCallSwitchHelper<LA,true,false> :
+      public LocalAssemblerCallSwitchHelper<LA,true,true>
     {
       //=======================
       // Jacobian apply methods
@@ -332,57 +336,70 @@ namespace Dune {
       }
     };
 
-    namespace LocalOperatorApply
-    {
+    } // namespace Impl
 
-      //////////////////////
+    /** compile time switching of function call */
+    template<typename LA, bool doIt>
+    struct LocalAssemblerCallSwitch :
+      public Impl::LocalAssemblerCallSwitchHelper<LA,doIt> {};
+
+    namespace LocalOperatorApply {
+
       template<typename LOP, typename... Args>
       void patternVolume(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doPatternVolume>::pattern_volume(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doPatternVolume>::
+          pattern_volume(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void patternVolumePostSkeleton(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doPatternVolumePostSkeleton>::pattern_volume_post_skeleton(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doPatternVolumePostSkeleton>::
+          pattern_volume_post_skeleton(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void patternSkeleton(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doPatternSkeleton>::pattern_skeleton(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doPatternSkeleton>::
+          pattern_skeleton(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void patternBoundary(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doPatternBoundary>::pattern_boundary(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doPatternBoundary>::
+          pattern_boundary(lop, args...);
       }
 
       //////////////////////
       template<typename LOP, typename... Args>
       void alphaVolume(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::alpha_volume(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doAlphaVolume>::
+          alpha_volume(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void alphaVolumePostSkeleton(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::alpha_volume_post_skeleton(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doAlphaVolumePostSkeleton>::
+          alpha_volume_post_skeleton(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void alphaSkeleton(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::alpha_skeleton(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doAlphaSkeleton>::
+          alpha_skeleton(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void alphaBoundary(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::alpha_boundary(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doAlphaBoundary>::
+          alpha_boundary(lop, args...);
       }
 
 
@@ -390,25 +407,29 @@ namespace Dune {
       template<typename LOP, typename... Args>
       void lambdaVolume(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolume>::lambda_volume(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doLambdaVolume>::
+          lambda_volume(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void lambdaVolumePostSkeleton(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolumePostSkeleton>::lambda_volume_post_skeleton(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doLambdaVolumePostSkeleton>::
+          lambda_volume_post_skeleton(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void lambdaSkeleton(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doLambdaSkeleton>::lambda_skeleton(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doLambdaSkeleton>::
+          lambda_skeleton(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void lambdaBoundary(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doLambdaBoundary>::lambda_boundary(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doLambdaBoundary>::
+          lambda_boundary(lop, args...);
       }
 
 
@@ -416,25 +437,29 @@ namespace Dune {
       template<typename LOP, typename... Args>
       void jacobianVolume(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::jacobian_volume(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doAlphaVolume>::
+          jacobian_volume(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void jacobianVolumePostSkeleton(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::jacobian_volume_post_skeleton(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doAlphaVolumePostSkeleton>::
+          jacobian_volume_post_skeleton(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void jacobianSkeleton(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::jacobian_skeleton(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doAlphaSkeleton>::
+          jacobian_skeleton(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void jacobianBoundary(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::jacobian_boundary(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doAlphaBoundary>::
+          jacobian_boundary(lop, args...);
       }
 
 
@@ -442,25 +467,29 @@ namespace Dune {
       template<typename LOP, typename... Args>
       void jacobianApplyVolume(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::jacobian_apply_volume(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doAlphaVolume>::
+          jacobian_apply_volume(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void jacobianApplyVolumePostSkeleton(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::jacobian_apply_volume_post_skeleton(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doAlphaVolumePostSkeleton>::
+          jacobian_apply_volume_post_skeleton(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void jacobianApplySkeleton(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::jacobian_apply_skeleton(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doAlphaSkeleton>::
+          jacobian_apply_skeleton(lop, args...);
       }
 
       template<typename LOP, typename... Args>
       void jacobianApplyBoundary(const LOP& lop, Args &... args)
       {
-        LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::jacobian_apply_boundary(lop, args...);
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doAlphaBoundary>::
+          jacobian_apply_boundary(lop, args...);
       }
 
     } // namespace LocalOperatorApply
