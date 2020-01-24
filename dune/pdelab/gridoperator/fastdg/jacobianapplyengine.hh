@@ -254,7 +254,7 @@ namespace Dune{
       void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         global_result_view_inside.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
           jacobian_apply_volume(lop,eg,lfsu_cache.localFunctionSpace(),global_solution_view_inside,global_update_view_inside,lfsv_cache.localFunctionSpace(),global_result_view_inside);
       }
 
@@ -264,7 +264,7 @@ namespace Dune{
       {
         global_result_view_inside.setWeight(local_assembler.weight());
         global_result_view_outside.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
           jacobian_apply_skeleton(lop,ig,
                                   lfsu_s_cache.localFunctionSpace(),global_solution_view_inside,global_update_view_inside,lfsv_s_cache.localFunctionSpace(),
                                   lfsu_n_cache.localFunctionSpace(),global_solution_view_outside,global_update_view_outside,lfsv_n_cache.localFunctionSpace(),
@@ -275,7 +275,7 @@ namespace Dune{
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
         global_result_view_inside.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
           jacobian_apply_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),global_solution_view_inside,global_update_view_inside,lfsv_s_cache.localFunctionSpace(),global_result_view_inside);
       }
 
@@ -292,7 +292,7 @@ namespace Dune{
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         global_result_view_inside.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
           jacobian_apply_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),global_solution_view_inside,global_update_view_inside,lfsv_cache.localFunctionSpace(),global_result_view_inside);
       }
 
