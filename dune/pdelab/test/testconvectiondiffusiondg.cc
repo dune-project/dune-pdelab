@@ -164,7 +164,7 @@ int main(int argc, char** argv)
     bool testfail(false);
     using std::abs;
     using std::isnan;
-    if (isnan(error) or abs(error)>1e-7)
+    if (isnan(error) or abs(error)>1e-6)
       testfail = true;
     return testfail;
   }
