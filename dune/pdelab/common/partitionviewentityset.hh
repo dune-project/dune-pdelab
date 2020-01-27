@@ -14,6 +14,7 @@
 #include <dune/geometry/referenceelements.hh>
 #include <dune/geometry/typeindex.hh>
 #include <dune/grid/common/capabilities.hh>
+#include <dune/grid/common/entityiterator.hh>
 #include <dune/grid/common/partitionset.hh>
 #include <dune/grid/common/rangegenerators.hh>
 
