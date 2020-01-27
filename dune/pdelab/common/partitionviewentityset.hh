@@ -115,60 +115,47 @@ namespace Dune {
 
     public:
 
-      //enum {codimension = BaseIterator::codim};
-
       typedef typename BaseIterator::Entity Entity;
 
       //! Constructor
       explicit ExcluderIterator(BaseIterator baseIterator, BaseIterator baseIteratorEnd, const std::shared_ptr<Excluder>& excluder)
       : baseIterator_(baseIterator), baseIteratorEnd_(baseIteratorEnd), excluder_(excluder)
       {
-        /*while (!excluder_.includeEntity(dereference())) {
-          baseIterator_.impl().increment();
-          std::cout << "Excluded!!!!" << std::endl;
-          if (baseIterator_.impl().equals(baseIteratorEnd_.impl()))
-            return;
-
-        }*/
+        spool(); // The first element might need to be excluded, so spool right away!
       }
 
       //! prefix increment
       void increment() {
-        //++(baseIterator_.impl());
         baseIterator_.impl().increment();
-        if (baseIterator_.impl().equals(baseIteratorEnd_.impl()))
-          return;
-        while (!excluder_->includeEntity(dereference())) {
-          baseIterator_.impl().increment();
-          std::cout << "Excluded!!!!" << std::endl;
-          if (baseIterator_.impl().equals(baseIteratorEnd_.impl()))
-            return;
-
-        }
+        spool();
       }
 
       //! dereferencing
       Entity dereference() const {
-        // FIXME: This fixes the case where begin() is already a not-included entity. Better to do in consturctor, crashes with UG (and maybe other grids?) though
-        while (!excluder_->includeEntity(baseIterator_.impl().dereference())) {
-          baseIterator_.impl().increment();
-          std::cout << "Excluded!!!!" << std::endl;
-          if (baseIterator_.impl().equals(baseIteratorEnd_.impl())) {
-            std::cout << "Ouch. Reached end in first excluder run!" << std::endl;
-            break;
-          }
-        }
-
         return baseIterator_.impl().dereference();
+      }
+
+      //! Jump over elements that are to be excluded
+      void spool() {
+
+        if (baseIterator_.impl().equals(baseIteratorEnd_.impl()))
+          return;
+
+        while (!excluder_->includeEntity(dereference())) {
+          baseIterator_.impl().increment();
+
+          if (baseIterator_.impl().equals(baseIteratorEnd_.impl()))
+            return;
+        }
       }
 
       //! equality
       bool equals(const ExcluderIterator& i) const {
-        baseIterator_.impl().equals(i.baseIterator_.impl());
+        return baseIterator_.impl().equals(i.baseIterator_.impl());
       }
 
     private:
-      mutable BaseIterator baseIterator_;
+      BaseIterator baseIterator_;
       BaseIterator baseIteratorEnd_;
       const std::shared_ptr<Excluder>& excluder_;
     };
