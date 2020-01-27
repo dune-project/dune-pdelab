@@ -2,18 +2,7 @@
 #include "config.h"
 #endif
 
-#include <dune/pdelab/boilerplate/pdelab.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionadapter.hh>
-#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
-#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
-
-#include <dune/pdelab/backend/istl/geneo/geneo.hh>
-
-#include <dune/pdelab/backend/istl/geneo/novlp_operators.hh>
-
-#include <dune/pdelab/test/gridexamples.hh>
+#include <dune/pdelab.hh>
 
 #include <dune/grid/utility/parmetisgridpartitioner.hh>
 
@@ -181,8 +170,8 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   auto gv = grid->leafGridView();
 
   // Transfer partitioning from ParMETIS to our grid
-  //std::vector<unsigned> part(Dune::ParMetisGridPartitioner<GV>::partition(gv, helper));
-  //grid->loadBalance(part, 0);
+  std::vector<unsigned> part(Dune::ParMetisGridPartitioner<GV>::partition(gv, helper));
+  grid->loadBalance(part, 0);
 
 
   /*typedef Dune::YaspGrid<dim> GM;
@@ -438,7 +427,7 @@ std::cout << "Return for " << i << std::endl;
   typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
   auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
   vtkwriter.addVertexData(adapt);
-  vtkwriter.write("newtestgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type);
+  vtkwriter.write("newassemblertestgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type);
 }
 
 
