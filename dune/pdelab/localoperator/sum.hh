@@ -52,10 +52,10 @@ namespace Dune {
       ArgPtrs lops;
 
       template<typename F, typename... Args2>
-      void applyLops(F && f, Args2 &&... args)
+      void applyLops(F&& f, Args2 &&... args) const
       {
         Hybrid::forEach(Std::make_index_sequence<size-1>{},
-          [&](auto i){f(getSummand<i>(), std::forward<Args2>(args)...);});
+          [&](auto i){f(*Hybrid::elementAt(lops, i), std::forward<Args2>(args)...);});
       }
 
     public:
@@ -75,11 +75,6 @@ namespace Dune {
       template<std::size_t i>
       void setSummand(typename std::tuple_element<i,Args>::type& summand)
       { std::get<i>(lops) = &summand; }
-
-      //! get the i'th component of the sum
-      template<std::size_t i>
-      typename std::tuple_element<i,Args>::type& getSummand()
-      { return *std::get<i>(lops); }
 
       //! \} Construction and modification
 
@@ -212,7 +207,7 @@ namespace Dune {
       ( const LFSU& lfsu, const LFSV& lfsv,
         LocalPattern& pattern) const
       {
-        applyLops(LocalOperatorApply::patternVolume, lfsu, lfsv, pattern);
+        applyLops(LocalOperatorApply::PatternVolume(), lfsu, lfsv, pattern);
       }
 
       //! \brief get an element's contribution to the sparsity pattern after
@@ -227,7 +222,7 @@ namespace Dune {
       ( const LFSU& lfsu, const LFSV& lfsv,
         LocalPattern& pattern) const
       {
-        applyLops(LocalOperatorApply::patternVolumePostSkeleton, lfsu, lfsv, pattern);
+        applyLops(LocalOperatorApply::PatternVolumePostSkeleton(), lfsu, lfsv, pattern);
       }
 
       //! get an internal intersection's contribution to the sparsity pattern
@@ -243,7 +238,7 @@ namespace Dune {
         LocalPattern& pattern_sn,
         LocalPattern& pattern_ns) const
       {
-        applyLops(LocalOperatorApply::patternSkeleton,
+        applyLops(LocalOperatorApply::PatternSkeleton(),
           lfsu_s, lfsv_s, lfsu_n, lfsv_n,
           pattern_sn, pattern_ns);
       }
@@ -259,7 +254,7 @@ namespace Dune {
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
         LocalPattern& pattern_ss) const
       {
-        applyLops(LocalOperatorApply::patternBoundary, lfsu_s, lfsv_s, pattern_ss);
+        applyLops(LocalOperatorApply::PatternBoundary(), lfsu_s, lfsv_s, pattern_ss);
       }
 
       //! \} Methods for the sparsity pattern
@@ -282,7 +277,7 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         R& r) const
       {
-        applyLops(LocalOperatorApply::alphaVolume, eg, lfsu, x, lfsv, r);
+        applyLops(LocalOperatorApply::AlphaVolume(), eg, lfsu, x, lfsv, r);
       }
 
       //! \brief get an element's contribution to alpha after the
@@ -298,7 +293,7 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         R& r) const
       {
-        applyLops(LocalOperatorApply::alphaVolumePostSkeleton, eg, lfsu, x, lfsv, r);
+        applyLops(LocalOperatorApply::AlphaVolumePostSkeleton(), eg, lfsu, x, lfsv, r);
       }
 
       //! get an internal intersections's contribution to alpha
@@ -314,7 +309,7 @@ namespace Dune {
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
         R& r_s, R& r_n) const
       {
-        applyLops(LocalOperatorApply::alphaSkeleton, ig,
+        applyLops(LocalOperatorApply::AlphaSkeleton(), ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
                 r_s, r_n);
@@ -332,7 +327,7 @@ namespace Dune {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         R& r_s) const
       {
-        applyLops(LocalOperatorApply::alphaVolumePostSkeleton, ig, lfsu_s, x_s, lfsv_s, r_s);
+        applyLops(LocalOperatorApply::AlphaVolumePostSkeleton(), ig, lfsu_s, x_s, lfsv_s, r_s);
       }
 
       //! \} Methods for the residual -- non-constant parts
@@ -351,7 +346,7 @@ namespace Dune {
       template<typename EG, typename LFSV, typename R>
       void lambda_volume(const EG& eg, const LFSV& lfsv, R& r) const
       {
-        applyLops(LocalOperatorApply::lambdaVolume, eg, lfsv, r);
+        applyLops(LocalOperatorApply::LambdaVolume(), eg, lfsv, r);
       }
 
       //! \brief get an element's contribution to lambda after the
@@ -365,7 +360,7 @@ namespace Dune {
                                        const LFSV& lfsv,
                                        R& r) const
       {
-        applyLops(LocalOperatorApply::lambdaVolumePostSkeleton, eg, lfsv, r);
+        applyLops(LocalOperatorApply::LambdaVolumePostSkeleton(), eg, lfsv, r);
       }
 
       //! get an internal intersections's contribution to lambda
@@ -378,7 +373,7 @@ namespace Dune {
                            const LFSV& lfsv_s, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
       {
-        applyLops(LocalOperatorApply::lambdaSkeleton, ig, lfsv_s, lfsv_n, r_s, r_n);
+        applyLops(LocalOperatorApply::LambdaSkeleton(), ig, lfsv_s, lfsv_n, r_s, r_n);
       }
 
       //! get a boundary intersections's contribution to lambda
@@ -389,7 +384,7 @@ namespace Dune {
       template<typename IG, typename LFSV, typename R>
       void lambda_boundary(const IG& ig, const LFSV& lfsv_s, R& r_s) const
       {
-        applyLops(LocalOperatorApply::lambdaBoundary, ig, lfsv_s, r_s);
+        applyLops(LocalOperatorApply::LambdaBoundary(), ig, lfsv_s, r_s);
       }
 
       //! \} Methods for the residual -- constant parts
@@ -412,7 +407,7 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         Y& y) const
       {
-        applyLops(LocalOperatorApply::jacobianApplyVolume, eg, lfsu, x, lfsv, y);
+        applyLops(LocalOperatorApply::JacobianApplyVolume(), eg, lfsu, x, lfsv, y);
       }
 
       //! \brief apply an element's jacobian after the intersections have been
@@ -428,7 +423,7 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         Y& y) const
       {
-        applyLops(LocalOperatorApply::jacobianApplyVolumePostSkeleton, eg, lfsu, x, lfsv, y);
+        applyLops(LocalOperatorApply::JacobianApplyVolumePostSkeleton(), eg, lfsu, x, lfsv, y);
       }
 
       //! apply an internal intersections's jacobians
@@ -444,7 +439,7 @@ namespace Dune {
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
         Y& y_s, Y& y_n) const
       {
-        applyLops(LocalOperatorApply::jacobianApplySkeleton, ig,
+        applyLops(LocalOperatorApply::JacobianApplySkeleton(), ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
                 y_s, y_n);
@@ -462,7 +457,7 @@ namespace Dune {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         Y& y_s) const
       {
-        applyLops(LocalOperatorApply::jacobianApplyBoundary, ig, lfsu_s, x_s, lfsv_s, y_s);
+        applyLops(LocalOperatorApply::JacobianApplyBoundary(), ig, lfsu_s, x_s, lfsv_s, y_s);
       }
 
       //! \} Methods for the application of the jacobian
@@ -485,7 +480,7 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         LocalMatrix& mat) const
       {
-        applyLops(LocalOperatorApply::jacobianVolume, eg, lfsu, x, lfsv, mat);
+        applyLops(LocalOperatorApply::JacobianVolume(), eg, lfsu, x, lfsv, mat);
       }
 
       //! get an element's jacobian after the intersections have been handled
@@ -500,7 +495,7 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         LocalMatrix& mat) const
       {
-        applyLops(LocalOperatorApply::jacobianVolumePostSkeleton, eg, lfsu, x, lfsv, mat);
+        applyLops(LocalOperatorApply::JacobianVolumePostSkeleton(), eg, lfsu, x, lfsv, mat);
       }
 
       //! apply an internal intersections's jacobians
@@ -517,7 +512,7 @@ namespace Dune {
         LocalMatrix& mat_ss, LocalMatrix& mat_sn,
         LocalMatrix& mat_ns, LocalMatrix& mat_nn) const
       {
-        applyLops(LocalOperatorApply::jacobianSkeleton, ig,
+        applyLops(LocalOperatorApply::JacobianSkeleton(), ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
                 mat_ss, mat_sn, mat_ns, mat_nn);
@@ -535,7 +530,7 @@ namespace Dune {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         LocalMatrix& mat_ss) const
       {
-        applyLops(LocalOperatorApply::jacobianBoundary, ig, lfsu_s, x_s, lfsv_s, mat_ss);
+        applyLops(LocalOperatorApply::JacobianBoundary(), ig, lfsu_s, x_s, lfsv_s, mat_ss);
       }
 
       //! \} Methods to extract the jacobian
