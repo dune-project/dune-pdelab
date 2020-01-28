@@ -86,7 +86,7 @@ constexpr auto combineOr() {
 
     private:
       template<typename T>
-      using PatternVolumeValue = std::integral_constant<bool, T::PatternVolumeValue>;
+      using PatternVolumeValue = std::integral_constant<bool, T::doPatternVolume>;
       template<typename T>
       using PatternVolumePostSkeletonValue = std::integral_constant<bool, T::doPatternVolumePostSkeleton>;
       template<typename T>
@@ -123,61 +123,62 @@ constexpr auto combineOr() {
       //! \brief Whether to assemble the pattern on the elements, i.e. whether
       //!        or not pattern_volume() should be called.
       enum { doPatternVolume             =
-             combineOr<Args,PatternVolumeValue>             };
+             combineOr<Args,PatternVolumeValue>()             };
+
       //! \brief Whether to assemble the pattern on the elements after the
       //!        skeleton has been handled, i.e. whether or not
       //!        pattern_volume_post_skeleton() should be called.
       enum { doPatternVolumePostSkeleton =
-             combineOr<Args,PatternVolumePostSkeletonValue> };
+             combineOr<Args,PatternVolumePostSkeletonValue>() };
       //! \brief Whether to assemble the pattern on the interior
       //!        intersections, i.e. whether or not pattern_skeleton() should
       //!        be called.
       enum { doPatternSkeleton           =
-             combineOr<Args,PatternSkeletonValue>           };
+             combineOr<Args,PatternSkeletonValue>()           };
       //! \brief Whether to assemble the pattern on the boundary
       //!        intersections, i.e. whether or not pattern_boundary() should
       //!        be called.
       enum { doPatternBoundary           =
-             combineOr<Args,PatternBoundaryValue>           };
+             combineOr<Args,PatternBoundaryValue>()           };
 
       //! \brief Whether to call the local operator's alpha_volume(),
       //!        jacobian_apply_volume() and jacobian_volume().
       enum { doAlphaVolume               =
-             combineOr<Args,AlphaVolumeValue>               };
+             combineOr<Args,AlphaVolumeValue>()               };
       //! \brief Whether to call the local operator's
       //!        alpha_volume_post_skeleton(),
       //!        jacobian_apply_volume_post_skeleton() and
       //!        jacobian_volume_post_skeleton().
       enum { doAlphaVolumePostSkeleton   =
-             combineOr<Args,AlphaVolumePostSkeletonValue>   };
+             combineOr<Args,AlphaVolumePostSkeletonValue>()   };
       //! \brief Whether to call the local operator's alpha_skeleton(),
       //!        jacobian_apply_skeleton() and jacobian_skeleton().
       enum { doAlphaSkeleton             =
-             combineOr<Args,AlphaSkeletonValue>             };
+             combineOr<Args,AlphaSkeletonValue>()             };
       //! \brief Whether to call the local operator's alpha_boundary(),
       //!        jacobian_apply_boundary() and jacobian_boundary().
       enum { doAlphaBoundary             =
-             combineOr<Args,AlphaBoundaryValue>             };
+             combineOr<Args,AlphaBoundaryValue>()             };
 
       //! \brief Whether to call the local operator's lambda_volume().
       enum { doLambdaVolume              =
-             combineOr<Args,LambdaVolumeValue>              };
+             combineOr<Args,LambdaVolumeValue>()              };
       //! \brief Whether to call the local operator's
       //!        lambda_volume_post_skeleton().
       enum { doLambdaVolumePostSkeleton  =
-             combineOr<Args,LambdaVolumePostSkeletonValue>  };
+             combineOr<Args,LambdaVolumePostSkeletonValue>()  };
       //! \brief Whether to call the local operator's lambda_skeleton().
       enum { doLambdaSkeleton            =
-             combineOr<Args,LambdaSkeletonValue>            };
+             combineOr<Args,LambdaSkeletonValue>()            };
       //! \brief Whether to call the local operator's lambda_boundary().
       enum { doLambdaBoundary            =
-             combineOr<Args,LambdaBoundaryValue>            };
+             combineOr<Args,LambdaBoundaryValue>()            };
 
       //! \brief Whether to visit the skeleton methods from both sides
       enum { doSkeletonTwoSided          =
-             combineOr<Args,TwoSidedSkeletonRequiredValue>  };
-      static_assert(!(combineOr<Args,OneSidedSkeletonRequiredValue> &&
-                      combineOr<Args,TwoSidedSkeletonRequiredValue>),
+             combineOr<Args,TwoSidedSkeletonRequiredValue>()  };
+      static_assert(!(combineOr<Args,OneSidedSkeletonRequiredValue>() &&
+                      combineOr<Args,TwoSidedSkeletonRequiredValue>()),
                     "Some summands require a one-sided skelton, others a "
                     "two-sided skeleton.  This is not supported.");
 
