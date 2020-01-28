@@ -14,16 +14,21 @@
 namespace Dune {
   namespace PDELab {
 
-template<template<typename> typename F, typename... Args>
-constexpr auto staticCombineOr(const std::tuple<Args...> & t)
-{
-    return std::disjunction<F<Args>...>{};
-}
+    template<template<typename> typename F, template<typename...> typename RedOp, typename... Args>
+    constexpr auto staticReduction(const std::tuple<Args...> & t)
+    {
+      return RedOp<F<Args>...>{};
+    }
 
-template<typename Tuple, template<typename> typename F>
-constexpr auto combineOr() {
-    return decltype(staticCombineOr<F>(std::declval<Tuple>())){};
-}
+    template<typename Tuple, template<typename> typename F>
+    constexpr auto combineOr() {
+      return decltype(staticReduction<F, std::disjunction>(std::declval<Tuple>())){};
+    }
+
+    template<typename Tuple, template<typename> typename F>
+    constexpr auto combineAnd() {
+      return decltype(staticReduction<F, std::conjunction>(std::declval<Tuple>())){};
+    }
 
     //! \addtogroup LocalOperator
     //! \ingroup PDELab
@@ -119,6 +124,9 @@ constexpr auto combineOr() {
       using TwoSidedSkeletonRequiredValue = std::integral_constant
       < bool, ( ( T::doAlphaSkeleton || T::doLambdaSkeleton) && T::doSkeletonTwoSided)>;
 
+      template<typename T>
+      using IsLinearValue = std::integral_constant<bool, T::isLinear>;
+
     public:
       //! \brief Whether to assemble the pattern on the elements, i.e. whether
       //!        or not pattern_volume() should be called.
@@ -181,6 +189,9 @@ constexpr auto combineOr() {
                       combineOr<Args,TwoSidedSkeletonRequiredValue>()),
                     "Some summands require a one-sided skelton, others a "
                     "two-sided skeleton.  This is not supported.");
+
+      //! \brief Whether this is a linear operator
+      enum { isLinear = combineAnd<Args, IsLinearValue>() };
 
       //! \} Control flags
 
