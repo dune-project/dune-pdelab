@@ -52,7 +52,7 @@ namespace Dune {
 
 #endif // DOXYGEN
 
-      virtual ~LeafGridViewOrdering() = default;
+      virtual ~LeafGridViewOrdering() override = default;
 
       virtual void update() override
       {
