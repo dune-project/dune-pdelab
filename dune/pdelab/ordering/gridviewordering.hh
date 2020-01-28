@@ -499,7 +499,7 @@ namespace Dune {
         this->setDelegate(this);
       }
 
-      virtual ~GridViewOrdering() = default;
+      virtual ~GridViewOrdering() override = default;
 
 #endif // DOXYGEN
 
