@@ -80,6 +80,8 @@ namespace Dune {
 
 #endif // DOXYGEN
 
+      virtual ~LeafOrderingBase() override = default;
+
       virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const override
       {
         mapIndex(di,ci);
