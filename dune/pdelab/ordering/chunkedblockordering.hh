@@ -165,6 +165,8 @@ namespace Dune {
         this->setDelegate(this);
       }
 
+      virtual ~ChunkedBlockOrdering() override = default;
+
       virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const override
       {
         ordering().mapIndex(di,ci);

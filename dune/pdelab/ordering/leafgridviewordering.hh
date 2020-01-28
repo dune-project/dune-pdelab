@@ -52,6 +52,8 @@ namespace Dune {
 
 #endif // DOXYGEN
 
+      virtual ~LeafGridViewOrdering() override = default;
+
       virtual void update() override
       {
         LocalOrdering& lo = this->localOrdering();
