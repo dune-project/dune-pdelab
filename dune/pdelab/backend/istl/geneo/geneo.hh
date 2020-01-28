@@ -12,6 +12,7 @@
 #include <dune/pdelab/backend/istl/geneo/localoperator_ovlp_region.hh>
 #include <dune/pdelab/backend/istl/geneo/new_localoperator_ovlp_region.hh>
 #include <dune/pdelab/backend/istl/geneo/new_localoperator_nonovlp.hh>
+#include <dune/pdelab/backend/istl/geneo/novlp_operators.hh>
 
 #include <dune/pdelab/backend/istl/geneo/geneobasis.hh>
 #include <dune/pdelab/backend/istl/geneo/new_geneobasis.hh>

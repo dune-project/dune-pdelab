@@ -53,9 +53,10 @@ namespace Dune {
 
         // X * A_0 * X
         M ovlp_mat(A_ovlp);
-        for (auto row_iter = ovlp_mat.begin(); row_iter != ovlp_mat.end(); row_iter++) {
+        using Dune::PDELab::Backend::native;
+        for (auto row_iter = native(ovlp_mat).begin(); row_iter != native(ovlp_mat).end(); row_iter++) {
           for (auto col_iter = row_iter->begin(); col_iter != row_iter->end(); col_iter++) {
-            *col_iter *= part_unity[row_iter.index()] * part_unity[col_iter.index()];
+            *col_iter *= native(part_unity)[row_iter.index()] * native(part_unity)[col_iter.index()];
           }
         }
 

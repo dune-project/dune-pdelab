@@ -402,7 +402,7 @@ namespace Dune {
         : _index_set(std::make_shared<IndexSet>(gv,CodimMask(initialize ? ~0ull : 0ull),initialize)), excluder_(excluder)
       {}
 
-      void setExcluder(std::shared_ptr<Excluder> excluder) {
+      void setExcluder(std::shared_ptr<Excluder> excluder) const {
         excluder_ = excluder;
       }
 
@@ -447,7 +447,7 @@ namespace Dune {
     private:
 
       std::shared_ptr<IndexSet> _index_set;
-      std::shared_ptr<Excluder> excluder_;
+      mutable std::shared_ptr<Excluder> excluder_;
 
     };
 

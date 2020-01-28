@@ -2,16 +2,7 @@
 #include "config.h"
 #endif
 
-#include <dune/pdelab/boilerplate/pdelab.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionadapter.hh>
-#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
-#include <dune/pdelab/gridfunctionspace/vtk.hh>
-
-#include <dune/pdelab/backend/istl/geneo/geneo.hh>
-
-#include <dune/pdelab/backend/istl/geneo/novlp_operators.hh>
-
-#include <dune/pdelab/test/gridexamples.hh>
+#include <dune/pdelab.hh>
 
 #include <dune/grid/utility/parmetisgridpartitioner.hh>
 
@@ -112,78 +103,91 @@ public:
   }
 };
 
-class GhostExcluder { // Who ya gonna call? Ghost excluders!!
-public:
-
-  template<typename LFSCache, typename Entity>
-  bool assembleCell(const Entity& entity, const LFSCache & cache) const {
-    return entity.partitionType() != Dune::PartitionType::GhostEntity;
-    //return true;
-  }
-private:
-};
-
-
-template <typename Vector>
-class InteriorExcluder {
-public:
-
-  InteriorExcluder(const Vector& partUnity)
-   : partUnity_(partUnity) {
-  }
-
-  template<typename LFSCache, typename Entity>
-  bool assembleCell(const Entity& entity, const LFSCache & cache) const {
-    //return true; // FIXME
-    //if (entity.partitionType() == Dune::PartitionType::GhostEntity) // NOTE: Replaced by EntitySet excluder
-    //  return false;
-    for (std::size_t i = 0; i < cache.size(); i++)
-    {
-      if (partUnity_[cache.containerIndex(i)[0]] > 0.0 &&
-        partUnity_[cache.containerIndex(i)[0]] < 1.0)
-        return true;
-    }
-    return false;
-  }
-private:
-  const Vector& partUnity_;
-};
-
-template <typename Vector>
+template <typename Vector, typename GV>
 class EntitySetExcluder {
 public:
 
-  void setPartUnity(std::shared_ptr<Vector> partUnity) {
-    partUnity_ = partUnity;
+  typedef typename GV::template Codim<0>::Entity Entity;
+  typedef typename GV::template Codim<1>::Entity Entity1;
+  typedef typename GV::template Codim<2>::Entity Entity2;
+
+  bool includeEntity(const Entity1& entity) const {
+    return true;
   }
-
-  template<typename Entity>
-  bool includeEntity(const Entity& entity) const {
-    if (!is_on)
-      return true;
-
-    if (entity.partitionType() == Dune::PartitionType::GhostEntity)
-      return false;
-    if (partUnity_ == nullptr)
-      return true;
- // TODO: LFS cache selbst anlegen?
-   /* for (std::size_t i = 0; i < cache.size(); i++)
-    {
-      if (partUnity_[cache.containerIndex(i)[0]] > 0.0 &&
-        partUnity_[cache.containerIndex(i)[0]] < 1.0)
-        return true;
-    }*/
+  bool includeEntity(const Entity2& entity) const {
     return true;
   }
 
-  void switch_on(bool on) {
-    is_on = on;
+  virtual bool includeEntity(const Entity& entity) const {
+    if (entity.partitionType() == Dune::PartitionType::GhostEntity)
+      return false;
+
+    return true;
   }
+
+};
+
+template <typename Vector, typename GV, typename GFS>
+class EntitySetPartUnityExcluder : public EntitySetExcluder<Vector, GV> {
+public:
+
+  typedef typename GV::template Codim<0>::Entity Entity;
+
+  EntitySetPartUnityExcluder(const GFS& gfs, std::shared_ptr<Vector> partUnity) : lfs(gfs), partUnity_(partUnity) {}
+
+  bool includeEntity(const Entity& entity) const override {
+
+    if (entity.partitionType() == Dune::PartitionType::GhostEntity)
+      return false;
+
+    typedef Dune::PDELab::LFSIndexCache<LFS,Dune::PDELab::EmptyTransformation> LFSCache;
+    LFSCache lfs_cache(lfs);
+    lfs.bind( entity );
+    lfs_cache.update();
+
+    for (std::size_t i = 0; i < lfs_cache.size(); i++)
+    {
+      if ((*partUnity_)[lfs_cache.containerIndex(i)[0]] > 0.0 &&
+          (*partUnity_)[lfs_cache.containerIndex(i)[0]] < 1.0) {
+          return true;
+      }
+    }
+    return false;
+  }
+
 private:
-  bool is_on = true;
-  //typedef LocalFunctionSpace<GFS, TrialSpaceTag> LFSU;
+  typedef Dune::PDELab::LocalFunctionSpace<GFS, Dune::PDELab::TrialSpaceTag> LFS;
+  mutable LFS lfs;
   std::shared_ptr<Vector> partUnity_ = nullptr;
 };
+
+template <typename Vector, typename GV>
+class EntitySetNoOpExcluder : public EntitySetExcluder<Vector, GV> {
+public:
+
+  typedef typename GV::template Codim<0>::Entity Entity;
+
+  EntitySetNoOpExcluder() {}
+
+  bool includeEntity(const Entity& entity) const override {
+    return true;
+  }
+};
+
+
+template <typename Vector, typename GV>
+class EntitySetGhostExcluder : public EntitySetExcluder<Vector, GV> {
+public:
+
+  typedef typename GV::template Codim<0>::Entity Entity;
+
+  bool includeEntity(const Entity& entity) const override {
+    return entity.partitionType() != Dune::PartitionType::GhostEntity;
+  }
+};
+
+
+
 
 void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper& helper) {
 
@@ -241,39 +245,36 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   using Vector = Dune::BlockVector<Dune::FieldVector<K,components>>;
   using Matrix = Dune::BCRSMatrix<Dune::FieldMatrix<K,components,components>>;
 
-  //using ES = Dune::PDELab::NonOverlappingEntitySet<GV>;
-  using ESExcluder = EntitySetExcluder<Vector>;
-  ESExcluder es_excluder;
-  using GV = Dune::PDELab::OverlapEntitySet<GV_,Dune::Partitions::All, ESExcluder>;
-  GV gv(gv_, es_excluder);
-  //typedef GV_ GV;
-  //GV_& gv = gv_;
+  using ESExcluder = EntitySetExcluder<Vector, GV_>;
+  auto ghost_excluder = std::make_shared<EntitySetGhostExcluder<Vector, GV_>>();
+
+
+  using ES = Dune::PDELab::OverlapEntitySet<GV_,Dune::Partitions::All, ESExcluder>;
+  ES es(gv_, ghost_excluder);
 
   // make problem parameters
-  typedef GenericEllipticProblem<GV,NumberType> Problem;
+  typedef GenericEllipticProblem<ES,NumberType> Problem;
   Problem problem;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
-  BCType bctype(gv,problem);
+  BCType bctype(es,problem);
 
 
   // make a finite element space
 
-  typedef typename GV::Grid::ctype DF;
+  typedef typename ES::Grid::ctype DF;
   // instantiate finite element maps
-  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
-  FEM fem(gv);
+  typedef Dune::PDELab::QkLocalFiniteElementMap<ES,DF,double,1> FEM;
+  FEM fem(es);
 
   // function space with no constraints on processor boundaries, needed for the GenEO eigenproblem
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
+  typedef Dune::PDELab::GridFunctionSpace<ES,FEM,
                                           Dune::PDELab::ConformingDirichletConstraints,
                                           Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>
                                           > GFS;
-  GFS gfs(gv,fem);
+  GFS gfs(es,fem);
 
   int verb=0;
   if (gfs.gridView().comm().rank()==0) verb=2;
-  //if (gfs.gridView().comm().rank() == 3) verb=3;
-  //verb = 3;
 
   // make a degree of freedom vector on fine grid and initialize it with interpolation of Dirichlet condition
   typedef Dune::PDELab::Backend::Vector<GFS,NumberType> V;
@@ -281,7 +282,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   // Extract domain boundary constraints from problem definition, apply trace to solution vector
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
-  G g(gv,problem);
+  G g(es,problem);
   Dune::PDELab::interpolate(g,gfs,x);
 
 
@@ -311,9 +312,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
   auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
-  /*typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC,GhostExcluder> GO;
-  GhostExcluder ghost_excluder;
-  auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros),ghost_excluder);*/
 
 
   std::cout << "problem definition: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
@@ -323,7 +321,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   V d(gfs,0.0);
   go.residual(x,d); // NOTE: Need operator without Dirichlet on proc boundaries for rhs setup!
 
-
   // types
   typedef GO::Jacobian M;
 
@@ -331,8 +328,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   // Assemble fine grid matrix defined without processor constraints
   M A(go);
   go.jacobian(x,A);
-
-  es_excluder.switch_on(false);
 
   if (gfs.gridView().comm().rank()==0) {
     using Dune::PDELab::Backend::native;
@@ -350,7 +345,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
     Dune::printmatrix(std::cout, native(A), "A", "");
   }
 
-  Dune::NonoverlappingOverlapAdapter<GV, Vector, Matrix> adapter(gv, native(A), avg, algebraic_overlap);
+  Dune::NonoverlappingOverlapAdapter<GV_, Vector, Matrix> adapter(gv_, native(A), avg, algebraic_overlap);
   std::cout << "NonoverlappingOverlapAdapter: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
 
   std::shared_ptr<Matrix> A_extended = adapter.extendMatrix(native(A));
@@ -385,9 +380,9 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   auto communicator = std::shared_ptr<Dune::BufferedCommunicator>(new Dune::BufferedCommunicator());
   communicator->build<Vector>(*allinterface);
 
-  Dune::PDELab::MultiVectorBundle<GV, Vector, Matrix> remotePartUnities(adapter);
+  Dune::PDELab::MultiVectorBundle<GV_, Vector, Matrix> remotePartUnities(adapter);
   remotePartUnities.localVector_ = part_unity;
-  communicator->forward<Dune::PDELab::MultiGatherScatter<Dune::PDELab::MultiVectorBundle<GV, Vector, Matrix>>>(remotePartUnities,remotePartUnities); // make function known in other subdomains
+  communicator->forward<Dune::PDELab::MultiGatherScatter<Dune::PDELab::MultiVectorBundle<GV_, Vector, Matrix>>>(remotePartUnities,remotePartUnities); // make function known in other subdomains
 
   std::cout << "comm part_unity: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
 
@@ -396,14 +391,21 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   auto part_unity_restricted = std::make_shared<Vector>(native(A).N());
   adapter.restrictVector(*part_unity, *part_unity_restricted);
 
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC,InteriorExcluder<Vector>> GO_OVLP;
-  InteriorExcluder<Vector> excluder(*part_unity_restricted);
-  auto go_overlap = GO_OVLP(gfs,cc,gfs,cc,lop,MBE(nonzeros),excluder);
 
-  M A_ovlp(go_overlap);
-  es_excluder.switch_on(true);
-  go_overlap.jacobian(x,A_ovlp);
-  es_excluder.switch_on(false);
+
+  auto es_pou_excluder = std::make_shared<EntitySetPartUnityExcluder<Vector, GV_, GFS>> (gfs, part_unity_restricted);
+  gfs.entitySet().setExcluder(es_pou_excluder);
+
+
+
+  M A_ovlp(go);
+  go.jacobian(x,A_ovlp);
+
+  if (gfs.gridView().comm().rank()==0) {
+    using Dune::PDELab::Backend::native;
+    Dune::storeMatrixMarket(native(A), "A_ovlp.mm");
+  }
+
 
   std::cout << "local A_ovlp: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
 
@@ -417,44 +419,46 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
 
   int verbose = verb;
-  using ScalarVector = Dune::BlockVector<Dune::FieldVector<K,1>>;
 
 
 
-  int nev = 2;
-  //auto subdomainbasis = std::make_shared<Dune::PDELab::SubdomainBasis<Vector>>(*Dune::makePartitionOfUnity(adapter_A));
-
-
-  M newmat(go_overlap);
+  M newmat(go);
   auto extended_matrices = adapter.lambdaMultiExtendMatrix(native(A_ovlp), native(A), [&](int i){
-
+std::cout << "Lambda called for " << i << std::endl;
     std::shared_ptr<Vector> neighbor_part_unity = remotePartUnities.getVectorForRank(i); //.neighbor_basis[i];
 
     adapter.restrictVector(*neighbor_part_unity, *part_unity_restricted);
 
-    InteriorExcluder<Vector> excluder(*part_unity_restricted);
-    auto go_overlap = GO_OVLP(gfs,cc,gfs,cc,lop,MBE(nonzeros),excluder);
-
-    // TODO: es_excluder.setPartUnity(part_unity_restricted);
-    es_excluder.setPartUnity(part_unity_restricted);
+    std::shared_ptr<EntitySetExcluder<Vector, GV_>> es_local_pou_excluder = std::make_shared<EntitySetPartUnityExcluder<Vector, GV_, GFS>> (gfs, part_unity_restricted);
+    gfs.entitySet().setExcluder(es_local_pou_excluder);
 
     for (auto rIt=native(newmat).begin(); rIt!=native(newmat).end(); ++rIt)
       for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt) {
         *cIt = 0.0;
       }
 
-    es_excluder.switch_on(true);
-    go_overlap.jacobian(x,newmat);
-    es_excluder.switch_on(false);
+std::cout << "Jacobian for " << i << std::endl;
+    go.jacobian(x,newmat);
 
+    if (gfs.gridView().comm().rank()==0) {
+      using Dune::PDELab::Backend::native;
+      Dune::storeMatrixMarket(native(newmat), "comm_mat" + std::to_string(i) + ".mm");
+    }
+
+std::cout << "Return for " << i << std::endl;
     return stackobject_to_shared_ptr(native(newmat));
   });
 
   std::shared_ptr<Matrix> A_ovlp_extended = extended_matrices.first;
   A_extended = extended_matrices.second;
 
-  //std::shared_ptr<Matrix> A_ovlp_extended = adapter.multiExtendMatrix(native(A_ovlp), A_ovlp_for_neighbors);
-  //A_extended = adapter.multiExtendMatrix(native(A), A_ovlp_for_neighbors); // NOTE: Need to redo extension... chicken and egg with partition of unity
+  if (gfs.gridView().comm().rank()==0) {
+    using Dune::PDELab::Backend::native;
+    Dune::storeMatrixMarket(native(*A_ovlp_extended), "A_ovlp_extended.mm");
+    Dune::storeMatrixMarket(native(*A_extended), "A_extended.mm");
+  }
+
+
   std::cout << "Comm ovlp matrices: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
   std::cout << "Basis setup" << std::endl;
   // Enforce problem's Dirichlet condition on PoU
@@ -474,8 +478,8 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   std::cout << "part_unity with Dirichlet: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
 
-  auto subdomainbasis = std::make_shared<Dune::PDELab::NewGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, -1.0, nev);
-  //auto subdomainbasis = std::make_shared<Dune::PDELab::SubdomainBasis<Vector>>(*part_unity);
+  int nev = 2;
+  auto subdomainbasis = std::make_shared<Dune::PDELab::NewGenEOBasis<GV_, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, -1.0, nev);
   std::cout << "eigenproblems: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
 
 
@@ -502,7 +506,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
     Dune::printmatrix(std::cout, *A_ovlp_extended, "A_ovlp_extended", "");
   }
 
-  auto coarse_space = std::make_shared<Dune::PDELab::NewSubdomainProjectedCoarseSpace<GV, Matrix, Vector>>(adapter, gv, *A_extended, subdomainbasis, verbose);
+  auto coarse_space = std::make_shared<Dune::PDELab::NewSubdomainProjectedCoarseSpace<GV_, Matrix, Vector>>(adapter, gv_, *A_extended, subdomainbasis, verbose);
 
   if(verb > 2) {
     Dune::printmatrix(std::cout, *coarse_space->get_coarse_system(), "coarse_system", "");
@@ -536,11 +540,11 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
       }
     }
 
-  Dune::PDELab::ISTL::NewTwoLevelOverlappingAdditiveSchwarz<GV, Matrix, Vector> prec(adapter, *A_extended, coarse_space, true, verb);
+  Dune::PDELab::ISTL::NewTwoLevelOverlappingAdditiveSchwarz<GV_, Matrix, Matrix, Vector, Vector> prec(adapter, *A_extended, coarse_space, true, verb);
 
 
-  NonoverlappingOperator<GV, Matrix,Vector> linearOperator(gv,native(A));
-  NonoverlappingScalarProduct<GV,Vector> scalarproduct(gv,native(x));
+  NonoverlappingOperator<ES, Matrix,Vector> linearOperator(es,native(A));
+  NonoverlappingScalarProduct<ES,Vector> scalarproduct(es,native(x));
   Dune::CGSolver<Vector> solver(linearOperator,scalarproduct,prec,1e-6,500,verbose);
 
   //Vector b_cpy(d);
@@ -580,8 +584,6 @@ int main(int argc, char **argv)
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc,argv);
 
     driver("geneo", "standard", helper);
-    //driver("geneo", "sarkis");
-    //driver("lipton_babuska", "standard");
 
     return 0;
   }
