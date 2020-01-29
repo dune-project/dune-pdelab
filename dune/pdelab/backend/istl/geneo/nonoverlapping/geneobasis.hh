@@ -5,7 +5,7 @@
 #include <functional>
 
 #include <dune/pdelab/backend/istl/geneo/subdomainbasis.hh>
-#include <dune/pdelab/backend/istl/geneo/new_arpackpp_geneo.hh>
+#include <dune/pdelab/backend/istl/geneo/arpackpp_geneo.hh>
 
 #if HAVE_ARPACKPP
 
@@ -40,7 +40,7 @@ namespace Dune {
        * \param verbose Verbosity value.
        */
       NewGenEOBasis(NonoverlappingOverlapAdapter<GridView, X, M>& adapter, const M& A, const M& A_ovlp, const X& part_unity, const double eigenvalue_threshold,
-                int& nev, int nev_arpack = -1, double shift = 0.001, bool add_part_unity = false, int verbose = 0) {
+                    int& nev, int nev_arpack = -1, const double shift = 0.001, const bool add_part_unity = false, const int verbose = 0) {
 
         if (nev_arpack == -1)
           nev_arpack = std::max(nev, 2);
@@ -62,7 +62,7 @@ namespace Dune {
 
         // Setup Arpack for solving generalized eigenproblem
         std::cout << "ARPACK setup...";
-        NewArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, X> arpack(A);
+        ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, X> arpack(A);
         std::cout << " done" << std::endl;
         double eps = 0.0;
 

@@ -57,11 +57,11 @@ namespace Dune {
         }
 
         // Setup Arpack for solving generalized eigenproblem
-        ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, X> arpack(native(AF_exterior));
+        ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, ISTLX> arpack(native(AF_exterior));
         double eps = 0.0;
 
         std::vector<double> eigenvalues(nev_arpack,0.0);
-        std::vector<X> eigenvectors(nev_arpack,X(gfs,0.0));
+        std::vector<ISTLX> eigenvectors(nev_arpack,ISTLX(native(part_unity).N()));
 
         arpack.computeGenNonSymMinMagnitude(native(ovlp_mat), eps, eigenvectors, eigenvalues, shift);
 

@@ -8,7 +8,7 @@
 #include <dune/istl/umfpack.hh>
 #include <dune/pdelab/gridfunctionspace/dunefunctionsgridfunctionspace.hh>
 
-#include "coarsespace.hh"
+#include <dune/pdelab/backend/istl/geneo/coarsespace.hh>
 #include "overlaptools.hh"
 
 #include <dune/common/parallel/communicator.hh>

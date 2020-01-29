@@ -169,8 +169,8 @@ namespace Dune {
         cache.update();
         for (std::size_t i = 0; i < cache.size(); i++)
           {
-            if (partUnity_[cache.containerIndex(i)[0]] > 0.0 &&
-                partUnity_[cache.containerIndex(i)[0]] < 1.0)
+            if (partUnity_[cache.containerIndex(i).back()] > 0.0 && // TODO: Test for composites!!!
+                partUnity_[cache.containerIndex(i).back()] < 1.0)
               return false;
           }
         return true;
