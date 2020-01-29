@@ -65,6 +65,11 @@ namespace Dune {
       //! \{
       //
 
+      //! \brief Default-construct an InstationarySumLocalOperator. Expects the operators
+      //!        to be added later through the setSummand method.
+      InstationarySumLocalOperator()
+      {}
+
       //! \brief construct a InstationarySumLocalOperator from a tuple of
       //!        local operators
       InstationarySumLocalOperator(const ArgRefs& lops_)
