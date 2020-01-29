@@ -51,7 +51,7 @@ namespace Dune {
         Hybrid::forEach(Std::make_index_sequence<size-1>{},
           [&](auto i){
             if(weights[i] != K(0))
-              f(getSummand<i>(), std::forward<Args2>(args)...);});
+              f(*Hybrid::elementAt(lops, i), std::forward<Args2>(args)...);});
       }
 
     public:
