@@ -52,10 +52,10 @@ namespace Dune {
       ArgPtrs lops;
 
       template<typename F, typename... Args2>
-      void applyLops(F && f, Args2 &&... args)
+      void applyLops(F && f, Args2 &&... args) const
       {
-        Hybrid::forEach(Std::make_index_sequence<size-1>{},
-          [&](auto i){f(getSummand<i>(), std::forward<Args2>(args)...);});
+        Hybrid::forEach(Std::make_index_sequence<size>{},
+          [&](auto i){f(*Hybrid::elementAt(lops, i), std::forward<Args2>(args)...);});
       }
 
     public:
@@ -64,6 +64,11 @@ namespace Dune {
       //! \name Construction and modification
       //! \{
       //
+
+      //! \brief Default-construct an InstationarySumLocalOperator. Expects the operators
+      //!        to be added later through the setSummand method.
+      InstationarySumLocalOperator()
+      {}
 
       //! \brief construct a InstationarySumLocalOperator from a tuple of
       //!        local operators
