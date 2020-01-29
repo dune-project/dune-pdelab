@@ -654,190 +654,6 @@ namespace Dune {
 
     };
 
-    /*template<typename GV, typename P>
-    class OverlapEntitySetIndexSetBase
-    {
-
-      template<typename,typename>
-      friend class OverlapEntitySet;
-
-    public:
-
-      using Traits = OverlapEntitySetTraits<GV,P>;
-
-      using Partitions = typename Traits::Partitions;
-      using Grid      = typename Traits::Grid;
-      using GridView = typename Traits::GridView;
-      using BaseIndexSet = typename Traits::BaseIndexSet;
-      using size_type = typename Traits::size_type;
-      using dim_type = typename Traits::dim_type;
-      using Index = typename Traits::Index;
-      using Types = typename Traits::Types;
-      using CodimMask = typename Traits::CodimMask;
-
-      using IndexType = Index;
-
-      constexpr static Index invalidIndex()
-      {
-        return Traits::invalidIndex();
-      }
-
-      template<dim_type codim>
-      using Codim = typename Traits::template Codim<codim>;
-
-      OverlapEntitySetIndexSetBase(const OverlapEntitySetIndexSetBase&) = delete;
-      OverlapEntitySetIndexSetBase& operator=(const OverlapEntitySetIndexSetBase&) = delete;
-
-
-    protected:
-
-      bool update(bool force)
-      {
-        if (!(_needs_update || force))
-          return false;
-        std::fill(_gt_offsets.begin(),_gt_offsets.end(),0);
-        std::fill(_mapped_gt_offsets.begin(),_mapped_gt_offsets.end(),0);
-        _active_geometry_types.reset();
-        _geometry_types.resize(0);
-        for (dim_type codim = 0; codim <= GV::dimension; ++codim)
-        {
-          if (!_wanted_codims.test(codim))
-            continue;
-          for (const auto& gt : baseIndexSet().types(codim))
-          {
-            auto gt_index = GlobalGeometryTypeIndex::index(gt);
-            _gt_offsets[gt_index + 1] = baseIndexSet().size(gt);
-            _geometry_types.push_back(gt);
-            _active_geometry_types.set(gt_index);
-          }
-        }
-        for (dim_type codim = 0; codim <= GV::dimension; ++codim)
-        {
-          auto range = std::equal_range(
-            _geometry_types.begin(),
-                                        _geometry_types.end(),
-                                        GeometryTypes::none(GV::dimension - codim),
-                                        [](const GeometryType& x, const GeometryType& y)
-                                        {
-                                          // reverse order because we store in ascending order with regard to the codim, not the dim
-                                          return y.dim() < x.dim();
-                                        });
-          _per_codim_geometry_types[codim] = {range.first,range.second};
-        }
-
-        std::partial_sum(_gt_offsets.begin(),_gt_offsets.end(),_gt_offsets.begin());
-        _active_codims = _wanted_codims;
-        _needs_update = false;
-        return true;
-      }
-
-    public:
-
-      size_type size(GeometryType gt) const
-      {
-        assert(!needsUpdate());
-        auto gt_index = GlobalGeometryTypeIndex::index(gt);
-        return _mapped_gt_offsets[gt_index + 1] - _mapped_gt_offsets[gt_index];
-      }
-
-      size_type size(dim_type codim) const
-      {
-        assert(!needsUpdate());
-        auto dim = GV::dimension;
-        #if DUNE_VERSION_NEWER_REV(DUNE_GEOMETRY,2,4,1)
-        return _mapped_gt_offsets[GlobalGeometryTypeIndex::offset(dim-codim+1)] -
-        _mapped_gt_offsets[GlobalGeometryTypeIndex::offset(dim-codim)];
-        #else
-        return codim < dim ? _mapped_gt_offsets[GlobalGeometryTypeIndex::size(dim-codim)] -
-        _mapped_gt_offsets[GlobalGeometryTypeIndex::size(dim-codim-1)] : 0;
-        #endif
-      }
-
-      template<typename Entity>
-      bool contains(const Entity& e) const
-      {
-        return Partitions::contains(e.partitionType()) ? baseIndexSet().contains(e) : false;
-      }
-
-      bool contains(dim_type codim) const
-      {
-        return _active_codims.test(codim);
-      }
-
-      bool contains(const GeometryType& gt) const
-      {
-        return _active_geometry_types.test(GlobalGeometryTypeIndex::index(gt));
-      }
-
-      const BaseIndexSet& baseIndexSet() const
-      {
-        return _gv.indexSet();
-      }
-
-      Types types(dim_type codim) const
-      {
-        assert(!needsUpdate());
-        return _per_codim_geometry_types[codim];
-      }
-
-      Types types() const
-      {
-        assert(!needsUpdate());
-        return {_geometry_types.begin(),_geometry_types.end()};
-      }
-
-      OverlapEntitySetIndexSetBase(const GV& gv, CodimMask wanted_codims)
-      : _gv(gv)
-      , _needs_update(true)
-      , _wanted_codims(wanted_codims)
-      {}
-
-      const GridView& gridView() const
-      {
-        return _gv;
-      }
-
-      bool needsUpdate() const
-      {
-        return _needs_update;
-      }
-
-    protected:
-
-      void reset()
-      {
-        _needs_update = true;
-        _wanted_codims.reset();
-      }
-
-      void addCodim(dim_type codim)
-      {
-        _wanted_codims.set(codim);
-        _needs_update = _wanted_codims != _active_codims || _wanted_codims.none();
-      }
-
-      void removeCodim(dim_type codim)
-      {
-        _wanted_codims.reset(codim);
-        _needs_update = _wanted_codims != _active_codims || _wanted_codims.none();
-      }
-
-      GV _gv;
-      bool _needs_update;
-      CodimMask _wanted_codims;
-      std::bitset<GlobalGeometryTypeIndex::size(GV::dimension)> _active_geometry_types;
-      CodimMask _active_codims;
-      std::array<size_type,GlobalGeometryTypeIndex::size(GV::dimension) + 1> _gt_offsets;
-      std::array<size_type,GlobalGeometryTypeIndex::size(GV::dimension) + 1> _mapped_gt_offsets;
-
-    private:
-
-      std::vector<GeometryType> _geometry_types;
-      std::array<Types,GV::dimension + 1> _per_codim_geometry_types;
-
-    };*/
-
-
 
     template<typename GV, typename P>
     class PartitionViewEntitySetIndexSetBase
@@ -1025,15 +841,16 @@ namespace Dune {
 
     };
 
-    /*template<typename GV, typename P>
-    class OverlapEntitySetIndexSet
-     : public OverlapEntitySetIndexSetBase<GV,P>
+
+    template<typename GV, typename P>
+    class PartitionViewEntitySetIndexSet
+    : public PartitionViewEntitySetIndexSetBase<GV,P>
     {
 
-      using Base = OverlapEntitySetIndexSetBase<GV,P>;
+      using Base = PartitionViewEntitySetIndexSetBase<GV,P>;
 
       template<typename,typename>
-      friend class OverlapEntitySet;
+      friend class PartitionViewEntitySet;
 
     public:
 
@@ -1088,13 +905,13 @@ namespace Dune {
       {
         if (_active_codims.test(codim))
           for (const auto& e : entities(gridView(),codim,Dune::Partitions::all))
-            {
-              auto gt = e.type();
-              auto gt_index = GlobalGeometryTypeIndex::index(gt);
-              if (Partitions::contains(e.partitionType()))
-                _indices[_gt_offsets[gt_index] + baseIndexSet().index(e)] = _mapped_gt_offsets[gt_index + 1]++;
-            }
-        update_codim(Dune::Codim<cd+1>{});
+          {
+            auto gt = e.type();
+            auto gt_index = GlobalGeometryTypeIndex::index(gt);
+            if (Partitions::contains(e.partitionType()))
+              _indices[_gt_offsets[gt_index] + baseIndexSet().index(e)] = _mapped_gt_offsets[gt_index + 1]++;
+          }
+          update_codim(Dune::Codim<cd+1>{});
       }
 
 
@@ -1105,28 +922,28 @@ namespace Dune {
         auto& index_set = baseIndexSet();
 
         for (const auto& e : elements(gridView(),Dune::Partitions::all))
+        {
+          if (!Partitions::contains(e.partitionType()))
+            continue;
+
+          auto ref_el = ReferenceElements<typename Base::Traits::CoordinateField,GV::dimension>::general(e.type());
+          for (dim_type codim = 0; codim <= Grid::dimension; ++codim)
           {
-            if (!Partitions::contains(e.partitionType()))
+            if (!_active_codims.test(codim))
               continue;
 
-            auto ref_el = ReferenceElements<typename Base::Traits::CoordinateField,GV::dimension>::general(e.type());
-            for (dim_type codim = 0; codim <= Grid::dimension; ++codim)
-              {
-                if (!_active_codims.test(codim))
-                  continue;
+            size_type sub_entity_count = ref_el.size(codim);
 
-                size_type sub_entity_count = ref_el.size(codim);
-
-                for(size_type i = 0; i < sub_entity_count; ++i)
-                  {
-                    auto gt = ref_el.type(i,codim);
-                    auto gt_index = GlobalGeometryTypeIndex::index(gt);
-                    auto index = index_set.subIndex(e,i,codim);
-                    if (_indices[_gt_offsets[gt_index] + index] == invalidIndex())
-                      _indices[_gt_offsets[gt_index] + index] = _mapped_gt_offsets[gt_index + 1]++;
-                  }
-              }
+            for(size_type i = 0; i < sub_entity_count; ++i)
+            {
+              auto gt = ref_el.type(i,codim);
+              auto gt_index = GlobalGeometryTypeIndex::index(gt);
+              auto index = index_set.subIndex(e,i,codim);
+              if (_indices[_gt_offsets[gt_index] + index] == invalidIndex())
+                _indices[_gt_offsets[gt_index] + index] = _mapped_gt_offsets[gt_index + 1]++;
+            }
           }
+        }
       }
 
 
@@ -1176,8 +993,8 @@ namespace Dune {
       }
 
 
-      OverlapEntitySetIndexSet(const GV& gv, CodimMask wanted_codims, bool initialize)
-        : Base(gv,wanted_codims)
+      PartitionViewEntitySetIndexSet(const GV& gv, CodimMask wanted_codims, bool initialize)
+      : Base(gv,wanted_codims)
       {
         if (initialize)
           update(true);
@@ -1191,7 +1008,10 @@ namespace Dune {
 
       std::vector<Index> _indices;
 
-    };*/
+    };
+
+
+
 
     template<typename GV>
     class PartitionViewEntitySetIndexSet<GV,Partitions::All>
