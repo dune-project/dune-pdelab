@@ -136,9 +136,10 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   auto gv = grid->leafGridView();
 
   // Transfer partitioning from ParMETIS to our grid
+#if PARMETIS_MAJOR_VERSION
   std::vector<unsigned> part(Dune::ParMetisGridPartitioner<GV>::partition(gv, helper));
   grid->loadBalance(part, 0);
-
+#endif
 
   /*typedef Dune::YaspGrid<dim> GM;
 

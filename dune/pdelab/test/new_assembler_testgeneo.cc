@@ -170,9 +170,10 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   auto gv = grid->leafGridView();
 
   // Transfer partitioning from ParMETIS to our grid
+#if PARMETIS_MAJOR_VERSION
   std::vector<unsigned> part(Dune::ParMetisGridPartitioner<GV>::partition(gv, helper));
   grid->loadBalance(part, 0);
-
+#endif
 
   /*typedef Dune::YaspGrid<dim> GM;
 
@@ -291,7 +292,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   Dune::AllSet<Attribute> allAttribute;
   auto allinterface = std::shared_ptr<Dune::Interface>(new Dune::Interface());
   allinterface->build(*adapter.getRemoteIndices(),allAttribute,allAttribute); // all to all communication
-  auto communicator = std::shared_ptr<Dune::BufferedCommunicator>(new Dune::BufferedCommunicator());
+  auto communicator = std::shared_ptr<DuneWithRank::BufferedCommunicator>(new DuneWithRank::BufferedCommunicator());
   communicator->build<Vector>(*allinterface);
 
   Dune::PDELab::MultiVectorBundle<GV, Vector, Matrix> remotePartUnities(adapter);
