@@ -1087,12 +1087,13 @@ void VariableSizeCommunicator<Allocator>::setupInterfaceTrackers(DataHandle& han
   for(IIter inf=interface_->begin(), end=interface_->end(); inf!=end; ++inf)
   {
 
-    if(handle.fixedsize() && InterfaceInformationChooser<FORWARD>::getSend(inf->second).size())
+    if(handle.fixedsize() && InterfaceInformationChooser<FORWARD>::getSend(inf->second).size()) {
       if constexpr (hasTemplatedGatherWithProc<DataHandle>::value) {
         fixedsize=handle.sizeWithProc(InterfaceInformationChooser<FORWARD>::getSend(inf->second)[0], inf->first);
       } else {
         fixedsize=handle.size(InterfaceInformationChooser<FORWARD>::getSend(inf->second)[0]);
       }
+    }
     assert(!handle.fixedsize()||fixedsize>0);
     send_trackers.push_back(InterfaceTracker(inf->first,
                                              InterfaceInformationChooser<FORWARD>::getSend(inf->second), fixedsize));

@@ -1092,6 +1092,13 @@ namespace Dune {
         distance[i] = 0.0; // this is a boundary dof
       else
         distance[i] = 2*overlapsize+1.0;
+
+    /*auto pu = std::shared_ptr<Vector>(new Vector(M.N()));
+    for (typename Vector::size_type i=0; i<pu->N(); i++){
+      (*pu)[i] = (double)distance[i];
+    }
+    return pu;*/
+
     for (int round=0; round<2*overlapsize; round++)
       for (typename ScalarVector::size_type i=0; i<distance.N(); i++)
         {
