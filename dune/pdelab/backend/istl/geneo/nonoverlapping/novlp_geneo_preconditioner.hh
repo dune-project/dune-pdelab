@@ -22,9 +22,6 @@ namespace Dune {
       }
 
       virtual bool includeEntity(const Entity& entity) const {
-        if (entity.partitionType() == Dune::PartitionType::GhostEntity)
-          return false;
-
         return true;
       }
 
