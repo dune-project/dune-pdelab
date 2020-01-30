@@ -43,10 +43,7 @@
 #include<dune/istl/io.hh>
 
 #include<dune/pdelab/backend/istl/geneo/geneo.hh>
-#include<dune/pdelab/backend/istl/geneo/schwarznonoverlapping.hh>
-
-#include<dune/pdelab/backend/istl/geneo/novlp_operators.hh>
-
+#include<dune/pdelab/backend/istl/geneo/nonoverlapping/schwarznonoverlapping.hh>
 
 
 int main(int argc, char **argv)
