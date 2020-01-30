@@ -13,6 +13,9 @@
 #include<dune/common/parallel/communicator.hh>
 #include<dune/common/parallel/variablesizecommunicator.hh>
 
+#include "communicator_with_rank.hh"
+#include "variablesizecommunicator_with_rank.hh"
+
 namespace Dune {
 
 
@@ -793,7 +796,7 @@ namespace Dune {
 
           // find new indices
           ExtenderDataHandle extdh(rank,*pis,A,new2old_localindex,old2new_localindex);
-          Dune::VariableSizeCommunicator<> varcommunicator(tempinterface);
+          DuneWithRank::VariableSizeCommunicator<> varcommunicator(tempinterface);
           // comm.barrier();
           // std::cout << rank << ": before finding new indices" << std::endl;
           // comm.barrier();
@@ -901,7 +904,7 @@ namespace Dune {
     Dune::AllSet<EPISAttribute> allAttribute;
     Dune::Interface allinterface;
     allinterface.build(*epis.remoteIndices(),allAttribute,allAttribute); // all to all communication
-    Dune::VariableSizeCommunicator<> varcommunicator(allinterface);
+    DuneWithRank::VariableSizeCommunicator<> varcommunicator(allinterface);
     //std::cout << "interface is built" << std::endl;
 
     // make a copy M of the matrix A_local where rows/columns corresponding to ghosts are omitted
@@ -940,7 +943,7 @@ namespace Dune {
     Dune::AllSet<EPISAttribute> allAttribute;
     Dune::Interface allinterface;
     allinterface.build(*epis.remoteIndices(),allAttribute,allAttribute); // all to all communication
-    Dune::VariableSizeCommunicator<> varcommunicator(allinterface);
+    DuneWithRank::VariableSizeCommunicator<> varcommunicator(allinterface);
     //std::cout << "interface is built" << std::endl;
 
     // make a copy M of the matrix A_local where rows/columns corresponding to ghosts are omitted
@@ -998,7 +1001,7 @@ namespace Dune {
     Dune::AllSet<EPISAttribute> allAttribute;
     Dune::Interface allinterface;
     allinterface.build(*epis.remoteIndices(),allAttribute,allAttribute); // all to all communication
-    Dune::VariableSizeCommunicator<> varcommunicator(allinterface);
+    DuneWithRank::VariableSizeCommunicator<> varcommunicator(allinterface);
     //std::cout << "interface is built" << std::endl;
 
     // make a copy M of the matrix A_local where rows/columns corresponding to ghosts are omitted
@@ -1053,7 +1056,7 @@ namespace Dune {
     Dune::AllSet<EPISAttribute> allAttribute;
     Dune::Interface allinterface;
     allinterface.build(*epis.remoteIndices(),allAttribute,allAttribute); // all to all communication
-    Dune::VariableSizeCommunicator<> varcommunicator(allinterface);
+    DuneWithRank::VariableSizeCommunicator<> varcommunicator(allinterface);
 
     using ParallelIndexSet = typename ExtendedParallelIndexSet::ParallelIndexSet;
     OverlapTools::AddNonlocalEntriesToDiagonal<Matrix,ParallelIndexSet,ScalarVector> adddh(M,*epis.parallelIndexSet(),owner);
@@ -1073,8 +1076,8 @@ namespace Dune {
     Dune::AllSet<EPISAttribute> allAttribute;
     Dune::Interface allinterface;
     allinterface.build(*epis.remoteIndices(),allAttribute,allAttribute); // all to all communication
-    Dune::VariableSizeCommunicator<> varcommunicator(allinterface);
-    Dune::BufferedCommunicator communicator;
+    DuneWithRank::VariableSizeCommunicator<> varcommunicator(allinterface);
+    DuneWithRank::BufferedCommunicator communicator;
     communicator.build<ScalarVector>(allinterface);
 
     // now lets determine an improved partition of unity ....
@@ -1126,9 +1129,9 @@ namespace Dune {
     Dune::AllSet<EPISAttribute> allAttribute;
     Dune::Interface allinterface;
     allinterface.build(*epis.remoteIndices(),allAttribute,allAttribute); // all to all communication
-    Dune::VariableSizeCommunicator<> varcommunicator(allinterface);
+    DuneWithRank::VariableSizeCommunicator<> varcommunicator(allinterface);
 
-    Dune::BufferedCommunicator communicator;
+    DuneWithRank::BufferedCommunicator communicator;
     communicator.build<ScalarVector>(allinterface);
 
     // now lets determine an improved partition of unity ....

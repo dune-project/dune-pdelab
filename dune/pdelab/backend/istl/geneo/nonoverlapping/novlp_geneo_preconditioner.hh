@@ -143,7 +143,7 @@ namespace Dune {
         Dune::AllSet<Attribute> allAttribute;
         auto allinterface = std::shared_ptr<Dune::Interface>(new Dune::Interface());
         allinterface->build(*adapter.getRemoteIndices(),allAttribute,allAttribute); // all to all communication
-        auto communicator = std::shared_ptr<Dune::BufferedCommunicator>(new Dune::BufferedCommunicator());
+        auto communicator = std::shared_ptr<DuneWithRank::BufferedCommunicator>(new DuneWithRank::BufferedCommunicator());
         communicator->build<Vector>(*allinterface);
 
         Dune::PDELab::MultiVectorBundle<GV, Vector, Matrix> remotePartUnities(adapter);
