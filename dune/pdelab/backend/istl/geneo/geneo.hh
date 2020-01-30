@@ -13,6 +13,7 @@
 #include <dune/pdelab/backend/istl/geneo/nonoverlapping/localoperator_ovlp_region.hh>
 #include <dune/pdelab/backend/istl/geneo/nonoverlapping/localoperator_nonovlp.hh>
 #include <dune/pdelab/backend/istl/geneo/nonoverlapping/novlp_operators.hh>
+#include <dune/pdelab/backend/istl/geneo/nonoverlapping/novlp_geneo_preconditioner.hh>
 
 #include <dune/pdelab/backend/istl/geneo/geneobasis.hh>
 #include <dune/pdelab/backend/istl/geneo/nonoverlapping/geneobasis.hh>

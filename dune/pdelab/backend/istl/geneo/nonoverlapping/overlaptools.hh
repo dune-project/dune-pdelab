@@ -1061,8 +1061,8 @@ namespace Dune {
   }
 
 
-  template<typename ExtendedParallelIndexSet, typename Matrix, typename Vector, int block_size=1>
-  std::shared_ptr<Dune::BlockVector<Dune::FieldVector<typename Matrix::field_type,block_size>>>
+  template<typename ExtendedParallelIndexSet, typename Matrix, typename Vector>
+  std::shared_ptr<Vector>
   makePartitionOfUnity (const ExtendedParallelIndexSet& epis, const Matrix& M, int overlapsize)
   {
     using FieldType = typename Matrix::field_type;
@@ -1367,12 +1367,12 @@ namespace Dune {
     //std::shared_ptr<Matrix> M_;
   };
 
-  template<typename GridView, typename Matrix, typename Vector, int block_size=1>
-  std::shared_ptr<Dune::BlockVector<Dune::FieldVector<typename Vector::field_type,block_size>>> makePartitionOfUnity(NonoverlappingOverlapAdapter<GridView, Vector, Matrix>& adapter, const Matrix& A) {
+  template<typename GridView, typename Matrix, typename Vector>
+  std::shared_ptr<Vector> makePartitionOfUnity(NonoverlappingOverlapAdapter<GridView, Vector, Matrix>& adapter, const Matrix& A) {
     using GlobalId = typename GridView::Grid::GlobalIdSet::IdType;
     using CollectiveCommunication = typename GridView::CollectiveCommunication;
     using EPIS = Dune::ExtendedParallelIndexSet<CollectiveCommunication,GlobalId,Matrix>;
-    return Dune::makePartitionOfUnity<EPIS, Matrix, Vector, block_size>(adapter.getEpis(), A, adapter.getEpis().overlapSize());
+    return Dune::makePartitionOfUnity<EPIS, Matrix, Vector>(adapter.getEpis(), A, adapter.getEpis().overlapSize());
   }
 }
 

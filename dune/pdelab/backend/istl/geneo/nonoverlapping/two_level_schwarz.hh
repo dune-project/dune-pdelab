@@ -24,7 +24,7 @@ namespace Dune {
       * \brief Two level overlapping Schwarz preconditioner with arbitrary coarse space.
       */
       //template<class GFS, class M, class X, class Y>
-      template<typename GridView, typename ScalarMatrix, typename Matrix, typename ScalarVector, typename Vector, int block_size=1>
+      template<typename GridView, typename ScalarMatrix, typename Matrix, typename ScalarVector, typename Vector>
       class NewTwoLevelOverlappingAdditiveSchwarz
        : public Dune::Preconditioner<Vector,Vector>
       {
@@ -111,6 +111,7 @@ namespace Dune {
           if (verbosity_ > 2) Dune::printvector(std::cout, b, "defect (distributed)", "", 1, 10, 17);
 
 
+          const int block_size = Vector::block_type::dimension;
           Vector b_cpy(b);// FIXME: Avoid this
           for (auto rIt=A_.begin(); rIt!=A_.end(); ++rIt) {
               for(int block_i = 0; block_i < block_size; block_i++){
