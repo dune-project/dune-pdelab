@@ -284,7 +284,16 @@ namespace Dune::PDELab
     {
       _residual = 0.0;
       _gridOperator.residual(solution, _residual);
-      _result.defect =  _linearSolver.norm(_residual);
+
+      // Use the maximum norm as a stopping criterion. This helps loosen the tolerance
+      // when solving for stationary solutions of nonlinear time-dependent problems.
+      // The default is to use the Euclidean norm (in the else-block) as before
+      if (_useMaxNorm){
+        auto rankMax = Backend::native(_residual).infinity_norm();
+        _result.defect = _gridOperator.testGridFunctionSpace().gridView().comm().max(rankMax);
+      }
+      else
+        _result.defect =  _linearSolver.norm(_residual);
     }
 
     //! Set how much output you get
@@ -329,6 +338,12 @@ namespace Dune::PDELab
     void setKeepMatrix(bool b)
     {
       _keepMatrix = b;
+    }
+
+    //! Set whether to use the maximum norm for stopping criteria.
+    void setUseMaxNorm(bool b)
+    {
+      _useMaxNorm = b;
     }
 
     //! Return whether the jacobian matrix is kept across calls to apply().
@@ -419,6 +434,8 @@ namespace Dune::PDELab
           setAbsoluteLimit(parameterTree.get<Real>("absolute_limit"));
         if (parameterTree.hasKey("keeep_matrix"))
           setKeepMatrix(parameterTree.get<bool>("keep_matrix"));
+        if (parameterTree.hasKey("use_max_norm"))
+          setUseMaxNorm(parameterTree.get<bool>("use_max_norm"));
 
         if (parameterTree.hasKey("min_linear_reduction"))
           setMinLinearReduction(parameterTree.get<Real>("min_linear_reduction"));
@@ -504,6 +521,7 @@ namespace Dune::PDELab
     Real _reduction = 1e-8;
     Real _absoluteLimit = 1e-12;
     bool _keepMatrix = true;
+    bool _useMaxNorm = false;
 
     // User parameters for prepareStep()
     Real _minLinearReduction = 1e-3;
