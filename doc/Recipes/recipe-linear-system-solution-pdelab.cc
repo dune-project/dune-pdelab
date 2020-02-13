@@ -116,7 +116,6 @@ public:
   BCType
   bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& xlocal) const
   {
-    typename Traits::DomainType xglobal = is.geometry().global(xlocal);
     return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
 
@@ -222,6 +221,7 @@ int main(int argc, char **argv)
     // [Linear solver backend 2]
     typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
     //! [Linear solver backend 2]
+    LS ls(100,3);
     }
 
     // [Assemble and solve linear problem]
