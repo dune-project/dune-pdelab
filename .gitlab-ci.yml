@@ -9,16 +9,24 @@ variables:
 # than one thread.
   OMP_NUM_THREADS: 1
 
+.common: &common
+  script:
+    - duneci-standard-test
+    # test tutorials as well
+    - export DUNE_CONTROL_PATH=$(pwd):/duneci/modules:$DUNE_CONTROL_PATH
+    - duneci-install-module https://gitlab.dune-project.org/pdelab/dune-pdelab-tutorials.git
+    - cd /duneci/modules/dune-pdelab-tutorials && duneci-standard-test
+
 debian:10--gcc:
+  <<: *common
   image: registry.dune-project.org/docker/ci/dune-pdelab-deps:git
-  script: duneci-standard-test
   tags:
     - "cores:4"
     - "mem:16G"
 
 debian:10--clang:
+  <<: *common
   image: registry.dune-project.org/docker/ci/dune-pdelab-deps:git
-  script: duneci-standard-test
   variables: {DUNECI_OPTS: /duneci/opts.clang}
   tags:
     - "cores:4"
