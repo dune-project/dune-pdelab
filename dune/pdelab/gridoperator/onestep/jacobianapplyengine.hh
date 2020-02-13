@@ -63,9 +63,9 @@ namespace Dune{
         , invalid_result(nullptr)
         , invalid_solution(nullptr)
         , invalid_update(nullptr)
+        , result(invalid_result)
         , solution(invalid_solution)
         , update(invalid_update)
-        , result(invalid_result)
       {}
 
       //! Set current solution vector. Must be called before
