@@ -3,17 +3,6 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_WEIGHTEDSUM_HH
 #define DUNE_PDELAB_LOCALOPERATOR_WEIGHTEDSUM_HH
 
-#include <cstddef>
-
-#include <dune/common/forloop.hh>
-#include <dune/common/fvector.hh>
-#include <dune/common/tuples.hh>
-#include <dune/common/tupleutility.hh>
-#include <dune/common/typetraits.hh>
-
-#include <dune/pdelab/gridfunctionspace/localvector.hh>
-#include <dune/pdelab/gridoperator/common/localmatrix.hh>
-
 #include <dune/pdelab/localoperator/sum.hh>
 
 namespace Dune {
@@ -45,13 +34,60 @@ namespace Dune {
       typedef FieldVector<K, size> Weights;
       Weights weights;
 
-      template<typename F, typename... Args2>
-      void applyLops(F && f, Args2 &&... args)
+      // concept check for a weighted container, like e.g. LocalVector or LocalMatrix
+      struct WeightedContainer {
+        template<class C>
+        auto require(C& c) -> decltype(
+          Concept::requireType<typename C::weight_type>(),
+          const_cast<C&>(c).weight()
+          // c.setWeight(std::declval<typename C::weight_type>())
+          );
+      };
+
+      template<typename... FArgs>
+      void getWeights(FieldVector<K, sizeof...(FArgs)> & aweights,
+        std::tuple<FArgs...> fargs) const
       {
-        Hybrid::forEach(Std::make_index_sequence<size-1>{},
+        Hybrid::forEach(Std::make_index_sequence<sizeof...(FArgs)>{},
+          [&](auto j){
+            const auto & a = get<j>(fargs);
+            Hybrid::ifElse(models<WeightedContainer,decltype(a)>(),
+              [&](auto id){
+                aweights[j] = id(a).weight();});
+          });
+      }
+
+      template<typename... FArgs>
+      void setWeights(const FieldVector<K, sizeof...(FArgs)> & aweights,
+        std::tuple<FArgs...> fargs) const
+      {
+        Hybrid::forEach(Std::make_index_sequence<sizeof...(FArgs)>{},
+          [&](auto j){
+            auto & a = get<j>(fargs);
+            Hybrid::ifElse(models<WeightedContainer,decltype(a)>(),
+              [&](auto id){
+                id(a).setWeight(aweights[j]);});
+          });
+      }
+
+      template<typename F, typename... FArgs>
+      void applyLops(F && f, FArgs &&... fargs) const
+      {
+        // remember weights
+        FieldVector<K, sizeof...(FArgs)> aweights(K(0));
+        FieldVector<K, sizeof...(FArgs)> current_weights;
+        getWeights(aweights, std::forward_as_tuple(fargs...));
+        Hybrid::forEach(Std::make_index_sequence<size>{},
           [&](auto i){
-            if(weights[i] != K(0))
-              f(*Hybrid::elementAt(lops, i), std::forward<Args2>(args)...);});
+            if(weights[i] != K(0)) {
+              // set weights
+              current_weights = aweights;
+              current_weights *= weights[i];
+              setWeights(current_weights, std::forward_as_tuple(fargs...));
+              f(*Hybrid::elementAt(this->lops, i), std::forward<FArgs>(fargs)...);}}
+          );
+        // reset weights
+        setWeights(aweights, std::forward_as_tuple(fargs...));
       }
 
     public:
