@@ -340,8 +340,8 @@ namespace Dune {
 
     /** compile time switching of function call */
     template<typename LOP, bool doIt>
-    struct LocalAssemblerCallSwitch :
-      public Impl::LocalAssemblerCallSwitchHelper<LOP,doIt> {};
+    using LocalAssemblerCallSwitch =
+      Impl::LocalAssemblerCallSwitchHelper<LOP,doIt>;
 
     namespace LocalOperatorApply {
 
