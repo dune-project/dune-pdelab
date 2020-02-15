@@ -7,8 +7,7 @@
 #include<cstddef>
 #include<string>
 #include<vector>
-
-#include <dune/common/shared_ptr.hh>
+#include<memory>
 
 #include<dune/grid/io/file/vtk/vtkwriter.hh>
 

@@ -32,7 +32,7 @@ struct OPBFEMFactory
 #if !HAVE_GMP
     std::cerr << "Warning: Testing OPBLocalFiniteElementMap without GMP!" << std::endl;
 #endif
-    return Dune::make_shared<typename FEM<GV,DF,RF,basic_type>::type>();
+    return std::make_shared<typename FEM<GV,DF,RF,basic_type>::type>();
   }
 
 };

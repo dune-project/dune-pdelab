@@ -106,7 +106,7 @@ public:
     using Element = GlobalFunction::Element;
     using size_type = std::size_t;
 
-    LocalFunction(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
+    LocalFunction(const std::shared_ptr<const GridFunctionSpace> gfs, const std::shared_ptr<const Vector> v)
       : pgfs_(gfs)
       , v_(v)
       , lfs_(*pgfs_)
@@ -293,8 +293,8 @@ public:
 
   protected:
 
-    const shared_ptr<const GridFunctionSpace> pgfs_;
-    const shared_ptr<const Vector> v_;
+    const std::shared_ptr<const GridFunctionSpace> pgfs_;
+    const std::shared_ptr<const Vector> v_;
     LFS lfs_;
     LFSCache lfs_cache_;
     XView x_view_;
@@ -373,8 +373,8 @@ public:
 
 private:
 
-  const shared_ptr<const GridFunctionSpace> pgfs_;
-  const shared_ptr<const Vector> v_;
+  const std::shared_ptr<const GridFunctionSpace> pgfs_;
+  const std::shared_ptr<const Vector> v_;
 
 };
 

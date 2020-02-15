@@ -6,8 +6,7 @@
 
 #include <algorithm>
 #include <cstddef>
-
-#include <dune/common/shared_ptr.hh>
+#include <memory>
 
 #include <dune/typetree/powernode.hh>
 

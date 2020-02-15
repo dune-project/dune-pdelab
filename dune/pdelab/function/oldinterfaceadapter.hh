@@ -70,7 +70,7 @@ namespace Imp {
 
     // transforming constructor
     template<typename Transformation>
-    LocalGridViewFunctionAdapter(shared_ptr<const F> f, const Transformation & t) : f_(f) {};
+    LocalGridViewFunctionAdapter(std::shared_ptr<const F> f, const Transformation & t) : f_(f) {};
 
     // transforming constructor
     template<typename Transformation>
@@ -78,7 +78,7 @@ namespace Imp {
 
   private:
     Element element_;
-    shared_ptr<const F> f_;
+    std::shared_ptr<const F> f_;
   };
 
   template<class F, template<class> class DerivativeTraits = Functions::DefaultDerivativeTraits>

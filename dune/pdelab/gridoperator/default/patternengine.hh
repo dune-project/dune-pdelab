@@ -62,7 +62,7 @@ namespace Dune{
          creates this engine
       */
       DefaultLocalPatternAssemblerEngine(const LocalAssembler & local_assembler_,
-                                         shared_ptr<typename LA::Traits::BorderDOFExchanger> border_dof_exchanger)
+                                         std::shared_ptr<typename LA::Traits::BorderDOFExchanger> border_dof_exchanger)
         : local_assembler(local_assembler_)
         , lop(local_assembler.localOperator())
         , pattern(nullptr)
@@ -292,7 +292,7 @@ namespace Dune{
 
       BorderPattern _border_pattern;
 
-      shared_ptr<BorderDOFExchanger> _border_dof_exchanger;
+      std::shared_ptr<BorderDOFExchanger> _border_dof_exchanger;
 
     }; // End of class DefaultLocalPatternAssemblerEngine
 

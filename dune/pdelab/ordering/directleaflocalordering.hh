@@ -110,7 +110,7 @@ namespace Dune {
         return 0;
       }
 
-      DirectLeafLocalOrdering(const shared_ptr<const FEM>& fem, const ES& es)
+      DirectLeafLocalOrdering(const std::shared_ptr<const FEM>& fem, const ES& es)
         : _fem(fem)
         , _es(es)
         , _fixed_size(false)
@@ -304,7 +304,7 @@ namespace Dune {
 
     protected:
 
-      shared_ptr<const FEM> _fem;
+      std::shared_ptr<const FEM> _fem;
       typename FESwitch::Store _fe_store;
 
       ES _es;

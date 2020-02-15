@@ -519,7 +519,7 @@ namespace Dune {
         return *_communication_cache;
       }
 
-      shared_ptr<CommunicationCache> communicationCacheStorage()
+      std::shared_ptr<CommunicationCache> communicationCacheStorage()
       {
         return _communication_cache;
       }
@@ -531,7 +531,7 @@ namespace Dune {
 
     private:
 
-      shared_ptr<CommunicationCache> _communication_cache;
+      std::shared_ptr<CommunicationCache> _communication_cache;
       EntitySet _entity_set;
 
     };
