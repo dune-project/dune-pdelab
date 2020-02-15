@@ -2,6 +2,7 @@
 #ifndef DUNE_PDELAB_FUNCTION_OLDINTERFACEADAPTER_HH
 #define DUNE_PDELAB_FUNCTION_OLDINTERFACEADAPTER_HH
 
+#include <dune/common/shared_ptr.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/typetraits.hh>
 #include <dune/functions/common/signature.hh>

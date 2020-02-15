@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include <dune/common/exceptions.hh>
+#include <dune/common/shared_ptr.hh>
 
 #include <dune/geometry/typeindex.hh>
 

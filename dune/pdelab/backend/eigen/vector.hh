@@ -7,6 +7,7 @@
 
 #include <memory>
 
+#include <dune/common/shared_ptr.hh>
 #include <dune/istl/bvector.hh>
 
 #include <dune/pdelab/backend/common/tags.hh>

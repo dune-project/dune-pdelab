@@ -5,6 +5,8 @@
 
 #include <memory>
 
+#include <dune/common/shared_ptr.hh>
+
 #include <dune/typetree/typetree.hh>
 
 #include <dune/pdelab/gridoperator/fastdg/residualengine.hh>

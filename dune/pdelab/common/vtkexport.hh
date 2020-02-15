@@ -9,6 +9,8 @@
 #include<vector>
 #include<memory>
 
+#include<dune/common/shared_ptr.hh>
+
 #include<dune/grid/io/file/vtk/vtkwriter.hh>
 
 #include<dune/pdelab/common/range.hh>

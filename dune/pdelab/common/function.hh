@@ -8,6 +8,7 @@
 #include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/typetraits.hh>
+#include <dune/common/shared_ptr.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 

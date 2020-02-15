@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <memory>
 
+#include <dune/common/shared_ptr.hh>
+
 #include <dune/typetree/powernode.hh>
 
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
