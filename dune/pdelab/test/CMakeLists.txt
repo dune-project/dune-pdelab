@@ -197,6 +197,4 @@ exclude_from_headercheck(
   testpoisson-periodic.hh
 )
 
-dune_add_test(SOURCES testpk1dlfe.cc)
-
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vtk)
