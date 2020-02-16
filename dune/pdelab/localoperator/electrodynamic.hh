@@ -13,8 +13,7 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/common/fvector.hh>
 
-#include <dune/geometry/quadraturerules.hh>
-
+#include <dune/pdelab/common/quadraturerules.hh>
 #include <dune/pdelab/localoperator/numericalresidual.hh>
 #include <dune/pdelab/localoperator/pattern.hh>
 #include <dune/pdelab/localoperator/flags.hh>
