@@ -92,7 +92,7 @@ namespace Dune {
        * @param backend       backend object
        * @param ordering_tag  ordering tag object
        */
-      PowerGridFunctionSpace(const std::array<shared_ptr<T>,k>& container, const Backend& backend = Backend(), const OrderingTag ordering_tag = OrderingTag())
+      PowerGridFunctionSpace(const std::array<std::shared_ptr<T>,k>& container, const Backend& backend = Backend(), const OrderingTag ordering_tag = OrderingTag())
         : BaseT(container)
         , ImplementationBase(backend,ordering_tag)
       {}

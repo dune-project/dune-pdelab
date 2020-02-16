@@ -3,6 +3,8 @@
 #define DUNE_PDELAB_LOCALOPERATOR_DARCYFEM_HH
 
 #include <dune/common/fvector.hh>
+#include <dune/common/shared_ptr.hh>
+
 #include <dune/geometry/referenceelements.hh>
 
 #include <dune/pdelab/common/function.hh>

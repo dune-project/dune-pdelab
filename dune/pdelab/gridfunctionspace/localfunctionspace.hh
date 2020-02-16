@@ -6,6 +6,7 @@
 #include<vector>
 
 #include <dune/common/stdstreams.hh>
+#include <dune/common/shared_ptr.hh>
 
 #include <dune/geometry/referenceelements.hh>
 

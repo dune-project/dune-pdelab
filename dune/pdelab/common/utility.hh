@@ -6,8 +6,6 @@
 
 #include <memory>
 
-#include <dune/common/shared_ptr.hh>
-
 namespace Dune {
   namespace PDELab {
 

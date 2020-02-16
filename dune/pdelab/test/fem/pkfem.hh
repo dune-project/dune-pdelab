@@ -21,7 +21,7 @@ struct PKFEMFactory
   template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
   static typename FEM<GV,DF,RF,basic_type>::pointer create(const GV& gv)
   {
-    return Dune::make_shared<typename FEM<GV,DF,RF,basic_type>::type>(gv);
+    return std::make_shared<typename FEM<GV,DF,RF,basic_type>::type>(gv);
   }
 
 };

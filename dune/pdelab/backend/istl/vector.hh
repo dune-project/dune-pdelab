@@ -4,6 +4,7 @@
 #define DUNE_PDELAB_BACKEND_ISTL_VECTOR_HH
 
 #include <dune/common/fvector.hh>
+#include <dune/common/shared_ptr.hh>
 #include <dune/istl/bvector.hh>
 #include <dune/typetree/typetree.hh>
 

@@ -1239,7 +1239,7 @@ namespace Dune {
       bool reuse;
       bool firstapply;
       bool usesuperlu;
-      shared_ptr<AMG> amg;
+      std::shared_ptr<AMG> amg;
       ISTLAMGStatistics stats;
     };
 

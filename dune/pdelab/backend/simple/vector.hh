@@ -9,6 +9,7 @@
 #include <numeric>
 
 #include <dune/common/fvector.hh>
+#include <dune/common/shared_ptr.hh>
 #include <dune/istl/bvector.hh>
 
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
