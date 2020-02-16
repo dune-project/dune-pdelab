@@ -8,11 +8,10 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/parametertree.hh>
 
-#include <dune/geometry/quadraturerules.hh>
-
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
 
+#include <dune/pdelab/common/quadraturerules.hh>
 #include <dune/pdelab/localoperator/defaultimp.hh>
 #include <dune/pdelab/localoperator/pattern.hh>
 #include <dune/pdelab/localoperator/flags.hh>
