@@ -61,7 +61,7 @@ namespace PDELab {
     }
 
     //! Transformation Constructor, taking the set of new children
-    PowerLocalFunction(const std::array<Dune::shared_ptr<F>,k>& children)
+    PowerLocalFunction(const std::array<std::shared_ptr<F>,k>& children)
       : NodeType(children)
     {}
 

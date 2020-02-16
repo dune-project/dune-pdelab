@@ -2,11 +2,12 @@
 // vi: set et ts=4 sw=2 sts=2:
 #include <config.h>
 
+#include <memory>
+
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/parametertree.hh>
 #include <dune/common/parametertreeparser.hh>
-#include <dune/common/shared_ptr.hh>
 
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/yaspgrid.hh>
@@ -75,7 +76,7 @@ int main(int argc, char* argv[]) try {
 
   // typedef UGGrid<dim> GridType;
   typedef YaspGrid<dim> GridType;
-  shared_ptr<GridType> grid;
+  std::shared_ptr<GridType> grid;
   FieldVector<double, dim> lower(0), upper(10);
   std::array<unsigned int, dim> elements = {2, 2};
 

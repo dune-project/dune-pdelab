@@ -7,7 +7,8 @@
 #include<vector>
 
 #include<dune/common/exceptions.hh>
-#include <dune/common/fvector.hh>
+#include<dune/common/fvector.hh>
+#include<dune/common/shared_ptr.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
@@ -1228,13 +1229,13 @@ namespace Dune {
       typedef Dune::PDELab::LFSIndexCache<LFS> LFSCache;
       typedef typename X::template ConstLocalView<LFSCache> XView;
 
-      shared_ptr<GFS const> pgfs;
+      std::shared_ptr<GFS const> pgfs;
       mutable LFS lfs;
       mutable LFSCache lfs_cache;
       mutable XView x_view;
       mutable std::vector<RF> xl;
       mutable std::vector<JT> J;
-      shared_ptr<const X> px;
+      std::shared_ptr<const X> px;
     }; // end class VectorDiscreteGridFunctionDiv
 
     /** \brief Compute curl of vector-valued functions.
@@ -1426,13 +1427,13 @@ namespace Dune {
       typedef Dune::PDELab::LFSIndexCache<LFS> LFSCache;
       typedef typename X::template ConstLocalView<LFSCache> XView;
 
-      shared_ptr<GFS const> pgfs;
+      std::shared_ptr<GFS const> pgfs;
       mutable LFS lfs;
       mutable LFSCache lfs_cache;
       mutable XView x_view;
       mutable std::vector<RF> xl;
       mutable std::vector<JT> J;
-      shared_ptr<const X> px;
+      std::shared_ptr<const X> px;
     }; // end class VectorDiscreteGridFunctionCurl (3D)
 
     /** \brief Compute curl of vector-valued functions (2D).
@@ -1566,13 +1567,13 @@ namespace Dune {
       typedef Dune::PDELab::LFSIndexCache<LFS> LFSCache;
       typedef typename X::template ConstLocalView<LFSCache> XView;
 
-      shared_ptr<GFS const> pgfs;
+      std::shared_ptr<GFS const> pgfs;
       mutable LFS lfs;
       mutable LFSCache lfs_cache;
       mutable XView x_view;
       mutable std::vector<RF> xl;
       mutable std::vector<JT> J;
-      shared_ptr<const X> px;
+      std::shared_ptr<const X> px;
     }; // end class VectorDiscreteGridFunctionCurl (2D)
 
    //! \} group GridFunctionSpace

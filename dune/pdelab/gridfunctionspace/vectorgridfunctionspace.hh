@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <memory>
 
 #include <dune/common/shared_ptr.hh>
 

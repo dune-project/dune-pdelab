@@ -5,6 +5,7 @@
 #define DUNE_PDELAB_CONSTRAINTS_COMMON_CONSTRAINTS_HH
 
 #include<dune/common/exceptions.hh>
+#include<dune/common/shared_ptr.hh>
 #include<dune/common/float_cmp.hh>
 
 #include<dune/pdelab/common/function.hh>

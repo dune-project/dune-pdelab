@@ -84,7 +84,7 @@ namespace Dune{
       //! @}
 
       //! Constructor with empty constraints
-      FastDGLocalAssembler (LOP & lop_, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
+      FastDGLocalAssembler (LOP & lop_, std::shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : lop(stackobject_to_shared_ptr(lop_)),
           weight_(1.0),
           doPreProcessing_(true),
@@ -96,7 +96,7 @@ namespace Dune{
 
       //! Constructor for non trivial constraints
       FastDGLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_,
-                             shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
+                            std::shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : Base(cu_, cv_),
           lop(stackobject_to_shared_ptr(lop_)),
           weight_(1.0),

@@ -7,6 +7,7 @@
  *  \brief GridFunctionSubSpace implementation.
  */
 
+#include <dune/common/shared_ptr.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>

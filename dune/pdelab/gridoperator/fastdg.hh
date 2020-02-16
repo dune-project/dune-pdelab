@@ -260,7 +260,7 @@ namespace Dune {
 
     private:
       Assembler global_assembler;
-      shared_ptr<BorderDOFExchanger> dof_exchanger;
+      std::shared_ptr<BorderDOFExchanger> dof_exchanger;
 
       mutable LocalAssembler local_assembler;
       MB backend;

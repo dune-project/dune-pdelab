@@ -8,6 +8,7 @@
 #include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/typetraits.hh>
+#include <dune/common/shared_ptr.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
@@ -393,7 +394,7 @@ namespace Dune {
        *
        * @param container array of pointers to child grid functions
        */
-      PowerGridFunction (const std::array<shared_ptr<T>,k>& container)
+      PowerGridFunction (const std::array<std::shared_ptr<T>,k>& container)
         : BaseT(container) {}
 
       //! Construct a PowerGridFunction with k clones of the function t
@@ -780,7 +781,7 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<T const> t;
+      std::shared_ptr<T const> t;
     };
 
     // Adapter takes a vector-valued grid function and applies
@@ -821,7 +822,7 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<T const> t;
+      std::shared_ptr<T const> t;
     };
 
 
@@ -850,7 +851,7 @@ namespace Dune {
           name << s;
           for (std::size_t i=0; i < treePath.size(); ++i)
             name << "_" << treePath.element(i);
-          w.addVertexData(make_shared< VTKGridFunctionAdapter<T> >(t,name.str()));
+          w.addVertexData(std::make_shared< VTKGridFunctionAdapter<T> >(t,name.str()));
         }
       };
 

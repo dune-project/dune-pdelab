@@ -8,12 +8,13 @@
 #include <ostream>
 #include <set>
 #include <vector>
+#include <memory>
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
-#include <dune/common/shared_ptr.hh>
 #include <dune/common/stdstreams.hh>
 #include <dune/common/typetraits.hh>
+#include <dune/common/shared_ptr.hh>
 
 #include <dune/geometry/referenceelements.hh>
 #include <dune/geometry/type.hh>
