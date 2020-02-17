@@ -9,6 +9,7 @@
 #include <dune/typetree/typetree.hh>
 
 #include <dune/pdelab/backend/interface.hh>
+#include <dune/pdelab/backend/gfstraits.hh>
 #include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/common/aliasedvectorview.hh>
@@ -30,6 +31,8 @@ namespace Dune {
 
         friend Backend::impl::Wrapper<C>;
 
+        using GFST = GFSTraits<GFS>;
+
       public:
         typedef typename C::field_type ElementType;
         typedef ElementType E;
@@ -41,7 +44,7 @@ namespace Dune {
 
         using value_type = E;
 
-        typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
+        typedef typename GFST::ContainerIndex ContainerIndex;
 
         typedef ISTL::vector_iterator<C> iterator;
         typedef ISTL::vector_iterator<const C> const_iterator;
@@ -61,7 +64,7 @@ namespace Dune {
 
         BlockVector(const BlockVector& rhs)
           : _gfs(rhs._gfs)
-          , _container(std::make_shared<Container>(_gfs->ordering().blockCount()))
+          , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
         {
           ISTL::dispatch_vector_allocation(_gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
           (*_container) = rhs.native();
@@ -74,7 +77,7 @@ namespace Dune {
 
         BlockVector (std::shared_ptr<const GFS> gfs, Backend::attached_container = Backend::attached_container())
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(gfs->ordering().blockCount()))
+          , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
         {
           ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         }
@@ -93,13 +96,13 @@ namespace Dune {
           : _gfs(gfs)
           , _container(stackobject_to_shared_ptr(container))
         {
-          _container->resize(gfs->ordering().blockCount());
+          _container->resize(GFST::blockCount(_gfs));
           ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         }
 
         BlockVector (std::shared_ptr<const GFS> gfs, const E& e)
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(gfs->ordering().blockCount()))
+          , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
         {
           ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
           (*_container)=e;
