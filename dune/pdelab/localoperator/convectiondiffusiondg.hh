@@ -53,7 +53,6 @@ namespace Dune {
      */
     template<typename T, typename FiniteElementMap>
     class ConvectionDiffusionDG :
-      public Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >,
       public Dune::PDELab::FullSkeletonPattern,
       public Dune::PDELab::FullVolumePattern,
       public Dune::PDELab::LocalOperatorDefaultFlags,
@@ -89,10 +88,13 @@ namespace Dune {
                              Real alpha_=0.0,
                              int intorderadd_=0
                              )
-        : Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
-        param(param_), method(method_), weights(weights_),
-        alpha(alpha_), intorderadd(intorderadd_), quadrature_factor(2),
-        cache(20)
+        : param(param_)
+        , method(method_)
+        , weights(weights_)
+        , alpha(alpha_)
+        , intorderadd(intorderadd_)
+        , quadrature_factor(2)
+        , cache(20)
       {
         theta = 1.0;
         if (method==ConvectionDiffusionDGMethod::SIPG) theta = -1.0;
@@ -666,12 +668,22 @@ namespace Dune {
           }
       }
 
-      // boundary integral depending on test and ansatz functions
-      // We put the Dirchlet evaluation also in the alpha term to save some geometry evaluations
+      // Helper function that can be used to accumulate the alhpa_boundary term
+      // (if jacobian_apply is set to false) or the jacobian_apply_boundary (if
+      // jacobian_apply is set to true)
+      //
+      // A different way of solving this would be to implement all non u
+      // dependent parts in lambda_boundary and have only the u dependent parts
+      // in alpha_volume. Then jacobian_apply_bonudary could just call
+      // alpha_volume.
+      //
+      // It was done in this way for two reasons:
+      // - Easier to verify the implementation and compare to skeleton methods
+      // - More efficient
       template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-      void alpha_boundary (const IG& ig,
-                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           R& r_s) const
+      void residual_boundary_integral (const IG& ig,
+                                       const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                       R& r_s, bool jacobian_apply=false) const
       {
         // define types
         using RF = typename LFSV::Traits::FiniteElementType::
@@ -765,13 +777,14 @@ namespace Dune {
 
             if (bctype == ConvectionDiffusionBoundaryConditions::Neumann)
               {
-                // evaluate flux boundary condition
-                auto j = param.j(ig.intersection(),ip.position());
+                if (not jacobian_apply){
+                  // evaluate flux boundary condition
+                  auto j = param.j(ig.intersection(),ip.position());
 
-                // integrate
-                for (size_type i=0; i<lfsv_s.size(); i++)
-                  r_s.accumulate(lfsv_s,i,j * psi_s[i] * factor);
-
+                  // integrate
+                  for (size_type i=0; i<lfsv_s.size(); i++)
+                    r_s.accumulate(lfsv_s,i,j * psi_s[i] * factor);
+                }
                 continue;
               }
 
@@ -797,13 +810,14 @@ namespace Dune {
                 for (size_type i=0; i<lfsv_s.size(); i++)
                   r_s.accumulate(lfsv_s,i,term1 * psi_s[i]);
 
-                // evaluate flux boundary condition
-                auto o = param.o(ig.intersection(),ip.position());
+                if (not jacobian_apply){
+                  // evaluate flux boundary condition
+                  auto o = param.o(ig.intersection(),ip.position());
 
-                // integrate
-                for (size_type i=0; i<lfsv_s.size(); i++)
-                  r_s.accumulate(lfsv_s,i,o * psi_s[i] * factor);
-
+                  // integrate
+                  for (size_type i=0; i<lfsv_s.size(); i++)
+                    r_s.accumulate(lfsv_s,i,o * psi_s[i] * factor);
+                }
                 continue;
               }
 
@@ -824,6 +838,10 @@ namespace Dune {
 
             // evaluate Dirichlet boundary condition
             auto g = param.g(cell_inside,iplocal_s);
+
+            if (jacobian_apply){
+              g = 0.0;
+            }
 
             // upwind
             RF omegaup_s, omegaup_n;
@@ -858,6 +876,26 @@ namespace Dune {
             for (size_type i=0; i<lfsv_s.size(); i++)
               r_s.accumulate(lfsv_s,i,term4 * psi_s[i]);
           }
+      }
+
+      // boundary integral depending on test and ansatz functions
+      // We put the Dirchlet evaluation also in the alpha term to save some geometry evaluations
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_boundary (const IG& ig,
+                         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                         R& r_s) const
+      {
+        residual_boundary_integral(ig, lfsu_s, x_s, lfsv_s, r_s);
+      }
+
+      // apply jacobian of boundary term
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      void jacobian_apply_boundary (const IG& ig,
+                                    const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                    Y& y_s) const
+      {
+        // Call helper function and tell that we want to do jacobian apply
+        residual_boundary_integral(ig, lfsu_s, x_s, lfsv_s, y_s, true);
       }
 
       template<typename IG, typename LFSU, typename X, typename LFSV, typename M>

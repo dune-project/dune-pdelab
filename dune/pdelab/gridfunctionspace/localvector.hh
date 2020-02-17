@@ -148,6 +148,18 @@ namespace Dune {
         return _container.base();
       }
 
+      //! Access underlying container
+      auto data()
+      {
+        return _container.data();
+      }
+
+      //! Access underlying container, const version
+      const auto data() const
+      {
+        return _container.data();
+      }
+
     private:
       C& _container;
       weight_type _weight;
@@ -176,6 +188,7 @@ namespace Dune {
 
       //! The value type of this container.
       typedef typename BaseContainer::value_type  value_type;
+      typedef value_type field_type;
 
       //! The size type of this container.
       typedef typename BaseContainer::size_type    size_type;
@@ -226,10 +239,43 @@ namespace Dune {
         return _container[lfs.localIndex(i)];
       }
 
+      //! Access underlying container
+      auto data()
+      {
+        return _container.data();
+      }
+
+      //! Access underlying container, const version
+      const auto data() const
+      {
+        return _container.data();
+      }
+
+      //! Calculate axpy operation this -> this += alpha*other
+      LocalVector& axpy(const value_type alpha, const LocalVector& other)
+      {
+        std::transform(_container.begin(),_container.end(),
+                       other._container.begin(),
+                       _container.begin(),
+                       [=](const value_type &a,
+                           const value_type &b) { return a + alpha*b;});
+        return *this;
+      }
+
       //! Assigns v to all entries.
       LocalVector& operator=(const value_type& v)
       {
         std::fill(_container.begin(),_container.end(),v);
+        return *this;
+      }
+
+      //! Adds two vectors.
+      LocalVector& operator+=(const LocalVector& other)
+      {
+        std::transform(_container.begin(),_container.end(),
+                       other._container.begin(),
+                       _container.begin(),
+                       std::plus<value_type>());
         return *this;
       }
 
@@ -244,6 +290,26 @@ namespace Dune {
           std::bind(std::multiplies<value_type>(),v,_1)
           );
         return *this;
+      }
+
+      //! Dot product with other vector
+      value_type dot(const LocalVector& other) const
+      {
+        value_type dot_product=0.0;
+        dot_product = std::inner_product(_container.begin(),_container.end(),
+                                         other._container.begin(),
+                                         dot_product);
+        return dot_product;
+      }
+
+      //! Return Euclidean norm of vector
+      value_type two_norm() const
+      {
+        value_type nrm=0.0;
+        nrm = std::inner_product(_container.begin(),_container.end(),
+                                 _container.begin(),
+                                 nrm);
+        return sqrt(nrm);
       }
 
       //! The size of the container.
