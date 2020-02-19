@@ -32,8 +32,9 @@ struct FunctionsBasisInfo
 }
 
 
-template<typename GridView, typename Basis>
-void backend_test(GridView gridView, Basis basis)
+template<typename GridView, typename Basis, int expectedBlockSize>
+void backend_test(GridView gridView, Basis basis,
+  std::integral_constant<int,expectedBlockSize>)
 {
   // using Vec = Dune::PDELab::Backend::Vector<BasisInfo,double>;
   // Vec x(basis);
@@ -51,7 +52,7 @@ void test_lagrange_gfs(GridView gridView)
 
   static_assert(Dune::models< Dune::PDELab::Concept::GridFunctionSpace, GFS>(), "not a grid function space");
 
-  backend_test(gridView, gfs);
+  backend_test(gridView, gfs, std::integral_constant<int,1>());
 }
 
 template<typename GridView>
@@ -69,7 +70,7 @@ void test_combined_gfs(GridView gridView)
 
   static_assert(Dune::models< Dune::PDELab::Concept::GridFunctionSpace, PGFS>(), "not a grid function space");
 
-  backend_test(gridView, pgfs);
+  backend_test(gridView, pgfs, std::integral_constant<int,2>());
 }
 
 template<typename GridView>
@@ -85,7 +86,7 @@ void test_functions_lagrange_basis(GridView gridView)
   using BasisInfo = Dune::PDELab::FunctionsBasisInfo<decltype(basis),Backend>;
 
   BasisInfo basisInfo(basis);
-  backend_test(gridView, basisInfo);
+  backend_test(gridView, basisInfo, std::integral_constant<int,1>());
 }
 
 template<typename GridView>
@@ -116,7 +117,7 @@ void test_functions_combined_basis(GridView gridView)
   using BasisInfo = Dune::PDELab::FunctionsBasisInfo<decltype(basis),Backend>;
 
   BasisInfo basisInfo(basis);
-  backend_test(gridView, basisInfo);
+  backend_test(gridView, basisInfo, std::integral_constant<int,2>());
 }
 
 template<typename Grid>
