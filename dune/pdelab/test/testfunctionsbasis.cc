@@ -33,11 +33,13 @@ void test(const std::unique_ptr<Grid>& grid)
   const auto gridView = grid->leafGridView();
   auto basis = makeBasis(gridView, lagrange<3>());
 
+  static_assert(Dune::models< Dune::Functions::Concept::GlobalBasis<std::decay_t<decltype(gridView)>>, decltype(basis)>(), "not a basis");
+
   using Backend = Dune::PDELab::ISTL::VectorBackend<>;
   using BasisInfo = Dune::PDELab::FunctionsBasisInfo<decltype(basis),Backend>;
 
-  using Vec = Dune::PDELab::Backend::Vector<BasisInfo,double>;
-  Vec x(basis);
+  // using Vec = Dune::PDELab::Backend::Vector<BasisInfo,double>;
+  // Vec x(basis);
 
 }
 
