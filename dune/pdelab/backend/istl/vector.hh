@@ -8,6 +8,7 @@
 #include <dune/istl/bvector.hh>
 #include <dune/typetree/typetree.hh>
 
+#include <dune/pdelab/common/concepts.hh>
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/gfstraits.hh>
 #include <dune/pdelab/backend/common/tags.hh>
@@ -338,9 +339,15 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-      // helper struct invoking the GFS tree -> ISTL vector reduction
+      // helper struct invoking the FunctionSpace / Basis tree -> ISTL vector reduction
+      template<typename GFS, typename E, typename Enable = void>
+      struct BlockVectorSelectorHelper;
+
+      // specialization for PDELab GridFunctionSpace
       template<typename GFS, typename E>
-      struct BlockVectorSelectorHelper
+      struct BlockVectorSelectorHelper<
+        GFS,E,
+        std::enable_if_t<models<Concept::GridFunctionSpace, GFS>()>>
       {
 
         typedef typename TypeTree::AccumulateType<
@@ -351,6 +358,22 @@ namespace Dune {
         typedef BlockVector<GFS,typename vector_descriptor::vector_type> Type;
 
       };
+
+      // specialization for dune-functions basis
+      template<typename FSB, typename E>
+      struct BlockVectorSelectorHelper<
+        FSB,E,
+        std::enable_if_t<models<Concept::BasisInfo, FSB>()>>
+        // std::enable_if_t<models<Functions::Concept::GlobalBasis<typename FSB::GridView>, FSB>()>>
+      {
+        typedef typename TypeTree::AccumulateType<
+          typename FSB::Basis::PreBasis::Node,
+          ISTL::vector_creation_policy<E>
+          >::type vector_descriptor;
+
+        typedef BlockVector<GFS,typename vector_descriptor::vector_type> Type;
+      };
+
 
 #endif // DOXYGEN
 
