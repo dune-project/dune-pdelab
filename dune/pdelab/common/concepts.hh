@@ -73,18 +73,15 @@ struct GridFunctionSpace
   );
 };
 
-// derived from TypeTree::LeafNode
-// type ConstraintsContainer
-// methods
-//    gridView
-//    entitySet
-//    finiteElementMap
-//    finiteElementMapStorage
-//    constraints
-//    constraintsStorage
-//    ordering
-//    orderingStorage
-
+struct BasisInfo // check for our thin wrapper around a dune-functions basis
+{
+  template<class B>
+  auto require(B&& t) -> decltype(
+    requireType<typename B::Basis>(),
+    requireType<typename B::GridView>(),
+    requireConcept<Dune::Functions::Concept::GlobalBasis<typename B::GridView>>(t.basis())
+  );
+};
 
 } // namespace Dune::PDELab::Concept
 } // namespace Dune::PDELab
