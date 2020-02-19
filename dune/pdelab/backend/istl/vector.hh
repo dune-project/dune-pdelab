@@ -347,7 +347,7 @@ namespace Dune {
       template<typename GFS, typename E>
       struct BlockVectorSelectorHelper<
         GFS,E,
-        std::enable_if_t<models<Concept::GridFunctionSpace, GFS>()>>
+        std::enable_if_t<isGridFunctionSpace<GFS>()>>
       {
 
         typedef typename TypeTree::AccumulateType<
@@ -363,15 +363,14 @@ namespace Dune {
       template<typename FSB, typename E>
       struct BlockVectorSelectorHelper<
         FSB,E,
-        std::enable_if_t<models<Concept::BasisInfo, FSB>()>>
-        // std::enable_if_t<models<Functions::Concept::GlobalBasis<typename FSB::GridView>, FSB>()>>
+        std::enable_if_t<isBasisInfo<FSB>()>>
       {
         typedef typename TypeTree::AccumulateType<
           typename FSB::Basis::PreBasis::Node,
           ISTL::vector_creation_policy<E>
           >::type vector_descriptor;
 
-        typedef BlockVector<GFS,typename vector_descriptor::vector_type> Type;
+        typedef BlockVector<FSB,typename vector_descriptor::vector_type> Type;
       };
 
 

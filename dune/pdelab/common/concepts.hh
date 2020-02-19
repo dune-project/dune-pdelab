@@ -9,49 +9,9 @@
 
 namespace Dune::PDELab {
 
-// /// Check if GFS models a PDELab GridFrunctionSpace
-// template<class GFS>
-// static constexpr bool isGridFunctionSpace()
-// {
-//   return models<Concept::GridFunctionSpace<Args&&...>, F>();
-// }
-
 namespace Concept {
 
 using namespace Dune::Concept;
-
-struct HasGridViewMethod
-{
-  template<class C>
-  auto require(C&& c) -> decltype(
-    c.gridView()
-  );
-};
-
-struct HasFiniteElementMapMethod
-{
-  template<class C>
-  auto require(C&& c) -> decltype(
-    c.finiteElementMap()
-  );
-};
-
-struct HasConstraintsMethod
-{
-  template<class C>
-  auto require(C&& c) -> decltype(
-    c.constraints()
-  );
-};
-
-struct HasOrderingMethod
-{
-  template<class C>
-  auto require(C&& c) -> decltype(
-    c.ordering()
-  );
-};
-
 
 struct GridFunctionSpace
 {
@@ -84,6 +44,21 @@ struct BasisInfo // check for our thin wrapper around a dune-functions basis
 };
 
 } // namespace Dune::PDELab::Concept
+
+/// Check if B models a PDELab GridFrunctionSpace
+template<class B>
+static constexpr bool isGridFunctionSpace()
+{
+  return models<Concept::GridFunctionSpace, B>();
+}
+
+/// Check if B is our thin wrapper around a dune-functions basis
+template<class B>
+static constexpr bool isBasisInfo()
+{
+  return models<Concept::BasisInfo, B>();
+}
+
 } // namespace Dune::PDELab
 
 
