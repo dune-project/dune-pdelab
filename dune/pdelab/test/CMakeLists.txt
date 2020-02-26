@@ -1,4 +1,5 @@
 add_subdirectory(fem)
+add_subdirectory(matrixfree)
 
 dune_add_test(SOURCES testnewton.cc)
 
