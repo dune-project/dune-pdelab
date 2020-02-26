@@ -99,7 +99,7 @@ namespace Dune {
         impl::BlockDiagonalAccumulationViewWrapper<Y> view_s_on(y_s, true);
         impl::BlockDiagonalAccumulationViewWrapper<Y> view_n_off(y_n, false);
         Z z_s_zero(z_s.size(), 0.0);
-        jacobian_apply_skeleton(_localOperator, ig, lfsu_s, z_s_zero, lfsv_s, lfsu_n, z_n, lfsv_n, view_s_on, view_n_off);
+        Dune::PDELab::impl::jacobianApplySkeleton(_localOperator, ig, lfsu_s, z_s_zero, lfsv_s, lfsu_n, z_n, lfsv_n, view_s_on, view_n_off);
       }
 
       template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
@@ -126,7 +126,7 @@ namespace Dune {
         impl::BlockDiagonalAccumulationViewWrapper<Y> view_s_on(y_s, true);
         impl::BlockDiagonalAccumulationViewWrapper<Y> view_n_off(y_n, false);
         Z z_s_zero(z_s.size(), 0.0);
-        jacobianApplySkeleton(_localOperator, ig, lfsu_s, x_s, z_s_zero, lfsv_s, lfsu_n, x_n, z_n, lfsv_n, view_s_on, view_n_off);
+        Dune::PDELab::impl::jacobianApplySkeleton(_localOperator, ig, lfsu_s, x_s, z_s_zero, lfsv_s, lfsu_n, x_n, z_n, lfsv_n, view_s_on, view_n_off);
       }
 
     private:
