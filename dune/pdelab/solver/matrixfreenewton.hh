@@ -21,6 +21,7 @@
 #include <dune/common/timer.hh>
 #include <dune/common/parametertree.hh>
 
+#include <dune/pdelab/newton/newton.hh>
 #include <dune/pdelab/solver/newtonerrors.hh>
 #include <dune/pdelab/solver/newton.hh>
 
