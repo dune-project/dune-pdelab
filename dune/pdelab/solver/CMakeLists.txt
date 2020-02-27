@@ -1,4 +1,6 @@
-install(FILES newtonerrors.hh
+install(FILES matrixfreelinear.hh
+              matrixfreenewton.hh
+              newtonerrors.hh
               newton.hh
               newtonlinesearch.hh
               newtonterminate.hh
