@@ -80,12 +80,12 @@ namespace Dune {
        * \param[in] weights_ Weighted averages for diffusion tensor. Default is no weighting.
        * \param[in] alpha_   Penalization constant. Default is zero.
        *
-       * Collecting the input parameters above, the default is the OBB-method.
+       * Collecting the input parameters above, the default is the weighted SIPG with a penalty factor of 1.
        */
       ConvectionDiffusionDG (T& param_,
-                             ConvectionDiffusionDGMethod::Type method_=ConvectionDiffusionDGMethod::NIPG,
-                             ConvectionDiffusionDGWeights::Type weights_=ConvectionDiffusionDGWeights::weightsOff,
-                             Real alpha_=0.0,
+                             ConvectionDiffusionDGMethod::Type method_=ConvectionDiffusionDGMethod::SIPG,
+                             ConvectionDiffusionDGWeights::Type weights_=ConvectionDiffusionDGWeights::weightsOn,
+                             Real alpha_=1.0,
                              int intorderadd_=0
                              )
         : param(param_)
