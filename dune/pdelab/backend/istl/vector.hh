@@ -10,7 +10,7 @@
 
 #include <dune/pdelab/common/concepts.hh>
 #include <dune/pdelab/backend/interface.hh>
-#include <dune/pdelab/backend/gfstraits.hh>
+#include <dune/pdelab/backend/common/gfstraits.hh>
 #include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/common/aliasedvectorview.hh>
@@ -349,14 +349,14 @@ namespace Dune {
         GFS,E,
         std::enable_if_t<isGridFunctionSpace<GFS>()>>
       {
-
         typedef typename TypeTree::AccumulateType<
           GFS,
           ISTL::vector_creation_policy<E>
           >::type vector_descriptor;
 
-        typedef BlockVector<GFS,typename vector_descriptor::vector_type> Type;
-
+        using Blocking = typename vector_descriptor::blocking;
+        using Container = typename VectorType<E,Blocking>::Type;
+        using Type = Container; // BlockVector<FSB,Container>;
       };
 
       // specialization for dune-functions basis
@@ -365,12 +365,9 @@ namespace Dune {
         FSB,E,
         std::enable_if_t<isBasisInfo<FSB>()>>
       {
-        typedef typename TypeTree::AccumulateType<
-          typename FSB::Basis::PreBasis::Node,
-          ISTL::vector_creation_policy<E>
-          >::type vector_descriptor;
-
-        typedef BlockVector<FSB,typename vector_descriptor::vector_type> Type;
+        using Blocking = PDELab::Blocking::Blocking_t<typename FSB::Basis>;
+        using Container = typename VectorType<E,Blocking>::Type;
+        using Type = Container; // BlockVector<FSB,Container>;
       };
 
 
