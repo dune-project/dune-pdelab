@@ -67,7 +67,8 @@ namespace Dune {
           : _gfs(rhs._gfs)
           , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
         {
-          ISTL::dispatch_vector_allocation(_gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          #warning fix actual allocation
+          // ISTL::dispatch_vector_allocation(_gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
           (*_container) = rhs.native();
         }
 
@@ -80,7 +81,7 @@ namespace Dune {
           : _gfs(gfs)
           , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
         {
-          ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          // ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         }
 
         //! Creates an BlockVector without allocating an underlying ISTL vector.
@@ -98,14 +99,14 @@ namespace Dune {
           , _container(stackobject_to_shared_ptr(container))
         {
           _container->resize(GFST::blockCount(_gfs));
-          ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          // ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         }
 
         BlockVector (std::shared_ptr<const GFS> gfs, const E& e)
           : _gfs(gfs)
           , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
         {
-          ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          // ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
           (*_container)=e;
         }
 
@@ -356,7 +357,7 @@ namespace Dune {
 
         using Blocking = typename vector_descriptor::blocking;
         using Container = typename VectorType<E,Blocking>::Type;
-        using Type = Container; // BlockVector<FSB,Container>;
+        using Type = BlockVector<GFS,Container>;
       };
 
       // specialization for dune-functions basis
@@ -367,7 +368,7 @@ namespace Dune {
       {
         using Blocking = PDELab::Blocking::Blocking_t<typename FSB::Basis>;
         using Container = typename VectorType<E,Blocking>::Type;
-        using Type = Container; // BlockVector<FSB,Container>;
+        using Type = BlockVector<FSB,Container>;
       };
 
 

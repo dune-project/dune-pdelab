@@ -47,8 +47,8 @@ void backend_test(GridView gridView, Basis basis,
 {
   using Vec = PDELab::Backend::Vector<Basis,double>;
   // Vec x(basis);
-  std::cout << className<Vec>() << std::endl;
-  // std::cout << className<typename Vec::Container>() << std::endl;
+  // std::cout << className<Vec>() << std::endl;
+  std::cout << className<typename Vec::Container>() << std::endl;
 }
 
 template<typename GridView>
