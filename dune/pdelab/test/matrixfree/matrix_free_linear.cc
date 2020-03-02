@@ -265,6 +265,8 @@ int main(int argc, char** argv)
     LinearSolver linearSolver(gridOperator, ibjplop_go, maxiter, verbosity);
     using Solver = Dune::PDELab::MatrixFreeStationaryLinearProblemSolver<GridOperator, LinearSolver, CoefficientVector>;
 #elif defined(MATRIX_FREE_SOR)
+    std::cout << "Info: Using matrix-free SOR." << std::endl;
+
     // Setup local operator for evaluating the block and point diagonal
     using BlockDiagonalLOP = Dune::PDELab::BlockDiagonalLocalOperatorWrapper<LocalOperator>;
     BlockDiagonalLOP blockDiagonalLop(localOperator);
