@@ -239,12 +239,13 @@ int main(int argc, char** argv)
 #elif defined(MATRIX_FREE_SOR)
     std::cout << "Info: Using matrix-free SOR." << std::endl;
 
-    using NonlinearBlockDiagonalLOP = NonlinearBlockDiagonalLocalOperator<GridFunctionSpace, GridFunctionSpace>;
-    NonlinearBlockDiagonalLOP nonlinearBlockDiagonalLOP(gridFunctionSpace, gridFunctionSpace, initree);
-    using NonlinearPointDiagonalLOP = NonlinearPointDiagonalLocalOperator<GridFunctionSpace, GridFunctionSpace>;
-    NonlinearPointDiagonalLOP nonlinearPointDiagonalLOP(gridFunctionSpace, gridFunctionSpace, initree);
-    using IBJPLOP = Dune::PDELab::IterativeBlockJacobiPreconditionerLocalOperator<NonlinearBlockDiagonalLOP,
-                                                                                  NonlinearPointDiagonalLOP,
+    // Setup local operator for evaluating the block and point diagonal
+    using BlockDiagonalLOP = Dune::PDELab::BlockDiagonalLocalOperatorWrapper<LocalOperator>;
+    BlockDiagonalLOP blockDiagonalLOP(localOperator);
+    using PointDiagonalLOP = Dune::PDELab::PointDiagonalLocalOperatorWrapper<LocalOperator>;
+    PointDiagonalLOP pointDiagonalLOP(localOperator);
+    using IBJPLOP = Dune::PDELab::IterativeBlockJacobiPreconditionerLocalOperator<BlockDiagonalLOP,
+                                                                                  PointDiagonalLOP,
                                                                                   GridFunctionSpace,
                                                                                   DomainField,
                                                                                   Dune::BiCGSTABSolver>;
@@ -253,22 +254,22 @@ int main(int argc, char** argv)
     blockSolverOptions._resreduction = initree.get<double>("block_inverse_solver.reduction", 1e-5);
     blockSolverOptions._maxiter = initree.get<int>("block_inverse_solver.maxiter", 100);
     blockSolverOptions._verbose = initree.get<int>("block_inverse_solver.verbose", 0);
-    IBJPLOP ibjplop(nonlinearBlockDiagonalLOP,
-                    nonlinearPointDiagonalLOP,
+    IBJPLOP ibjplop(blockDiagonalLOP,
+                    pointDiagonalLOP,
                     gridFunctionSpace,
                     solverStat,
                     blockSolverOptions,
                     2);
 
     // Setup local operator for evaluating the block off-diagonals
-    using NonlinearBlockOffDiagonalLOP = NonlinearBlockOffDiagonalLocalOperator<GridFunctionSpace, GridFunctionSpace>;
-    NonlinearBlockOffDiagonalLOP nonlinearBlockOffDiagonalLOP(gridFunctionSpace, gridFunctionSpace, initree);
+    using BlockOffDiagonalLOP = Dune::PDELab::BlockOffDiagonalLocalOperatorWrapper<LocalOperator>;
+    BlockOffDiagonalLOP blockOffDiagonalLOP(localOperator);
 
     // Setup local operator for SOR preconditioner
     using BlockSORPreconditionerLOP = Dune::PDELab::BlockSORPreconditionerLocalOperator<IBJPLOP,
-                                                                                        NonlinearBlockOffDiagonalLOP,
+                                                                                        BlockOffDiagonalLOP,
                                                                                         GridFunctionSpace>;
-    BlockSORPreconditionerLOP blockSORPreconditionerLOP(ibjplop, nonlinearBlockOffDiagonalLOP, gridFunctionSpace, 1.0);
+    BlockSORPreconditionerLOP blockSORPreconditionerLOP(ibjplop, blockOffDiagonalLOP, gridFunctionSpace, 1.0);
 
     // Setup grid operator for preconditioner application
     using BlockSORPreconditionerGO = Dune::PDELab::GridOperator<GridFunctionSpace,
