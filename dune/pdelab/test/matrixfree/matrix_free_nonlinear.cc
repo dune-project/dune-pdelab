@@ -7,23 +7,23 @@
 
 #include "dune/pdelab.hh"
 
-// This should also work if we use the FastDGGridOperator
-// #define FASTDG
+// Include local operator for nonlinear problem. This header is not part of
+// pdelab.hh since it only exists for testing nonlinear problems
+#include "dune/pdelab/test/localoperator/nonlinearconvectiondiffusiondg.hh"
 
-//======================================
+
 // These are set through CMakeLists.txt!
-//======================================
 // #define MATRIX_BASED
 // #define PARTIAL_MATRIX_FREE
 // #define FULLY_MATRIX_FREE
-// #define MATRIX_FREE_SOR
 // #define MATRIX_BASED_SOR
+// #define MATRIX_FREE_SOR
 
 
-// Poisson problem where the Dirichlet boundary condition g is also the
-// solution.
+// Poisson problem with nonlinearity where the Dirichlet boundary condition g
+// is also the solution.
 template <typename GridView, typename RangeType>
-class PoissonProblem : public Dune::PDELab::ConvectionDiffusionModelProblem<GridView, RangeType>
+class NonlinearPoissonProblem : public Dune::PDELab::ConvectionDiffusionModelProblem<GridView, RangeType>
 {
 public:
   // Source term
@@ -31,11 +31,21 @@ public:
   auto f(const Element& element, const Coord& x) const
   {
     auto global = element.geometry().global(x);
-    auto c = (0.5-global[0])*(0.5-global[0]) + (0.5-global[1])*(0.5-global[1]);
-    using std::exp;
-    auto g = exp(-1.0*c);
-    auto f = 4*(1.0-c)*g;
+    auto g = global.two_norm2();
+    auto f = -4.0 + mu * g * g;
     return f;
+  }
+
+  // Nonlinearity
+  RangeType q(const RangeType u) const
+  {
+    return mu*u*u;
+  }
+
+  // Derivative of Nonlinearity
+  RangeType qprime(const RangeType u) const
+  {
+    return 2*mu*u;
   }
 
   // Boundary condition type
@@ -50,11 +60,11 @@ public:
   RangeType g (const Element& element, const Coord& x) const
   {
     auto global = element.geometry().global(x);
-    auto c = (0.5-global[0])*(0.5-global[0]) + (0.5-global[1])*(0.5-global[1]);
-    using std::exp;
-    auto g = exp(-1.0*c);
+    auto g = global.two_norm2();
     return g;
   }
+
+  RangeType mu = 2.0;
 };
 
 
@@ -66,7 +76,7 @@ int main(int argc, char** argv)
 
     // Read initree
     Dune::ParameterTree initree;
-    Dune::ParameterTreeParser::readINITree("matrix_free_linear.ini", initree);
+    Dune::ParameterTreeParser::readINITree("matrix_free_nonlinear.ini", initree);
 
     // Create grid
     const int dim = 2;
@@ -96,9 +106,9 @@ int main(int argc, char** argv)
     gridFunctionSpace.name("numerical_solution");
 
     // Local operator
-    using Problem = PoissonProblem<GridView, RangeType>;
+    using Problem = NonlinearPoissonProblem<GridView, RangeType>;
     Problem problem;
-    using LocalOperator = Dune::PDELab::ConvectionDiffusionDG<Problem, FiniteElementMap>;
+    using LocalOperator = Dune::PDELab::NonlinearConvectionDiffusionDG<Problem, FiniteElementMap>;
     LocalOperator localOperator(problem,
                                 Dune::PDELab::ConvectionDiffusionDGMethod::SIPG,
                                 Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn,
@@ -116,17 +126,6 @@ int main(int argc, char** argv)
     const int dofestimate = pow(2, dim) * gridFunctionSpace.maxLocalSize();
     using MatrixBackend = Dune::PDELab::ISTL::BCRSMatrixBackend<>;
     MatrixBackend matrixBackend(dofestimate);
-#ifdef FASTDG
-    using GridOperator = Dune::PDELab::FastDGGridOperator<GridFunctionSpace,
-                                                          GridFunctionSpace,
-                                                          LocalOperator,
-                                                          MatrixBackend,
-                                                          DomainField,
-                                                          RangeType,
-                                                          RangeType,
-                                                          ConstraintsContainer,
-                                                          ConstraintsContainer>;
-#else
     using GridOperator = Dune::PDELab::GridOperator<GridFunctionSpace,
                                                     GridFunctionSpace,
                                                     LocalOperator,
@@ -136,7 +135,6 @@ int main(int argc, char** argv)
                                                     RangeType,
                                                     ConstraintsContainer,
                                                     ConstraintsContainer>;
-#endif
     GridOperator gridOperator(gridFunctionSpace,
                               constraintsContainer,
                               gridFunctionSpace,
@@ -147,11 +145,6 @@ int main(int argc, char** argv)
     std::cout << "cc with " << constraintsContainer.size() << " dofs generated  "<< std::endl;
 
     // Solution vector
-    //
-    // Note: In the DG case we do not need to set the boundary values to the
-    // Dirichlet boundary condition values. We create the DirichletExtension
-    // anyway since we use it as exact solution in the error calculation. We
-    // keep the code here to make it as similar to the non-DG case as possible.
     using CoefficientVector = Dune::PDELab::Backend::Vector<GridFunctionSpace, DomainField>;
     CoefficientVector coefficientVector(gridFunctionSpace);
     coefficientVector = 0.0;
@@ -169,29 +162,20 @@ int main(int argc, char** argv)
     const int maxiter = initree.get<int>("linear_solver.maxiter", 5000);
     const int verbosity = initree.get<int>("linear_solver.verbosity", 0);
 #if defined(MATRIX_BASED)
+    // Solve matrix-based
     std::cout << "Info: Using matrix-based solver." << std::endl;
     using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_BCGS_Jac;
     LinearSolver linearSolver(maxiter, verbosity);
-    using Solver = Dune::PDELab::StationaryLinearProblemSolver<GridOperator, LinearSolver, CoefficientVector>;
+    using Solver = Dune::PDELab::NewtonMethod<GridOperator, LinearSolver>;
 #elif defined(PARTIAL_MATRIX_FREE)
     std::cout << "Info: Using partially matrix-free solver." << std::endl;
+
     using BlockDiagonalLOP = Dune::PDELab::BlockDiagonalLocalOperatorWrapper<LocalOperator>;
     BlockDiagonalLOP blockDiagonalLop(localOperator);
     using ABJPLOP = Dune::PDELab::AssembledBlockJacobiPreconditionerLocalOperator<BlockDiagonalLOP,
                                                                                   GridFunctionSpace,
                                                                                   DomainField>;
     ABJPLOP abjplop(blockDiagonalLop, gridFunctionSpace);
-#ifdef FASTDG
-    using ABJPLOP_GO = Dune::PDELab::FastDGGridOperator<GridFunctionSpace,
-                                                        GridFunctionSpace,
-                                                        ABJPLOP,
-                                                        MatrixBackend,
-                                                        DomainField,
-                                                        RangeType,
-                                                        RangeType,
-                                                        ConstraintsContainer,
-                                                        ConstraintsContainer>;
-#else
     using ABJPLOP_GO = Dune::PDELab::GridOperator<GridFunctionSpace,
                                                   GridFunctionSpace,
                                                   ABJPLOP,
@@ -201,7 +185,6 @@ int main(int argc, char** argv)
                                                   RangeType,
                                                   ConstraintsContainer,
                                                   ConstraintsContainer>;
-#endif
     ABJPLOP_GO abjplop_go(gridFunctionSpace,
                           constraintsContainer,
                           gridFunctionSpace,
@@ -210,40 +193,30 @@ int main(int argc, char** argv)
                           matrixBackend);
     using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_MatrixFree_Base<GridOperator, ABJPLOP_GO, Dune::BiCGSTABSolver>;
     LinearSolver linearSolver(gridOperator, abjplop_go, maxiter, verbosity);
-    using Solver = Dune::PDELab::MatrixFreeStationaryLinearProblemSolver<GridOperator, LinearSolver, CoefficientVector>;
+    using Solver = Dune::PDELab::MatrixFreeNewton<GridOperator, LinearSolver, CoefficientVector>;
 #elif defined(FULLY_MATRIX_FREE)
     std::cout << "Info: Using fully matrix-free solver." << std::endl;
 
-    Dune::PDELab::SolverStatistics<int> solverStat(gridView.comm());
-    Dune::PDELab::BlockSolverOptions blockSolverOptions;
-    blockSolverOptions._resreduction = initree.get<double>("block_inverse_solver.reduction", 1e-5);
-    blockSolverOptions._maxiter = initree.get<int>("block_inverse_solver.maxiter", 100);
-    blockSolverOptions._verbose = initree.get<int>("block_inverse_solver.verbose", 0);
-
-    // Setup local operator for evaluating the block and point diagonal
     using BlockDiagonalLOP = Dune::PDELab::BlockDiagonalLocalOperatorWrapper<LocalOperator>;
     BlockDiagonalLOP blockDiagonalLop(localOperator);
     using PointDiagonalLOP = Dune::PDELab::PointDiagonalLocalOperatorWrapper<LocalOperator>;
     PointDiagonalLOP pointDiagonalLop(localOperator);
-
-    // Setup preconditioner local operator and grid operator
     using IBJPLOP = Dune::PDELab::IterativeBlockJacobiPreconditionerLocalOperator<BlockDiagonalLOP,
                                                                                   PointDiagonalLOP,
                                                                                   GridFunctionSpace,
                                                                                   DomainField,
                                                                                   Dune::BiCGSTABSolver>;
-    IBJPLOP ibjplop(blockDiagonalLop, pointDiagonalLop, gridFunctionSpace, solverStat, blockSolverOptions, 2);
-#ifdef FASTDG
-    using IBJPLOP_GO = Dune::PDELab::FastDGGridOperator<GridFunctionSpace,
-                                                        GridFunctionSpace,
-                                                        IBJPLOP,
-                                                        MatrixBackend,
-                                                        DomainField,
-                                                        RangeType,
-                                                        RangeType,
-                                                        ConstraintsContainer,
-                                                        ConstraintsContainer>;
-#else
+    Dune::PDELab::SolverStatistics<int> solverStat(gridView.comm());
+    Dune::PDELab::BlockSolverOptions blockSolverOptions;
+    blockSolverOptions._resreduction = initree.get<double>("block_inverse_solver.reduction", 1e-5);
+    blockSolverOptions._maxiter = initree.get<int>("block_inverse_solver.maxiter", 100);
+    blockSolverOptions._verbose = initree.get<int>("block_inverse_solver.verbose", 0);
+    IBJPLOP ibjplop(blockDiagonalLop,
+                    pointDiagonalLop,
+                    gridFunctionSpace,
+                    solverStat,
+                    blockSolverOptions,
+                    2);
     using IBJPLOP_GO = Dune::PDELab::GridOperator<GridFunctionSpace,
                                                   GridFunctionSpace,
                                                   IBJPLOP,
@@ -253,7 +226,6 @@ int main(int argc, char** argv)
                                                   RangeType,
                                                   ConstraintsContainer,
                                                   ConstraintsContainer>;
-#endif
     IBJPLOP_GO ibjplop_go(gridFunctionSpace,
                           constraintsContainer,
                           gridFunctionSpace,
@@ -263,36 +235,40 @@ int main(int argc, char** argv)
 
     using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_MatrixFree_Base<GridOperator, IBJPLOP_GO, Dune::BiCGSTABSolver>;
     LinearSolver linearSolver(gridOperator, ibjplop_go, maxiter, verbosity);
-    using Solver = Dune::PDELab::MatrixFreeStationaryLinearProblemSolver<GridOperator, LinearSolver, CoefficientVector>;
+    using Solver = Dune::PDELab::MatrixFreeNewton<GridOperator, LinearSolver, CoefficientVector>;
 #elif defined(MATRIX_FREE_SOR)
-    // Setup local operator for evaluating the block and point diagonal
-    using BlockDiagonalLOP = Dune::PDELab::BlockDiagonalLocalOperatorWrapper<LocalOperator>;
-    BlockDiagonalLOP blockDiagonalLop(localOperator);
-    using PointDiagonalLOP = Dune::PDELab::PointDiagonalLocalOperatorWrapper<LocalOperator>;
-    PointDiagonalLOP pointDiagonalLop(localOperator);
+    std::cout << "Info: Using matrix-free SOR." << std::endl;
 
-    // Setup local operator for jacobian preconditioner
+    using NonlinearBlockDiagonalLOP = NonlinearBlockDiagonalLocalOperator<GridFunctionSpace, GridFunctionSpace>;
+    NonlinearBlockDiagonalLOP nonlinearBlockDiagonalLOP(gridFunctionSpace, gridFunctionSpace, initree);
+    using NonlinearPointDiagonalLOP = NonlinearPointDiagonalLocalOperator<GridFunctionSpace, GridFunctionSpace>;
+    NonlinearPointDiagonalLOP nonlinearPointDiagonalLOP(gridFunctionSpace, gridFunctionSpace, initree);
+    using IBJPLOP = Dune::PDELab::IterativeBlockJacobiPreconditionerLocalOperator<NonlinearBlockDiagonalLOP,
+                                                                                  NonlinearPointDiagonalLOP,
+                                                                                  GridFunctionSpace,
+                                                                                  DomainField,
+                                                                                  Dune::BiCGSTABSolver>;
     Dune::PDELab::SolverStatistics<int> solverStat(gridView.comm());
     Dune::PDELab::BlockSolverOptions blockSolverOptions;
     blockSolverOptions._resreduction = initree.get<double>("block_inverse_solver.reduction", 1e-5);
     blockSolverOptions._maxiter = initree.get<int>("block_inverse_solver.maxiter", 100);
     blockSolverOptions._verbose = initree.get<int>("block_inverse_solver.verbose", 0);
-    using IBJPLOP = Dune::PDELab::IterativeBlockJacobiPreconditionerLocalOperator<BlockDiagonalLOP,
-                                                                                  PointDiagonalLOP,
-                                                                                  GridFunctionSpace,
-                                                                                  DomainField,
-                                                                                  Dune::BiCGSTABSolver>;
-    IBJPLOP ibjplop(blockDiagonalLop, pointDiagonalLop, gridFunctionSpace, solverStat, blockSolverOptions, 2);
+    IBJPLOP ibjplop(nonlinearBlockDiagonalLOP,
+                    nonlinearPointDiagonalLOP,
+                    gridFunctionSpace,
+                    solverStat,
+                    blockSolverOptions,
+                    2);
 
     // Setup local operator for evaluating the block off-diagonals
-    using BlockOffDiagonalLOP = Dune::PDELab::BlockOffDiagonalLocalOperatorWrapper<LocalOperator>;
-    BlockOffDiagonalLOP blockOffDiagonalLOP(localOperator);
+    using NonlinearBlockOffDiagonalLOP = NonlinearBlockOffDiagonalLocalOperator<GridFunctionSpace, GridFunctionSpace>;
+    NonlinearBlockOffDiagonalLOP nonlinearBlockOffDiagonalLOP(gridFunctionSpace, gridFunctionSpace, initree);
 
     // Setup local operator for SOR preconditioner
     using BlockSORPreconditionerLOP = Dune::PDELab::BlockSORPreconditionerLocalOperator<IBJPLOP,
-                                                                                        BlockOffDiagonalLOP,
+                                                                                        NonlinearBlockOffDiagonalLOP,
                                                                                         GridFunctionSpace>;
-    BlockSORPreconditionerLOP blockSORPreconditionerLOP(ibjplop, blockOffDiagonalLOP, gridFunctionSpace, 1.0);
+    BlockSORPreconditionerLOP blockSORPreconditionerLOP(ibjplop, nonlinearBlockOffDiagonalLOP, gridFunctionSpace, 1.0);
 
     // Setup grid operator for preconditioner application
     using BlockSORPreconditionerGO = Dune::PDELab::GridOperator<GridFunctionSpace,
@@ -315,12 +291,13 @@ int main(int argc, char** argv)
                                                                        BlockSORPreconditionerGO,
                                                                        Dune::BiCGSTABSolver>;
     LinearSolver linearSolver(gridOperator, blockSORPreconditionerGO, maxiter, verbosity);
-    using Solver = Dune::PDELab::MatrixFreeStationaryLinearProblemSolver<GridOperator, LinearSolver, CoefficientVector>;
+    using Solver = Dune::PDELab::MatrixFreeNewton<GridOperator, LinearSolver, CoefficientVector>;
 #elif defined(MATRIX_BASED_SOR)
+    // Solve matrix-based
     std::cout << "Info: Using matrix-based SOR solver." << std::endl;
     using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_BCGS_SOR;
     LinearSolver linearSolver(maxiter, verbosity);
-    using Solver = Dune::PDELab::StationaryLinearProblemSolver<GridOperator, LinearSolver, CoefficientVector>;
+    using Solver = Dune::PDELab::NewtonMethod<GridOperator, LinearSolver>;
 #else
     static_assert(false);
     DUNE_THROW(Dune::Exception, "This should not happen");
@@ -329,11 +306,9 @@ int main(int argc, char** argv)
     // }}}
     //========================
 
-
     // Solve the PDE
-    const double reduction = initree.get<double>("solver.reduction", 1e-12);
-    Solver solver(gridOperator, linearSolver, coefficientVector, reduction);
-    solver.apply();
+    Solver solver(gridOperator, linearSolver);
+    solver.apply(coefficientVector);
 
     // // Visualization
     // //
@@ -342,7 +317,7 @@ int main(int argc, char** argv)
     // using VTKWriter = Dune::SubsamplingVTKWriter<GridView>;
     // Dune::RefinementIntervals subint(1);
     // VTKWriter vtkwriter(gridView, subint);
-    // std::string vtkfile("matrix_free_linear");
+    // std::string vtkfile("matrix_free_nonlinear");
     // Dune::PDELab::addSolutionToVTKWriter(vtkwriter, gridFunctionSpace, coefficientVector,
     //                                      Dune::PDELab::vtk::defaultNameScheme());
     // vtkwriter.write(vtkfile, Dune::VTK::ascii);
@@ -357,7 +332,7 @@ int main(int argc, char** argv)
     DifferenceSquaredAdapter differenceSquaredAdapder(dirichletExtension, discreteGridFunction);
     DifferenceSquaredAdapter::Traits::RangeType error(0.0);
     Dune::PDELab::integrateGridFunction(differenceSquaredAdapder, error, 10);
-    std::cout << "l2errorsquared: " << error << std::endl;
+    std::cout << "l2errorsquared matrix based: " << error << std::endl;
 
     // Let the test fail if the error is too large
     bool testfail(false);
