@@ -39,6 +39,8 @@ struct BasisInfo // check for our thin wrapper around a dune-functions basis
   auto require(B&& t) -> decltype(
     requireType<typename B::Basis>(),
     requireType<typename B::GridView>(),
+    requireType<typename B::ContainerIndex>(),
+    requireType<typename B::Traits::Backend>(),
     requireConcept<Dune::Functions::Concept::GlobalBasis<typename B::GridView>>(t.basis())
   );
 };
