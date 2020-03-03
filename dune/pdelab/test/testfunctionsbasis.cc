@@ -13,10 +13,6 @@
 #include <dune/functions/functionspacebases/powerbasis.hh>
 #include <dune/pdelab.hh>
 
-namespace Dune::PDELab {
-
-}
-
 using namespace Dune;
 using namespace Dune::PDELab;
 
