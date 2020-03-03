@@ -229,12 +229,6 @@ namespace Dune {
             std::cout << std::endl;
         }
 
-        // TODO: For nonlinear problems we need to set the linearization
-        // point. So far this is not supported by the matrix free solver
-        // backends.
-        //
-        // _ls.setLinearizationPoint(*_x);
-
         _ls.apply(z,r,red);
         _linear_solver_result = _ls.result();
         timing = watch.elapsed();
