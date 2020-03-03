@@ -37,10 +37,11 @@ namespace Dune {
 
         using BasisTraits = PDELab::BasisTraits<GFS>;
 
-        static void resizeVector(std::shared_ptr<const GFS>& gfs, C& container)
+        static void resizeVector(std::shared_ptr<const GFS>& pgfs, C& container)
         {
           // get size information and resize vector ...
-          auto sz = sizeInfo(gfs);
+          auto & gfs = *pgfs;
+          auto sz = ISTL::sizeInfo(gfs);
           auto v = Functions::istlVectorBackend(container);
           v.resize(sz);
         }

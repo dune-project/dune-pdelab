@@ -54,7 +54,7 @@ private:
     {
         if (pos < prefix.size())
         {
-            if(ordering.childOrderingCount())
+            if(ordering.childOrderingCount() && ordering.containerBlocked())
                 return childOrderingSize(ordering.childOrdering(prefix[pos]), prefix, pos+1);
             else // this should only happen if we are the leaf...
                 return 0; // indicates static size
@@ -65,18 +65,18 @@ private:
 
 };
 
-template<typename GFS>
-auto sizeInfo(const std::shared_ptr<const GFS> & gfs,
-    std::enable_if_t<isGridFunctionSpace<GFS>(),int> = 0)
+template<typename GFS,
+         std::enable_if_t<isGridFunctionSpace<GFS>(),int> = 0>
+auto sizeInfo(const GFS & gfs) -> GFSSizeInfo<GFS> 
 {
-    return GFSSizeInfo<GFS>(*gfs);
+    return GFSSizeInfo<GFS>(gfs);
 }
 
-template<typename FSB>
-auto sizeInfo(const std::shared_ptr<const FSB> & gfs,
-    std::enable_if_t<isBasisInfo<FSB>(),int> = 0)
+template<typename B,
+         std::enable_if_t<models<Concept::BasisInfo, B>(),int> = 0>
+auto sizeInfo(const B & basis) -> decltype(Dune::Functions::sizeInfo(basis.basis()))
 {
-    return Dune::Functions::sizeInfo(gfs->basis());
+    return Dune::Functions::sizeInfo(basis.basis());
 }
 
 }}} // Dune::PDELab::ISTL
