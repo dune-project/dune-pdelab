@@ -13,8 +13,6 @@
 #include <dune/functions/functionspacebases/powerbasis.hh>
 #include <dune/pdelab.hh>
 
-#include "gridexamples.hh"
-
 namespace Dune::PDELab {
 
 //! \brief thin wrapper around a dune-functions basis to add information about the backend
@@ -161,10 +159,20 @@ int main(int argc, char** argv)
 
     Dune::MPIHelper::instance(argc,argv);
 
-#if HAVE_UG
-    test(UnitTriangleMaker<Dune::UGGrid<2>>::create());
-    // test(TriangulatedUnitSquareMaker<Dune::UGGrid<2>>::create());
-#endif // HAVE_UG
+    // make grid
+    const int dim = 2;
+    // typedef Dune::UGGrid<dim> GridType;
+    typedef Dune::YaspGrid<dim> GridType;
+
+    // Build grid with uneven row/col number to provoke a reentrant corner in parallel case with UG
+    Dune::FieldVector<typename GridType::ctype,dim> lowerLeft(0);
+    Dune::FieldVector<typename GridType::ctype,dim> upperRight(1);
+    std::array<unsigned int,dim> elements;
+    std::fill(elements.begin(), elements.end(), 17);
+
+    auto grid = Dune::StructuredGridFactory<GridType>::createCubeGrid(lowerLeft, upperRight, elements);
+
+    test(grid);
 
     // test passed
     return 0;
