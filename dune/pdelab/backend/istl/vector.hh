@@ -8,6 +8,8 @@
 #include <dune/istl/bvector.hh>
 #include <dune/typetree/typetree.hh>
 
+#include <dune/functions/backends/istlvectorbackend.hh>
+
 #include <dune/pdelab/common/concepts.hh>
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/gfstraits.hh>
@@ -33,6 +35,14 @@ namespace Dune {
         friend Backend::impl::Wrapper<C>;
 
         using GFST = GFSTraits<GFS>;
+
+        static void resizeVector(std::shared_ptr<const GFS>& gfs, C& container)
+        {
+          // get size information and resize vector ...
+          auto sz = GFST::sizeInfo(gfs);
+          auto v = Functions::istlVectorBackend(container);
+          v.resize(sz);
+        }
 
       public:
         typedef typename C::field_type ElementType;
@@ -65,9 +75,10 @@ namespace Dune {
 
         BlockVector(const BlockVector& rhs)
           : _gfs(rhs._gfs)
-          , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
+          , _container(std::make_shared<Container>())
+          // , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
         {
-          #warning fix actual allocation
+          resizeVector(_gfs,*_container);
           // ISTL::dispatch_vector_allocation(_gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
           (*_container) = rhs.native();
         }
@@ -79,8 +90,10 @@ namespace Dune {
 
         BlockVector (std::shared_ptr<const GFS> gfs, Backend::attached_container = Backend::attached_container())
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
+          , _container(std::make_shared<Container>())
+          // , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
         {
+          resizeVector(_gfs,*_container);
           // ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         }
 
@@ -98,14 +111,16 @@ namespace Dune {
           : _gfs(gfs)
           , _container(stackobject_to_shared_ptr(container))
         {
-          _container->resize(GFST::blockCount(_gfs));
+          resizeVector(_gfs,*_container);
           // ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         }
 
         BlockVector (std::shared_ptr<const GFS> gfs, const E& e)
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
+          , _container(std::make_shared<Container>())
+          // , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
         {
+          resizeVector(_gfs,*_container);
           // ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
           (*_container)=e;
         }

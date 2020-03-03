@@ -73,7 +73,10 @@ namespace Dune {
         return access_vector_element(container_tag(b[ci[i]]),b[ci[i]],ci,i-1);
       }
 
-
+      // ********************************************************************************
+      // size management, not used anymore, now done via dune-functions...
+      // ********************************************************************************
+#if 0
       template<typename Vector>
       void resize_vector(tags::block_vector, Vector& v, std::size_t size, bool copy_values)
       {
@@ -116,7 +119,7 @@ namespace Dune {
       {
         resize_vector(container_tag(c),c,ordering.blockCount(),false);
       }
-
+#endif
 
       // ********************************************************************************
       // map blocking info to ISTL vector type
@@ -133,8 +136,8 @@ namespace Dune {
       template<typename E>
       struct VectorType<E,Dune::PDELab::Blocking::tag::flat>
       {
-        // using Type = Dune::BlockVector<FieldVector<E,1>>;
-        using Type = Dune::BlockVector<E>;
+        using Type = Dune::BlockVector<FieldVector<E,1>>;
+        // using Type = Dune::BlockVector<E>;
       };
 
       template<typename E, typename First>

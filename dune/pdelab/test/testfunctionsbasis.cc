@@ -38,15 +38,16 @@ struct FunctionsBasisInfo
 }
 
 using namespace Dune;
+using namespace Dune::PDELab;
 
 template<typename GridView, typename Basis, int expectedBlockSize>
 void backend_test(GridView gridView, Basis basis,
   std::integral_constant<int,expectedBlockSize>)
 {
-  using Vec = PDELab::Backend::Vector<Basis,double>;
-  // Vec x(basis);
-  // std::cout << className<Vec>() << std::endl;
-  std::cout << className<typename Vec::Container>() << std::endl;
+  using Vec = Backend::Vector<Basis,double>;
+  std::cout << "----------------------------\n";
+  Vec x(basis);
+  std::cout << className(Backend::native(x)) << std::endl;
 }
 
 template<typename GridView>
