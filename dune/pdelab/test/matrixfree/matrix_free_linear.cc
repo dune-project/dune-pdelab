@@ -339,8 +339,8 @@ int main(int argc, char** argv)
 
     // // Visualization
     // //
-    // // This is not necessary for testing but might be useful for debugging in
-    // // case the test fails.
+    // // This is not necessary for testing but might be useful for debugging if
+    // // the test fails.
     // using VTKWriter = Dune::SubsamplingVTKWriter<GridView>;
     // Dune::RefinementIntervals subint(1);
     // VTKWriter vtkwriter(gridView, subint);
