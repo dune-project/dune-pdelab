@@ -69,6 +69,8 @@ namespace Dune {
       int verbose_;
     }; // end class ISTLBackend_SEQ_MatrixFree_Base
 
+
+    // A matrix based SOR backend for comparing the matrix-free version
     class ISTLBackend_SEQ_BCGS_SOR
       : public ISTLBackend_SEQ_Base<Dune::SeqSOR, Dune::BiCGSTABSolver>
     {

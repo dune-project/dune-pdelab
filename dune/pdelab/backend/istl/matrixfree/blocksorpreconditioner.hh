@@ -15,8 +15,8 @@ namespace Dune {
      * Given a linear system of equations Ax=b, a preconditioner step solves
      * Wv=d for a given vector d and an approximation $W \approx A$.
      *
-     * Using the block decomposition $A =D+L+U$ block-SOR uses $W =
-     * \omega^{-1}D+L$. And is implemented in the following way:
+     * Using the block decomposition $A=D+L+U$ block-SOR uses
+     * $W=\omega^{-1}D+L$. And is implemented in the following way:
      *
      * for element T_i, i=1,...,m do:
      *   (1) a_i = d_i - \sum_{i<j} A_{ij} v_i^{(k)} - \sum_{i>j} A_{ij} v_i^{(k-1)}
@@ -24,8 +24,8 @@ namespace Dune {
      *   (3) Update v_i^{(k)} = (1-\omega) v_i^{(k-1)} + \omega b_i
      *
      * See the artice "Matrix-free multigrid block-preconditioners for higher
-     * order discontinuous Galerkin discretisations" by Peter, Eike, Steffen
-     * and Marian.
+     * order discontinuous Galerkin discretisations" by P. Bastian, E. Mueller,
+     * S. Muething and M. Piatkowski.
      *
      * \tparam JacobianLOP Type of the Jacobi preconditioner local operator
      * \tparam BlockOffDiagonalLOP Type of the local operator for assembling the block off diagonal
