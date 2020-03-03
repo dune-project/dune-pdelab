@@ -12,13 +12,14 @@
 
 #include <dune/pdelab/common/concepts.hh>
 #include <dune/pdelab/backend/interface.hh>
-#include <dune/pdelab/backend/common/gfstraits.hh>
 #include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/common/aliasedvectorview.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/backend/istl/vectorhelpers.hh>
 #include <dune/pdelab/backend/istl/vectoriterator.hh>
+#include <dune/pdelab/backend/istl/sizeinfo.hh>
+#include <dune/pdelab/gridfunctionspace/functionspacebasis.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
@@ -34,12 +35,12 @@ namespace Dune {
 
         friend Backend::impl::Wrapper<C>;
 
-        using GFST = GFSTraits<GFS>;
+        using BasisTraits = PDELab::BasisTraits<GFS>;
 
         static void resizeVector(std::shared_ptr<const GFS>& gfs, C& container)
         {
           // get size information and resize vector ...
-          auto sz = GFST::sizeInfo(gfs);
+          auto sz = sizeInfo(gfs);
           auto v = Functions::istlVectorBackend(container);
           v.resize(sz);
         }
@@ -55,7 +56,7 @@ namespace Dune {
 
         using value_type = E;
 
-        typedef typename GFST::ContainerIndex ContainerIndex;
+        typedef typename BasisTraits::ContainerIndex ContainerIndex;
 
         typedef ISTL::vector_iterator<C> iterator;
         typedef ISTL::vector_iterator<const C> const_iterator;

@@ -15,26 +15,6 @@
 
 namespace Dune::PDELab {
 
-//! \brief thin wrapper around a dune-functions basis to add information about the backend
-template<typename FSB, typename B>
-struct FunctionsBasisInfo
-{
-  FunctionsBasisInfo(FSB & b) :
-    _basis(b) {}
-
-  using Basis = FSB;
-  using GridView = typename FSB::GridView;
-
-  // try to get around without Traits
-  struct Traits {
-    using Backend = B;
-  };
-
-  FSB & basis() { return _basis; }
-  const FSB & basis() const { return _basis; }
-
-  FSB & _basis;
-};
 }
 
 using namespace Dune;

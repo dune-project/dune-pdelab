@@ -18,6 +18,7 @@ install(FILES
   patternstatistics.hh
   seq_amg_dg_backend.hh
   seqistlsolverbackend.hh
+  sizeinfo.hh
   tags.hh
   utility.hh
   vector.hh

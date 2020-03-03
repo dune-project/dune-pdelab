@@ -1,10 +1,13 @@
-#ifndef DUNE_PDELAB_BACKEND_COMMON_GFS_TRAITS_HH
-#define DUNE_PDELAB_BACKEND_COMMON_GFS_TRAITS_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_SIZEINFO_HH
+#define DUNE_PDELAB_BACKEND_ISTL_SIZEINFO_HH
 
 #include <dune/functions/functionspacebases/sizeinfo.hh>
 
-namespace Dune::PDELab {
+namespace Dune {
+namespace PDELab {
+namespace ISTL {
 
+/** implementation of the Dune::Functions::SizeInfo interface for a GridFunctionSpace */
 template<class GFS>
 class GFSSizeInfo
 {
@@ -62,37 +65,20 @@ private:
 
 };
 
-template<typename GFS, typename Enable = void>
-struct GFSTraits;
-
 template<typename GFS>
-struct GFSTraits<GFS,
-                 std::enable_if_t<isGridFunctionSpace<GFS>()>>
+auto sizeInfo(const std::shared_ptr<const GFS> & gfs,
+    std::enable_if_t<isGridFunctionSpace<GFS>(),int> = 0)
 {
-    // Multiindex with which we can access entries in a DOF container
-    using ContainerIndex = typename GFS::Ordering::Traits::ContainerIndex;
-
-    auto static sizeInfo(const std::shared_ptr<const GFS> & gfs)
-    {
-        return GFSSizeInfo<GFS>(*gfs);
-    }
-};
-
-template<typename FSB>
-struct GFSTraits<FSB,
-                 std::enable_if_t<isBasisInfo<FSB>()>>
-{
-    // Multiindex with which we can access entries in a DOF container
-    using Basis = typename FSB::Basis;
-    using LocalView = typename Basis::LocalView;
-    using ContainerIndex = typename LocalView::MultiIndex;
-
-    auto static sizeInfo(const std::shared_ptr<const FSB> & gfs)
-    {
-        return Dune::Functions::sizeInfo(gfs->basis());
-    }
-};
-
+    return GFSSizeInfo<GFS>(*gfs);
 }
 
-#endif // DUNE_PDELAB_BACKEND_COMMON_GFS_TRAITS_HH
+template<typename FSB>
+auto sizeInfo(const std::shared_ptr<const FSB> & gfs,
+    std::enable_if_t<isBasisInfo<FSB>(),int> = 0)
+{
+    return Dune::Functions::sizeInfo(gfs->basis());
+}
+
+}}} // Dune::PDELab::ISTL
+
+#endif // DUNE_PDELAB_BACKEND_ISTL_SIZEINFO_HH
