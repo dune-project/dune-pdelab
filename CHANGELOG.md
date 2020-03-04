@@ -14,6 +14,11 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   Change the default parameters of the convectiondiffusiondg local operator. Instead of NIPG, no weights
+    and penalty factor alpha=0 we now use SIPG, weights and alpha=1 as default. Note that this is not backward
+    compatible so you need to change your code if you used the default parameters and want to keep the
+    behavior.
+
 -   The `nonlinear_jacobian_apply` method of the grid operator is deprecated. Instead you should use the new
     `jacobian_apply_method` taking the same arguments. In addition you need to set the new `isLinear` flag in
     your local operator to true.
