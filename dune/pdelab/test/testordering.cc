@@ -62,7 +62,10 @@ void check_ordering(const GFS& gfs)
     }
 
     using V = Dune::PDELab::Backend::Vector<GFS,double>;
+    std::cout << std::endl;
+    std::cout << Dune::className<typename V::Container>() << std::endl;
     V x(gfs);
+    std::cout << Dune::PDELab::Backend::native(x).size() << std::endl;
     x = 0.0;
     std::cout << std::endl;
 }
