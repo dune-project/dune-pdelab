@@ -229,6 +229,9 @@ namespace Dune {
           typedef field_matrix_1_1 type;
         };
 
+        template<typename T>
+        using container_t = typename container<T>::type;
+
 #endif // DOXYGEN
 
       } // namespace tags
@@ -245,7 +248,7 @@ namespace Dune {
       template<typename T>
       typename tags::container<T>::type container_tag(const T&)
       {
-        return typename tags::container<T>::type();
+        return tags::container_t<T>();
       }
 
     } // namespace ISTL
