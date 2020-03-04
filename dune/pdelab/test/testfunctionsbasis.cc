@@ -22,8 +22,30 @@ void backend_test(GridView gridView, Basis basis,
 {
   using Vec = Backend::Vector<Basis,double>;
   std::cout << "----------------------------\n";
+
+  // create vector
   Vec x(basis);
   std::cout << className(Backend::native(x)) << std::endl;
+
+  // assign value
+  x = 1.0;
+
+#if 0
+  // create discrete function
+  typedef Dune::PDELab::DiscreteGridFunction<Basis,Vec> DGF;
+  DGF dgf(basis,x);
+
+  // create discrete gridview-function
+  typedef Dune::PDELab::DiscreteGridViewFunction<Basis,Vec> DGVF;
+  DGVF dgvf(gfs,x);
+
+  // Write solution to VTK
+  Dune::VTKWriter<GV> vtkwriter(gfs.gridView());
+  typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
+  auto adapt = std::make_shared<ADAPT>(dgf,"solution");
+  vtkwriter.addVertexData(adapt);
+  vtkwriter.write("testgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type);
+#endif
 }
 
 template<typename GridView>
