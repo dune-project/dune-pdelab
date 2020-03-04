@@ -28,8 +28,8 @@ struct GridFunctionSpace
     // gfs.constraintsStorage(),
     // requireConvertible<typename GFS::Traits::FiniteElementMap>(gfs.finiteElementMap()),
     // requireConvertible<typename GFS::Traits::ConstraintsType>(gfs.constraints()),
-    requireConvertible<typename GFS::Ordering>(gfs.ordering()),
-    requireConvertible<std::shared_ptr<typename GFS::Ordering>>(gfs.orderingStorage())
+    requireConvertible<typename GFS::Ordering>(gfs.ordering())
+    // requireConvertible<std::shared_ptr<typename GFS::Ordering>>(gfs.orderingStorage())
   );
 };
 
