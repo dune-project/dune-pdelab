@@ -1,7 +1,11 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_SIZEINFO_HH
 #define DUNE_PDELAB_BACKEND_ISTL_SIZEINFO_HH
 
+#include <dune/common/reservedvector.hh>
 #include <dune/functions/functionspacebases/sizeinfo.hh>
+#include <dune/pdelab/common/concepts.hh>
+
+#include "vectorhelpers.hh"
 
 namespace Dune {
 namespace PDELab {
@@ -11,6 +15,70 @@ namespace ISTL {
 template<class GFS>
 class GFSSizeInfo
 {
+
+    // ********************************************************************************
+    // collect size information
+    // ********************************************************************************
+    static void setSize(tags::block_vector, std::vector<std::size_t>& sizes, std::size_t offset, std::size_t size)
+    {
+        sizes[offset] = size;
+    }
+
+    static void setSize(tags::field_vector, std::vector<std::size_t>&, std::size_t, std::size_t)
+    {}
+
+    template<typename V, typename Ordering>
+    static void getSizes(tags::field_vector, const Ordering& ordering, std::vector<std::size_t>& sizes, std::size_t offset)
+    {}
+
+    template<typename V, typename Ordering>
+    static void getSizes(tags::block_vector, const Ordering& ordering, std::vector<std::size_t>& sizes, std::size_t offset)
+    {
+        for (std::size_t i = 0; i < ordering.childOrderingCount(); ++i)
+        {
+            if (ordering.containerBlocked())
+            {
+                sizes.push_back(0);
+                // dispatch on the block_type
+                using block_type = typename V::block_type;
+                using childtag = tags::container_t<block_type>;
+                setSize(childtag(),sizes,offset+1,ordering.childOrdering(i).blockCount());
+                getSizes<block_type>(childtag(), ordering.childOrdering(i), sizes, offset+1);
+            }
+            else
+                getSizes<V>(tags::block_vector(), ordering.childOrdering(i), sizes, offset);
+        }
+    }
+
+    template<typename V, typename Ordering>
+    static void dispatchGetSizes(const Ordering& ordering, std::vector<std::size_t>& sizes,
+        HierarchicContainerAllocationTag)
+    {
+        using tag = tags::container_t<V>;
+        getSizes<V>(tag(), ordering, sizes, 0);
+    }
+
+    template<typename V, typename Ordering>
+    static void dispatchGetSizes(const Ordering& ordering, std::vector<std::size_t>& sizes,
+        FlatContainerAllocationTag)
+    {}
+
+    static std::vector<std::size_t> getSizes(const GFS& gfs)
+    {
+        typedef typename TypeTree::AccumulateType<
+            GFS,
+            ISTL::vector_creation_policy<double>
+            >::type vector_descriptor;
+
+        using Blocking = typename vector_descriptor::blocking;
+        using Container = typename VectorType<double,Blocking>::Type;
+
+        std::vector<std::size_t> sizes({gfs.ordering().blockCount()});
+        dispatchGetSizes<Container>(gfs.ordering(), sizes, typename GFS::Ordering::ContainerAllocationTag());
+        return sizes;
+    }
+
+
 public:
     using size_type = std::size_t;
     using SizePrefix = Dune::ReservedVector<std::size_t,
@@ -19,7 +87,9 @@ public:
     /**
      * \brief Construct from basis
      */
-    GFSSizeInfo(const GFS& gfs) : ordering_(gfs.ordering())
+    GFSSizeInfo(const GFS& gfs) :
+        //ordering_(gfs.ordering())
+        sizes_(getSizes(gfs))
     {}
 
     /**
@@ -38,31 +108,18 @@ public:
      */
     size_type size(const SizePrefix& prefix) const
     {
-        return childOrderingSize(ordering_, prefix, 0);
+        if (prefix.size() > sizes_.size()+1)
+            return 0;
+        return sizes_[prefix.size()];
     }
 
     operator size_type () const
     {
-        return ordering_.blockCount();
+        return sizes_[0];
     }
 
 private:
-    const typename GFS::Ordering & ordering_;
-
-    template<typename Ordering>
-    static size_type childOrderingSize(const Ordering & ordering, const SizePrefix& prefix, int pos)
-    {
-        if (pos < prefix.size())
-        {
-            if(ordering.childOrderingCount() && ordering.containerBlocked())
-                return childOrderingSize(ordering.childOrdering(prefix[pos]), prefix, pos+1);
-            else // this should only happen if we are the leaf...
-                return 0; // indicates static size
-                // return ordering.size()/ordering.blockCount();
-        }
-        return ordering.blockCount();
-    }
-
+    std::vector<std::size_t> sizes_;
 };
 
 template<typename GFS,
