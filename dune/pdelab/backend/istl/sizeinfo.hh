@@ -108,7 +108,7 @@ public:
      */
     size_type size(const SizePrefix& prefix) const
     {
-        if (prefix.size() > sizes_.size()+1)
+        if (prefix.size() >= sizes_.size())
             return 0;
         return sizes_[prefix.size()];
     }
