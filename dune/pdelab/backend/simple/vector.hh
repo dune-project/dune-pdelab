@@ -15,6 +15,7 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/backend/common/tags.hh>
+#include <dune/pdelab/backend/common/sizeinfo.hh>
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/simple/descriptors.hh>
@@ -46,6 +47,15 @@ namespace Dune {
 
         friend Backend::impl::Wrapper<C>;
 
+        using BasisTraits = PDELab::BasisTraits<GFS>;
+
+        static std::size_t getSize(const GFS& gfs)
+        {
+          // get size information and resize vector ...
+          auto sz = ISTL::sizeInfo(gfs);
+          return std::size_t(sz);
+        }
+
       public:
         typedef C Container;
         typedef typename Container::value_type ElementType;
@@ -57,7 +67,7 @@ namespace Dune {
         typedef GFS GridFunctionSpace;
         typedef typename Container::size_type size_type;
 
-        typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
+        typedef typename BasisTraits::ContainerIndex ContainerIndex;
 
         typedef typename Container::iterator iterator;
         typedef typename Container::const_iterator const_iterator;
@@ -76,7 +86,7 @@ namespace Dune {
 
         VectorContainer (const GFS& gfs, Backend::attached_container = Backend::attached_container())
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
+          , _container(std::make_shared<Container>(getSize(gfs)))
         {}
 
         //! Creates a VectorContainer without allocating storage.
@@ -93,12 +103,12 @@ namespace Dune {
           : _gfs(gfs)
           , _container(stackobject_to_shared_ptr(container))
         {
-          _container->resize(gfs.ordering().blockCount());
+          _container->resize(getSize(gfs));
         }
 
         VectorContainer (const GFS& gfs, const E& e)
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(gfs.ordering().blockCount(),e))
+          , _container(std::make_shared<Container>(getSize(gfs),e))
         {}
 
         void detach()
