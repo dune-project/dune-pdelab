@@ -13,12 +13,12 @@
 #include <dune/pdelab/common/concepts.hh>
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/tags.hh>
+#include <dune/pdelab/backend/common/sizeinfo.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/common/aliasedvectorview.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/backend/istl/vectorhelpers.hh>
 #include <dune/pdelab/backend/istl/vectoriterator.hh>
-#include <dune/pdelab/backend/istl/sizeinfo.hh>
 #include <dune/pdelab/gridfunctionspace/functionspacebasis.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>

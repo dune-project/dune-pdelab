@@ -6,8 +6,6 @@
 #include <dune/pdelab/common/concepts.hh>
 #include <dune/pdelab/backend/interface.hh>
 
-#include "vectorhelpers.hh"
-
 namespace Dune {
 namespace PDELab {
 namespace ISTL {
