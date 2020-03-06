@@ -17,6 +17,7 @@ template<class GFS>
 class GFSSizeInfo
 {
 
+    using other_vector = ISTL::tags::other_vector;
     using block_vector = ISTL::tags::block_vector;
     using field_vector = ISTL::tags::field_vector;
     template<typename C>
@@ -31,6 +32,10 @@ class GFSSizeInfo
     }
 
     static void setSize(field_vector, std::vector<std::size_t>&, std::size_t, std::size_t)
+    {}
+
+    template<typename V, typename Ordering>
+    static void getSizes(other_vector, const Ordering& ordering, std::vector<std::size_t>& sizes, std::size_t offset)
     {}
 
     template<typename V, typename Ordering>
