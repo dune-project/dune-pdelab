@@ -40,13 +40,6 @@ namespace Dune {
 
         using BasisTraits = PDELab::BasisTraits<GFS>;
 
-        static std::size_t getSize(const GFS& gfs)
-        {
-          // get size information and resize vector ...
-          auto sz = ISTL::sizeInfo(gfs);
-          return std::size_t(sz);
-        }
-
       public:
         typedef ET ElementType;
         typedef ET E;
@@ -78,7 +71,7 @@ namespace Dune {
 
         VectorContainer (const GFS& gfs, Backend::attached_container = Backend::attached_container())
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(getSize(gfs)))
+          , _container(std::make_shared<Container>(std::size_t(Backend::sizeInfo(gfs))))
         {}
 
         //! Creates a VectorContainer without allocating storage.
@@ -95,12 +88,12 @@ namespace Dune {
           : _gfs(gfs)
           , _container(stackobject_to_shared_ptr(container))
         {
-          _container->resize(getSize(gfs));
+          _container->resize(std::size_t(Backend::sizeInfo(gfs)));
         }
 
         VectorContainer (const GFS& gfs, const E& e)
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(Container::Constant(getSize(gfs),e)))
+          , _container(std::make_shared<Container>(Container::Constant(std::size_t(Backend::sizeInfo(gfs)),e)))
         {}
 
         void detach()

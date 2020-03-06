@@ -5,33 +5,40 @@
 #include <dune/functions/functionspacebases/sizeinfo.hh>
 #include <dune/pdelab/common/concepts.hh>
 #include <dune/pdelab/backend/interface.hh>
+#include <dune/pdelab/backend/istl/tags.hh>
+#include <dune/pdelab/gridfunctionspace/tags.hh>
 
 namespace Dune {
 namespace PDELab {
-namespace ISTL {
+namespace Backend {
 
 /** implementation of the Dune::Functions::SizeInfo interface for a GridFunctionSpace */
 template<class GFS>
 class GFSSizeInfo
 {
 
+    using block_vector = ISTL::tags::block_vector;
+    using field_vector = ISTL::tags::field_vector;
+    template<typename C>
+    using container_t = ISTL::tags::container_t<C>;
+
     // ********************************************************************************
     // collect size information
     // ********************************************************************************
-    static void setSize(tags::block_vector, std::vector<std::size_t>& sizes, std::size_t offset, std::size_t size)
+    static void setSize(block_vector, std::vector<std::size_t>& sizes, std::size_t offset, std::size_t size)
     {
         sizes[offset] = size;
     }
 
-    static void setSize(tags::field_vector, std::vector<std::size_t>&, std::size_t, std::size_t)
+    static void setSize(field_vector, std::vector<std::size_t>&, std::size_t, std::size_t)
     {}
 
     template<typename V, typename Ordering>
-    static void getSizes(tags::field_vector, const Ordering& ordering, std::vector<std::size_t>& sizes, std::size_t offset)
+    static void getSizes(field_vector, const Ordering& ordering, std::vector<std::size_t>& sizes, std::size_t offset)
     {}
 
     template<typename V, typename Ordering>
-    static void getSizes(tags::block_vector, const Ordering& ordering, std::vector<std::size_t>& sizes, std::size_t offset)
+    static void getSizes(block_vector, const Ordering& ordering, std::vector<std::size_t>& sizes, std::size_t offset)
     {
         for (std::size_t i = 0; i < ordering.childOrderingCount(); ++i)
         {
@@ -40,12 +47,12 @@ class GFSSizeInfo
                 sizes.push_back(0);
                 // dispatch on the block_type
                 using block_type = typename V::block_type;
-                using childtag = tags::container_t<block_type>;
+                using childtag = container_t<block_type>;
                 setSize(childtag(),sizes,offset+1,ordering.childOrdering(i).blockCount());
                 getSizes<block_type>(childtag(), ordering.childOrdering(i), sizes, offset+1);
             }
             else
-                getSizes<V>(tags::block_vector(), ordering.childOrdering(i), sizes, offset);
+                getSizes<V>(block_vector(), ordering.childOrdering(i), sizes, offset);
         }
     }
 
@@ -53,7 +60,7 @@ class GFSSizeInfo
     static void dispatchGetSizes(const Ordering& ordering, std::vector<std::size_t>& sizes,
         HierarchicContainerAllocationTag)
     {
-        using tag = tags::container_t<V>;
+        using tag = container_t<V>;
         getSizes<V>(tag(), ordering, sizes, 0);
     }
 
@@ -129,6 +136,6 @@ auto sizeInfo(const B & basis) -> decltype(Dune::Functions::sizeInfo(basis.basis
     return Dune::Functions::sizeInfo(basis.basis());
 }
 
-}}} // Dune::PDELab::ISTL
+}}} // Dune::PDELab::Backend
 
 #endif // DUNE_PDELAB_BACKEND_ISTL_SIZEINFO_HH

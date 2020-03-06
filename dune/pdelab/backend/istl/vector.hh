@@ -41,7 +41,7 @@ namespace Dune {
         {
           // get size information and resize vector ...
           auto & gfs = *pgfs;
-          auto sz = ISTL::sizeInfo(gfs);
+          auto sz = Backend::sizeInfo(gfs);
           auto v = Functions::istlVectorBackend(container);
           v.resize(sz);
         }
