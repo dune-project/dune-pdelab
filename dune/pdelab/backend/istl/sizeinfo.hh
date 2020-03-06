@@ -4,6 +4,7 @@
 #include <dune/common/reservedvector.hh>
 #include <dune/functions/functionspacebases/sizeinfo.hh>
 #include <dune/pdelab/common/concepts.hh>
+#include <dune/pdelab/backend/interface.hh>
 
 #include "vectorhelpers.hh"
 
@@ -65,13 +66,7 @@ class GFSSizeInfo
 
     static std::vector<std::size_t> getSizes(const GFS& gfs)
     {
-        typedef typename TypeTree::AccumulateType<
-            GFS,
-            ISTL::vector_creation_policy<double>
-            >::type vector_descriptor;
-
-        using Blocking = typename vector_descriptor::blocking;
-        using Container = typename VectorType<double,Blocking>::Type;
+        using Container = typename Backend::Vector<GFS,double>::Container;
 
         std::vector<std::size_t> sizes({gfs.ordering().blockCount()});
         dispatchGetSizes<Container>(gfs.ordering(), sizes, typename GFS::Ordering::ContainerAllocationTag());
