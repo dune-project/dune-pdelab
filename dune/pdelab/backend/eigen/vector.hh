@@ -11,6 +11,7 @@
 #include <dune/istl/bvector.hh>
 
 #include <dune/pdelab/backend/common/tags.hh>
+#include <dune/pdelab/backend/common/sizeinfo.hh>
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include "descriptors.hh"
@@ -37,6 +38,15 @@ namespace Dune {
 
         friend Backend::impl::Wrapper<Container>;
 
+        using BasisTraits = PDELab::BasisTraits<GFS>;
+
+        static std::size_t getSize(const GFS& gfs)
+        {
+          // get size information and resize vector ...
+          auto sz = ISTL::sizeInfo(gfs);
+          return std::size_t(sz);
+        }
+
       public:
         typedef ET ElementType;
         typedef ET E;
@@ -47,7 +57,7 @@ namespace Dune {
         typedef GFS GridFunctionSpace;
           typedef std::size_t size_type;
 
-        typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
+        typedef typename BasisTraits::ContainerIndex ContainerIndex;
 
         typedef ElementType* iterator;
         typedef const ElementType* const_iterator;
@@ -68,7 +78,7 @@ namespace Dune {
 
         VectorContainer (const GFS& gfs, Backend::attached_container = Backend::attached_container())
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
+          , _container(std::make_shared<Container>(getSize(gfs)))
         {}
 
         //! Creates a VectorContainer without allocating storage.
@@ -85,12 +95,12 @@ namespace Dune {
           : _gfs(gfs)
           , _container(stackobject_to_shared_ptr(container))
         {
-          _container->resize(gfs.ordering().blockCount());
+          _container->resize(getSize(gfs));
         }
 
         VectorContainer (const GFS& gfs, const E& e)
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(Container::Constant(gfs.ordering().blockCount(),e)))
+          , _container(std::make_shared<Container>(Container::Constant(getSize(gfs),e)))
         {}
 
         void detach()

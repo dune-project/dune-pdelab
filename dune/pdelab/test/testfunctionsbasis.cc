@@ -99,6 +99,22 @@ void test_functions_lagrange_basis(GridView gridView)
 }
 
 template<typename GridView>
+void test_functions_lagrange_basis_eigen(GridView gridView)
+{
+  using namespace Functions::BasisFactory;
+
+  auto basis = makeBasis(gridView, lagrange<3>());
+
+  static_assert(models< Functions::Concept::GlobalBasis<std::decay_t<decltype(gridView)>>, decltype(basis)>(), "not a basis");
+
+  using Backend = PDELab::Eigen::VectorBackend;
+  using BasisInfo = PDELab::FunctionsBasisInfo<decltype(basis),Backend>;
+
+  BasisInfo basisInfo(basis);
+  backend_test(gridView, basisInfo, std::integral_constant<int,1>());
+}
+
+template<typename GridView>
 void test_functions_combined_basis(GridView gridView)
 {
   using namespace Functions::BasisFactory;
@@ -150,6 +166,8 @@ void test(const std::unique_ptr<Grid>& grid)
   // now try to use dune-functions
   test_functions_lagrange_basis(gv);
   test_functions_combined_basis(gv);
+  // try with other backends
+  test_functions_lagrange_basis_eigen(gv);
 }
 
 int main(int argc, char** argv)
