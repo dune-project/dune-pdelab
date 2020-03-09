@@ -126,13 +126,13 @@ void testinterpolate (const GV& gv)
   Dune::PDELab::interpolate(h,pgfs,pxg); // krass !
 
   // subspaces
-  typedef Dune::PDELab::GridFunctionSubSpace<CGFS,Dune::TypeTree::TreePath<0> > SUBGFS0;
+  typedef Dune::PDELab::GridFunctionSubSpace<CGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<0>> > SUBGFS0;
   SUBGFS0 subgfs0(cgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<CGFS,Dune::TypeTree::TreePath<1> > SUBGFS1;
+  typedef Dune::PDELab::GridFunctionSubSpace<CGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<1>> > SUBGFS1;
   SUBGFS1 subgfs1(cgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,Dune::TypeTree::TreePath<0> > PSUBGFS0;
+  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<0>> > PSUBGFS0;
   PSUBGFS0 psubgfs0(pgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,Dune::TypeTree::TreePath<1> > PSUBGFS1;
+  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<1>> > PSUBGFS1;
   PSUBGFS1 psubgfs1(pgfs);
 
   // make discrete function object
@@ -305,13 +305,13 @@ void testtaylorhood (const GV& gv)
   std::cout << "all entries correct" << std::endl;
 
   // subspaces
-  typedef Dune::PDELab::GridFunctionSubSpace<THGFS,Dune::TypeTree::TreePath<1> > SUBP;
+  typedef Dune::PDELab::GridFunctionSubSpace<THGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<1>> > SUBP;
   SUBP subp(thgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<THGFS,Dune::TypeTree::TreePath<0> > SUBV;
+  typedef Dune::PDELab::GridFunctionSubSpace<THGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<0>> > SUBV;
   SUBV subv(thgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<SUBV,Dune::TypeTree::TreePath<0> > SUBV0;
+  typedef Dune::PDELab::GridFunctionSubSpace<SUBV,Dune::TypeTree::HybridTreePath<Dune::index_constant<0>> > SUBV0;
   SUBV0 subv0(subv);
-  typedef Dune::PDELab::GridFunctionSubSpace<SUBV,Dune::TypeTree::TreePath<1> > SUBV1;
+  typedef Dune::PDELab::GridFunctionSubSpace<SUBV,Dune::TypeTree::HybridTreePath<Dune::index_constant<1>> > SUBV1;
   SUBV1 subv1(subv);
 
 
@@ -358,9 +358,9 @@ void testgridfunctions (const GV& gv)
   Dune::PDELab::interpolate(velocity_lin,vgfs,xv);
 
   // subspaces
-  typedef Dune::PDELab::GridFunctionSubSpace<VGFS,Dune::TypeTree::TreePath<0> > SUBV0;
+  typedef Dune::PDELab::GridFunctionSubSpace<VGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<0>> > SUBV0;
   SUBV0 subv0(vgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<VGFS,Dune::TypeTree::TreePath<1> > SUBV1;
+  typedef Dune::PDELab::GridFunctionSubSpace<VGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<1>> > SUBV1;
   SUBV1 subv1(vgfs);
 
   // make discrete function object
