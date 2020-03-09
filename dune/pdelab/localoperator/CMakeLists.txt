@@ -1,4 +1,6 @@
 install(FILES blockdiagonal.hh
+              blockdiagonalwrapper.hh
+              blockoffdiagonalwrapper.hh
               callswitch.hh
               convectiondiffusionccfv.hh
               convectiondiffusiondg.hh
@@ -18,6 +20,7 @@ install(FILES blockdiagonal.hh
               flags.hh
               idefault.hh
               interface.hh
+              jacobianapplyhelper.hh
               l2.hh
               l2volumefunctional.hh
               linearacousticsdg.hh
@@ -34,6 +37,7 @@ install(FILES blockdiagonal.hh
               numericalresidual.hh
               pattern.hh
               permeability_adapter.hh
+              pointdiagonalwrapper.hh
               scaled.hh
               stokesparameter.hh
               sum.hh
