@@ -9,7 +9,6 @@ variables:
 # than one thread.
   OMP_NUM_THREADS: 1
   DUNECI_PARALLEL: 4
-  DUNECI_TOOLCHAIN: gcc-7-17
 
 before_script:
   - . /duneci/bin/duneci-init-job
@@ -35,6 +34,8 @@ debian:10--gcc:
   tags:
     - "cores:4"
     - "mem:16G"
+  variables:
+    DUNECI_TOOLCHAIN: gcc-7-17
   artifacts:
     reports:
       junit: junit/*.xml
@@ -42,7 +43,8 @@ debian:10--gcc:
 debian:10--clang:
   <<: *common
   image: registry.dune-project.org/docker/ci/debian:10
-  variables: {DUNECI_OPTS: /duneci/opts.clang}
+  variables:
+    DUNECI_TOOLCHAIN: clang-6-17
   tags:
     - "cores:4"
     - "mem:16G"
