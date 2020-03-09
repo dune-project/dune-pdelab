@@ -18,6 +18,7 @@ before_script:
   - duneci-install-module https://gitlab.dune-project.org/core/dune-grid.git
   - duneci-install-module https://gitlab.dune-project.org/core/dune-istl.git
   - duneci-install-module https://gitlab.dune-project.org/staging/dune-typetree.git
+  - duneci-install-module https://gitlab.dune-project.org/staging/dune-functions.git
 
 .common: &common
   script:
