@@ -9,6 +9,7 @@ variables:
 # than one thread.
   OMP_NUM_THREADS: 1
   DUNECI_PARALLEL: 4
+  DUNECI_TOOLCHAIN: gcc-7-17
 
 before_script:
   - . /duneci/bin/duneci-init-job
