@@ -76,7 +76,6 @@ namespace Dune {
           typename LFS::Traits::DOFIndex dof_index(lfs.dofIndex(0));
 
           typedef typename LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::GeometryIndex GeometryIndexAccessor;
-          const GeometryType vertex_gt(0);
 
           // Find the corresponding entity in the reference element
           for (int j=0; j<refelement.size(faceindex,1,dimension); j++){
@@ -102,13 +101,13 @@ namespace Dune {
                 if(nodeState[m[fi[i+1]]].isHanging() && nodeState[m[fi[i+2]]].isHanging())
                   {
                     GeometryIndexAccessor::store(dof_index.entityIndex(),
-                                                 vertex_gt,
+                                                 GeometryTypes::vertex,
                                                  global_vertex_idx[fi[i+3]]);
 
                     contribution[dof_index] = 0.25;
 
                     GeometryIndexAccessor::store(dof_index.entityIndex(),
-                                                 vertex_gt,
+                                                 GeometryTypes::vertex,
                                                  global_vertex_idx[j]);
 
                     trafo[dof_index] = contribution;
@@ -117,13 +116,13 @@ namespace Dune {
                 else if(!nodeState[m[fi[i+1]]].isHanging())
                   {
                     GeometryIndexAccessor::store(dof_index.entityIndex(),
-                                                 vertex_gt,
+                                                 GeometryTypes::vertex,
                                                  global_vertex_idx[fi[i+1]]);
 
                     contribution[dof_index] = 0.5;
 
                     GeometryIndexAccessor::store(dof_index.entityIndex(),
-                                                 vertex_gt,
+                                                 GeometryTypes::vertex,
                                                  global_vertex_idx[j]);
 
                     trafo[dof_index] = contribution;
@@ -132,13 +131,13 @@ namespace Dune {
                 else if(!nodeState[m[fi[i+2]]].isHanging())
                   {
                     GeometryIndexAccessor::store(dof_index.entityIndex(),
-                                                 vertex_gt,
+                                                 GeometryTypes::vertex,
                                                  global_vertex_idx[fi[i+2]]);
 
                     contribution[dof_index] = 0.5;
 
                     GeometryIndexAccessor::store(dof_index.entityIndex(),
-                                                 vertex_gt,
+                                                 GeometryTypes::vertex,
                                                  global_vertex_idx[j]);
 
                     trafo[dof_index] = contribution;
@@ -158,13 +157,13 @@ namespace Dune {
                 assert( !nodeState[m[n_j]].isHanging() );
 
                 GeometryIndexAccessor::store(dof_index.entityIndex(),
-                                             vertex_gt,
+                                             GeometryTypes::vertex,
                                              global_vertex_idx[n_j]);
 
                 contribution[dof_index] = 0.5;
 
                 GeometryIndexAccessor::store(dof_index.entityIndex(),
-                                             vertex_gt,
+                                             GeometryTypes::vertex,
                                              global_vertex_idx[j]);
 
                 trafo[dof_index] = contribution;
@@ -239,7 +238,6 @@ namespace Dune {
           typename LFS::Traits::DOFIndex dof_index(lfs.dofIndex(0));
 
           typedef typename LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::GeometryIndex GeometryIndexAccessor;
-          const GeometryType vertex_gt(0);
 
           // Find the corresponding entity in the reference element
           for (int j=0; j<refelement.size(faceindex,1,dimension); j++){
@@ -259,13 +257,13 @@ namespace Dune {
                   if( !nodeState[m[n_j]].isHanging() )
                     {
                       GeometryIndexAccessor::store(dof_index.entityIndex(),
-                                                   vertex_gt,
+                                                   GeometryTypes::vertex,
                                                    global_vertex_idx[n_j]);
 
                       contribution[dof_index] = 0.5;
 
                       GeometryIndexAccessor::store(dof_index.entityIndex(),
-                                                   vertex_gt,
+                                                   GeometryTypes::vertex,
                                                    global_vertex_idx[j]);
 
                       trafo[dof_index] = contribution;
@@ -282,13 +280,13 @@ namespace Dune {
                 // If both neighbors are hanging nodes, then this node
                 // is diagonal to the target of the contribution
                 GeometryIndexAccessor::store(dof_index.entityIndex(),
-                                             vertex_gt,
+                                             GeometryTypes::vertex,
                                              global_vertex_idx[n_j]);
 
                 contribution[dof_index] = 0.5;
 
                 GeometryIndexAccessor::store(dof_index.entityIndex(),
-                                             vertex_gt,
+                                             GeometryTypes::vertex,
                                              global_vertex_idx[j]);
 
                 trafo[dof_index] = contribution;
