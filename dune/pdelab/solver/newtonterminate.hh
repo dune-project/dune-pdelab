@@ -36,7 +36,8 @@ namespace Dune::PDELab
       return converged;
     }
 
-    virtual void setParameters(const ParameterTree& parameterTree){
+    virtual void setParameters(const ParameterTree& parameterTree) override
+    {
       _maxIterations = parameterTree.get<unsigned int>("max_iterations", _maxIterations);
       _force_iteration = parameterTree.get<bool>("force_iteration", _force_iteration);
     }
