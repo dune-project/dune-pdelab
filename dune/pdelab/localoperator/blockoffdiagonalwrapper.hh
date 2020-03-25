@@ -8,6 +8,46 @@
 namespace Dune {
   namespace PDELab {
 
+    namespace impl {
+      template <typename View>
+      class ZeroViewWrapper
+      {
+      public:
+
+        using Container = typename View::Container;
+        using ElementType = typename View::ElementType;
+        using size_type = typename View::size_type;
+
+        ZeroViewWrapper(View& view, bool zero)
+          : _view(view), _zero(zero), _zeroCoefficient(0.0)
+        {}
+
+        template <typename LFS>
+        const ElementType& operator()(const LFS& lfs, size_type i) const
+        {
+          if (_zero)
+            return _zeroCoefficient;
+          else
+            return _view(lfs, i);
+        }
+
+        const ElementType* data() const
+        {
+          // Note: There is no principal problem in implementing this. Create
+          // an array of ElementType that has the correct size and contains
+          // only zeros. This was not implemted since there was no way of
+          // testing the implementation. Better to have a clear error message
+          // than a delicate implementation bug.
+          DUNE_THROW(Dune::Exception, "So far the ZeroViewWrapper does not support fast DG local operators using the data() method to access coefficients. .")
+        }
+
+      private:
+        const View& _view;
+        bool _zero;
+        ElementType _zeroCoefficient;
+      };
+    } // namespace impl
+
     /** \brief A local operator that accumulates the off block diagonal
      *
      * This makes only sense for methods that have a block structure like
@@ -23,7 +63,7 @@ namespace Dune {
      *
      * \tparam[in] LocalOperator Type of the local operator that gets wrapped
      */
-    template <class LocalOperator>
+    template <typename LocalOperator>
     class BlockOffDiagonalLocalOperatorWrapper
       : public Dune::PDELab::LocalOperatorDefaultFlags
     {
@@ -104,10 +144,16 @@ namespace Dune {
         // jacobian locally for one block so we need to implement equation (1)
         // to get all contributions of other cell on the current one.
 
+        // Set input coefficients z_s to zero
+        auto z_zero = impl::ZeroViewWrapper(z_s, true);
+        auto z_neigh = impl::ZeroViewWrapper(z_n, false);
+
+        // Only accumulate in y_s
         impl::BlockDiagonalAccumulationViewWrapper<Y> view_s_on(y_s, true);
         impl::BlockDiagonalAccumulationViewWrapper<Y> view_n_off(y_n, false);
-        Z z_s_zero(z_s.size(), 0.0);
-        Dune::PDELab::impl::jacobianApplySkeleton(_localOperator, ig, lfsu_s, z_s_zero, lfsv_s, lfsu_n, z_n, lfsv_n, view_s_on, view_n_off);
+
+        // Apply Jacobian
+        Dune::PDELab::impl::jacobianApplySkeleton(_localOperator, ig, lfsu_s, z_zero, lfsv_s, lfsu_n, z_neigh, lfsv_n, view_s_on, view_n_off);
       }
 
       template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
@@ -131,10 +177,16 @@ namespace Dune {
         // jacobian locally for one block so we need to implement equation (1)
         // to get all contributions of other cell on the current one.
 
+        // Set input coefficients z_s to zero
+        auto z_zero = impl::ZeroViewWrapper(z_s, true);
+        auto z_neigh = impl::ZeroViewWrapper(z_n, false);
+
+        // Only accumulate in y_s
         impl::BlockDiagonalAccumulationViewWrapper<Y> view_s_on(y_s, true);
         impl::BlockDiagonalAccumulationViewWrapper<Y> view_n_off(y_n, false);
-        Z z_s_zero(z_s.size(), 0.0);
-        Dune::PDELab::impl::jacobianApplySkeleton(_localOperator, ig, lfsu_s, x_s, z_s_zero, lfsv_s, lfsu_n, x_n, z_n, lfsv_n, view_s_on, view_n_off);
+
+        // Apply Jacobian
+        Dune::PDELab::impl::jacobianApplySkeleton(_localOperator, ig, lfsu_s, x_s, z_zero, lfsv_s, lfsu_n, x_n, z_neigh, lfsv_n, view_s_on, view_n_off);
       }
 
     private:
