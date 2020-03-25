@@ -178,7 +178,8 @@ namespace Dune {
       {
         W _a_i_view(_a_i, y_s.weight());
         if (ig.inside().partitionType() == Dune::InteriorEntity)
-          _blockOffDiagonalLOP.jacobian_apply_skeleton(ig, lfsu_s, x_s, y_s.container(), lfsv_s, lfsu_n, x_n, y_n.container(), lfsv_s, _a_i_view, _a_i_view);
+          // TODO: Only works for FastDGGridOperator (y_* being an AliasedVectorView)
+          _blockOffDiagonalLOP.jacobian_apply_skeleton(ig, lfsu_s, x_s, y_s, lfsv_s, lfsu_n, x_n, y_n, lfsv_s, _a_i_view, _a_i_view);
       }
 
       //! Apply preconditioner after skeleton terms, linear version
