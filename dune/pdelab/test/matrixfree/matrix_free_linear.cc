@@ -117,6 +117,7 @@ int main(int argc, char** argv)
     using MatrixBackend = Dune::PDELab::ISTL::BCRSMatrixBackend<>;
     MatrixBackend matrixBackend(dofestimate);
 #ifdef FASTDG
+    std::cout << "Info: Using fast DG grid operator." << std::endl;
     using GridOperator = Dune::PDELab::FastDGGridOperator<GridFunctionSpace,
                                                           GridFunctionSpace,
                                                           LocalOperator,
@@ -297,6 +298,17 @@ int main(int argc, char** argv)
     BlockSORPreconditionerLOP blockSORPreconditionerLOP(ibjplop, blockOffDiagonalLOP, gridFunctionSpace, 1.0);
 
     // Setup grid operator for preconditioner application
+#ifdef FASTDG
+    using BlockSORPreconditionerGO = Dune::PDELab::FastDGGridOperator<GridFunctionSpace,
+                                                                      GridFunctionSpace,
+                                                                      BlockSORPreconditionerLOP,
+                                                                      MatrixBackend,
+                                                                      DomainField,
+                                                                      RangeType,
+                                                                      RangeType,
+                                                                      ConstraintsContainer,
+                                                                      ConstraintsContainer>;
+#else
     using BlockSORPreconditionerGO = Dune::PDELab::GridOperator<GridFunctionSpace,
                                                                 GridFunctionSpace,
                                                                 BlockSORPreconditionerLOP,
@@ -306,6 +318,7 @@ int main(int argc, char** argv)
                                                                 RangeType,
                                                                 ConstraintsContainer,
                                                                 ConstraintsContainer>;
+#endif
     BlockSORPreconditionerGO blockSORPreconditionerGO(gridFunctionSpace,
                                                       constraintsContainer,
                                                       gridFunctionSpace,
