@@ -12,7 +12,16 @@
 #include "dune/pdelab/test/localoperator/nonlinearconvectiondiffusiondg.hh"
 
 
+#ifdef MATRIX_FREE_SOR
+#define FASTDG
+#endif
+#ifdef MATRIX_BASED_SOR
+#define FASTDG
+#endif
+
+//======================================
 // These are set through CMakeLists.txt!
+//======================================
 // #define MATRIX_BASED
 // #define PARTIAL_MATRIX_FREE
 // #define FULLY_MATRIX_FREE
@@ -272,6 +281,17 @@ int main(int argc, char** argv)
     BlockSORPreconditionerLOP blockSORPreconditionerLOP(ibjplop, blockOffDiagonalLOP, gridFunctionSpace, 1.0);
 
     // Setup grid operator for preconditioner application
+#ifdef FASTDG
+    using BlockSORPreconditionerGO = Dune::PDELab::FastDGGridOperator<GridFunctionSpace,
+                                                                      GridFunctionSpace,
+                                                                      BlockSORPreconditionerLOP,
+                                                                      MatrixBackend,
+                                                                      DomainField,
+                                                                      RangeType,
+                                                                      RangeType,
+                                                                      ConstraintsContainer,
+                                                                      ConstraintsContainer>;
+#else
     using BlockSORPreconditionerGO = Dune::PDELab::GridOperator<GridFunctionSpace,
                                                                 GridFunctionSpace,
                                                                 BlockSORPreconditionerLOP,
@@ -281,6 +301,7 @@ int main(int argc, char** argv)
                                                                 RangeType,
                                                                 ConstraintsContainer,
                                                                 ConstraintsContainer>;
+#endif
     BlockSORPreconditionerGO blockSORPreconditionerGO(gridFunctionSpace,
                                                       constraintsContainer,
                                                       gridFunctionSpace,
