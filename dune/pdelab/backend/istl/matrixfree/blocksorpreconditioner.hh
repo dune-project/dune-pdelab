@@ -163,7 +163,9 @@ namespace Dune {
           // Note: Since the block off diagonal local operator works two sided
           // we can pass _a_i_view two times to the jacobian_apply_skeleton but
           // will only accumulate once.
-          _blockOffDiagonalLOP.jacobian_apply_skeleton(ig, lfsu_s, y_s.container(), lfsv_s, lfsu_n, y_n.container(), lfsv_s, _a_i_view, _a_i_view);
+
+          // TODO: Only works for FastDGGridOperator (y_* being an AliasedVectorView)
+          _blockOffDiagonalLOP.jacobian_apply_skeleton(ig, lfsu_s, y_s, lfsv_s, lfsu_n, y_n, lfsv_s, _a_i_view, _a_i_view);
         }
       }
 
