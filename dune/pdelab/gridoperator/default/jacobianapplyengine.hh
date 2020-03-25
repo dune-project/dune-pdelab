@@ -288,7 +288,7 @@ namespace Dune{
           jacobian_apply_skeleton(lop,ig,
                                   lfsu_s_cache.localFunctionSpace(),local_solution_inside,local_update_inside,lfsv_s_cache.localFunctionSpace(),
                                   lfsu_n_cache.localFunctionSpace(),local_solution_outside,local_update_outside,lfsv_n_cache.localFunctionSpace(),
-                         result_view_inside,result_view_outside);
+                                  result_view_inside,result_view_outside);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
