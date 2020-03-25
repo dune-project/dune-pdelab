@@ -38,7 +38,7 @@ namespace Dune {
           // only zeros. This was not implemted since there was no way of
           // testing the implementation. Better to have a clear error message
           // than a delicate implementation bug.
-          DUNE_THROW(Dune::Exception, "So far the ZeroViewWrapper does not support fast DG local operators using the data() method to access coefficients. .")
+          DUNE_THROW(Dune::Exception, "So far the ZeroViewWrapper does not support fast DG local operators using the data() method to access coefficients. .");
         }
 
       private:
