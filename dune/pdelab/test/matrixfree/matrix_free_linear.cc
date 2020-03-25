@@ -7,8 +7,12 @@
 
 #include "dune/pdelab.hh"
 
-// This should also work if we use the FastDGGridOperator
-// #define FASTDG
+#ifdef MATRIX_FREE_SOR
+#define FASTDG
+#endif
+#ifdef MATRIX_BASED_SOR
+#define FASTDG
+#endif
 
 //======================================
 // These are set through CMakeLists.txt!
