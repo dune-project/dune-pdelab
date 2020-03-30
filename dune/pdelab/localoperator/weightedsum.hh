@@ -155,15 +155,16 @@ namespace Dune {
        * No summand local operators are set.  They must be initialized with
        * setSummand() before the constructed object is used.
        */
-      WeightedSumLocalOperator
-      ( const Weights& weights_ = Weights(1))
+      [[deprecated("The specialization WeightedSumLocalOperator<K,Tuple<...>> is"
+            "deprecated and will be removed after PDELab 2.7.")]]
+      WeightedSumLocalOperator (const Weights& weights_ = Weights(1))
         : Base(weights_)
       { }
 
       //! construct a WeightedSumLocalOperator from a tuple of local operators
-      WeightedSumLocalOperator
-      ( const ArgRefs& lops_,
-        const Weights& weights_ = Weights(1))
+      [[deprecated("The specialization WeightedSumLocalOperator<K,Tuple<...>> is"
+            "deprecated and will be removed after PDELab 2.7.")]]
+      WeightedSumLocalOperator (const ArgRefs& lops_, const Weights& weights_ = Weights(1))
         : Base(transformTuple<AddPtrTypeEvaluator>(lops_), weights_)
       { }
     };
