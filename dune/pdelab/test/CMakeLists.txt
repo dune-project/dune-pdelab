@@ -1,5 +1,7 @@
 add_subdirectory(fem)
 
+dune_add_test(SOURCES testcombinedoperator.cc)
+
 dune_add_test(SOURCES testconvectiondiffusiondg.cc)
 
 dune_add_test(SOURCES testnewton.cc)
