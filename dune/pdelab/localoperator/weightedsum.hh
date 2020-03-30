@@ -103,16 +103,14 @@ namespace Dune {
        * No summand local operators are set.  They must be initialized with
        * setSummand() before the constructed object is used.
        */
-      WeightedSumLocalOperator
-      ( const Weights& weights_ = Weights(1))
+      WeightedSumLocalOperator (const Weights& weights_ = Weights(1))
         : weights(weights_)
       { }
 
       //! construct a WeightedSumLocalOperator from a tuple of local operators
-      WeightedSumLocalOperator
-      ( const ArgRefs& lops_,
+      WeightedSumLocalOperator (Args&&... lops_,
         const Weights& weights_ = Weights(1))
-        : Base(transformTuple<AddPtrTypeEvaluator>(lops_)), weights(weights_)
+        : Base(std::forward<Args>(lops_)...), weights(weights_)
       { }
 
     protected:
