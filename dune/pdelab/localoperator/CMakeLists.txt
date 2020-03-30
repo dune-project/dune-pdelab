@@ -1,5 +1,6 @@
 install(FILES blockdiagonal.hh
               callswitch.hh
+              combinedoperator.hh
               convectiondiffusionccfv.hh
               convectiondiffusiondg.hh
               convectiondiffusionfem.hh

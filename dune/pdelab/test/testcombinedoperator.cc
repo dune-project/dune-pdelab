@@ -58,6 +58,30 @@ private:
     double _v;
 };
 
+// template <typename GFS>
+// double test(const GO& go, const GFS& gfs, bool test_jacobian=true)
+// {
+//     // Initialize vectors and matrices for gridoperator calls
+//     typename GO::Traits::Domain u(gfs,0.0);
+//     typename GO::Traits::Range r(gfs);
+//     typename GO::Traits::Jacobian jac(go);
+
+//     // Call gridoperator methods
+//     go.residual(u,r);
+//     if (test_jacobian)
+//       go.jacobian(u,jac);
+//     go.jacobian_apply(u,r);
+
+//     // For linear problems these methods should throw errors
+//     bool jacobian_apply_error = false;
+//     bool nonlinear_jacobian_apply_error = false;
+//     try{ go.jacobian_apply(u,u,r); } catch (...) { jacobian_apply_error = true; }
+//     try{ go.nonlinear_jacobian_apply(u,u,r); } catch (...) { nonlinear_jacobian_apply_error = true; }
+
+//     // If both are true we hit exceptions where expected -> true is a sucess
+//     return (jacobian_apply_error and nonlinear_jacobian_apply_error);
+// }
+
 int main(int argc, char** argv)
 {
   try{
@@ -99,6 +123,19 @@ int main(int argc, char** argv)
 
     // Make sum local operator
     {
+        using LOP = Dune::PDELab::InstationarySumLocalOperator<Scalar,Scalar>;
+        LOP lop(Scalar(2.),Scalar(3.));
+        using GO = Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,double,double,double>;
+
+        GO go(gfs,gfs,lop,mbe);
+        typename GO::Traits::Domain x(gfs,0.0);
+        go.residual(x,x);
+        std::cout << Dune::PDELab::Backend::native(x)[0] << std::endl;
+        success &= (Dune::PDELab::Backend::native(x)[0] == 2. + 3.);
+    }
+
+    // Make sum local operator from tuple
+    {
         using OPS = std::tuple<Scalar,Scalar>;
         using OPSRefs = std::tuple<Scalar&,Scalar&>;
         using LOP = Dune::PDELab::InstationarySumLocalOperator<OPS>;
@@ -110,6 +147,7 @@ int main(int argc, char** argv)
         GO go(gfs,gfs,lop,mbe);
         typename GO::Traits::Domain x(gfs,0.0);
         go.residual(x,x);
+        std::cout << Dune::PDELab::Backend::native(x)[0] << std::endl;
         success &= (Dune::PDELab::Backend::native(x)[0] == 2. + 3.);
     }
 
@@ -128,6 +166,7 @@ int main(int argc, char** argv)
         GO go(gfs,gfs,lop,mbe);
         typename GO::Traits::Domain x(gfs,0.0);
         go.residual(x,x);
+        std::cout << Dune::PDELab::Backend::native(x)[0] << std::endl;
         success &= (Dune::PDELab::Backend::native(x)[0] == 2*2. - 3.);
     }
 
