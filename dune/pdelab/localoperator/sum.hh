@@ -77,11 +77,15 @@ namespace Dune {
 
       //! \brief Default-construct an InstationarySumLocalOperator. Expects the operators
       //!        to be added later through the setSummand method.
+      [[deprecated("The specialization InstationarySumLocalOperator<Tuple<...>> is"
+            "deprecated and will be removed after PDELab 2.7.")]]
       InstationarySumLocalOperator()
       {}
 
       //! \brief construct a InstationarySumLocalOperator from a tuple of
       //!        local operators
+      [[deprecated("The specialization InstationarySumLocalOperator<Tuple<...>> is"
+            "deprecated and will be removed after PDELab 2.7.")]]
       InstationarySumLocalOperator(const ArgRefs& lops)
         : Base(transformTuple<AddPtrTypeEvaluator>(lops))
       { }
