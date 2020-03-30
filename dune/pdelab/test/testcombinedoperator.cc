@@ -153,6 +153,19 @@ int main(int argc, char** argv)
 
     // Make weighted sum local operator
     {
+        using LOP = Dune::PDELab::WeightedSumLocalOperator<double,Scalar,Scalar>;
+        LOP lop(Scalar(2.),Scalar(3.),{2.,-1.});
+
+        using GO = Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,double,double,double>;
+        GO go(gfs,gfs,lop,mbe);
+        typename GO::Traits::Domain x(gfs,0.0);
+        go.residual(x,x);
+        std::cout << Dune::PDELab::Backend::native(x)[0] << std::endl;
+        success &= (Dune::PDELab::Backend::native(x)[0] == 2*2. - 3.);
+    }
+
+    // Make weighted sum local operator from tuple
+    {
         using OPS = std::tuple<Scalar,Scalar>;
         using OPSRefs = std::tuple<Scalar&,Scalar&>;
         using Weights = Dune::FieldVector<double, 2>;
