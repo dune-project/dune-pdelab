@@ -29,8 +29,8 @@ namespace Dune {
     class CombinedOperator
     {
     protected:
-      typedef typename ForEachType<AddPtrTypeEvaluator, std::tuple<Args...>>::Type ArgPtrs;
-      typedef typename ForEachType<AddRefTypeEvaluator, std::tuple<Args...>>::Type ArgRefs;
+      using ArgPtrs = std::tuple<std::shared_ptr<std::remove_reference_t<Args>>...>;
+      using ArgRefs = std::tuple<Args&...>;
 
       ArgPtrs lops;
 
@@ -49,13 +49,13 @@ namespace Dune {
 
       CombinedOperator() {}
 
-      CombinedOperator(Args&... args) : lops(&args...) {}
+      CombinedOperator(Args&... args) : lops(stackobject_to_shared_ptr(args)...) {}
 
-      #warning so kann das nicht bleiben...
-      CombinedOperator(Args&&... args) : lops(new Args(args)...) {}
+      CombinedOperator(Args&&... args) : lops(std::make_shared<Args>(std::move(args))...) {}
 
     protected:
-      CombinedOperator(ArgPtrs l) : lops(l) {}
+      // CombinedOperator(const ArgPtrs & l) : lops(l) {}
+      CombinedOperator(ArgPtrs && l) : lops(std::move(l)) {}
     public:
 
       //! set the i'th component of the sum
