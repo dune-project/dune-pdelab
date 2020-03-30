@@ -107,15 +107,23 @@ namespace Dune {
         : weights(weights_)
       { }
 
-      //! construct a WeightedSumLocalOperator from a tuple of local operators
+      //! construct a WeightedSumLocalOperator from a set
+      //! of local operators
+      WeightedSumLocalOperator (Args&... lops_,
+        const Weights& weights_ = Weights(1))
+        : Base(lops_...), weights(weights_)
+      { }
+
+      //! construct a WeightedSumLocalOperator from a set
+      //! of local operators (rvalue reference)
       WeightedSumLocalOperator (Args&&... lops_,
         const Weights& weights_ = Weights(1))
         : Base(std::forward<Args>(lops_)...), weights(weights_)
       { }
 
     protected:
-      WeightedSumLocalOperator(const ArgPtrs& lops, const Weights& weights_)
-        : Base(lops), weights(weights_)
+      WeightedSumLocalOperator(ArgPtrs&& lops, const Weights& weights_)
+        : Base(std::forward<ArgPtrs>(lops)), weights(weights_)
       { }
 
     public:
@@ -165,7 +173,8 @@ namespace Dune {
       [[deprecated("The specialization WeightedSumLocalOperator<K,Tuple<...>> is"
             "deprecated and will be removed after PDELab 2.7.")]]
       WeightedSumLocalOperator (const ArgRefs& lops_, const Weights& weights_ = Weights(1))
-        : Base(transformTuple<AddPtrTypeEvaluator>(lops_), weights_)
+        : Base(genericTransformTuple(lops_,
+            [](auto & l){return stackobject_to_shared_ptr(l);}), weights_)
       { }
     };
 

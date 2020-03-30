@@ -40,21 +40,21 @@ namespace Dune {
       InstationarySumLocalOperator()
       {}
 
-      //! \brief Default-construct an InstationarySumLocalOperator. Expects the operators
-      //!        to be added later through the setSummand method.
+      //! \brief construct a InstationarySumLocalOperator from a set of
+      //!        local operators
       InstationarySumLocalOperator(Args&... lops)
         : Base(lops...)
       {}
 
-      //! \brief Default-construct an InstationarySumLocalOperator. Expects the operators
-      //!        to be added later through the setSummand method.
+      //! \brief construct a InstationarySumLocalOperator from a set of
+      //!        local operators (rvalue reference)
       InstationarySumLocalOperator(Args&&... lops)
         : Base(std::forward<Args>(lops)...)
       {}
 
     protected:
-      InstationarySumLocalOperator(const ArgPtrs& lops)
-        : Base(lops)
+      InstationarySumLocalOperator(ArgPtrs&& lops)
+        : Base(std::forward<ArgPtrs>(lops))
       { }
 
     };
@@ -87,7 +87,8 @@ namespace Dune {
       [[deprecated("The specialization InstationarySumLocalOperator<Tuple<...>> is"
             "deprecated and will be removed after PDELab 2.7.")]]
       InstationarySumLocalOperator(const ArgRefs& lops)
-        : Base(transformTuple<AddPtrTypeEvaluator>(lops))
+        : Base(genericTransformTuple(lops,
+            [](auto & l){return stackobject_to_shared_ptr(l);}))
       { }
     };
 
