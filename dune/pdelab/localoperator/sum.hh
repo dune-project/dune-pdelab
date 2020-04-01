@@ -23,10 +23,10 @@ namespace Dune {
       public CombinedOperator<InstationarySumLocalOperator<Args...>, Args...>
     {
       template<typename F, typename... FArgs>
-      void applyLops(F && f, FArgs &&... args) const
+      void applyLops(F && f, FArgs &... args) const
       {
         Hybrid::forEach(Std::make_index_sequence<sizeof...(Args)>{},
-          [&](auto i){f(*Hybrid::elementAt(this->lops, i), std::forward<FArgs>(args)...);});
+          [&](auto i){f(*Hybrid::elementAt(this->lops, i), args...);});
       }
 
       using Base = CombinedOperator<InstationarySumLocalOperator<Args...>, Args...>;
