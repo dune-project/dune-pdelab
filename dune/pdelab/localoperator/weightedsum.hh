@@ -72,7 +72,7 @@ namespace Dune {
       }
 
       template<typename F, typename... FArgs>
-      void applyLops(F && f, FArgs &&... fargs) const
+      void applyLops(F && f, FArgs &... fargs) const
       {
         // remember weights
         FieldVector<K, sizeof...(FArgs)> aweights(K(0));
@@ -85,7 +85,7 @@ namespace Dune {
               current_weights = aweights;
               current_weights *= weights[i];
               setWeights(current_weights, std::forward_as_tuple(fargs...));
-              f(*Hybrid::elementAt(this->lops, i), std::forward<FArgs>(fargs)...);}}
+              f(*Hybrid::elementAt(this->lops, i), fargs...);}}
           );
         // reset weights
         setWeights(aweights, std::forward_as_tuple(fargs...));
