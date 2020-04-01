@@ -22,7 +22,7 @@ namespace Dune {
     /**
      * \nosubgrouping
      *
-     * \tparam ApplyOp operator implementing applyLops to call a particular local and combine them
+     * \tparam ApplyOp operator implementing applyLops to call a particular local operator and combine them
      * \tparam Args variadic list of local operators
      */
     template<typename ApplyOp, typename... Args>
