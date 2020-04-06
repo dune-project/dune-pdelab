@@ -19,6 +19,7 @@ namespace Dune {
     //! \brief constraints all DOFs associated with interior vertices
     //! This allows to implement surface FEM using standard first order FEM
     class InteriorNodeConstraints
+      : public TypeTree::LeafNode
     {
       std::vector<bool> interior;
     public:

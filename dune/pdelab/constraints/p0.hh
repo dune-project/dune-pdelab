@@ -13,6 +13,7 @@ namespace Dune {
 
     //! Parallel P0 constraints for overlapping grids
     class P0ParallelConstraints
+      : public TypeTree::LeafNode
     {
     public:
       enum{doBoundary=false};

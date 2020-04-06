@@ -34,6 +34,7 @@ namespace Dune {
     //! Dirichlet Constraints construction
     // works in any dimension and on all element types
     class ConformingDirichletConstraints
+      : public TypeTree::LeafNode
     {
     public:
       enum { doBoundary = true };
