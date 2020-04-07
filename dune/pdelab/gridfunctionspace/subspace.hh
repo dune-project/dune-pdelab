@@ -60,7 +60,7 @@ namespace Dune {
          * This TMP will recursively walk down the GFS and the Ordering tree and insert additional
          * entries into the Ordering tree as required.
          */
-        template<typename Ordering, typename GFS, typename GFSTP, typename OrderingTP = TypeTree::TreePath<> >
+        template<typename Ordering, typename GFS, typename GFSTP, typename OrderingTP = TypeTree::HybridTreePath<> >
         struct find_ordering_treepath_for_sub_gfs
         {
 
@@ -99,7 +99,7 @@ namespace Dune {
 
         //! End of recursion for TreePath-deducing TMP.
         template<typename Ordering, typename GFS, typename OrderingTP>
-        struct find_ordering_treepath_for_sub_gfs<Ordering,GFS,TypeTree::TreePath<>,OrderingTP>
+        struct find_ordering_treepath_for_sub_gfs<Ordering,GFS,TypeTree::HybridTreePath<>,OrderingTP>
         {
 
           // We have found the correct ordering TreePath, so let's return it.

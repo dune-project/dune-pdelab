@@ -172,7 +172,7 @@ int main(int argc, char** argv)
 
     // need a grid in order to test grid functions
     constexpr unsigned int degree = 1;
-    constexpr std::size_t nonzeros = std::pow(2*degree+1,dim);
+    constexpr std::size_t nonzeros = Dune::power(2*degree+1,dim);
 
     // make problem parameters
     typedef GenericEllipticProblem<typename Grid::LeafGridView,NumberType> Problem;

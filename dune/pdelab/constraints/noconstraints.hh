@@ -14,6 +14,7 @@ namespace Dune {
 
     // Empty constraints assembler class
     class NoConstraints
+      : public TypeTree::LeafNode
     {
     public:
       enum { doBoundary = false };
