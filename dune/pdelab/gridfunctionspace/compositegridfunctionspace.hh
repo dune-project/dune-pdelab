@@ -79,6 +79,26 @@ namespace Dune {
 
       typedef typename ordering_transformation::Type Ordering;
 
+      //! extract type for storing constraints
+      template<typename E>
+      struct ConstraintsContainer
+      {
+        typedef typename std::conditional<
+          // check against all children.
+          // Use EmptyTransformation, iif all Children use EmptyTransformation
+          std::conjunction_v<
+            std::is_same<
+              EmptyTransformation,
+              typename Children::template ConstraintsContainer<E>::Type>...>,
+          EmptyTransformation,
+          ConstraintsTransformation<
+            typename Ordering::Traits::DOFIndex,
+            typename Ordering::Traits::ContainerIndex,
+            E
+            >
+          >::type Type;
+      };
+
       typedef typename ImplementationBase::Traits Traits;
 
       // ********************************************************************************
