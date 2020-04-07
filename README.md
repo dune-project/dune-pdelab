@@ -66,9 +66,9 @@ For installation instructions please see the [DUNE website][1].
 Links
 -----
 
- [0]: http://www.dune-project.org/pdelab/
+ [0]: https://dune-project.org/modules/dune-pdelab/
  [1]: http://www.dune-project.org
- [2]: http://www.dune-project.org/doc/installation-notes.html
+ [2]: https://dune-project.org/doc/beginners-resources-pdelab/
  [4]: http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
  [5]: http://www.mcs.anl.gov/petsc/
  [6]: http://eigen.tuxfamily.org
