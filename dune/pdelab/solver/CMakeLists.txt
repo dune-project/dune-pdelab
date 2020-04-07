@@ -3,4 +3,4 @@ install(FILES newtonerrors.hh
               newtonlinesearch.hh
               newtonterminate.hh
               utility.hh
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/newton)
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/solver)
