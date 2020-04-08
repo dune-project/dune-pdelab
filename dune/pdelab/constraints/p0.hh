@@ -3,6 +3,7 @@
 #define DUNE_PDELAB_CONSTRAINTS_P0_HH
 
 #include "../common/geometrywrapper.hh"
+#include <dune/typetree/typetree.hh>
 
 namespace Dune {
   namespace PDELab {

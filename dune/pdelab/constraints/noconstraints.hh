@@ -5,6 +5,8 @@
 
 #include <dune/pdelab/common/geometrywrapper.hh>
 
+#include <dune/typetree/typetree.hh>
+
 namespace Dune {
   namespace PDELab {
 
