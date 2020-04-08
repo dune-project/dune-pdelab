@@ -231,13 +231,7 @@ namespace Dune {
       std::size_t intersectionIndex = 0;
       for (const auto& is : intersections(lfsu.gridFunctionSpace().gridView(), eg.entity()))
       {
-        Dune::PDELab::IntersectionGeometry<
-          typename std::remove_reference<
-            typename std::remove_const<
-              decltype(is)
-              >::type
-            >::type
-          > ig(is, intersectionIndex++);
+        Dune::PDELab::IntersectionGeometry<std::decay_t<decltype(is)>> ig(is, intersectionIndex++);
         auto intersectionData = classifyIntersection(entitySet, is);
         auto intersectionType = std::get<0>(intersectionData);
 
@@ -276,13 +270,7 @@ namespace Dune {
       std::size_t intersectionIndex = 0;
       for (const auto& is : intersections(lfsu.gridFunctionSpace().gridView(), eg.entity()))
       {
-        Dune::PDELab::IntersectionGeometry<
-          typename std::remove_reference<
-            typename std::remove_const<
-              decltype(is)
-              >::type
-            >::type
-          > ig(is, intersectionIndex++);
+        Dune::PDELab::IntersectionGeometry<std::decay_t<decltype(is)>> ig(is, intersectionIndex++);
         auto intersectionData = classifyIntersection(entitySet, is);
         auto intersectionType = std::get<0>(intersectionData);
 
