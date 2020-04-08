@@ -93,7 +93,7 @@ namespace Dune {
         // The element type for the vector.
         typedef E element_type;
 
-        // The ISTL vector type associated with the current subtree.
+        // The blocking descriptor associated with the current subtree.
         using blocking = Dune::PDELab::Blocking::tag::leafBlocked<block_size>;
       };
 
