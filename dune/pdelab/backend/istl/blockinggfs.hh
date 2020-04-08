@@ -290,7 +290,7 @@ namespace Dune {
         >
         : public Data
       {
-        // build new block vector with large field block size
+        // build a new blockinkg descriptor with large field block size
         using blocking = Dune::PDELab::Blocking::tag::leafBlocked<Data::block_size>;
       };
 
