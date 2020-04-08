@@ -9,6 +9,8 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 
+#include <dune/typetree/typetree.hh>
+
 namespace Dune {
   namespace PDELab {
 
