@@ -278,7 +278,7 @@ namespace Dune {
                       "Incompatible child block structures detected, cannot perform dynamic blocking. "
                       "Did you want to apply static blocking at this level?");
 
-        // Wrap the child vector type in another BlockVector
+        // Wrap the child blocking within another blocking
         using blocking = Dune::PDELab::Blocking::tag::blocked<typename Data::child_blocking>;
       };
 
