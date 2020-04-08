@@ -101,8 +101,8 @@ namespace Dune {
                            const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
       {
-        impl::PointDiagonalAccumulationViewWrapper view_ss(r_s, true);
-        impl::PointDiagonalAccumulationViewWrapper view_other(r_s, false);
+        impl::PointDiagonalAccumulationViewWrapper<R> view_ss(r_s, true);
+        impl::PointDiagonalAccumulationViewWrapper<R> view_other(r_s, false);
         _localOperator.jacobian_skeleton(ig,
                                          lfsu_s, x_s, lfsv_s,
                                          lfsu_n, x_n, lfsv_n,
@@ -114,7 +114,7 @@ namespace Dune {
                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                          R& r_s) const
       {
-        impl::PointDiagonalAccumulationViewWrapper view(r_s, true);
+        impl::PointDiagonalAccumulationViewWrapper<R> view(r_s, true);
         _localOperator.jacobian_boundary(ig, lfsu_s, x_s, lfsv_s, view);
       }
 
