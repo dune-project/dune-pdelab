@@ -5,6 +5,8 @@
 #include "../common/geometrywrapper.hh"
 #include<dune/grid/common/gridenums.hh>
 
+#include <dune/typetree/typetree.hh>
+
 namespace Dune {
   namespace PDELab {
 
