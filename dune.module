@@ -3,6 +3,6 @@
 Module: dune-pdelab
 Version: 2.7-git
 Maintainer: dune-pdelab@lists.dune-project.org
-Depends: dune-grid (>= 2.7) dune-localfunctions (>= 2.7) dune-istl (>= 2.7) dune-typetree (>= 2.7) dune-functions (>= 2.7)
-Suggests: dune-alugrid
+Depends: dune-grid (>=2.7&&<2.8) dune-localfunctions (>=2.7&&<2.8) dune-istl (>=2.7&&<2.8) dune-typetree (>=2.7&&<2.8) dune-functions (>=2.7&&<2.8)
+Suggests: dune-alugrid (>=2.7&&<2.8)
 Whitespace-Hook: Yes
