@@ -217,15 +217,15 @@ void testpowerp1 (const GV& gv)
   Dune::PDELab::set_constrained_dofs(p1mcg,0.0,p1mxg);
 
   // subspaces
-  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<0>> > SUB0GFS;
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::TypeTree::TreePath<0> > SUB0GFS;
   SUB0GFS sub0gfs(p1mgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<1>> > SUB1GFS;
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::TypeTree::TreePath<1> > SUB1GFS;
   SUB1GFS sub1gfs(p1mgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<2>> > SUB2GFS;
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::TypeTree::TreePath<2> > SUB2GFS;
   SUB2GFS sub2gfs(p1mgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<3>> > SUB3GFS;
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::TypeTree::TreePath<3> > SUB3GFS;
   SUB3GFS sub3gfs(p1mgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<4>> > SUB4GFS;
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::TypeTree::TreePath<4> > SUB4GFS;
   SUB4GFS sub4gfs(p1mgfs);
 
   // make discrete function objects (this is not yet generic enough

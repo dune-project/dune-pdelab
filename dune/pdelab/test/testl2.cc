@@ -104,7 +104,7 @@ void test_l2(const GV& gv)
   system_go.residual(system_v,system_r);
 
   // Extract first component from system space
-  using SubSpace = Dune::PDELab::GridFunctionSubSpace<SystemGFS,Dune::TypeTree::HybridTreePath<Dune::index_constant<0>,Dune::index_constant<0>>>;
+  using SubSpace = Dune::PDELab::GridFunctionSubSpace<SystemGFS,Dune::TypeTree::TreePath<0,0>>;
   SubSpace sub_space(system_gfs);
 
   // Integrate L2 norm of difference between scalar space and first component of system space
