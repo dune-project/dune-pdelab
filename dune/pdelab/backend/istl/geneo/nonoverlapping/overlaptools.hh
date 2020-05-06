@@ -277,7 +277,7 @@ namespace Dune {
       std::size_t sizeWithProc (int i, int proc) // i is a new local index
       {
         std::size_t count = 1; // always send one
-        if (i>=new2old_localindex.size()) return count; // not our business since this index is not in the original range
+        if ((unsigned)i>=new2old_localindex.size()) return count; // not our business since this index is not in the original range
         auto I = new2old_localindex[i]; // I is the local index in the input index set
         auto MEndIt = A[I].end();
         for (auto It = A[I].begin(); It!=MEndIt; ++It) // iterate over row and count entries
@@ -297,7 +297,7 @@ namespace Dune {
       {
         //std::cout << "proc: " << proc << std::endl;
         buffer.write(std::make_pair(BlockType(),GlobalId())); // write a default value
-        if (i>=new2old_localindex.size()) return; // not our business since this index is not in the original range
+        if ((unsigned)i>=new2old_localindex.size()) return; // not our business since this index is not in the original range
         auto I = new2old_localindex[i];
         auto MEndIt = A[I].end();
         for (auto It = A[I].begin(); It!=MEndIt; ++It) // iterate over row and count entries
@@ -376,7 +376,7 @@ namespace Dune {
         }
 
         std::size_t count = 1; // always send one
-        if (i>=new2old_localindex.size()) return count; // not our business since this index is not in the original range
+        if ((unsigned)i>=new2old_localindex.size()) return count; // not our business since this index is not in the original range
 
         auto I = new2old_localindex[i]; // I is the local index in the input index set
         auto MEndIt = (*A)[I].end(); // Can simply use first matrix here, as we assume equal sparsity patterns
@@ -402,7 +402,7 @@ namespace Dune {
         }
 
         buffer.write(std::make_pair(BlockType(),GlobalId())); // write a default value
-        if (i>=new2old_localindex.size()) return; // not our business since this index is not in the original range
+        if ((unsigned)i>=new2old_localindex.size()) return; // not our business since this index is not in the original range
         auto I = new2old_localindex[i];
         auto MEndIt = (*A)[I].end();
         for (auto It = (*A)[I].begin(); It!=MEndIt; ++It) // iterate over row and count entries
@@ -572,7 +572,7 @@ namespace Dune {
       {
         auto& myset = origins[indexset.index(e)];
         DataType x;
-        for (int i=0; i<n; ++i)
+        for (size_t i=0; i<n; ++i)
           {
             buff.read(x);
             myset.insert(x);
@@ -664,7 +664,7 @@ namespace Dune {
         // indicates that this local index was already in the initial set (including the ghosts)
         // then we have part of the graph and send information about our part of the row
         std::size_t count=1;
-        if (i<n2o.size()) // i is a new local index since it comes from the parallel index set
+        if ((unsigned)i<n2o.size()) // i is a new local index since it comes from the parallel index set
           {
             auto I = n2o[i]; // I is the corresponding index in the original local index set of A
             auto cIt = A[I].begin();
@@ -683,7 +683,7 @@ namespace Dune {
       void gather (B& buffer, int i)
       {
         buffer.write(GlobalId()); // write dummy since we want message length >= 1
-        if (i<n2o.size()) // i is a new local index since it comes from the parallel index set
+        if ((unsigned)i<n2o.size()) // i is a new local index since it comes from the parallel index set
           {
             auto I = n2o[i]; // I is the corresponding index in the original local index set of A
             auto cIt = A[I].begin();
@@ -929,7 +929,7 @@ namespace Dune {
                                                                                old2new_localindex,globalid);
     varcommunicator.forward(matconsdh);
     //std::cout << rank << ": matrix communication finished" << std::endl;
-    auto stats = M->compress();
+    M->compress();
     //std::cout << rank << ": matrix done" << std::endl;
     return M;
   }
@@ -1367,14 +1367,12 @@ namespace Dune {
     }
 
     const GridView& gv_;
-    const int overlap_;
     const int avg_;
-    //const Matrix& A_;
     const std::vector<GlobalId> globalid_;
+    const int overlap_;
     EPIS epis_;
   public:
     std::vector<LocalIndex> new2old_localindex_;
-    //std::shared_ptr<Matrix> M_;
   };
 
   template<typename GridView, typename Matrix, typename Vector>

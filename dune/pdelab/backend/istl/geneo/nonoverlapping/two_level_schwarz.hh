@@ -213,20 +213,20 @@ namespace Dune {
         int verbosity_;
         bool coarse_space_active_;
 
+        NonoverlappingOverlapAdapter<GridView, Vector, Matrix> adapter_;
+
+        const Matrix& A_;
+        Dune::UMFPack<Matrix> solverf_;
+
         double coarse_time_ = 0.0;
         int apply_calls_ = 0;
 
-        NonoverlappingOverlapAdapter<GridView, Vector, Matrix> adapter_;
-
-        //const GFS& gfs_;
-        Dune::UMFPack<Matrix> solverf_;
         std::shared_ptr<CoarseSpace<Vector> > coarse_space_;
         Dune::UMFPack<ScalarMatrix> coarse_solver_;
 
         ScalarVector coarse_defect_;
         Vector prolongated_;
 
-        const Matrix& A_;
       };
     }
   }

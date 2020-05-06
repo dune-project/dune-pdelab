@@ -50,7 +50,7 @@ namespace Dune {
       }
 
       void print() {
-        for (int i = 0; i < neighboringRanks_.size(); i++) {
+        for (size_t i = 0; i < neighboringRanks_.size(); i++) {
           Dune::printvector(std::cout, *(neighbor_basis[i]), "remote vec from neighbor " + std::to_string(neighboringRanks_[i]), "");
         }
       }
@@ -345,7 +345,8 @@ namespace Dune {
 
       NonoverlappingOverlapAdapter<GridView, X, M> adapter_;
 
-      //const GFS& gfs_;
+      const GridView& gridView_;
+
       const M& AF_exterior_;
 
       int verbosity_;
@@ -356,7 +357,6 @@ namespace Dune {
 
       std::shared_ptr<SubdomainBasis<X> > subdomainbasis_;
 
-      const GridView& gridView_;
 
       std::vector<rank_type> local_basis_sizes_; // Dimensions of local coarse space per subdomain
       rank_type my_basis_array_offset_; // Start of local basis functions in a consecutive global ordering
