@@ -9,14 +9,20 @@
 #include<dune/geometry/type.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 
+#include <dune/typetree/typetree.hh>
+
 namespace Dune {
   namespace PDELab {
 
     //! Neumann Constraints construction, as needed for RT0
-    class RT0Constraints {
+    class RT0Constraints
+      : public TypeTree::LeafNode
+    {
     public:
-        enum{doBoundary=true};enum{doProcessor=false};
-      enum{doSkeleton=false};enum{doVolume=false};
+      enum{doBoundary=true};
+      enum{doProcessor=false};
+      enum{doSkeleton=false};
+      enum{doVolume=false};
 
 
       //! boundary constraints

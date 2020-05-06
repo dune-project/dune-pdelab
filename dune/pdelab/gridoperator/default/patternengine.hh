@@ -62,7 +62,7 @@ namespace Dune{
          creates this engine
       */
       DefaultLocalPatternAssemblerEngine(const LocalAssembler & local_assembler_,
-                                         shared_ptr<typename LA::Traits::BorderDOFExchanger> border_dof_exchanger)
+                                         std::shared_ptr<typename LA::Traits::BorderDOFExchanger> border_dof_exchanger)
         : local_assembler(local_assembler_)
         , lop(local_assembler.localOperator())
         , pattern(nullptr)
@@ -187,7 +187,7 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolume,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolume>::
           pattern_volume(lop,lfsu_cache.localFunctionSpace(),lfsv_cache.localFunctionSpace(),localpattern);
       }
 
@@ -195,7 +195,7 @@ namespace Dune{
       void assembleUVSkeleton(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                               const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternSkeleton,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternSkeleton>::
           pattern_skeleton(lop,
                            lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace(),
                            lfsu_n_cache.localFunctionSpace(),lfsv_n_cache.localFunctionSpace(),
@@ -205,7 +205,7 @@ namespace Dune{
       template<typename IG, typename LFSUC, typename LFSVC>
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternBoundary,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternBoundary>::
           pattern_boundary(lop,lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace(),localpattern);
       }
 
@@ -230,7 +230,7 @@ namespace Dune{
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolumePostSkeleton,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolumePostSkeleton>::
           pattern_volume_post_skeleton(lop,lfsu_cache.localFunctionSpace(),lfsv_cache.localFunctionSpace(),localpattern);
       }
 
@@ -292,7 +292,7 @@ namespace Dune{
 
       BorderPattern _border_pattern;
 
-      shared_ptr<BorderDOFExchanger> _border_dof_exchanger;
+      std::shared_ptr<BorderDOFExchanger> _border_dof_exchanger;
 
     }; // End of class DefaultLocalPatternAssemblerEngine
 

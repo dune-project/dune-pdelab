@@ -31,12 +31,6 @@
 #include <dune/pdelab/solver/newtonterminate.hh>
 #include <dune/pdelab/solver/utility.hh>
 #include <dune/pdelab/newton/newton.hh>
-#include <dune/pdelab/finiteelement/l2orthonormal.hh>
-#include <dune/pdelab/finiteelement/localbasiscache.hh>
-#include <dune/pdelab/finiteelement/pk1d.hh>
-#include <dune/pdelab/finiteelement/qkdglobatto.hh>
-#include <dune/pdelab/finiteelement/qkdglagrange.hh>
-#include <dune/pdelab/finiteelement/qkdglegendre.hh>
 #include <dune/pdelab/localoperator/numericaljacobian.hh>
 #include <dune/pdelab/localoperator/darcyccfv.hh>
 #include <dune/pdelab/localoperator/maxwellparameter.hh>
@@ -224,7 +218,6 @@
 #include <dune/pdelab/finiteelementmap/rt0simplex2dfem.hh>
 #include <dune/pdelab/finiteelementmap/rt1simplex2dfem.hh>
 #include <dune/pdelab/finiteelementmap/rt0cube2dfem.hh>
-#include <dune/pdelab/finiteelementmap/pk1d.hh>
 #include <dune/pdelab/finiteelementmap/rt2cube2dfem.hh>
 #include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
 #include <dune/pdelab/finiteelementmap/variableqkdgfem.hh>

@@ -121,7 +121,6 @@ public:
   BCType
   bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& xlocal) const
   {
-    typename Traits::DomainType xglobal = is.geometry().global(xlocal);
     return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
 
@@ -164,7 +163,7 @@ int main(int argc, char **argv)
     // need a grid in order to test grid functions
     constexpr unsigned int dim = 1;
     constexpr unsigned int degree = 1;
-    constexpr std::size_t nonzeros = std::pow(2*degree+1,dim);
+    constexpr std::size_t nonzeros = Dune::power(2*degree+1,dim);
 
     Dune::FieldVector<NumberType,dim> L(1.0);
     std::array<int,dim> N(Dune::filledArray<dim,int>(5));

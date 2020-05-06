@@ -5,6 +5,8 @@
 #include "../common/geometrywrapper.hh"
 #include<dune/grid/common/gridenums.hh>
 
+#include <dune/typetree/typetree.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -14,6 +16,7 @@ namespace Dune {
 
     //! Parallel P0 constraints for nonoverlapping grids with ghosts
     class P0ParallelGhostConstraints
+      : public TypeTree::LeafNode
     {
     public:
       enum{doBoundary=false};

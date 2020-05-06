@@ -3,6 +3,7 @@
 #define DUNE_PDELAB_BACKEND_ISTL_BCRSMATRIX_HH
 
 #include <dune/common/typetraits.hh>
+#include <dune/common/shared_ptr.hh>
 #include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/common/aliasedmatrixview.hh>

@@ -5,6 +5,8 @@
 
 #include <dune/pdelab/common/geometrywrapper.hh>
 
+#include <dune/typetree/typetree.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -14,6 +16,7 @@ namespace Dune {
 
     // Empty constraints assembler class
     class NoConstraints
+      : public TypeTree::LeafNode
     {
     public:
       enum { doBoundary = false };

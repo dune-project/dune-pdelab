@@ -79,7 +79,7 @@ namespace Dune{
       //! @}
 
       //! Constructor with empty constraints
-      DefaultLocalAssembler (LOP & lop, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
+      DefaultLocalAssembler (LOP & lop, std::shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : lop_(lop),  weight_(1.0), doPreProcessing_(true), doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
         , jacobian_apply_engine(*this)
@@ -88,7 +88,7 @@ namespace Dune{
 
       //! Constructor for non trivial constraints
       DefaultLocalAssembler (LOP & lop, const CU& cu, const CV& cv,
-                             shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
+                             std::shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : Base(cu, cv),
           lop_(lop),  weight_(1.0), doPreProcessing_(true), doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)

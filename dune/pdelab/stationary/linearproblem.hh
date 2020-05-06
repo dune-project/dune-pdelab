@@ -291,7 +291,7 @@ namespace Dune {
       const GO& _go;
       LS& _ls;
       V* _x;
-      shared_ptr<M> _jacobian;
+      std::shared_ptr<M> _jacobian;
       Real _reduction;
       Real _min_defect;
       Dune::PDELab::LinearSolverResult<double> _linear_solver_result;

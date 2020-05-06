@@ -99,25 +99,6 @@ namespace Dune {
 
       typedef O OrderingTag;
 
-      // TODO: Do not just use constraints from child 0!
-      //! extract type for storing constraints
-      template<typename E>
-      struct ConstraintsContainer
-      {
-        typedef typename std::conditional<
-          std::is_same<
-            typename GridFunctionSpace::template Child<0>::type::template ConstraintsContainer<E>::Type,
-            EmptyTransformation
-            >::value,
-          EmptyTransformation,
-          ConstraintsTransformation<
-            typename GridFunctionSpace::Ordering::Traits::DOFIndex,
-            typename GridFunctionSpace::Ordering::Traits::ContainerIndex,
-            E
-            >
-          >::type Type;
-      };
-
       //! get grid view
       const typename Traits::GridView& gridView () const
       {

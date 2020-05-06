@@ -3,6 +3,7 @@
 #define DUNE_PDELAB_CONSTRAINTS_P0_HH
 
 #include "../common/geometrywrapper.hh"
+#include <dune/typetree/typetree.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -13,6 +14,7 @@ namespace Dune {
 
     //! Parallel P0 constraints for overlapping grids
     class P0ParallelConstraints
+      : public TypeTree::LeafNode
     {
     public:
       enum{doBoundary=false};

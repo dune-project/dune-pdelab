@@ -40,7 +40,7 @@ namespace Dune::PDELab
       _newton.updateDefect(solution);
     }
 
-    virtual void setParameters(const ParameterTree&) {}
+    virtual void setParameters(const ParameterTree&) override {}
 
   private:
     Newton& _newton;
@@ -166,7 +166,7 @@ namespace Dune::PDELab
      *   there was any improvement, even if the convergence criterion was not
      *   reached.
      */
-    virtual void setParameters(const ParameterTree& parameterTree)
+    virtual void setParameters(const ParameterTree& parameterTree) override
     {
       _lineSearchMaxIterations = parameterTree.get<unsigned int>("line_search_max_iterations",
                                                                  _lineSearchMaxIterations);

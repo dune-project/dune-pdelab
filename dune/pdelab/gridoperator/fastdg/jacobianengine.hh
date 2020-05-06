@@ -240,7 +240,7 @@ namespace Dune{
       void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         global_a_ss_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
           jacobian_volume(lop,eg,lfsu_cache.localFunctionSpace(),global_s_s_view,lfsv_cache.localFunctionSpace(),global_a_ss_view);
       }
 
@@ -252,7 +252,7 @@ namespace Dune{
         global_a_sn_view.setWeight(local_assembler.weight());
         global_a_ns_view.setWeight(local_assembler.weight());
         global_a_nn_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
           jacobian_skeleton(lop,ig,
                             lfsu_s_cache.localFunctionSpace(),global_s_s_view,lfsv_s_cache.localFunctionSpace(),
                             lfsu_n_cache.localFunctionSpace(),global_s_n_view,lfsv_n_cache.localFunctionSpace(),
@@ -264,7 +264,7 @@ namespace Dune{
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
         global_a_ss_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
           jacobian_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),global_s_s_view,lfsv_s_cache.localFunctionSpace(),global_a_ss_view);
       }
 
@@ -290,7 +290,7 @@ namespace Dune{
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         global_a_ss_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
           jacobian_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),global_s_s_view,lfsv_cache.localFunctionSpace(),global_a_ss_view);
       }
 

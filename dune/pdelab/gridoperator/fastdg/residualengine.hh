@@ -284,7 +284,7 @@ namespace Dune{
       {
         //rl_view.setWeight(local_assembler.weight());
         global_rl_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
           alpha_volume(lop,eg,lfsu_cache.localFunctionSpace(),global_sl_view,lfsv_cache.localFunctionSpace(),global_rl_view);
       }
 
@@ -293,7 +293,7 @@ namespace Dune{
       {
         //rl_view.setWeight(local_assembler.weight());
         global_rl_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolume,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolume>::
           lambda_volume(lop,eg,lfsv_cache.localFunctionSpace(),global_rl_view);
       }
 
@@ -305,7 +305,7 @@ namespace Dune{
         //rn_view.setWeight(local_assembler.weight());
         global_rl_view.setWeight(local_assembler.weight());
         global_rn_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
           alpha_skeleton(lop,ig,
                          lfsu_s_cache.localFunctionSpace(),global_sl_view,lfsv_s_cache.localFunctionSpace(),
                          lfsu_n_cache.localFunctionSpace(),global_sn_view,lfsv_n_cache.localFunctionSpace(),
@@ -319,7 +319,7 @@ namespace Dune{
         //rn_view.setWeight(local_assembler.weight());
         global_rl_view.setWeight(local_assembler.weight());
         global_rn_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaSkeleton,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaSkeleton>::
           lambda_skeleton(lop, ig, lfsv_s_cache.localFunctionSpace(), lfsv_n_cache.localFunctionSpace(), global_rl_view, global_rn_view);
       }
 
@@ -328,7 +328,7 @@ namespace Dune{
       {
         //rl_view.setWeight(local_assembler.weight());
         global_rl_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
           alpha_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),global_sl_view,lfsv_s_cache.localFunctionSpace(),global_rl_view);
       }
 
@@ -337,7 +337,7 @@ namespace Dune{
       {
         //rl_view.setWeight(local_assembler.weight());
         global_rl_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaBoundary,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaBoundary>::
           lambda_boundary(lop,ig,lfsv_s_cache.localFunctionSpace(),global_rl_view);
       }
 
@@ -364,7 +364,7 @@ namespace Dune{
       {
         //rl_view.setWeight(local_assembler.weight());
         global_rl_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
           alpha_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),global_sl_view,lfsv_cache.localFunctionSpace(),global_rl_view);
       }
 
@@ -373,7 +373,7 @@ namespace Dune{
       {
         //rl_view.setWeight(local_assembler.weight());
         global_rl_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolumePostSkeleton,LOP::isLinear>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolumePostSkeleton>::
           lambda_volume_post_skeleton(lop,eg,lfsv_cache.localFunctionSpace(),global_rl_view);
       }
 

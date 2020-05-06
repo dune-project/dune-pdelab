@@ -8,6 +8,7 @@
 #include <ostream>
 #include <memory>
 
+#include <dune/common/shared_ptr.hh>
 #include <dune/common/debugstream.hh>
 
 #include <dune/geometry/quadraturerules.hh>

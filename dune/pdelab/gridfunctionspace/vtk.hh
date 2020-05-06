@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include <dune/common/exceptions.hh>
+#include <dune/common/shared_ptr.hh>
 
 #include <dune/geometry/typeindex.hh>
 
@@ -184,7 +185,7 @@ namespace Dune {
       public:
         typedef typename BaseT::Traits Traits;
 
-        DGFTreeLeafFunction (const LFS& lfs, const shared_ptr<Data>& data)
+        DGFTreeLeafFunction (const LFS& lfs, const std::shared_ptr<Data>& data)
           : BaseT(lfs.gridFunctionSpace().dataSetType())
           , _lfs(lfs)
           , _data(data)
@@ -223,7 +224,7 @@ namespace Dune {
       private:
 
         const LFS& _lfs;
-        const shared_ptr<Data> _data;
+        const std::shared_ptr<Data> _data;
         mutable std::vector<typename Traits::RangeType> _basis;
 
       };
@@ -282,7 +283,7 @@ namespace Dune {
         typedef typename ChildLFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename ChildLFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType RT;
 
-        DGFTreeVectorFunction (const LFS& lfs, const shared_ptr<Data>& data)
+        DGFTreeVectorFunction (const LFS& lfs, const std::shared_ptr<Data>& data)
           : BaseT(lfs.gridFunctionSpace().dataSetType())
           , _lfs(lfs)
           , _data(data)
@@ -325,7 +326,7 @@ namespace Dune {
       private:
 
         const LFS& _lfs;
-        const shared_ptr<Data> _data;
+        const std::shared_ptr<Data> _data;
         mutable std::vector<typename BasisSwitch::Range> _basis;
 
       };
@@ -432,7 +433,7 @@ namespace Dune {
         //! Helper function for extracting (or building) the component name and adding
         //! the component to the VTKWriter.
         template<typename DGF, typename TreePath>
-        void add_to_vtk_writer(const shared_ptr<DGF>& dgf, TreePath tp)
+        void add_to_vtk_writer(const std::shared_ptr<DGF>& dgf, TreePath tp)
         {
           std::string name = name_generator(dgf->localFunctionSpace().gridFunctionSpace().name(),tp);
           switch (dgf->dataSetType())
@@ -531,7 +532,7 @@ namespace Dune {
         }
 
 
-        add_solution_to_vtk_writer_visitor(VTKWriter& vtk_writer_, shared_ptr<Data> data_, const NameGenerator& name_generator_, const typename Data::Predicate& predicate_)
+        add_solution_to_vtk_writer_visitor(VTKWriter& vtk_writer_, std::shared_ptr<Data> data_, const NameGenerator& name_generator_, const typename Data::Predicate& predicate_)
           : vtk_writer(vtk_writer_)
           , data(data_)
           , name_generator(name_generator_)
@@ -539,7 +540,7 @@ namespace Dune {
         {}
 
         VTKWriter& vtk_writer;
-        shared_ptr<Data> data;
+        std::shared_ptr<Data> data;
         const NameGenerator& name_generator;
         typename Data::Predicate predicate;
 
@@ -626,14 +627,14 @@ namespace Dune {
           return *this;
         }
 
-        OutputCollector(VTKWriter& vtk_writer, const shared_ptr<Data>& data, const Predicate& predicate = Predicate())
+        OutputCollector(VTKWriter& vtk_writer, const std::shared_ptr<Data>& data, const Predicate& predicate = Predicate())
           : _vtk_writer(vtk_writer)
           , _data(data)
           , _predicate(predicate)
         {}
 
         VTKWriter& _vtk_writer;
-        shared_ptr<Data> _data;
+        std::shared_ptr<Data> _data;
         Predicate _predicate;
 
       };

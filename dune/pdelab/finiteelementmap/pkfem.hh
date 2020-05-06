@@ -27,7 +27,7 @@ namespace Dune {
 
       template<typename GV, typename D, typename R, unsigned int k>
       class PkLocalFiniteElementMapBase<GV,D,R,k,1>
-        : public SimpleLocalFiniteElementMap<Dune::PkLocalFiniteElement<D,R,1,k>,1>
+        : public SimpleLocalFiniteElementMap<Dune::LagrangeSimplexLocalFiniteElement<D,R,1,k>,1>
       {
 
       public:
@@ -78,13 +78,13 @@ namespace Dune {
       template<typename GV, typename D, typename R, unsigned int k>
       class PkLocalFiniteElementMapBase<GV,D,R,k,2>
         : public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits<
-                                                  Dune::PkLocalFiniteElement<D,R,2,k>
+                                                  Dune::LagrangeSimplexLocalFiniteElement<D,R,2,k>
                                                   >,
                                                 PkLocalFiniteElementMapBase<GV,D,R,k,2>
                                                 >
       {
 
-        typedef Dune::PkLocalFiniteElement<D,R,2,k> FE;
+        typedef Dune::LagrangeSimplexLocalFiniteElement<D,R,2,k> FE;
 
       public:
 
@@ -95,11 +95,11 @@ namespace Dune {
           : _gv(gv)
         {
           // generate permutations
-          unsigned int p[3] = {0,1,2};
+          std::array<unsigned int, 3> p = {0,1,2};
           for (int i = 0; i < 6; ++i)
             {
               _variant[i] = FE(p);
-              std::next_permutation(p,p+3);
+              std::next_permutation(p.begin(), p.end());
             }
         }
 
@@ -172,13 +172,13 @@ namespace Dune {
       template<typename GV, typename D, typename R, unsigned int k>
       class PkLocalFiniteElementMapBase<GV,D,R,k,3>
         : public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits<
-                                                  Dune::PkLocalFiniteElement<D,R,3,k>
+                                                  Dune::LagrangeSimplexLocalFiniteElement<D,R,3,k>
                                                   >,
                                                 PkLocalFiniteElementMapBase<GV,D,R,k,3>
                                                 >
       {
 
-        typedef Dune::PkLocalFiniteElement<D,R,3,k> FE;
+        typedef Dune::LagrangeSimplexLocalFiniteElement<D,R,3,k> FE;
 
       public:
 
@@ -192,24 +192,12 @@ namespace Dune {
 
           // create all variants by iterating over all permutations
           unsigned int n = 0;
-          unsigned int vertexmap[4];
-          for(vertexmap[0] = 0; vertexmap[0] < 4; ++vertexmap[0])
-            {
-              for(vertexmap[1] = 0; vertexmap[1] < 4; ++vertexmap[1])
-                {
-                  if (vertexmap[0] == vertexmap[1])
-                    continue;
-                  for(vertexmap[2] = 0; vertexmap[2] < 4; ++vertexmap[2])
-                    {
-                      if (vertexmap[0] == vertexmap[2] ||
-                          vertexmap[1] == vertexmap[2])
-                        continue;
-                      vertexmap[3] = 6 - vertexmap[0] - vertexmap[1] - vertexmap[2];
-                      _variant[n] = FE(vertexmap);
-                      _perm_index[compressPerm(vertexmap)] = n++;
-                    }
-                }
-            }
+          std::array<unsigned int, 4> vertexmap = {0, 1, 2, 3};
+          do {
+            _variant[n] = FE(vertexmap);
+            _perm_index[compressPerm(vertexmap)] = n++;
+          }
+          while(std::next_permutation(vertexmap.begin(), vertexmap.end()));
         }
 
         //! \brief get local basis functions for entity
@@ -222,7 +210,7 @@ namespace Dune {
 
           // get the vertex indices
           const typename GV::IndexSet& is = _gv.indexSet();
-          unsigned int vertexmap[4];
+          std::array<unsigned int, 4> vertexmap;
           for (unsigned int i = 0; i < 4; ++i)
             vertexmap[i] = is.subIndex(e,i,3);
 
@@ -282,7 +270,7 @@ namespace Dune {
 
       private:
 
-        unsigned int compressPerm(const unsigned int vertexmap[4]) const
+        unsigned int compressPerm(const std::array<unsigned int, 4> vertexmap) const
         {
           return vertexmap[0] + (vertexmap[1]<<2) + (vertexmap[2]<<4) + (vertexmap[3]<<6);
         }

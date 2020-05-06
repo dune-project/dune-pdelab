@@ -17,6 +17,26 @@ namespace Dune {
      */
     //! Base parameter class for time stepping scheme parameters
     /**
+     * The parameters \f$ a,b \in \mathbb{R}^{s\times s+1} \f$ and
+     * \f$ d\in \mathbb{R}^d \f$ implement the generic class of time-stepping methods
+     * of Shu and Osher [1]:
+     * \f[
+     * \begin{aligned}
+     *   u_h^{(0)} &= u_h^k\\
+     *   \sum_{j=0}^s \left[ a_{ij} m_h\left(u_h^{(j)}, v; t^k + d_j\Delta t^k\right)
+     *     + b_{ij}\Delta t^k r_h \left( u_h^{(j)},v,t^k+d_j\Delta t^k \right)\right] &= 0 & \forall i=1,\ldots,s \quad \forall v\in V_h(t^{k+1})\\
+     *   u_h^{k+1} &= u_h^{(s)}
+     * \end{aligned}
+     * \f]
+     * where \f$ m_h\f$ is the temporal residual form (mass operator) and \f$
+     * r_h \f$ is the spatial residual form.
+     *
+     * This class in particular contains Runge-Kutta and fractional step
+     * methods. A more elaborate description can be found in the PDELab tutorials (tutorial03).
+     *
+     * [1] Chi W. Shu and Stanley Osher. Efficient implementation of essentially
+     * non- oscillatory shock-capturing schemes. J. Comput. Phys., 77:439–471
+     *
      * \tparam R C++ type of the floating point parameters
      */
     template<class R>

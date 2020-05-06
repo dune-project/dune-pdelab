@@ -82,6 +82,24 @@ namespace Dune {
 
       typedef typename ordering_transformation::Type Ordering;
 
+      //! extract type for storing constraints
+      template<typename E>
+      struct ConstraintsContainer
+      {
+        typedef typename std::conditional<
+          std::is_same<
+            typename T::template ConstraintsContainer<E>::Type,
+            EmptyTransformation
+            >::value,
+          EmptyTransformation,
+          ConstraintsTransformation<
+            typename Ordering::Traits::DOFIndex,
+            typename Ordering::Traits::ContainerIndex,
+            E
+            >
+          >::type Type;
+      };
+
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
 
@@ -92,7 +110,7 @@ namespace Dune {
        * @param backend       backend object
        * @param ordering_tag  ordering tag object
        */
-      PowerGridFunctionSpace(const std::array<shared_ptr<T>,k>& container, const Backend& backend = Backend(), const OrderingTag ordering_tag = OrderingTag())
+      PowerGridFunctionSpace(const std::array<std::shared_ptr<T>,k>& container, const Backend& backend = Backend(), const OrderingTag ordering_tag = OrderingTag())
         : BaseT(container)
         , ImplementationBase(backend,ordering_tag)
       {}

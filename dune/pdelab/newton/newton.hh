@@ -154,12 +154,14 @@ namespace Dune
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
         , solver_(solver)
         , result_valid_(false)
+        , use_maxnorm_(false)
       {}
 
       NewtonSolver(const GridOperator& go, Solver& solver)
         : NewtonBase<GOS,TrlV,TstV>(go)
         , solver_(solver)
         , result_valid_(false)
+        , use_maxnorm_(false)
       {}
 
       void apply();
@@ -174,12 +176,29 @@ namespace Dune
         return this->res_;
       }
 
+      //! Set whether the maximum norm should be used as a stopping criterion
+      void setUseMaxNorm(bool b)
+      {
+        use_maxnorm_ = b;
+      }
+
     protected:
       virtual void defect(TestVector& r) override
       {
         r = 0.0;
         this->gridoperator_.residual(*this->u_, r);
-        this->res_.defect = this->solver_.norm(r);
+        // use maximum norm as a stopping criterion, this helps loosen the tolerance
+        // when solving for stationary solutions of nonlinear time-dependent problems
+        // the default is to use the Euclidean norm (in the else-block) as before
+        if(use_maxnorm_)
+        {
+          auto rank_max = Backend::native(r).infinity_norm();
+          this->res_.defect = this->gridoperator_.testGridFunctionSpace().gridView().comm().max(rank_max);
+        }
+        else
+        {
+          this->res_.defect = this->solver_.norm(r);
+        }
         if (!std::isfinite(this->res_.defect))
           DUNE_THROW(NewtonDefectError,
                      "NewtonSolver::defect(): Non-linear defect is NaN or Inf");
@@ -212,6 +231,7 @@ namespace Dune
 
       Solver& solver_;
       bool result_valid_;
+      bool use_maxnorm_;
     }; // end class NewtonSolver
 
     template<class GOS, class S, class TrlV, class TstV>
@@ -812,6 +832,9 @@ namespace Dune
         if (param.hasKey("KeepMatrix"))
           this->setKeepMatrix(
             param.get<bool>("KeepMatrix"));
+        if (param.hasKey("UseMaxNorm"))
+          this->setUseMaxNorm(
+            param.get<bool>("UseMaxNorm"));
       }
     }; // end class Newton
   } // end namespace PDELab

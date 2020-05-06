@@ -9,6 +9,8 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 
+#include <dune/typetree/typetree.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -19,6 +21,7 @@ namespace Dune {
     //! \brief constraints all DOFs associated with interior vertices
     //! This allows to implement surface FEM using standard first order FEM
     class InteriorNodeConstraints
+      : public TypeTree::LeafNode
     {
       std::vector<bool> interior;
     public:
@@ -38,7 +41,7 @@ namespace Dune {
       void volume (const P& param, const EG& eg, const LFS& lfs, T& trafo) const
       {
         typedef typename EG::Entity Entity;
-        enum { dim = Entity::dimension, dimw = Entity::dimensionworld };
+        enum { dim = Entity::dimension };
 
         // update component
         typename T::RowType empty;
@@ -59,8 +62,9 @@ namespace Dune {
 
           // update constraints
           if (interior[idx])
-            trafo[i] = empty;
+              trafo[lfs.dofIndex(i)] = empty;
         }
+
       }
 
       const std::vector<bool> & interiorNodes() const
@@ -80,10 +84,10 @@ namespace Dune {
           interior[i] = true;
 
         // loop over all cells
-        for(const auto& entity : cells(gv))
+        for(const auto& entity : elements(gv))
         {
           // find boundary faces & associated vertices
-          for (const auto& intersection : intersection(gv,entity))
+          for (const auto& intersection : intersections(gv,entity))
           {
             if (intersection.boundary())
             {

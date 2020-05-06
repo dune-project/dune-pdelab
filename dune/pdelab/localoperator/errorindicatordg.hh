@@ -7,9 +7,9 @@
 
 #include <dune/common/fvector.hh>
 
-#include <dune/geometry/quadraturerules.hh>
 #include <dune/geometry/referenceelements.hh>
 
+#include <dune/pdelab/common/quadraturerules.hh>
 #include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 #include <dune/pdelab/localoperator/eval.hh>
