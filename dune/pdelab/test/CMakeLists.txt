@@ -2,11 +2,14 @@ add_subdirectory(fem)
 
 dune_add_test(SOURCES testcombinedoperator.cc)
 
-dune_add_test(SOURCES testconvectiondiffusiondg.cc)
+dune_add_test(SOURCES testconvectiondiffusiondg.cc
+              CMAKE_GUARD SUPERLU_FOUND)
 
-dune_add_test(SOURCES testnewton.cc)
+dune_add_test(SOURCES testnewton.cc
+              CMAKE_GUARD SUPERLU_FOUND)
 
-dune_add_test(SOURCES testinstationary.cc)
+dune_add_test(SOURCES testinstationary.cc
+              CMAKE_GUARD SUPERLU_FOUND)
 
 dune_add_test(SOURCES testanalytic.cc)
 

@@ -25,7 +25,7 @@ namespace Dune {
       template<typename F, typename... FArgs>
       void applyLops(F && f, FArgs &... args) const
       {
-        Hybrid::forEach(Std::make_index_sequence<sizeof...(Args)>{},
+        Hybrid::forEach(std::make_index_sequence<sizeof...(Args)>{},
           [&](auto i){f(*Hybrid::elementAt(this->lops, i), args...);});
       }
 
