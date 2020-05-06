@@ -801,6 +801,8 @@ namespace Dune {
         , xl(pgfs->maxLocalSize())
         , yb(pgfs->maxLocalSize())
       {
+         for(std::size_t i = 0; i < dimR; ++i)
+            remap[i] = i + start;
       }
 
       //! construct
