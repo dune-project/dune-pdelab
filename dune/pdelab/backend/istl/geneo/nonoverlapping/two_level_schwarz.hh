@@ -1,5 +1,5 @@
-#ifndef NEW_TWO_LEVEL_SCHWARZ_HH
-#define NEW_TWO_LEVEL_SCHWARZ_HH
+#ifndef NONOVERLAPPING_TWO_LEVEL_SCHWARZ_HH
+#define NONOVERLAPPING_TWO_LEVEL_SCHWARZ_HH
 
 #if HAVE_SUITESPARSE_UMFPACK
 
@@ -25,7 +25,7 @@ namespace Dune {
       */
       //template<class GFS, class M, class X, class Y>
       template<typename GridView, typename ScalarMatrix, typename Matrix, typename ScalarVector, typename Vector>
-      class NewTwoLevelOverlappingAdditiveSchwarz
+      class NonoverlappingTwoLevelOverlappingAdditiveSchwarz
        : public Dune::Preconditioner<Vector,Vector>
       {
 
@@ -61,8 +61,8 @@ namespace Dune {
           \param n The number of iterations to perform.
           \param w The relaxation factor.
         */
-        //NewTwoLevelOverlappingAdditiveSchwarz (const GFS& gfs, const M& AF, std::shared_ptr<CoarseSpace<X> > coarse_space, bool coarse_space_active = true, int verbosity = 0)
-        NewTwoLevelOverlappingAdditiveSchwarz (const NonoverlappingOverlapAdapter<GridView, Vector, Matrix>& adapter, const Matrix& A, std::shared_ptr<CoarseSpace<Vector> > coarse_space, bool coarse_space_active = true, int verbosity = 0)
+        //NonoverlappingTwoLevelOverlappingAdditiveSchwarz (const GFS& gfs, const M& AF, std::shared_ptr<CoarseSpace<X> > coarse_space, bool coarse_space_active = true, int verbosity = 0)
+        NonoverlappingTwoLevelOverlappingAdditiveSchwarz (const NonoverlappingOverlapAdapter<GridView, Vector, Matrix>& adapter, const Matrix& A, std::shared_ptr<CoarseSpace<Vector> > coarse_space, bool coarse_space_active = true, int verbosity = 0)
         : verbosity_(verbosity),
           coarse_space_active_(coarse_space_active),
           //gfs_(gfs),

@@ -394,7 +394,7 @@ std::cout << "Return for " << i << std::endl;
   std::cout << "part_unity with Dirichlet: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
 
   int nev = 2;
-  auto subdomainbasis = std::make_shared<Dune::PDELab::NewGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, -1.0, nev);
+  auto subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, -1.0, nev);
 
   std::cout << "eigenproblems: " << timer_detailed.elapsed() << std::endl; timer_detailed.reset();
 
@@ -410,7 +410,7 @@ std::cout << "Return for " << i << std::endl;
       }
     }
 
-  Dune::PDELab::ISTL::NewTwoLevelOverlappingAdditiveSchwarz<GV, Matrix, Matrix, Vector,Vector> prec(adapter, *A_extended, coarse_space, true, verb);
+  Dune::PDELab::ISTL::NonoverlappingTwoLevelOverlappingAdditiveSchwarz<GV, Matrix, Matrix, Vector,Vector> prec(adapter, *A_extended, coarse_space, true, verb);
 
 
   NonoverlappingOperator<GV, Matrix,Vector> linearOperator(gv,native(A));

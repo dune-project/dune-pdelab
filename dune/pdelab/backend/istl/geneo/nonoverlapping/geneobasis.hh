@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_NEWGENEOBASIS_HH
-#define DUNE_PDELAB_BACKEND_ISTL_GENEO_NEWGENEOBASIS_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_NonoverlappingGenEOBasis_HH
+#define DUNE_PDELAB_BACKEND_ISTL_GENEO_NonoverlappingGenEOBasis_HH
 
 #include <algorithm>
 #include <functional>
@@ -19,7 +19,7 @@ namespace Dune {
      * on the area where this subdomain overlaps with others.
      */
     template<class GridView, class M, class X>
-    class NewGenEOBasis : public SubdomainBasis<X>
+    class NonoverlappingGenEOBasis : public SubdomainBasis<X>
     {
       typedef Dune::PDELab::Backend::Native<M> ISTLM;
       typedef Dune::PDELab::Backend::Native<X> ISTLX;
@@ -39,17 +39,13 @@ namespace Dune {
        * \param add_part_unity Whether to explicitly add the partition of unity itself in the coarse basis.
        * \param verbose Verbosity value.
        */
-      NewGenEOBasis(NonoverlappingOverlapAdapter<GridView, X, M>& adapter, const M& A, const M& A_ovlp, const X& part_unity, const double eigenvalue_threshold,
+      NonoverlappingGenEOBasis(NonoverlappingOverlapAdapter<GridView, X, M>& adapter, const M& A, const M& A_ovlp, const X& part_unity, const double eigenvalue_threshold,
                     int& nev, int nev_arpack = -1, const double shift = 0.001, const bool add_part_unity = false, const int verbose = 0) {
 
         if (nev_arpack == -1)
           nev_arpack = std::max(nev, 2);
         if (nev_arpack < nev)
           DUNE_THROW(Dune::Exception,"nev_arpack is less then nev!");
-
-        /*std::cout << "part_unity...";
-        X part_unity = *Dune::makePartitionOfUnity(adapter, A);
-        std::cout << " done" << std::endl;*/
 
         // X * A_0 * X
         M ovlp_mat(A_ovlp);
@@ -101,7 +97,7 @@ namespace Dune {
             this->local_basis[base_id]->begin(),
             std::multiplies<>()
             );
-          //if (eigenvalues[base_id] < .0) // TODO: Normalization for debugging; Remove this for performance
+          //if (eigenvalues[base_id] < .0) // Normalization for debugging; Remove this for performance
           //  *(this->local_basis[base_id]) *= -1.0;
         }
 

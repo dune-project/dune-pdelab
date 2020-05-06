@@ -277,7 +277,7 @@ int main(int argc, char **argv)
 
     /*{
 
-      Dune::PDELab::ISTL::NewTwoLevelOverlappingAdditiveSchwarz<GV, Matrix, Vector> prec(gv, A, avg, overlap, nullptr, false, 3);
+      Dune::PDELab::ISTL::NonoverlappingTwoLevelOverlappingAdditiveSchwarz<GV, Matrix, Vector> prec(gv, A, avg, overlap, nullptr, false, 3);
       Dune::CGSolver<Vector> solver(linearOperator,scalarproduct,prec,1e-6,2500,verbose);
 
       Vector b_cpy(b);
@@ -292,12 +292,12 @@ int main(int argc, char **argv)
       Dune::UMFPack<Matrix> solverf_(*A_extended);*/
 
       /*int nev = 5;
-      //auto subdomainbasis = std::make_shared<Dune::PDELab::NewGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_extended, -1.0, nev);
+      //auto subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_extended, -1.0, nev);
 
       auto subdomainbasis = std::make_shared<Dune::PDELab::SubdomainBasis<Vector>>(*Dune::makePartitionOfUnity(adapter, *A_extended));
       auto coarse_space = std::make_shared<Dune::PDELab::NewSubdomainProjectedCoarseSpace<GV, Matrix, Vector>>(adapter, gv, *A_extended, subdomainbasis);
 
-      Dune::PDELab::ISTL::NewTwoLevelOverlappingAdditiveSchwarz<GV, Matrix, Vector> prec(adapter, *A_extended, coarse_space, true, 3);
+      Dune::PDELab::ISTL::NonoverlappingTwoLevelOverlappingAdditiveSchwarz<GV, Matrix, Vector> prec(adapter, *A_extended, coarse_space, true, 3);
       Dune::CGSolver<Vector> solver(linearOperator,scalarproduct,prec,1e-6,2500,verbose);
 
       Vector b_cpy(b);

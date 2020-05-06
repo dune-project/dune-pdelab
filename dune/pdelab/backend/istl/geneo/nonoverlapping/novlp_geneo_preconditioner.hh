@@ -74,7 +74,7 @@ namespace Dune {
 
 
     template <typename GO, typename ScalarMatrix, typename Matrix, typename ScalarVector, typename Vector>
-    class GenEOPreconditioner : public Dune::Preconditioner<Vector,Vector> {
+    class NonoverlappingGenEOPreconditioner : public Dune::Preconditioner<Vector,Vector> {
 
       using V = typename GO::Domain;
       using M = typename GO::Jacobian;
@@ -120,7 +120,7 @@ namespace Dune {
         prec->post(x);
       }
 
-      GenEOPreconditioner(const GO& go, const typename GO::Jacobian& A, int algebraic_overlap, int avg_nonzeros, const double eigenvalue_threshold, int& nev,
+      NonoverlappingGenEOPreconditioner(const GO& go, const typename GO::Jacobian& A, int algebraic_overlap, int avg_nonzeros, const double eigenvalue_threshold, int& nev,
                           int nev_arpack = -1, const double shift = 0.001, int verbose = 0)
       : A_ovlp(go){
 
@@ -211,7 +211,7 @@ namespace Dune {
           }
         }
 
-        auto subdomainbasis = std::make_shared<Dune::PDELab::NewGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, eigenvalue_threshold, nev, nev_arpack, shift);
+        auto subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, eigenvalue_threshold, nev, nev_arpack, shift);
 
         auto coarse_space = std::make_shared<Dune::PDELab::NewSubdomainProjectedCoarseSpace<GV, Matrix, Vector>>(adapter, gv, *A_extended, subdomainbasis, verbose);
 
@@ -230,7 +230,7 @@ namespace Dune {
           }
         }
 
-        prec = std::make_shared<Dune::PDELab::ISTL::NewTwoLevelOverlappingAdditiveSchwarz<GV, ScalarMatrix, Matrix, ScalarVector, Vector>>(adapter, *A_extended, coarse_space, true, verbose);
+        prec = std::make_shared<Dune::PDELab::ISTL::NonoverlappingTwoLevelOverlappingAdditiveSchwarz<GV, ScalarMatrix, Matrix, ScalarVector, Vector>>(adapter, *A_extended, coarse_space, true, verbose);
 
       }
 
@@ -241,7 +241,7 @@ namespace Dune {
       std::shared_ptr<Matrix> A_extended;
       std::shared_ptr<Vector> part_unity;
 
-      std::shared_ptr<Dune::PDELab::ISTL::NewTwoLevelOverlappingAdditiveSchwarz<typename GO::Traits::TrialGridFunctionSpace::Traits::GridView, ScalarMatrix, Matrix, ScalarVector, Vector>> prec = nullptr;
+      std::shared_ptr<Dune::PDELab::ISTL::NonoverlappingTwoLevelOverlappingAdditiveSchwarz<typename GO::Traits::TrialGridFunctionSpace::Traits::GridView, ScalarMatrix, Matrix, ScalarVector, Vector>> prec = nullptr;
 
     };
 

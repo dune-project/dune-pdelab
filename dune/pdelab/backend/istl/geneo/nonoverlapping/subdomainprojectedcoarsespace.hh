@@ -23,17 +23,8 @@ namespace Dune {
 
       MultiVectorBundle(NonoverlappingOverlapAdapter<GridView, Vector, Matrix>& adapter)
       : neighboringRanks_(adapter.findNeighboringRanks()),
-      //neighbor_basis(neighboringRanks_.size())
-      neighbor_basis(0)
+        neighbor_basis(0)
       {
-        std::cout << "setting up with " << neighboringRanks_.size() << " neighbors" << std::endl;
-        /*for (auto& basisvec : neighbor_basis) {
-          std::cout << "set up vector with " << adapter.getExtendedSize() << " size" << std::endl;
-          basisvec = std::make_shared<Vector>(adapter.getExtendedSize());
-        }
-        for (auto& basisvec : neighbor_basis) {
-          std::cout << (*basisvec)[0] << std::endl;
-        }*/
         for (auto& rank : neighboringRanks_) {
           neighbor_basis.push_back(std::make_shared<Vector>(adapter.getExtendedSize()));
         }
@@ -89,7 +80,6 @@ namespace Dune {
     public:
       typedef typename CoarseSpace<X>::COARSE_V COARSE_V;
       typedef typename CoarseSpace<X>::COARSE_M COARSE_M;
-      //typedef typename COARSE_M::field_type field_type;
       typedef typename M::field_type field_type;
 
       /*! \brief Constructor.
@@ -155,10 +145,6 @@ namespace Dune {
 
 
         MultiVectorBundle<GridView, X, M> bundle(adapter_);
-        /*std::vector<std::shared_ptr<X> > neighbor_basis(neighbor_ranks_.size());
-        for (auto& basis : neighbor_basis) {
-          basis = std::make_shared<X>(adapter_.getExtendedSize());
-        }*/
 
         // Assemble local section of coarse matrix
         for (rank_type basis_index_remote = 0; basis_index_remote < max_local_basis_size; basis_index_remote++) {
