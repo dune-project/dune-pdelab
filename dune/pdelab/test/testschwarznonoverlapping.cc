@@ -256,8 +256,8 @@ int main(int argc, char **argv)
 
     // solve the linear system iteratively
     // operators and scalar product
-    NonoverlappingOperator<GV, Matrix,Vector> linearOperator(gv,A);
-    NonoverlappingScalarProduct<GV,Vector> scalarproduct(gv,x);
+    Dune::PDELab::NonoverlappingNonoverlappingOperator<GV, Matrix,Vector> linearOperator(gv,A);
+    Dune::PDELab::NonoverlappingNonoverlappingScalarProduct<GV,Vector> scalarproduct(gv,x);
 
     // preconditioner
     auto coarsespace = true;

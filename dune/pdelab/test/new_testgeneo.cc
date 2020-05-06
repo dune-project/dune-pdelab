@@ -546,8 +546,8 @@ std::cout << "Return for " << i << std::endl;
   Dune::PDELab::ISTL::NonoverlappingTwoLevelOverlappingAdditiveSchwarz<GV_, Matrix, Matrix, Vector, Vector> prec(adapter, *A_extended, coarse_space, true, verb);
 
 
-  NonoverlappingOperator<ES, Matrix,Vector> linearOperator(es,native(A));
-  NonoverlappingScalarProduct<ES,Vector> scalarproduct(es,native(x));
+  Dune::PDELab::NonoverlappingNonoverlappingOperator<ES, Matrix,Vector> linearOperator(es,native(A));
+  Dune::PDELab::NonoverlappingNonoverlappingScalarProduct<ES,Vector> scalarproduct(es,native(x));
   Dune::CGSolver<Vector> solver(linearOperator,scalarproduct,prec,1e-6,500,verbose);
 
   //Vector b_cpy(d);

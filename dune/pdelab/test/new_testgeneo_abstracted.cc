@@ -252,14 +252,14 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
 
   int nev = 2;
-  auto prec = std::make_shared<Dune::PDELab::GenEOPreconditioner<GO, Matrix, Matrix, Vector, Vector>>(go, A, algebraic_overlap, nonzeros, eigenvalue_threshold, nev, -1, 0.001, verbose);//, eigenvalue_threshold, 2, -1, .001, verbose);
+  auto prec = std::make_shared<Dune::PDELab::NonoverlappingGenEOPreconditioner<GO, Matrix, Matrix, Vector, Vector>>(go, A, algebraic_overlap, nonzeros, eigenvalue_threshold, nev, -1, 0.001, verbose);//, eigenvalue_threshold, 2, -1, .001, verbose);
 
 
 
   using Dune::PDELab::Backend::native;
 
-  NonoverlappingOperator<ES, Matrix,Vector> linearOperator(es,native(A));
-  NonoverlappingScalarProduct<ES,Vector> scalarproduct(es,native(x));
+  Dune::PDELab::NonoverlappingNonoverlappingOperator<ES, Matrix,Vector> linearOperator(es,native(A));
+  Dune::PDELab::NonoverlappingNonoverlappingScalarProduct<ES,Vector> scalarproduct(es,native(x));
   Dune::CGSolver<Vector> solver(linearOperator,scalarproduct,*prec,1e-6,500,verbose);
 
   //Vector b_cpy(d);
