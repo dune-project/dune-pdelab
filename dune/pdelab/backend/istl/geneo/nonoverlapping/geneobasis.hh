@@ -29,7 +29,8 @@ namespace Dune {
       /*!
        * \brief Constructor.
        * \param gfs Grid function space.
-       * \param AF_exterior Stiffness matrix with boundary conditions from problem definition and Neumann on processor boundaries.
+       * \param A Left-hand side matrix of the GenEO eigenproblem; with problem-dependent boundary conditions on the domain boundary
+       *        and Neumann on processor boundaries
        * \param AF_ovlp The same matrix as AF_exterior, but only assembled on overlap region (where more than 1 subdomain exists).
        * \param eigenvalue_threshold Threshold up to which eigenvalue an eigenpair should be included in the basis. If negative, no thresholding.
        * \param part_unity Partition of unity to construct the basis with.

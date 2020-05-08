@@ -85,7 +85,7 @@ public:
     /*if (xglobal[0] > 1.0-1E-6)
       return 1.0;
     else*/
-      return 0.0; // TODO: support Dirichlet again
+      return 0.0;
   }
 
   //! flux boundary condition
@@ -112,11 +112,9 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
 
   unsigned int cells = 24;
-  //int cells = 80;
   int overlap = 0;
 
   // define parameters
-  //const unsigned int dim = 1;
   const unsigned int dim = 2;
   const unsigned int degree = 1;
   const std::size_t nonzeros = std::pow(2*degree+1,dim);
@@ -142,20 +140,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 #else
   grid->loadBalance();
 #endif
-
-  /*typedef Dune::YaspGrid<dim> GM;
-
-
-  Dune::FieldVector<double,dim> L(1.0);
-  std::array<int,dim> N;
-  N.fill(cells);
-  std::bitset<dim> B(false);
-
-  auto grid = std::make_shared<GM>(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication());
-  typedef typename GM::LeafGridView GV;
-  auto gv = grid->leafGridView();*/
-
-
 
   const int components = 1;
   using K = double;
@@ -237,21 +221,12 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   // set up and assemble right hand side w.r.t. l(v)-a(u_g,v)
   V d(gfs,0.0);
-  go.residual(x,d); // NOTE: Need operator without Dirichlet on proc boundaries for rhs setup!
+  go.residual(x,d);
 
-  // Choose an eigenvalue threshold according to Spillane et al., 2014.
-  // This particular choice is a heuristic working very well for Darcy problems.
-  // Theoretically, any value delivers robustness; practically, you may need to
-  // choose another value to achieve a good balance between condition bound and
-  // global basis size
-  //double eigenvalue_threshold = (double)overlap / (cells + overlap);
   double eigenvalue_threshold = -1;
-
-
   const int algebraic_overlap = 1;
-
-
   int nev = 2;
+
   auto prec = std::make_shared<Dune::PDELab::NonoverlappingGenEOPreconditioner<GO, Matrix, Matrix, Vector, Vector>>(go, A, algebraic_overlap, nonzeros, eigenvalue_threshold, nev, -1, 0.001, verbose);//, eigenvalue_threshold, 2, -1, .001, verbose);
 
 
@@ -262,31 +237,19 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   Dune::PDELab::NonoverlappingNonoverlappingScalarProduct<ES,Vector> scalarproduct(es,native(x));
   Dune::CGSolver<Vector> solver(linearOperator,scalarproduct,*prec,1e-6,500,verbose);
 
-  //Vector b_cpy(d);
-  Vector v(native(x)); // TODO: init via size
-  // FIXME: Dirichlet unterstützen
+  Vector v(native(x));
   Dune::InverseOperatorResult stat;
   solver.apply(native(v),native(d),stat);
   native(x) -= v;
 
-  //native(x) -= x_cpy;
-
-  // now solve defect equation A*v = d using a CG solver with our shiny preconditioner
-  /*V v(gfs,0.0);
-  auto solver_ref = std::make_shared<Dune::CGSolver<V> >(*popf,ospf,*prec,1E-6,1000,verb,true);
-  Dune::InverseOperatorResult result;
-  solver_ref->apply(v,d,result);
-  x -= v;*/
-
-
   // Write solution to VTK
-  Dune::VTKWriter<GV> vtkwriter(gv);//gfs.gridView());
+  Dune::VTKWriter<GV> vtkwriter(gv);
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   DGF xdgf(gfs,x);
   typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
   auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
   vtkwriter.addVertexData(adapt);
-  vtkwriter.write("newtestgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type);
+  vtkwriter.write("nonovlptestgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type);
 }
 
 

@@ -164,8 +164,6 @@ namespace Dune {
       */
       virtual double norm (const Vector& x) const override
       {
-        // if (!check_vector_isfinite(x))
-        //   std::cout << gv.comm().rank() << ": NaN in x detected in NonoverlappingScalarProduct.norm" << std::endl;
         Vector y(x);
         NonoverlappingVectorAddDataHandle<GV,Vector> adddh(gv,y);
         if (gv.comm().size()>1)

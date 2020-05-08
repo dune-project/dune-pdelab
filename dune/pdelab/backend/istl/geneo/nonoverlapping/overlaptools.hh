@@ -1093,12 +1093,6 @@ namespace Dune {
       else
         distance[i] = 2*overlapsize+1.0;
 
-    /*auto pu = std::shared_ptr<Vector>(new Vector(M.N()));
-    for (typename Vector::size_type i=0; i<pu->N(); i++){
-      (*pu)[i] = (double)distance[i];
-    }
-    return pu;*/
-
     for (int round=0; round<2*overlapsize; round++)
       for (typename ScalarVector::size_type i=0; i<distance.N(); i++)
         {
@@ -1116,8 +1110,6 @@ namespace Dune {
     communicator.forward<OverlapTools::AddGatherScatter<ScalarVector>>(sumdistance,sumdistance);
     auto pu = std::shared_ptr<Vector>(new Vector(M.N()));
     for (typename Vector::size_type i=0; i<pu->N(); i++){
-      //(*pu)[i] = (distance[i]+1.0)/sumdistance[i];
-      //std::cout << (*pu)[i] << std::endl;
       (*pu)[i] = (distance[i]+.0)/sumdistance[i];
       std::cout << (*pu)[i] << std::endl;
     }
@@ -1262,11 +1254,8 @@ namespace Dune {
     epis_(gv.comm(),Dune::PDELab::findNeighboringRanks(gv,overlap_),A,buildPartitionTypeVector(gv),globalid_,overlap_,false)
     {
       new2old_localindex_ = epis_.extendedToOriginalLocalIndex(); // TODO: avoid copy?
-      //M_ = Dune::copyAndExtendMatrix(epis_,A_,avg_,globalid_);
-      //extendMatrix(A_);
     }
 
-    // TODO: Allow direct access to epis_ instead?
     size_t getExtendedSize() const {
       return epis_.parallelIndexSet()->size();
     }
@@ -1279,10 +1268,6 @@ namespace Dune {
     std::vector<int> findNeighboringRanks() {
       return Dune::PDELab::findNeighboringRanks(gv_,overlap_);
     }
-
-    /*std::shared_ptr<Matrix> getExtendedMatrix() {
-      return M_;
-    }*/
 
     std::shared_ptr<Matrix> extendMatrix(const Matrix& A) {
       return Dune::copyAndExtendMatrix(epis_,A,avg_,globalid_);
@@ -1300,29 +1285,6 @@ namespace Dune {
       return Dune::lambdaMultiCopyAndExtendMatrix(epis_,A_local,A2_local,MatrixLambda,avg_,globalid_);
     }
 
-
-    /*std::shared_ptr<Matrix> copyOverlap(const Matrix& A_from, const Matrix& A_to) {
-      //auto M = std::shared_ptr<Matrix>(new Matrix(epis.extendedSize(),epis.extendedSize(),avg,0.1,Matrix::implicit));
-      auto new2old_localindex = epis_.extendedToOriginalLocalIndex();
-      auto old2new_localindex = epis_.originalToExtendedLocalIndex();
-
-      for (typename Vector::size_type i=0; i<new2old_localindex_.size(); i++) {
-        extended[i] = restricted[new2old_localindex_[i]];
-      }
-
-      typename Vector::size_type localIndex = 0;
-      for (auto rIt=A_from.begin(); rIt!=A_from.end(); ++rIt) // loop over entries of A
-        for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt)
-        {
-          LocalIndex bla = new2old_localindex_[localIndex];
-          //auto i = old2new_localindex[rIt.index()];
-          //auto j = old2new_localindex[cIt.index()];
-          //if ( i<new2old_localindex.size() && j<new2old_localindex.size() )
-          A_to[rIt.index()][cIt.index()] = *cIt;//->entry(i,j) = *cIt;
-        }
-
-    }*/
-
     const GridView& gridView() const {
       return gv_;
     }
@@ -1339,13 +1301,11 @@ namespace Dune {
 
   private:
 
-    //template<typename GridView>
     std::vector<EPISAttribute> buildPartitionTypeVector(const GridView& gv) {
       auto& indexset = gv.indexSet();
       std::vector<Dune::EPISAttribute> partitiontype(indexset.size(GridView::Grid::dimension));
 
       for (const auto& v : vertices(gv,Dune::Partitions::all))
-      //for (const auto& v : vertices(gv,Dune::Partitions::interiorBorder))
       {
         if (v.partitionType()==Dune::InteriorEntity) partitiontype[indexset.index(v)] = Dune::EPISAttribute::interior;
         if (v.partitionType()==Dune::BorderEntity) partitiontype[indexset.index(v)] = Dune::EPISAttribute::border;

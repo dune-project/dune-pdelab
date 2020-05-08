@@ -100,11 +100,11 @@ public:
 
 void driver(std::string basis_type, std::string part_unity_type) {
 
-  int cells = 24;
+  int cells = 100;
   int overlap = 1;
 
   // define parameters
-  const unsigned int dim = 1;
+  const unsigned int dim = 2;
   const unsigned int degree = 1;
   const std::size_t nonzeros = std::pow(2*degree+1,dim);
   typedef double NumberType;
@@ -113,13 +113,11 @@ void driver(std::string basis_type, std::string part_unity_type) {
   typedef Dune::YaspGrid<dim> GM;
 
   Dune::FieldVector<double,dim> L(1.0);
-  std::array<int,dim> N;
-  N.fill(cells);
+  std::array<int,dim> N = {cells, cells};
   std::bitset<dim> B(false);
 
-//  std::array<int,dim> yasppartitions = {4, 4};
-  std::array<int,dim> yasppartitions = {4};
   typedef Dune::YaspFixedSizePartitioner<dim> YP;
+  std::array<int,dim> yasppartitions = {2, 1};
   auto yp = new YP(yasppartitions);
 
   auto grid = std::make_shared<GM>(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication(),yp);
@@ -253,8 +251,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
   double eigenvalue_threshold = (double)overlap / (cells + overlap);
 
   int verb=0;
-  //if (gfs.gridView().comm().rank()==0) verb=2;
-  if (gfs.gridView().comm().rank() == 3) verb=3;
+  if (gfs.gridView().comm().rank()==0) verb=2;
 
   // Create a local function space needed for the Sarkis partition of unity only
   typedef Dune::PDELab::LocalFunctionSpace<GFS, Dune::PDELab::AnySpaceTag> LFS;
@@ -264,26 +261,16 @@ void driver(std::string basis_type, std::string part_unity_type) {
   // Generate a partition of unity
   std::shared_ptr<V> part_unity;
   if (part_unity_type == "standard")
-    part_unity = std::make_shared<V>(standardPartitionOfUnity<V>(gfs, cc));
-  //else if (part_unity_type == "sarkis")
-  //  part_unity = std::make_shared<V>(sarkisPartitionOfUnity<V>(gfs, lfs, cc_bnd_neu_int_dir, cells, cells, overlap, yasppartitions[0], yasppartitions[1]));
+    part_unity = std::make_shared<V>(standardPartitionOfUnity<V>(gfs, cc_bnd_neu_int_dir));
+  else if (part_unity_type == "sarkis")
+    part_unity = std::make_shared<V>(sarkisPartitionOfUnity<V>(gfs, lfs, cc_bnd_neu_int_dir, cells, cells, overlap, yasppartitions[0], yasppartitions[1]));
   else
     DUNE_THROW(Dune::Exception, "Unkown selection in test driver!");
 
 
   // Choose how many eigenvalues to compute
-  int nev = 2;
-  int nev_arpack = 2 ;
-  eigenvalue_threshold = -1;
-
-  using Dune::PDELab::Backend::native;
-  if(verb > 2) {
-    //Dune::printvector(std::cout, *part_unity, "part_unity with Dirichlet", "");
-    Dune::printmatrix(std::cout, native(AF_exterior), "AF_exterior", "");
-    Dune::printmatrix(std::cout, native(AF_ovlp), "AF_ovlp", "");
-    Dune::printvector(std::cout, native(*part_unity), "part_unity with Dirichlet", "");
-    //Dune::printmatrix(std::cout, native(*part_unity), "part_unity", "");
-  }
+  int nev = 10;
+  int nev_arpack = 10;
 
   // Construct per-subdomain basis functions
   std::shared_ptr<Dune::PDELab::SubdomainBasis<V> > subdomain_basis;
@@ -296,10 +283,6 @@ void driver(std::string basis_type, std::string part_unity_type) {
   else
     DUNE_THROW(Dune::Exception, "Unkown selection in test driver!");
 
-  if (verb > 2)
-    for (int i = 0; i < subdomain_basis->basis_size(); i++)
-      Dune::printvector(std::cout, native(*subdomain_basis->get_basis_vector(i)), "basis vector " + std::to_string(i), "", 1, 10, 17);
-
 
   // Fuse per-subdomain basis functions to a global coarse space
   auto coarse_space = std::make_shared<Dune::PDELab::SubdomainProjectedCoarseSpace<GFS,M_EXTERIOR,V,PIH> >(gfs, AF_exterior, subdomain_basis, pihf);
@@ -311,21 +294,10 @@ void driver(std::string basis_type, std::string part_unity_type) {
 
   // now solve defect equation A*v = d using a CG solver with our shiny preconditioner
   V v(gfs,0.0);
-  auto solver_ref = std::make_shared<Dune::CGSolver<V> >(*popf,ospf,*prec,1E-6,500,verb,false);
+  auto solver_ref = std::make_shared<Dune::CGSolver<V> >(*popf,ospf,*prec,1E-6,1000,verb,true);
   Dune::InverseOperatorResult result;
   solver_ref->apply(v,d,result);
   x -= v;
-
-  for (int i = 0; i < subdomain_basis->basis_size(); i++) {
-    // Write solution to VTK
-    Dune::VTKWriter<GV> vtkwriter(gfs.gridView());
-    typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-    DGF xdgf(gfs,*subdomain_basis->get_basis_vector(i));
-    typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
-    auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
-    vtkwriter.addVertexData(adapt);
-    vtkwriter.write("testgeneo_basis_" + std::to_string(i));
-  }
 
 
   // Write solution to VTK
@@ -348,9 +320,8 @@ int main(int argc, char **argv)
     Dune::MPIHelper::instance(argc,argv);
 
     driver("geneo", "standard");
-    //driver("geneo", "sarkis");
-    //driver("part_unity", "sarkis");
-    //driver("lipton_babuska", "standard");
+    driver("geneo", "sarkis");
+    driver("lipton_babuska", "standard");
 
     return 0;
   }

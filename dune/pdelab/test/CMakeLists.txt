@@ -52,17 +52,11 @@ dune_add_test(SOURCES testelasticity.cc)
 
 if(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
   dune_add_test(SOURCES testgeneo.cc
-                MPI_RANKS 4 # FIXME: Temporary use of 4 cores, to be removed when merged!
+                MPI_RANKS 2
                 TIMEOUT 300)
 
   if (UG_FOUND)
-  dune_add_test(SOURCES new_testgeneo.cc
-                MPI_RANKS 2
-                TIMEOUT 300)
-  dune_add_test(SOURCES new_testgeneo_abstracted.cc
-                MPI_RANKS 2
-                TIMEOUT 300)
-  dune_add_test(SOURCES new_assembler_testgeneo.cc
+  dune_add_test(SOURCES testgeneo_nonovlp.cc
                 MPI_RANKS 2
                 TIMEOUT 300)
   endif()
