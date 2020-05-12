@@ -106,6 +106,18 @@ namespace Dune {
         It is assumed that the vectors are consistent on the interior+border
         partition.
       */
+#if DUNE_VERSION_NEWER(DUNE_ISTL,2,7)
+      //const interface of istl
+      virtual field_type dot (const X& x, const X& y) const override
+      {
+        // do local scalar product on unique partition
+        field_type sum = helper.disjointDot(x,y);
+
+        // do global communication
+        return gfs.gridView().comm().sum(sum);
+      }
+#else
+      //non-const interface of istl
       virtual field_type dot (const X& x, const X& y) override
       {
         // do local scalar product on unique partition
@@ -115,13 +127,25 @@ namespace Dune {
         return gfs.gridView().comm().sum(sum);
       }
 
+#endif
+
+#if DUNE_VERSION_NEWER(DUNE_ISTL,2,7)
+      //const interface of istl
       /*! \brief Norm of a right-hand side vector.
         The vector must be consistent on the interior+border partition
       */
+      virtual double norm (const X& x) const override
+      {
+        return sqrt(static_cast<double>(this->dot(x,x)));
+      }
+#else
+      //non-const interface of istl
       virtual double norm (const X& x) override
       {
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
+#endif
+
 
       SolverCategory::Category category() const override
       {
@@ -442,16 +466,36 @@ namespace Dune {
         : implementation(implementation_)
       {}
 
+#if DUNE_VERSION_NEWER(DUNE_ISTL,2,7)
+      //const interface of dune istl >2.7
+      virtual typename X::Container::field_type dot(const X& x, const X& y) const override
+      {
+        return implementation.dot(x,y);
+      }
+#else
+      //non-const interface of dune istl <2.7
       virtual typename X::Container::field_type dot(const X& x, const X& y) override
       {
         return implementation.dot(x,y);
       }
+#endif
 
+#if DUNE_VERSION_NEWER(DUNE_ISTL,2,7)
+      //const interface of dune istl >2.7
+      virtual typename X::Container::field_type norm (const X& x) const override
+      {
+        using namespace std;
+        return sqrt(static_cast<double>(this->dot(x,x)));
+      }
+
+#else
+      //non-const interface of dune istl <2.7
       virtual typename X::Container::field_type norm (const X& x) override
       {
         using namespace std;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
+#endif
 
     private:
       const OVLPScalarProductImplementation<GFS>& implementation;
