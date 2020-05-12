@@ -466,16 +466,36 @@ namespace Dune {
         : implementation(implementation_)
       {}
 
+#if DUNE_VERSION_NEWER(DUNE_ISTL,2,7)
+      //const interface of dune istl >2.7
+      virtual typename X::Container::field_type dot(const X& x, const X& y) const override
+      {
+        return implementation.dot(x,y);
+      }
+#else
+      //non-const interface of dune istl <2.7
       virtual typename X::Container::field_type dot(const X& x, const X& y) override
       {
         return implementation.dot(x,y);
       }
+#endif
 
+#if DUNE_VERSION_NEWER(DUNE_ISTL,2,7)
+      //const interface of dune istl >2.7
+      virtual typename X::Container::field_type norm (const X& x) const override
+      {
+        using namespace std;
+        return sqrt(static_cast<double>(this->dot(x,x)));
+      }
+
+#else
+      //non-const interface of dune istl <2.7
       virtual typename X::Container::field_type norm (const X& x) override
       {
         using namespace std;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
+#endif
 
     private:
       const OVLPScalarProductImplementation<GFS>& implementation;

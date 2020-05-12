@@ -154,6 +154,18 @@ namespace Dune {
         It is assumed that the vectors are consistent on the interior+border
         partition.
       */
+#if DUNE_VERSION_NEWER(DUNE_ISTL,2,7)
+      //const interface of istl 2.7
+      virtual field_type dot (const X& x, const X& y) const  override
+      {
+        // do local scalar product on unique partition
+        field_type sum = helper.disjointDot(x,y);
+
+        // do global communication
+        return gfs.gridView().comm().sum(sum);
+      }
+#else
+      //non-const interface of istl <2.7
       virtual field_type dot (const X& x, const X& y) override
       {
         // do local scalar product on unique partition
@@ -162,14 +174,24 @@ namespace Dune {
         // do global communication
         return gfs.gridView().comm().sum(sum);
       }
+#endif
 
       /*! \brief Norm of a right-hand side vector.
         The vector must be consistent on the interior+border partition
       */
-      virtual double norm (const X& x) override
+#if DUNE_VERSION_NEWER(DUNE_ISTL,2,7)
+      //const interface of istl >2.7
+      virtual double norm (const X& x) const override
       {
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
+#else
+      //non-const interface of istl <2.7
+      virtual double norm (const X& x) const override
+      {
+        return sqrt(static_cast<double>(this->dot(x,x)));
+      }
+#endif
 
       /*! \brief make additive vector consistent
        */
