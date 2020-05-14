@@ -3,6 +3,7 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_SUM_HH
 #define DUNE_PDELAB_LOCALOPERATOR_SUM_HH
 
+#include <dune/common/std/utility.hh>
 #include <dune/pdelab/localoperator/combinedoperator.hh>
 
 namespace Dune {
