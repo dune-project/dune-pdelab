@@ -25,26 +25,18 @@ dune_project()
 # Disable the upstream testing magic, that builds tests during "make test"
 set(DUNE_TEST_MAGIC OFF)
 
-# To have enable all packages work with cmake-2.8, the module
-# libraries need to be added before the call to dune_enable_all_packages()
-# With cmake 3.1, one would use the MODULE_LIBRARIES argument of
-# dune_enable_all_packages() instead.
+# Use the enable all packages feature
+dune_enable_all_packages(MODULE_LIBRARIES dunepdelab)
 
 if(NOT MINGW)
   set(clock_cc "dune/pdelab/common/clock.cc")
 endif()
 
-dune_add_library(dunepdelab
+dune_library_add_sources(dunepdelab SOURCES
   ${clock_cc}
   dune/pdelab/common/hostname.cc
   dune/pdelab/common/logtag.cc
-  )
-dune_target_enable_all_packages(dunepdelab)
-
-dune_register_package_flags(LIBRARIES dunepdelab)
-
-# Use the enable all packages feature
-dune_enable_all_packages()
+)
 
 add_subdirectory(doc)
 add_subdirectory(dune/pdelab)
