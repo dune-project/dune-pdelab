@@ -53,9 +53,15 @@ namespace Dune {
       struct build_matrix_type
       {
 
+#if DUNE_VERSION_LT(DUNE_ISTL,2,8)
         static_assert(static_cast<int>(RV::blocklevel) == static_cast<int>(CV::blocklevel),"Both vectors must have identical blocking depth");
 
         typedef typename recursive_build_matrix_type<E,RV,CV,RV::blocklevel>::type type;
+#else
+        static_assert(static_cast<int>(blockLevel<RV>()) == static_cast<int>(blockLevel<CV>()),"Both vectors must have identical blocking depth");
+
+        typedef typename recursive_build_matrix_type<E,RV,CV,blockLevel<RV>()>::type type;
+#endif
 
       };
 
@@ -128,7 +134,11 @@ namespace Dune {
 
       };
 
+#if DUNE_VERSION_LT(DUNE_ISTL,2,8)
       template<typename M, int blocklevel = M::blocklevel>
+#else
+      template<typename M, int blocklevel = blockLevel<M>()>
+#endif
       struct requires_pattern
       {
         static const bool value = requires_pattern<typename M::block_type,blocklevel-1>::value;
