@@ -4,6 +4,9 @@
 
 #include <dune/common/typetraits.hh>
 #include <dune/common/shared_ptr.hh>
+#if DUNE_VERSION_GTE(ISTL,2,8)
+#include <dune/istl/blocklevel.hh>
+#endif
 #include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/common/aliasedmatrixview.hh>
@@ -48,7 +51,11 @@ namespace Dune {
         // some trickery to avoid exposing average users to the fact that there might
         // be multiple statistics objects
         typedef typename std::conditional<
+#if DUNE_VERSION_LT(DUNE_ISTL,2,8)
           (C::blocklevel > 2),
+#else
+          (blockLevel<C>() > 2),
+#endif
           std::vector<PatternStatistics>,
           PatternStatistics
           >::type StatisticsReturnType;
