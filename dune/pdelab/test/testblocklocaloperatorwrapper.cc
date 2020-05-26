@@ -179,6 +179,30 @@ int main(int argc, char** argv)
     // Dune::printmatrix(std::cout, native(blockOffDiagonalJacobian),"block diagonal","row", 9, 1);
 
 
+    // Assemble point diagonal (=diagonal of diagonal blocks) of Jacobian
+    using PointDiagonalLocalOperator = Dune::PDELab::PointDiagonalLocalOperatorWrapper<LocalOperator>;
+    PointDiagonalLocalOperator pointDiagonalLocalOperator(localOperator);
+    using PointDiagonalGridOperator = Dune::PDELab::GridOperator<GridFunctionSpace,
+                                                                 GridFunctionSpace,
+                                                                 PointDiagonalLocalOperator,
+                                                                 MatrixBackend,
+                                                                 DomainField,
+                                                                 RangeType,
+                                                                 RangeType,
+                                                                 ConstraintsContainer,
+                                                                 ConstraintsContainer>;
+    PointDiagonalGridOperator pointDiagonalGridOperator(gridFunctionSpace,
+                                                        constraintsContainer,
+                                                        gridFunctionSpace,
+                                                        constraintsContainer,
+                                                        pointDiagonalLocalOperator,
+                                                        matrixBackend);
+    CoefficientVector pointDiagonal(gridFunctionSpace);
+    pointDiagonal = 0.0;
+    pointDiagonalGridOperator.residual(coefficientVector, pointDiagonal);
+    // Dune::printvector(std::cout, native(pointDiagonal),"point diagonal", "row");
+
+
     bool testfail = false;
 
     // Test if the Block Diagonal Matrix Looks as expected:
@@ -223,6 +247,26 @@ int main(int argc, char** argv)
           if (block.infinity_norm() > 1e-14)
             testfail = true;
           // std::cout << block.infinity_norm() << std::endl;
+        }
+      }
+    }
+
+    // Test if the point diagonal looks as expected
+    for (std::size_t i=0; i<native(blockOffDiagonalJacobian).N(); ++i){
+      for (std::size_t j=0; j<native(blockOffDiagonalJacobian).M(); ++j){
+        if (i == j){
+          auto block = native(jacobian)[i][j];
+          auto vector = native(pointDiagonal)[i];
+          // Iterate over the diagonal block
+          for (std::size_t ii=0; ii<block.N(); ++ii){
+            for (std::size_t jj=0; jj<block.N(); ++jj){
+              if (ii == jj){
+                if (block[ii][ii] - vector[ii] > 1e-14)
+                  testfail = true;
+                // std::cout << block[ii][ii] - vector[ii] << std::endl;
+              }
+            }
+          }
         }
       }
     }
