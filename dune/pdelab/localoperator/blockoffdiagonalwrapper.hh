@@ -25,8 +25,7 @@ namespace Dune {
      */
     template <class LocalOperator>
     class BlockOffDiagonalLocalOperatorWrapper
-      : public Dune::PDELab::FullSkeletonPattern
-      , public Dune::PDELab::LocalOperatorDefaultFlags
+      : public Dune::PDELab::LocalOperatorDefaultFlags
     {
     public:
       // We only want to assemble the off-diagonal blocks so we only need
@@ -58,6 +57,15 @@ namespace Dune {
       BlockOffDiagonalLocalOperatorWrapper(const BlockOffDiagonalLocalOperatorWrapper& other)
         : _localOperator(other._localOperator)
       {}
+
+      // define sparsity pattern connecting self and neighbor dofs
+      template<typename LFSU, typename LFSV, typename LocalPattern>
+      void pattern_skeleton (const LFSU& lfsu_s, const LFSV& lfsv_s, const LFSU& lfsu_n, const LFSV& lfsv_n,
+                             LocalPattern& pattern_sn,
+                             LocalPattern& pattern_ns) const
+      {
+        _localOperator.pattern_skeleton (lfsu_s, lfsv_s, lfsu_n, lfsv_n, pattern_sn, pattern_ns);
+      }
 
       template<typename IG, typename LFSU, typename X, typename LFSV, typename MAT>
       void jacobian_skeleton (const IG& ig,

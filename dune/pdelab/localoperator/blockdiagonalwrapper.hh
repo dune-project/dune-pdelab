@@ -78,8 +78,7 @@ namespace Dune {
      */
     template <class LocalOperator>
     class BlockDiagonalLocalOperatorWrapper
-      : public Dune::PDELab::FullVolumePattern
-      , public Dune::PDELab::LocalOperatorDefaultFlags
+      : public Dune::PDELab::LocalOperatorDefaultFlags
     {
     public:
       // We only want to assemble the diagonal blocks so we only need volume
@@ -114,6 +113,14 @@ namespace Dune {
       BlockDiagonalLocalOperatorWrapper(const BlockDiagonalLocalOperatorWrapper& other)
         : _localOperator(other._localOperator)
       {}
+
+      // define sparsity pattern of operator representation
+      template<typename LFSU, typename LFSV, typename LocalPattern>
+      void pattern_volume (const LFSU& lfsu, const LFSV& lfsv,
+                           LocalPattern& pattern) const
+      {
+        _localOperator.pattern_volume(lfsu, lfsv, pattern);
+      }
 
       template<typename EG, typename LFSU, typename X, typename LFSV, typename MAT>
       void jacobian_volume (const EG& eg,
