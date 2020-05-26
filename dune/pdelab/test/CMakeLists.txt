@@ -12,6 +12,8 @@ dune_add_test(SOURCES testanalytic.cc)
 
 dune_add_test(SOURCES testbindtime.cc)
 
+dune_add_test(SOURCES testblocklocaloperatorwrapper.cc)
+
 dune_add_test(NAME testcomplexnumbers-istl
               SOURCES testcomplexnumbers.cc
               COMPILE_DEFINITIONS SUPERLU_NTYPE=3
