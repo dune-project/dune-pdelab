@@ -196,7 +196,7 @@ namespace Dune {
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
         transformed_type r(make_tuple(std::make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked(gfs),const_cast<GFS*>(&gfs));
-        return std::move(r);
+        return r;
       }
 
       static transformed_storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t)
