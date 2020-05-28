@@ -14,6 +14,11 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   Change the local operator interface for nonlinear jacobian apply methods. The vector representing the
+    current solution (x) and the vector that the jacobian is applied on (z) can now have different type. Note:
+    This is a change in the interface description of the local operator interface but will not break any user
+    code since all calls to the local operator through a grid operator will use the same type for x and z.
+
 -   Change the default parameters of the convectiondiffusiondg local operator. Instead of NIPG, no weights
     and penalty factor alpha=0 we now use SIPG, weights and alpha=1 as default. Note that this is not backward
     compatible so you need to change your code if you used the default parameters and want to keep the
