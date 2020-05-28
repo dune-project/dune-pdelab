@@ -14,6 +14,11 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   Change the local operator interface for nonlinear jacobian apply methods. The vector representing the
+    current solution (x) and the vector that the jacobian is applied on (z) can now have different type. Note:
+    This is a change in the interface description of the local operator interface but will not break any user
+    code since all calls to the local operator through a grid operator will use the same type for x and z.
+
 -   The number of preconditioner steps for sequential ISTL solvers is now a runtime parameter. It is now set
     to 1 as a default in contrast to before where we always applied 3 preconditioner steps. This will change
     the number of preconditioner/solver steps in all codes using those solvers. You can always restore the
