@@ -95,24 +95,24 @@ namespace Dune {
       //=======================
       // Jacobian apply methods
       //=======================
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-      static void jacobian_apply_volume (const LOP& lop, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
+      template<typename EG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
+      static void jacobian_apply_volume (const LOP& lop, const EG& eg, const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv, Y& y)
       {
       }
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-      static void jacobian_apply_volume_post_skeleton (const LOP& lop, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
+      template<typename EG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
+      static void jacobian_apply_volume_post_skeleton (const LOP& lop, const EG& eg, const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv, Y& y)
       {
       }
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
       static void jacobian_apply_skeleton (const LOP& lop, const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
-        const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
+        const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& x_n, const Z& z_n, const LFSV& lfsv_n,
         Y& y_s, Y& y_n)
       {
       }
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
       static void jacobian_apply_boundary (const LOP& lop, const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
         Y& y_s)
       {
       }
@@ -239,30 +239,30 @@ namespace Dune {
       //=======================
       // Jacobian apply methods
       //=======================
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-      static auto jacobian_apply_volume (const LOP& lop, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
+      template<typename EG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
+      static auto jacobian_apply_volume (const LOP& lop, const EG& eg, const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv, Y& y)
       {
-        lop.jacobian_apply_volume(eg,lfsu,z,lfsv,y);
+        lop.jacobian_apply_volume(eg,lfsu,x,lfsv,y);
       }
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-      static void jacobian_apply_volume_post_skeleton (const LOP& lop, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
+      template<typename EG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
+      static void jacobian_apply_volume_post_skeleton (const LOP& lop, const EG& eg, const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv, Y& y)
       {
-        lop.jacobian_apply_volume_post_skeleton(eg,lfsu,z,lfsv,y);
+        lop.jacobian_apply_volume_post_skeleton(eg,lfsu,x,lfsv,y);
       }
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
       static void jacobian_apply_skeleton (const LOP& lop, const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
-        const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
+        const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& x_n, const Z& z_n, const LFSV& lfsv_n,
         Y& y_s, Y& y_n)
       {
-        lop.jacobian_apply_skeleton(ig,lfsu_s,z_s,lfsv_s,lfsu_n,z_n,lfsv_n,y_s,y_n);
+        lop.jacobian_apply_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,y_s,y_n);
       }
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
       static void jacobian_apply_boundary (const LOP& lop, const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
         Y& y_s)
       {
-        lop.jacobian_apply_boundary(ig,lfsu_s,z_s,lfsv_s,y_s);
+        lop.jacobian_apply_boundary(ig,lfsu_s,x_s,lfsv_s,y_s);
       }
 
       //=================
@@ -309,27 +309,27 @@ namespace Dune {
       //=======================
       // Jacobian apply methods
       //=======================
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-      static auto jacobian_apply_volume (const LOP& lop, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
+      template<typename EG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
+      static auto jacobian_apply_volume (const LOP& lop, const EG& eg, const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv, Y& y)
       {
         lop.jacobian_apply_volume(eg,lfsu,x,z,lfsv,y);
       }
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-      static void jacobian_apply_volume_post_skeleton (const LOP& lop, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
+      template<typename EG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
+      static void jacobian_apply_volume_post_skeleton (const LOP& lop, const EG& eg, const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv, Y& y)
       {
         lop.jacobian_apply_volume_post_skeleton(eg,lfsu,x,z,lfsv,y);
       }
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
       static void jacobian_apply_skeleton (const LOP& lop, const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
-        const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
+        const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& x_n, const Z& z_n, const LFSV& lfsv_n,
         Y& y_s, Y& y_n)
       {
         lop.jacobian_apply_skeleton(ig,lfsu_s,x_s,z_s,lfsv_s,lfsu_n,x_n,z_n,lfsv_n,y_s,y_n);
       }
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      template<typename IG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
       static void jacobian_apply_boundary (const LOP& lop, const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
         Y& y_s)
       {
         lop.jacobian_apply_boundary(ig,lfsu_s,x_s,z_s,lfsv_s,y_s);
