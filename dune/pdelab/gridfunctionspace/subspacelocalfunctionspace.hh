@@ -22,7 +22,7 @@ namespace Dune {
       // ********************************************************************************
 
       template<typename It>
-      void extract_tree_path_elements(TypeTree::HybridTreePath<>, It it)
+      void extract_tree_path_elements(TypeTree::StaticTreePath<>, It it)
       {
         // end of recursion
       }
