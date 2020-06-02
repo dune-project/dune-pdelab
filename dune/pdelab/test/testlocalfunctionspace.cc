@@ -74,7 +74,7 @@ void test (const GV& gv)
   //CompositeLFSCache compositelfsCache(compositelfs);
   //  std::vector<double> xlc(compositelfs.maxSize());
 
-  typedef Dune::TypeTree::HybridTreePath<Dune::index_constant<1>> Path1;
+  typedef Dune::TypeTree::StaticTreePath<1> Path1;
   typedef Dune::PDELab::GridFunctionSubSpace<CompositeGFS, Path1> SubGFS1;
   typedef Dune::PDELab::LocalFunctionSpace<SubGFS1> SubLFS1;
   SubGFS1 subgfs1(compositegfs);
