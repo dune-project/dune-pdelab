@@ -458,7 +458,7 @@ namespace Dune::PDELab
         if (parameterTree.hasKey("use_max_norm"))
           setUseMaxNorm(parameterTree.get<bool>("use_max_norm"));
         if (parameterTree.hasKey("hanging_node_modifications"))
-          _hangingNodeModifications(parameterTree.get<bool>("hanging_node_modifications"));
+          _hangingNodeModifications = parameterTree.get<bool>("hanging_node_modifications");
 
         if (parameterTree.hasKey("min_linear_reduction"))
           setMinLinearReduction(parameterTree.get<Real>("min_linear_reduction"));
