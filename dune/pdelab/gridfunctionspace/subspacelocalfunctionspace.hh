@@ -10,6 +10,7 @@
 // nothing in here is of interest to our users
 #ifndef DOXYGEN
 
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 
 namespace Dune {
@@ -22,7 +23,7 @@ namespace Dune {
       // ********************************************************************************
 
       template<typename It>
-      void extract_tree_path_elements(TypeTree::HybridTreePath<>, It it)
+      void extract_tree_path_elements(TypeTree::StaticTreePath<>, It it)
       {
         // end of recursion
       }
