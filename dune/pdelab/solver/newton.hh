@@ -91,7 +91,7 @@ namespace Dune::PDELab
       return _result;
     }
 
-    virtual void prepareStep(const Domain& solution)
+    virtual void prepareStep(Domain& solution)
     {
       _reassembled = false;
       if (_result.defect/_previousDefect > _reassembleThreshold){
@@ -106,7 +106,6 @@ namespace Dune::PDELab
           // Interpolate periodic constraints / hanging nodes
           _gridOperator.localAssembler().backtransform(solution);
         }
-
         if (_verbosity>=3)
               std::cout << "      Reassembling matrix..." << std::endl;
         *_jacobian = Real(0.0);
@@ -292,18 +291,18 @@ namespace Dune::PDELab
     }
 
     //! Update _residual and defect in _result
-    virtual void updateDefect(const Domain& solution)
+    virtual void updateDefect(Domain& solution)
     {
-      if (_hangingNodeModifications) {
-          auto dirichletValues = solution;
-          // Set all non dirichlet values to zero
-          Dune::PDELab::set_shifted_dofs(_gridOperator.localAssembler().trialConstraints(), 0.0, dirichletValues);
-          // Set all constrained DOFs to zero in solution
-          Dune::PDELab::set_constrained_dofs(_gridOperator.localAssembler().trialConstraints(), 0.0, solution);
-          // Copy correct Dirichlet values back into solution vector
-          Dune::PDELab::copy_constrained_dofs(_gridOperator.localAssembler().trialConstraints(), dirichletValues, solution);
-          // Interpolate periodic constraints / hanging nodes
-          _gridOperator.localAssembler().backtransform(solution);
+      if (_hangingNodeModifications){
+        auto dirichletValues = solution;
+        // Set all non dirichlet values to zero
+        Dune::PDELab::set_shifted_dofs(_gridOperator.localAssembler().trialConstraints(), 0.0, dirichletValues);
+        // Set all constrained DOFs to zero in solution
+        Dune::PDELab::set_constrained_dofs(_gridOperator.localAssembler().trialConstraints(), 0.0, solution);
+        // Copy correct Dirichlet values back into solution vector
+        Dune::PDELab::copy_constrained_dofs(_gridOperator.localAssembler().trialConstraints(), dirichletValues, solution);
+        // Interpolate periodic constraints / hanging nodes
+        _gridOperator.localAssembler().backtransform(solution);
       }
 
       _residual = 0.0;
