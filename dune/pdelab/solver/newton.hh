@@ -96,9 +96,14 @@ namespace Dune::PDELab
       _reassembled = false;
       if (_result.defect/_previousDefect > _reassembleThreshold){
         if (_hangingNodeModifications){
-          // Set hanging node DOFs to zero
-          Dune::PDELab::set_shifted_dofs(_gridOperator.localAssembler().trialConstraints(),0.0, solution);
-          // Interpolate hanging nodes
+          auto dirichletValues = solution;
+          // Set all non dirichlet values to zero
+          Dune::PDELab::set_shifted_dofs(_gridOperator.localAssembler().trialConstraints(), 0.0, dirichletValues);
+          // Set all constrained DOFs to zero in solution
+          Dune::PDELab::set_constrained_dofs(_gridOperator.localAssembler().trialConstraints(), 0.0, solution);
+          // Copy correct Dirichlet values back into solution vector
+          Dune::PDELab::copy_constrained_dofs(_gridOperator.localAssembler().trialConstraints(), dirichletValues, solution);
+          // Interpolate periodic constraints / hanging nodes
           _gridOperator.localAssembler().backtransform(solution);
         }
 
@@ -290,10 +295,15 @@ namespace Dune::PDELab
     virtual void updateDefect(const Domain& solution)
     {
       if (_hangingNodeModifications) {
-        // Set hanging nodes DOFs to zero
-        Dune::PDELab::set_shifted_dofs(_gridOperator.localAssembler().trialConstraints(),0.0, solution);
-        // Interpolate periodic constraints / hanging nodes
-        _gridOperator.localAssembler().backtransform(solution);
+          auto dirichletValues = solution;
+          // Set all non dirichlet values to zero
+          Dune::PDELab::set_shifted_dofs(_gridOperator.localAssembler().trialConstraints(), 0.0, dirichletValues);
+          // Set all constrained DOFs to zero in solution
+          Dune::PDELab::set_constrained_dofs(_gridOperator.localAssembler().trialConstraints(), 0.0, solution);
+          // Copy correct Dirichlet values back into solution vector
+          Dune::PDELab::copy_constrained_dofs(_gridOperator.localAssembler().trialConstraints(), dirichletValues, solution);
+          // Interpolate periodic constraints / hanging nodes
+          _gridOperator.localAssembler().backtransform(solution);
       }
 
       _residual = 0.0;
