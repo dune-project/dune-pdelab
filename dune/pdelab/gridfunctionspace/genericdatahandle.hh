@@ -154,7 +154,7 @@ namespace Dune {
       }
 
       //!  \brief returns true if size per entity of given dim and codim is a constant
-      bool fixedsize(int dim, int codim) const
+      bool fixedSize(int dim, int codim) const
       {
         return _communication_descriptor.fixedSize(_gfs,dim,codim);
       }
@@ -1124,7 +1124,7 @@ namespace Dune {
         return _gfs.dataHandleContains(codim);
       }
 
-      bool fixedsize(int dim, int codim) const
+      bool fixedSize(int dim, int codim) const
       {
         // We always send a single value, the MPI rank.
         return true;
