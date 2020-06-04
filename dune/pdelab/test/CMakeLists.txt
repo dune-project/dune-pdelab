@@ -167,21 +167,21 @@ dune_add_test(NAME testnonoverlappingsinglephaseflow-ug
               COMPILE_DEFINITIONS GRID_UG
               MPI_RANKS 1 2
               TIMEOUT 300
-              CMAKE_GUARD UG_FOUND)
+              CMAKE_GUARD dune-uggrid_FOUND)
 
 dune_add_test(SOURCES testnonoverlappingsinglephaseflow-boilerplate.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
               MPI_RANKS 2
               TIMEOUT 300
-              CMAKE_GUARD UG_FOUND)
+              CMAKE_GUARD dune-uggrid_FOUND)
 
 dune_add_test(SOURCES testadaptivity.cc
-              CMAKE_GUARD UG_FOUND)
+              CMAKE_GUARD dune-uggrid_FOUND)
 
 dune_add_test(SOURCES testnonoverlapping.cc
               MPI_RANKS 2
               TIMEOUT 300
-              CMAKE_GUARD UG_FOUND)
+              CMAKE_GUARD dune-uggrid_FOUND)
 
 dune_add_test(SOURCES testranktransmission.cc
               MPI_RANKS 2
