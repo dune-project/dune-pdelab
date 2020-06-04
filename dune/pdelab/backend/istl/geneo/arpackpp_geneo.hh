@@ -284,13 +284,12 @@ namespace ArpackGeneo
 
       // use type ArPackPlusPlus_BCRSMatrixWrapperGen to store matrix information
       // and to perform the product (A-sigma B)^-1 v (LU decomposition is not used)
-      typedef ArPackPlusPlus_BCRSMatrixWrapperGen<BCRSMatrix> WrappedMatrix;
+      typedef ArPackPlusPlus_BCRSMatrixWrapperGen<BCRSMatrix>  WrappedMatrix;
       WrappedMatrix A(ashiftb,b_);
 
       // get number of rows and columns in A
       const int nrows = A.nrows();
-      const int ncols = A.ncols();
-
+        const int ncols = A.ncols();
       // assert that A is square
       if (nrows != ncols)
         DUNE_THROW(Dune::ISTLError,"Matrix is not square ("
@@ -305,7 +304,6 @@ namespace ArpackGeneo
       ARNonSymStdEig<Real,WrappedMatrix>
         dprob(nrows, nev, &A, &WrappedMatrix::multMv, which, ncv, tol, maxit);
 
-
       // set ARPACK verbosity mode if requested
       if (verbosity_level_ > 3) dprob.Trace();
 
@@ -314,6 +312,7 @@ namespace ArpackGeneo
       auto ev_data = ev.data();
       auto ev_imag_data = ev_imag.data();
       dprob.Eigenvalues(ev_data,ev_imag_data,ivec);
+
 
       // Get sorting permutation for un-shifted eigenvalues
       std::vector<int> index(nev, 0);

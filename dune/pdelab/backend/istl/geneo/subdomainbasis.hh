@@ -1,4 +1,3 @@
-
 #ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_SUBDOMAINBASIS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_GENEO_SUBDOMAINBASIS_HH
 
@@ -39,10 +38,38 @@ namespace Dune {
         return local_basis.size();
       }
 
+      /*!
+       * \brief Write EV basis to a .txt file
+       */
+       void to_file(std::string basename) {
+         std::ofstream output_basis_size;
+         std::string filename_basis_size = basename + "_basis_size.txt";
+         output_basis_size.open(filename_basis_size, std::ios::out);
+         output_basis_size << local_basis.size();
+         output_basis_size.close();
+
+          for (int basis_index = 0; basis_index < local_basis.size(); basis_index++) {
+            std::ostringstream os;
+            os << basis_index;
+            std::string filename = basename + "_EV_" + os.str() + ".txt";
+            std::ofstream output;
+            output.open(filename, std::ios::out);
+            //if (!output.is_open()) {std::cout << "Error: Cannot open file" << std::endl;}
+            //else {std::cout << "Writting " << filename << std::endl;}
+            Dune::printvector(output, *local_basis[basis_index], "", "", 3, 10, 16);
+            output.close();
+          }
+       }
+
     protected:
       std::vector<std::shared_ptr<X> > local_basis;
 
     };
+
+
+
+
+
   }
 }
 

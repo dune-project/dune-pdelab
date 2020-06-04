@@ -1111,7 +1111,7 @@ namespace Dune {
     auto pu = std::shared_ptr<Vector>(new Vector(M.N()));
     for (typename Vector::size_type i=0; i<pu->N(); i++){
       (*pu)[i] = (distance[i]+.0)/sumdistance[i];
-      std::cout << (*pu)[i] << std::endl;
+      //std::cout << (*pu)[i] << std::endl;
     }
     return pu;
   }
