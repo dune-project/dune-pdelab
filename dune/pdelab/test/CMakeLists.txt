@@ -47,11 +47,11 @@ dune_add_test(SOURCES testheat-instationary-periodic.cc)
 
 dune_add_test(SOURCES testelasticity.cc)
 
-if(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
-  dune_add_test(SOURCES testgeneo.cc
-                MPI_RANKS 2
-                TIMEOUT 300)
-endif(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
+dune_add_test(SOURCES testgeneo.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND
+              )
 
 dune_add_test(SOURCES testdglegendre.cc)
 
@@ -108,32 +108,33 @@ dune_add_test(SOURCES testpermutedordering.cc)
 dune_add_test(SOURCES testsimplebackend.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 
+dune_add_test(SOURCES testclock.cc
+              CMAKE_GUARD "NOT MINGW")
 
-if(NOT MINGW)
-  dune_add_test(SOURCES testclock.cc)
-  dune_add_test(SOURCES test-instationary-with-boundary-constraints.cc)
-  dune_add_test(SOURCES test-transport-ccfv.cc)
-endif()
+dune_add_test(SOURCES test-instationary-with-boundary-constraints.cc
+              CMAKE_GUARD "NOT MINGW")
 
+dune_add_test(SOURCES test-transport-ccfv.cc
+              CMAKE_GUARD "NOT MINGW")
 
-if(EIGEN3_FOUND)
-  dune_add_test(SOURCES testeigenbackend.cc
-               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-endif(EIGEN3_FOUND)
+dune_add_test(SOURCES testeigenbackend.cc
+              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
+              CMAKE_GUARD EIGEN3_FOUND)
 
-if(dune-alugrid_FOUND)
-  dune_add_test(SOURCES testordering.cc)
+dune_add_test(SOURCES testordering.cc
+              CMAKE_GUARD dune-alugrid_FOUND)
 
-  dune_add_test(SOURCES testloadbalancing.cc
-                COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
-                MPI_RANKS 2
-                TIMEOUT 300)
-endif(dune-alugrid_FOUND)
+dune_add_test(SOURCES testloadbalancing.cc
+              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD dune-alugrid_FOUND)
 
-if(GMP_FOUND)
-  dune_add_test(SOURCES testopbfem.cc)
-  dune_add_test(SOURCES test-dg-amg.cc)
-endif(GMP_FOUND)
+dune_add_test(SOURCES testopbfem.cc
+              CMAKE_GUARD GMP_FOUND)
+
+dune_add_test(SOURCES test-dg-amg.cc
+              CMAKE_GUARD GMP_FOUND)
 
 # Include periodic tests. Must run in parallel.
 foreach(degree IN ITEMS 1 2)
@@ -157,25 +158,26 @@ dune_add_test(NAME testnonoverlappingsinglephaseflow-yasp
               MPI_RANKS 1 2
               TIMEOUT 300)
 
-if(UG_FOUND)
-  dune_add_test(NAME testnonoverlappingsinglephaseflow-ug
-                SOURCES testnonoverlappingsinglephaseflow.cc
-                COMPILE_DEFINITIONS GRID_UG
-                MPI_RANKS 1 2
-                TIMEOUT 300)
+dune_add_test(NAME testnonoverlappingsinglephaseflow-ug
+              SOURCES testnonoverlappingsinglephaseflow.cc
+              COMPILE_DEFINITIONS GRID_UG
+              MPI_RANKS 1 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND)
 
-  dune_add_test(SOURCES testnonoverlappingsinglephaseflow-boilerplate.cc
-                COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
-                MPI_RANKS 2
-                TIMEOUT 300)
+dune_add_test(SOURCES testnonoverlappingsinglephaseflow-boilerplate.cc
+              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND)
 
-  dune_add_test(SOURCES testadaptivity.cc)
+dune_add_test(SOURCES testadaptivity.cc
+              CMAKE_GUARD UG_FOUND)
 
-  dune_add_test(SOURCES testnonoverlapping.cc
-                MPI_RANKS 2
-                TIMEOUT 300)
-endif()
-
+dune_add_test(SOURCES testnonoverlapping.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND)
 
 dune_add_test(SOURCES testranktransmission.cc
               MPI_RANKS 2
