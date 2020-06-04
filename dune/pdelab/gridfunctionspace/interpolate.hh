@@ -11,12 +11,10 @@
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/virtualinterface.hh>
-#include <dune/functions/common/functionfromcallable.hh>
 
 #include <dune/typetree/typetree.hh>
 #include <dune/typetree/pairtraversal.hh>
 
-#include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/function/localfunction.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
@@ -94,10 +92,7 @@ namespace Dune {
           // call interpolate for the basis
           auto f = [&](const Domain& x) -> RangeField { return lf(x)[index]; };
 
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<RangeField(Domain), decltype(f), Dune::Function<Domain,RangeField> >;
-          LocalFunction fnkt(f);
-
-          ib.interpolate(lfs.finiteElement(), fnkt, xl);
+          ib.interpolate(lfs.finiteElement(), f, xl);
 
           // write coefficients into local vector
           xg.write_sub_container(lfs,xl);
@@ -135,9 +130,8 @@ namespace Dune {
            // call interpolate for the basis
           using Domain = typename Functions::SignatureTraits<F>::Domain;
           using Range = typename Functions::SignatureTraits<F>::Range;
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Dune::Function<Domain,Range> >;
-          LocalFunction lf(f);
-          ib.interpolate(lfs.finiteElement(), lf, xl);
+
+          ib.interpolate(lfs.finiteElement(), f, xl);
           // write coefficients into local vector
           xg.write_sub_container(lfs,xl);
         }
@@ -152,9 +146,7 @@ namespace Dune {
         {
           // call interpolate for the basis
           using Domain = typename Functions::SignatureTraits<F>::Domain;
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Dune::Function<Domain,Range> >;
-          LocalFunction lf(f);
-          TypeTree::applyToTree(lfs,InterpolateLeafFromScalarVisitor<IB,LocalFunction,XG>(ib,lf,xg));
+          TypeTree::applyToTree(lfs,InterpolateLeafFromScalarVisitor<IB,F,XG>(ib, f, xg));
 
         }
 
