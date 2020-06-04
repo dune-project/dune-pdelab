@@ -45,7 +45,7 @@ public:
   }
 
   //! returns true if size per entity of given dim and codim is a constant
-  bool fixedsize (int dim, int codim) const
+  bool fixedSize (int dim, int codim) const
   {
     return true;
   }
