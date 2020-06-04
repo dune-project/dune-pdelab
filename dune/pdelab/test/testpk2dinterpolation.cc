@@ -80,19 +80,20 @@ void run_test(const std::unique_ptr<Grid>& grid, int &result, unsigned int maxel
   std::cout << std::endl
             << "Testing P" << k << "2D interpolation with " << name << std::endl;
 
+  while((unsigned int)(grid->leafGridView().size(0)) < maxelements)
+    grid->globalRefine(1);
+
   typedef Dune::PDELab::PkLocalFiniteElementMap<typename Grid::LeafGridView, double, double, k> FEM;
   FEM fem(grid->leafGridView());
 
   std::cout << "interpolation level 0" << std::endl;
-  double error0 = interpolationerror(grid->leafGridView(), fem);
-  double h0 = std::pow(1/double(grid->leafGridView().size(0)), 1/double(Grid::dimension));
+  auto gridViewLevel0 = grid->levelGridView(0);
+  double error0 = interpolationerror(gridViewLevel0, fem);
+  double h0 = std::pow(1/double(gridViewLevel0.size(0)), 1/double(Grid::dimension));
   std::cout << "interpolation error: "
-            << std::setw(8) << grid->leafGridView().size(0) << " elements, h="
+            << std::setw(8) << gridViewLevel0.size(0) << " elements, h="
             << std::scientific << h0 << ", error="
             << std::scientific << error0 << std::endl;
-
-  while((unsigned int)(grid->leafGridView().size(0)) < maxelements)
-    grid->globalRefine(1);
 
   std::cout << "interpolation level " << grid->maxLevel() << std::endl;
   double errorf = interpolationerror(grid->leafGridView(), fem);
