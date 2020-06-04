@@ -2,9 +2,11 @@ add_subdirectory(fem)
 
 dune_add_test(SOURCES testcombinedoperator.cc)
 
-dune_add_test(SOURCES testconvectiondiffusiondg.cc)
+dune_add_test(SOURCES testconvectiondiffusiondg.cc
+              CMAKE_GUARD SUPERLU_FOUND)
 
-dune_add_test(SOURCES testnewton.cc)
+dune_add_test(SOURCES testnewton.cc
+              CMAKE_GUARD SUPERLU_FOUND)
 
 dune_add_test(SOURCES testinstationary.cc)
 
@@ -15,12 +17,14 @@ dune_add_test(SOURCES testbindtime.cc)
 dune_add_test(NAME testcomplexnumbers-istl
               SOURCES testcomplexnumbers.cc
               COMPILE_DEFINITIONS SUPERLU_NTYPE=3
-                                  USE_ISTL)
+                                  USE_ISTL
+              CMAKE_GUARD SUPERLU_FOUND)
 
 dune_add_test(NAME testcomplexnumbers-istlbackend
               SOURCES testcomplexnumbers.cc
               COMPILE_DEFINITIONS SUPERLU_NTYPE=3
-                                  USE_ISTL_BACKEND)
+                                  USE_ISTL_BACKEND
+              CMAKE_GUARD SUPERLU_FOUND)
 
 dune_add_test(SOURCES testconstraints.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
@@ -50,7 +54,7 @@ dune_add_test(SOURCES testelasticity.cc)
 dune_add_test(SOURCES testgeneo.cc
               MPI_RANKS 2
               TIMEOUT 300
-              CMAKE_GUARD SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND
+              CMAKE_GUARD SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
               )
 
 dune_add_test(SOURCES testdglegendre.cc)
