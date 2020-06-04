@@ -145,9 +145,7 @@ namespace Dune {
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
           // call interpolate for the basis
-          using Domain = typename Functions::SignatureTraits<F>::Domain;
           TypeTree::applyToTree(lfs,InterpolateLeafFromScalarVisitor<IB,F,XG>(ib, f, xg));
-
         }
 
         // interpolate PowerLFS from vector-valued function
