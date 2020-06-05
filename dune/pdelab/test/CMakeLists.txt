@@ -8,6 +8,8 @@ dune_add_test(SOURCES testconvectiondiffusiondg.cc
 dune_add_test(SOURCES testnewton.cc
               CMAKE_GUARD SUPERLU_FOUND)
 
+dune_add_test(SOURCES testoldnewton.cc)
+
 dune_add_test(SOURCES testinstationary.cc)
 
 dune_add_test(SOURCES testanalytic.cc)
