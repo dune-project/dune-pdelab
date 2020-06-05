@@ -69,25 +69,28 @@ namespace Dune {
        *  \endcode
        */
       /** @{ */
+      /** \brief dimension of the domain this FEM is defined on.
+       */
+      static constexpr int dimension = -1;
       /** \brief a FiniteElementMap is fixedSize iif the size of the local
        * functions space for each GeometryType is fixed.
        */
-      bool fixedSize() const = delete;
+      static constexpr bool fixedSize() = delete;
       /** \brief if the FiniteElementMap is fixedSize, the size
        * methods computes the number of DOFs for given GeometryType.
        */
-      std::size_t size(GeometryType gt) const = delete;
+      static constexpr std::size_t size(GeometryType gt) = delete;
       /** @} */
       /** \brief return if FiniteElementMap has degrees of freedom for
        * given codimension
        */
-      bool hasDOFs(int codim) const = delete;
+      static constexpr bool hasDOFs(int codim) = delete;
       /** \brief compute an upper bound for the local number of DOFs.
        *
        * this upper bound is used to avoid reallocations in
        * std::vectors used during the assembly.
        */
-      std::size_t maxLocalSize() const = delete;
+      static constexpr std::size_t maxLocalSize() = delete;
     };
 
     namespace Impl {
