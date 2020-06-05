@@ -5,6 +5,7 @@
 #include "config.h"
 #endif
 
+#include <dune/common/deprecated.hh>
 #include "dune/pdelab.hh"
 
 #include "nonlinearpoissonfem.hh"
@@ -69,6 +70,8 @@ public:
 int main(int argc, char** argv)
 {
   try{
+    DUNE_NO_DEPRECATED_BEGIN
+
     // Maybe initialize mpi
     Dune::MPIHelper::instance(argc, argv);
 
@@ -185,6 +188,7 @@ int main(int argc, char** argv)
     if (isnan(error) or abs(error)>1e-7)
       testfail = true;
     return testfail;
+    DUNE_NO_DEPRECATED_END
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
