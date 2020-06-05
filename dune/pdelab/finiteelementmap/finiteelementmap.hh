@@ -93,28 +93,11 @@ namespace Dune {
       static constexpr std::size_t maxLocalSize() = delete;
     };
 
-    namespace Impl {
-
-      template<int dim>
-      struct inject_dimension
-      {
-        static constexpr int dimension = dim;
-      };
-
-      template<>
-      struct inject_dimension<-1>
-      {
-        DUNE_DEPRECATED_MSG("Your FEM implementation does not export the dimension. This will cause compilation errors after PDELab 2.6.") inject_dimension() {};
-      };
-
-    }
-
     //! simple implementation where all entities have the same finite element
-    template<class Imp, int dim_ = -1>
+    template<class Imp, int dim_>
     class SimpleLocalFiniteElementMap :
       public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits<Imp>,
-                                            SimpleLocalFiniteElementMap<Imp> >,
-      public Impl::inject_dimension<dim_>
+                                            SimpleLocalFiniteElementMap<Imp,dim_> >
     {
     public:
       //! \brief export type of the signature
@@ -134,6 +117,8 @@ namespace Dune {
       {
         return imp;
       }
+
+      static constexpr int dimension = dim_;
 
     private:
       Imp imp; // create once
