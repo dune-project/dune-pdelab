@@ -57,7 +57,9 @@ bool test_linear(const GO& go, const GFS& gfs, bool test_jacobian=true)
     bool jacobian_apply_error = false;
     bool nonlinear_jacobian_apply_error = false;
     try{ go.jacobian_apply(u,u,r); } catch (...) { jacobian_apply_error = true; }
+    DUNE_NO_DEPRECATED_BEGIN
     try{ go.nonlinear_jacobian_apply(u,u,r); } catch (...) { nonlinear_jacobian_apply_error = true; }
+    DUNE_NO_DEPRECATED_END
 
     // If both are true we hit exceptions where expected -> true is a sucess
     return (jacobian_apply_error and nonlinear_jacobian_apply_error);
