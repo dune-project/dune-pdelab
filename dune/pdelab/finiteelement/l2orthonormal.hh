@@ -770,7 +770,7 @@ DUNE_NO_DEPRECATED_END
           typename LB::Traits::DomainType x;
           RangeType y;
           for (int i=0; i<d; i++) x[i] = it->position()[i];
-          f.evaluate(x,y);
+          y = f(x);
 
           // evaluate the basis
           std::vector<RangeType> phi(LB::n);
