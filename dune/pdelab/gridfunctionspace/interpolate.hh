@@ -11,12 +11,10 @@
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/virtualinterface.hh>
-#include <dune/functions/common/functionfromcallable.hh>
 
 #include <dune/typetree/typetree.hh>
 #include <dune/typetree/pairtraversal.hh>
 
-#include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/function/localfunction.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
@@ -27,22 +25,9 @@ namespace Dune {
     //! \addtogroup GridFunctionSpace
     //! \ingroup PDELab
     //! \{
-
-    // Backend for standard local interpolation
-    struct InterpolateBackendStandard
-    {
-      template<typename FE, typename ElemFunction, typename XL>
-      void interpolate(const FE &fe, const ElemFunction &elemFunction,
-                       XL &xl) const
-      {
-        FiniteElementInterfaceSwitch<FE>::interpolation(fe).
-          interpolate(elemFunction,xl);
-      }
-    };
-
     namespace {
 
-      template<typename IB, typename LF, typename XG>
+      template<typename LF, typename XG>
       struct InterpolateLeafFromScalarVisitor
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
@@ -54,26 +39,24 @@ namespace Dune {
           std::vector<typename XG::ElementType> xl(lfs.size());
 
           // call interpolate for the basis
-          ib.interpolate(lfs.finiteElement(), lf, xl);
+          FiniteElementInterfaceSwitch<typename LFS::Traits::FiniteElement>::interpolation(lfs.finiteElement()).
+            interpolate(lf, xl);
 
           // write coefficients into local vector
           xg.write_sub_container(lfs,xl);
         }
 
-        InterpolateLeafFromScalarVisitor(const IB& ib_, const LF& lf_, XG& xg_)
-          : ib(ib_)
-          , lf(lf_)
+        InterpolateLeafFromScalarVisitor(const LF& lf_, XG& xg_)
+          : lf(lf_)
           , xg(xg_)
         {}
 
-        const IB& ib;
         const LF& lf;
         XG& xg;
-
       };
 
 
-      template<typename IB, typename LF, typename XG>
+      template<typename LF, typename XG>
       struct InterpolateLeafFromVectorVisitor
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
@@ -94,10 +77,8 @@ namespace Dune {
           // call interpolate for the basis
           auto f = [&](const Domain& x) -> RangeField { return lf(x)[index]; };
 
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<RangeField(Domain), decltype(f), Dune::Function<Domain,RangeField> >;
-          LocalFunction fnkt(f);
-
-          ib.interpolate(lfs.finiteElement(), fnkt, xl);
+          FiniteElementInterfaceSwitch<typename LFS::Traits::FiniteElement>::interpolation(lfs.finiteElement()).
+            interpolate(f, xl);
 
           // write coefficients into local vector
           xg.write_sub_container(lfs,xl);
@@ -106,22 +87,19 @@ namespace Dune {
           index++;
         }
 
-        InterpolateLeafFromVectorVisitor(const IB& ib_, const LF& lf_, XG& xg_)
-          : ib(ib_)
-          , lf(lf_)
+        InterpolateLeafFromVectorVisitor(const LF& lf_, XG& xg_)
+          : lf(lf_)
           , index(0)
           , xg(xg_)
         {}
 
-        const IB& ib;
         const LF& lf;
         mutable std::size_t index;
         XG& xg;
-
       };
 
 
-      template<typename IB, typename E, typename XG>
+      template<typename E, typename XG>
       struct InterpolateVisitor
         : public TypeTree::TreePairVisitor
         , public TypeTree::DynamicTraversal
@@ -135,9 +113,10 @@ namespace Dune {
            // call interpolate for the basis
           using Domain = typename Functions::SignatureTraits<F>::Domain;
           using Range = typename Functions::SignatureTraits<F>::Range;
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Dune::Function<Domain,Range> >;
-          LocalFunction lf(f);
-          ib.interpolate(lfs.finiteElement(), lf, xl);
+
+          FiniteElementInterfaceSwitch<typename LFS::Traits::FiniteElement>::interpolation(lfs.finiteElement()).
+            interpolate(f, xl);
+
           // write coefficients into local vector
           xg.write_sub_container(lfs,xl);
         }
@@ -151,11 +130,7 @@ namespace Dune {
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
           // call interpolate for the basis
-          using Domain = typename Functions::SignatureTraits<F>::Domain;
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Dune::Function<Domain,Range> >;
-          LocalFunction lf(f);
-          TypeTree::applyToTree(lfs,InterpolateLeafFromScalarVisitor<IB,LocalFunction,XG>(ib,lf,xg));
-
+          TypeTree::applyToTree(lfs,InterpolateLeafFromScalarVisitor<F,XG>(f, xg));
         }
 
         // interpolate PowerLFS from vector-valued function
@@ -171,17 +146,15 @@ namespace Dune {
                         "must match for automatic interpolation of "    \
                         "vector-valued function");
 
-          TypeTree::applyToTree(lfs,InterpolateLeafFromVectorVisitor<IB,F,XG>(ib,f,xg));
+          TypeTree::applyToTree(lfs,InterpolateLeafFromVectorVisitor<F,XG>(f,xg));
         }
 
-        InterpolateVisitor(IB ib_, const E& e_, XG& xg_)
-          : ib(ib_)
-          , e(e_)
+        InterpolateVisitor(const E& e_, XG& xg_)
+          : e(e_)
           , xg(xg_)
         {}
 
       private:
-        IB ib;
         const E& e;
         XG& xg;
       };
@@ -233,7 +206,7 @@ namespace Dune {
           x_view.bind(lfs_cache);
 
           // call interpolate
-          TypeTree::applyToTreePair(lf,lfs,InterpolateVisitor<InterpolateBackendStandard,Element,XView>(InterpolateBackendStandard(),element,x_view));
+          TypeTree::applyToTreePair(lf,lfs,InterpolateVisitor<Element,XView>(element,x_view));
 
           x_view.unbind();
           lf.unbind();
