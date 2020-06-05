@@ -20,6 +20,9 @@
 #include <dune/common/fvector.hh>     // provides Dune::FieldVector
 #include <dune/common/exceptions.hh>  // provides DUNE_THROW(...)
 
+#if DUNE_VERSION_GTE(ISTL,2,8)
+#include <dune/istl/blocklevel.hh>
+#endif
 #include <dune/istl/bvector.hh>        // provides Dune::BlockVector
 #include <dune/istl/istlexception.hh>  // provides Dune::ISTLError
 #include <dune/istl/io.hh>             // provides Dune::printvector(...)
@@ -71,10 +74,15 @@ namespace ArpackGeneo
         a_(A_.M() * mBlock), n_(A_.N() * nBlock)
     {
       // assert that BCRSMatrix type has blocklevel 2
+#if DUNE_VERSION_LT(DUNE_ISTL,2,8)
       static_assert
         (BCRSMatrix::blocklevel == 2,
          "Only BCRSMatrices with blocklevel 2 are supported.");
-
+#else
+      static_assert
+        (Dune::blockLevel<BCRSMatrix>() == 2,
+         "Only BCRSMatrices with blocklevel 2 are supported.");
+#endif
       // allocate memory for auxiliary block vector objects
       // which are compatible to matrix rows / columns
       domainBlockVector.resize(A_.N());
