@@ -134,6 +134,8 @@ int main(int argc, char** argv)
         success &= (Dune::PDELab::Backend::native(x)[0] == 2. + 3.);
     }
 
+    // This block tests a deprecated feature - we suppress the deprecation warning
+    DUNE_NO_DEPRECATED_BEGIN
     // Make sum local operator from tuple
     {
         using OPS = std::tuple<Scalar,Scalar>;
@@ -150,6 +152,7 @@ int main(int argc, char** argv)
         std::cout << Dune::PDELab::Backend::native(x)[0] << std::endl;
         success &= (Dune::PDELab::Backend::native(x)[0] == 2. + 3.);
     }
+    DUNE_NO_DEPRECATED_END
 
     // Make weighted sum local operator
     {
@@ -164,6 +167,8 @@ int main(int argc, char** argv)
         success &= (Dune::PDELab::Backend::native(x)[0] == 2*2. - 3.);
     }
 
+    // This block tests a deprecated feature - we suppress the deprecation warning
+    DUNE_NO_DEPRECATED_BEGIN
     // Make weighted sum local operator from tuple
     {
         using OPS = std::tuple<Scalar,Scalar>;
@@ -182,6 +187,7 @@ int main(int argc, char** argv)
         std::cout << Dune::PDELab::Backend::native(x)[0] << std::endl;
         success &= (Dune::PDELab::Backend::native(x)[0] == 2*2. - 3.);
     }
+    DUNE_NO_DEPRECATED_END
 
     return (! success);
   }
