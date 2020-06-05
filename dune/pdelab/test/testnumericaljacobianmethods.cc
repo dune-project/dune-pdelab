@@ -22,6 +22,7 @@
 
 #include <iostream>
 
+#include <dune/common/deprecated.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/exceptions.hh>
 
@@ -142,7 +143,10 @@ int main(int argc, char** argv)
     go.residual(u,r);
     go.jacobian(u,jac);
     go.jacobian_apply(u,r);
+
+    DUNE_NO_DEPRECATED_BEGIN
     go.nonlinear_jacobian_apply(u,u,r);
+    DUNE_NO_DEPRECATED_END
 
     return 0;
   }
