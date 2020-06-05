@@ -162,23 +162,11 @@ namespace Dune {
         // DynamicVector grew allocator support some time after the 2.3 release,
         // so we have to adjust the forward declaration accordingly
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
-
         template<typename F, typename Allocator>
         struct container<DynamicVector<F,Allocator> >
         {
           typedef dynamic_vector type;
         };
-
-#else
-
-        template<typename F>
-        struct container<DynamicVector<F> >
-        {
-          typedef dynamic_vector type;
-        };
-
-#endif
 
         template<typename F, int n>
         struct container<FieldVector<F,n> >
