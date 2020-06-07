@@ -124,7 +124,7 @@ namespace Dune::PDELab
           solution = *_previousSolution;
           _newton.updateDefect(solution);
           DUNE_THROW(NewtonLineSearchError,
-                     "NewtonLineSearch::line_search(): line search failed, "
+                     "NewtonLineSearch::lineSearch(): line search failed, "
                      "max iteration count reached, "
                      "defect did not improve enough");
         }
@@ -133,7 +133,7 @@ namespace Dune::PDELab
             solution = *_previousSolution;
             _newton.updateDefect(solution);
             DUNE_THROW(NewtonLineSearchError,
-                       "NewtonLineSearch::line_search(): line search failed, "
+                       "NewtonLineSearch::lineSearch(): line search failed, "
                        "max iteration count reached, "
                        "defect did not improve in any of the iterations");
           }
