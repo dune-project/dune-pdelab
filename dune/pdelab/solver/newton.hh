@@ -456,28 +456,24 @@ namespace Dune::PDELab
      *  \endcode
      */
     void setParameters(const ParameterTree& parameterTree){
-        if (parameterTree.hasKey("verbosity"))
-          setVerbosityLevel(parameterTree.get<unsigned int>("verbosity"));
-        if (parameterTree.hasKey("reduction"))
-          setReduction(parameterTree.get<Real>("reduction"));
-        if (parameterTree.hasKey("absolute_limit"))
-          setAbsoluteLimit(parameterTree.get<Real>("absolute_limit"));
-        if (parameterTree.hasKey("keeep_matrix"))
-          setKeepMatrix(parameterTree.get<bool>("keep_matrix"));
-        if (parameterTree.hasKey("use_max_norm"))
-          setUseMaxNorm(parameterTree.get<bool>("use_max_norm"));
-        if (parameterTree.hasKey("hanging_node_modifications"))
-          _hangingNodeModifications = parameterTree.get<bool>("hanging_node_modifications");
+      _verbosity = parameterTree.get("VerbosityLevel", _verbosity);
+      _reduction = parameterTree.get("Reduction", _reduction);
+      _absoluteLimit = parameterTree.get("AbsoluteLimit", _absoluteLimit);
+      _keepMatrix = parameterTree.get("KeepMatrix", _keepMatrix);
+      _useMaxNorm = parameterTree.get("use_max_norm", _useMaxNorm);
+      _hangingNodeModifications = parameterTree.get("HangingNodeModifications", _hangingNodeModifications);
+      _minLinearReduction = parameterTree.get("MinLinearReduction", _minLinearReduction);
+      _fixedLinearReduction = parameterTree.get("FixedLinearReduction", _fixedLinearReduction);
+      _reassembleThreshold = parameterTree.get("ReassembleThreshold", _reassembleThreshold);
 
-        if (parameterTree.hasKey("min_linear_reduction"))
-          setMinLinearReduction(parameterTree.get<Real>("min_linear_reduction"));
-        if (parameterTree.hasKey("fixed_linear_reduction"))
-          setFixedLinearReduction(parameterTree.get<bool>("fixed_linear_reduction"));
-        if (parameterTree.hasKey("reassemble_threshold"))
-          setReassembleThreshold(parameterTree.get<Real>("reassemble_threshold"));
+      // first create the linesearch, depending on the parameter
+      std::string lineSearchStrategy = parameterTree.get("LineSearchStrategy","hackbuschReusken");
+      auto strategy = lineSearchStrategyFromString(lineSearchStrategy);
+      _lineSearch = createLineSearch(*this, strategy);
 
-        _terminate->setParameters(parameterTree.sub("terminate"));
-        _lineSearch->setParameters(parameterTree.sub("line_search"));
+      // now set parameters
+      _terminate->setParameters(parameterTree);
+      _lineSearch->setParameters(parameterTree);
     }
 
     //! Set the termination criterion
@@ -495,26 +491,27 @@ namespace Dune::PDELab
       _lineSearch = lineSearch;
     }
 
-    //! Construct Newton using default parameters
+    //! Construct Newton using default parameters with default parameters
+    /**
+       in p
+     */
     NewtonMethod(
       const GridOperator& gridOperator,
-      LinearSolver& linearSolver,
-      const std::string& lineSearchStrategy="hackbusch_reusken")
+      LinearSolver& linearSolver)
       : _gridOperator(gridOperator)
       , _linearSolver(linearSolver)
       , _residual(gridOperator.testGridFunctionSpace())
       , _correction(gridOperator.trialGridFunctionSpace())
     {
       _terminate = std::make_shared<DefaultTerminate<NewtonMethod>> (*this);
-      _lineSearch = getLineSearch(*this, lineSearchStrategy);
+      _lineSearch = createLineSearch(*this, LineSearchStrategy::hackbuschReusken);
     }
 
     //! Construct Newton passing a parameter tree
     NewtonMethod(
       const GridOperator& gridOperator,
       LinearSolver& linearSolver,
-      const ParameterTree& parameterTree,
-      const std::string& lineSearchStrategy="hackbusch_reusken")
+      const ParameterTree& parameterTree)
       : _gridOperator(gridOperator)
       , _linearSolver(linearSolver)
       , _residual(gridOperator.testGridFunctionSpace())
@@ -522,8 +519,6 @@ namespace Dune::PDELab
 
     {
       setParameters(parameterTree);
-      _terminate = std::make_shared<DefaultTerminate<NewtonMethod>> (*this);
-      _lineSearch = getLineSearch(*this, lineSearchStrategy);
     }
 
   private:

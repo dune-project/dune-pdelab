@@ -159,22 +159,21 @@ namespace Dune::PDELab
      *
      * Possible parameters are:
      *
-     * - line_search_max_iterations: Maximum number of line search iterations.
+     * - lineSearchMaxIterations: Maximum number of line search iterations.
      *
-     * - line_search_damping_factor: Multiplier to line search parameter after each iteration.
+     * - lineSearchDampingFactor: Multiplier to line search parameter after each iteration.
      *
-     * - line_search_accept_best: Accept the best line search parameter if
+     * - lineSearchAcceptBest: Accept the best line search parameter if
      *   there was any improvement, even if the convergence criterion was not
      *   reached.
      */
     virtual void setParameters(const ParameterTree& parameterTree) override
     {
-      _lineSearchMaxIterations = parameterTree.get<unsigned int>("line_search_max_iterations",
+      _lineSearchMaxIterations = parameterTree.get<unsigned int>("LineSearchMaxIterations",
                                                                  _lineSearchMaxIterations);
-      _lineSearchDampingFactor = parameterTree.get<Real>("line_search_damping_factor",
+      _lineSearchDampingFactor = parameterTree.get<Real>("LineSearchDampingFactor",
                                                          _lineSearchDampingFactor);
-      _acceptBest = parameterTree.get<bool>("line_search_accept_best",
-                                            _acceptBest);
+      _acceptBest = parameterTree.get<bool>("LineSearchAcceptBest", _acceptBest);
     }
 
   private:
@@ -218,7 +217,7 @@ namespace Dune::PDELab
   }
 
 
-  /** \brief Get a pointer to a line search
+  /** \brief fectory function to create an instace of a line-search
    *
    * \tparam Newton A Newton solver
    *
@@ -230,9 +229,8 @@ namespace Dune::PDELab
    */
   template <typename Newton>
   std::shared_ptr<LineSearchInterface<typename Newton::Domain>>
-  getLineSearch(Newton& newton, const std::string& name)
+  createLineSearch(Newton& newton, LineSearchStrategy strategy)
   {
-    auto strategy = lineSearchStrategyFromString(name);
     if (strategy == LineSearchStrategy::noLineSearch){
       auto lineSearch = std::make_shared<LineSearchNone<Newton>> (newton);
       return lineSearch;

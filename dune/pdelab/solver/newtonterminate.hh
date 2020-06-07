@@ -38,8 +38,8 @@ namespace Dune::PDELab
 
     virtual void setParameters(const ParameterTree& parameterTree) override
     {
-      _maxIterations = parameterTree.get<unsigned int>("max_iterations", _maxIterations);
-      _force_iteration = parameterTree.get<bool>("force_iteration", _force_iteration);
+      _maxIterations = parameterTree.get<unsigned int>("MaxIterations", _maxIterations);
+      _force_iteration = parameterTree.get<bool>("ForceIteration", _force_iteration);
     }
 
   private:
