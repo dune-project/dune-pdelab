@@ -53,7 +53,7 @@ namespace Dune::PDELab
    *
    * - If Newton is created using the default parameters it is an inexact
    *   Newton since the default reduction for the linear systems is quite
-   *   high. You can change this through setMinLinearReduction()
+   *   low. You can change this through setMinLinearReduction()
    *
    * \tparam GridOperator_ Grid operator for evaluation of resdidual and Jacobian
    * \tparam LinearSolver_ Solver backend for solving linear system of equations
