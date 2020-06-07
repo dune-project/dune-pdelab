@@ -193,20 +193,23 @@ namespace Dune::PDELab
     hackbuschReusken
   };
 
-
-  /** \brief Get a LineSearchStrategy from a string identifier
-   *
-   * \param name Identifier used to pick LineSearchStrategy
-   *
-   * Possible values for name: "noLineSearch", "hackbuschReusken"
-   */
-  LineSearchStrategy lineSearchStrategyFromString(const std::string& name)
-  {
-    if (name == "noLineSearch")
-      return LineSearchStrategy::noLineSearch;
-    if (name == "hackbusch_reusken")
-      return LineSearchStrategy::hackbuschReusken;
-    DUNE_THROW(Exception,"Unkown line search strategy: " << name);
+  // we put this into an emty namespace, so that we don't violate the one-definition-rule
+  namespace {
+    /** \brief Get a LineSearchStrategy from a string identifier
+     *
+     * \param name Identifier used to pick LineSearchStrategy
+     *
+     * Possible values for name: "noLineSearch", "hackbuschReusken"
+     */
+    inline
+    LineSearchStrategy lineSearchStrategyFromString (const std::string& name)
+    {
+      if (name == "noLineSearch")
+        return LineSearchStrategy::noLineSearch;
+      if (name == "hackbuschReusken")
+        return LineSearchStrategy::hackbuschReusken;
+      DUNE_THROW(Exception,"Unkown line search strategy: " << name);
+    }
   }
 
 
