@@ -60,7 +60,8 @@ namespace Dune::PDELab
     using Domain = typename Newton::Domain;
     using Real = typename Newton::Real;
 
-    LineSearchHackbuschReusken(Newton& newton) : _newton(newton) {}
+    LineSearchHackbuschReusken(Newton& newton, bool forceAcceptBest = false) :
+      _newton(newton), _forceAcceptBest(forceAcceptBest) {}
 
     //! Do line search
     virtual void lineSearch(Domain& solution, const Domain& correction) override
@@ -120,7 +121,7 @@ namespace Dune::PDELab
         if (verbosity >= 4)
           std::cout << "          max line search iterations exceeded" << std::endl;
 
-        if (not _acceptBest){
+        if (not (_acceptBest or _forceAcceptBest)){
           solution = *_previousSolution;
           _newton.updateDefect(solution);
           DUNE_THROW(NewtonLineSearchError,
@@ -184,13 +185,15 @@ namespace Dune::PDELab
     unsigned int _lineSearchMaxIterations = 10;
     Real _lineSearchDampingFactor = 0.5;
     bool _acceptBest = false;
+    bool _forceAcceptBest;
   };
 
   //! Flags for different line search strategies
   enum class LineSearchStrategy
   {
     noLineSearch,
-    hackbuschReusken
+    hackbuschReusken,
+    hackbuschReuskenAcceptBest
   };
 
   // we put this into an emty namespace, so that we don't violate the one-definition-rule
@@ -208,6 +211,8 @@ namespace Dune::PDELab
         return LineSearchStrategy::noLineSearch;
       if (name == "hackbuschReusken")
         return LineSearchStrategy::hackbuschReusken;
+      if (name == "hackbuschReuskenAcceptBest")
+        return LineSearchStrategy::hackbuschReuskenAcceptBest;
       DUNE_THROW(Exception,"Unkown line search strategy: " << name);
     }
   }
@@ -234,6 +239,12 @@ namespace Dune::PDELab
     }
     if (strategy == LineSearchStrategy::hackbuschReusken){
       auto lineSearch = std::make_shared<LineSearchHackbuschReusken<Newton>> (newton);
+      return lineSearch;
+    }
+    if (strategy == LineSearchStrategy::hackbuschReuskenAcceptBest){
+      auto lineSearch = std::make_shared<LineSearchHackbuschReusken<Newton>> (newton, true);
+      std::cout << "Warning: linesearch hackbuschReuskenAcceptBest is deprecated and will be removed after PDELab 2.7.\n"
+                << "         Please use 'hackbuschReusken' and add the parameter 'LineSearchAcceptBest : true'";
       return lineSearch;
     }
     DUNE_THROW(Exception,"Unkown line search strategy");
