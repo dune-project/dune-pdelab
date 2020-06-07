@@ -343,12 +343,14 @@ namespace Dune
 
       //! \brief Local interpolation of a function
       template<typename F, typename C>
-      void interpolate (const F& f, std::vector<C>& out) const
+      void interpolate (const F& ff, std::vector<C>& out) const
       {
         // select quadrature rule
         typedef typename LB::Traits::RangeType RangeType;
         const Dune::QuadratureRule<R,d>&
           rule = Dune::QuadratureRules<R,d>::rule(gt,2*k);
+
+        auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
 
         // prepare result
         out.resize(n);
