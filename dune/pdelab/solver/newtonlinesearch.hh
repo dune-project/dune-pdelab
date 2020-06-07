@@ -187,7 +187,7 @@ namespace Dune::PDELab
   };
 
   //! Flags for different line search strategies
-  enum LineSearchStrategy
+  enum class LineSearchStrategy
   {
     noLineSearch,
     hackbuschReusken
