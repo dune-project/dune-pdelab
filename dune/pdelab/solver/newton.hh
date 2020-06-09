@@ -456,7 +456,7 @@ namespace Dune::PDELab
       _reduction = parameterTree.get("Reduction", _reduction);
       _absoluteLimit = parameterTree.get("AbsoluteLimit", _absoluteLimit);
       _keepMatrix = parameterTree.get("KeepMatrix", _keepMatrix);
-      _useMaxNorm = parameterTree.get("use_max_norm", _useMaxNorm);
+      _useMaxNorm = parameterTree.get("UseMaxNorm", _useMaxNorm);
       _hangingNodeModifications = parameterTree.get("HangingNodeModifications", _hangingNodeModifications);
       _minLinearReduction = parameterTree.get("MinLinearReduction", _minLinearReduction);
       _fixedLinearReduction = parameterTree.get("FixedLinearReduction", _fixedLinearReduction);
