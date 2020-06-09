@@ -430,16 +430,12 @@ namespace Dune::PDELab
      *
      *  \code
      *  [newton_parameters]
-     *  reassemble_threshold = 0.1
-     *  absolute_limit = 1e-6
-     *  reduction = 1e-4
-     *  min_linear_reduction = 1e-3
-     *
-     *  [newton_parameters.terminate]
-     *  max_iterations = 15
-     *
-     *  [newton_parameters.line_search]
-     *  line_search_damping_factor = 0.7
+     *  ReassembleThreshold = 0.1
+     *  AbsoluteLimit = 1e-6
+     *  Reduction = 1e-4
+     *  MinLinearReduction = 1e-3
+     *  MaxIterations = 15
+     *  LineSearchDampingFactor = 0.7
      *  \endcode
      *
      *  and invocation in the code:
