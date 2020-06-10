@@ -30,42 +30,30 @@
 
 int main(int argc, char** argv)
 {
-  try{
-    // Initialize Mpi
-    Dune::MPIHelper::instance(argc, argv);
+  // Initialize Mpi
+  Dune::MPIHelper::instance(argc, argv);
 
-    // need a grid in order to test grid functions
-    constexpr unsigned int dim = 2;
-    Dune::FieldVector<double,dim> L(1.0);
-    std::array<int,dim> N(Dune::filledArray<dim,int>(64));
+  // need a grid in order to test grid functions
+  constexpr unsigned int dim = 2;
+  Dune::FieldVector<double,dim> L(1.0);
+  std::array<int,dim> N(Dune::filledArray<dim,int>(64));
 
-    typedef Dune::YaspGrid<dim> Grid;
-    Grid grid(L,N);
+  typedef Dune::YaspGrid<dim> Grid;
+  Grid grid(L,N);
 
-    // [Defining an analytic grid function]
-    auto analyticFunction = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& i, const auto& x){
-      return exp(-(x*x));
-    });
-    //! [Defining an analytic grid function]
+  // [Defining an analytic grid function]
+  auto analyticFunction = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& i, const auto& x){
+    return exp(-(x*x));
+  });
+  //! [Defining an analytic grid function]
 
-    // [Compute integral]
-    auto integral = Dune::PDELab::integrateGridFunction(analyticFunction,10);
-    //! [Compute integral]
+  // [Compute integral]
+  auto integral = Dune::PDELab::integrateGridFunction(analyticFunction,10);
+  //! [Compute integral]
 
-    // [Sum for parallel case]
-    integral = grid.leafGridView().comm().sum(integral);
-    //! [Sum for parallel case]
+  // [Sum for parallel case]
+  integral = grid.leafGridView().comm().sum(integral);
+  //! [Sum for parallel case]
 
-    std::cout << "Integral: " << integral << std::endl;
-
-    return 0;
-  }
-  catch (Dune::Exception &e){
-    std::cerr << "Dune reported error: " << e << std::endl;
-    return 1;
-  }
-  catch (...){
-    std::cerr << "Unknown exception thrown!" << std::endl;
-    return 1;
-  }
+  std::cout << "Integral: " << integral << std::endl;
 }

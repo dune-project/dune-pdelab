@@ -148,101 +148,89 @@ public:
 
 int main(int argc, char **argv)
 {
-  try {
-    // initialize MPI, finalize is done automatically on exit
-    Dune::MPIHelper::instance(argc,argv);
+  // initialize MPI, finalize is done automatically on exit
+  Dune::MPIHelper::instance(argc,argv);
 
-    // define parameters
-    typedef double NumberType;
+  // define parameters
+  typedef double NumberType;
 
-    // need a grid in order to test grid functions
-    constexpr unsigned int dim = 1;
-    constexpr unsigned int degree = 1;
-    constexpr std::size_t nonzeros = Dune::power(2*degree+1,dim);
+  // need a grid in order to test grid functions
+  constexpr unsigned int dim = 1;
+  constexpr unsigned int degree = 1;
+  constexpr std::size_t nonzeros = Dune::power(2*degree+1,dim);
 
-    Dune::FieldVector<NumberType,dim> L(1.0);
-    std::array<int,dim> N(Dune::filledArray<dim,int>(5));
+  Dune::FieldVector<NumberType,dim> L(1.0);
+  std::array<int,dim> N(Dune::filledArray<dim,int>(5));
 
-    typedef Dune::YaspGrid<dim> Grid;
-    Grid grid(L,N);
-
-
-    // make grid
-    typedef Dune::YaspGrid<dim> GM;
+  typedef Dune::YaspGrid<dim> Grid;
+  Grid grid(L,N);
 
 
-    // make problem parameters
-    typedef GenericEllipticProblem<typename GM::LeafGridView,NumberType> Problem;
-    Problem problem;
-    typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
-    BCType bctype(grid.leafGridView(),problem);
+  // make grid
+  typedef Dune::YaspGrid<dim> GM;
 
 
-    typedef typename GM::ctype DF;
-    typedef Dune::PDELab::QkLocalFiniteElementMap<GM::LeafGridView,DF,NumberType,1> FEM;
-    FEM fem(grid.leafGridView());
+  // make problem parameters
+  typedef GenericEllipticProblem<typename GM::LeafGridView,NumberType> Problem;
+  Problem problem;
+  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
+  BCType bctype(grid.leafGridView(),problem);
 
-    // make function space with constraints
-    typedef Dune::PDELab::GridFunctionSpace<GM::LeafGridView,FEM,
-    Dune::PDELab::ConformingDirichletConstraints,
-    Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>> GFS;
-    GFS gfs(grid.leafGridView(),fem);
 
-    typedef typename GFS::template ConstraintsContainer<NumberType>::Type CC;
-    CC cc;
-    Dune::PDELab::constraints(bctype,gfs,cc);
+  typedef typename GM::ctype DF;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GM::LeafGridView,DF,NumberType,1> FEM;
+  FEM fem(grid.leafGridView());
 
-    // assembler for finite elemenent problem
-    typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
-    LOP lop(problem);
+  // make function space with constraints
+  typedef Dune::PDELab::GridFunctionSpace<GM::LeafGridView,FEM,
+  Dune::PDELab::ConformingDirichletConstraints,
+  Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>> GFS;
+  GFS gfs(grid.leafGridView(),fem);
 
-    typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
-    // [Grid operator]
-    typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
-    auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
-    //! [Grid operator]
+  typedef typename GFS::template ConstraintsContainer<NumberType>::Type CC;
+  CC cc;
+  Dune::PDELab::constraints(bctype,gfs,cc);
 
-    // [Make degree of freedom vector]
-    typedef Dune::PDELab::Backend::Vector<GFS,NumberType> X;
-    X x(gfs,0.0);
-    //! [Make degree of freedom vector]
-    // [Set it to match boundary conditions]
-    typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
-    G g(grid.leafGridView(),problem);
-    Dune::PDELab::interpolate(g,gfs,x);
-    //! [Set it to match boundary conditions]
+  // assembler for finite elemenent problem
+  typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
+  LOP lop(problem);
 
-    // [Linear solver backend]
-    typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GO> LS;
-    LS ls(100,3);
-    //! [Linear solver backend]
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
+  // [Grid operator]
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
+  auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
+  //! [Grid operator]
 
-    {
-    // [Linear solver backend 2]
-    typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
-    //! [Linear solver backend 2]
-    LS ls(100,3);
-    }
+  // [Make degree of freedom vector]
+  typedef Dune::PDELab::Backend::Vector<GFS,NumberType> X;
+  X x(gfs,0.0);
+  //! [Make degree of freedom vector]
+  // [Set it to match boundary conditions]
+  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
+  G g(grid.leafGridView(),problem);
+  Dune::PDELab::interpolate(g,gfs,x);
+  //! [Set it to match boundary conditions]
 
-    // [Assemble and solve linear problem]
-    typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,X> SLP;
-    SLP slp(go,ls,x,1e-10);
-    slp.apply(); // here all the work is done!
-    //! [Assemble and solve linear problem]
+  // [Linear solver backend]
+  typedef Dune::PDELab::ISTLBackend_SEQ_CG_AMG_SSOR<GO> LS;
+  LS ls(100,3);
+  //! [Linear solver backend]
 
-    using Dune::PDELab::Backend::native;
-    // [Solution output]
-    Dune::printvector(std::cout, native(x), "Solution", "");
-    //! [Solution output]
-
-    return 0;
+  {
+  // [Linear solver backend 2]
+  typedef Dune::PDELab::ISTLBackend_SEQ_CG_ILU0 LS;
+  //! [Linear solver backend 2]
+  LS ls(100,3);
   }
-  catch (Dune::Exception &e){
-    std::cerr << "Dune reported error: " << e << std::endl;
-    return 1;
-  }
-  catch (...){
-    std::cerr << "Unknown exception thrown!" << std::endl;
-    return 1;
-  }
+
+  // [Assemble and solve linear problem]
+  typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,X> SLP;
+  SLP slp(go,ls,x,1e-10);
+  slp.apply(); // here all the work is done!
+  //! [Assemble and solve linear problem]
+
+  using Dune::PDELab::Backend::native;
+  // [Solution output]
+  Dune::printvector(std::cout, native(x), "Solution", "");
+  //! [Solution output]
 }

@@ -1157,44 +1157,36 @@ public:
 
 int main(int argc, char** argv)
 {
-  try{
-    // Maybe initialize MPI
-    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
-    if(Dune::MPIHelper::isFake)
-      std::cout<< "This is a sequential program." << std::endl;
-    else
-      std::cout<<"I am rank "<<helper.rank()<<" of "<<helper.size()
-        <<" processes!"<<std::endl;
-    constexpr int dim = 2;
-    using RF = double;
-    using Grid = Dune::YaspGrid<dim>;
-    using DF = Grid::ctype;
-    using LType = Dune::FieldVector<DF,dim>;
-    LType L;
-    L[0] = 0.1;
-    L[1] = 0.1;
-    std::array<int,dim> N;
-    N[0] = 16;
-    N[1] = 16;
-    std::bitset<dim> periodic(false);
-    int overlap=1;
-    int refinement = 1;
-    YaspPartition<dim> yp;
-    std::shared_ptr<Grid> gridp = std::shared_ptr<Grid>(new Grid(L,N,periodic,overlap,Dune::MPIHelper::getCollectiveCommunication(),&yp));
-    gridp->refineOptions(false); // keep overlap in cells
-    gridp->globalRefine(refinement);
-    using GV = Grid::LeafGridView;
-    GV gv=gridp->leafGridView();
-    using FEM = Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim>;
-    FEM fem(Dune::GeometryTypes::cube(dim));
-    using Param = Parameters<RF,LType>;
-    Param param(L);
-    driver(gv,fem,param);
-  }
-  catch (Dune::Exception &e){
-    std::cerr << "Dune reported error: " << e << std::endl;
-  }
-  catch (...){
-    std::cerr << "Unknown exception thrown!" << std::endl;
-  }
+  // Maybe initialize MPI
+  Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
+  if(Dune::MPIHelper::isFake)
+    std::cout<< "This is a sequential program." << std::endl;
+  else
+    std::cout<<"I am rank "<<helper.rank()<<" of "<<helper.size()
+      <<" processes!"<<std::endl;
+  constexpr int dim = 2;
+  using RF = double;
+  using Grid = Dune::YaspGrid<dim>;
+  using DF = Grid::ctype;
+  using LType = Dune::FieldVector<DF,dim>;
+  LType L;
+  L[0] = 0.1;
+  L[1] = 0.1;
+  std::array<int,dim> N;
+  N[0] = 16;
+  N[1] = 16;
+  std::bitset<dim> periodic(false);
+  int overlap=1;
+  int refinement = 1;
+  YaspPartition<dim> yp;
+  std::shared_ptr<Grid> gridp = std::shared_ptr<Grid>(new Grid(L,N,periodic,overlap,Dune::MPIHelper::getCollectiveCommunication(),&yp));
+  gridp->refineOptions(false); // keep overlap in cells
+  gridp->globalRefine(refinement);
+  using GV = Grid::LeafGridView;
+  GV gv=gridp->leafGridView();
+  using FEM = Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim>;
+  FEM fem(Dune::GeometryTypes::cube(dim));
+  using Param = Parameters<RF,LType>;
+  Param param(L);
+  driver(gv,fem,param);
 }
