@@ -24,6 +24,7 @@
 #include <dune/common/parametertree.hh>
 
 #include <dune/pdelab/backend/solver.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/solver/newton.hh>
 
 
