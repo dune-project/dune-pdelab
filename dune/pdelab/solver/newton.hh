@@ -6,6 +6,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/ios_state.hh>
 
+#include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/solver/newtonerrors.hh>
 #include <dune/pdelab/solver/newtonlinesearch.hh>
 #include <dune/pdelab/solver/newtonterminate.hh>
