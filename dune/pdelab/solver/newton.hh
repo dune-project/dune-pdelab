@@ -514,6 +514,7 @@ namespace Dune::PDELab
       , _correction(gridOperator.trialGridFunctionSpace())
 
     {
+      _terminate = std::make_shared<DefaultTerminate<NewtonMethod>> (*this);
       setParameters(parameterTree);
     }
 
