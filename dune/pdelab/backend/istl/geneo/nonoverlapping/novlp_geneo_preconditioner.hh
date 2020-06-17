@@ -132,10 +132,11 @@ namespace Dune {
 
         using Dune::PDELab::Backend::native;
 
-
         Dune::NonoverlappingOverlapAdapter<GV, Vector, Matrix> adapter(gv, native(A), avg_nonzeros, algebraic_overlap);
+
         A_extended = adapter.extendMatrix(native(A));
         part_unity = Dune::makePartitionOfUnity<GV, Matrix, Vector>(adapter, *A_extended);
+
 
         using Attribute = Dune::EPISAttribute;
         Dune::AllSet<Attribute> allAttribute;
@@ -148,14 +149,21 @@ namespace Dune {
         remotePartUnities.localVector_ = part_unity;
         communicator->forward<Dune::PDELab::MultiGatherScatter<Dune::PDELab::MultiVectorBundle<GV, Vector, Matrix>>>(remotePartUnities,remotePartUnities); // make function known in other subdomains
 
+
         // Assemble fine grid matrix defined only on overlap region
         auto part_unity_restricted = std::make_shared<Vector>(native(A).N());
         adapter.restrictVector(*part_unity, *part_unity_restricted);
 
+
+
         auto es_pou_excluder = std::make_shared<EntitySetPartUnityExcluder<Vector, GV, GFS>> (gfs, part_unity_restricted);
         gfs.entitySet().setExcluder(es_pou_excluder);
 
+
+
         go.jacobian(x,A_ovlp);
+
+
 
         M newmat(go);
         // Provide neighbors with matrices assembled exclusively on respective overlap area
@@ -177,9 +185,9 @@ namespace Dune {
           return stackobject_to_shared_ptr(native(newmat));
         });
 
-
         A_ovlp_extended = extended_matrices.first;
         A_extended = extended_matrices.second;
+
 
         // Enforce problem's Dirichlet condition on PoU
         const int block_size = Vector::block_type::dimension;
@@ -202,24 +210,21 @@ namespace Dune {
           }
         }
 
+        std::string basename = "Offline/EV";
 
         if (multiscale==0) { // Classic case: no need to use multiscale FRAMEWORK
           subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, eigenvalue_threshold, nev, nev_arpack, shift,false,2);
         } else if (multiscale==1) { // first step of the multiscale FRAMEWORK: solving the pristine model & saving it to file
           subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, eigenvalue_threshold, nev, nev_arpack, shift,false,2);
           // Save the EV basis
-          std::ostringstream os;
-          os << adapter.gridView().comm().rank();
-          std::string basename = "Offline/Proc_"+os.str();
-          subdomainbasis->to_file(basename);
+          int rank = adapter.gridView().comm().rank();
+          subdomainbasis->to_file(basename, rank);
         } else if (multiscale==2) { // other step of the multiscale FRAMEWORK: loading the subdomain basis from files
           std::vector<int>::iterator it = std::find(std::begin(proc_to_be_solved), std::end(proc_to_be_solved), adapter.gridView().comm().rank());
           if (it != proc_to_be_solved.end()) {
-            //std::cout << "Element Found" << std::endl;
             subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, eigenvalue_threshold, nev, nev_arpack, shift,false,2);
           } else {
-            //std::cout << "Element Not Found" << std::endl;
-            subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasisFromFiles<GV, Matrix, Vector>>(adapter);
+            subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasisFromFiles<GV, Matrix, Vector>>(adapter, basename);
           }
         }
 
@@ -227,13 +232,12 @@ namespace Dune {
            // Test case for write/read database
            // Check numbers of digit initially and after the saving/reading procedure
            subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, eigenvalue_threshold, nev, nev_arpack, shift,false,2);
-           std::ostringstream os;
-           os << adapter.gridView().comm().rank();
-           std::string basename = "Offline/Proc_"+os.str();
-           subdomainbasis->to_file(basename);
+
+           int rank = adapter.gridView().comm().rank();
+           subdomainbasis->to_file(basename, rank);
 
            //auto fromfile_subdomainbasis;
-           auto fromfile_subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasisFromFiles<GV, Matrix, Vector>>(adapter);
+           auto fromfile_subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasisFromFiles<GV, Matrix, Vector>>(adapter, basename);
 
            std::cout << (*subdomainbasis->get_basis_vector(0))[0] << std::endl;
            std::cout << (*fromfile_subdomainbasis->get_basis_vector(0))[0] << std::endl;

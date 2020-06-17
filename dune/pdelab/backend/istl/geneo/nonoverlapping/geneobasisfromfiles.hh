@@ -16,34 +16,42 @@ namespace Dune {
     public:
 
       /*!
-       * \brief Constructor of subdomainbasis from files of the pristine solution
+       * \brief Constructor of subdomainbasis from files where the
+       * local EV from a pristine model are saved
        */
-      NonoverlappingGenEOBasisFromFiles(NonoverlappingOverlapAdapter<GridView, X, M>& adapter) {
+      NonoverlappingGenEOBasisFromFiles(NonoverlappingOverlapAdapter<GridView, X, M>& adapter, std::string& basename) {
+
         std::cout << "Getting EV basis at proc " << adapter.gridView().comm().rank() << " from offline." << std::endl;
-        std::ostringstream os1;
-        os1 << adapter.gridView().comm().rank();
-        std::string basename = "Offline/Proc_"+os1.str();
+
+        std::ostringstream osrank;
+        osrank << adapter.gridView().comm().rank();
+        int basis_size;
 
         // Get the basis size from file
-        std::string filename_basis_size = basename+"_basis_size.txt";
+        std::string filename_basis_size = basename+ "_r" + osrank.str() + "_size.txt";
         std::ifstream input_basis_size;
         input_basis_size.open(filename_basis_size, std::ios::in);
-        //if (!input_basis_size.is_open()) {std::cout << "Error: Cannot open file" << std::endl;}
-        //else {std::cout << "Reading " << filename_basis_size << std::endl;}
-        int basis_size;
+        if (!input_basis_size.is_open()) {std::cout << "Error: Cannot open file " << filename_basis_size << std::endl;}
         input_basis_size >> basis_size;
         input_basis_size.close();
-
         this->local_basis.resize(basis_size);
 
         for (int basis_index = 0; basis_index < this->local_basis.size(); basis_index++) {
 
           std::shared_ptr<X> ev = std::make_shared<X>();
 
-          std::ifstream input;
+          std::ostringstream rfilename;
+          rfilename<< basename << "_r" << adapter.gridView().comm().rank() << "_" << basis_index << ".mm";
+          std::ifstream file;
+          file.open(rfilename.str().c_str(), std::ios::in);
+          if(!file)
+            DUNE_THROW(IOError, "Could not open file: " << rfilename.str().c_str());
+          Dune::readMatrixMarket(*ev,file);
+          file.close();
+          /*std::ifstream input;
           std::ostringstream os;
           os << basis_index;
-          std::string filename = basename + "_EV_" + os.str() + ".txt";
+          std::string filename = basename + "_" + os.str() + ".txt";
           input.open(filename, std::ios::in);
 
           std::string line;
@@ -57,7 +65,7 @@ namespace Dune {
             input >> tmp >> (*ev)[i][0] >> (*ev)[i][1] >> (*ev)[i][2];
           }
 
-          input.close();
+          input.close();*/
 
           this->local_basis[basis_index] = ev;
         }

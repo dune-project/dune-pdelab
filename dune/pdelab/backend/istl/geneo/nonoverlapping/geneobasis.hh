@@ -59,7 +59,7 @@ namespace Dune {
 
         // Setup Arpack for solving generalized eigenproblem
         std::cout << "ARPACK setup...";
-        ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, X> arpack(A);//, 100, 4);
+        ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, X> arpack(A);
         std::cout << " done" << std::endl;
         double eps = 0.0;
 

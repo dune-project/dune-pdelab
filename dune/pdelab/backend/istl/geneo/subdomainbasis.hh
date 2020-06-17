@@ -1,3 +1,4 @@
+
 #ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_SUBDOMAINBASIS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_GENEO_SUBDOMAINBASIS_HH
 
@@ -39,26 +40,29 @@ namespace Dune {
       }
 
       /*!
-       * \brief Write EV basis to a .txt file
+       * \brief Write EV basis in .mm format
        */
-       void to_file(std::string basename) {
+       void to_file(std::string basename, int rank) {
+         // For each processor, printing the size of the associated subdomainbasis.
+         // As this size is variable for each processor, it is the way to keep
+         // this information after consecutive runs
          std::ofstream output_basis_size;
-         std::string filename_basis_size = basename + "_basis_size.txt";
-         output_basis_size.open(filename_basis_size, std::ios::out);
+         std::ostringstream osrank;
+         osrank << rank;
+         std::string filename = basename + "_r" + osrank.str() + "_size.txt";
+         output_basis_size.open(filename, std::ios::out);
          output_basis_size << local_basis.size();
          output_basis_size.close();
 
-          for (int basis_index = 0; basis_index < local_basis.size(); basis_index++) {
-            std::ostringstream os;
-            os << basis_index;
-            std::string filename = basename + "_EV_" + os.str() + ".txt";
-            std::ofstream output;
-            output.open(filename, std::ios::out);
-            //if (!output.is_open()) {std::cout << "Error: Cannot open file" << std::endl;}
-            //else {std::cout << "Writting " << filename << std::endl;}
-            Dune::printvector(output, *local_basis[basis_index], "", "", 3, 10, 16);
-            output.close();
-          }
+         // Writing subdomainbasis using matrixmarket format
+         for (int basis_index = 0; basis_index < local_basis.size(); basis_index++) {
+           std::ostringstream rfilename;
+           rfilename << basename << "_r" << rank << "_" << basis_index << ".mm";
+           std::ofstream file(rfilename.str().c_str());
+           file.setf(std::ios::scientific,std::ios::floatfield);
+           Dune::writeMatrixMarket(*local_basis[basis_index], file);
+           file.close();
+         }
        }
 
     protected:
