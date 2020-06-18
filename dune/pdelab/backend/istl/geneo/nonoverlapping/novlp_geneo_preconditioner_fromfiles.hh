@@ -1,80 +1,14 @@
-#ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_NOVLP_GENEO_PRECONDITIONER_HH
-#define DUNE_PDELAB_BACKEND_ISTL_GENEO_NOVLP_GENEO_PRECONDITIONER_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_NOVLP_GENEO_PRECONDITIONER_FROMFILES_HH
+#define DUNE_PDELAB_BACKEND_ISTL_GENEO_NOVLP_GENEO_PRECONDITIONER_FROMFILES_HH
 
 #include <dune/pdelab/backend/istl/geneo/nonoverlapping/geneobasis.hh>
+#include <dune/pdelab/backend/istl/geneo/nonoverlapping/geneobasisfromfiles.hh>
 
 namespace Dune {
   namespace PDELab {
 
-    template <typename Vector, typename GV>
-    class EntitySetExcluder {
-    public:
-
-      typedef typename GV::template Codim<0>::Entity Entity;
-      typedef typename GV::template Codim<1>::Entity Entity1;
-      typedef typename GV::template Codim<2>::Entity Entity2;
-
-      bool includeEntity(const Entity1& entity) const {
-        return true;
-      }
-      bool includeEntity(const Entity2& entity) const {
-        return true;
-      }
-
-      virtual bool includeEntity(const Entity& entity) const {
-        return true;
-      }
-
-    };
-
-    template <typename Vector, typename GV, typename GFS>
-    class EntitySetPartUnityExcluder : public EntitySetExcluder<Vector, GV> {
-    public:
-
-      typedef typename GV::template Codim<0>::Entity Entity;
-
-      EntitySetPartUnityExcluder(const GFS& gfs, std::shared_ptr<Vector> partUnity) : lfs(gfs), partUnity_(partUnity) {}
-
-      bool includeEntity(const Entity& entity) const override {
-
-        if (entity.partitionType() == Dune::PartitionType::GhostEntity)
-          return false;
-
-        typedef Dune::PDELab::LFSIndexCache<LFS,Dune::PDELab::EmptyTransformation> LFSCache;
-        LFSCache lfs_cache(lfs);
-        lfs.bind( entity );
-        lfs_cache.update();
-
-        for (std::size_t i = 0; i < lfs_cache.size(); i++)
-        {
-          if ((*partUnity_)[lfs_cache.containerIndex(i).back()][0] > 0.0 &&
-            (*partUnity_)[lfs_cache.containerIndex(i).back()][0] < 1.0) {
-            return true;
-            }
-        }
-        return false;
-      }
-
-    private:
-      typedef Dune::PDELab::LocalFunctionSpace<GFS, Dune::PDELab::TrialSpaceTag> LFS;
-      mutable LFS lfs;
-      std::shared_ptr<Vector> partUnity_ = nullptr;
-    };
-
-    template <typename Vector, typename GV>
-    class EntitySetGhostExcluder : public EntitySetExcluder<Vector, GV> {
-    public:
-
-      typedef typename GV::template Codim<0>::Entity Entity;
-
-      bool includeEntity(const Entity& entity) const override {
-        return entity.partitionType() != Dune::PartitionType::GhostEntity;
-      }
-    };
-
-
     template <typename GO, typename ScalarMatrix, typename Matrix, typename ScalarVector, typename Vector>
-    class NonoverlappingGenEOPreconditioner : public Dune::Preconditioner<Vector,Vector> {
+    class NonoverlappingGenEOPreconditionerFromFiles : public Dune::Preconditioner<Vector,Vector> {
 
       using V = typename GO::Domain;
       using M = typename GO::Jacobian;
@@ -120,8 +54,8 @@ namespace Dune {
         prec->post(x);
       }
 
-      NonoverlappingGenEOPreconditioner(const GO& go, const typename GO::Jacobian& A, int algebraic_overlap, int avg_nonzeros, const double eigenvalue_threshold, int& nev,
-                          int nev_arpack = -1, const double shift = 0.001, int verbose = 0)
+      NonoverlappingGenEOPreconditionerFromFiles(const GO& go, const typename GO::Jacobian& A, int algebraic_overlap, int avg_nonzeros, const double eigenvalue_threshold, int& nev,
+                          int nev_arpack = -1, const double shift = 0.001, int verbose = 0, int multiscale = 0, std::vector<int> proc_to_be_solved = {0})
       : A_ovlp(go){
 
         V x(go.trialGridFunctionSpace(),0.0); // NOTE: We assume linear problems, so simply set x to zero here!
@@ -211,10 +145,41 @@ namespace Dune {
           }
         }
 
-        auto subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, eigenvalue_threshold, nev, nev_arpack, shift);
+        std::string basename = "Offline/EV";
+
+        if (multiscale==0) { // Classic case: no need to use multiscale FRAMEWORK
+          subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, eigenvalue_threshold, nev, nev_arpack, shift,false,2);
+        } else if (multiscale==1) { // first step of the multiscale FRAMEWORK: solving the pristine model & saving it to file
+          subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, eigenvalue_threshold, nev, nev_arpack, shift,false,2);
+          // Save the EV basis
+          int rank = adapter.gridView().comm().rank();
+          subdomainbasis->to_file(basename, rank);
+        } else if (multiscale==2) { // other step of the multiscale FRAMEWORK: loading the subdomain basis from files
+          std::vector<int>::iterator it = std::find(std::begin(proc_to_be_solved), std::end(proc_to_be_solved), adapter.gridView().comm().rank());
+          if (it != proc_to_be_solved.end()) {
+            subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, eigenvalue_threshold, nev, nev_arpack, shift,false,2);
+          } else {
+            subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasisFromFiles<GV, Matrix, Vector>>(adapter, basename);
+          }
+        }
+
+        else if (multiscale==3) {
+           // Test case for write/read database
+           // Check numbers of digit initially and after the saving/reading procedure
+           subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, eigenvalue_threshold, nev, nev_arpack, shift,false,2);
+
+           int rank = adapter.gridView().comm().rank();
+           subdomainbasis->to_file(basename, rank);
+
+           //auto fromfile_subdomainbasis;
+           auto fromfile_subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasisFromFiles<GV, Matrix, Vector>>(adapter, basename);
+
+           std::cout << (*subdomainbasis->get_basis_vector(0))[0] << std::endl;
+           std::cout << (*fromfile_subdomainbasis->get_basis_vector(0))[0] << std::endl;
+           std::cout << (*subdomainbasis->get_basis_vector(0))[0] - (*fromfile_subdomainbasis->get_basis_vector(0))[0] << std::endl;
+        }
 
         auto coarse_space = std::make_shared<Dune::PDELab::NewSubdomainProjectedCoarseSpace<GV, Matrix, Vector>>(adapter, gv, *A_extended, subdomainbasis, verbose);
-
 
         // Apply Dirichlet conditions on processor boundaries, needed for Schwarz method
         for (auto rIt=A_extended->begin(); rIt!=A_extended->end(); ++rIt){
@@ -234,7 +199,13 @@ namespace Dune {
 
       }
 
+      std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> getSubdomainbasis() {
+        return subdomainbasis;
+      }
+
     private:
+
+      std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> subdomainbasis;
 
       M A_ovlp;
       std::shared_ptr<Matrix> A_ovlp_extended;
