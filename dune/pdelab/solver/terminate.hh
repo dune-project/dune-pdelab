@@ -1,10 +1,14 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_SOLVER_NEWTONTERMINATE_HH
-#define DUNE_PDELAB_SOLVER_NEWTONTERMINATE_HH
+#ifndef DUNE_PDELAB_SOLVER_TERMINATE_HH
+#define DUNE_PDELAB_SOLVER_TERMINATE_HH
 
 namespace Dune::PDELab
 {
+
+  class TerminateError : public Exception {};
+
+
   class TerminateInterface
   {
   public:
@@ -17,22 +21,22 @@ namespace Dune::PDELab
   };
 
 
-  template <typename Newton>
+  template <typename Solver>
   class DefaultTerminate : public TerminateInterface
   {
   public:
-    using Real = typename Newton::Real;
+    using Real = typename Solver::Real;
 
-    DefaultTerminate(Newton& newton) : _newton(newton) {}
+    DefaultTerminate(Solver& solver) : _solver(solver) {}
 
     virtual bool terminate() override
     {
-      if (_force_iteration && _newton.result().iterations == 0)
+      if (_force_iteration && _solver.result().iterations == 0)
         return false;
-      auto converged = _newton.result().defect < _newton.getAbsoluteLimit() || _newton.result().defect < _newton.result().first_defect * _newton.getReduction();
-      if (_newton.result().iterations >= _maxIterations && not _newton.result().converged)
-        DUNE_THROW(NewtonNotConverged,
-                   "NewtonTerminate::terminate(): Maximum iteration count reached");
+      auto converged = _solver.result().defect < _solver.getAbsoluteLimit() || _solver.result().defect < _solver.result().first_defect * _solver.getReduction();
+      if (_solver.result().iterations >= _maxIterations && not _solver.result().converged)
+        DUNE_THROW(TerminateError,
+                   "Terminate::terminate(): Maximum iteration count reached");
       return converged;
     }
 
@@ -40,10 +44,12 @@ namespace Dune::PDELab
     {
       _maxIterations = parameterTree.get<unsigned int>("MaxIterations", _maxIterations);
       _force_iteration = parameterTree.get<bool>("ForceIteration", _force_iteration);
+
+      std::cout << _maxIterations << std::endl;
     }
 
   private:
-    Newton& _newton;
+    Solver& _solver;
     unsigned int _maxIterations = 40;
     bool _force_iteration = false;
   };

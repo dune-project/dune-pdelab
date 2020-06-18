@@ -1,12 +1,14 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_SOLVER_NEWTONLINESEARCH_HH
-#define DUNE_PDELAB_SOLVER_NEWTONLINESEARCH_HH
+#ifndef DUNE_PDELAB_SOLVER_LINESEARCH_HH
+#define DUNE_PDELAB_SOLVER_LINESEARCH_HH
 
-#include <dune/pdelab/solver/newtonerrors.hh>
 
 namespace Dune::PDELab
 {
+
+  class LineSearchError : public Exception {};
+
   //! Abstract base class describing the line search interface
   template <typename Domain>
   class LineSearchInterface
@@ -24,26 +26,26 @@ namespace Dune::PDELab
 
 
   //! Class for simply updating the solution without line search
-  template <typename Newton>
-  class LineSearchNone : public LineSearchInterface<typename Newton::Domain>
+  template <typename Solver>
+  class LineSearchNone : public LineSearchInterface<typename Solver::Domain>
   {
   public:
-    using Domain = typename Newton::Domain;
-    using Real = typename Newton::Real;
+    using Domain = typename Solver::Domain;
+    using Real = typename Solver::Real;
 
-    LineSearchNone(Newton& newton) : _newton(newton) {}
+    LineSearchNone(Solver& solver) : _solver(solver) {}
 
     //! Do line search (in this case just update the solution)
     virtual void lineSearch(Domain& solution, const Domain& correction) override
     {
       solution.axpy(-1.0, correction);
-      _newton.updateDefect(solution);
+      _solver.updateDefect(solution);
     }
 
     virtual void setParameters(const ParameterTree&) override {}
 
   private:
-    Newton& _newton;
+    Solver& _solver;
   };
 
 
@@ -53,33 +55,33 @@ namespace Dune::PDELab
    * method this line search will simply return the best result even if it did
    * not converge.
    */
-  template <typename Newton>
-  class LineSearchHackbuschReusken : public LineSearchInterface<typename Newton::Domain>
+  template <typename Solver>
+  class LineSearchHackbuschReusken : public LineSearchInterface<typename Solver::Domain>
   {
   public:
-    using Domain = typename Newton::Domain;
-    using Real = typename Newton::Real;
+    using Domain = typename Solver::Domain;
+    using Real = typename Solver::Real;
 
-    LineSearchHackbuschReusken(Newton& newton, bool forceAcceptBest = false) :
-      _newton(newton), _forceAcceptBest(forceAcceptBest) {}
+    LineSearchHackbuschReusken(Solver& solver, bool forceAcceptBest = false) :
+      _solver(solver), _forceAcceptBest(forceAcceptBest) {}
 
     //! Do line search
     virtual void lineSearch(Domain& solution, const Domain& correction) override
     {
-      if ((_newton.result().defect < _newton.getAbsoluteLimit())){
+      if ((_solver.result().defect < _solver.getAbsoluteLimit())){
         solution.axpy(-1.0, correction);
-        _newton.updateDefect(solution);
+        _solver.updateDefect(solution);
         return;
       }
 
-      auto verbosity = _newton.getVerbosityLevel();
+      auto verbosity = _solver.getVerbosityLevel();
 
       if (verbosity >= 4)
         std::cout << "      Performing line search..." << std::endl;
       Real lambda = 1.0;
       Real bestLambda = 0.0;
-      Real bestDefect = _newton.result().defect;
-      Real previousDefect = _newton.result().defect;
+      Real bestDefect = _solver.result().defect;
+      Real previousDefect = _solver.result().defect;
       bool converged = false;
 
       if (not _previousSolution)
@@ -95,21 +97,21 @@ namespace Dune::PDELab
                     << std::endl;
 
         solution.axpy(-lambda, correction);
-        _newton.updateDefect(solution);
+        _solver.updateDefect(solution);
         if (verbosity >= 4){
-          if (not std::isfinite(_newton.result().defect))
+          if (not std::isfinite(_solver.result().defect))
             std::cout << "          NaNs detected" << std::endl;
         }       // ignore NaNs and try again with lower lambda
 
-        if (_newton.result().defect <= (1.0 - lambda/4) * previousDefect){
+        if (_solver.result().defect <= (1.0 - lambda/4) * previousDefect){
           if (verbosity >= 4)
             std::cout << "          line search converged" << std::endl;
           converged = true;
           break;
         }
 
-        if (_newton.result().defect < bestDefect){
-          bestDefect = _newton.result().defect;
+        if (_solver.result().defect < bestDefect){
+          bestDefect = _solver.result().defect;
           bestLambda = lambda;
         }
 
@@ -123,25 +125,25 @@ namespace Dune::PDELab
 
         if (not (_acceptBest or _forceAcceptBest)){
           solution = *_previousSolution;
-          _newton.updateDefect(solution);
-          DUNE_THROW(NewtonLineSearchError,
-                     "NewtonLineSearch::lineSearch(): line search failed, "
+          _solver.updateDefect(solution);
+          DUNE_THROW( LineSearchError,
+                     "LineSearch::lineSearch(): line search failed, "
                      "max iteration count reached, "
                      "defect did not improve enough");
         }
         else{
           if (bestLambda == 0.0){
             solution = *_previousSolution;
-            _newton.updateDefect(solution);
-            DUNE_THROW(NewtonLineSearchError,
-                       "NewtonLineSearch::lineSearch(): line search failed, "
+            _solver.updateDefect(solution);
+            DUNE_THROW(LineSearchError,
+                       "LineSearch::lineSearch(): line search failed, "
                        "max iteration count reached, "
                        "defect did not improve in any of the iterations");
           }
           if (bestLambda != lambda){
             solution = *_previousSolution;
             solution.axpy(-bestLambda, correction);
-            _newton.updateDefect(solution);
+            _solver.updateDefect(solution);
             converged = true;
           }
         }
@@ -159,25 +161,25 @@ namespace Dune::PDELab
      *
      * Possible parameters are:
      *
-     * - lineSearchMaxIterations: Maximum number of line search iterations.
+     * - MaxIterations: Maximum number of line search iterations.
      *
-     * - lineSearchDampingFactor: Multiplier to line search parameter after each iteration.
+     * - DampingFactor: Multiplier to line search parameter after each iteration.
      *
-     * - lineSearchAcceptBest: Accept the best line search parameter if
+     * - AcceptBest: Accept the best line search parameter if
      *   there was any improvement, even if the convergence criterion was not
      *   reached.
      */
     virtual void setParameters(const ParameterTree& parameterTree) override
     {
-      _lineSearchMaxIterations = parameterTree.get<unsigned int>("LineSearchMaxIterations",
+      _lineSearchMaxIterations = parameterTree.get<unsigned int>("MaxIterations",
                                                                  _lineSearchMaxIterations);
-      _lineSearchDampingFactor = parameterTree.get<Real>("LineSearchDampingFactor",
+      _lineSearchDampingFactor = parameterTree.get<Real>("DampingFactor",
                                                          _lineSearchDampingFactor);
-      _acceptBest = parameterTree.get<bool>("LineSearchAcceptBest", _acceptBest);
+      _acceptBest = parameterTree.get<bool>("AcceptBest", _acceptBest);
     }
 
   private:
-    Newton& _newton;
+    Solver& _solver;
     std::shared_ptr<Domain> _previousSolution;
 
     // Line search parameters
@@ -219,28 +221,28 @@ namespace Dune::PDELab
 
   /** \brief fectory function to create an instace of a line-search
    *
-   * \tparam Newton A Newton solver
+   * \tparam Solver A solver
    *
-   * \param newton Newton solver object
+   * \param solver Solver object
 
    * \param name Identifier to choose line search. Possible values:
    * - "noLineSearch": Return pointer to LineSearchNone
    * - "hackbuschReusken": Return pointer to LineSearchHackbuschReusken
    */
-  template <typename Newton>
-  std::shared_ptr<LineSearchInterface<typename Newton::Domain>>
-  createLineSearch(Newton& newton, LineSearchStrategy strategy)
+  template <typename Solver>
+  std::shared_ptr<LineSearchInterface<typename Solver::Domain>>
+  createLineSearch(Solver& solver, LineSearchStrategy strategy)
   {
     if (strategy == LineSearchStrategy::noLineSearch){
-      auto lineSearch = std::make_shared<LineSearchNone<Newton>> (newton);
+      auto lineSearch = std::make_shared<LineSearchNone<Solver>> (solver);
       return lineSearch;
     }
     if (strategy == LineSearchStrategy::hackbuschReusken){
-      auto lineSearch = std::make_shared<LineSearchHackbuschReusken<Newton>> (newton);
+      auto lineSearch = std::make_shared<LineSearchHackbuschReusken<Solver>> (solver);
       return lineSearch;
     }
     if (strategy == LineSearchStrategy::hackbuschReuskenAcceptBest){
-      auto lineSearch = std::make_shared<LineSearchHackbuschReusken<Newton>> (newton, true);
+      auto lineSearch = std::make_shared<LineSearchHackbuschReusken<Solver>> (solver, true);
       std::cout << "Warning: linesearch hackbuschReuskenAcceptBest is deprecated and will be removed after PDELab 2.7.\n"
                 << "         Please use 'hackbuschReusken' and add the parameter 'LineSearchAcceptBest : true'";
       return lineSearch;

@@ -7,8 +7,8 @@
 #include <dune/common/ios_state.hh>
 
 #include <dune/pdelab/solver/newtonerrors.hh>
-#include <dune/pdelab/solver/newtonlinesearch.hh>
-#include <dune/pdelab/solver/newtonterminate.hh>
+#include <dune/pdelab/solver/linesearch.hh>
+#include <dune/pdelab/solver/terminate.hh>
 #include <dune/pdelab/solver/utility.hh>
 
 namespace Dune::PDELab
