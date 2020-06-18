@@ -158,7 +158,8 @@ int main(int argc, char** argv)
     // Set some parameters without loading parameter tree from ini file (just to show that it works)
     Dune::ParameterTree ptree;
     ptree["Verbosity"] = "4";
-    ptree["LineSearchDampingFactor"] = "0.3";
+    ptree["Terminate.MaxIterations"] = "39";
+    ptree["LineSearch.DampingFactor"] = "0.3";
     ptree["UseMaxNorm"] = "1";
     solver.setParameters(ptree);
 
