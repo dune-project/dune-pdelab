@@ -468,8 +468,25 @@ namespace Dune::PDELab
       _lineSearch = createLineSearch(*this, strategy);
 
       // now set parameters
-      _terminate->setParameters(parameterTree);
-      _lineSearch->setParameters(parameterTree);
+      if (parameterTree.hasSub("Terminate")){
+        _terminate->setParameters(parameterTree.sub("Terminate"));
+      }
+      else{
+        ParameterTree terminateTree;
+        terminateTree["MaxIterations"] = std::to_string(parameterTree.get("MaxIterations", 40));
+        terminateTree["ForceIteration"] = std::to_string(parameterTree.get("ForceIteration", false));
+        _terminate->setParameters(terminateTree);
+      }
+      if (parameterTree.hasSub("LineSearch")){
+        _lineSearch->setParameters(parameterTree.sub("LineSearch"));
+      }
+      else{
+        ParameterTree lineSearchTree;
+        lineSearchTree["MaxIterations"] = std::to_string(parameterTree.get("LineSearchMaxIterations", 10));
+        lineSearchTree["DampingFactor"] = std::to_string(parameterTree.get("LineSearchDampingFactor", 0.5));
+        lineSearchTree["AcceptBest"] = std::to_string(parameterTree.get("LineSearchAcceptBest", false));
+        _lineSearch->setParameters(lineSearchTree);
+      }
     }
 
     //! Set the termination criterion
