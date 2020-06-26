@@ -2,11 +2,14 @@ add_subdirectory(fem)
 
 dune_add_test(SOURCES testcombinedoperator.cc)
 
-dune_add_test(SOURCES testconvectiondiffusiondg.cc)
+dune_add_test(SOURCES testconvectiondiffusiondg.cc
+              CMAKE_GUARD SUPERLU_FOUND)
 
-dune_add_test(SOURCES testnewton.cc)
+dune_add_test(SOURCES testnewton.cc
+              CMAKE_GUARD SUPERLU_FOUND)
 
-dune_add_test(SOURCES testinstationary.cc)
+dune_add_test(SOURCES testinstationary.cc
+              CMAKE_GUARD SUPERLU_FOUND)
 
 dune_add_test(SOURCES testanalytic.cc)
 
@@ -51,7 +54,20 @@ if(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
   dune_add_test(SOURCES testgeneo.cc
                 MPI_RANKS 2
                 TIMEOUT 300)
+
+  if (UG_FOUND)
+  dune_add_test(SOURCES testgeneo_nonovlp.cc
+                MPI_RANKS 2
+                TIMEOUT 300)
+  endif()
 endif(SuiteSparse_UMFPACK_FOUND AND ARPACKPP_FOUND)
+
+if(SuiteSparse_UMFPACK_FOUND AND UG_FOUND)
+  dune_add_test(SOURCES testschwarznonoverlapping.cc
+                MPI_RANKS 4
+                TIMEOUT 300)
+endif()
+
 
 dune_add_test(SOURCES testdglegendre.cc)
 

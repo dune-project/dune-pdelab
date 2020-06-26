@@ -49,7 +49,7 @@ namespace Dune {
       void getWeights(FieldVector<K, sizeof...(FArgs)> & aweights,
         std::tuple<FArgs...> fargs) const
       {
-        Hybrid::forEach(Std::make_index_sequence<sizeof...(FArgs)>{},
+        Hybrid::forEach(std::make_index_sequence<sizeof...(FArgs)>{},
           [&](auto j){
             const auto & a = get<j>(fargs);
             Hybrid::ifElse(models<WeightedContainer,decltype(a)>(),
@@ -62,7 +62,7 @@ namespace Dune {
       void setWeights(const FieldVector<K, sizeof...(FArgs)> & aweights,
         std::tuple<FArgs...> fargs) const
       {
-        Hybrid::forEach(Std::make_index_sequence<sizeof...(FArgs)>{},
+        Hybrid::forEach(std::make_index_sequence<sizeof...(FArgs)>{},
           [&](auto j){
             auto & a = get<j>(fargs);
             Hybrid::ifElse(models<WeightedContainer,decltype(a)>(),
@@ -78,7 +78,7 @@ namespace Dune {
         FieldVector<K, sizeof...(FArgs)> aweights(K(0));
         FieldVector<K, sizeof...(FArgs)> current_weights;
         getWeights(aweights, std::forward_as_tuple(fargs...));
-        Hybrid::forEach(Std::make_index_sequence<sizeof...(Args)>{},
+        Hybrid::forEach(std::make_index_sequence<sizeof...(Args)>{},
           [&](auto i){
             if(weights[i] != K(0)) {
               // set weights

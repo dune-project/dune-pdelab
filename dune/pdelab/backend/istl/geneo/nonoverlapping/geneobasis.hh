@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_GENEOBASIS_HH
-#define DUNE_PDELAB_BACKEND_ISTL_GENEO_GENEOBASIS_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_GENEO_NonoverlappingGenEOBasis_HH
+#define DUNE_PDELAB_BACKEND_ISTL_GENEO_NonoverlappingGenEOBasis_HH
 
 #include <algorithm>
 #include <functional>
@@ -18,8 +18,8 @@ namespace Dune {
      * This coarse space is based on generalized eigenpoblems defined on the full stiffness matrix of a subdomain and one assembled only
      * on the area where this subdomain overlaps with others.
      */
-    template<class GFS, class M, class X, int dim>
-    class GenEOBasis : public SubdomainBasis<X>
+    template<class GridView, class M, class X>
+    class NonoverlappingGenEOBasis : public SubdomainBasis<X>
     {
       typedef Dune::PDELab::Backend::Native<M> ISTLM;
       typedef Dune::PDELab::Backend::Native<X> ISTLX;
@@ -29,7 +29,8 @@ namespace Dune {
       /*!
        * \brief Constructor.
        * \param gfs Grid function space.
-       * \param AF_exterior Stiffness matrix with boundary conditions from problem definition and Neumann on processor boundaries.
+       * \param A Left-hand side matrix of the GenEO eigenproblem; with problem-dependent boundary conditions on the domain boundary
+       *        and Neumann on processor boundaries
        * \param AF_ovlp The same matrix as AF_exterior, but only assembled on overlap region (where more than 1 subdomain exists).
        * \param eigenvalue_threshold Threshold up to which eigenvalue an eigenpair should be included in the basis. If negative, no thresholding.
        * \param part_unity Partition of unity to construct the basis with.
@@ -39,9 +40,8 @@ namespace Dune {
        * \param add_part_unity Whether to explicitly add the partition of unity itself in the coarse basis.
        * \param verbose Verbosity value.
        */
-      GenEOBasis(const GFS& gfs, const M& AF_exterior, const M& AF_ovlp, const double eigenvalue_threshold, X& part_unity,
-                int& nev, int nev_arpack = -1, double shift = 0.001, bool add_part_unity = false, int verbose = 0) {
-        using Dune::PDELab::Backend::native;
+      NonoverlappingGenEOBasis(NonoverlappingOverlapAdapter<GridView, X, M>& adapter, const M& A, const M& A_ovlp, const X& part_unity, const double eigenvalue_threshold,
+                    int& nev, int nev_arpack = -1, const double shift = 0.001, const bool add_part_unity = false, const int verbose = 0) {
 
         if (nev_arpack == -1)
           nev_arpack = std::max(nev, 2);
@@ -49,7 +49,8 @@ namespace Dune {
           DUNE_THROW(Dune::Exception,"nev_arpack is less then nev!");
 
         // X * A_0 * X
-        M ovlp_mat(AF_ovlp);
+        M ovlp_mat(A_ovlp);
+        using Dune::PDELab::Backend::native;
         for (auto row_iter = native(ovlp_mat).begin(); row_iter != native(ovlp_mat).end(); row_iter++) {
           for (auto col_iter = row_iter->begin(); col_iter != row_iter->end(); col_iter++) {
             *col_iter *= native(part_unity)[row_iter.index()] * native(part_unity)[col_iter.index()];
@@ -57,13 +58,17 @@ namespace Dune {
         }
 
         // Setup Arpack for solving generalized eigenproblem
-        ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, ISTLX> arpack(native(AF_exterior));
+        std::cout << "ARPACK setup...";
+        ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, X> arpack(A);
+        std::cout << " done" << std::endl;
         double eps = 0.0;
 
         std::vector<double> eigenvalues(nev_arpack,0.0);
-        std::vector<ISTLX> eigenvectors(nev_arpack,ISTLX(native(part_unity).N()));
+        std::vector<X> eigenvectors(nev_arpack,X(adapter.getExtendedSize()));
 
-        arpack.computeGenNonSymMinMagnitude(native(ovlp_mat), eps, eigenvectors, eigenvalues, shift);
+        std::cout << "ARPACK solve...";
+        arpack.computeGenNonSymMinMagnitude(ovlp_mat, eps, eigenvectors, eigenvalues, shift);
+        std::cout << " done" << std::endl;
 
         // Count eigenvectors below threshold
         int cnt = -1;
@@ -75,7 +80,7 @@ namespace Dune {
             }
           }
           if (verbose > 0)
-            std::cout << "Process " << gfs.gridView().comm().rank() << " picked " << cnt << " eigenvectors" << std::endl;
+            std::cout << "Process " << adapter.gridView().comm().rank() << " picked " << cnt << " eigenvectors" << std::endl;
           if (cnt == -1)
             DUNE_THROW(Dune::Exception,"No eigenvalue above threshold - not enough eigenvalues computed!");
         } else {
@@ -93,7 +98,7 @@ namespace Dune {
             this->local_basis[base_id]->begin(),
             std::multiplies<>()
             );
-          //if (eigenvalues[base_id] < .0) // TODO: Normalization for debugging; Remove this for performance
+          //if (eigenvalues[base_id] < .0) // Normalization for debugging; Remove this for performance
           //  *(this->local_basis[base_id]) *= -1.0;
         }
 
@@ -117,4 +122,4 @@ namespace Dune {
 
 #endif
 
-#endif //DUNE_PDELAB_BACKEND_ISTL_GENEO_GENEOBASIS_HH
+#endif

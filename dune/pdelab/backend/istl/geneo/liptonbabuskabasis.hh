@@ -35,11 +35,11 @@ namespace Dune {
         auto AF_interior = AF_exterior;
         native(AF_interior) -= native(AF_ovlp);
 
-        ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, X> arpack(native(AF_exterior));
+        ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, ISTLX> arpack(native(AF_exterior));
         double eps = .0001;
 
         std::vector<double> eigenvalues(nev_arpack,0.0);
-        std::vector<X> eigenvectors(nev_arpack,X(gfs,0.0));
+        std::vector<ISTLX> eigenvectors(nev_arpack,ISTLX(native(part_unity).N()));
 
         arpack.computeGenNonSymMinMagnitude(native(AF_interior), eps, eigenvectors, eigenvalues, shift);
 

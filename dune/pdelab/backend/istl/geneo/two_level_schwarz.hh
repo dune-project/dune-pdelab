@@ -4,6 +4,9 @@
 #if HAVE_SUITESPARSE_UMFPACK
 
 #include <dune/common/timer.hh>
+#include <dune/istl/umfpack.hh>
+#include <dune/pdelab/backend/interface.hh>
+#include <dune/pdelab/gridfunctionspace/dunefunctionsgridfunctionspace.hh>
 
 #include "coarsespace.hh"
 
@@ -63,10 +66,19 @@ namespace Dune {
         */
         virtual void apply (X& v, const Y& d)
         {
+          using Dune::PDELab::Backend::native;
+          if (verbosity_ > 2)
+            Dune::printvector(std::cout, native(d), "defect", "", 1, 10, 17);
+
           // first the subdomain solves
           Y b(d); // need copy, since solver overwrites right hand side
           Dune::InverseOperatorResult result;
           solverf_.apply(v,b,result);
+
+          if (verbosity_ > 2)
+            Dune::printvector(std::cout, native(v), "correction (1lvl)", "", 1, 10, 17);
+
+
 
           if (!coarse_space_active_) {
 
@@ -80,6 +92,8 @@ namespace Dune {
             Dune::Timer timer_coarse_solve;
 
             coarse_space_->restrict (d, coarse_defect_);
+            if (verbosity_ > 2)
+              Dune::printvector(std::cout, coarse_defect_, "coarse_defect_", "", 1, 10, 17);
 
             // Solve coarse system
             Dune::InverseOperatorResult result;
@@ -89,12 +103,15 @@ namespace Dune {
             // Prolongate coarse solution on local domain
             coarse_space_->prolongate(v0, prolongated_);
             v += prolongated_;
+            if (verbosity_ > 2) Dune::printvector(std::cout, native(prolongated_), "prolongated_", "", 1, 10, 17);
+            if (verbosity_ > 2) Dune::printvector(std::cout, native(v), "correction", "", 1, 10, 17);
 
             coarse_time_ += timer_coarse_solve.elapsed();
             apply_calls_++;
 
             Dune::PDELab::AddDataHandle<GFS,X> result_addh(gfs_,v);
             gfs_.gridView().communicate(result_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
+            if (verbosity_ > 2) Dune::printvector(std::cout, native(v), "correction (sum)", "", 1, 10, 17);
           }
         }
 

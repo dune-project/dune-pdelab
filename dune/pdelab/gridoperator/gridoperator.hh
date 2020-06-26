@@ -14,6 +14,7 @@
 namespace Dune{
   namespace PDELab{
 
+
     /**
        \brief Standard grid operator implementation
 
@@ -30,14 +31,15 @@ namespace Dune{
     template<typename GFSU, typename GFSV, typename LOP,
              typename MB, typename DF, typename RF, typename JF,
              typename CU=Dune::PDELab::EmptyTransformation,
-             typename CV=Dune::PDELab::EmptyTransformation
+             typename CV=Dune::PDELab::EmptyTransformation,
+             typename EXCLUDER = NoOpExcluder
              >
     class GridOperator
     {
     public:
 
       //! The global assembler type
-      typedef DefaultAssembler<GFSU,GFSV,CU,CV> Assembler;
+      typedef DefaultAssembler<GFSU,GFSV,CU,CV,EXCLUDER> Assembler;
 
       //! The type of the domain (solution).
       using Domain = Dune::PDELab::Backend::Vector<GFSU,DF>;
@@ -73,16 +75,16 @@ namespace Dune{
       };
 
       //! Constructor for non trivial constraints
-      GridOperator(const GFSU & gfsu_, const CU & cu_, const GFSV & gfsv_, const CV & cv_, LOP & lop_, const MB& mb_ = MB())
-        : global_assembler(gfsu_,gfsv_,cu_,cv_)
+      GridOperator(const GFSU & gfsu_, const CU & cu_, const GFSV & gfsv_, const CV & cv_, LOP & lop_, const MB& mb_ = MB(), const EXCLUDER& excluder = EXCLUDER())
+        : global_assembler(gfsu_,gfsv_,cu_,cv_,excluder)
         , dof_exchanger(std::make_shared<BorderDOFExchanger>(*this))
         , local_assembler(lop_, cu_, cv_,dof_exchanger)
         , backend(mb_)
       {}
 
       //! Constructor for empty constraints
-      GridOperator(const GFSU & gfsu_, const GFSV & gfsv_, LOP & lop_, const MB& mb_ = MB())
-        : global_assembler(gfsu_,gfsv_)
+      GridOperator(const GFSU & gfsu_, const GFSV & gfsv_, LOP & lop_, const MB& mb_ = MB(), const EXCLUDER& excluder = EXCLUDER())
+        : global_assembler(gfsu_,gfsv_,excluder)
         , dof_exchanger(std::make_shared<BorderDOFExchanger>(*this))
         , local_assembler(lop_,dof_exchanger)
         , backend(mb_)
