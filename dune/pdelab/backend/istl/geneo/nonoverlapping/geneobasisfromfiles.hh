@@ -34,6 +34,7 @@ namespace Dune {
         if (!input_basis_size.is_open()) {std::cout << "Error: Cannot open file " << filename_basis_size << std::endl;}
         input_basis_size >> basis_size;
         input_basis_size.close();
+
         this->local_basis.resize(basis_size);
 
         for (int basis_index = 0; basis_index < this->local_basis.size(); basis_index++) {
@@ -48,33 +49,13 @@ namespace Dune {
             DUNE_THROW(IOError, "Could not open file: " << rfilename.str().c_str());
           Dune::readMatrixMarket(*ev,file);
           file.close();
-          /*std::ifstream input;
-          std::ostringstream os;
-          os << basis_index;
-          std::string filename = basename + "_" + os.str() + ".txt";
-          input.open(filename, std::ios::in);
-
-          std::string line;
-          std::getline(input, line);
-          auto start = line.find("blocks=")+7U;
-          auto end = line.find(",", start);
-          int EV_size = std::stoi(line.substr(start, end - start));
-          ev->resize(EV_size);
-          for(int i=0; i<ev->size();i++){
-            int tmp;
-            input >> tmp >> (*ev)[i][0] >> (*ev)[i][1] >> (*ev)[i][2];
-          }
-
-          input.close();*/
 
           this->local_basis[basis_index] = ev;
         }
 
-
       }
 
     };
-
 
   }
 }

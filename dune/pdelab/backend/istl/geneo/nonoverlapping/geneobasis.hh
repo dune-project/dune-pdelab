@@ -114,7 +114,6 @@ namespace Dune {
           this->local_basis.pop_back();
         }
       }
-
     };
 
 

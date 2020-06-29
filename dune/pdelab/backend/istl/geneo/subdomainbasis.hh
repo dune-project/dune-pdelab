@@ -69,11 +69,6 @@ namespace Dune {
       std::vector<std::shared_ptr<X> > local_basis;
 
     };
-
-
-
-
-
   }
 }
 
