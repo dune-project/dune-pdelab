@@ -27,8 +27,8 @@
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/solver/newton.hh>
 #include <dune/pdelab/solver/newtonerrors.hh>
-#include <dune/pdelab/solver/newtonlinesearch.hh>
-#include <dune/pdelab/solver/newtonterminate.hh>
+#include <dune/pdelab/solver/linesearch.hh>
+#include <dune/pdelab/solver/terminate.hh>
 #include <dune/pdelab/solver/utility.hh>
 #include <dune/pdelab/newton/newton.hh>
 #include <dune/pdelab/localoperator/numericaljacobian.hh>
