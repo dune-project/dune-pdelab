@@ -7,8 +7,8 @@
 #include <dune/common/ios_state.hh>
 
 #include <dune/pdelab/solver/newtonerrors.hh>
-#include <dune/pdelab/solver/newtonlinesearch.hh>
-#include <dune/pdelab/solver/newtonterminate.hh>
+#include <dune/pdelab/solver/linesearch.hh>
+#include <dune/pdelab/solver/terminate.hh>
 #include <dune/pdelab/solver/utility.hh>
 
 namespace Dune::PDELab
@@ -53,7 +53,7 @@ namespace Dune::PDELab
    *
    * - If Newton is created using the default parameters it is an inexact
    *   Newton since the default reduction for the linear systems is quite
-   *   high. You can change this through setMinLinearReduction()
+   *   low. You can change this through setMinLinearReduction()
    *
    * \tparam GridOperator_ Grid operator for evaluation of resdidual and Jacobian
    * \tparam LinearSolver_ Solver backend for solving linear system of equations
@@ -430,16 +430,12 @@ namespace Dune::PDELab
      *
      *  \code
      *  [newton_parameters]
-     *  reassemble_threshold = 0.1
-     *  absolute_limit = 1e-6
-     *  reduction = 1e-4
-     *  min_linear_reduction = 1e-3
-     *
-     *  [newton_parameters.terminate]
-     *  max_iterations = 15
-     *
-     *  [newton_parameters.line_search]
-     *  line_search_damping_factor = 0.7
+     *  ReassembleThreshold = 0.1
+     *  AbsoluteLimit = 1e-6
+     *  Reduction = 1e-4
+     *  MinLinearReduction = 1e-3
+     *  MaxIterations = 15
+     *  LineSearchDampingFactor = 0.7
      *  \endcode
      *
      *  and invocation in the code:
@@ -456,28 +452,41 @@ namespace Dune::PDELab
      *  \endcode
      */
     void setParameters(const ParameterTree& parameterTree){
-        if (parameterTree.hasKey("verbosity"))
-          setVerbosityLevel(parameterTree.get<unsigned int>("verbosity"));
-        if (parameterTree.hasKey("reduction"))
-          setReduction(parameterTree.get<Real>("reduction"));
-        if (parameterTree.hasKey("absolute_limit"))
-          setAbsoluteLimit(parameterTree.get<Real>("absolute_limit"));
-        if (parameterTree.hasKey("keeep_matrix"))
-          setKeepMatrix(parameterTree.get<bool>("keep_matrix"));
-        if (parameterTree.hasKey("use_max_norm"))
-          setUseMaxNorm(parameterTree.get<bool>("use_max_norm"));
-        if (parameterTree.hasKey("hanging_node_modifications"))
-          _hangingNodeModifications = parameterTree.get<bool>("hanging_node_modifications");
+      _verbosity = parameterTree.get("VerbosityLevel", _verbosity);
+      _reduction = parameterTree.get("Reduction", _reduction);
+      _absoluteLimit = parameterTree.get("AbsoluteLimit", _absoluteLimit);
+      _keepMatrix = parameterTree.get("KeepMatrix", _keepMatrix);
+      _useMaxNorm = parameterTree.get("UseMaxNorm", _useMaxNorm);
+      _hangingNodeModifications = parameterTree.get("HangingNodeModifications", _hangingNodeModifications);
+      _minLinearReduction = parameterTree.get("MinLinearReduction", _minLinearReduction);
+      _fixedLinearReduction = parameterTree.get("FixedLinearReduction", _fixedLinearReduction);
+      _reassembleThreshold = parameterTree.get("ReassembleThreshold", _reassembleThreshold);
 
-        if (parameterTree.hasKey("min_linear_reduction"))
-          setMinLinearReduction(parameterTree.get<Real>("min_linear_reduction"));
-        if (parameterTree.hasKey("fixed_linear_reduction"))
-          setFixedLinearReduction(parameterTree.get<bool>("fixed_linear_reduction"));
-        if (parameterTree.hasKey("reassemble_threshold"))
-          setReassembleThreshold(parameterTree.get<Real>("reassemble_threshold"));
+      // first create the linesearch, depending on the parameter
+      std::string lineSearchStrategy = parameterTree.get("LineSearchStrategy","hackbuschReusken");
+      auto strategy = lineSearchStrategyFromString(lineSearchStrategy);
+      _lineSearch = createLineSearch(*this, strategy);
 
-        _terminate->setParameters(parameterTree.sub("terminate"));
-        _lineSearch->setParameters(parameterTree.sub("line_search"));
+      // now set parameters
+      if (parameterTree.hasSub("Terminate")){
+        _terminate->setParameters(parameterTree.sub("Terminate"));
+      }
+      else{
+        ParameterTree terminateTree;
+        terminateTree["MaxIterations"] = std::to_string(parameterTree.get("MaxIterations", 40));
+        terminateTree["ForceIteration"] = std::to_string(parameterTree.get("ForceIteration", false));
+        _terminate->setParameters(terminateTree);
+      }
+      if (parameterTree.hasSub("LineSearch")){
+        _lineSearch->setParameters(parameterTree.sub("LineSearch"));
+      }
+      else{
+        ParameterTree lineSearchTree;
+        lineSearchTree["MaxIterations"] = std::to_string(parameterTree.get("LineSearchMaxIterations", 10));
+        lineSearchTree["DampingFactor"] = std::to_string(parameterTree.get("LineSearchDampingFactor", 0.5));
+        lineSearchTree["AcceptBest"] = std::to_string(parameterTree.get("LineSearchAcceptBest", false));
+        _lineSearch->setParameters(lineSearchTree);
+      }
     }
 
     //! Set the termination criterion
@@ -495,35 +504,35 @@ namespace Dune::PDELab
       _lineSearch = lineSearch;
     }
 
-    //! Construct Newton using default parameters
+    //! Construct Newton using default parameters with default parameters
+    /**
+       in p
+     */
     NewtonMethod(
       const GridOperator& gridOperator,
-      LinearSolver& linearSolver,
-      const std::string& lineSearchStrategy="hackbusch_reusken")
+      LinearSolver& linearSolver)
       : _gridOperator(gridOperator)
       , _linearSolver(linearSolver)
       , _residual(gridOperator.testGridFunctionSpace())
       , _correction(gridOperator.trialGridFunctionSpace())
     {
       _terminate = std::make_shared<DefaultTerminate<NewtonMethod>> (*this);
-      _lineSearch = getLineSearch(*this, lineSearchStrategy);
+      _lineSearch = createLineSearch(*this, LineSearchStrategy::hackbuschReusken);
     }
 
     //! Construct Newton passing a parameter tree
     NewtonMethod(
       const GridOperator& gridOperator,
       LinearSolver& linearSolver,
-      const ParameterTree& parameterTree,
-      const std::string& lineSearchStrategy="hackbusch_reusken")
+      const ParameterTree& parameterTree)
       : _gridOperator(gridOperator)
       , _linearSolver(linearSolver)
       , _residual(gridOperator.testGridFunctionSpace())
       , _correction(gridOperator.trialGridFunctionSpace())
 
     {
-      setParameters(parameterTree);
       _terminate = std::make_shared<DefaultTerminate<NewtonMethod>> (*this);
-      _lineSearch = getLineSearch(*this, lineSearchStrategy);
+      setParameters(parameterTree);
     }
 
   private:

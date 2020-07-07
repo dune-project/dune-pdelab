@@ -36,6 +36,10 @@ namespace Dune
 {
   namespace PDELab
   {
+
+    class NewtonLineSearchError : public NewtonError {};
+    class NewtonNotConverged : public NewtonError {};
+
     // Status information of Newton's method
     template<class RFType>
     struct NewtonResult : LinearSolverResult<RFType>
