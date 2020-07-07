@@ -899,12 +899,12 @@ void driver (const GV& gv, const FEM& fem, Param& param)
   using PDESOLVERF = Dune::PDELab::NewtonMethod<IGOF,LSF>;
   PDESOLVERF pdesolverf(igof,lsf);
   Dune::ParameterTree newtonParam;
-  newtonParam["reassemble_threshold"] = "0.0";
-  newtonParam["verbosity"] = "2";
-  newtonParam["reduction"] = "1e-8";
-  newtonParam["min_linear_reduction"] = "1e-4";
-  newtonParam["terminate.max_iterations"] = std::to_string(newtonMaxIt);
-  newtonParam["line_search.line_search_max_iterations"] = "10";
+  newtonParam["ReassembleThreshold"] = "0.0";
+  newtonParam["VerbosityLevel"] = "2";
+  newtonParam["Reduction"] = "1e-8";
+  newtonParam["MinLinearReduction"] = "1e-4";
+  newtonParam["MaxIterations"] = std::to_string(newtonMaxIt);
+  newtonParam["LineSearchMaxIterations"] = "10";
   pdesolverf.setParameters(newtonParam);
   // select a solver for contaminant
   using PDESOLVERC = Dune::PDELab::NewtonMethod<IGOC,LSC>;
