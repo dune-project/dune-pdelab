@@ -17,6 +17,7 @@
 
 #include <dune/localfunctions/common/localbasis.hh>
 #include <dune/localfunctions/common/localfiniteelementtraits.hh>
+#include <dune/localfunctions/common/localinterpolation.hh>
 #include <dune/localfunctions/common/localkey.hh>
 #include <dune/localfunctions/common/localtoglobaladaptors.hh>
 
@@ -343,12 +344,14 @@ namespace Dune
 
       //! \brief Local interpolation of a function
       template<typename F, typename C>
-      void interpolate (const F& f, std::vector<C>& out) const
+      void interpolate (const F& ff, std::vector<C>& out) const
       {
         // select quadrature rule
         typedef typename LB::Traits::RangeType RangeType;
         const Dune::QuadratureRule<R,d>&
           rule = Dune::QuadratureRules<R,d>::rule(gt,2*k);
+
+        auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
 
         // prepare result
         out.resize(n);
@@ -363,7 +366,7 @@ namespace Dune
             typename LB::Traits::DomainType x;
             RangeType y;
             for (int i=0; i<d; i++) x[i] = it->position()[i];
-            f.evaluate(x,y);
+            y = f(x);
 
             // evaluate the basis
             std::vector<RangeType> phi(n);

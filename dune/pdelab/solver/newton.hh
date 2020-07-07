@@ -6,6 +6,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/ios_state.hh>
 
+#include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/solver/newtonerrors.hh>
 #include <dune/pdelab/solver/newtonlinesearch.hh>
 #include <dune/pdelab/solver/newtonterminate.hh>
@@ -91,10 +92,21 @@ namespace Dune::PDELab
       return _result;
     }
 
-    virtual void prepareStep(const Domain& solution)
+    virtual void prepareStep(Domain& solution)
     {
       _reassembled = false;
       if (_result.defect/_previousDefect > _reassembleThreshold){
+        if (_hangingNodeModifications){
+          auto dirichletValues = solution;
+          // Set all non dirichlet values to zero
+          Dune::PDELab::set_shifted_dofs(_gridOperator.localAssembler().trialConstraints(), 0.0, dirichletValues);
+          // Set all constrained DOFs to zero in solution
+          Dune::PDELab::set_constrained_dofs(_gridOperator.localAssembler().trialConstraints(), 0.0, solution);
+          // Copy correct Dirichlet values back into solution vector
+          Dune::PDELab::copy_constrained_dofs(_gridOperator.localAssembler().trialConstraints(), dirichletValues, solution);
+          // Interpolate periodic constraints / hanging nodes
+          _gridOperator.localAssembler().backtransform(solution);
+        }
         if (_verbosity>=3)
               std::cout << "      Reassembling matrix..." << std::endl;
         *_jacobian = Real(0.0);
@@ -280,8 +292,20 @@ namespace Dune::PDELab
     }
 
     //! Update _residual and defect in _result
-    virtual void updateDefect(const Domain& solution)
+    virtual void updateDefect(Domain& solution)
     {
+      if (_hangingNodeModifications){
+        auto dirichletValues = solution;
+        // Set all non dirichlet values to zero
+        Dune::PDELab::set_shifted_dofs(_gridOperator.localAssembler().trialConstraints(), 0.0, dirichletValues);
+        // Set all constrained DOFs to zero in solution
+        Dune::PDELab::set_constrained_dofs(_gridOperator.localAssembler().trialConstraints(), 0.0, solution);
+        // Copy correct Dirichlet values back into solution vector
+        Dune::PDELab::copy_constrained_dofs(_gridOperator.localAssembler().trialConstraints(), dirichletValues, solution);
+        // Interpolate periodic constraints / hanging nodes
+        _gridOperator.localAssembler().backtransform(solution);
+      }
+
       _residual = 0.0;
       _gridOperator.residual(solution, _residual);
 
@@ -345,6 +369,13 @@ namespace Dune::PDELab
     {
       _useMaxNorm = b;
     }
+
+    //! Does the problem have hanging nodes
+    void setHangingNodeModifications(bool b)
+    {
+      _hangingNodeModifications = b;
+    }
+
 
     //! Return whether the jacobian matrix is kept across calls to apply().
     bool keepMatrix() const
@@ -436,6 +467,8 @@ namespace Dune::PDELab
           setKeepMatrix(parameterTree.get<bool>("keep_matrix"));
         if (parameterTree.hasKey("use_max_norm"))
           setUseMaxNorm(parameterTree.get<bool>("use_max_norm"));
+        if (parameterTree.hasKey("hanging_node_modifications"))
+          _hangingNodeModifications = parameterTree.get<bool>("hanging_node_modifications");
 
         if (parameterTree.hasKey("min_linear_reduction"))
           setMinLinearReduction(parameterTree.get<Real>("min_linear_reduction"));
@@ -522,6 +555,9 @@ namespace Dune::PDELab
     Real _absoluteLimit = 1e-12;
     bool _keepMatrix = true;
     bool _useMaxNorm = false;
+
+    // Special treatment if we have hanging nodes
+    bool _hangingNodeModifications = false;
 
     // User parameters for prepareStep()
     Real _minLinearReduction = 1e-3;

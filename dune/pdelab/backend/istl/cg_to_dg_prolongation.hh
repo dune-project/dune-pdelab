@@ -54,12 +54,11 @@ namespace Dune {
         WrappedLocalShapeFunction (const Imp& imp, int comp) :
           _imp(imp), _comp(comp) {}
 
-        void evaluate(const Dune::FieldVector<DF,dim> & x,
-          Dune::FieldVector<DF,1> & y) const
+        Dune::FieldVector<DF,1> operator()(const Dune::FieldVector<DF,dim> & x) const
         {
           std::vector<RT> v;
           _imp.finiteElement().localBasis().evaluateFunction(x,v);
-          y = v[_comp];
+          return v[_comp];
         }
       };
 

@@ -32,7 +32,7 @@
 
 #include <dune/pdelab.hh>
 
-// store physical entitiy information from GmshReader
+// store physical entity information from GmshReader
 struct MeshInfo
 {
   // note: we rely on grids where we can use the boundary segment index to
@@ -164,9 +164,11 @@ int main(int argc, char** argv) {
   using Grid = Dune::ALUGrid<dim, dim, Dune::simplex, Dune::conforming>;
 
   MeshInfo meshinfo;
-  auto mygrid(Dune::GmshReader<Grid>::read(
+  Dune::GridFactory<Grid> factory;
+  Dune::GmshReader<Grid>::read(factory,
       meshfilename, meshinfo.boundary_id_to_physical_entity,
-      meshinfo.element_index_to_physical_entity));
+      meshinfo.element_index_to_physical_entity);
+  auto mygrid = factory.createGrid();
   Dune::gridinfo(*mygrid);
 
   BCTypeParam bctype(meshinfo);

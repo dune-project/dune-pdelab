@@ -215,8 +215,8 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_Base(unsigned maxiter_=5000, int verbose_=1)
-        : maxiter(maxiter_), verbose(verbose_)
+      explicit ISTLBackend_SEQ_Base(unsigned maxiter_=5000, int verbose_=1, unsigned preconditioner_steps_=1)
+        : maxiter(maxiter_), verbose(verbose_), preconditioner_steps(preconditioner_steps_)
       {}
 
 
@@ -240,7 +240,7 @@ namespace Dune {
         Preconditioner<Native<M>,
                        Native<V>,
                        Native<W>,
-                       1> prec(native(A), 3, 1.0);
+                       1> prec(native(A), preconditioner_steps, 1.0);
         Solver<Native<V>> solver(opa, prec, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
         solver.apply(native(z), native(r), stat);
@@ -254,6 +254,7 @@ namespace Dune {
     private:
       unsigned maxiter;
       int verbose;
+      unsigned preconditioner_steps;
     };
 
     template<template<typename> class Solver>
@@ -371,8 +372,8 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_LOOP_Jac (unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::LoopSolver>(maxiter_, verbose_)
+      explicit ISTLBackend_SEQ_LOOP_Jac (unsigned maxiter_=5000, int verbose_=1, unsigned preconditioner_steps_=1)
+        : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::LoopSolver>(maxiter_, verbose_, preconditioner_steps_)
       {}
     };
 
@@ -405,8 +406,8 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_BCGS_Jac (unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::BiCGSTABSolver>(maxiter_, verbose_)
+      explicit ISTLBackend_SEQ_BCGS_Jac (unsigned maxiter_=5000, int verbose_=1, unsigned preconditioner_steps_=1)
+        : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::BiCGSTABSolver>(maxiter_, verbose_, preconditioner_steps_)
       {}
     };
 
@@ -422,8 +423,8 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_BCGS_SSOR (unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_)
+      explicit ISTLBackend_SEQ_BCGS_SSOR (unsigned maxiter_=5000, int verbose_=1, unsigned preconditioner_steps_=1)
+        : ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_, preconditioner_steps_)
       {}
     };
 
@@ -509,8 +510,8 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_CG_SSOR (unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::CGSolver>(maxiter_, verbose_)
+      explicit ISTLBackend_SEQ_CG_SSOR (unsigned maxiter_=5000, int verbose_=1, unsigned preconditioner_steps_=1)
+        : ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::CGSolver>(maxiter_, verbose_, preconditioner_steps_)
       {}
     };
 
@@ -526,8 +527,8 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_MINRES_SSOR (unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::MINRESSolver>(maxiter_, verbose_)
+      explicit ISTLBackend_SEQ_MINRES_SSOR (unsigned maxiter_=5000, int verbose_=1, unsigned preconditioner_steps_=1)
+        : ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::MINRESSolver>(maxiter_, verbose_, preconditioner_steps_)
       {}
     };
 
@@ -542,8 +543,8 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_CG_Jac (unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::CGSolver>(maxiter_, verbose_)
+      explicit ISTLBackend_SEQ_CG_Jac (unsigned maxiter_=5000, int verbose_=1, unsigned preconditioner_steps_=1)
+        : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::CGSolver>(maxiter_, verbose_, preconditioner_steps_)
       {}
     };
 

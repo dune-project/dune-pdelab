@@ -43,7 +43,7 @@ namespace Dune {
         }
 
         //! Returns true if size per entity of given dim and codim is a constant.
-        bool fixedsize (int dim, int codim) const
+        bool fixedSize (int dim, int codim) const
         {
           // We return false here, since gather and scatter is called
           // for all entities of all levels of the grid but we only

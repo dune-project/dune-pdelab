@@ -137,7 +137,11 @@ namespace Dune {
         //! Returns pattern statistics for all contained BCRSMatrix objects.
         const StatisticsReturnType& patternStatistics() const
         {
+#if DUNE_VERSION_LT(DUNE_ISTL,2,8)
           return patternStatistics(std::integral_constant<bool,(C::blocklevel > 2)>());
+#else
+          return patternStatistics(std::integral_constant<bool,(blockLevel<C>() > 2)>());
+#endif
         }
 
 #ifndef DOXYGEN
