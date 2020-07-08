@@ -56,7 +56,7 @@ namespace Dune::PDELab
    *   Newton since the default reduction for the linear systems is quite
    *   low. You can change this through setMinLinearReduction()
    *
-   * \tparam GridOperator_ Grid operator for evaluation of resdidual and Jacobian
+   * \tparam GridOperator_ Grid operator for evaluation of residual and Jacobian
    * \tparam LinearSolver_ Solver backend for solving linear system of equations
    */
   template <typename GridOperator_, typename LinearSolver_>
@@ -227,6 +227,8 @@ namespace Dune::PDELab
         linearSolve();
         end = Clock::now();
         linear_solver_time += end -start;
+        _result.linear_solver_time += to_seconds(linear_solver_time);
+        _result.linear_solver_iterations += _linearSolver.result().iterations;
 
         //===================================
         // Do line search and update solution
