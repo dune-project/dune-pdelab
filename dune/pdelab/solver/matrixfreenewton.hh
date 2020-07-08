@@ -463,8 +463,6 @@ namespace Dune {
           // <<<3>>> call linear solver
           *z_ = 0.0;
           solver_.apply(*z_, *r_, linear_reduction_);
-          res_.linear_solver_time += linear_solver_timer.elapsed();
-          res_.linear_solver_iterations += solver_.result().iterations;
           auto linear_solver_time = linear_solver_timer.elapsed();
           res_.linear_solver_time += linear_solver_time;
           res_.linear_solver_iterations += solver_.result().iterations;
