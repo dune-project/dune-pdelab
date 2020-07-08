@@ -14,15 +14,17 @@
 namespace Dune {
   namespace PDELab {
 
-    /** \brief Sequential matrix-free solver backend for the combinations {CGSolver,BiCGSTABSolver,MINRESSolver} x {SeqMatrixFreeBlockSOR}.
+    /** \brief Sequential matrix-free solver backend for the combinations {CGSolver,BiCGSTABSolver,MINRESSolver} x {SeqMatrixFreePreconditioner}.
 
-        \tparam GO     Grid operator implementing the matrix-free operator application, plugged in SeqMatrixFreeBlockSOR.
-        \tparam PrecGO Grid operator implementing matrix-free preconditioning. Plugged into SeqMatrixFreeBlockSOR.
+        \tparam GO     Grid operator implementing the matrix-free operator application
+        \tparam PrecGO Grid operator implementing matrix-free preconditioning
 
-        The grid operator \p PrecGO can take as a \p LOP
-        the local operator wrapper IterativeInverseBlockDiagonalLocalOperatorWrapper
-        to build a matrix-free undamped block Jacobi only usable with zero input
-        or the local operator wrapper BlockDiagonalSORLocalOperatorWrapper to build a matrix-free block SOR preconditioner.
+        The grid operator \p PrecGO can be a grid operator build from one of
+        the following local operators:
+
+        - AssembledBlockJacobiPreconditionerLocalOperator for partial matrix-free Jacobi
+        - IterativeBlockJacobiPreconditionerLocalOperator for fully matrix-free Jacobi
+        - BlockSORPreconditionerLocalOperator for matrix-free SOR
     */
     template<class GO, class PrecGO,
              template<class> class Solver>
