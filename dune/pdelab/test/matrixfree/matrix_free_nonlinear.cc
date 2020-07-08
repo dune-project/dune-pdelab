@@ -391,13 +391,17 @@ int main(int argc, char** argv)
     Dune::PDELab::integrateGridFunction(differenceSquaredAdapder, error, 10);
     std::cout << "l2errorsquared: " << error << std::endl;
 
+    using std::abs;
+    auto iteration_difference = abs(result.linear_solver_iterations - resultMatrixFree.linear_solver_iterations);
+    std::cout << "Difference in number of linear iterations between matrix-based and matrix-free: "
+              << iteration_difference << std::endl;
+
     // Let the test fail if the error is too large
     bool testfail(false);
-    using std::abs;
     using std::isnan;
-    if (isnan(error) or abs(error)>1e-7)
+    if (isnan(error) or abs(error)>1e-6)
       testfail = true;
-    if (result.linear_solver_iterations != resultMatrixFree.linear_solver_iterations)
+    if (iteration_difference > 10)
       testfail = true;
     return testfail;
   }
