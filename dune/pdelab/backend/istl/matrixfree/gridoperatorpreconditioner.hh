@@ -11,10 +11,10 @@
 namespace Dune::PDELab
 {
 
-  /** \brief Turn a grid operator that represents a preconditioner solve into a ISTL preconditioner
-
-      \tparam PrecGO Grid operator implementing the matrix-free preconditioner application
-  */
+  /** \brief Turn a grid operator that represents a preconditioner into an ISTL preconditioner
+   *
+   *  \tparam PrecGO Grid operator implementing the matrix-free preconditioner application
+   */
   template<class PrecGO>
   class GridOperatorPreconditioner
     : public Dune::Preconditioner<typename PrecGO::Traits::Domain,typename PrecGO::Traits::Range>
@@ -41,7 +41,7 @@ namespace Dune::PDELab
       _u = &u;
     }
 
-    //! prepare tensor product preconditioner if desired
+    //! prepare preconditioner
     void pre(Domain& v, Range& d) override
     {
       if (not isLinear and _u == nullptr)

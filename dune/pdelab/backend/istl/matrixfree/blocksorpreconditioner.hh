@@ -44,6 +44,8 @@ namespace Dune {
       using W = typename LocalVector::WeightedAccumulationView;
 
     public :
+      // A SOR preconditioner includes non-diagonal blocks so we need volume
+      // and skeleton methods. We do two-sided assembly!
       static constexpr bool doPatternVolume = true;
       static constexpr bool doPatternSkeleton = true;
       static constexpr bool doPatternVolumePostSkeleton = true;
@@ -64,11 +66,14 @@ namespace Dune {
         , _b_i(gridFunctionSpace.ordering().maxLocalSize())
       {}
 
+      /** We use a Jacobi preconditioner that requires a setup. The setup will
+       * be done in the alpha-volume method and later be used during the apply
+       * methods.
+       */
       bool requireSetup()
       {
         return _jacobianlop.requireSetup();
       }
-
       void setRequireSetup(bool v)
       {
         _jacobianlop.setRequireSetup(v);
@@ -188,9 +193,7 @@ namespace Dune {
                                                const LFSU& lfsu, const X& x,
                                                const LFSV& lfsv, Y& y) const
       {
-        // Looking at the algorithm above we now need to finish step (1) by
-
-        // Subtract x: _a_i -= x_e. Looking at the algorithm above this
+        // Subtracting x: _a_i -= x_e. Looking at the algorithm above this
         // finishes step (1) since the coefficient x is the vector d
         // above. After this we have r_tmp = - a_i
         std::transform(_a_i.data(),

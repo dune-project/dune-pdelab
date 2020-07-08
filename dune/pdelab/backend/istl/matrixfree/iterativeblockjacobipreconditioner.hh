@@ -18,10 +18,11 @@ namespace Dune {
 
     namespace impl{
 
-      /** \brief Point Jacobi preconditioner for local diagonal block systems
+      /* \brief Point Jacobi preconditioner for local diagonal block systems
        *
-       * The values of the inverse of the diagonal need to be provided during
-       * construction.
+       * This class will do the Jacobi preconditioning for a diagonal
+       * block. The values of the inverse of the diagonal need to be provided
+       * during construction.
        */
       template<typename X>
       class LocalPointJacobiPreconditioner : public Dune::Preconditioner<X,X>
@@ -87,25 +88,25 @@ namespace Dune {
        * Where the OnTheFlyOperator takes a grid operator and solves a global
        * system, this class only solves the local block diagonal system.
        */
-      template<typename BlockDiagonalLOP, typename W, typename XView, typename EG, typename LFSU, typename LFSV>
+      template<typename BlockDiagonalLocalOperator, typename W, typename XView, typename EG, typename LFSU, typename LFSV>
       struct BlockDiagonalOperator
         : public Dune::LinearOperator<W,W>
       {
         using Base = Dune::LinearOperator<W,W>;
         using field_type = typename Base::field_type;
         using weight_type = typename W::WeightedAccumulationView::weight_type;
-        static constexpr bool isLinear = BlockDiagonalLOP::isLinear;
+        static constexpr bool isLinear = BlockDiagonalLocalOperator::isLinear;
 
         Dune::SolverCategory::Category category() const override
         {
           return Dune::SolverCategory::sequential;
         }
 
-        BlockDiagonalOperator(const BlockDiagonalLOP& blockDiagonalLop,
+        BlockDiagonalOperator(const BlockDiagonalLocalOperator& blockDiagonalLocalOperator,
                               const EG& eg,
                               const LFSU& lfsu,
                               const LFSV& lfsv)
-          : _blockDiagonalLop(blockDiagonalLop)
+          : _blockDiagonalLocalOperator(blockDiagonalLocalOperator)
           , _eg(eg)
           , _lfsu(lfsu)
           , _lfsv(lfsv)
@@ -118,9 +119,9 @@ namespace Dune {
           y = 0.0;
           typename W::WeightedAccumulationView y_view(y, _weight);
           if (isLinear)
-            applyLocalDiagonalBlock(_blockDiagonalLop, _eg, _lfsu, z, z, _lfsv, y_view);
+            applyLocalDiagonalBlock(_blockDiagonalLocalOperator, _eg, _lfsu, z, z, _lfsv, y_view);
           else
-            applyLocalDiagonalBlock(_blockDiagonalLop, _eg, _lfsu, *_u, z, _lfsv, y_view);
+            applyLocalDiagonalBlock(_blockDiagonalLocalOperator, _eg, _lfsu, *_u, z, _lfsv, y_view);
         }
 
         void applyscaleadd(field_type alpha, const W& z, W& y) const override
@@ -140,7 +141,7 @@ namespace Dune {
         }
 
       private :
-        const BlockDiagonalLOP& _blockDiagonalLop;
+        const BlockDiagonalLocalOperator& _blockDiagonalLocalOperator;
         const EG& _eg;
         const LFSU& _lfsu;
         const LFSV& _lfsv;
@@ -209,11 +210,9 @@ namespace Dune {
     } // namespace impl
 
 
-    /** \struct BlockSolverOptions
-     * \brief Options for IterativeBlockJacobiPreconditionerLocalOperator
+    /** \brief Options for IterativeBlockJacobiPreconditionerLocalOperator
      *
-     * Controls the options of the iterative solver for the individual
-     * blocks.
+     * Controls the options of the iterative solver for the individual blocks.
      */
     struct BlockSolverOptions
     {
@@ -249,8 +248,34 @@ namespace Dune {
     }; // end struct BlockSolverOptions
 
 
-    template<typename BlockDiagonalLOP,
-             typename PointDiagonalLOP,
+    /**\brief Local operator that can be used to create a fully matrix-free Jacobi preconditioner
+     *
+     * Similar to the partial matrix-free class
+     * AssembledBlockJacobiPreconditionerLocalOperator this implements a local
+     * operator that can be used to implement a matrix-free Jacobi
+     * preconditioner. In contrast to the other class this implementation will
+     * be fully matrix-free.
+     *
+     * A matrix-free Jacobi preconditioner needs to be able to apply the
+     * inverse of the block diagonal D to a vector. In the partial matrix-free
+     * class mentioned above this was done by assembling the diagonal blocks
+     * and inverting this matrix. In order to get a fully matrix-free version
+     * we instead use a Krylow solver on the diagonal block. This can once
+     * again be done in a matrix-free way but we will need a preconditioner for
+     * iterative solver. For this purpose we use another Jacobi preconditioner
+     * that operates on a single block. This means we need to assemble the
+     * point diagonal of this block and apply the inverse.
+     *
+     * For examples see dune-pdelab/dune/pdelab/test/matrixfree/.
+     *
+     * \tparam BlockDiagonalLocalOperator A lop for local application of diagonal blocks
+     * \tparam PointDiagonalLocalOperator A lop for local assembly of point diagonal
+     * \tparam GridFunctionSpace A grid function space
+     * \tparam DomainField Domain field
+     * \tparam IterativeSolver Solver that will be used to 'invert' the diagonal blocks
+     */
+    template<typename BlockDiagonalLocalOperator,
+             typename PointDiagonalLocalOperator,
              typename GridFunctionSpace,
              typename DomainField,
              template<typename> class IterativeSolver>
@@ -258,29 +283,47 @@ namespace Dune {
       : public Dune::PDELab::FullVolumePattern
       , public Dune::PDELab::LocalOperatorDefaultFlags
     {
+      // Extract some types
       using GridView = typename GridFunctionSpace::Traits::GridViewType;
       using Grid = typename GridView::Traits::Grid;
       using EntityType = typename Grid::template Codim<0>::Entity;
       using value_type = DomainField;
-
       using LocalVector = Dune::PDELab::LocalVector<value_type>;
       using InvDiagonal = typename LocalVector::BaseContainer;
 
     public:
+      // Since this class implements something like D^{-1}v for a diagonal
+      // block matrix D we will only have volume methods. The underlying local
+      // operator that describes the block diagonal might of course have
+      // skeleton or boundary parts.
       static constexpr bool doPatternVolume = true;
       static constexpr bool doAlphaVolume = true;
-      static constexpr bool isLinear = BlockDiagonalLOP::isLinear;
+      static constexpr bool isLinear = BlockDiagonalLocalOperator::isLinear;
 
-      IterativeBlockJacobiPreconditionerLocalOperator(const BlockDiagonalLOP& blockDiagonalLop,
-                                                      const PointDiagonalLOP& pointDiagonalLop,
+      /**\brief Constructor
+       *
+       * \param blockDiagonalLocalOperator A local operator that can be used to (locally)
+       *   apply a diagonal block through the <applyLocalDiagonalBlock> function. You can
+       *   create such a local operator by wrapping your local operator into a
+       *   <BlockDiagonalLocalOperatorWrapper>
+       * \param pointDiagonalLocalOperator A local operator that can be used to (locally) assemble
+       *   the point diagonal of a diagonal block. You can create such a local operator by
+       *   wrapping your local operator into a <PointDiagonalLocalOperatorWrapper>
+       * \param gridFunctionSpace A grid function space
+       * \param solverStat A class for export solver statistics
+       * \param solveroptions A class for configuring your solver
+       * \param verbose Controls the amount of output
+       */
+      IterativeBlockJacobiPreconditionerLocalOperator(const BlockDiagonalLocalOperator& blockDiagonalLocalOperator,
+                                                      const PointDiagonalLocalOperator& pointDiagonalLocalOperator,
                                                       const GridFunctionSpace& gridFunctionSpace,
-                                                      SolverStatistics<int>& solver_stat,
+                                                      SolverStatistics<int>& solverStatiscits,
                                                       BlockSolverOptions solveroptions,
                                                       const bool verbose=0)
-        : _blockDiagonalLOP(blockDiagonalLop)
-        , _pointDiagonalLop(pointDiagonalLop)
+        : _blockDiagonalLocalOperator(blockDiagonalLocalOperator)
+        , _pointDiagonalLocalOperator(pointDiagonalLocalOperator)
         , _gridFunctionSpace(gridFunctionSpace)
-        , _solverStat(solver_stat)
+        , _solverStatistics(solverStatiscits)
         , _mapper(gridFunctionSpace.gridView().grid())
         , _invDiagonalCache(_mapper.size())
         , _solveroptions(solveroptions)
@@ -288,21 +331,24 @@ namespace Dune {
         , _requireSetup(true)
       {}
 
+      // Before we can call the jacobian_apply methods we need to assemble the
+      // point diagonal of the diagonal block. This will be used as a preconditioner
+      // for the iterative matrix free solver on the diagonal block.
       bool requireSetup()
       {
         return _requireSetup;
       }
-
       void setRequireSetup(bool v)
       {
         _requireSetup = v;
       }
 
-      /** \brief prepare tensor product preconditioner
-
-          - call the point diagonal operator
-          - store inverses of the result
-      */
+      /** \brief Prepare fully matrix-free preconditioner
+       *
+       * This assembles the point diagonal of the diagonal block and stores its
+       * inverse. During the apply step this will be used as a preconditioner
+       * for the solver on the local block.
+       */
       template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
       void alpha_volume(const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
       {
@@ -314,16 +360,16 @@ namespace Dune {
         _invDiagonalCache[cache_idx].resize(lfsu.size());
         using TmpView = impl::WeightedPointDiagonalAccumulationView<InvDiagonal>;
         TmpView view(_invDiagonalCache[cache_idx], y.weight());
-        assembleLocalPointDiagonal(_pointDiagonalLop, eg, lfsu, x, lfsv, view);
+        assembleLocalPointDiagonal(_pointDiagonalLocalOperator, eg, lfsu, x, lfsv, view);
 
-        // Invert this once now to be able to do multiplications lateron
+        // Invert this and store it (will later be used as a preconditioner)
         for(auto& val : _invDiagonalCache[cache_idx]){
           val = 1. / val;
         }
       }
 
 
-      // Jacobian apply for linear problems
+      //! Apply fully matrix-free preconditioner - linear case
       template<typename EG, typename LFSU, typename Z, typename LFSV, typename Y>
       void jacobian_apply_volume(const EG& eg, const LFSU& lfsu, const Z& z, const LFSV& lfsv, Y& y) const
       {
@@ -338,10 +384,8 @@ namespace Dune {
         impl::LocalPointJacobiPreconditioner<LocalVector> pointJacobi(invDiagonal,
                                                                       _solveroptions._weight,
                                                                       _solveroptions._precondition);
-        impl::BlockDiagonalOperator<BlockDiagonalLOP, LocalVector, Z, EG, LFSU, LFSV> op(_blockDiagonalLOP,
-                                                                                         eg,
-                                                                                         lfsu,
-                                                                                         lfsv);
+        impl::BlockDiagonalOperator<BlockDiagonalLocalOperator, LocalVector, Z, EG, LFSU, LFSV>
+          op(_blockDiagonalLocalOperator, eg, lfsu, lfsv);
         op.setWeight(y.weight());
         IterativeSolver<LocalVector> solver(op,
                                             pointJacobi,
@@ -357,7 +401,7 @@ namespace Dune {
         // Solve local blocks iteratively
         LocalVector y_tmp(lfsv.size(), 0.0);
         solver.apply(y_tmp, z_tmp, stat);
-        _solverStat.append(stat.iterations);
+        _solverStatistics.append(stat.iterations);
         std::transform(y.data(),
                        y.data()+y.size(),
                        y_tmp.data(),
@@ -366,7 +410,11 @@ namespace Dune {
       } // end jacobian_apply_volume
 
 
-      // Jacobian apply for nonlinear problems
+      /**\brief Apply fully matrix-free preconditioner - nonlinear case
+       *
+       * Compared to the linear case this needs to set the correct
+       * linearization point in the BlockDiagonalOperator
+       */
       template<typename EG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
       void jacobian_apply_volume(const EG& eg, const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv, Y& y) const
       {
@@ -381,10 +429,8 @@ namespace Dune {
         impl::LocalPointJacobiPreconditioner<LocalVector> pointJacobi(invDiagonal,
                                                                       _solveroptions._weight,
                                                                       _solveroptions._precondition);
-        impl::BlockDiagonalOperator<BlockDiagonalLOP, LocalVector, X, EG, LFSU, LFSV> op(_blockDiagonalLOP,
-                                                                                         eg,
-                                                                                         lfsu,
-                                                                                         lfsv);
+        impl::BlockDiagonalOperator<BlockDiagonalLocalOperator, LocalVector, X, EG, LFSU, LFSV>
+          op(_blockDiagonalLocalOperator, eg, lfsu, lfsv);
         op.setLinearizationPoint(x);
         op.setWeight(y.weight());
         IterativeSolver<LocalVector> solver(op,
@@ -401,7 +447,7 @@ namespace Dune {
         // Solve local blocks iteratively
         LocalVector y_tmp(lfsv.size(), 0.0);
         solver.apply(y_tmp, z_tmp, stat);
-        _solverStat.append(stat.iterations);
+        _solverStatistics.append(stat.iterations);
         std::transform(y.data(),
                        y.data()+y.size(),
                        y_tmp.data(),
@@ -410,10 +456,10 @@ namespace Dune {
       } // end jacobian_apply_volume
 
     private :
-      BlockDiagonalLOP _blockDiagonalLOP;
-      PointDiagonalLOP _pointDiagonalLop;
+      BlockDiagonalLocalOperator _blockDiagonalLocalOperator;
+      PointDiagonalLocalOperator _pointDiagonalLocalOperator;
       const GridFunctionSpace& _gridFunctionSpace;
-      SolverStatistics<int>& _solverStat;
+      SolverStatistics<int>& _solverStatistics;
       typename Dune::LeafSingleCodimSingleGeomTypeMapper<Grid, 0> _mapper;
       mutable std::vector<InvDiagonal> _invDiagonalCache;
       mutable BlockSolverOptions _solveroptions;
