@@ -9,21 +9,50 @@ namespace Dune {
   namespace PDELab {
 
     namespace impl {
+
+      // This can be used to get a vector view that returns a zero coefficient.
       template <typename View>
       class ZeroViewWrapper
       {
       public:
-
         using Container = typename View::Container;
-        using ElementType = typename View::ElementType;
-        using size_type = typename View::size_type;
+        using ElementType = typename View::value_type;
+        using SizeType = typename View::size_type;
 
-        ZeroViewWrapper(View& view, bool zero)
+        ZeroViewWrapper(const View& view, bool zero)
           : _view(view), _zero(zero), _zeroCoefficient(0.0)
         {}
 
         template <typename LFS>
-        const ElementType& operator()(const LFS& lfs, size_type i) const
+        const ElementType& operator()(const LFS& lfs, SizeType i) const
+        {
+          if (_zero)
+            return _zeroCoefficient;
+          else
+            return _view.container()(lfs, i);
+        }
+
+      private:
+        const View& _view;
+        bool _zero;
+        ElementType _zeroCoefficient;
+      };
+
+      // Interfaces look different in the fast-DG case
+      template <typename Container, typename LocalFunctionSpaceCache>
+      class ZeroViewWrapper<AliasedVectorView<Container, LocalFunctionSpaceCache>>
+      {
+      public:
+        using View = ConstAliasedVectorView<Container, LocalFunctionSpaceCache>;
+        using ElementType = typename View::ElementType;
+        using SizeType = typename View::size_type;
+
+        ZeroViewWrapper(const View& view, bool zero)
+          : _view(view), _zero(zero), _zeroCoefficient(0.0)
+        {}
+
+        template <typename LFS>
+        const ElementType& operator()(const LFS& lfs, SizeType i) const
         {
           if (_zero)
             return _zeroCoefficient;
@@ -46,6 +75,8 @@ namespace Dune {
         bool _zero;
         ElementType _zeroCoefficient;
       };
+
+
     } // namespace impl
 
     /** \brief A local operator that accumulates the off block diagonal
@@ -145,8 +176,8 @@ namespace Dune {
         // to get all contributions of other cell on the current one.
 
         // Set input coefficients z_s to zero
-        auto z_zero = impl::ZeroViewWrapper(z_s, true);
-        auto z_neigh = impl::ZeroViewWrapper(z_n, false);
+        impl::ZeroViewWrapper<Z> z_zero(z_s, true);
+        impl::ZeroViewWrapper<Z> z_neigh(z_n, false);
 
         // Only accumulate in y_s
         impl::BlockDiagonalAccumulationViewWrapper<Y> view_s_on(y_s, true);
@@ -178,8 +209,8 @@ namespace Dune {
         // to get all contributions of other cell on the current one.
 
         // Set input coefficients z_s to zero
-        auto z_zero = impl::ZeroViewWrapper(z_s, true);
-        auto z_neigh = impl::ZeroViewWrapper(z_n, false);
+        impl::ZeroViewWrapper<Z> z_zero(z_s, true);
+        impl::ZeroViewWrapper<Z> z_neigh(z_n, false);
 
         // Only accumulate in y_s
         impl::BlockDiagonalAccumulationViewWrapper<Y> view_s_on(y_s, true);
