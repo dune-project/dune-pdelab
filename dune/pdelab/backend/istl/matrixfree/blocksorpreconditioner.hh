@@ -163,6 +163,35 @@ namespace Dune {
         // _a_i = \sum_{j<i} A_ij v_j^{(k)} + \sum_{j>i} A_ij v_j^{(k-1)}
         //
         // after visiting all the intersections.
+        //
+        // NOTE: This only work for the FastDGGridOperator!
+        //
+        // This works perfectly for the FastDGGridOperator: The fast-DG
+        // grid operator directly works on the degrees of freedom vector, so if
+        // we set some values during the jacobian apply skeleton we will get
+        // the correct result in the jacobian apply post skeleton.
+        //
+        // For the regular GridOperator we instead write data into a local
+        // degrees of freedom vectors and the results will only written back to
+        // the global data structure during unbinding of the LFS. This means
+        // you get the same old coefficients in the
+        // jacobian_apply_volume_post_skeleton. There are two ways around this issue:
+        //
+        // 1. Copy data, e.g. by storing the values as members of this
+        // class. This does not require changing pdelab, but: Copying data is
+        // slow and the whole point of matrix-free solvers is to avoid
+        // unnecessary memory work. In the end all these solvers are intended
+        // to be used together with the FastDGGridOperator.
+        //
+        // 2. It would be possible to change the GridOperator assembler. This
+        // is not really appealing since it's behavior is perfect for the
+        // regular use case and having an additional unbind/bind would slow
+        // down those regular use cases.
+        //
+        // It is of course possible to achieve both: A fast implementation in
+        // case of FastDGGridOperator and a slower one for regular GridOperator
+        // involving data movement but this would make this whole
+        // implementation even more complicated without big benefits.
         W _a_i_view(_a_i, y_s.weight());
         if (ig.inside().partitionType() == Dune::InteriorEntity){
           // Note: Since the block off diagonal local operator works two sided
@@ -181,9 +210,9 @@ namespace Dune {
                                    const LFSU& lfsu_n, const X& x_n, const Z& z_n, const LFSV& lfsv_n,
                                    Y& y_s, Y& y_n) const
       {
+        // See documentation above!
         W _a_i_view(_a_i, y_s.weight());
         if (ig.inside().partitionType() == Dune::InteriorEntity)
-          // TODO: Only works for FastDGGridOperator (y_* being an AliasedVectorView)
           _blockOffDiagonalLOP.jacobian_apply_skeleton(ig, lfsu_s, x_s, y_s, lfsv_s, lfsu_n, x_n, y_n, lfsv_s, _a_i_view, _a_i_view);
       }
 

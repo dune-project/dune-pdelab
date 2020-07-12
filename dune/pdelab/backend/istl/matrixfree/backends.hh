@@ -10,22 +10,53 @@
 #include<dune/istl/solvers.hh>
 
 #include<dune/pdelab/backend/istl/matrixfree/gridoperatorpreconditioner.hh>
+#include<dune/pdelab/gridoperator/fastdg.hh>
+#include<dune/pdelab/backend/istl/matrixfree/blocksorpreconditioner.hh>
 
 namespace Dune {
   namespace PDELab {
 
-    /** \brief Sequential matrix-free solver backend for the combinations {CGSolver,BiCGSTABSolver,MINRESSolver} x {SeqMatrixFreePreconditioner}.
+    namespace impl{
 
-        \tparam GO     Grid operator implementing the matrix-free operator application
-        \tparam PrecGO Grid operator implementing matrix-free preconditioning
+      // Can be used to check if a local operator is a
+      // BlockSORPreconditionerLocalOperator
+      template <typename>
+      struct isBlockSORPreconditionerLocalOperator : std::false_type {};
 
-        The grid operator \p PrecGO can be a grid operator build from one of
-        the following local operators:
+      template <typename JacobianLOP, typename BlockOffDiagonalLOP, typename GridFunctionSpace>
+      struct isBlockSORPreconditionerLocalOperator<BlockSORPreconditionerLocalOperator<JacobianLOP,
+                                                                                       BlockOffDiagonalLOP,
+                                                                                       GridFunctionSpace>>
+        : std::true_type {};
 
-        - AssembledBlockJacobiPreconditionerLocalOperator for partial matrix-free Jacobi
-        - IterativeBlockJacobiPreconditionerLocalOperator for fully matrix-free Jacobi
-        - BlockSORPreconditionerLocalOperator for matrix-free SOR
-    */
+      // Can be used to check if a grid operator is a FastDGGridOperator
+      template <typename>
+      struct isFastDGGridOperator : std::false_type {};
+
+      template<typename GFSU, typename GFSV, typename LOP,
+               typename MB, typename DF, typename RF, typename JF,
+               typename CU, typename CV>
+      struct isFastDGGridOperator<FastDGGridOperator<GFSU, GFSV, LOP, MB, DF, RF, JF, CU, CV >>
+        : std::true_type {};
+
+    }
+
+    /**\brief Sequential matrix-free solver backend
+     *
+     * This can be used with a combination of {CGSolver, BiCGSTABSolver,
+     * MINRESSolver} as a solver and grid operator build from one of the
+     * following local operators:
+     *
+     * - AssembledBlockJacobiPreconditionerLocalOperator for partial matrix-free Jacobi
+     * - IterativeBlockJacobiPreconditionerLocalOperator for fully matrix-free Jacobi
+     * - BlockSORPreconditionerLocalOperator for matrix-free SOR
+     *
+     * Note: If you use BlockSORPreconditionerLocalOperator you need to use
+     * FastDGGridOperator!
+
+     *  \tparam GO     Grid operator implementing the matrix-free operator application
+     *  \tparam PrecGO Grid operator implementing matrix-free preconditioning
+     */
     template<class GO, class PrecGO,
              template<class> class Solver>
     class ISTLBackend_SEQ_MatrixFree_Base
@@ -42,7 +73,18 @@ namespace Dune {
                                       unsigned maxiter=5000, int verbose=1)
         : opa_(go), seqprec_(precgo)
         , maxiter_(maxiter), verbose_(verbose)
-      {}
+      {
+        // First lets brake that down: The case we want to avoid is having SOR
+        // with regular grid operator. We check for SOR and not fast grid
+        // operator and assert that this is not the case.
+        //
+        // For more information why this is not working have a look at the
+        // documentation of the class BlockSORPreconditionerLocalOperator
+        static_assert(not(impl::isBlockSORPreconditionerLocalOperator<
+                          typename PrecGO::Traits::LocalAssembler::LocalOperator>::value
+                          and not impl::isFastDGGridOperator<PrecGO>::value),
+                      "If you use the BlockSORPreconditioner you need to use FastDGGridOperator!");
+      }
 
       void apply(V& z, W& r, typename V::ElementType reduction)
       {
