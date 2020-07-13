@@ -172,6 +172,7 @@
 #include <dune/pdelab/backend/istl/istlsolverbackend.hh>
 #include <dune/pdelab/backend/istl/matrixfree/assembledblockjacobipreconditioner.hh>
 #include <dune/pdelab/backend/istl/matrixfree/backends.hh>
+#include <dune/pdelab/backend/istl/matrixfree/checklopinterface.hh>
 #include <dune/pdelab/backend/istl/matrixfree/blocksorpreconditioner.hh>
 #include <dune/pdelab/backend/istl/matrixfree/gridoperatorpreconditioner.hh>
 #include <dune/pdelab/backend/istl/matrixfree/iterativeblockjacobipreconditioner.hh>

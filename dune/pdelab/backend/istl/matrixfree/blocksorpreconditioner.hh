@@ -125,8 +125,8 @@ namespace Dune {
       }
 
       //! linearized operator application, volume terms
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-      void jacobian_apply_volume(const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y) const
+      template<typename EG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
+      void jacobian_apply_volume(const EG& eg, const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv, Y& y) const
       {
         _a_i = 0.0;
       }
@@ -251,8 +251,8 @@ namespace Dune {
       }
 
       //! apply preconditioner after skeleton terms, linearized version
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-      void jacobian_apply_volume_post_skeleton(const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y) const
+      template<typename EG, typename LFSU, typename X, typename Z, typename LFSV, typename Y>
+      void jacobian_apply_volume_post_skeleton(const EG& eg, const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv, Y& y) const
       {
         // static checks
         //----------------------

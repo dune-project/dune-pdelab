@@ -12,6 +12,8 @@
 #include<dune/pdelab/backend/istl/matrixfree/gridoperatorpreconditioner.hh>
 #include<dune/pdelab/gridoperator/fastdg.hh>
 #include<dune/pdelab/backend/istl/matrixfree/blocksorpreconditioner.hh>
+#include<dune/pdelab/backend/istl/matrixfree/checklopinterface.hh>
+
 
 namespace Dune {
   namespace PDELab {
@@ -84,6 +86,31 @@ namespace Dune {
                           typename PrecGO::Traits::LocalAssembler::LocalOperator>::value
                           and not impl::isFastDGGridOperator<PrecGO>::value),
                       "If you use the BlockSORPreconditioner you need to use FastDGGridOperator!");
+
+
+        // We need to assert that the local operator uses the new interface and not the old one
+        static_assert(!decltype(Dune::PDELab::impl::hasOldLOPInterface(go.localAssembler().localOperator()))::value,
+                      "\n"
+                      "In order to use the matrix-free solvers your grid operator must follow the new\n"
+                      "local operator interface for nonlinear jacobian applys, where the current\n"
+                      "solution and the linearization point can have different types. This is best\n"
+                      "explained by an example.\n\n"
+                      "old: void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y) const {}\n"
+                      "new: void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv, Y& y) const {}\n\n"
+                      "Note that in the new interface the type of z is Z and doesn't have to be X.\n"
+                      "You need to adjust all the nonlinear jacobian apply methods in your local operator\n"
+                      "in a similar way.");
+        static_assert(!decltype(Dune::PDELab::impl::hasOldLOPInterface(precgo.localAssembler().localOperator()))::value,
+                      "\n"
+                      "In order to use the matrix-free solvers your grid operator must follow the new\n"
+                      "local operator interface for nonlinear jacobian applys, where the current\n"
+                      "solution and the linearization point can have different types. This is best\n"
+                      "explained by an example.\n\n"
+                      "old: void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y) const {}\n"
+                      "new: void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv, Y& y) const {}\n\n"
+                      "Note that in the new interface the type of z is Z and doesn't have to be X.\n"
+                      "You need to adjust all the nonlinear jacobian apply methods in your local operator\n"
+                      "in a similar way.");
       }
 
       void apply(V& z, W& r, typename V::ElementType reduction)
