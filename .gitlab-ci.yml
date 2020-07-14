@@ -32,7 +32,7 @@ debian:10--gcc:
 
 debian:10--clang:
   <<: *common
-  image: registry.dune-project.org/docker/ci/dune:2.7-debian-10-clang-6-libcpp-17
+  image: registry.dune-project.org/docker/ci/dune:2.7-debian-10-clang-7-libcpp-17
   tags:
     - "cores:4"
     - "mem:16G"
