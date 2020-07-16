@@ -175,22 +175,6 @@ namespace Dune {
           return _container.data();
         }
 
-        // Note: This whole method is only needed since the generated point
-        // diagonal localoperator use matrix based accumulation calls for
-        // now. This is something that needs to be fixed in the nonfast case of
-        // code generation
-        template <typename LFSV, typename LFSU>
-        void accumulate(const LFSV& lfsv, size_type i, const LFSU& lfsu, size_type j, value_type value)
-        {
-          assert (i==j);
-
-          // palpo TODO: The if statement is only a workaround. The nonfast
-          // generated local operator need to be adjusted to drop the
-          // nondiagonal entries...
-          if (i == j)
-            _container.data()[lfsv.localIndex(i)] += _weight * value;
-        }
-
         template<typename LFSV>
         void accumulate(const LFSV& lfsv, size_type i, value_type value)
         {
