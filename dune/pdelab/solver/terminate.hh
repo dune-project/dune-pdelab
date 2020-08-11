@@ -48,6 +48,18 @@ namespace Dune::PDELab
       std::cout << _maxIterations << std::endl;
     }
 
+    //! Set the maximum iterations allowed in the Newton solver
+    void setMaxIterations(const unsigned int maxIterations)
+    {
+      _maxIterations = maxIterations;
+    }
+
+    //! Set if the Newton solver should always perform an iteration
+    void setForceIteration(const bool forceIteration)
+    {
+      _force_iteration = forceIteration;
+    }
+
   private:
     Solver& _solver;
     unsigned int _maxIterations = 40;
