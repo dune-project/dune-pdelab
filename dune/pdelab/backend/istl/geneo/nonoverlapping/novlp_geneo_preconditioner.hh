@@ -73,7 +73,7 @@ namespace Dune {
     };
 
 
-    template <typename GO, typename ScalarMatrix, typename Matrix, typename ScalarVector, typename Vector>
+    template <typename GO, typename Matrix, typename Vector>
     class NonoverlappingGenEOPreconditioner : public Dune::Preconditioner<Vector,Vector> {
 
       using V = typename GO::Domain;
@@ -230,7 +230,7 @@ namespace Dune {
           }
         }
 
-        prec = std::make_shared<Dune::PDELab::ISTL::NonoverlappingTwoLevelOverlappingAdditiveSchwarz<GV, ScalarMatrix, Matrix, ScalarVector, Vector>>(adapter, *A_extended, coarse_space, true, verbose);
+        prec = std::make_shared<Dune::PDELab::ISTL::NonoverlappingTwoLevelOverlappingAdditiveSchwarz<GV, Matrix, Vector>>(adapter, *A_extended, coarse_space, true, verbose);
 
       }
 
@@ -241,7 +241,7 @@ namespace Dune {
       std::shared_ptr<Matrix> A_extended;
       std::shared_ptr<Vector> part_unity;
 
-      std::shared_ptr<Dune::PDELab::ISTL::NonoverlappingTwoLevelOverlappingAdditiveSchwarz<typename GO::Traits::TrialGridFunctionSpace::Traits::GridView, ScalarMatrix, Matrix, ScalarVector, Vector>> prec = nullptr;
+      std::shared_ptr<Dune::PDELab::ISTL::NonoverlappingTwoLevelOverlappingAdditiveSchwarz<typename GO::Traits::TrialGridFunctionSpace::Traits::GridView, Matrix, Vector>> prec = nullptr;
 
     };
 

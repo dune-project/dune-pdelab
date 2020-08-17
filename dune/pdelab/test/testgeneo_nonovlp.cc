@@ -227,7 +227,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   const int algebraic_overlap = 1;
   int nev = 2;
 
-  auto prec = std::make_shared<Dune::PDELab::NonoverlappingGenEOPreconditioner<GO, Matrix, Matrix, Vector, Vector>>(go, A, algebraic_overlap, nonzeros, eigenvalue_threshold, nev, -1, 0.001, verbose);//, eigenvalue_threshold, 2, -1, .001, verbose);
+  auto prec = std::make_shared<Dune::PDELab::NonoverlappingGenEOPreconditioner<GO, Matrix, Vector>>(go, A, algebraic_overlap, nonzeros, eigenvalue_threshold, nev, -1, 0.001, verbose);//, eigenvalue_threshold, 2, -1, .001, verbose);
 
 
 
