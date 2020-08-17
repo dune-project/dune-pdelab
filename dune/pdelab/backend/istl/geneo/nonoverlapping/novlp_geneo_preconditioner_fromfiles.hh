@@ -55,7 +55,7 @@ namespace Dune {
       }
 
       NonoverlappingGenEOPreconditionerFromFiles(const GO& go, const typename GO::Jacobian& A, int algebraic_overlap, int avg_nonzeros, const double eigenvalue_threshold, int& nev,
-                          int nev_arpack = -1, const double shift = 0.001, int verbose = 0, int multiscale = 0, std::vector<int> proc_to_be_solved = {0})
+                          int nev_arpack = -1, const double shift = 0.001, int verbose = 0, int multiscale = 0, std::vector<int> proc_to_be_solved = {0}, std::string path_to_storage = "")
       : A_ovlp(go){
 
         V x(go.trialGridFunctionSpace(),0.0); // NOTE: We assume linear problems, so simply set x to zero here!
@@ -145,7 +145,7 @@ namespace Dune {
           }
         }
 
-        std::string basename = "Offline/EV";
+        std::string basename = path_to_storage+"EV";
 
         if (multiscale==0) { // Classic case: no need to use multiscale FRAMEWORK
           subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, eigenvalue_threshold, nev, nev_arpack, shift,false,2);
@@ -173,10 +173,11 @@ namespace Dune {
 
            //auto fromfile_subdomainbasis;
            auto fromfile_subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasisFromFiles<GV, Matrix, Vector>>(adapter, basename);
+           fromfile_subdomainbasis->to_file("rewrite_"+basename, rank);
+           // auto tmp = (*subdomainbasis->get_basis_vector(0));
+           // tmp -= (*fromfile_subdomainbasis->get_basis_vector(0));
+           // std::cout << tmp.two_norm() << std::endl;
 
-           std::cout << (*subdomainbasis->get_basis_vector(0))[0] << std::endl;
-           std::cout << (*fromfile_subdomainbasis->get_basis_vector(0))[0] << std::endl;
-           std::cout << (*subdomainbasis->get_basis_vector(0))[0] - (*fromfile_subdomainbasis->get_basis_vector(0))[0] << std::endl;
         }
 
         auto coarse_space = std::make_shared<Dune::PDELab::NewSubdomainProjectedCoarseSpace<GV, Matrix, Vector>>(adapter, gv, *A_extended, subdomainbasis, verbose);

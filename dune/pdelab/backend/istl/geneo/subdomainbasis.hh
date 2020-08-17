@@ -47,9 +47,7 @@ namespace Dune {
          // As this size is variable for each processor, it is the way to keep
          // this information after consecutive runs
          std::ofstream output_basis_size;
-         std::ostringstream osrank;
-         osrank << rank;
-         std::string filename = basename + "_r" + osrank.str() + "_size.txt";
+         std::string filename = basename + "_r" + std::to_string(rank) + "_size.txt";
          output_basis_size.open(filename, std::ios::out);
          output_basis_size << local_basis.size();
          output_basis_size.close();
@@ -59,7 +57,10 @@ namespace Dune {
            std::ostringstream rfilename;
            rfilename << basename << "_r" << rank << "_" << basis_index << ".mm";
            std::ofstream file(rfilename.str().c_str());
+           // Dune::storeMatrixMarket(*local_basis[basis_index], )
+
            file.setf(std::ios::scientific,std::ios::floatfield);
+           file.precision(15);
            Dune::writeMatrixMarket(*local_basis[basis_index], file);
            file.close();
          }
