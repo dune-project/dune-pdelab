@@ -166,7 +166,7 @@ namespace Dune {
                 }
               }
             }
-            gfs_.gridView().comm().broadcast(&entries_pos, couplings, rank);
+            gfs_.gridView().comm().broadcast(entries_pos, couplings, rank);
 
             // Communicate actual entries
             field_type entries[couplings];
@@ -183,7 +183,7 @@ namespace Dune {
                 }
               }
             }
-            MPI_Bcast(&entries, couplings, MPITraits<field_type>::getType(), rank, gfs_.gridView().comm());
+            gfs_.gridView().comm().broadcast(entries, couplings, rank);
 
             // Build matrix row based on pattern
             for (rank_type i = 0; i < couplings; i++)
