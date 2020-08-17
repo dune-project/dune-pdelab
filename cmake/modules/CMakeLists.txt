@@ -1,9 +1,3 @@
-set(modules
-  CorrectWindowsPaths.cmake
-  DunePdelabMacros.cmake
-  FindPackageMultipass.cmake
-  FindPETSc.cmake
-  ResolveCompilerPaths.cmake
-  UseEigen.cmake
-  UsePETSc.cmake)
-install(FILES ${modules} DESTINATION ${DUNE_INSTALL_MODULEDIR})
+install(FILES DunePdelabMacros.cmake
+              UseEigen.cmake
+        DESTINATION ${DUNE_INSTALL_MODULEDIR})
