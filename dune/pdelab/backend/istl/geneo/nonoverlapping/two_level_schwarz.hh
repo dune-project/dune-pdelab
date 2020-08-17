@@ -24,7 +24,7 @@ namespace Dune {
       * \brief Two level overlapping Schwarz preconditioner with arbitrary coarse space.
       */
       //template<class GFS, class M, class X, class Y>
-      template<typename GridView, typename ScalarMatrix, typename Matrix, typename ScalarVector, typename Vector>
+      template<typename GridView, typename Matrix, typename Vector>
       class NonoverlappingTwoLevelOverlappingAdditiveSchwarz
        : public Dune::Preconditioner<Vector,Vector>
       {
@@ -160,7 +160,7 @@ namespace Dune {
 
             if (verbosity_ > 2) Dune::printvector(std::cout, coarse_defect_, "coarse_defect_ ", "", 1, 10, 17);
 
-            ScalarVector v0(coarse_space_->basis_size());
+            typename CoarseSpace<Vector>::COARSE_V v0(coarse_space_->basis_size());
             coarse_solver_.apply(v0, coarse_defect_, result);
             if (verbosity_ > 2) Dune::printvector(std::cout, v0, "v0 ", "");
             coarse_space_->prolongate(v0, prolongated_);
@@ -222,9 +222,9 @@ namespace Dune {
         int apply_calls_ = 0;
 
         std::shared_ptr<CoarseSpace<Vector> > coarse_space_;
-        Dune::UMFPack<ScalarMatrix> coarse_solver_;
+        Dune::UMFPack<typename CoarseSpace<Vector>::COARSE_M> coarse_solver_;
 
-        ScalarVector coarse_defect_;
+        typename CoarseSpace<Vector>::COARSE_V coarse_defect_;
         Vector prolongated_;
 
       };
