@@ -39,10 +39,6 @@ PDELab depends on the following software packages:
 
 The following software is optional:
 
-* [PETSc 3.3][5] - there is an experimental backend for PETSc vectors and
-  matrices. See [CHANGELOG.md][11] for details. WARNING: The PETSC backend is
-  currently broken.
-
 * [Eigen 3.1.0][6] - there is an experimental backend for Eigen vectors and
   matrices as well as some solvers. See [CHANGELOG.md][11] for details.
 
@@ -70,7 +66,6 @@ Links
  [1]: http://www.dune-project.org
  [2]: https://dune-project.org/doc/beginners-resources-pdelab/
  [4]: http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
- [5]: http://www.mcs.anl.gov/petsc/
  [6]: http://eigen.tuxfamily.org
  [8]: http://lists.dune-project.org/mailman/listinfo/dune-pdelab
  [9]: http://gitlab.dune-project.org/pdelab/dune-pdelab/issues
