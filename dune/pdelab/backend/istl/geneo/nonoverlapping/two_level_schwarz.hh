@@ -54,26 +54,33 @@ namespace Dune {
           return Dune::SolverCategory::nonoverlapping;
         }
 
-        /*! \brief Constructor.
-
-          Constructor gets all parameters to operate the prec.
-          \param A The matrix to operate on.
-          \param n The number of iterations to perform.
-          \param w The relaxation factor.
-        */
-        //NonoverlappingTwoLevelOverlappingAdditiveSchwarz (const GFS& gfs, const M& AF, std::shared_ptr<CoarseSpace<X> > coarse_space, bool coarse_space_active = true, int verbosity = 0)
-        NonoverlappingTwoLevelOverlappingAdditiveSchwarz (const NonoverlappingOverlapAdapter<GridView, Vector, Matrix>& adapter, const Matrix& A, std::shared_ptr<CoarseSpace<Vector> > coarse_space, bool coarse_space_active = true, int verbosity = 0)
+        NonoverlappingTwoLevelOverlappingAdditiveSchwarz (const NonoverlappingOverlapAdapter<GridView, Vector, Matrix>& adapter, std::shared_ptr<Matrix> A, const Vector& part_unity, std::shared_ptr<CoarseSpace<Vector> > coarse_space, bool coarse_space_active = true, int verbosity = 0)
         : verbosity_(verbosity),
           coarse_space_active_(coarse_space_active),
-          //gfs_(gfs),
-          adapter_(adapter),//gridview, A, avg, overlap), // TODO: Pass in from outside
+          adapter_(adapter),
           A_(A),
-          solverf_(A,false),
           coarse_space_(coarse_space),
           coarse_solver_ (*coarse_space_->get_coarse_system()),
           coarse_defect_(coarse_space_->basis_size(), coarse_space_->basis_size()),
           prolongated_(adapter_.getExtendedSize())
         {
+          const int block_size = Vector::block_type::dimension;
+
+          // Apply Dirichlet conditions to matrix on processor boundaries, inferred from partition of unity
+          for (auto rIt=A_->begin(); rIt!=A_->end(); ++rIt){
+            for(int block_i = 0; block_i < block_size; block_i++){
+              if (part_unity[rIt.index()][block_i] == .0) {
+                for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt)
+                {
+                  for(int block_j = 0; block_j < block_size; block_j++){
+                    (*cIt)[block_i][block_j] = (rIt.index() == cIt.index() && block_i == block_j) ? 1.0 : 0.0;
+                  }
+                }
+              }
+            }
+          }
+
+          solverf_ = std::make_shared<Dune::UMFPack<Matrix>>(*A_,false);
         }
 
         /*!
@@ -113,7 +120,7 @@ namespace Dune {
 
           const int block_size = Vector::block_type::dimension;
           Vector b_cpy(b);// FIXME: Avoid this
-          for (auto rIt=A_.begin(); rIt!=A_.end(); ++rIt) {
+          for (auto rIt=A_->begin(); rIt!=A_->end(); ++rIt) {
               for(int block_i = 0; block_i < block_size; block_i++){
                   bool isDirichlet = true;
                   for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt)
@@ -135,7 +142,7 @@ namespace Dune {
           if (verbosity_ > 2) Dune::printvector(std::cout, b_cpy, "defect (Dirichlet applied) ", "", 1, 10, 17);
 
           Dune::InverseOperatorResult result;
-          solverf_.apply(correction,b_cpy,result);
+          solverf_->apply(correction,b_cpy,result);
 
           if (verbosity_ > 2) Dune::printvector(std::cout, correction, "correction (1lvl) ", "", 1, 10, 17);
 
@@ -215,8 +222,8 @@ namespace Dune {
 
         NonoverlappingOverlapAdapter<GridView, Vector, Matrix> adapter_;
 
-        const Matrix& A_;
-        Dune::UMFPack<Matrix> solverf_;
+        std::shared_ptr<Matrix> A_ = nullptr;
+        std::shared_ptr<Dune::UMFPack<Matrix>> solverf_ = nullptr;
 
         double coarse_time_ = 0.0;
         int apply_calls_ = 0;
