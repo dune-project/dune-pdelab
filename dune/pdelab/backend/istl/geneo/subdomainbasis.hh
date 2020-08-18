@@ -42,29 +42,22 @@ namespace Dune {
       /*!
        * \brief Write EV basis in .mm format
        */
-       void to_file(std::string basename, int rank) {
-         // For each processor, printing the size of the associated subdomainbasis.
-         // As this size is variable for each processor, it is the way to keep
-         // this information after consecutive runs
-         std::ofstream output_basis_size;
-         std::string filename = basename + "_r" + std::to_string(rank) + "_size.txt";
-         output_basis_size.open(filename, std::ios::out);
-         output_basis_size << local_basis.size();
-         output_basis_size.close();
+      void to_file(std::string basename, int rank) {
+        // For each processor, printing the size of the associated subdomainbasis.
+        // As this size is variable for each processor, it is the way to keep
+        // this information after consecutive runs
+        std::ofstream output_basis_size;
+        std::string filename = basename + "_" + std::to_string(rank) + "_size.txt";
+        output_basis_size.open(filename, std::ios::out);
+        output_basis_size << local_basis.size();
+        output_basis_size.close();
 
-         // Writing subdomainbasis using matrixmarket format
-         for (int basis_index = 0; basis_index < local_basis.size(); basis_index++) {
-           std::ostringstream rfilename;
-           rfilename << basename << "_r" << rank << "_" << basis_index << ".mm";
-           std::ofstream file(rfilename.str().c_str());
-           // Dune::storeMatrixMarket(*local_basis[basis_index], )
-
-           file.setf(std::ios::scientific,std::ios::floatfield);
-           file.precision(15);
-           Dune::writeMatrixMarket(*local_basis[basis_index], file);
-           file.close();
-         }
-       }
+        // Writing subdomainbasis using matrixmarket format
+        for (int basis_index = 0; basis_index < local_basis.size(); basis_index++) {
+          std::string filename = basename + "_" + std::to_string(basis_index) + "_" + std::to_string(rank) + ".mm";
+          Dune::storeMatrixMarket(*local_basis[basis_index], filename, 15);
+        }
+      }
 
     protected:
       std::vector<std::shared_ptr<X> > local_basis;

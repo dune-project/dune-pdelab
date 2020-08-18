@@ -28,7 +28,7 @@ namespace Dune {
         int basis_size;
 
         // Get the basis size from file
-        std::string filename_basis_size = basename+ "_r" + osrank.str() + "_size.txt";
+        std::string filename_basis_size = basename+ "_" + osrank.str() + "_size.txt";
         std::ifstream input_basis_size;
         input_basis_size.open(filename_basis_size, std::ios::in);
         if (!input_basis_size.is_open())
@@ -41,7 +41,7 @@ namespace Dune {
 
           std::shared_ptr<X> ev = std::make_shared<X>();
           std::ostringstream rfilename;
-          rfilename<< basename << "_r" << adapter.gridView().comm().rank() << "_" << basis_index << ".mm";
+          rfilename<< basename <<  "_" << basis_index  << "_" << adapter.gridView().comm().rank() << ".mm";
           std::ifstream file;
           file.open(rfilename.str().c_str(), std::ios::in);
           if(!file)
