@@ -512,15 +512,15 @@ namespace Dune {
 
     private:
 
-      static constexpr bool hasAllEntities(Dune::Dim<Grid::dimension + 1>)
+      static constexpr bool hasAllEntityIterators(Dune::Dim<Grid::dimension + 1>)
       {
         return true;
       }
 
       template<dim_type dim = 0>
-      static constexpr bool hasAllEntities(Dune::Dim<dim> = {})
+      static constexpr bool hasAllEntityIterators(Dune::Dim<dim> = {})
       {
-        return Capabilities::hasEntity<Grid,dim>::v && hasAllEntities(Dune::Dim<dim+1>{});
+        return Capabilities::hasEntityIterator<Grid,dim>::v && hasAllEntityIterators(Dune::Dim<dim+1>{});
       }
 
       bool update(bool force)
@@ -529,7 +529,7 @@ namespace Dune {
           return false;
         _indices.assign(_gt_offsets.back(),invalidIndex());
         _mapped_gt_offsets[0] = 0;
-        update_codims(std::integral_constant<bool,hasAllEntities()>{});
+        update_codims(std::integral_constant<bool,hasAllEntityIterators()>{});
         std::partial_sum(_mapped_gt_offsets.begin(),_mapped_gt_offsets.end(),_mapped_gt_offsets.begin());
         return true;
       }
