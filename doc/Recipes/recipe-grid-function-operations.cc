@@ -40,63 +40,50 @@
 
 int main(int argc, char** argv)
 {
-  try{
-    // Initialize Mpi
-    Dune::MPIHelper::instance(argc, argv);
+  // Initialize Mpi
+  Dune::MPIHelper::instance(argc, argv);
 
-    // need a grid in order to test grid functions
-    constexpr unsigned int dim = 2;
-    Dune::FieldVector<double,dim> L(5.0);
-    std::array<int,dim> N(Dune::filledArray<dim,int>(64));
+  // need a grid in order to test grid functions
+  constexpr unsigned int dim = 2;
+  Dune::FieldVector<double,dim> L(5.0);
+  std::array<int,dim> N(Dune::filledArray<dim,int>(64));
 
-    typedef Dune::YaspGrid<dim> Grid;
-    Grid grid(L,N);
+  typedef Dune::YaspGrid<dim> Grid;
+  Grid grid(L,N);
 
-    // [Defining functions]
-    auto analyticFunction1 = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& x){
-      return exp(-(x*x));
-    });
-    auto analyticFunction2 = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& x){
-      return x[0]*3.0;
-    });
-    //! [Defining functions]
-
-
-    {
-      // [Instantiating DifferenceSquaredAdapter]
-      Dune::PDELab::DifferenceSquaredAdapter<decltype(analyticFunction1),decltype(analyticFunction2)> difference(analyticFunction1, analyticFunction2);
-      // Note: Newer compiler versions do not require template arguments here!
-      //! [Instantiating DifferenceSquaredAdapter]
-      auto integral = Dune::PDELab::integrateGridFunction(difference,10);
-      std::cout << "Integral: " << integral << std::endl;
-    }
-
-    {
-      // [Defining operations]
-      auto difference = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& element, const auto& xlocal){
-        Dune::FieldVector<double,1> y1;
-        analyticFunction1.evaluate(element, xlocal, y1);
-        Dune::FieldVector<double,1> y2;
-        analyticFunction2.evaluate(element, xlocal, y2);
-        y2 -= y1;
-        return y2.two_norm2();
-      });
-      //! [Defining operations]
-      // [Compute integral]
-      auto integral = Dune::PDELab::integrateGridFunction(difference,10);
-      //! [Compute integral]
-      std::cout << "Integral: " << integral << std::endl;
-    }
+  // [Defining functions]
+  auto analyticFunction1 = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& x){
+    return exp(-(x*x));
+  });
+  auto analyticFunction2 = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& x){
+    return x[0]*3.0;
+  });
+  //! [Defining functions]
 
 
-    return 0;
+  {
+    // [Instantiating DifferenceSquaredAdapter]
+    Dune::PDELab::DifferenceSquaredAdapter<decltype(analyticFunction1),decltype(analyticFunction2)> difference(analyticFunction1, analyticFunction2);
+    // Note: Newer compiler versions do not require template arguments here!
+    //! [Instantiating DifferenceSquaredAdapter]
+    auto integral = Dune::PDELab::integrateGridFunction(difference,10);
+    std::cout << "Integral: " << integral << std::endl;
   }
-  catch (Dune::Exception &e){
-    std::cerr << "Dune reported error: " << e << std::endl;
-    return 1;
-  }
-  catch (...){
-    std::cerr << "Unknown exception thrown!" << std::endl;
-    return 1;
+
+  {
+    // [Defining operations]
+    auto difference = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& element, const auto& xlocal){
+      Dune::FieldVector<double,1> y1;
+      analyticFunction1.evaluate(element, xlocal, y1);
+      Dune::FieldVector<double,1> y2;
+      analyticFunction2.evaluate(element, xlocal, y2);
+      y2 -= y1;
+      return y2.two_norm2();
+    });
+    //! [Defining operations]
+    // [Compute integral]
+    auto integral = Dune::PDELab::integrateGridFunction(difference,10);
+    //! [Compute integral]
+    std::cout << "Integral: " << integral << std::endl;
   }
 }

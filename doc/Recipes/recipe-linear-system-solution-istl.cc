@@ -153,121 +153,109 @@ public:
 
 int main(int argc, char **argv)
 {
-  try {
-    // initialize MPI, finalize is done automatically on exit
-    Dune::MPIHelper::instance(argc,argv);
+  // initialize MPI, finalize is done automatically on exit
+  Dune::MPIHelper::instance(argc,argv);
 
-    // define parameters
-    typedef double NumberType;
+  // define parameters
+  typedef double NumberType;
 
-    // need a grid in order to test grid functions
-    constexpr unsigned int dim = 1;
-    constexpr unsigned int degree = 1;
-    constexpr std::size_t nonzeros = Dune::power(2*degree+1,dim);
+  // need a grid in order to test grid functions
+  constexpr unsigned int dim = 1;
+  constexpr unsigned int degree = 1;
+  constexpr std::size_t nonzeros = Dune::power(2*degree+1,dim);
 
-    Dune::FieldVector<NumberType,dim> L(1.0);
-    std::array<int,dim> N(Dune::filledArray<dim,int>(5));
+  Dune::FieldVector<NumberType,dim> L(1.0);
+  std::array<int,dim> N(Dune::filledArray<dim,int>(5));
 
-    typedef Dune::YaspGrid<dim> Grid;
-    Grid grid(L,N);
-
-
-    // make grid
-    typedef Dune::YaspGrid<dim> GM;
+  typedef Dune::YaspGrid<dim> Grid;
+  Grid grid(L,N);
 
 
-    // make problem parameters
-    typedef GenericEllipticProblem<typename GM::LeafGridView,NumberType> Problem;
-    Problem problem;
-    typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
-    BCType bctype(grid.leafGridView(),problem);
+  // make grid
+  typedef Dune::YaspGrid<dim> GM;
 
 
-    typedef typename GM::ctype DF;
-    typedef Dune::PDELab::QkLocalFiniteElementMap<GM::LeafGridView,DF,NumberType,1> FEM;
-    FEM fem(grid.leafGridView());
+  // make problem parameters
+  typedef GenericEllipticProblem<typename GM::LeafGridView,NumberType> Problem;
+  Problem problem;
+  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
+  BCType bctype(grid.leafGridView(),problem);
 
-    typedef Dune::PDELab::GridFunctionSpace<GM::LeafGridView,FEM,
-    Dune::PDELab::ConformingDirichletConstraints,
-    Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>> GFS;
-    GFS gfs(grid.leafGridView(),fem);
 
-    typedef typename GFS::template ConstraintsContainer<NumberType>::Type CC;
-    CC cc;
-    Dune::PDELab::constraints(bctype,gfs,cc);
+  typedef typename GM::ctype DF;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GM::LeafGridView,DF,NumberType,1> FEM;
+  FEM fem(grid.leafGridView());
 
-    // local operator for finite elemenent problem
-    typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
-    LOP lop(problem);
+  typedef Dune::PDELab::GridFunctionSpace<GM::LeafGridView,FEM,
+  Dune::PDELab::ConformingDirichletConstraints,
+  Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>> GFS;
+  GFS gfs(grid.leafGridView(),fem);
 
-    typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
-    // [Grid operator]
-    typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
-    auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
-    //! [Grid operator]
+  typedef typename GFS::template ConstraintsContainer<NumberType>::Type CC;
+  CC cc;
+  Dune::PDELab::constraints(bctype,gfs,cc);
 
-    // [Make degree of freedom vector]
-    typedef Dune::PDELab::Backend::Vector<GFS,NumberType> X;
-    X x(gfs,0.0);
-    //! [Make degree of freedom vector]
-    // [Set it to match boundary conditions]
-    typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
-    G g(grid.leafGridView(),problem);
-    Dune::PDELab::interpolate(g,gfs,x);
-    //! [Set it to match boundary conditions]
+  // local operator for finite elemenent problem
+  typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
+  LOP lop(problem);
 
-    // [Assemble residual]
-    X d(gfs,0.0);
-    go.residual(x,d);
-    //! [Assemble residual]
+  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
+  // [Grid operator]
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
+  auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
+  //! [Grid operator]
 
-    // [Assemble matrix]
-    typedef GO::Jacobian M;
-    M A(go);
-    go.jacobian(x,A);
-    //! [Assemble matrix]
+  // [Make degree of freedom vector]
+  typedef Dune::PDELab::Backend::Vector<GFS,NumberType> X;
+  X x(gfs,0.0);
+  //! [Make degree of freedom vector]
+  // [Set it to match boundary conditions]
+  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
+  G g(grid.leafGridView(),problem);
+  Dune::PDELab::interpolate(g,gfs,x);
+  //! [Set it to match boundary conditions]
 
-    // [Extract ISTL types]
-    typedef Dune::PDELab::Backend::Native<M> ISTLM;
-    typedef Dune::PDELab::Backend::Native<X> ISTLX;
-    //! [Extract ISTL types]
+  // [Assemble residual]
+  X d(gfs,0.0);
+  go.residual(x,d);
+  //! [Assemble residual]
 
-    // [Access to ISTL objects]
-    using Dune::PDELab::Backend::native;
-    //! [Access to ISTL objects]
+  // [Assemble matrix]
+  typedef GO::Jacobian M;
+  M A(go);
+  go.jacobian(x,A);
+  //! [Assemble matrix]
 
-    // [Define operator]
-    typedef Dune::MatrixAdapter<ISTLM,ISTLX,ISTLX> Operator;
-    Operator matrixop(native(A));
-    //! [Define operator]
+  // [Extract ISTL types]
+  typedef Dune::PDELab::Backend::Native<M> ISTLM;
+  typedef Dune::PDELab::Backend::Native<X> ISTLX;
+  //! [Extract ISTL types]
 
-    // [Define preconditioner and solver]
-    Dune::SeqJac<ISTLM,ISTLX,ISTLX> preconditioner(native(A), 1, .5);
-    Dune::CGSolver<ISTLX> solver(matrixop, preconditioner, 1e-3, 10, 2);
-    //! [Define preconditioner and solver]
+  // [Access to ISTL objects]
+  using Dune::PDELab::Backend::native;
+  //! [Access to ISTL objects]
 
-    // [Run solver]
-    X v(gfs,0.0);
-    Dune::InverseOperatorResult res;
-    solver.apply(native(v), native(d), res);
-    //! [Run solver]
+  // [Define operator]
+  typedef Dune::MatrixAdapter<ISTLM,ISTLX,ISTLX> Operator;
+  Operator matrixop(native(A));
+  //! [Define operator]
 
-    // [Subtract defect correction]
-    x -= v;
-    //! [Subtract defect correction]
+  // [Define preconditioner and solver]
+  Dune::SeqJac<ISTLM,ISTLX,ISTLX> preconditioner(native(A), 1, .5);
+  Dune::CGSolver<ISTLX> solver(matrixop, preconditioner, 1e-3, 10, 2);
+  //! [Define preconditioner and solver]
 
-    // [Solution output]
-    Dune::printvector(std::cout, native(x), "Solution", "");
-    //! [Solution output]
+  // [Run solver]
+  X v(gfs,0.0);
+  Dune::InverseOperatorResult res;
+  solver.apply(native(v), native(d), res);
+  //! [Run solver]
 
-    return 0;
-  }
-  catch (Dune::Exception &e){
-    std::cerr << "Dune reported error: " << e << std::endl;
-    return 1;
-  }
-  catch (...){
-    std::cerr << "Unknown exception thrown!" << std::endl;
-    return 1;
-  }
+  // [Subtract defect correction]
+  x -= v;
+  //! [Subtract defect correction]
+
+  // [Solution output]
+  Dune::printvector(std::cout, native(x), "Solution", "");
+  //! [Solution output]
 }

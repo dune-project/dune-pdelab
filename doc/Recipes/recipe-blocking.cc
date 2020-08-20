@@ -41,72 +41,60 @@
 
 int main(int argc, char** argv)
 {
-    try{
-        // Initialize Mpi
-        Dune::MPIHelper::instance(argc, argv);
+  // Initialize Mpi
+  Dune::MPIHelper::instance(argc, argv);
 
-        // need a grid in order to test grid functions
-        constexpr unsigned int dim = 2;
-        Dune::FieldVector<double,dim> L(5.0);
-        std::array<int,dim> N(Dune::filledArray<dim,int>(64));
+  // need a grid in order to test grid functions
+  constexpr unsigned int dim = 2;
+  Dune::FieldVector<double,dim> L(5.0);
+  std::array<int,dim> N(Dune::filledArray<dim,int>(64));
 
-        typedef Dune::YaspGrid<dim> Grid;
-        Grid grid(L,N);
+  typedef Dune::YaspGrid<dim> Grid;
+  Grid grid(L,N);
 
-        using DF = double;
-        using GV = decltype(grid.leafGridView());
+  using DF = double;
+  using GV = decltype(grid.leafGridView());
 
-        // instantiate finite element maps
-        typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
-        FEM fem(grid.leafGridView());
+  // instantiate finite element maps
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
+  FEM fem(grid.leafGridView());
 
-        //Set up constraints
-        typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
+  //Set up constraints
+  typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
 
-        // [Scalar grid function space]
-        // Set up scalar grid function space
-        typedef Dune::PDELab::GridFunctionSpace<GV, FEM, Constraints, Dune::PDELab::ISTL::VectorBackend<>> SCALAR_GFS;
-        SCALAR_GFS U1(grid.leafGridView(),fem); U1.name("U1");
-        SCALAR_GFS U2(grid.leafGridView(),fem); U2.name("U2");
-        //! [Scalar grid function space]
+  // [Scalar grid function space]
+  // Set up scalar grid function space
+  typedef Dune::PDELab::GridFunctionSpace<GV, FEM, Constraints, Dune::PDELab::ISTL::VectorBackend<>> SCALAR_GFS;
+  SCALAR_GFS U1(grid.leafGridView(),fem); U1.name("U1");
+  SCALAR_GFS U2(grid.leafGridView(),fem); U2.name("U2");
+  //! [Scalar grid function space]
 
-        {
-        // [Lexiographic blocked type]
-        // Use lexiographical blocked ordering
-        typedef Dune::PDELab::LexicographicOrderingTag LexiographicOrderingTag;
+  {
+  // [Lexiographic blocked type]
+  // Use lexiographical blocked ordering
+  typedef Dune::PDELab::LexicographicOrderingTag LexiographicOrderingTag;
 
-        // Set up power grid function space
-        using VBE = Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed>; // blocking vector backend
-        typedef Dune::PDELab::PowerGridFunctionSpace<SCALAR_GFS,
-                                                     dim, // block size
-                                                     VBE, // blocked vector backend
-                                                     LexiographicOrderingTag> GFS;
-        GFS gfs(U1,U2);
-        //! [Lexiographic blocked type]
-        }
+  // Set up power grid function space
+  using VBE = Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed>; // blocking vector backend
+  typedef Dune::PDELab::PowerGridFunctionSpace<SCALAR_GFS,
+                                                dim, // block size
+                                                VBE, // blocked vector backend
+                                                LexiographicOrderingTag> GFS;
+  GFS gfs(U1,U2);
+  //! [Lexiographic blocked type]
+  }
 
-        {
-        // [Entity blocked type]
-        // Use entity blocked ordering
-        typedef Dune::PDELab::EntityBlockedOrderingTag EntityOrderingTag;
+  {
+  // [Entity blocked type]
+  // Use entity blocked ordering
+  typedef Dune::PDELab::EntityBlockedOrderingTag EntityOrderingTag;
 
-        // Setting up a composite grid function space with the same scalar grid function space in both components
-        using VBE = Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed>; // blocking vector backend
-        typedef Dune::PDELab::CompositeGridFunctionSpace<VBE, // blocked vector backend
-                                                         EntityOrderingTag,
-                                                         SCALAR_GFS, SCALAR_GFS> GFS;
-        GFS gfs(U1,U2);
-        //! [Entity blocked type]
-        }
-
-        return 0;
-    }
-    catch (Dune::Exception &e){
-        std::cerr << "Dune reported error: " << e << std::endl;
-        return 1;
-    }
-    catch (...){
-        std::cerr << "Unknown exception thrown!" << std::endl;
-        return 1;
-    }
+  // Setting up a composite grid function space with the same scalar grid function space in both components
+  using VBE = Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed>; // blocking vector backend
+  typedef Dune::PDELab::CompositeGridFunctionSpace<VBE, // blocked vector backend
+                                                    EntityOrderingTag,
+                                                    SCALAR_GFS, SCALAR_GFS> GFS;
+  GFS gfs(U1,U2);
+  //! [Entity blocked type]
+  }
 }

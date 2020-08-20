@@ -221,44 +221,34 @@ void communicate(const GV& gv, int communicationType){
 //===============================================================
 int main(int argc, char** argv)
 {
-  try{
-    // Maybe initialize Mpi
-    Dune::MPIHelper&
-      helper = Dune::MPIHelper::instance(argc, argv);
-    if(Dune::MPIHelper::isFake)
-      std::cout<< "This is a sequential program." << std::endl;
-    else
-      std::cout << "Parallel code run on "
-                << helper.size() << " process(es)" << std::endl;
+  // Maybe initialize Mpi
+  Dune::MPIHelper&
+    helper = Dune::MPIHelper::instance(argc, argv);
+  if(Dune::MPIHelper::isFake)
+    std::cout<< "This is a sequential program." << std::endl;
+  else
+    std::cout << "Parallel code run on "
+              << helper.size() << " process(es)" << std::endl;
 
-    // read ini file
-    const int overlap = 2;
-    const int refinement = 0;
+  // read ini file
+  const int overlap = 2;
+  const int refinement = 0;
 
-    // Create 2D YaspGrid
-    constexpr int dim=2;
-    typedef Dune::YaspGrid<dim> Grid;
-    typedef Grid::ctype DF;
-    Dune::FieldVector<DF,dim> L{1.,1.};
-    std::array<int,dim> N{16,16};
-    std::bitset<dim> B(false); // periodic boundary (left-right, up-bottom)
-    std::shared_ptr<Grid> gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));//,Dune::MPIHelper::getCollectiveCommunication()));
-    gridp->refineOptions(false); // keep overlap in cells
-    gridp->globalRefine(refinement);
-    //! [Define gv]
-    typedef Grid::LeafGridView GV;
-    GV gv=gridp->leafGridView();
-    //! [Define gv]
+  // Create 2D YaspGrid
+  constexpr int dim=2;
+  typedef Dune::YaspGrid<dim> Grid;
+  typedef Grid::ctype DF;
+  Dune::FieldVector<DF,dim> L{1.,1.};
+  std::array<int,dim> N{16,16};
+  std::bitset<dim> B(false); // periodic boundary (left-right, up-bottom)
+  std::shared_ptr<Grid> gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));//,Dune::MPIHelper::getCollectiveCommunication()));
+  gridp->refineOptions(false); // keep overlap in cells
+  gridp->globalRefine(refinement);
+  //! [Define gv]
+  typedef Grid::LeafGridView GV;
+  GV gv=gridp->leafGridView();
+  //! [Define gv]
 
-    int communicationType = 1;
-    communicate(gv,communicationType);
-  }
-  catch (Dune::Exception &e){
-    std::cerr << "Dune reported error: " << e << std::endl;
-    return 1;
-  }
-  catch (...){
-    std::cerr << "Unknown exception thrown!" << std::endl;
-    return 1;
-  }
+  int communicationType = 1;
+  communicate(gv,communicationType);
 }
