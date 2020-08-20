@@ -2,8 +2,8 @@
 install(FILES
   arpackpp_geneo.hh
   coarsespace.hh
-  geneobasis.hh
   geneo.hh
+  geneobasis.hh
   liptonbabuskabasis.hh
   localoperator_ovlp_region.hh
   multicommdatahandle.hh

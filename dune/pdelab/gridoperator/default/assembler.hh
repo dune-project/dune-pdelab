@@ -11,14 +11,6 @@
 namespace Dune{
   namespace PDELab{
 
-    class NoOpExcluder {
-    public:
-      template<typename LFSCache, typename Entity>
-      bool assembleCell(const Entity& entity, const LFSCache& cache) const {
-        return true;
-      }
-    };
-
     /**
        \brief The assembler for standard DUNE grid
 
@@ -26,7 +18,7 @@ namespace Dune{
        * \tparam GFSV GridFunctionSpace for test functions
        */
 
-    template<typename GFSU, typename GFSV, typename CU, typename CV, typename EXCLUDER = NoOpExcluder>
+    template<typename GFSU, typename GFSV, typename CU, typename CV>
     class DefaultAssembler {
     public:
 
@@ -49,7 +41,7 @@ namespace Dune{
       //! Static check on whether this is a Galerkin method
       static const bool isGalerkinMethod = std::is_same<GFSU,GFSV>::value;
 
-      DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_, const CU& cu_, const CV& cv_, const EXCLUDER& excluder = EXCLUDER())
+      DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_, const CU& cu_, const CV& cv_)
         : gfsu(gfsu_)
         , gfsv(gfsv_)
         , cu(cu_)
@@ -58,10 +50,9 @@ namespace Dune{
         , lfsv(gfsv_)
         , lfsun(gfsu_)
         , lfsvn(gfsv_)
-        , excluder_(excluder)
       { }
 
-      DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_, const EXCLUDER& excluder = EXCLUDER())
+      DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_)
         : gfsu(gfsu_)
         , gfsv(gfsv_)
         , cu()
@@ -70,7 +61,6 @@ namespace Dune{
         , lfsv(gfsv_)
         , lfsun(gfsu_)
         , lfsvn(gfsv_)
-        , excluder_(excluder)
       { }
 
       //! Get the trial grid function space
@@ -136,9 +126,6 @@ namespace Dune{
             // Bind local test function space to element
             lfsv.bind( element );
             lfsv_cache.update();
-
-            if (!excluder_.assembleCell(element, lfsv_cache))
-              continue;
 
             // Notify assembler engine about bind
             assembler_engine.onBindLFSV(eg,lfsv_cache);
@@ -293,8 +280,6 @@ namespace Dune{
       /* global function spaces */
       const GFSU& gfsu;
       const GFSV& gfsv;
-
-      const EXCLUDER& excluder_;
 
       typename std::conditional<
         std::is_same<CU,EmptyTransformation>::value,
