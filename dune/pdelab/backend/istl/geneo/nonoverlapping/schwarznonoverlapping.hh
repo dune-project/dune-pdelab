@@ -115,20 +115,12 @@ namespace Dune {
             pu = std::shared_ptr<ScalarVector>(new ScalarVector(N_prec));
             for (typename ScalarVector::size_type i=0; i<pu->N(); i++)
               (*pu)[i] = 1.0;
-            //for (size_t i=0; i<N_orig; i++)
-            //  new2old_localindex.push_back(i);
             return;
           }
 
         //adapter = std::make_shared<NonoverlappingOverlapAdapter<Vector, CollectiveCommunication, GlobalId, Matrix>>(comm_, neighbors, A, partitiontype, globalid, avg_, overlap_);
         adapter = std::make_shared<NonoverlappingOverlapAdapter<GridView, Vector, Matrix>>(gv, A, avg_, overlap_);
 
-        // construct the new way
-        /*EPIS epis(comm,neighbors,A,partitiontype,globalid,overlapsize,false);
-        pis = epis.parallelIndexSet();
-        si = epis.remoteIndices();
-        si = adapter->getRemoteIndices();*/
-        //new2old_localindex = epis.extendedToOriginalLocalIndex();
         N_prec = adapter->getExtendedSize(); // this now the new size after adding overlap
 
         // construct stiffness matrix on overlapping set
@@ -146,30 +138,6 @@ namespace Dune {
         // construct owner partition scalar vector
         auto owner = Dune::makeOwner(adapter->getEpis(),*M,overlapsize);
 
-        // print matrices
-        // for (int i=0; i<p; i++)
-        //   {
-        //     comm.barrier();
-        //     if (rank==i) {
-        //       std::cout << "rank " << rank << std::endl;
-        //       Dune::printmatrix(std::cout,*M,"M","row",8,1);
-        //     }
-        //   }
-
-        // for fun construct a matrix with neumann boundary conditions
-        //auto Mneumann = std::shared_ptr<Matrix>(new Matrix(*M)); // make a copy of M
-        //Dune::addNonlocalEntriesToDiagonal(epis,*Mneumann,*owner);
-        // print matrices
-        // for (int i=0; i<p; i++)
-        //   {
-        //     comm.barrier();
-        //     if (rank==i) {
-        //       std::cout << "rank " << rank << std::endl;
-        //       Dune::printmatrix(std::cout,*Mneumann,"Mneumann","row",8,1);
-        //     }
-        //   }
-        // comm.barrier();
-        //ExactSolver xxx(*Mneumann,1);
 
         // build up communication interface using all atributes (thankfully ghosts are out of the way :-)) for later use
         Dune::AllSet<Attribute> allAttribute;
@@ -223,7 +191,6 @@ namespace Dune {
                 A0.entry(i,j) = row[j];
           }
         auto stats0 = A0.compress();
-        //if (rank==0) Dune::printmatrix(std::cout,A0,"A0","row",8,1);
 
         // make floating subdomains known to everyone
         floating = new field_type[p];
@@ -231,9 +198,6 @@ namespace Dune {
         if (floatingSubdomain)
           floating[rank] = 1.0;
         comm.sum(floating,p);
-        // if (rank==0)
-        //   for (int j=0; j<p; j++)
-        //     std::cout << "floating[" << j << "] = " << floating[j] << std::endl;
 
         // eliminate non-floating subdomains from coarse system
         for (size_t i=0; i<A0.N(); i++)
@@ -258,7 +222,6 @@ namespace Dune {
                   }
               }
           }
-        //if (rank==0) Dune::printmatrix(std::cout,A0,"A0","row",8,1);
 
         // compute LU decomposition of coarse matrix
         coarsesolver = std::shared_ptr<ExactSolver>(new ExactSolver(A0,0));
@@ -274,8 +237,6 @@ namespace Dune {
         adapter->restrictVector(*pu, vec);
         for (auto& val : vec)
           vec *= vec;
-        //for (typename Vector::size_type i=0; i<new2old_localindex.size(); i++)
-        //  vec[new2old_localindex[i]] = (*pu)[i][0]*(*pu)[i][0];
       }
 
       template<typename T>
@@ -317,9 +278,7 @@ namespace Dune {
         // copy defect to a vector with the new local index set
         Vector d2(N_prec);
         adapter->extendVector(d, d2);
-        //std::cout << rank << ": preconditioner before communication" << std::endl;
         if (p>1) communicator->forward<AddGatherScatter<Vector>>(d2,d2); // make it consistent
-        //std::cout << rank << ": preconditioner after communication" << std::endl;
 
         // coarse grid correction
         Vector z(N_prec);
@@ -345,26 +304,15 @@ namespace Dune {
             v0 = 0.0;
             Dune::InverseOperatorResult stat;
             coarsesolver->apply(v0,R0d,stat);
-            // if (rank==0)
-            //   {
-            //     for (int i=0; i<p; i++)
-            //       std::cout << "v0[" << i << "] = " << v0[i] << std::endl;
-            //   }
-
             // assemble correction from subdomains
             for (typename Vector::size_type i=0; i<z.N(); i++)
               z[i].axpy((*pu)[i]*(*pu)[i],v0[rank]);
           }
 
-        // solve subdomain problem
-        //for (typename Vector::size_type i=0; i<d2.N(); i++)
-        //  d2[i] *= (*pu)[i]; // apply prescaling
         Dune::InverseOperatorResult stat;
         Vector v2(N_prec);
         v2 = 0.0;
         subdomainsolver->apply(v2,d2,stat);
-        //for (typename Vector::size_type i=0; i<v2.N(); i++)
-        //  v2[i] *= (*pu)[i]; // post scaling with partition of unity
         if (coarsespace && p>1) v2 += z;
 
         // add up corrections

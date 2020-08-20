@@ -47,7 +47,7 @@ namespace Dune {
       }
 
       std::shared_ptr<Vector> localVector_;
-      std::vector<std::shared_ptr<Vector> > neighbor_basis; // TODO: Better use a map?
+      std::vector<std::shared_ptr<Vector> > neighbor_basis;
       std::vector<int> neighboringRanks_;
     };
 
@@ -56,9 +56,9 @@ namespace Dune {
     {
       static typename V::value_type gather(const V& a, int i)
       {
-        return (*a.localVector_)[i]; // I am sending my value
+        return (*a.localVector_)[i];
       }
-      static void scatterWithProc (V& a, typename V::value_type v, int i, int proc)
+      static void scatterWithRank (V& a, typename V::value_type v, int i, int proc)
       {
         (*a.getVectorForRank(proc))[i]=v;
       }
@@ -73,7 +73,7 @@ namespace Dune {
     * extended by zeros, resulting in a sparse system.
     */
     template<class GridView, class M, class X>
-    class NewSubdomainProjectedCoarseSpace : public CoarseSpace<X>
+    class NonoverlappingSubdomainProjectedCoarseSpace : public CoarseSpace<X>
     {
 
       typedef int rank_type;
@@ -88,7 +88,7 @@ namespace Dune {
       * \param subdomainbasis Per-subdomain coarse basis.
       * \param verbosity Verbosity.
       */
-      NewSubdomainProjectedCoarseSpace (NonoverlappingOverlapAdapter<GridView, X, M>& adapter, const GridView& gridView, const M& AF_exterior_, std::shared_ptr<SubdomainBasis<X> > subdomainbasis, int verbosity = 1)
+      NonoverlappingSubdomainProjectedCoarseSpace (NonoverlappingOverlapAdapter<GridView, X, M>& adapter, const GridView& gridView, const M& AF_exterior_, std::shared_ptr<SubdomainBasis<X> > subdomainbasis, int verbosity = 1)
        : adapter_(adapter),
          gridView_(gridView),
          AF_exterior_(AF_exterior_),
@@ -349,4 +349,4 @@ namespace Dune {
   }
 }
 
-#endif //DUNE_PDELAB_BACKEND_ISTL_GENEO_SUBDOMAINPROJECTEDCOARSESPACE_HH
+#endif
