@@ -246,7 +246,7 @@ namespace Dune{
         doPostProcessing_ = v;
       }
 
-    protected:
+    private:
 
       //! The local operator
       LOP & lop_;

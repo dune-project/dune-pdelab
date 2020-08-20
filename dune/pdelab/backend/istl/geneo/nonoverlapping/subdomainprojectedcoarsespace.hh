@@ -47,7 +47,7 @@ namespace Dune {
       }
 
       std::shared_ptr<Vector> localVector_;
-      std::vector<std::shared_ptr<Vector> > neighbor_basis; // TODO: Better use a map?
+      std::vector<std::shared_ptr<Vector> > neighbor_basis;
       std::vector<int> neighboringRanks_;
     };
 
@@ -56,9 +56,9 @@ namespace Dune {
     {
       static typename V::value_type gather(const V& a, int i)
       {
-        return (*a.localVector_)[i]; // I am sending my value
+        return (*a.localVector_)[i];
       }
-      static void scatterWithProc (V& a, typename V::value_type v, int i, int proc)
+      static void scatterWithRank (V& a, typename V::value_type v, int i, int proc)
       {
         (*a.getVectorForRank(proc))[i]=v;
       }
@@ -73,7 +73,7 @@ namespace Dune {
     * extended by zeros, resulting in a sparse system.
     */
     template<class GridView, class M, class X>
-    class NewSubdomainProjectedCoarseSpace : public CoarseSpace<X>
+    class NonoverlappingSubdomainProjectedCoarseSpace : public CoarseSpace<X>
     {
 
       typedef int rank_type;
@@ -88,7 +88,7 @@ namespace Dune {
       * \param subdomainbasis Per-subdomain coarse basis.
       * \param verbosity Verbosity.
       */
-      NewSubdomainProjectedCoarseSpace (NonoverlappingOverlapAdapter<GridView, X, M>& adapter, const GridView& gridView, const M& AF_exterior_, std::shared_ptr<SubdomainBasis<X> > subdomainbasis, int verbosity = 1)
+      NonoverlappingSubdomainProjectedCoarseSpace (NonoverlappingOverlapAdapter<GridView, X, M>& adapter, const GridView& gridView, const M& AF_exterior_, std::shared_ptr<SubdomainBasis<X> > subdomainbasis, int verbosity = 1)
        : adapter_(adapter),
          gridView_(gridView),
          AF_exterior_(AF_exterior_),
@@ -113,7 +113,8 @@ namespace Dune {
         // Communicate local coarse space dimensions
         local_basis_sizes_.resize(ranks_);
         rank_type local_size = subdomainbasis_->basis_size();
-        MPI_Allgather(&local_size, 1, MPITraits<rank_type>::getType(), local_basis_sizes_.data(), 1, MPITraits<rank_type>::getType(), gridView_.comm());
+        gridView_.comm().allgather(&local_size, 1, local_basis_sizes_.data());
+
 
         // Count coarse space dimensions
         global_basis_size_ = 0;
@@ -181,17 +182,12 @@ namespace Dune {
             if (verbosity_ > 2) {
               std::cout << "Product of neighbor " << neighbor_ranks_[neighbor_id] << "'s basis fct " << basis_index_remote <<
                            "with local basis fcts" << std::endl;
-              //Dune::printvector(std::cout, *basis_vector, "remote vec", "");
             }
 
             X Atimesv(adapter_.getExtendedSize());
             AF_exterior_.mv(*basis_vector, Atimesv);
 
             for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
-              /*if (verbosity_ > 2) {
-                std::cout << "Local basis fct " << basis_index << std::endl;
-                Dune::printvector(std::cout, *subdomainbasis_->get_basis_vector(basis_index), "local vec", "");
-              }*/
               field_type entry = *subdomainbasis_->get_basis_vector(basis_index)*Atimesv;
               local_rows[basis_index][neighbor_id].push_back(entry);
             }
@@ -213,7 +209,7 @@ namespace Dune {
                 couplings += local_basis_sizes_[neighbor_id];
               }
             }
-            MPI_Bcast(&couplings, 1, MPITraits<rank_type>::getType(), rank, gridView_.comm());
+            gridView_.comm().broadcast(&couplings, 1, rank);
 
             // Communicate row's pattern
             rank_type entries_pos[couplings];
@@ -231,7 +227,7 @@ namespace Dune {
                 }
               }
             }
-            MPI_Bcast(&entries_pos, couplings, MPITraits<rank_type>::getType(), rank, gridView_.comm());
+            gridView_.comm().broadcast(entries_pos, couplings, rank);
 
             // Communicate actual entries
             field_type entries[couplings];
@@ -248,7 +244,7 @@ namespace Dune {
                 }
               }
             }
-            MPI_Bcast(&entries, couplings, MPITraits<field_type>::getType(), rank, gridView_.comm());
+            gridView_.comm().broadcast(entries, couplings, rank);
 
             // Build matrix row based on pattern
             for (rank_type i = 0; i < couplings; i++)
@@ -353,4 +349,4 @@ namespace Dune {
   }
 }
 
-#endif //DUNE_PDELAB_BACKEND_ISTL_GENEO_SUBDOMAINPROJECTEDCOARSESPACE_HH
+#endif

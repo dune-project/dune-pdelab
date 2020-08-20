@@ -23,7 +23,6 @@ namespace Dune {
       /*!
       * \brief Two level overlapping Schwarz preconditioner with arbitrary coarse space.
       */
-      //template<class GFS, class M, class X, class Y>
       template<typename GridView, typename Matrix, typename Vector>
       class NonoverlappingTwoLevelOverlappingAdditiveSchwarz
        : public Dune::Preconditioner<Vector,Vector>
@@ -43,11 +42,6 @@ namespace Dune {
         };
 
       public:
-        //typedef Dune::PDELab::Backend::Native<M> ISTLM;
-
-        //typedef Dune::BlockVector<Dune::FieldVector<double,1> > COARSE_V;
-        //typedef Dune::BCRSMatrix<Dune::FieldMatrix<double,1,1> > COARSE_M;
-
         // define the category
         virtual Dune::SolverCategory::Category category() const
         {
@@ -148,19 +142,12 @@ namespace Dune {
 
           if (!coarse_space_active_) {
 
-
             communicator->forward<AddGatherScatter<Vector>>(correction,correction); // make function known in other subdomains
-            std::cout << "size correction: " << correction.N() << " size v: " << v.N() << std::endl;
 
             adapter_.restrictVector(correction, v);
 
-            //Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs_,v);
-            // Just add local results and return in 1-level Schwarz case
-            //gfs_.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
-
           } else {
 
-            //gfs_.gridView().comm().barrier();
             Dune::Timer timer_coarse_solve;
 
             coarse_space_->restrict (b, coarse_defect_);
@@ -183,25 +170,7 @@ namespace Dune {
             adapter_.restrictVector(correction, v);
             if (verbosity_ > 2) Dune::printvector(std::cout, v, "correction (restricted) ", "", 1, 10, 17);
 
-            //exit(0);
-
-            //communicator->forward<AddGatherScatter<Vector>>(correction,correction); // make function known in other subdomains
-            //adapter_.restrictVector(correction, v);
-
-
-            // Solve coarse system
-            /*Dune::InverseOperatorResult result;
-            COARSE_V v0(coarse_space_->basis_size(),coarse_space_->basis_size());
-            coarse_solver_.apply(v0, coarse_defect_, result);
-
-            // Prolongate coarse solution on local domain
-            coarse_space_->prolongate(v0, prolongated_);
-            v += prolongated_;*/
-
             coarse_time_ += timer_coarse_solve.elapsed();
-
-            //Dune::PDELab::AddDataHandle<GFS,X> result_addh(gfs_,v);
-            //gfs_.gridView().communicate(result_addh,Dune::All_All_Interface,Dune::ForwardCommunication);
           }
           apply_calls_++;
         }

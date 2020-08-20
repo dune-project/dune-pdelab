@@ -5,6 +5,9 @@
 
 #include <dune/pdelab/localoperator/combinedoperator.hh>
 
+#include <utility>
+
+
 namespace Dune {
   namespace PDELab {
 

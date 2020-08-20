@@ -13,7 +13,6 @@
 namespace Dune{
   namespace PDELab{
 
-
     /**
        \brief The local assembler engine for DUNE grids which
        assembles the jacobian matrix
@@ -332,24 +331,6 @@ namespace Dune{
       //! @}
 
     }; // End of class DefaultLocalJacobianAssemblerEngine
-
-    /*template<typename LA>
-    class RestrictedLocalJacobianAssemblerEngine
-    : public DefaultLocalJacobianAssemblerEngine<LA> {
-
-      typedef LA LocalAssembler;
-
-      RestrictedLocalJacobianAssemblerEngine (const LocalAssembler & local_assembler_)
-      : DefaultLocalJacobianAssemblerEngine<LA>(local_assembler_)
-      {}
-
-      template<typename EG>
-      bool assembleCell(const EG & eg)
-      {
-        return LocalAssembler::isNonOverlapping && eg.entity().partitionType() != Dune::InteriorEntity;
-      }
-
-    };*/
 
   }
 }

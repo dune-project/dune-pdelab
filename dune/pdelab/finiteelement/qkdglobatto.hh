@@ -9,6 +9,7 @@
 #include <dune/localfunctions/common/localbasis.hh>
 #include <dune/localfunctions/common/localkey.hh>
 #include <dune/localfunctions/common/localfiniteelementtraits.hh>
+#include <dune/localfunctions/common/localinterpolation.hh>
 #include <dune/localfunctions/common/localtoglobaladaptors.hh>
 #include <dune/pdelab/finiteelement/qkdglagrange.hh>
 
@@ -211,10 +212,11 @@ namespace Dune
 
       //! \brief Local interpolation of a function
       template<typename F, typename C>
-      void interpolate (const F& f, std::vector<C>& out) const
+      void interpolate (const F& ff, std::vector<C>& out) const
       {
         typename LB::Traits::DomainType x;
-        typename LB::Traits::RangeType y;
+
+        auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
 
         out.resize(QkSize<k,d>::value);
 
@@ -227,7 +229,7 @@ namespace Dune
             for (int j=0; j<d; j++)
               x[j] = poly.x(alpha[j]);
 
-            f.evaluate(x,y); out[i] = y;
+            out[i] = f(x);
           }
       }
     };
@@ -239,13 +241,14 @@ namespace Dune
     public:
       //! \brief Local interpolation of a function
       template<typename F, typename C>
-      void interpolate (const F& f, std::vector<C>& out) const
+      void interpolate (const F& ff, std::vector<C>& out) const
       {
         typename LB::Traits::DomainType x(0.5);
-        typename LB::Traits::RangeType y;
-        f.evaluate(x,y);
+
+        auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
+
         out.resize(1);
-        out[0] = y;
+        out[0] = f(x);
       }
     };
 

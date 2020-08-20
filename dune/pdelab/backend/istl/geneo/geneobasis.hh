@@ -93,8 +93,6 @@ namespace Dune {
             this->local_basis[base_id]->begin(),
             std::multiplies<>()
             );
-          //if (eigenvalues[base_id] < .0) // TODO: Normalization for debugging; Remove this for performance
-          //  *(this->local_basis[base_id]) *= -1.0;
         }
 
         // Normalize basis vectors

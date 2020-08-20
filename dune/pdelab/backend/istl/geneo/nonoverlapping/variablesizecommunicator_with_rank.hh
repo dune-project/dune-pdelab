@@ -541,7 +541,7 @@ struct hasTemplatedGatherWithProc
   typedef char (& yes)[1];
   typedef char (& no)[2];
 
-  template <typename C> static yes check(decltype(&C::gatherWithProcTag)); // TODO: Improve. Very much.
+  template <typename C> static yes check(decltype(&C::sizeWithRank)); // TODO: Improve. Very much.
   template <typename> static no check(...);
 
   static bool const value = sizeof(check<T>(0)) == sizeof(yes);
@@ -568,18 +568,16 @@ public:
   {
     return true;
   }
-  std::size_t sizeWithProc(std::size_t i, int proc)
+  std::size_t sizeWithRank(std::size_t i, int proc)
   {
     DUNE_UNUSED_PARAMETER(i);
     return 1;
   }
-  void gatherWithProcTag() {
-  }
   template<class B>
-  void gatherWithProc(B& buf, int i, int proc)
+  void gatherWithRank(B& buf, int i, int proc)
   {
     if constexpr (hasTemplatedGatherWithProc<DataHandle>::value)
-      buf.write(data_.sizeWithProc(i, proc));
+      buf.write(data_.sizeWithRank(i, proc));
     else
       buf.write(data_.size(i));
   }
@@ -686,7 +684,7 @@ struct PackEntries
       for(std::size_t i=0; i< noIndices; ++i)
       {
         if constexpr (hasTemplatedGatherWithProc<DataHandle>::value)
-          handle.gatherWithProc(buffer, tracker.index(), tracker.rank());
+          handle.gatherWithRank(buffer, tracker.index(), tracker.rank());
         else
           handle.gather(buffer, tracker.index());
         tracker.moveToNextIndex();
@@ -699,10 +697,10 @@ struct PackEntries
       tracker.skipZeroIndices();
       if constexpr (hasTemplatedGatherWithProc<DataHandle>::value) {
         while(!tracker.finished())
-          if(buffer.hasSpaceForItems(handle.sizeWithProc(tracker.index(), tracker.rank())))
+          if(buffer.hasSpaceForItems(handle.sizeWithRank(tracker.index(), tracker.rank())))
           {
-            handle.gatherWithProc(buffer, tracker.index(), tracker.rank());
-            packed+=handle.sizeWithProc(tracker.index(), tracker.rank());
+            handle.gatherWithRank(buffer, tracker.index(), tracker.rank());
+            packed+=handle.sizeWithRank(tracker.index(), tracker.rank());
             tracker.moveToNextIndex();
           }
           else
@@ -852,7 +850,7 @@ struct SetupSendRequest{
     // Skip indices of zero size.
 
     if constexpr (hasTemplatedGatherWithProc<DataHandle>::value) {
-      while(!tracker.finished() &&  !handle.sizeWithProc(tracker.index(), tracker.rank()))
+      while(!tracker.finished() &&  !handle.sizeWithRank(tracker.index(), tracker.rank()))
         tracker.moveToNextIndex();
     } else {
       while(!tracker.finished() &&  !handle.size(tracker.index()))
@@ -1089,7 +1087,7 @@ void VariableSizeCommunicator<Allocator>::setupInterfaceTrackers(DataHandle& han
 
     if(handle.fixedsize() && InterfaceInformationChooser<FORWARD>::getSend(inf->second).size()) {
       if constexpr (hasTemplatedGatherWithProc<DataHandle>::value) {
-        fixedsize=handle.sizeWithProc(InterfaceInformationChooser<FORWARD>::getSend(inf->second)[0], inf->first);
+        fixedsize=handle.sizeWithRank(InterfaceInformationChooser<FORWARD>::getSend(inf->second)[0], inf->first);
       } else {
         fixedsize=handle.size(InterfaceInformationChooser<FORWARD>::getSend(inf->second)[0]);
       }

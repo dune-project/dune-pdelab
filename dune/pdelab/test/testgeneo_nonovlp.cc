@@ -6,8 +6,6 @@
 
 #include <dune/grid/utility/parmetisgridpartitioner.hh>
 
-#include <dune/istl/matrixmarket.hh>
-
 /*
  * Defining a Darcy problem with alternating layers of permeability and a high contrast
  */
@@ -227,8 +225,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   const int algebraic_overlap = 1;
   int nev = 2;
 
-  auto prec = std::make_shared<Dune::PDELab::NonoverlappingGenEOPreconditioner<GO, Matrix, Vector>>(go, A, algebraic_overlap, nonzeros, eigenvalue_threshold, nev, -1, 0.001, verbose);//, eigenvalue_threshold, 2, -1, .001, verbose);
-
+  auto prec = std::make_shared<Dune::PDELab::NonoverlappingGenEOPreconditioner<GO, Matrix, Vector>>(go, A, algebraic_overlap, nonzeros, eigenvalue_threshold, nev, -1, 0.001, verbose);
 
 
   using Dune::PDELab::Backend::native;
@@ -257,22 +254,10 @@ int main(int argc, char **argv)
 {
   using Dune::PDELab::Backend::native;
 
-  try{
-    // initialize MPI, finalize is done automatically on exit
-    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc,argv);
+  // initialize MPI, finalize is done automatically on exit
+  Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc,argv);
 
-    driver("geneo", "standard", helper);
+  driver("geneo", "standard", helper);
 
-    return 0;
-  }
-
-  catch (Dune::Exception &e){
-    std::cerr << "Dune reported error: " << e << std::endl;
-    return 1;
-  }
-  catch (...){
-    std::cerr << "Unknown exception thrown!" << std::endl;
-    return 1;
-  }
-
+  return 0;
 }

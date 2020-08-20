@@ -274,7 +274,7 @@ namespace Dune {
       }
 
       // return size for given (local) index
-      std::size_t sizeWithProc (int i, int proc) // i is a new local index
+      std::size_t sizeWithRank (int i, int proc) // i is a new local index
       {
         std::size_t count = 1; // always send one
         if ((unsigned)i>=new2old_localindex.size()) return count; // not our business since this index is not in the original range
@@ -287,13 +287,9 @@ namespace Dune {
         return count;
       }
 
-      void gatherWithProcTag() {
-
-      }// TODO: Replace by better solution...
-
       // gather to buffer
       template<class B>
-      void gatherWithProc(B& buffer, int i, int proc) // TODO: Pick local matrix depending on remote rank
+      void gatherWithRank(B& buffer, int i, int proc) // TODO: Pick local matrix depending on remote rank
       {
         //std::cout << "proc: " << proc << std::endl;
         buffer.write(std::make_pair(BlockType(),GlobalId())); // write a default value
@@ -366,7 +362,7 @@ namespace Dune {
       }
 
       // return size for given (local) index
-      std::size_t sizeWithProc (int i, int proc) // i is a new local index
+      std::size_t sizeWithRank (int i, int proc) // i is a new local index
       {
         // Doesn't matter which matrix we send here (we assume identical pattern), so just make sure one is ready
         if (loadedMatrixProc == -1) {
@@ -387,13 +383,9 @@ namespace Dune {
         return count;
       }
 
-      void gatherWithProcTag() { // TODO: Replace by better solution...
-
-      }
-
       // gather to buffer
       template<class B>
-      void gatherWithProc(B& buffer, int i, int proc)
+      void gatherWithRank(B& buffer, int i, int proc)
       {
         if (loadedMatrixProc != proc) {
           std::cout << "Assembling for " << proc << std::endl;
@@ -466,7 +458,7 @@ namespace Dune {
       }
 
       // return size for given (local) index
-      std::size_t sizeWithProc (int i, int proc) // i is a new local index
+      std::size_t sizeWithRank (int i, int proc) // i is a new local index
       {
         std::size_t count = 1; // always send one
         if (i>=new2old_localindex.size()) return count; // not our business since this index is not in the original range
@@ -485,7 +477,7 @@ namespace Dune {
 
       // gather to buffer
       template<class B>
-      void gatherWithProc(B& buffer, int i, int proc)
+      void gatherWithRank(B& buffer, int i, int proc)
       {
         //std::size_t count = 1; // always send one
         //std::cout << "proc: " << proc << std::endl;

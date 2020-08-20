@@ -5,6 +5,7 @@
 #include "config.h"
 #endif
 
+#include <dune/common/deprecated.hh>
 #include "dune/pdelab.hh"
 
 #include "nonlinearpoissonfem.hh"
@@ -69,6 +70,8 @@ public:
 int main(int argc, char** argv)
 {
   try{
+    DUNE_NO_DEPRECATED_BEGIN
+
     // Maybe initialize mpi
     Dune::MPIHelper::instance(argc, argv);
 
@@ -152,16 +155,8 @@ int main(int argc, char** argv)
     using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_SuperLU;
     LinearSolver linearSolver(false);
     const double reduction = 1e-7;
-    using Solver = Dune::PDELab::NewtonMethod<GridOperator, LinearSolver>;
-    Solver solver(gridOperator, linearSolver);
-
-    // Set some parameters without loading parameter tree from ini file (just to show that it works)
-    Dune::ParameterTree ptree;
-    ptree["Verbosity"] = "4";
-    ptree["Terminate.MaxIterations"] = "39";
-    ptree["LineSearch.DampingFactor"] = "0.3";
-    ptree["UseMaxNorm"] = "1";
-    solver.setParameters(ptree);
+    using Solver = Dune::PDELab::Newton<GridOperator, LinearSolver, CoefficientVector>;
+    Solver solver(gridOperator, coefficientVector, linearSolver);
 
     // Solve PDE
     solver.apply(coefficientVector);
@@ -193,6 +188,7 @@ int main(int argc, char** argv)
     if (isnan(error) or abs(error)>1e-7)
       testfail = true;
     return testfail;
+    DUNE_NO_DEPRECATED_END
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;

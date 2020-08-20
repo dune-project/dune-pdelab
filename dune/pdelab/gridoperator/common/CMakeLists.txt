@@ -1,5 +1,3 @@
-exclude_from_headercheck(assembler.hh)
-
 install(FILES assembler.hh
               assemblerutilities.hh
               borderdofexchanger.hh

@@ -22,7 +22,18 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 
+#include <dune/common/version.hh>
 #include <dune/typetree/typetree.hh>
+
+// This alias should be removed after a PDELab 2.7 release.
+#if DUNE_VERSION_LT_REV(DUNE_TYPETREE,2,7,1)
+namespace Dune {
+  namespace TypeTree {
+    template<std::size_t... i>
+    using StaticTreePath = TreePath<i...>;
+  }
+}
+#endif
 
 #include <dune/pdelab/common/partitionviewentityset.hh>
 #include <dune/pdelab/backend/interface.hh>

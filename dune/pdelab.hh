@@ -27,8 +27,8 @@
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/solver/newton.hh>
 #include <dune/pdelab/solver/newtonerrors.hh>
-#include <dune/pdelab/solver/newtonlinesearch.hh>
-#include <dune/pdelab/solver/newtonterminate.hh>
+#include <dune/pdelab/solver/linesearch.hh>
+#include <dune/pdelab/solver/terminate.hh>
 #include <dune/pdelab/solver/utility.hh>
 #include <dune/pdelab/newton/newton.hh>
 #include <dune/pdelab/localoperator/numericaljacobian.hh>
@@ -47,6 +47,10 @@
 #include <dune/pdelab/localoperator/scaled.hh>
 #include <dune/pdelab/localoperator/numericalresidual.hh>
 #include <dune/pdelab/localoperator/blockdiagonal.hh>
+#include <dune/pdelab/localoperator/blockdiagonalwrapper.hh>
+#include <dune/pdelab/localoperator/blockoffdiagonalwrapper.hh>
+#include <dune/pdelab/localoperator/jacobianapplyhelper.hh>
+#include <dune/pdelab/localoperator/pointdiagonalwrapper.hh>
 #include <dune/pdelab/localoperator/dgnavierstokesparameter.hh>
 #include <dune/pdelab/localoperator/taylorhoodnavierstokes.hh>
 #include <dune/pdelab/localoperator/linearacousticsdg.hh>

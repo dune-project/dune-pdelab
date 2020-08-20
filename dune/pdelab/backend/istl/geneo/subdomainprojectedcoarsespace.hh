@@ -63,7 +63,7 @@ namespace Dune {
         // Communicate local coarse space dimensions
         local_basis_sizes_.resize(ranks_);
         rank_type local_size = subdomainbasis_->basis_size();
-        MPI_Allgather(&local_size, 1, MPITraits<rank_type>::getType(), local_basis_sizes_.data(), 1, MPITraits<rank_type>::getType(), gfs_.gridView().comm());
+        gfs_.gridView().comm().allgather(&local_size, 1, local_basis_sizes_.data());
 
         // Count coarse space dimensions
         global_basis_size_ = 0;
@@ -148,7 +148,7 @@ namespace Dune {
                 couplings += local_basis_sizes_[neighbor_id];
               }
             }
-            MPI_Bcast(&couplings, 1, MPITraits<rank_type>::getType(), rank, gfs_.gridView().comm());
+            gfs_.gridView().comm().broadcast(&couplings, 1, rank);
 
             // Communicate row's pattern
             rank_type entries_pos[couplings];
@@ -166,7 +166,7 @@ namespace Dune {
                 }
               }
             }
-            MPI_Bcast(&entries_pos, couplings, MPITraits<rank_type>::getType(), rank, gfs_.gridView().comm());
+            gfs_.gridView().comm().broadcast(entries_pos, couplings, rank);
 
             // Communicate actual entries
             field_type entries[couplings];
@@ -183,7 +183,7 @@ namespace Dune {
                 }
               }
             }
-            MPI_Bcast(&entries, couplings, MPITraits<field_type>::getType(), rank, gfs_.gridView().comm());
+            gfs_.gridView().comm().broadcast(entries, couplings, rank);
 
             // Build matrix row based on pattern
             for (rank_type i = 0; i < couplings; i++)
