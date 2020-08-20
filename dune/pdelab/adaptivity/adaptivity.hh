@@ -391,6 +391,7 @@ namespace Dune {
       struct coarse_function
       {
         using Range = typename FiniteElement::Traits::LocalBasisType::Traits::RangeType;
+        using Domain = typename FiniteElement::Traits::LocalBasisType::Traits::DomainType;
 
         //! Traits class containing decayed types
         struct Traits
@@ -398,14 +399,14 @@ namespace Dune {
           using RangeType = std::decay_t<Range>;
         };
 
-        template<typename X, typename Y>
-        void evaluate(const X& x, Y& y) const
+        Range operator()(const Domain& x) const
         {
           _phi.resize(_finite_element.localBasis().size());
           _finite_element.localBasis().evaluateFunction(_coarse_geometry.local(_fine_geometry.global(x)),_phi);
-          y = 0;
+          Range y = 0;
           for (size_type i = 0; i < _phi.size(); ++i)
             y.axpy(_dofs[_offset + i],_phi[i]);
+          return y;
         }
 
         coarse_function(const FiniteElement& finite_element, Geometry coarse_geometry, Geometry fine_geometry, const LocalDOFVector& dofs, size_type offset)

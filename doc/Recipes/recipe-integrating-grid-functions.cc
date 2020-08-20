@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     Grid grid(L,N);
 
     // [Defining an analytic grid function]
-    auto analyticFunction = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& i, const auto& x){
+    auto analyticFunction = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& x){
       return exp(-(x*x));
     });
     //! [Defining an analytic grid function]

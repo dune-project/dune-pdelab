@@ -311,7 +311,7 @@ namespace Dune {
              _gfsv.dataHandleContains(codim));
         }
 
-        bool fixedsize (int dim, int codim) const
+        bool fixedSize (int dim, int codim) const
         {
           return false;
         }
@@ -411,7 +411,7 @@ namespace Dune {
              _gfsv.dataHandleContains(codim));
         }
 
-        bool fixedsize(int dim, int codim) const
+        bool fixedSize(int dim, int codim) const
         {
           return false;
         }

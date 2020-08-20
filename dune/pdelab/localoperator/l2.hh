@@ -167,57 +167,6 @@ namespace Dune {
 
     };
 
-    /** A local operator for the mass operator of a vector valued lfs (L_2 integral)
-     *
-     * \f{align*}{
-     \int_\Omega uv dx
-     * \f}
-     */
-    class PowerL2 :
-      public FullVolumePattern,
-      public LocalOperatorDefaultFlags,
-      public InstationaryLocalOperatorDefaultMethods<double>
-    {
-    public:
-      // Pattern assembly flags
-      enum { doPatternVolume = true };
-
-      // Residual assembly flags
-      enum { doAlphaVolume = true };
-
-      DUNE_DEPRECATED_MSG("PowerL2 is deprecated in PDELab 2.6 and will be removed after this release. The standard L2 operator now works on nested spaces, please use that instead.")
-      PowerL2 (int intorderadd = 2)
-        : scalar_operator(intorderadd)
-      {}
-
-      // Volume integral depending on test and ansatz functions
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
-      {
-        for(unsigned int i=0; i<TypeTree::degree(lfsu); ++i)
-          scalar_operator.alpha_volume(eg,lfsu.child(i),x,lfsv.child(i),r);
-      }
-
-      // apply jacobian of volume term
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-      void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
-      {
-        alpha_volume(eg,lfsu,x,lfsv,y);
-      }
-
-      // Jacobian of volume term
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                            M& mat) const
-      {
-        for(unsigned int i=0; i<TypeTree::degree(lfsu); ++i)
-          scalar_operator.jacobian_volume(eg,lfsu.child(i),x,lfsv.child(i),mat);
-      }
-
-    private:
-      L2 scalar_operator;
-    };
-
     //! \} group LocalOperator
   } // namespace PDELab
 } // namespace Dune

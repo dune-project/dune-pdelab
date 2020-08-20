@@ -14,6 +14,11 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   The number of preconditioner steps for sequential ISTL solvers is now a runtime parameter. It is now set
+    to 1 as a default in contrast to before where we always applied 3 preconditioner steps. This will change
+    the number of preconditioner/solver steps in all codes using those solvers. You can always restore the
+    old behavior by setting preconditioner_steps to 3 in the constructor of your solver.
+
 -   Change the default parameters of the convectiondiffusiondg local operator. Instead of NIPG, no weights
     and penalty factor alpha=0 we now use SIPG, weights and alpha=1 as default. Note that this is not backward
     compatible so you need to change your code if you used the default parameters and want to keep the

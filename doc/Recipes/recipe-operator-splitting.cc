@@ -899,12 +899,12 @@ void driver (const GV& gv, const FEM& fem, Param& param)
   using PDESOLVERF = Dune::PDELab::NewtonMethod<IGOF,LSF>;
   PDESOLVERF pdesolverf(igof,lsf);
   Dune::ParameterTree newtonParam;
-  newtonParam["reassemble_threshold"] = "0.0";
-  newtonParam["verbosity"] = "2";
-  newtonParam["reduction"] = "1e-8";
-  newtonParam["min_linear_reduction"] = "1e-4";
-  newtonParam["terminate.max_iterations"] = std::to_string(newtonMaxIt);
-  newtonParam["line_search.line_search_max_iterations"] = "10";
+  newtonParam["ReassembleThreshold"] = "0.0";
+  newtonParam["VerbosityLevel"] = "2";
+  newtonParam["Reduction"] = "1e-8";
+  newtonParam["MinLinearReduction"] = "1e-4";
+  newtonParam["MaxIterations"] = std::to_string(newtonMaxIt);
+  newtonParam["LineSearchMaxIterations"] = "10";
   pdesolverf.setParameters(newtonParam);
   // select a solver for contaminant
   using PDESOLVERC = Dune::PDELab::NewtonMethod<IGOC,LSC>;
@@ -928,9 +928,7 @@ void driver (const GV& gv, const FEM& fem, Param& param)
   osmd.setVerbosityLevel(2);
 
   // [Define objects for measuring splitting correction]
-  using Path0 = Dune::TypeTree::HybridTreePath<Dune::index_constant<0>>;
-  using Path1 = Dune::TypeTree::HybridTreePath<Dune::index_constant<1>>;
-  using GFSC_Sub0 = Dune::PDELab::GridFunctionSubSpace<GFSC,Path0>;
+  using GFSC_Sub0 = Dune::PDELab::GridFunctionSubSpace<GFSC,Dune::TypeTree::StaticTreePath<0>>;
   GFSC_Sub0 gfsc_sub0(gfsc);
   using SubC0 = Dune::PDELab::DiscreteGridFunction<GFSC_Sub0,ZC>;
   SubC0 subC0(gfsc_sub0,zcstep);
@@ -938,7 +936,7 @@ void driver (const GV& gv, const FEM& fem, Param& param)
   using ErrC0 = Dune::PDELab::DifferenceSquaredAdapter<SubC0,SubC0>;
   ErrC0 errC0(subC0,subC0new);
   //! [Define objects for measuring splitting correction]
-  using GFSC_Sub1 = Dune::PDELab::GridFunctionSubSpace<GFSC,Path1>;
+  using GFSC_Sub1 = Dune::PDELab::GridFunctionSubSpace<GFSC,Dune::TypeTree::StaticTreePath<1>>;
   GFSC_Sub1 gfsc_sub1(gfsc);
   using SubC1 = Dune::PDELab::DiscreteGridFunction<GFSC_Sub1,ZC>;
   SubC1 subC1(gfsc_sub1,zcstep);

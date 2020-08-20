@@ -24,6 +24,7 @@
 #include <dune/common/parametertree.hh>
 
 #include <dune/pdelab/backend/solver.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/solver/newton.hh>
 
 
@@ -36,6 +37,10 @@ namespace Dune
 {
   namespace PDELab
   {
+
+    class NewtonLineSearchError : public NewtonError {};
+    class NewtonNotConverged : public NewtonError {};
+
     // Status information of Newton's method
     template<class RFType>
     struct NewtonResult : LinearSolverResult<RFType>
@@ -162,6 +167,7 @@ namespace Dune
         , solver_(solver)
         , result_valid_(false)
         , use_maxnorm_(false)
+        , hanging_node_modifications_(false)
       {}
 
       void apply();
@@ -182,9 +188,26 @@ namespace Dune
         use_maxnorm_ = b;
       }
 
+      void setHangingNodeModifications(bool b)
+      {
+        hanging_node_modifications_ = b;
+      }
+
     protected:
       virtual void defect(TestVector& r) override
       {
+        if (hanging_node_modifications_){
+          auto dirichletValues = *this->u_;
+          // Set all non dirichlet values to zero
+          Dune::PDELab::set_shifted_dofs(this->gridoperator_.localAssembler().trialConstraints(), 0.0, dirichletValues);
+          // Set all constrained DOFs to zero in solution
+          Dune::PDELab::set_constrained_dofs(this->gridoperator_.localAssembler().trialConstraints(), 0.0, *this->u_);
+          // Copy correct Dirichlet values back into solution vector
+          Dune::PDELab::copy_constrained_dofs(this->gridoperator_.localAssembler().trialConstraints(), dirichletValues, *this->u_);
+          // Interpolate periodic constraints / hanging nodes
+          this->gridoperator_.localAssembler().backtransform(*this->u_);
+        }
+
         r = 0.0;
         this->gridoperator_.residual(*this->u_, r);
         // use maximum norm as a stopping criterion, this helps loosen the tolerance
@@ -232,6 +255,7 @@ namespace Dune
       Solver& solver_;
       bool result_valid_;
       bool use_maxnorm_;
+      bool hanging_node_modifications_;
     }; // end class NewtonSolver
 
     template<class GOS, class S, class TrlV, class TstV>
@@ -491,6 +515,7 @@ namespace Dune
         , min_linear_reduction_(1e-3)
         , fixed_linear_reduction_(0.0)
         , reassemble_threshold_(0.0)
+        , hanging_node_modifications_(false)
       {}
 
       /**\brief set the minimal reduction in the linear solver
@@ -525,11 +550,28 @@ namespace Dune
         reassemble_threshold_ = reassemble_threshold;
       }
 
+      void setHangingNodeModifications(bool b)
+      {
+        hanging_node_modifications_ = b;
+      }
+
       virtual void prepare_step(Matrix& A, TstV& ) override
       {
         this->reassembled_ = false;
         if (this->res_.defect/this->prev_defect_ > reassemble_threshold_)
           {
+            if (hanging_node_modifications_){
+              auto dirichletValues = *this->u_;
+              // Set all non dirichlet values to zero
+              Dune::PDELab::set_shifted_dofs(this->gridoperator_.localAssembler().trialConstraints(), 0.0, dirichletValues);
+              // Set all constrained DOFs to zero in solution
+              Dune::PDELab::set_constrained_dofs(this->gridoperator_.localAssembler().trialConstraints(), 0.0, *this->u_);
+              // Copy correct Dirichlet values back into solution vector
+              Dune::PDELab::copy_constrained_dofs(this->gridoperator_.localAssembler().trialConstraints(), dirichletValues, *this->u_);
+              // Interpolate periodic constraints / hanging nodes
+              this->gridoperator_.localAssembler().backtransform(*this->u_);
+            }
+
             if (this->verbosity_level_ >= 3)
               std::cout << "      Reassembling matrix..." << std::endl;
             A = 0.0;
@@ -576,6 +618,7 @@ namespace Dune
       RFType min_linear_reduction_;
       bool fixed_linear_reduction_;
       RFType reassemble_threshold_;
+      bool hanging_node_modifications_;
     }; // end class NewtonPrepareStep
 
     template<class GOS, class TrlV, class TstV>
