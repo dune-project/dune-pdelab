@@ -9,6 +9,7 @@ install(FILES bdm1cube2dfem.hh
               opbfem.hh
               p0fem.hh
               pk1d.hh
+              pkdg.hh
               pkfem.hh
               pkqkfem.hh
               powerfem.hh
