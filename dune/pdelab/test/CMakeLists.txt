@@ -16,6 +16,8 @@ dune_add_test(SOURCES testanalytic.cc)
 
 dune_add_test(SOURCES testbindtime.cc)
 
+dune_add_test(SOURCES testblocklocaloperatorwrapper.cc)
+
 dune_add_test(NAME testcomplexnumbers-istl
               SOURCES testcomplexnumbers.cc
               COMPILE_DEFINITIONS SUPERLU_NTYPE=3
@@ -194,19 +196,5 @@ dune_add_test(SOURCES testl2.cc)
 dune_add_test(SOURCES test-blocked-istl-ordering.cc)
 
 dune_add_test(SOURCES testtimedependentboundary_ovlpqk.cc)
-
-exclude_from_headercheck(
-  gridexamples.hh
-  helmholtzoperator.hh
-  testadaptivity-adaptivity.hh
-  testadaptivity-bcextension.hh
-  testadaptivity-bctype.hh
-  testadaptivity-error-indicator.hh
-  testadaptivity-operator.hh
-  testcomplexnumbers-problem.hh
-  testnonoverlappingsinglephaseflow-boilerplate-problem.hh
-  testnonoverlappingsinglephaseflow-problem.hh
-  testpoisson-periodic.hh
-)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vtk)

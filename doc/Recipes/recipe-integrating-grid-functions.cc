@@ -41,11 +41,11 @@ int main(int argc, char** argv)
   typedef Dune::YaspGrid<dim> Grid;
   Grid grid(L,N);
 
-  // [Defining an analytic grid function]
-  auto analyticFunction = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& i, const auto& x){
-    return exp(-(x*x));
-  });
-  //! [Defining an analytic grid function]
+    // [Defining an analytic grid function]
+    auto analyticFunction = Dune::PDELab::makeGridFunctionFromCallable (grid.leafGridView(), [&](const auto& x){
+      return exp(-(x*x));
+    });
+    //! [Defining an analytic grid function]
 
   // [Compute integral]
   auto integral = Dune::PDELab::integrateGridFunction(analyticFunction,10);
