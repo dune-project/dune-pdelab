@@ -11,6 +11,7 @@
 #include <dune/localfunctions/common/localfiniteelementtraits.hh>
 #include <dune/localfunctions/common/localinterpolation.hh>
 #include <dune/localfunctions/common/localtoglobaladaptors.hh>
+#include <dune/localfunctions/common/localinterpolation.hh>
 
 namespace Dune
 {
@@ -264,7 +265,6 @@ namespace Dune
       void interpolate (const F& ff, std::vector<C>& out) const
       {
         typename LB::Traits::DomainType x;
-
         auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
 
         out.resize(QkSize<k,d>::value);
@@ -293,7 +293,6 @@ namespace Dune
       void interpolate (const F& ff, std::vector<C>& out) const
       {
         typename LB::Traits::DomainType x(0.5);
-
         auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
 
         out.resize(1);
