@@ -40,9 +40,6 @@ namespace Dune {
     template<typename GV, typename P, typename Excluder>
     class OverlapEntitySet;
 
-    //template<typename GV, typename P>
-    //class OverlapEntitySetIndexSet;
-
     template<typename GV, typename P>
     struct PartitionViewEntitySetTraits
     {
@@ -654,7 +651,6 @@ namespace Dune {
 
     };
 
-
     template<typename GV, typename P>
     class PartitionViewEntitySetIndexSetBase
     {
@@ -839,7 +835,7 @@ namespace Dune {
 
     template<typename GV, typename P>
     class PartitionViewEntitySetIndexSet
-    : public PartitionViewEntitySetIndexSetBase<GV,P>
+     : public PartitionViewEntitySetIndexSetBase<GV,P>
     {
 
       using Base = PartitionViewEntitySetIndexSetBase<GV,P>;
@@ -900,13 +896,13 @@ namespace Dune {
       {
         if (_active_codims.test(codim))
           for (const auto& e : entities(gridView(),codim,Dune::Partitions::all))
-          {
-            auto gt = e.type();
-            auto gt_index = GlobalGeometryTypeIndex::index(gt);
-            if (Partitions::contains(e.partitionType()))
-              _indices[_gt_offsets[gt_index] + baseIndexSet().index(e)] = _mapped_gt_offsets[gt_index + 1]++;
-          }
-          update_codim(Dune::Codim<cd+1>{});
+            {
+              auto gt = e.type();
+              auto gt_index = GlobalGeometryTypeIndex::index(gt);
+              if (Partitions::contains(e.partitionType()))
+                _indices[_gt_offsets[gt_index] + baseIndexSet().index(e)] = _mapped_gt_offsets[gt_index + 1]++;
+            }
+        update_codim(Dune::Codim<cd+1>{});
       }
 
 
@@ -989,7 +985,7 @@ namespace Dune {
 
 
       PartitionViewEntitySetIndexSet(const GV& gv, CodimMask wanted_codims, bool initialize)
-      : Base(gv,wanted_codims)
+       : Base(gv,wanted_codims)
       {
         if (initialize)
           update(true);
@@ -1004,9 +1000,6 @@ namespace Dune {
       std::vector<Index> _indices;
 
     };
-
-
-
 
     template<typename GV>
     class PartitionViewEntitySetIndexSet<GV,Partitions::All>
