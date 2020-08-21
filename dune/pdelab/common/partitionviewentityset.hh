@@ -106,6 +106,12 @@ namespace Dune {
 
     };
 
+    /**
+     * @brief A grid entity iterator wrapper allowing to exclude elements on a per-element basis
+     *
+     * @tparam BaseIterator The underlying iterator to be wrapped
+     * @tparam Excluder A class deciding which elements to iterate over and which ones to skip
+     */
     template<typename BaseIterator, typename Excluder>
     class ExcluderIterator
     {
