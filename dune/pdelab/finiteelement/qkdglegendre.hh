@@ -354,8 +354,6 @@ namespace Dune
         const Dune::QuadratureRule<R,d>&
           rule = Dune::QuadratureRules<R,d>::rule(gt,2*k);
 
-        auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
-
         // prepare result
         out.resize(n);
         std::vector<R> diagonal(n);

@@ -267,8 +267,6 @@ namespace Dune
         typename LB::Traits::DomainType x;
         auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
 
-        auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
-
         out.resize(QkSize<k,d>::value);
 
         for (int i=0; i<QkSize<k,d>::value; i++)
@@ -295,8 +293,6 @@ namespace Dune
       void interpolate (const F& ff, std::vector<C>& out) const
       {
         typename LB::Traits::DomainType x(0.5);
-        auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
-
         auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
 
         out.resize(1);
