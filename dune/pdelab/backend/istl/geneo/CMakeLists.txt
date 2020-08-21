@@ -17,6 +17,7 @@ install(FILES
 install(FILES
   communicator_with_rank.hh
   geneobasis.hh
+  geneo_matrix_setup.hh
   novlp_geneo_preconditioner.hh
   novlp_operators.hh
   overlaptools.hh

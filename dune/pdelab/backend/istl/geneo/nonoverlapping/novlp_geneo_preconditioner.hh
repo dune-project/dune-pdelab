@@ -6,6 +6,9 @@
 namespace Dune {
   namespace PDELab {
 
+    /**
+     * @brief Black-box GenEO preconditioner working on nonoverlapping matrices
+     */
     template <typename GO, typename Matrix, typename Vector>
     class NonoverlappingGenEOPreconditioner : public Dune::Preconditioner<Vector,Vector> {
 
@@ -60,11 +63,12 @@ namespace Dune {
 
         Dune::NonoverlappingOverlapAdapter<GV, Vector, Matrix> adapter(gv, native(A), avg_nonzeros, algebraic_overlap);
 
-        std::shared_ptr<Matrix> A_extended = adapter.extendMatrix(native(A));
+        auto geneo_matrices = setupGenEOMatrices(go, adapter, A);
+        std::shared_ptr<Matrix> A_extended = std::get<0>(geneo_matrices);
+        std::shared_ptr<Matrix> A_overlap_extended = std::get<1>(geneo_matrices);
+        std::shared_ptr<Vector> part_unity = std::get<2>(geneo_matrices);
 
-        std::shared_ptr<Vector> part_unity = Dune::makePartitionOfUnity<GV, Matrix, Vector>(adapter, *A_extended);
-
-        auto subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(go, adapter, A, A_extended, part_unity, eigenvalue_threshold, nev, nev_arpack, shift);
+        auto subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_overlap_extended, part_unity, eigenvalue_threshold, nev, nev_arpack, shift);
 
         auto coarse_space = std::make_shared<Dune::PDELab::NonoverlappingSubdomainProjectedCoarseSpace<GV, Matrix, Vector>>(adapter, gv, *A_extended, subdomainbasis, verbose);
 
