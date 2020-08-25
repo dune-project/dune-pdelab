@@ -155,13 +155,32 @@ int main(int argc, char** argv)
     using Solver = Dune::PDELab::NewtonMethod<GridOperator, LinearSolver>;
     Solver solver(gridOperator, linearSolver);
 
-    // Set some parameters without loading parameter tree from ini file (just to show that it works)
+    // Use some nonsense parameters to ensure that setting them explicitly works
     Dune::ParameterTree ptree;
     ptree["Verbosity"] = "4";
-    ptree["Terminate.MaxIterations"] = "39";
-    ptree["LineSearch.DampingFactor"] = "0.3";
     ptree["UseMaxNorm"] = "1";
+    ptree["LineSearch.DampingFactor"] = "0.3";
+    ptree["Terminate.MaxIterations"] = "0";
+    ptree["LineSearch.MaxIterations"] = "0";
+
+    // Set some parameters without loading parameter tree from ini file
+    // (just to show that it works)
     solver.setParameters(ptree);
+
+    // Retrieve the terminate interface and set parameters
+    auto terminate = solver.getTerminate();
+    terminate->setParameters(ptree.sub("Terminate"));
+
+    // Assume terminate is default implementation
+    auto& term_default =
+      dynamic_cast<Dune::PDELab::DefaultTerminate<Solver>&>(*terminate);
+    term_default.setForceIteration(true);
+    term_default.setMaxIterations(39);
+
+    // Retrieve line search interface and set parameters
+    auto line_search = solver.getLineSearch();
+    ptree["LineSearch.MaxIterations"] = "20";
+    line_search->setParameters(ptree.sub("LineSearch"));
 
     // Solve PDE
     solver.apply(coefficientVector);
