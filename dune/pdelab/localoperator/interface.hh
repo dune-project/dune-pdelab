@@ -656,11 +656,11 @@ namespace Dune {
        * and/or jacobian_apply_boundary() methods are called (if they are
        * called at all).
        */
-      template<typename EG, typename LFSU, typename X, typename LFSV,
+      template<typename EG, typename LFSU, typename X, typename Z, typename LFSV,
                typename Y>
       void jacobian_apply_volume
       ( const EG& eg,
-        const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv,
+        const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv,
         Y& y) const
       {}
 
@@ -696,11 +696,11 @@ namespace Dune {
        * and/or jacobian_apply_boundary() methods are called (if they are
        * called at all).
        */
-      template<typename EG, typename LFSU, typename X, typename LFSV,
+      template<typename EG, typename LFSU, typename X, typename Z, typename LFSV,
                typename Y>
       void jacobian_apply_volume_post_skeleton
       ( const EG& eg,
-        const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv,
+        const LFSU& lfsu, const X& x, const Z& z, const LFSV& lfsv,
         Y& y) const
       {}
 
@@ -755,12 +755,12 @@ namespace Dune {
        * jacobian_apply_volume() and before the call to
        * jacobian_apply_volume_post_skeleton().
        */
-      template<typename IG, typename LFSU, typename X, typename LFSV,
+      template<typename IG, typename LFSU, typename X, typename Z, typename LFSV,
                typename Y>
       void jacobian_apply_skeleton
       ( const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
-        const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
+        const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& x_n, const Z& z_n, const LFSV& lfsv_n,
         Y& y_s, Y& y_n) const
       {}
 
@@ -800,11 +800,11 @@ namespace Dune {
        * jacobian_apply_volume() and before the call to
        * jacobian_apply_volume_post_skeleton().
        */
-      template<typename IG, typename LFSU, typename X, typename LFSV,
+      template<typename IG, typename LFSU, typename X, typename Z, typename LFSV,
                typename Y>
       void jacobian_apply_boundary
       ( const IG& ig,
-        const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_s, const X& x_s, const Z& z_s, const LFSV& lfsv_s,
         Y& y_s) const
       {}
 
