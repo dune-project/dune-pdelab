@@ -26,6 +26,13 @@ namespace Dune {
       }
 
       /*!
+       * \brief Append a vector into the basis
+       */
+      void append(X& basis_function) {
+        this->local_basis.push_back(std::make_shared<X>(basis_function));
+      }
+
+      /*!
        * \brief Returns basis vector i
        */
       std::shared_ptr<X> get_basis_vector(int i) {
