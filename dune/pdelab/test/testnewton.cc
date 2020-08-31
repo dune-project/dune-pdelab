@@ -171,11 +171,12 @@ int main(int argc, char** argv)
     auto terminate = solver.getTerminate();
     terminate->setParameters(ptree.sub("Terminate"));
 
-    // Assume terminate is default implementation
-    auto& term_default =
-      dynamic_cast<Dune::PDELab::DefaultTerminate<Solver>&>(*terminate);
-    term_default.setForceIteration(true);
-    term_default.setMaxIterations(39);
+    // Create new terminate with other values and insert it into solver
+    auto terminate =
+      std::make_shared<Dune::PDELab::DefaultTerminate<Solver>>(solver);
+    terminate->setForceIteration(true);
+    terminate->setMaxIterations(39);
+    solver.setTerminate(terminate);
 
     // Retrieve line search interface and set parameters
     auto line_search = solver.getLineSearch();
