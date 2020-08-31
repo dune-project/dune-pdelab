@@ -172,11 +172,11 @@ int main(int argc, char** argv)
     terminate->setParameters(ptree.sub("Terminate"));
 
     // Create new terminate with other values and insert it into solver
-    auto terminate =
+    auto terminate_new =
       std::make_shared<Dune::PDELab::DefaultTerminate<Solver>>(solver);
-    terminate->setForceIteration(true);
-    terminate->setMaxIterations(39);
-    solver.setTerminate(terminate);
+    terminate_new->setForceIteration(true);
+    terminate_new->setMaxIterations(39);
+    solver.setTerminate(terminate_new);
 
     // Retrieve line search interface and set parameters
     auto line_search = solver.getLineSearch();
