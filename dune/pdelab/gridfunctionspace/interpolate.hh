@@ -111,9 +111,6 @@ namespace Dune {
         {
           std::vector<typename XG::ElementType> xl(lfs.size());
            // call interpolate for the basis
-          using Domain = typename Functions::SignatureTraits<F>::Domain;
-          using Range = typename Functions::SignatureTraits<F>::Range;
-
           FiniteElementInterfaceSwitch<typename LFS::Traits::FiniteElement>::interpolation(lfs.finiteElement()).
             interpolate(f, xl);
 
