@@ -148,7 +148,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   auto ghost_excluder = std::make_shared<Dune::PDELab::EntitySetGhostExcluder<Vector, GV>>();
 
 
-  using ES = Dune::PDELab::OverlapEntitySet<GV,Dune::Partitions::All, ESExcluder>;
+  using ES = Dune::PDELab::ExcluderEntitySet<GV,Dune::Partitions::All, ESExcluder>;
   ES es(gv, ghost_excluder);
 
   // make problem parameters

@@ -38,10 +38,7 @@ namespace Dune {
     class PartitionViewEntitySetIndexSet;
 
     template<typename GV, typename P, typename Excluder>
-    class OverlapEntitySet;
-
-    //template<typename GV, typename P>
-    //class OverlapEntitySetIndexSet;
+    class ExcluderEntitySet;
 
     template<typename GV, typename P>
     struct PartitionViewEntitySetTraits
@@ -109,6 +106,12 @@ namespace Dune {
 
     };
 
+    /**
+     * @brief A grid entity iterator wrapper allowing to exclude elements on a per-element basis
+     *
+     * @tparam BaseIterator The underlying iterator to be wrapped
+     * @tparam Excluder A class deciding which elements to iterate over and which ones to skip
+     */
     template<typename BaseIterator, typename Excluder>
     class ExcluderIterator
     {
@@ -162,16 +165,14 @@ namespace Dune {
 
 
     template<typename GV, typename P, typename Excluder>
-    struct OverlapEntitySetTraits
+    struct ExcluderEntitySetTraits
     {
 
       using Partitions = typename std::decay<P>::type;
 
       using Grid = typename GV::Traits::Grid;
       using GridView = GV;
-      //using EntitySet = Dune::PDELab::OverlapEntitySet<GV,P>;
-      using EntitySet = Dune::PDELab::OverlapEntitySet<GV,P,Excluder>;
-      //using IndexSet = OverlapEntitySetIndexSet<GV,Partitions>;
+      using EntitySet = Dune::PDELab::ExcluderEntitySet<GV,P,Excluder>;
       using IndexSet = PartitionViewEntitySetIndexSet<GV,Partitions>;
       using BaseIndexSet = typename GV::Traits::IndexSet;
 
@@ -209,7 +210,6 @@ namespace Dune {
       struct Codim
       {
 
-        //using Iterator = typename GV::template Codim<codim>::template Partition<Partitions::partitionIterator()>::Iterator;
         using ExcluderIteratorImp = ExcluderIterator<typename GV::template Codim<codim>::template Partition<Partitions::partitionIterator()>::Iterator, Excluder>;
         using Iterator = EntityIterator<codim, Grid, ExcluderIteratorImp>;
 
@@ -222,26 +222,26 @@ namespace Dune {
         template<PartitionIteratorType pitype>
         struct Partition
         {
-
-          //using Iterator = typename GV::template Codim<codim>::template Partition<pitype>::Iterator;
-
           using ExcluderIteratorImp = ExcluderIterator<typename GV::template Codim<codim>::template Partition<pitype>::Iterator, Excluder>;
           using Iterator = EntityIterator<codim, Grid, ExcluderIteratorImp>;
-
-
         };
 
       };
 
     };
 
+    /**
+     * @brief Entity set that allows skipping elements
+     *
+     * @tparam Excluder A user-supplied class deciding per-element which elements should be iterated over and which ones should be skipped
+     */
     template<typename GV, typename P, typename Excluder>
-    class OverlapEntitySet
+    class ExcluderEntitySet
     {
 
     public:
 
-      using Traits = OverlapEntitySetTraits<GV,P,Excluder>;
+      using Traits = ExcluderEntitySetTraits<GV,P,Excluder>;
 
       using Partitions = typename Traits::Partitions;
       using Grid      = typename Traits::Grid;
@@ -310,23 +310,19 @@ namespace Dune {
       }
 
       template<dim_type codim, PartitionIteratorType pitype>
-      //typename GV::template Codim<codim>::template Partition<pitype>::Iterator
       typename Codim<codim>::template Partition<pitype>::Iterator
       begin() const
       {
         auto imp = typename Codim<codim>::template Partition<pitype>::ExcluderIteratorImp(gridView().template begin<codim,pitype>(), gridView().template end<codim,pitype>(), excluder_);
         return typename Codim<codim>::template Partition<pitype>::Iterator(imp);
-        //return gridView().template begin<codim,pitype>();
       }
 
       template<dim_type codim, PartitionIteratorType pitype>
-      //typename GV::template Codim<codim>::template Partition<pitype>::Iterator
       typename Codim<codim>::template Partition<pitype>::Iterator
       end() const
       {
         auto imp = typename Codim<codim>::template Partition<pitype>::ExcluderIteratorImp(gridView().template end<codim,pitype>(), gridView().template end<codim,pitype>(), excluder_);
         return typename Codim<codim>::template Partition<pitype>::Iterator(imp);
-        //return gridView().template end<codim,pitype>();
       }
 
       size_type size(dim_type codim) const
@@ -394,11 +390,11 @@ namespace Dune {
         return indexSet().gridView();
       }
 
-      OverlapEntitySet(const GridView& gv, CodimMask supported_codims, std::shared_ptr<Excluder> excluder)
+      ExcluderEntitySet(const GridView& gv, CodimMask supported_codims, std::shared_ptr<Excluder> excluder)
         : _index_set(std::make_shared<IndexSet>(gv,supported_codims,true)), excluder_(excluder)
       {}
 
-      explicit OverlapEntitySet(const GridView& gv, std::shared_ptr<Excluder> excluder, bool initialize = true)
+      explicit ExcluderEntitySet(const GridView& gv, std::shared_ptr<Excluder> excluder, bool initialize = true)
         : _index_set(std::make_shared<IndexSet>(gv,CodimMask(initialize ? ~0ull : 0ull),initialize)), excluder_(excluder)
       {}
 
@@ -654,7 +650,6 @@ namespace Dune {
 
     };
 
-
     template<typename GV, typename P>
     class PartitionViewEntitySetIndexSetBase
     {
@@ -663,7 +658,7 @@ namespace Dune {
       friend class PartitionViewEntitySet;
 
       template<typename,typename,typename>
-      friend class OverlapEntitySet;
+      friend class ExcluderEntitySet;
 
     public:
 
@@ -839,7 +834,7 @@ namespace Dune {
 
     template<typename GV, typename P>
     class PartitionViewEntitySetIndexSet
-    : public PartitionViewEntitySetIndexSetBase<GV,P>
+     : public PartitionViewEntitySetIndexSetBase<GV,P>
     {
 
       using Base = PartitionViewEntitySetIndexSetBase<GV,P>;
@@ -900,13 +895,13 @@ namespace Dune {
       {
         if (_active_codims.test(codim))
           for (const auto& e : entities(gridView(),codim,Dune::Partitions::all))
-          {
-            auto gt = e.type();
-            auto gt_index = GlobalGeometryTypeIndex::index(gt);
-            if (Partitions::contains(e.partitionType()))
-              _indices[_gt_offsets[gt_index] + baseIndexSet().index(e)] = _mapped_gt_offsets[gt_index + 1]++;
-          }
-          update_codim(Dune::Codim<cd+1>{});
+            {
+              auto gt = e.type();
+              auto gt_index = GlobalGeometryTypeIndex::index(gt);
+              if (Partitions::contains(e.partitionType()))
+                _indices[_gt_offsets[gt_index] + baseIndexSet().index(e)] = _mapped_gt_offsets[gt_index + 1]++;
+            }
+        update_codim(Dune::Codim<cd+1>{});
       }
 
 
@@ -989,7 +984,7 @@ namespace Dune {
 
 
       PartitionViewEntitySetIndexSet(const GV& gv, CodimMask wanted_codims, bool initialize)
-      : Base(gv,wanted_codims)
+       : Base(gv,wanted_codims)
       {
         if (initialize)
           update(true);
@@ -1005,9 +1000,6 @@ namespace Dune {
 
     };
 
-
-
-
     template<typename GV>
     class PartitionViewEntitySetIndexSet<GV,Partitions::All>
       : public PartitionViewEntitySetIndexSetBase<GV,Partitions::All>
@@ -1019,7 +1011,7 @@ namespace Dune {
       friend class Dune::PDELab::PartitionViewEntitySet;
 
       template<typename,typename,typename>
-      friend class Dune::PDELab::OverlapEntitySet;
+      friend class Dune::PDELab::ExcluderEntitySet;
 
     public:
 
@@ -1118,7 +1110,7 @@ namespace Dune {
       };
 
       template<typename GV,typename P,typename Excluder>
-      struct _isEntitySet<OverlapEntitySet<GV,P,Excluder>>
+      struct _isEntitySet<ExcluderEntitySet<GV,P,Excluder>>
       {
         using type = std::true_type;
       };
