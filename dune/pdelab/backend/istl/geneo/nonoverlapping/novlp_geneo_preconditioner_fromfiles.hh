@@ -62,31 +62,32 @@ namespace Dune {
 
         const GV& gv = go.trialGridFunctionSpace().gridView();
 
-        Dune::NonoverlappingOverlapAdapter<GV, Vector, Matrix> adapter(gv, native(A), avg_nonzeros, algebraic_overlap);
+       Dune::NonoverlappingOverlapAdapter<GV, Vector, Matrix> adapter(gv, native(A), avg_nonzeros, algebraic_overlap);
 
-        std::shared_ptr<Matrix> A_extended = adapter.extendMatrix(native(A));
-
-        std::shared_ptr<Vector> part_unity = Dune::makePartitionOfUnity<GV, Matrix, Vector>(adapter, *A_extended);
+        auto geneo_matrices = setupGenEOMatrices(go, adapter, A);
+        std::shared_ptr<Matrix> A_extended = std::get<0>(geneo_matrices);
+        std::shared_ptr<Matrix> A_overlap_extended = std::get<1>(geneo_matrices);
+        std::shared_ptr<Vector> part_unity = std::get<2>(geneo_matrices);
 
 
         std::string basename = path_to_storage+"EV";
 
         if (multiscale==1) { // first step of the multiscale FRAMEWORK: solving the pristine model & saving it to file
-          subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(go, adapter, A, A_extended, part_unity, eigenvalue_threshold, nev, nev_arpack, shift, false, 2);
+          subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_overlap_extended, part_unity, eigenvalue_threshold, nev, nev_arpack, shift, false, 2);
           // Save the EV basis
           int rank = adapter.gridView().comm().rank();
           subdomainbasis->to_file(basename, rank);
         } else if (multiscale==2) { // other step of the multiscale FRAMEWORK: loading the subdomain basis from files
           std::vector<int>::iterator it = std::find(std::begin(proc_to_be_solved), std::end(proc_to_be_solved), adapter.gridView().comm().rank());
           if (it != proc_to_be_solved.end()) {
-            subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(go, adapter, A, A_extended, part_unity, eigenvalue_threshold, nev, nev_arpack, shift, false, 2);
+            subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_overlap_extended, part_unity, eigenvalue_threshold, nev, nev_arpack, shift, false, 2);
           } else {
             subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasisFromFiles<GV, Matrix, Vector>>(adapter, basename);
           }
         } else if (multiscale==3) {
            // Test case for write/read database
            // Check numbers of digit initially and after the saving/reading procedure
-           subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(go, adapter, A, A_extended, part_unity, eigenvalue_threshold, nev, nev_arpack, shift, false, 2);
+            subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_overlap_extended, part_unity, eigenvalue_threshold, nev, nev_arpack, shift, false, 2);
 
            int rank = adapter.gridView().comm().rank();
            subdomainbasis->to_file(basename, rank);
@@ -101,7 +102,7 @@ namespace Dune {
         } else { // Classic case: no need to use multiscale FRAMEWORK
           // subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GV, Matrix, Vector>>(adapter, *A_extended, *A_ovlp_extended, *part_unity, eigenvalue_threshold, nev, nev_arpack, shift,false,2);
 
-          subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(go, adapter, A, A_extended, part_unity, eigenvalue_threshold, nev, nev_arpack, shift, false, 2);
+          subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_overlap_extended, part_unity, eigenvalue_threshold, nev, nev_arpack, shift, false, 2);
         }
 
         auto coarse_space = std::make_shared<Dune::PDELab::NonoverlappingSubdomainProjectedCoarseSpace<GV, Matrix, Vector>>(adapter, gv, *A_extended, subdomainbasis, verbose);

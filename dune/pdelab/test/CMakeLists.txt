@@ -68,7 +68,7 @@ dune_add_test(SOURCES testgeneo_nonovlp.cc
               CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
               )
 
-dune_add_test(SOURCES testgeneo_nonovlp_fromfile.cc
+dune_add_test(SOURCES testgeneo_nonovlp_coarsespace.cc
               MPI_RANKS 2
               TIMEOUT 300
               CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
