@@ -115,6 +115,18 @@ public:
       }
   };
 
+  // template <class CV, class X>
+  // void prolongate_CtoF (const CV& coarse, X& prolongated) {
+  //   prolongated = 0.0;
+
+  //   // Prolongate result
+  //   for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
+  //     X local_result(*subdomainbasis_->get_basis_vector(basis_index));
+  //     local_result *= coarse[my_basis_array_offset_ + basis_index];
+  //     prolongated += local_result;
+  //   }
+  // }
+
 
 void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper& helper) {
 
@@ -214,8 +226,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
   LOP lop(problem);
 
-
-
   // LocalOperator wrapper zeroing out subdomains' interiors in order to set up overlap matrix
 
   typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
@@ -240,8 +250,8 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   int nev_arpack = nev;
   // double shift = 0.001;
 
-  // int multiscale = 1;
-  // std::vector<int> proc_to_be_solved = {};
+  int multiscale = 0;
+  std::vector<int> proc_to_be_solved = {};
 
   using Dune::PDELab::Backend::native;
 
@@ -267,134 +277,69 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> subdomainbasis;
 
-  subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_overlap_extended, part_unity, eigenvalue_threshold, nev, nev_arpack);
-  // if (multiscale==1) { // first step of the multiscale FRAMEWORK: solving the pristine model & saving it to file
-  //   subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_overlap_extended, part_unity, eigenvalue_threshold, nev, nev_arpack);
-  //   // Save the EV basis
-  //   int rank = adapter.gridView().comm().rank();
-  //   subdomainbasis->to_file(basename, rank);
-  // } else if (multiscale==2) { // other step of the multiscale FRAMEWORK: loading the subdomain basis from files
-  //   std::vector<int>::iterator it = std::find(std::begin(proc_to_be_solved), std::end(proc_to_be_solved), adapter.gridView().comm().rank());
-  //   if (it != proc_to_be_solved.end()) {
-  //     subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_overlap_extended, part_unity, eigenvalue_threshold, nev, nev_arpack);
-  //   } else {
-  //     subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasisFromFiles<GV, Matrix, Vector>>(adapter, basename);
-  //   }
-  // } else if (multiscale==3) {
-  //   // Test case for write/read database
-  //   // Check numbers of digit initially and after the saving/reading procedure
-  //   subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_overlap_extended, part_unity, eigenvalue_threshold, nev, nev_arpack);
-
-  //   int rank = adapter.gridView().comm().rank();
-  //   subdomainbasis->to_file(basename, rank);
-
-  //   auto fromfile_subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasisFromFiles<GV, Matrix, Vector>>(adapter, basename);
-  //   fromfile_subdomainbasis->to_file(basename+"_rewritten", rank);
-  //   // auto tmp = (*subdomainbasis->get_basis_vector(0));
-  //   // tmp -= (*fromfile_subdomainbasis->get_basis_vector(0));
-  //   // std::cout << tmp.two_norm() << std::endl;
-  // } else { // Classic case: no need to use multiscale FRAMEWORK
-  //   subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_overlap_extended, part_unity, eigenvalue_threshold, nev, nev_arpack);
-  // }
-
-  // Extend the load vector d (right hand side) of the fine to space to its virtual overlap
-  Vector b(adapter.getExtendedSize());
-
-  //~ Add a solution to another rhs here fill with ones
-  // for(auto it = b.begin(); it!=b.end(); ++it){
-  //   b[it.index()] += 1.0;
-    // std::srand(std::time(0));
-    // b[it.index()] = -1.0 + 2.0* (std::rand()+0.0) / (RAND_MAX + 1.0);
-    // if(adapter.gridView().comm().rank()==0) std::cout<< b[it.index()] << std::endl;
-  // }
-
-  // ~ Add the true solution
-  adapter.extendVector(native(d), b);
-
-  communicator->forward<AddGatherScatter<Vector>>(b,b); // make function known in other subdomains
-
-  const int block_size = Vector::block_type::dimension;
-  Matrix A_dirichlet = *A_extended;
-  // Apply Dirichlet conditions to matrix on processor boundaries, inferred from partition of unity
-  for (auto rIt=A_dirichlet.begin(); rIt!=A_dirichlet.end(); ++rIt){
-      for(int block_i = 0; block_i < block_size; block_i++){
-          if ((*part_unity)[rIt.index()][block_i] == .0){
-              for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
-                  for(int block_j = 0; block_j < block_size; block_j++){
-                      (*cIt)[block_i][block_j] = (rIt.index() == cIt.index() && block_i == block_j) ? 1.0 : 0.0;
-                  }
-              }
-          }
-      }
+  // Load from offline the EV basis & recompute if needed
+  std::vector<int>::iterator it = std::find(std::begin(proc_to_be_solved), std::end(proc_to_be_solved), adapter.gridView().comm().rank());
+  if (it != proc_to_be_solved.end()) {
+    subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_overlap_extended, part_unity, eigenvalue_threshold, nev, nev_arpack);
+  } else {
+    subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasisFromFiles<GV, Matrix, Vector>>(adapter, basename);
   }
 
-  Vector b_cpy(b);
-  for (auto rIt=A_dirichlet.begin(); rIt!=A_dirichlet.end(); ++rIt) {
-      for(int block_i = 0; block_i < block_size; block_i++){
-          bool isDirichlet = true;
-          for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
-              for(int block_j = 0; block_j < block_size; block_j++){
-                  if ((rIt.index() != cIt.index() || block_i!=block_j) && (*cIt)[block_i][block_j] != 0.0){
-                      isDirichlet = false;
-                      break;
-                  }
-              }
-              if(!isDirichlet) break;
-          }
-          if (isDirichlet){
-              b_cpy[rIt.index()] = .0;
-              b[rIt.index()] = .0;
-          }
-      }
-  }
-
-  // Compute the fine solution for all subdomains
-  // std::shared_ptr<Vector> ui(adapter.getExtendedSize());
-  Vector ui(adapter.getExtendedSize());
-  Dune::UMFPack<Matrix> subdomain_solver(A_dirichlet, false);
-  Dune::InverseOperatorResult result1;
-  subdomain_solver.apply(ui,b_cpy,result1);
-  subdomainbasis->append(ui);
-
-  // save the subdomain basis here to keep the particular solution
-  int rank = adapter.gridView().comm().rank();
-  subdomainbasis->to_file(basename, rank);
-
-  auto coarse_space = std::make_shared<Dune::PDELab::NonoverlappingSubdomainProjectedCoarseSpace<GV, Matrix, Vector>>(adapter, gv, *A_extended, subdomainbasis, verbose);
-
-  // Get the coarse matrix from the coarse space
-  std::shared_ptr<CoarseMatrix> AH = coarse_space->get_coarse_system();
-
-  // Save the coarse space
+  // Load the coarse matrix
+  CoarseMatrix AH;
   std::string filename = path_to_storage + "OfflineAH.mm";
-  Dune::storeMatrixMarket(*AH, filename, 15);
+  std::ifstream file;
+  file.open(filename.c_str(), std::ios::in);
+  Dune::readMatrixMarket(AH,file);
+  file.close();
 
-  // Save the sizes of local basis
-  coarse_space->local_basis_sizes_to_file(path_to_storage + "local_size");
+  // if(adapter.gridView().comm().rank()==0) {
+  //   std::cout << AH.N() << std::endl;
+  //   std::cout << AH.M() << std::endl;}
 
-  // // ~~~~~~~~~~ Solve the coarse space system ~~~~~~~~~~
-  // // Objective :  find x = RH^T * AH^-1 * RH * b
+  // ~~~~~~~~~~ Solve the coarse space system ~~~~~~~~~~
+  // Objective :  find x = RH^T * AH^-1 * RH * b
 
   // // Use the correct rhs to solve the final system
   // adapter.extendVector(native(d), b);
-
-  // Initializate a load vector (right hand side) in the coarse space : coarse_d = RH * b
-  CoarseVector coarse_d(coarse_space->basis_size(), coarse_space->basis_size());
-  coarse_space->restrict(b,coarse_d);
-
-  // Save the coarse rhs
+  // // Initializate a load vector (right hand side) in the coarse space : coarse_d = RH * b
+  CoarseVector coarse_d;
+  // coarse_space->restrict(b,coarse_d);
+  // From Offline
   filename = path_to_storage + "OfflineCoarseb.mm";
-  Dune::storeMatrixMarket(coarse_d, filename, 15);
+  file.open(filename.c_str(), std::ios::in);
+  Dune::readMatrixMarket(coarse_d,file);
+  file.close();
 
   // Use of UMFPack to solve the problem [AH * coarse_v = RH * b] instead of inversing AH :: objective is to have [coarse_v = AH^-1 *  RH * b]
-  Dune::UMFPack<CoarseMatrix> coarse_solver(*AH, false); // Is there something better than UMFPACK?
-  CoarseVector coarse_v(coarse_space->basis_size(), coarse_space->basis_size());
+  Dune::UMFPack<CoarseMatrix> coarse_solver(AH, false);
+  CoarseVector coarse_v(AH.N(), AH.M());
   Dune::InverseOperatorResult result;
   coarse_solver.apply(coarse_v,coarse_d,result);
 
   // Prolongate the solution in order to have vsol on the fine space : vsol = RH^T * coarse_v = RH^T * AH^-1 * RH * b
-  Vector vsol(adapter.getExtendedSize());
-  coarse_space->prolongate(coarse_v, vsol);
+  Vector vsol(adapter.getExtendedSize()); // TODO get rid of adapter in the sequential solve
+  // Prolongate result
+  vsol = 0.0;
+
+  filename = path_to_storage + "local_size.txt";
+  std::vector<int> local_size(adapter.gridView().comm().size()), local_offset(adapter.gridView().comm().size()+1);
+  file.open(filename.c_str(), std::ios::in);
+  int count=0;
+  local_offset[0]=0;
+  for (std::string line; std::getline(file, line); ) {
+    int value = std::stoi(line);
+    local_size[count] = value;
+    local_offset[count+1] = value+local_offset[count];
+    count+=1;
+    // if(adapter.gridView().comm().rank()==0)
+    //   std::cout << "local_size : " << local_size[count] << ", local_offset : " << local_offset[count] << std::endl;
+  }
+  for (int basis_index = 0; basis_index < local_size[gv.comm().rank()]; basis_index++) {
+    Vector local_result(*subdomainbasis->get_basis_vector(basis_index));
+    local_result *= coarse_v[local_offset[gv.comm().rank()] + basis_index];
+    vsol += local_result;
+  }
 
   communicator->forward<AddGatherScatter<Vector>>(vsol, vsol);
 
@@ -425,8 +370,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   //     fieldname.prefix("EV");
 
   //     Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,vect,fieldname);
-  //     vtkwriter.write(filename,Dune::VTK::ascii);
-  // }
+  //     vtkwriter.write(filename,Dune::VTK::ascii);}
 }
 
 
