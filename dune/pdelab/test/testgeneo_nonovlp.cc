@@ -24,7 +24,7 @@ public:
     typename Traits::DomainType xglobal = e.geometry().global(x);
 
     RF perm1 = 1e0;
-    RF perm2 = 1e0; // FIXME we want high contrast
+    RF perm2 = 1e6;
     RF layer_thickness = 1.0 / 40.0;
 
     RF coeff = (int)std::floor(xglobal[0] / layer_thickness) % 2 == 0 ? perm1 : perm2;
@@ -127,7 +127,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   N.fill(cells);
   grid = Dune::StructuredGridFactory<GM>::createCubeGrid(l,u,N);
 
-
   typedef typename GM::LeafGridView GV;
   auto gv = grid->leafGridView();
 
@@ -171,6 +170,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
                                           Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>
                                           > GFS;
   GFS gfs(es,fem);
+  gfs.name("solution");
 
   int verbose = 0;
   if (gfs.gridView().comm().rank()==0) verbose = 2;
