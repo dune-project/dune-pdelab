@@ -171,8 +171,6 @@ namespace Dune {
       }
 
       return std::make_tuple(extended_matrices.first, extended_matrices.second, part_unity);
-      //std::shared_ptr<Matrix> A_ovlp_extended = extended_matrices.first;
-      //A_extended = extended_matrices.second;
     }
   }
 }
