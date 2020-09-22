@@ -19,6 +19,18 @@ namespace Dune {
         using ElementType = typename View::value_type;
         using SizeType = typename View::size_type;
 
+        // If zero is set to false this class will forward all container
+        // accesses to the vector view that is passed as first argument. This
+        // means it will basically behave the same way as the view itself.
+        //
+        // If you set zero to false it will return 0.0 when it is asked for a
+        // coefficient.
+        //
+        // Use case: The methods in the localoperator interface sometimes get
+        // multiple coefficient views that need to have the same type (e.g. x_s
+        // and x_n for the ansatz function in skeleton terms). This can be used
+        // to 'null' one of those vectors without actually changing any values
+        // in memory.
         ZeroViewWrapper(const View& view, bool zero)
           : _view(view), _zero(zero), _zeroCoefficient(0.0)
         {}
