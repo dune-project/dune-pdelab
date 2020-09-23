@@ -80,6 +80,12 @@ dune_add_test(SOURCES testgeneo_nonovlp_online.cc
               CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
               )
 
+dune_add_test(SOURCES testgeneo_nonovlp_PartialUseOfAGrid.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
 dune_add_test(SOURCES testschwarznonoverlapping.cc
               MPI_RANKS 4
               TIMEOUT 300

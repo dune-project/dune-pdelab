@@ -1289,6 +1289,13 @@ namespace Dune {
       for (typename ScalarVector::size_type i=0; i<new2old_localindex_.size(); i++)
         restricted[new2old_localindex_[i]] = extended[i];
     }
+    std::vector<LocalIndex> get_old2new_localindex() {
+      return epis_.originalToExtendedLocalIndex();
+    }
+
+    std::vector<LocalIndex> get_new2old_localindex() {
+      return new2old_localindex_;
+    }
 
   private:
 
