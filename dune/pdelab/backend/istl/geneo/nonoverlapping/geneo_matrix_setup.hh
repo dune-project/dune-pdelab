@@ -152,7 +152,7 @@ namespace Dune {
       // Enforce problem's Dirichlet condition on PoU
       const int block_size = Vector::block_type::dimension;
       for (auto rIt=A_extended->begin(); rIt!=A_extended->end(); ++rIt) {
-        for(int block_i = 0; block_i < block_size; block_i++){ //loop over block, TODO block_size
+        for(int block_i = 0; block_i < block_size; block_i++){ //loop over block
           bool isDirichlet = true;
           for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt)
           {
@@ -171,8 +171,6 @@ namespace Dune {
       }
 
       return std::make_tuple(extended_matrices.first, extended_matrices.second, part_unity);
-      //std::shared_ptr<Matrix> A_ovlp_extended = extended_matrices.first;
-      //A_extended = extended_matrices.second;
     }
   }
 }

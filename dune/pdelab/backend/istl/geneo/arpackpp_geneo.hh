@@ -337,7 +337,7 @@ namespace ArpackGeneo
       for (int i = 0; i < nev; i++) {
         lambda[i] = sigma+1./ev[index[i]];
         Real* x_raw = dprob.RawEigenvector(index[i]);
-        WrappedMatrix::arrayToVector(x_raw,x[i]);
+        WrappedMatrix::arrayToDomainBlockVector(x_raw,x[i]);
       }
 
       // obtain number of Arnoldi update iterations actually taken

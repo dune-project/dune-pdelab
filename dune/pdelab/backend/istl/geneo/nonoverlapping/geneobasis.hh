@@ -21,7 +21,6 @@ namespace Dune {
     template<class GO, class Matrix, class Vector>
     class NonoverlappingGenEOBasis : public SubdomainBasis<Vector>
     {
-      typedef Dune::PDELab::Backend::Native<Matrix> ISTLM;
       using GFS = typename GO::Traits::TrialGridFunctionSpace;
       using GridView = typename GFS::Traits::GridView;
       using GV = GridView;
@@ -55,15 +54,20 @@ namespace Dune {
         // X * A_0 * X
         Matrix ovlp_mat(*A_ovlp_extended);
         using Dune::PDELab::Backend::native;
+        const int block_size = Vector::block_type::dimension;
         for (auto row_iter = native(ovlp_mat).begin(); row_iter != native(ovlp_mat).end(); row_iter++) {
           for (auto col_iter = row_iter->begin(); col_iter != row_iter->end(); col_iter++) {
-            *col_iter *= native(*part_unity)[row_iter.index()] * native(*part_unity)[col_iter.index()];
+            for (int i = 0; i < block_size; i++) {
+              for (int j = 0; j < block_size; j++) {
+                (*col_iter)[i][j] *= native(*part_unity)[row_iter.index()][i] * native(*part_unity)[col_iter.index()][j];
+              }
+            }
           }
         }
 
         // Setup Arpack for solving generalized eigenproblem
         std::cout << "ARPACK setup...";
-        ArpackGeneo::ArPackPlusPlus_Algorithms<ISTLM, Vector> arpack(*A_extended);
+        ArpackGeneo::ArPackPlusPlus_Algorithms<Matrix, Vector> arpack(*A_extended);
         std::cout << " done" << std::endl;
         double eps = 0.0;
 
@@ -94,14 +98,13 @@ namespace Dune {
         // Write results to basis
         this->local_basis.resize(cnt);
         for (int base_id = 0; base_id < cnt; base_id++) {
-          this->local_basis[base_id] = std::make_shared<Vector>(*part_unity);
-          // scale partition of unity with eigenvector
-          std::transform(
-            this->local_basis[base_id]->begin(),this->local_basis[base_id]->end(),
-            eigenvectors[base_id].begin(),
-            this->local_basis[base_id]->begin(),
-            std::multiplies<>()
-            );
+          this->local_basis[base_id] = std::make_shared<Vector>(adapter.getExtendedSize());
+          *this->local_basis[base_id] = eigenvectors[base_id];
+          for (int i = 0; i < part_unity->N(); i++) {
+            for (int j = 0; j < block_size; j++) {
+              (*(this->local_basis[base_id]))[i][j] *= (*part_unity)[i][j];
+            }
+          }
         }
 
         // Normalize basis vectors
