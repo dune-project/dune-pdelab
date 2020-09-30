@@ -58,7 +58,7 @@ namespace Dune {
       {
         return (*a.localVector_)[i];
       }
-      static void scatterWithRank (V& a, typename V::value_type v, int i, int proc)
+      static void scatter (V& a, typename V::value_type v, int i, int proc)
       {
         (*a.getVectorForRank(proc))[i]=v;
       }

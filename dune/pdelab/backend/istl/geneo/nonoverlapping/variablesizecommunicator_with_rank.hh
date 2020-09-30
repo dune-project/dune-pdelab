@@ -536,18 +536,20 @@ private:
 };
 
 template <typename T>
-struct hasTemplatedGatherWithProc
-{
-  typedef char (& yes)[1];
-  typedef char (& no)[2];
+struct has2ArgSize {
 
-  template <typename C> static yes check(decltype(&C::sizeWithRank)); // TODO: Improve. Very much.
-  template <typename> static no check(...);
+  struct Any { template <typename U> operator U( void ); };
 
-  static bool const value = sizeof(check<T>(0)) == sizeof(yes);
+  // Check for size function argument pattern
+  template<typename U>
+  static int32_t SFINAE(decltype(std::declval<U>().size(Any(), Any()))*);
+
+  template<typename U>
+  static int8_t SFINAE(...);
+
+  static const bool value = sizeof(SFINAE<T>(nullptr)) == sizeof(int32_t);
 };
 
-/** @} */
 namespace
 {
 
@@ -568,16 +570,17 @@ public:
   {
     return true;
   }
-  std::size_t sizeWithRank(std::size_t i, int proc)
+  std::size_t size(std::size_t i, int proc)
   {
     DUNE_UNUSED_PARAMETER(i);
+    DUNE_UNUSED_PARAMETER(proc);
     return 1;
   }
   template<class B>
-  void gatherWithRank(B& buf, int i, int proc)
+  void gather(B& buf, int i, int proc)
   {
-    if constexpr (hasTemplatedGatherWithProc<DataHandle>::value)
-      buf.write(data_.sizeWithRank(i, proc));
+    if constexpr (has2ArgSize<DataHandle>::value)
+      buf.write(data_.size(i, proc));
     else
       buf.write(data_.size(i));
   }
@@ -683,8 +686,8 @@ struct PackEntries
       std::size_t noIndices=std::min(buffer.size()/tracker.fixedSize, tracker.indicesLeft());
       for(std::size_t i=0; i< noIndices; ++i)
       {
-        if constexpr (hasTemplatedGatherWithProc<DataHandle>::value)
-          handle.gatherWithRank(buffer, tracker.index(), tracker.rank());
+        if constexpr (has2ArgSize<DataHandle>::value)
+          handle.gather(buffer, tracker.index(), tracker.rank());
         else
           handle.gather(buffer, tracker.index());
         tracker.moveToNextIndex();
@@ -695,12 +698,12 @@ struct PackEntries
     {
       int packed=0;
       tracker.skipZeroIndices();
-      if constexpr (hasTemplatedGatherWithProc<DataHandle>::value) {
+      if constexpr (has2ArgSize<DataHandle>::value) {
         while(!tracker.finished())
-          if(buffer.hasSpaceForItems(handle.sizeWithRank(tracker.index(), tracker.rank())))
+          if(buffer.hasSpaceForItems(handle.size(tracker.index(), tracker.rank())))
           {
-            handle.gatherWithRank(buffer, tracker.index(), tracker.rank());
-            packed+=handle.sizeWithRank(tracker.index(), tracker.rank());
+            handle.gather(buffer, tracker.index(), tracker.rank());
+            packed+=handle.size(tracker.index(), tracker.rank());
             tracker.moveToNextIndex();
           }
           else
@@ -747,7 +750,10 @@ struct UnpackEntries{
 
       for(std::size_t i=0; i< noIndices; ++i)
       {
-        handle.scatter(buffer, tracker.index(), tracker.fixedSize);
+        if constexpr (has2ArgSize<DataHandle>::value)
+          handle.scatter(buffer, tracker.index(), tracker.fixedSize, tracker.rank());
+        else
+          handle.scatter(buffer, tracker.index(), tracker.fixedSize);
         tracker.moveToNextIndex();
       }
       return tracker.finished();
@@ -759,7 +765,10 @@ struct UnpackEntries{
       {
         assert(!tracker.finished());
         assert(buffer.hasSpaceForItems(tracker.size()));
-        handle.scatter(buffer, tracker.index(), tracker.size());
+        if constexpr (has2ArgSize<DataHandle>::value)
+          handle.scatter(buffer, tracker.index(), tracker.size(), tracker.rank());
+        else
+          handle.scatter(buffer, tracker.index(), tracker.size());
         unpacked+=tracker.size();
         tracker.moveToNextIndex();
       }
@@ -849,8 +858,8 @@ struct SetupSendRequest{
     int size=PackEntries<DataHandle>()(handle, tracker, buffer);
     // Skip indices of zero size.
 
-    if constexpr (hasTemplatedGatherWithProc<DataHandle>::value) {
-      while(!tracker.finished() &&  !handle.sizeWithRank(tracker.index(), tracker.rank()))
+    if constexpr (has2ArgSize<DataHandle>::value) {
+      while(!tracker.finished() &&  !handle.size(tracker.index(), tracker.rank()))
         tracker.moveToNextIndex();
     } else {
       while(!tracker.finished() &&  !handle.size(tracker.index()))
@@ -1086,8 +1095,8 @@ void VariableSizeCommunicator<Allocator>::setupInterfaceTrackers(DataHandle& han
   {
 
     if(handle.fixedsize() && InterfaceInformationChooser<FORWARD>::getSend(inf->second).size()) {
-      if constexpr (hasTemplatedGatherWithProc<DataHandle>::value) {
-        fixedsize=handle.sizeWithRank(InterfaceInformationChooser<FORWARD>::getSend(inf->second)[0], inf->first);
+      if constexpr (has2ArgSize<DataHandle>::value) {
+        fixedsize=handle.size(InterfaceInformationChooser<FORWARD>::getSend(inf->second)[0], inf->first);
       } else {
         fixedsize=handle.size(InterfaceInformationChooser<FORWARD>::getSend(inf->second)[0]);
       }

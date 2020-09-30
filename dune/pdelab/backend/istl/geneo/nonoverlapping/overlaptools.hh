@@ -257,7 +257,6 @@ namespace Dune {
       using DataType = std::pair<BlockType,GlobalId>;
 
       // constructor
-      // TODO: Support multiple input matrices
       MatrixConstructDataHandle (Matrix& M_, // the new matrix
                                  const Matrix& A_, // the input matrix in additive form
                                  std::shared_ptr<ParallelIndexSet> pis_,
@@ -274,7 +273,7 @@ namespace Dune {
       }
 
       // return size for given (local) index
-      std::size_t sizeWithRank (int i, int proc) // i is a new local index
+      std::size_t size (int i, int proc) // i is a new local index
       {
         std::size_t count = 1; // always send one
         if ((unsigned)i>=new2old_localindex.size()) return count; // not our business since this index is not in the original range
@@ -289,7 +288,7 @@ namespace Dune {
 
       // gather to buffer
       template<class B>
-      void gatherWithRank(B& buffer, int i, int proc) // TODO: Pick local matrix depending on remote rank
+      void gather(B& buffer, int i, int proc)
       {
         //std::cout << "proc: " << proc << std::endl;
         buffer.write(std::make_pair(BlockType(),GlobalId())); // write a default value
@@ -305,8 +304,10 @@ namespace Dune {
       }
 
       template<class B>
-      void scatter(B& buffer, int i, int count)
+      void scatter(B& buffer, int i, int count, int proc)
       {
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
         DataType pair;
         buffer.read(pair); // throw away the first one
         for (int k=1; k<count; k++)
@@ -362,7 +363,7 @@ namespace Dune {
       }
 
       // return size for given (local) index
-      std::size_t sizeWithRank (int i, int proc) // i is a new local index
+      std::size_t size (int i, int proc) // i is a new local index
       {
         // Doesn't matter which matrix we send here (we assume identical pattern), so just make sure one is ready
         if (loadedMatrixProc == -1) {
@@ -385,7 +386,7 @@ namespace Dune {
 
       // gather to buffer
       template<class B>
-      void gatherWithRank(B& buffer, int i, int proc)
+      void gather(B& buffer, int i, int proc)
       {
         if (loadedMatrixProc != proc) {
           std::cout << "Assembling for " << proc << std::endl;
@@ -405,7 +406,7 @@ namespace Dune {
       }
 
       template<class B>
-      void scatter(B& buffer, int i, int count)
+      void scatter(B& buffer, int i, int count, int proc)
       {
         DataType pair;
         buffer.read(pair); // throw away the first one
@@ -458,7 +459,7 @@ namespace Dune {
       }
 
       // return size for given (local) index
-      std::size_t sizeWithRank (int i, int proc) // i is a new local index
+      std::size_t size (int i, int proc) // i is a new local index
       {
         std::size_t count = 1; // always send one
         if (i>=new2old_localindex.size()) return count; // not our business since this index is not in the original range
@@ -471,13 +472,9 @@ namespace Dune {
         return count;
       }
 
-      void gatherWithProcTag() { // TODO: Replace by better solution...
-
-      }
-
       // gather to buffer
       template<class B>
-      void gatherWithRank(B& buffer, int i, int proc)
+      void gather(B& buffer, int i, int proc)
       {
         //std::size_t count = 1; // always send one
         //std::cout << "proc: " << proc << std::endl;
@@ -496,7 +493,7 @@ namespace Dune {
       }
 
       template<class B>
-      void scatter(B& buffer, int i, int count)
+      void scatter(B& buffer, int i, int count, int proc)
       {
         DataType pair;
         buffer.read(pair); // throw away the first one
@@ -1069,7 +1066,7 @@ namespace Dune {
     Dune::Interface allinterface;
     allinterface.build(*epis.remoteIndices(),allAttribute,allAttribute); // all to all communication
     DuneWithRank::VariableSizeCommunicator<> varcommunicator(allinterface);
-    DuneWithRank::BufferedCommunicator communicator;
+    Dune::BufferedCommunicator communicator;
     communicator.build<ScalarVector>(allinterface);
 
     // now lets determine an improved partition of unity ....
