@@ -1,3 +1,6 @@
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
+// vi: set et ts=2 sw=2 sts=2:
+
 #ifndef DUNE_PDELAB_STATIONARY_LINEARPROBLEM_HH
 #define DUNE_PDELAB_STATIONARY_LINEARPROBLEM_HH
 
@@ -9,6 +12,7 @@
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/solver.hh>
+#include <dune/pdelab/backend/solverwrapper.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -40,6 +44,19 @@ namespace Dune {
 
     };
 
+
+
+    /** \brief Solve linear problems using a residual formulation
+     *
+     * This work for matrix based and matrix free solvers. It uses a residual
+     * formulation solving \f$r(u,v)=0\f$ instead of solving
+     * \f$a(u,v)=l(v)\f$. In the matrix based case this means doing the
+     * following:
+     *
+     * 1. Calculate residual: r = A z_0-b
+     * 2. Solve: A z_u = r
+     * 3. Update: z = z_0 - z_u
+     */
     template<typename GO, typename LS, typename V>
     class StationaryLinearProblemSolver
     {
@@ -48,6 +65,8 @@ namespace Dune {
       typedef typename GO::Traits::TrialGridFunctionSpace TrialGridFunctionSpace;
       using W = Dune::PDELab::Backend::Vector<TrialGridFunctionSpace,typename V::ElementType>;
       typedef GO GridOperator;
+      using LinearSolverWrapper = Dune::PDELab::impl::LinearSolverWrapper<LS>;
+
 
     public:
       typedef StationaryLinearProblemSolverResult<double> Result;
@@ -55,6 +74,7 @@ namespace Dune {
       StationaryLinearProblemSolver(const GO& go, LS& ls, V& x, Real reduction, Real min_defect = 1e-99, int verbose=1)
         : _go(go)
         , _ls(ls)
+        , _linearSolverWrapper(ls)
         , _x(&x)
         , _reduction(reduction)
         , _min_defect(min_defect)
@@ -66,6 +86,7 @@ namespace Dune {
       StationaryLinearProblemSolver (const GO& go, LS& ls, Real reduction, Real min_defect = 1e-99, int verbose=1)
         : _go(go)
         , _ls(ls)
+        , _linearSolverWrapper(ls)
         , _x()
         , _reduction(reduction)
         , _min_defect(min_defect)
@@ -95,6 +116,7 @@ namespace Dune {
       StationaryLinearProblemSolver(const GO& go, LS& ls, V& x, const ParameterTree& params)
         : _go(go)
         , _ls(ls)
+        , _linearSolverWrapper(ls)
         , _x(&x)
         , _reduction(params.get<Real>("reduction"))
         , _min_defect(params.get<Real>("min_defect",1e-99))
@@ -124,6 +146,7 @@ namespace Dune {
       StationaryLinearProblemSolver(const GO& go, LS& ls, const ParameterTree& params)
         : _go(go)
         , _ls(ls)
+        , _linearSolverWrapper(ls)
         , _x()
         , _reduction(params.get<Real>("reduction"))
         , _min_defect(params.get<Real>("min_defect",1e-99))
@@ -156,16 +179,19 @@ namespace Dune {
         return _keep_matrix;
       }
 
+      //! Return result object
       const Result& result() const
       {
         return _res;
       }
 
+      //! Solve linear problem with the provided initial guess
       void apply(V& x, bool reuse_matrix = false) {
         _x = &x;
         apply(reuse_matrix);
       }
 
+      //! Solve linear problem (use initial guess that was passed at construction)
       void apply (bool reuse_matrix = false)
       {
         Dune::Timer watch;
@@ -174,7 +200,11 @@ namespace Dune {
         // assemble matrix; optional: assemble only on demand!
         watch.reset();
 
-        if (!_jacobian)
+        if (_linearSolverWrapper.isMatrixFree()){
+          std::cout << "=== matrix setup not required for matrix free solvers" << std::endl;
+        }
+        else{
+          if (!_jacobian)
           {
             _jacobian = std::make_shared<M>(_go);
             timing = watch.elapsed();
@@ -183,8 +213,9 @@ namespace Dune {
             watch.reset();
             assembler_time += timing;
           }
-        else if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
-          std::cout << "=== matrix setup skipped (matrix already allocated)" << std::endl;
+          else if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
+            std::cout << "=== matrix setup skipped (matrix already allocated)" << std::endl;
+        }
 
         if (_hanging_node_modifications)
           {
@@ -192,21 +223,25 @@ namespace Dune {
             _go.localAssembler().backtransform(*_x); // interpolate hanging nodes adjacent to Dirichlet nodes
           }
 
-        if (!reuse_matrix)
+        // Assemble Jacobian if necessary
+        if (!_linearSolverWrapper.isMatrixFree()){
+          if (!reuse_matrix)
           {
             (*_jacobian) = Real(0.0);
             _go.jacobian(*_x,*_jacobian);
           }
-
+        }
         timing = watch.elapsed();
-        // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
-        if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
+
+        if (!_linearSolverWrapper.isMatrixFree()){
+          if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
           {
             if (reuse_matrix)
               std::cout << "=== matrix assembly SKIPPED" << std::endl;
             else
               std::cout << "=== matrix assembly (max) " << timing << " s" << std::endl;
           }
+        }
 
         assembler_time += timing;
 
@@ -237,7 +272,12 @@ namespace Dune {
           else
             std::cout << std::endl;
         }
-        _ls.apply(*_jacobian,z,r,red); // solver makes right hand side consistent
+        if (_linearSolverWrapper.isMatrixFree()){
+          _linearSolverWrapper.apply(z, r, red);
+        }
+        else{
+          _linearSolverWrapper.apply(*_jacobian,z,r,red); // solver makes right hand side consistent
+        }
         _linear_solver_result = _ls.result();
         timing = watch.elapsed();
         // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
@@ -261,8 +301,10 @@ namespace Dune {
         if (_hanging_node_modifications)
           _go.localAssembler().backtransform(*_x); // interpolate hanging nodes adjacent to Dirichlet nodes
 
-        if (!_keep_matrix)
-          _jacobian.reset();
+        if (!_linearSolverWrapper.isMatrixFree()){
+          if (!_keep_matrix)
+            _jacobian.reset();
+        }
       }
 
       //! Discard the stored Jacobian matrix.
@@ -290,6 +332,7 @@ namespace Dune {
     private:
       const GO& _go;
       LS& _ls;
+      LinearSolverWrapper _linearSolverWrapper;
       V* _x;
       std::shared_ptr<M> _jacobian;
       Real _reduction;

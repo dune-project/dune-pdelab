@@ -133,6 +133,11 @@ namespace Dune {
         seqprec_.setLinearizationPoint(u);
       }
 
+      bool isMatrixFree()
+      {
+        return true;
+      }
+
     private :
       Operator opa_;
       SeqPrec seqprec_;

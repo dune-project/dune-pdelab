@@ -247,7 +247,7 @@ int main(int argc, char** argv)
                                                                                  BlockSORPreconditionerGO,
                                                                                  Dune::BiCGSTABSolver>;
     LinearSolverMatrixFree linearSolverMatrixFree(gridOperator, blockSORPreconditionerGO, maxiter, verbosity);
-    using SolverMatrixFree = Dune::PDELab::MatrixFreeStationaryLinearProblemSolver<GridOperator, LinearSolverMatrixFree, CoefficientVector>;
+    using SolverMatrixFree = Dune::PDELab::StationaryLinearProblemSolver<GridOperator, LinearSolverMatrixFree, CoefficientVector>;
 #elif defined(PARTIAL_MATRIX_FREE) // #if defined(SOR)
     std::cout << "Info: Using partially matrix-free solver." << std::endl;
     using BlockDiagonalLOP = Dune::PDELab::BlockDiagonalLocalOperatorWrapper<LocalOperator>;
@@ -285,7 +285,7 @@ int main(int argc, char** argv)
                           matrixBackend);
     using LinearSolverMatrixFree = Dune::PDELab::ISTLBackend_SEQ_MatrixFree_Base<GridOperator, ABJPLOP_GO, Dune::BiCGSTABSolver>;
     LinearSolverMatrixFree linearSolverMatrixFree(gridOperator, abjplop_go, maxiter, verbosity);
-    using SolverMatrixFree = Dune::PDELab::MatrixFreeStationaryLinearProblemSolver<GridOperator, LinearSolverMatrixFree, CoefficientVector>;
+    using SolverMatrixFree = Dune::PDELab::StationaryLinearProblemSolver<GridOperator, LinearSolverMatrixFree, CoefficientVector>;
 #elif defined(FULLY_MATRIX_FREE) // #if defined(SOR)
     std::cout << "Info: Using fully matrix-free solver." << std::endl;
 
@@ -338,7 +338,7 @@ int main(int argc, char** argv)
 
     using LinearSolverMatrixFree = Dune::PDELab::ISTLBackend_SEQ_MatrixFree_Base<GridOperator, IBJPLOP_GO, Dune::BiCGSTABSolver>;
     LinearSolverMatrixFree linearSolverMatrixFree(gridOperator, ibjplop_go, maxiter, verbosity);
-    using SolverMatrixFree = Dune::PDELab::MatrixFreeStationaryLinearProblemSolver<GridOperator, LinearSolverMatrixFree, CoefficientVector>;
+    using SolverMatrixFree = Dune::PDELab::StationaryLinearProblemSolver<GridOperator, LinearSolverMatrixFree, CoefficientVector>;
 #else
     static_assert(false);
     DUNE_THROW(Dune::Exception, "This should not happen");
