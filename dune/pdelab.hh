@@ -168,6 +168,13 @@
 #include <dune/pdelab/backend/istl/blockmatrixdiagonal.hh>
 #include <dune/pdelab/backend/istl/dunefunctions.hh>
 #include <dune/pdelab/backend/istl/istlsolverbackend.hh>
+#include <dune/pdelab/backend/istl/matrixfree/assembledblockjacobipreconditioner.hh>
+#include <dune/pdelab/backend/istl/matrixfree/backends.hh>
+#include <dune/pdelab/backend/istl/matrixfree/checklopinterface.hh>
+#include <dune/pdelab/backend/istl/matrixfree/blocksorpreconditioner.hh>
+#include <dune/pdelab/backend/istl/matrixfree/gridoperatorpreconditioner.hh>
+#include <dune/pdelab/backend/istl/matrixfree/iterativeblockjacobipreconditioner.hh>
+#include <dune/pdelab/backend/istl/matrixfree/solverstatistics.hh>
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
 #include <dune/pdelab/backend/istl/geneo/subdomainbasis.hh>
 #include <dune/pdelab/backend/istl/geneo/localoperator_ovlp_region.hh>

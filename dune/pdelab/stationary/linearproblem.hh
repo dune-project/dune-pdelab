@@ -1,3 +1,6 @@
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
+// vi: set et ts=2 sw=2 sts=2:
+
 #ifndef DUNE_PDELAB_STATIONARY_LINEARPROBLEM_HH
 #define DUNE_PDELAB_STATIONARY_LINEARPROBLEM_HH
 
@@ -40,6 +43,19 @@ namespace Dune {
 
     };
 
+
+
+    /** \brief Solve linear problems using a residual formulation
+     *
+     * This work for matrix based and matrix free solvers. It uses a residual
+     * formulation solving \f$r(u,v)=0\f$ instead of solving
+     * \f$a(u,v)=l(v)\f$. In the matrix based case this means doing the
+     * following:
+     *
+     * 1. Calculate residual: r = A z_0-b
+     * 2. Solve: A z_u = r
+     * 3. Update: z = z_0 - z_u
+     */
     template<typename GO, typename LS, typename V>
     class StationaryLinearProblemSolver
     {
@@ -156,16 +172,19 @@ namespace Dune {
         return _keep_matrix;
       }
 
+      //! Return result object
       const Result& result() const
       {
         return _res;
       }
 
+      //! Solve linear problem with the provided initial guess
       void apply(V& x, bool reuse_matrix = false) {
         _x = &x;
         apply(reuse_matrix);
       }
 
+      //! Solve linear problem (use initial guess that was passed at construction)
       void apply (bool reuse_matrix = false)
       {
         Dune::Timer watch;
@@ -174,7 +193,12 @@ namespace Dune {
         // assemble matrix; optional: assemble only on demand!
         watch.reset();
 
-        if (!_jacobian)
+        if constexpr (linearSolverIsMatrixFree<LS>()){
+          if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
+            std::cout << "=== matrix setup not required for matrix free solvers" << std::endl;
+        }
+        else{
+          if (!_jacobian)
           {
             _jacobian = std::make_shared<M>(_go);
             timing = watch.elapsed();
@@ -183,8 +207,9 @@ namespace Dune {
             watch.reset();
             assembler_time += timing;
           }
-        else if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
-          std::cout << "=== matrix setup skipped (matrix already allocated)" << std::endl;
+          else if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
+            std::cout << "=== matrix setup skipped (matrix already allocated)" << std::endl;
+        }
 
         if (_hanging_node_modifications)
           {
@@ -192,21 +217,25 @@ namespace Dune {
             _go.localAssembler().backtransform(*_x); // interpolate hanging nodes adjacent to Dirichlet nodes
           }
 
-        if (!reuse_matrix)
+        // Assemble Jacobian if necessary
+        if constexpr (!linearSolverIsMatrixFree<LS>()){
+          if (!reuse_matrix)
           {
             (*_jacobian) = Real(0.0);
             _go.jacobian(*_x,*_jacobian);
           }
-
+        }
         timing = watch.elapsed();
-        // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
-        if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
+
+        if constexpr (!linearSolverIsMatrixFree<LS>()){
+          if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
           {
             if (reuse_matrix)
               std::cout << "=== matrix assembly SKIPPED" << std::endl;
             else
               std::cout << "=== matrix assembly (max) " << timing << " s" << std::endl;
           }
+        }
 
         assembler_time += timing;
 
@@ -237,7 +266,12 @@ namespace Dune {
           else
             std::cout << std::endl;
         }
-        _ls.apply(*_jacobian,z,r,red); // solver makes right hand side consistent
+        if constexpr (linearSolverIsMatrixFree<LS>()){
+          _ls.apply(z, r, red);
+        }
+        if constexpr (!linearSolverIsMatrixFree<LS>()){
+          _ls.apply(*_jacobian,z,r,red); // solver makes right hand side consistent
+        }
         _linear_solver_result = _ls.result();
         timing = watch.elapsed();
         // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
@@ -261,8 +295,10 @@ namespace Dune {
         if (_hanging_node_modifications)
           _go.localAssembler().backtransform(*_x); // interpolate hanging nodes adjacent to Dirichlet nodes
 
-        if (!_keep_matrix)
-          _jacobian.reset();
+        if constexpr (!linearSolverIsMatrixFree<LS>()){
+          if (!_keep_matrix)
+            _jacobian.reset();
+        }
       }
 
       //! Discard the stored Jacobian matrix.
