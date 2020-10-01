@@ -25,7 +25,6 @@
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 #include <dune/pdelab/gridfunctionspace/datahandleprovider.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
-#include <dune/pdelab/solver/matrixfreenewton.hh>
 #include <dune/pdelab/solver/newton.hh>
 #include <dune/pdelab/solver/newtonerrors.hh>
 #include <dune/pdelab/solver/linesearch.hh>

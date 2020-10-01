@@ -107,11 +107,13 @@ namespace Dune::PDELab
           // Interpolate periodic constraints / hanging nodes
           _gridOperator.localAssembler().backtransform(solution);
         }
-        if (_verbosity>=3)
-              std::cout << "      Reassembling matrix..." << std::endl;
-        *_jacobian = Real(0.0);
-        _gridOperator.jacobian(solution, *_jacobian);
-        _reassembled = true;
+        if constexpr (!linearSolverIsMatrixFree<LinearSolver>()){
+          if (_verbosity>=3)
+            std::cout << "      Reassembling matrix..." << std::endl;
+          *_jacobian = Real(0.0);
+          _gridOperator.jacobian(solution, *_jacobian);
+          _reassembled = true;
+        }
       }
 
       _linearReduction = _minLinearReduction;
@@ -142,12 +144,19 @@ namespace Dune::PDELab
       if (_verbosity >= 4)
         std::cout << "      Solving linear system..." << std::endl;
 
-      // If the jacobian was not reassembled we might save some work in the solver backend
-      Impl::setLinearSystemReuse(_linearSolver, not _reassembled);
+      if constexpr (!linearSolverIsMatrixFree<LinearSolver>()){
+        // If the jacobian was not reassembled we might save some work in the solver backend
+        Impl::setLinearSystemReuse(_linearSolver, not _reassembled);
+      }
 
       // Solve the linear system
       _correction = 0.0;
-      _linearSolver.apply(*_jacobian, _correction, _residual, _linearReduction);
+      if constexpr (linearSolverIsMatrixFree<LinearSolver>()){
+        _linearSolver.apply(_correction, _residual, _linearReduction);
+      }
+      else{
+        _linearSolver.apply(*_jacobian, _correction, _residual, _linearReduction);
+      }
 
       if (not _linearSolver.result().converged)
         DUNE_THROW(NewtonLinearSolverError,
@@ -198,8 +207,10 @@ namespace Dune::PDELab
       //==========================
       // Calculate Jacobian matrix
       //==========================
-      if (not _jacobian)
-        _jacobian = std::make_shared<Jacobian>(_gridOperator);
+      if constexpr (!linearSolverIsMatrixFree<LinearSolver>()){
+        if (not _jacobian)
+          _jacobian = std::make_shared<Jacobian>(_gridOperator);
+      }
 
       //=========================
       // Nonlinear iteration loop
@@ -224,6 +235,11 @@ namespace Dune::PDELab
         // Solve linear system
         //====================
         start = Clock::now();
+
+        // Important: In the matrix-free case we need to set the current linearization point!
+        if constexpr (linearSolverIsMatrixFree<LinearSolver>()){
+          _linearSolver.setLinearizationPoint(solution);
+        }
         linearSolve();
         end = Clock::now();
         linear_solver_time += end -start;
@@ -289,8 +305,10 @@ namespace Dune::PDELab
                   << "   (" << std::setprecision(4) << _result.elapsed << "s)"
                   << std::endl;
 
-      if (not _keepMatrix)
-        _jacobian.reset();
+      if constexpr (!linearSolverIsMatrixFree<LinearSolver>()){
+        if (not _keepMatrix)
+          _jacobian.reset();
+      }
     }
 
     //! Update _residual and defect in _result
