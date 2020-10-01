@@ -343,7 +343,8 @@ namespace Dune {
     using LocalAssemblerCallSwitch =
       Impl::LocalAssemblerCallSwitchHelper<LOP,doIt>;
 
-    namespace LocalOperatorApply {
+    /* we use a nested empty namespace to allow for multiple symbols and avoid issues with the ODR */
+    namespace LocalOperatorApply { namespace {
 
       auto patternVolume = [](const auto& lop, auto&... args)
       {
@@ -492,7 +493,7 @@ namespace Dune {
           jacobian_apply_boundary(lop, args...);
       };
 
-    } // namespace LocalOperatorApply
+    } } // namespace LocalOperatorApply
 
   } // namespace PDELab
 } // namespace Dune
