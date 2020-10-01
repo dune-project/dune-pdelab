@@ -194,7 +194,8 @@ namespace Dune {
         watch.reset();
 
         if constexpr (linearSolverIsMatrixFree<LS>()){
-          std::cout << "=== matrix setup not required for matrix free solvers" << std::endl;
+          if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
+            std::cout << "=== matrix setup not required for matrix free solvers" << std::endl;
         }
         else{
           if (!_jacobian)
