@@ -143,7 +143,6 @@
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/common/aliasedvectorview.hh>
 #include <dune/pdelab/backend/solver.hh>
-#include <dune/pdelab/backend/solverwrapper.hh>
 #include <dune/pdelab/backend/eigen.hh>
 #include <dune/pdelab/backend/eigen/solvers.hh>
 #include <dune/pdelab/backend/eigen/descriptors.hh>

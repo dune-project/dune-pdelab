@@ -12,7 +12,6 @@
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/solver.hh>
-#include <dune/pdelab/backend/solverwrapper.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -65,8 +64,6 @@ namespace Dune {
       typedef typename GO::Traits::TrialGridFunctionSpace TrialGridFunctionSpace;
       using W = Dune::PDELab::Backend::Vector<TrialGridFunctionSpace,typename V::ElementType>;
       typedef GO GridOperator;
-      using LinearSolverWrapper = Dune::PDELab::impl::LinearSolverWrapper<LS>;
-
 
     public:
       typedef StationaryLinearProblemSolverResult<double> Result;
@@ -74,7 +71,6 @@ namespace Dune {
       StationaryLinearProblemSolver(const GO& go, LS& ls, V& x, Real reduction, Real min_defect = 1e-99, int verbose=1)
         : _go(go)
         , _ls(ls)
-        , _linearSolverWrapper(ls)
         , _x(&x)
         , _reduction(reduction)
         , _min_defect(min_defect)
@@ -86,7 +82,6 @@ namespace Dune {
       StationaryLinearProblemSolver (const GO& go, LS& ls, Real reduction, Real min_defect = 1e-99, int verbose=1)
         : _go(go)
         , _ls(ls)
-        , _linearSolverWrapper(ls)
         , _x()
         , _reduction(reduction)
         , _min_defect(min_defect)
@@ -116,7 +111,6 @@ namespace Dune {
       StationaryLinearProblemSolver(const GO& go, LS& ls, V& x, const ParameterTree& params)
         : _go(go)
         , _ls(ls)
-        , _linearSolverWrapper(ls)
         , _x(&x)
         , _reduction(params.get<Real>("reduction"))
         , _min_defect(params.get<Real>("min_defect",1e-99))
@@ -146,7 +140,6 @@ namespace Dune {
       StationaryLinearProblemSolver(const GO& go, LS& ls, const ParameterTree& params)
         : _go(go)
         , _ls(ls)
-        , _linearSolverWrapper(ls)
         , _x()
         , _reduction(params.get<Real>("reduction"))
         , _min_defect(params.get<Real>("min_defect",1e-99))
@@ -200,7 +193,7 @@ namespace Dune {
         // assemble matrix; optional: assemble only on demand!
         watch.reset();
 
-        if (_linearSolverWrapper.isMatrixFree()){
+        if constexpr (linearSolverIsMatrixFree<LS>()){
           std::cout << "=== matrix setup not required for matrix free solvers" << std::endl;
         }
         else{
@@ -224,7 +217,7 @@ namespace Dune {
           }
 
         // Assemble Jacobian if necessary
-        if (!_linearSolverWrapper.isMatrixFree()){
+        if constexpr (!linearSolverIsMatrixFree<LS>()){
           if (!reuse_matrix)
           {
             (*_jacobian) = Real(0.0);
@@ -233,7 +226,7 @@ namespace Dune {
         }
         timing = watch.elapsed();
 
-        if (!_linearSolverWrapper.isMatrixFree()){
+        if constexpr (!linearSolverIsMatrixFree<LS>()){
           if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
           {
             if (reuse_matrix)
@@ -272,11 +265,11 @@ namespace Dune {
           else
             std::cout << std::endl;
         }
-        if (_linearSolverWrapper.isMatrixFree()){
-          _linearSolverWrapper.apply(z, r, red);
+        if constexpr (linearSolverIsMatrixFree<LS>()){
+          _ls.apply(z, r, red);
         }
-        else{
-          _linearSolverWrapper.apply(*_jacobian,z,r,red); // solver makes right hand side consistent
+        if constexpr (!linearSolverIsMatrixFree<LS>()){
+          _ls.apply(*_jacobian,z,r,red); // solver makes right hand side consistent
         }
         _linear_solver_result = _ls.result();
         timing = watch.elapsed();
@@ -301,7 +294,7 @@ namespace Dune {
         if (_hanging_node_modifications)
           _go.localAssembler().backtransform(*_x); // interpolate hanging nodes adjacent to Dirichlet nodes
 
-        if (!_linearSolverWrapper.isMatrixFree()){
+        if constexpr (!linearSolverIsMatrixFree<LS>()){
           if (!_keep_matrix)
             _jacobian.reset();
         }
@@ -332,7 +325,6 @@ namespace Dune {
     private:
       const GO& _go;
       LS& _ls;
-      LinearSolverWrapper _linearSolverWrapper;
       V* _x;
       std::shared_ptr<M> _jacobian;
       Real _reduction;
