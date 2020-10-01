@@ -1,6 +1,9 @@
 add_subdirectory(fem)
+add_subdirectory(matrixfree)
 
 dune_add_test(SOURCES testcombinedoperator.cc)
+
+dune_add_test(SOURCES testchecklopinterface.cc)
 
 dune_add_test(SOURCES testconvectiondiffusiondg.cc
               CMAKE_GUARD SUPERLU_FOUND)

@@ -65,6 +65,30 @@ namespace Dune {
 
     //! \} group Backend
 
+
+    template <typename LS, typename = void>
+    struct LinearSolverHasIsMatrixFree : std::false_type {};
+
+    //! SFINAE check if a linear solver backend has a isMatrixFree method
+    template <typename LS>
+    struct LinearSolverHasIsMatrixFree<LS, std::void_t<decltype(std::declval<LS>().isMatrixFree)>> : std::true_type {};
+
+    /*! \brief Function that checks if a linear solver is matrix-free
+     *
+     * This can be used at compile time with `if constexpr`.
+     */
+    template <typename LS>
+    constexpr bool linearSolverIsMatrixFree(){
+      if constexpr (LinearSolverHasIsMatrixFree<LS>::value){
+        if constexpr (LS::isMatrixFree){
+           return true;
+        }
+      }
+      else{
+        return false;
+      }
+    }
+
   } // end namespace PDELab
 } // end namespace Dune
 
