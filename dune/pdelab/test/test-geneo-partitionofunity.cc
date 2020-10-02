@@ -11,8 +11,6 @@
 #include <string>
 #include <sstream>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/parametertreeparser.hh>
 
@@ -20,7 +18,6 @@
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 
 #include <dune/pdelab.hh>
-#pragma GCC diagnostic pop
 
 
 // symbolic constants for the dimension of the domain
@@ -97,7 +94,7 @@ public:
 
 
 // In 3 dimensions, Sarkis partition of unity is not yet supported. We still
-// provide the Grid Parameters container for consistency
+// use a Grid Parameters container for consistency
 template<typename GVCoord>
 class GridParameters3d
 {
@@ -282,7 +279,7 @@ int main(int argc, char** argv)
     ptreeparser.readINITree("test-geneo-partitionofunity.ini", ptree);
     ptreeparser.readOptions(argc, argv, ptree);
 
-    // read relevant parameters from ini file
+    // read static parameters and partition of unity type from ini file
     const int dim { ptree.get<int>("grid.dim") };
     const int ord { ptree.get<int>("partition.baseDegree") };
     const std::string partUnityType { ptree.get("partition.type", "") };
@@ -376,7 +373,6 @@ int main(int argc, char** argv)
       else
         DUNE_THROW(Dune::Exception, "Degree higher than 2 not yet supported.");
     }
-
   }
   catch (Dune::Exception& e)
   {
