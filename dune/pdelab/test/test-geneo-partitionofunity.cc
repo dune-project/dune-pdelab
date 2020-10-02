@@ -143,7 +143,7 @@ void write_vtk(const std::string& filename, const GV& gv, const GFS& gfs,
 
   vtkwriter.addVertexData(
     std::shared_ptr<VTKF>(new VTKF(partUnityDGF, outputname)));
-  vtkwriter.write(filename, Dune::VTK::appendedraw);
+  vtkwriter.write(filename, Dune::VTK::ascii);
 
   std::cout << "Partition of unity written to vtk file." << std::endl;
   return;
