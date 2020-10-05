@@ -1,4 +1,5 @@
 add_subdirectory(fem)
+add_subdirectory(geneo_unittests)
 
 dune_add_test(SOURCES testcombinedoperator.cc)
 
