@@ -269,125 +269,105 @@ void sarkisTestdriver(const GV& gv, const FEM& fem, const GP& gp,
 
 int main(int argc, char** argv)
 {
-  try
+  Dune::MPIHelper& mpihelper { Dune::MPIHelper::instance(argc, argv) };
+
+  // open ini file
+  Dune::ParameterTree ptree;
+  Dune::ParameterTreeParser ptreeparser;
+  ptreeparser.readINITree("test-geneo-partitionofunity.ini", ptree);
+  ptreeparser.readOptions(argc, argv, ptree);
+
+  // read static parameters and partition of unity type from ini file
+  const int dim { ptree.get<int>("grid.dim") };
+  const int ord { ptree.get<int>("partition.baseDegree") };
+  const std::string partUnityType { ptree.get("partition.type", "") };
+
+  std::string filename { generate_filename(ptree) };
+
+  if ((partUnityType == "sarkis") && (dim == THREEDIM))
+    DUNE_THROW(Dune::Exception, "Sarkis partition of unity is not yet "
+               "supported in 3 dimensions.");
+
+  using Real = double;
+  using GVCoord = Real;
+
+  if (dim == TWODIM)
   {
-    Dune::MPIHelper& mpihelper { Dune::MPIHelper::instance(argc, argv) };
+    GridParameters2d<GVCoord> gp(ptree);
 
-    // open ini file
-    Dune::ParameterTree ptree;
-    Dune::ParameterTreeParser ptreeparser;
-    ptreeparser.readINITree("test-geneo-partitionofunity.ini", ptree);
-    ptreeparser.readOptions(argc, argv, ptree);
+    // grid partitioning
+    using Partitioner = Dune::YaspFixedSizePartitioner<TWODIM>;
+    auto partitioner { std::make_unique<Partitioner>(gp.subdomLayout) };
 
-    // read static parameters and partition of unity type from ini file
-    const int dim { ptree.get<int>("grid.dim") };
-    const int ord { ptree.get<int>("partition.baseDegree") };
-    const std::string partUnityType { ptree.get("partition.type", "") };
+    // instantiate grid
+    using Grid = Dune::YaspGrid<TWODIM>;
+    auto grid { std::make_shared<Grid>(
+                  gp.upperRight, gp.nCells, gp.isPeriodic, gp.ovlp,
+                  Dune::MPIHelper::getCollectiveCommunication(),
+                  partitioner.get()) };
 
-    std::string filename { generate_filename(ptree) };
+    // create GridView to finest level
+    using GV = Grid::LevelGridView;
+    auto gv { grid->levelGridView(grid->maxLevel()) };
 
-    if ((partUnityType == "sarkis") && (dim == THREEDIM))
+    if (ord == 1)
     {
-      DUNE_THROW(Dune::Exception, "Sarkis partition of unity is not yet "
-                 "supported in 3 dimensions.");
-    }
+      Dune::PDELab::QkLocalFiniteElementMap<GV, GVCoord, Real, 1> feMap(gv);
 
-    using Real = double;
-    using GVCoord = Real;
-
-    if (dim == TWODIM)
-    {
-      GridParameters2d<GVCoord> gp(ptree);
-
-      // grid partitioning
-      using Partitioner = Dune::YaspFixedSizePartitioner<TWODIM>;
-      auto partitioner { std::make_unique<Partitioner>(gp.subdomLayout) };
-
-      // instantiate grid
-      using Grid = Dune::YaspGrid<TWODIM>;
-      auto grid { std::make_shared<Grid>(
-                    gp.upperRight, gp.nCells, gp.isPeriodic, gp.ovlp,
-                    Dune::MPIHelper::getCollectiveCommunication(),
-                    partitioner.get()) };
-
-      // create GridView to finest level
-      using GV = Grid::LevelGridView;
-      auto gv { grid->levelGridView(grid->maxLevel()) };
-
-      if (ord == 1)
-      {
-        Dune::PDELab::QkLocalFiniteElementMap<GV, GVCoord, Real, 1> feMap(gv);
-
-        if (partUnityType == "standard")
-          standardTestdriver(gv, feMap, ord, filename);
-        else if (partUnityType == "sarkis")
-          sarkisTestdriver(gv, feMap, gp, ord, filename);
-        else
-          DUNE_THROW(Dune::Exception, "Unknown partition of unity type.");
-      }
-      else if (ord == 2)
-      {
-        Dune::PDELab::QkLocalFiniteElementMap<GV, GVCoord, Real, 2>  feMap(gv);
-
-        if (partUnityType == "standard")
-          standardTestdriver(gv, feMap, ord, filename);
-        else if (partUnityType == "sarkis")
-          sarkisTestdriver(gv, feMap, gp, ord, filename);
-        else
-          DUNE_THROW(Dune::Exception, "Unknown partition of unity type.");
-      }
-      else
-        DUNE_THROW(Dune::Exception, "Degree higher than 3 not yet supported.");
-    }
-    else if (dim == THREEDIM)
-    {
-      GridParameters3d<GVCoord> gp(ptree);
-
-      // grid partitioning
-      using Partitioner = Dune::YaspFixedSizePartitioner<THREEDIM>;
-      auto partitioner { std::make_unique<Partitioner>(gp.subdomLayout) };
-
-      // instantiate grid
-      using Grid = Dune::YaspGrid<THREEDIM>;
-      auto grid { std::make_shared<Grid>(
-                    gp.upperRight, gp.nCells, gp.isPeriodic, gp.ovlp,
-                    Dune::MPIHelper::getCollectiveCommunication(),
-                    partitioner.get()) };
-
-      // create GridView to finest level
-      using GV = Grid::LevelGridView;
-      auto gv { grid->levelGridView(grid->maxLevel()) };
-
-      if (ord == 1)
-      {
-        Dune::PDELab::QkLocalFiniteElementMap<GV, GVCoord, Real, 1> feMap(gv);
-
+      if (partUnityType == "standard")
         standardTestdriver(gv, feMap, ord, filename);
-      }
-      else if (ord == 2)
-      {
-        Dune::PDELab::QkLocalFiniteElementMap<GV, GVCoord, Real, 2> feMap(gv);
-
-        standardTestdriver(gv, feMap, ord, filename);
-      }
+      else if (partUnityType == "sarkis")
+        sarkisTestdriver(gv, feMap, gp, ord, filename);
       else
-        DUNE_THROW(Dune::Exception, "Degree higher than 2 not yet supported.");
+        DUNE_THROW(Dune::Exception, "Unknown partition of unity type.");
     }
+    else if (ord == 2)
+    {
+      Dune::PDELab::QkLocalFiniteElementMap<GV, GVCoord, Real, 2>  feMap(gv);
+
+      if (partUnityType == "standard")
+        standardTestdriver(gv, feMap, ord, filename);
+      else if (partUnityType == "sarkis")
+        sarkisTestdriver(gv, feMap, gp, ord, filename);
+      else
+        DUNE_THROW(Dune::Exception, "Unknown partition of unity type.");
+    }
+    else
+      DUNE_THROW(Dune::Exception, "Degree higher than 3 not yet supported.");
   }
-  catch (Dune::Exception& e)
+  else if (dim == THREEDIM)
   {
-    std::cerr << "Dune reported error: " << e << std::endl;
-    return 1;
-  }
-  catch (std::exception& e)
-  {
-    std::cerr << "Error: " << e.what() << std::endl;
-    return 1;
-  }
-  catch (...)
-  {
-    std::cerr << "Unknown error!" << std::endl;
-    return 1;
+    GridParameters3d<GVCoord> gp(ptree);
+
+    // grid partitioning
+    using Partitioner = Dune::YaspFixedSizePartitioner<THREEDIM>;
+    auto partitioner { std::make_unique<Partitioner>(gp.subdomLayout) };
+
+    // instantiate grid
+    using Grid = Dune::YaspGrid<THREEDIM>;
+    auto grid { std::make_shared<Grid>(
+                  gp.upperRight, gp.nCells, gp.isPeriodic, gp.ovlp,
+                  Dune::MPIHelper::getCollectiveCommunication(),
+                  partitioner.get()) };
+
+    // create GridView to finest level
+    using GV = Grid::LevelGridView;
+    auto gv { grid->levelGridView(grid->maxLevel()) };
+
+    if (ord == 1)
+    {
+      Dune::PDELab::QkLocalFiniteElementMap<GV, GVCoord, Real, 1> feMap(gv);
+
+      standardTestdriver(gv, feMap, ord, filename);
+    }
+    else if (ord == 2)
+    {
+      Dune::PDELab::QkLocalFiniteElementMap<GV, GVCoord, Real, 2> feMap(gv);
+
+      standardTestdriver(gv, feMap, ord, filename);
+    }
+    else
+      DUNE_THROW(Dune::Exception, "Degree higher than 2 not yet supported.");
   }
 
   return 0;
