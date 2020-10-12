@@ -256,9 +256,7 @@ int main(int argc, char** argv)
 
   // open ini file
   Dune::ParameterTree ptree;
-  Dune::ParameterTreeParser ptreeparser;
-  ptreeparser.readINITree("test-geneo-partitionofunity.ini", ptree);
-  ptreeparser.readOptions(argc, argv, ptree);
+  Dune::ParameterTreeParser::readINITree(argv[1], ptree);
 
   // read static parameters and partition of unity type from ini file
   const int dim { ptree.get<int>("grid.dim") };
