@@ -256,7 +256,18 @@ int main(int argc, char** argv)
 
   // open ini file
   Dune::ParameterTree ptree;
-  Dune::ParameterTreeParser::readINITree(argv[1], ptree);
+
+  // if single .ini file is passed as command line argument, use it
+  if (argc == 2)
+    Dune::ParameterTreeParser::readINITree(argv[1], ptree);
+  // if no .ini file is passed as command line argument, use default
+  else if (argc == 1)
+    Dune::ParameterTreeParser::readINITree("test-geneo-partitionofunity.ini",
+                                           ptree);
+  else
+    DUNE_THROW(Dune::InvalidStateException, "Error parsing .ini file. "
+               "Either provide a single .ini file or no .ini file (default "
+               "used).");
 
   // read static parameters and partition of unity type from ini file
   const int dim { ptree.get<int>("grid.dim") };
