@@ -41,28 +41,11 @@ std::string generate_filename(const Dune::ParameterTree& ptree)
   if (!(puType == "standard" || puType == "sarkis"))
     DUNE_THROW(Dune::Exception, "Unknown partition of unity type.");
 
-  std::string typeAbbrv { (puType == "standard") ? "std" : "sar" };
-
   std::stringstream ss;
 
-  ss << "pu_" << typeAbbrv.c_str() << dim << "d"
-     << ptree.get<int>("partition.baseDegree") << "b"
-     << ptree.get<int>("grid.overlap") << "o"
-     << ptree.get<int>("grid.nCellsX") << "x"
-     << ptree.get<int>("grid.nCellsY");
-
-  if (dim == TWODIM)
-    ss << "c";
-  else
-    ss << "x" << ptree.get<int>("grid.nCellsZ") << "c";
-
-  ss << ptree.get<int>("grid.nSubdomX") << "x"
-     << ptree.get<int>("grid.nSubdomY");
-
-  if (dim == TWODIM)
-    ss << "s";
-  else
-    ss << "x" << ptree.get<int>("grid.nSubdomZ") << "s";
+  ss << "pou_" << puType << "_" << dim << "d_"
+     << ptree.get<int>("grid.overlap") << "o_"
+     << ptree.get<int>("partition.baseDegree") << "b";
 
   return ss.str();
 }
