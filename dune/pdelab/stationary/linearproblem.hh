@@ -77,7 +77,9 @@ namespace Dune {
         , _hanging_node_modifications(false)
         , _keep_matrix(true)
         , _verbose(verbose)
-      {}
+      {
+        setVerbosityLevel(_verbose);
+      }
 
       StationaryLinearProblemSolver (const GO& go, LS& ls, Real reduction, Real min_defect = 1e-99, int verbose=1)
         : _go(go)
@@ -88,7 +90,9 @@ namespace Dune {
         , _hanging_node_modifications(false)
         , _keep_matrix(true)
         , _verbose(verbose)
-      {}
+      {
+        setVerbosityLevel(_verbose);
+      }
 
       //! Construct a StationaryLinearProblemSolver for the given objects and read parameters from a ParameterTree.
       /**
@@ -117,7 +121,9 @@ namespace Dune {
         , _hanging_node_modifications(params.get<bool>("hanging_node_modifications",false))
         , _keep_matrix(params.get<bool>("keep_matrix",true))
         , _verbose(params.get<int>("verbosity",1))
-      {}
+      {
+        setVerbosityLevel(_verbose);
+      }
 
       //! Construct a StationaryLinearProblemSolver for the given objects and read parameters from a ParameterTree.
       /**
@@ -146,7 +152,18 @@ namespace Dune {
         , _hanging_node_modifications(params.get<bool>("hanging_node_modifications",false))
         , _keep_matrix(params.get<bool>("keep_matrix",true))
         , _verbose(params.get<int>("verbosity",1))
-      {}
+      {
+        setVerbosityLevel(_verbose);
+      }
+
+      //! Set how much output you get
+      void setVerbosityLevel(unsigned int verbosity)
+      {
+        if (_go.trialGridFunctionSpace().gridView().comm().rank()>0)
+          _verbose = 0;
+        else
+        _verbose = verbosity;
+      }
 
       //! Set whether the solver should apply the necessary transformations for calculations on hanging nodes.
       void setHangingNodeModifications(bool b)
