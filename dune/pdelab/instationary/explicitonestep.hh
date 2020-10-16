@@ -166,6 +166,8 @@ namespace Dune {
           verbosityLevel = 0;
         else
           verbosityLevel = level;
+
+        ls.setVerbosityLevel(verbosityLevel);
       }
 
       //! change number of current step

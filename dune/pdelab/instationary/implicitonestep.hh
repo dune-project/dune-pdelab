@@ -87,6 +87,8 @@ namespace Dune {
           verbosityLevel = 0;
         else
           verbosityLevel = level;
+
+        pdesolver.setVerbosityLevel(verbosityLevel);
       }
 
       //! change number of current step
