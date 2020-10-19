@@ -117,7 +117,8 @@ namespace Dune::PDELab
       }
 
       _linearReduction = _minLinearReduction;
-      if (not _fixedLinearReduction){
+      // corner case: ForceIteration==true. Use _minLinearReduction when initial defect is less than AbsoluteLimit.
+      if (not _fixedLinearReduction && !(_result.iterations==0 && _result.first_defect<_absoluteLimit)){
         // Determine maximum defect, where Newton is converged.
         using std::min;
         using std::max;
