@@ -64,7 +64,7 @@ X sarkisPartitionOfUnity(const GFS& gfs, LFS& lfs, const CC& cc, int cells_x, in
   if (gfs.gridView().grid().dimension != dim)
     DUNE_THROW(Dune::NotImplemented, "Currently, Sarkis partition of unity is only supported for 2 dimensional grids.");
 
-  else if (lfs.finiteElement().localBasis().order() != 1)
+  else if (GFS::Traits::FiniteElement::Traits::LocalBasisType::order() != 1)
     DUNE_THROW(Dune::NotImplemented, "Currently, Sarkis partition of unity is only supported for polynomial bases of order 1");
 
   else if (gfs.gridView().grid().domainSize() != Dune::FieldVector<DF, 2>(1.0))
