@@ -64,11 +64,11 @@ X sarkisPartitionOfUnity(const GFS& gfs, LFS& lfs, const CC& cc, int cells_x, in
   if (gfs.gridView().grid().dimension != dim)
     DUNE_THROW(Dune::NotImplemented, "Currently, Sarkis partition of unity is only supported for 2 dimensional grids.");
 
-  else if (GFS::Traits::FiniteElement::Traits::LocalBasisType::order() != 1)
+  if (GFS::Traits::FiniteElement::Traits::LocalBasisType::order() != 1)
     DUNE_THROW(Dune::NotImplemented, "Currently, Sarkis partition of unity is only supported for polynomial bases of order 1");
 
   // we assume the grid is instantiated as a (0.0, 1.0) x (0.0, 1.0) grid, so we do an exact flaoting point comparison here
-  else if (gfs.gridView().grid().domainSize() != Dune::FieldVector<DF, 2>(1.0))
+  if (gfs.gridView().grid().domainSize() != Dune::FieldVector<DF, 2>(1.0))
     DUNE_THROW(Dune::NotImplemented, "Currently, Sarkis partition of unity is only supported for the (0,1) x (0,1) unit square.");
 
   X part_unity(gfs, 1);
