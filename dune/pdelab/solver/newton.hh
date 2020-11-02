@@ -128,11 +128,9 @@ namespace Dune::PDELab
         // reduction of at least current_defect^2/prev_defect^2.  For the
         // last newton step a linear reduction of
         // 1/10*end_defect/current_defect is sufficient for convergence.
-        if (stop_defect/(10*_result.defect) > min(_minLinearReduction, _result.defect*_result.defect/(_previousDefect*_previousDefect)))
-          _linearReduction = stop_defect/(10*_result.defect);
-        else
-          _linearReduction = min(_minLinearReduction, _result.defect*_result.defect/(_previousDefect*_previousDefect));
-        }
+        _linearReduction =
+          std::max( stop_defect/(10*_result.defect),
+            std::min(_minLinearReduction, _result.defect*result.defect/(_previousDefect*_previousDefect)) );
 
         if (_verbosity >= 3)
           std::cout << "      requested linear reduction:       "
