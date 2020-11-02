@@ -405,6 +405,20 @@ namespace Dune {
     /* we use a nested empty namespace to allow for multiple symbols and avoid issues with the ODR */
     namespace LocalOperatorApply { namespace {
 
+      auto skipEntity = [](const auto& lop, auto&... args)
+      {
+        using LOP = std::decay_t<decltype(lop)>;
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doSelectiveEntity>::
+          skip_entity(lop, args...);
+      };
+
+      auto skipIntersection = [](const auto& lop, auto&... args)
+      {
+        using LOP = std::decay_t<decltype(lop)>;
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doSelectiveIntersection>::
+          skip_intersection(lop, args...);
+      };
+
       auto patternVolume = [](const auto& lop, auto&... args)
       {
         using LOP = std::decay_t<decltype(lop)>;

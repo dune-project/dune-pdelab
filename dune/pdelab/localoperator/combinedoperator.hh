@@ -86,6 +86,18 @@ namespace Dune {
       < bool, ( ( T::doAlphaSkeleton || T::doLambdaSkeleton) && T::doSkeletonTwoSided)>;
 
     public:
+
+      //! \brief Whether to do selective cell assembly, i.e. whether
+      //!        or not skip_entity() should be called.
+      enum { doSelectiveEntity            =
+             std::disjunction_v<std::integral_constant<bool,Args::doSelectiveEntity>...>              };
+      //! \brief Whether to do selective intersection assembly, i.e. whether
+      //!        or not skip_intersection() should be called.
+      enum { doSelectiveIntersection      =
+             std::disjunction_v<std::integral_constant<bool,Args::doSelectiveIntersection>...>        };
+
+      ////////////////////////////
+
       //! \brief Whether to assemble the pattern on the elements, i.e. whether
       //!        or not pattern_volume() should be called.
       enum { doPatternVolume             =
@@ -154,6 +166,40 @@ namespace Dune {
       enum { isLinear = std::conjunction_v<std::integral_constant<bool,Args::isLinear>...> };
 
       //! \} Control flags
+
+      //////////////////////////////////////////////////////////////////////
+      //
+      //! \name Methods selective assembly
+      //! \{
+      //
+
+      //! get an element's contribution to the sparsity pattern
+      /**
+       * \note Summands with zero weight don't contribute to the sparsity
+       *       pattern, and the calls to the pattern methods are eliminated at
+       *       run-time.
+       */
+      template<typename EG>
+      void skip_entity
+      ( const EG& eg, bool& skip) const
+      {
+        applyLops(LocalOperatorApply::skipEntity, eg, skip);
+      }
+
+      //! get an element's contribution to the sparsity pattern
+      /**
+       * \note Summands with zero weight don't contribute to the sparsity
+       *       pattern, and the calls to the pattern methods are eliminated at
+       *       run-time.
+       */
+      template<typename IG>
+      void skip_intersection
+      ( const IG& ig, bool& skip) const
+      {
+        applyLops(LocalOperatorApply::skipIntersection, ig, skip);
+      }
+
+      //! \} Methods for the sparsity pattern
 
       //////////////////////////////////////////////////////////////////////
       //
