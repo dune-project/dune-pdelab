@@ -339,9 +339,22 @@ namespace Dune{
       template<typename EG>
       bool assembleCell(const EG & eg)
       {
-        bool rv = true;
-        rv &= lae0->assembleCell(eg);
-        rv &= lae1->assembleCell(eg);
+        bool rv = lae0->assembleCell(eg);
+        if (rv != lae1->assembleCell(eg))
+          DUNE_THROW(NotImplemented,
+                     "Spacial and temporal local operators are not allowed "
+                     "to have different custom cell assembly rules");
+        return rv;
+      }
+
+      template<typename IG>
+      bool assembleIntersection(const IG & ig)
+      {
+        bool rv = lae0->assembleIntersection(ig);
+        if (rv != lae1->assembleIntersection(ig))
+          DUNE_THROW(NotImplemented,
+                     "Spacial and temporal local operators are not allowed "
+                     "to have different custom intersection assembly rules");
         return rv;
       }
 
