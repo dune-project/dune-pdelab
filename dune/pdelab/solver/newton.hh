@@ -120,7 +120,8 @@ namespace Dune::PDELab
       }
 
       _linearReduction = _minLinearReduction;
-      if (not _fixedLinearReduction){
+      // corner case: ForceIteration==true. Use _minLinearReduction when initial defect is less than AbsoluteLimit.
+      if (not _fixedLinearReduction && !(_result.iterations==0 && _result.first_defect<_absoluteLimit)){
         // Determine maximum defect, where Newton is converged.
         using std::min;
         using std::max;
@@ -130,10 +131,9 @@ namespace Dune::PDELab
         // reduction of at least current_defect^2/prev_defect^2.  For the
         // last newton step a linear reduction of
         // 1/10*end_defect/current_defect is sufficient for convergence.
-        if (stop_defect/(10*_result.defect) > _result.defect*_result.defect/(_previousDefect*_previousDefect))
-          _linearReduction = stop_defect/(10*_result.defect);
-        else
-          _linearReduction = min(_minLinearReduction, _result.defect*_result.defect/(_previousDefect*_previousDefect));
+        _linearReduction =
+          max( stop_defect/(10*_result.defect),
+            min(_minLinearReduction, _result.defect*_result.defect/(_previousDefect*_previousDefect)) );
         }
 
         if (_verbosity >= 3)
