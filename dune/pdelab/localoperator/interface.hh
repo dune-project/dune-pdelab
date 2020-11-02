@@ -87,6 +87,8 @@ namespace Dune {
     {
     public:
 
+      static const bool doSelectiveEntity = false;
+      static const bool doSelectiveIntersection = false;
       static const bool doPatternVolume = true;
       static const bool doPatternVolumePostSkeleton = true;
       static const bool doPatternSkeleton = true;
@@ -99,6 +101,42 @@ namespace Dune {
       static const bool doLambdaVolumePostSkeleton = true;
       static const bool doLambdaSkeleton = true;
       static const bool doLambdaBoundary = true;
+
+      //////////////////////////////////////////////////////////////////////
+      //
+      //! \name Methods for selective assembly
+      //! \{
+      //
+
+      //! whether to assembly methods associated with a given entity
+      /**
+       * \param eg   ElementGeometry describing the entity.
+       *
+       * This method is controlled by the flag \ref doSelectiveEntity. For a
+       * given element, it is called *before* the any other local method. If
+       * return value is true, all volume, skeleton, and boundary methods are
+       * skipped.
+       */
+      template<typename EG>
+      void skip_entity
+      ( const EG& eg, bool& skip) const
+      {}
+
+      //! whether to assembly methods associated with a given intersection
+      /**
+       * \param ig     IntersectionGeometry describing the intersection.
+       *
+       * This method is controlled by the flag \ref doSelectiveIntersection. For
+       * a given intersection, it is called *after* local volume methods and
+       * *before* any skeleton and boundary methods. If return value is true,
+       * all skeleton, and boundary methods are skipped.
+       */
+      template<typename IG>
+      void skip_intersection
+      ( const IG& ig, bool& skip) const
+      {}
+
+      //! \} Methods for selective assembly
 
       //////////////////////////////////////////////////////////////////////
       //

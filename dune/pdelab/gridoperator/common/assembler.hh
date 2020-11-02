@@ -83,6 +83,18 @@ namespace Dune {
       template<typename EG>
       bool assembleCell(const EG & eg);
 
+      /** Assembling method which is called for a given grid intersection. It
+      is called after the cell local function space is bound and before the
+      local function spaces is bound to the outside cell (if any) and similarly
+      for the extraction of the coefficients for the local trial function space.
+
+      \return Indicate whether assembling of this intersection may be aborted
+      after the call of this method. This may avoid unneccessary costs
+      due to binding of the local function spaces etc.
+      */
+      template<typename IG>
+      bool assembleIntersection(const IG & ig);
+
       /** Assembling for a codim 0 entity part for trial and test
       local function spaces.
       */

@@ -276,6 +276,13 @@ namespace Dune {
           return false;
         }
 
+        //! - returns false by default to continue intersection assembly.
+        template<typename IG>
+        bool assembleIntersection(const IG & ig)
+        {
+          return false;
+        }
+
         template<typename EG, typename LFSU, typename LFSV>
         void assembleUVVolume(const EG& eg, const LFSU& lfsu, const LFSV& lfsv)
         {

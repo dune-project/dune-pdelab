@@ -13,6 +13,35 @@
 namespace Dune{
   namespace PDELab{
 
+
+#ifndef DOXYGEN
+
+    namespace impl {
+
+      // ********************************************************************************
+      // concept checks that test whether a local operator provides a given flag
+      // ********************************************************************************
+
+      struct HasDoSkipEntity
+      {
+        template<typename LO>
+        auto require(LO&& lo) -> decltype(
+           Concept::requireConvertible<bool>(LO::doSelectiveEntity)
+          );
+      };
+
+      struct HasDoSkipIntersection
+      {
+        template<typename LO>
+        auto require(LO&& lo) -> decltype(
+          Concept::requireConvertible<bool>(LO::doSelectiveIntersection)
+          );
+      };
+
+    } // namespace impl
+
+#endif // DOXYGEN
+
     /**
        \brief The local assembler for DUNE grids
 
@@ -106,6 +135,46 @@ namespace Dune{
       const LOP &localOperator() const
       {
         return lop_;
+      }
+
+      /** Assemble on a given cell without function spaces.
+
+          \return If true, the assembling for this cell is assumed to
+          be complete and the assembler continues with the next grid
+          cell.
+       */
+      template<class EG>
+      bool assembleCell(const EG & eg) const
+      {
+        bool skip = false;
+        static_assert(
+          models<impl::HasDoSkipEntity,LOP>(),
+          "Your local operator does not provide the 'doSelectiveEntity' flag. "
+          "If you are porting a previous implementation, set the flag to false"
+          );
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doSelectiveEntity>::
+          skip_entity(lop_,eg,skip);
+        return skip;
+      }
+
+      /** Assemble on a given intersection without function spaces.
+
+          \return If true, the assembling for this intersection is assumed to
+          be complete and the assembler continues with the next grid
+          intersection.
+       */
+      template<class IG>
+      bool assembleIntersection(const IG & ig) const
+      {
+        bool skip = false;
+        static_assert(
+          models<impl::HasDoSkipIntersection,LOP>(),
+          "Your local operator does not provide the 'doSelectiveIntersection' flag. "
+          "If you are porting a previous implementation, set the flag to false"
+          );
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doSelectiveIntersection>::
+          skip_intersection(lop_,ig,skip);
+        return skip;
       }
 
       //! Notifies the local assembler about the current time of
