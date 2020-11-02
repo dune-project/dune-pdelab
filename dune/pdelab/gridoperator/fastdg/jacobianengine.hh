@@ -230,10 +230,23 @@ namespace Dune{
           be complete and the assembler continues with the next grid
           cell.
        */
-      template<typename EG>
-      bool assembleCell(const EG & eg)
+      template <typename EG> bool assembleCell(const EG &eg)
       {
-        return LocalAssembler::isNonOverlapping && eg.entity().partitionType() != Dune::InteriorEntity;
+        return localAssembler().assembleCell(eg) ||
+               (LocalAssembler::isNonOverlapping &&
+                eg.entity().partitionType() != Dune::InteriorEntity);
+      }
+
+      /** Assemble on a given intersection without function spaces.
+
+          \return If true, the assembling for this intersection is assumed to
+          be complete and the assembler continues with the next grid
+          intersection.
+       */
+      template<typename IG>
+      bool assembleIntersection(const IG & ig)
+      {
+        return localAssembler().assembleIntersection(ig);
       }
 
       template<typename EG, typename LFSUC, typename LFSVC>

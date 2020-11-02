@@ -165,6 +165,29 @@ namespace Dune{
                            p);
       }
 
+      /** Assemble on a given cell without function spaces.
+
+          \return If true, the assembling for this cell is assumed to
+          be complete and the assembler continues with the next grid
+          cell.
+       */
+      template<typename EG>
+      bool assembleCell(const EG & eg)
+      {
+        return localAssembler().assembleCell(eg);
+      }
+
+      /** Assemble on a given intersection without function spaces.
+
+          \return If true, the assembling for this intersection is assumed to
+          be complete and the assembler continues with the next grid
+          intersection.
+       */
+      template<typename IG>
+      bool assembleIntersection(const IG & ig)
+      {
+        return localAssembler().assembleIntersection(ig);
+      }
 
       //! Called when the local function space is about to be rebound or
       //! discarded
