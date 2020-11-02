@@ -84,6 +84,9 @@ namespace Dune::PDELab
     //! Type of results
     using Result = PDESolverResult<Real>;
 
+    //! Type of line search interface
+    using LineSearch = LineSearchInterface<Domain>;
+
     //! Return results
     const Result& result() const
     {
@@ -522,13 +525,25 @@ namespace Dune::PDELab
       _terminate = terminate;
     }
 
+    //! Return a pointer to the stored termination criterion
+    std::shared_ptr<TerminateInterface> getTerminate() const
+    {
+      return _terminate;
+    }
+
     /**\brief Set the line search
      *
      * See getLineSearch() for already implemented line searches
      */
-    void setLineSearch(std::shared_ptr<LineSearchInterface<Domain>> lineSearch)
+    void setLineSearch(std::shared_ptr<LineSearch> lineSearch)
     {
       _lineSearch = lineSearch;
+    }
+
+    //! Return a pointer to the stored line search
+    std::shared_ptr<LineSearch> getLineSearch() const
+    {
+      return _lineSearch;
     }
 
     //! Construct Newton using default parameters with default parameters
@@ -573,7 +588,7 @@ namespace Dune::PDELab
     std::shared_ptr<Domain> _previousSolution;
 
     std::shared_ptr<TerminateInterface> _terminate;
-    std::shared_ptr<LineSearchInterface<Domain>> _lineSearch;
+    std::shared_ptr<LineSearch> _lineSearch;
 
     // Class for storing results
     Result _result;
