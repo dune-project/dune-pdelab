@@ -162,6 +162,9 @@ namespace Dune{
 
                     IntersectionGeometry<Intersection> ig(intersection,intersection_index);
 
+                    if(assembler_engine.assembleIntersection(ig))
+                      continue;
+
                     auto intersection_data = classifyIntersection(entity_set,intersection);
                     auto intersection_type = std::get<0>(intersection_data);
                     auto& outside_element = std::get<1>(intersection_data);

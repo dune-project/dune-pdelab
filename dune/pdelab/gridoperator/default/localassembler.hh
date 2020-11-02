@@ -13,35 +13,6 @@
 namespace Dune{
   namespace PDELab{
 
-
-#ifndef DOXYGEN
-
-    namespace impl {
-
-      // ********************************************************************************
-      // concept checks that test whether a local operator provides a given flag
-      // ********************************************************************************
-
-      struct HasDoSkipEntity
-      {
-        template<typename LO>
-        auto require(LO&& lo) -> decltype(
-           Concept::requireConvertible<bool>(LO::doSelectiveEntity)
-          );
-      };
-
-      struct HasDoSkipIntersection
-      {
-        template<typename LO>
-        auto require(LO&& lo) -> decltype(
-          Concept::requireConvertible<bool>(LO::doSelectiveIntersection)
-          );
-      };
-
-    } // namespace impl
-
-#endif // DOXYGEN
-
     /**
        \brief The local assembler for DUNE grids
 
