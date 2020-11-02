@@ -579,7 +579,8 @@ namespace Dune
             this->reassembled_ = true;
           }
 
-        if (fixed_linear_reduction_ == true)
+        // corner case: force_iteration_==true. Use min_linear_reduction when initial defect is less than AbsoluteLimit.
+        if (fixed_linear_reduction_ == true || (this->res_.iterations==0 && this->res_.first_defect<this->abs_limit_))
           this->linear_reduction_ = min_linear_reduction_;
         else {
           // determine maximum defect, where Newton is converged.
@@ -595,13 +596,9 @@ namespace Dune
             1/10*end_defect/current_defect
             is sufficient for convergence.
           */
-          if ( stop_defect/(10*this->res_.defect) >
-               this->res_.defect*this->res_.defect/(this->prev_defect_*this->prev_defect_) )
-            this->linear_reduction_ =
-              stop_defect/(10*this->res_.defect);
-          else
-            this->linear_reduction_ =
-              std::min(min_linear_reduction_,this->res_.defect*this->res_.defect/(this->prev_defect_*this->prev_defect_));
+          this->linear_reduction_ =
+            std::max( stop_defect/(10*this->res_.defect),
+              std::min(min_linear_reduction_,this->res_.defect*this->res_.defect/(this->prev_defect_*this->prev_defect_)) );
         }
 
         this->prev_defect_ = this->res_.defect;
