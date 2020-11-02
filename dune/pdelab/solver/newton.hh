@@ -218,6 +218,9 @@ namespace Dune::PDELab
         }
         catch (...)
         {
+          // Keep track of statistics when the method fails. We record
+          // independently the time spent in non-converging attempts.
+          // Check OneStepMethod to see how these data are propagated.
           auto end = Clock::now();
           assembler_time += end-start;
           _result.assembler_time = to_seconds(assembler_time);
@@ -239,6 +242,7 @@ namespace Dune::PDELab
         }
         catch (...)
         {
+          // Separately catch statistics for linear solver failures.
           end = Clock::now();
           linear_solver_time += end-start;
           _result.linear_solver_time = to_seconds(linear_solver_time);
