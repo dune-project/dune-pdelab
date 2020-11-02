@@ -1297,6 +1297,16 @@ namespace Dune {
       return new2old_localindex_;
     }
 
+    std::vector<typename GridView::Grid::GlobalIdSet::IdType> get_globalid() {
+      auto& indexset = gv_.indexSet();
+      auto& globalidset = gv_.grid().globalIdSet();
+      using GlobalID = typename GridView::Grid::GlobalIdSet::IdType;
+      std::vector<GlobalID> globalid(indexset.size(GridView::Grid::dimension));
+      for (const auto& v : vertices(gv_,Dune::Partitions::all))
+        globalid[indexset.index(v)] = globalidset.id(v);
+      return globalid;
+    }
+
   private:
 
     std::vector<EPISAttribute> buildPartitionTypeVector(const GridView& gv) {

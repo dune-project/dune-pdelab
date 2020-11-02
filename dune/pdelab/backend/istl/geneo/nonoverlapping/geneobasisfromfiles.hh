@@ -10,7 +10,7 @@ namespace Dune {
     /*!
      */
     template<class GridView, class M, class X>
-    class NonoverlappingGenEOBasisFromFiles : public SubdomainBasis<X>
+    class GenEOBasisFromFiles : public SubdomainBasis<X>
     {
 
     public:
@@ -19,35 +19,19 @@ namespace Dune {
        * \brief Constructor of subdomainbasis from files where the
        * local EV from a pristine model are saved
        */
-      NonoverlappingGenEOBasisFromFiles(NonoverlappingOverlapAdapter<GridView, X, M>& adapter, std::string& basename, int verbose = 0) {
+      GenEOBasisFromFiles(std::string& path_to_storage, int basis_size, int subdomain_number, int verbose = 0) {
 
-        if (verbose > 1) std::cout << "Getting EV basis at proc " << adapter.gridView().comm().rank() << " from offline." << std::endl;
+        if (verbose > 1) std::cout << "Getting EV basis for subdomain: " << subdomain_number << " from offline." << std::endl;
 
-        std::ostringstream osrank;
-        osrank << adapter.gridView().comm().rank();
-        int basis_size;
-
-        // Get the basis size from file
-        std::string filename_basis_size = basename+ "_" + osrank.str() + "_size.txt";
-        std::ifstream input_basis_size;
-        input_basis_size.open(filename_basis_size, std::ios::in);
-        if (!input_basis_size.is_open())
-          DUNE_THROW(IOError, "Could not open file: " << filename_basis_size);
-        input_basis_size >> basis_size;
-        input_basis_size.close();
         this->local_basis.resize(basis_size);
 
-        for (int basis_index = 0; basis_index < this->local_basis.size(); basis_index++) {
-
+        for (int basis_index = 0; basis_index < basis_size; basis_index++) {
           std::shared_ptr<X> ev = std::make_shared<X>();
-          std::ostringstream rfilename;
-          rfilename<< basename <<  "_" << basis_index  << "_" << adapter.gridView().comm().rank() << ".mm";
-          std::ifstream file;
-          file.open(rfilename.str().c_str(), std::ios::in);
-          if(!file)
-            DUNE_THROW(IOError, "Could not open file: " << rfilename.str().c_str());
-          Dune::readMatrixMarket(*ev,file);
-          file.close();
+          std::string filename_EV = path_to_storage + std::to_string(subdomain_number) + "_EV_" + std::to_string(basis_index) + ".mm";
+          std::ifstream file_EV;
+          file_EV.open(filename_EV.c_str(), std::ios::in);
+          Dune::readMatrixMarket(*ev,file_EV);
+          file_EV.close();
 
           this->local_basis[basis_index] = ev;
         }

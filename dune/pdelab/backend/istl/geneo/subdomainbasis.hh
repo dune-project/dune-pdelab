@@ -46,25 +46,25 @@ namespace Dune {
         return local_basis.size();
       }
 
-      /*!
-       * \brief Write EV basis in .mm format
-       */
-      void to_file(std::string basename, int rank) {
-        // For each processor, printing the size of the associated subdomainbasis.
-        // As this size is variable for each processor, it is the way to keep
-        // this information after consecutive runs
-        std::ofstream output_basis_size;
-        std::string filename = basename + "_" + std::to_string(rank) + "_size.txt";
-        output_basis_size.open(filename, std::ios::out);
-        output_basis_size << local_basis.size();
-        output_basis_size.close();
+      // /*!
+      //  * \brief Write EV basis in .mm format
+      //  */
+      // void to_file(std::string basename, int rank) {
+      //   // For each processor, printing the size of the associated subdomainbasis.
+      //   // As this size is variable for each processor, it is the way to keep
+      //   // this information after consecutive runs
+      //   std::ofstream output_basis_size;
+      //   std::string filename = basename + "_" + std::to_string(rank) + "_size.txt";
+      //   output_basis_size.open(filename, std::ios::out);
+      //   output_basis_size << local_basis.size();
+      //   output_basis_size.close();
 
-        // Writing subdomainbasis using matrixmarket format
-        for (int basis_index = 0; basis_index < local_basis.size(); basis_index++) {
-          std::string filename = basename + "_" + std::to_string(basis_index) + "_" + std::to_string(rank) + ".mm";
-          Dune::storeMatrixMarket(*local_basis[basis_index], filename, 15);
-        }
-      }
+      //   // Writing subdomainbasis using matrixmarket format
+      //   for (int basis_index = 0; basis_index < local_basis.size(); basis_index++) {
+      //     std::string filename = basename + "_" + std::to_string(basis_index) + "_" + std::to_string(rank) + ".mm";
+      //     Dune::storeMatrixMarket(*local_basis[basis_index], filename, 15);
+      //   }
+      // }
 
     protected:
       std::vector<std::shared_ptr<X> > local_basis;

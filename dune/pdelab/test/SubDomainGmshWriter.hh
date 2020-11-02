@@ -135,10 +135,12 @@ namespace Dune {
           files[incrSD] << counter << " " << ElementsToBeSavedForEachSubdomain[incrSD][incrE].type;
           // If present, set the first tag to the physical entity
           if (!physicalEntities.empty())
-            files[incrSD] << " " << 2 << " " << physicalEntities[ElementsToBeSavedForEachSubdomain[incrSD][incrE].index] << " " << ElementsToBeSavedForEachSubdomain[incrSD][incrE].index;
+            files[incrSD] << " " << 1 << " " << physicalEntities[ElementsToBeSavedForEachSubdomain[incrSD][incrE].index];
+            // files[incrSD] << " " << 2 << " " << physicalEntities[ElementsToBeSavedForEachSubdomain[incrSD][incrE].index] << " " << ElementsToBeSavedForEachSubdomain[incrSD][incrE].index;
             // files[incrSD] << " " << 3 << " " << incrSD << " " << physicalEntities[ElementsToBeSavedForEachSubdomain[incrSD][incrE].index] << " " << ElementsToBeSavedForEachSubdomain[incrSD][incrE].index;
           else
-            files[incrSD] << " " << 1 << " " << ElementsToBeSavedForEachSubdomain[incrSD][incrE].index;
+            files[incrSD] << " " << 0;
+            // files[incrSD] << " " << 1 << " " << ElementsToBeSavedForEachSubdomain[incrSD][incrE].index;
             // files[incrSD] << " " << 2 << " " << incrSD << " " << ElementsToBeSavedForEachSubdomain[incrSD][incrE].index;
 
           for (int k = 0; k < ElementsToBeSavedForEachSubdomain[incrSD][incrE].nodes.size(); ++k)
@@ -208,11 +210,16 @@ namespace Dune {
               NodesToBeSavedForEachSubdomain[*it].push_back(nodeIndexFromEntity(e, 1));
               NodesToBeSavedForEachSubdomain[*it].push_back(nodeIndexFromEntity(e, 3));
               NodesToBeSavedForEachSubdomain[*it].push_back(nodeIndexFromEntity(e, 2));
+              // NodesToBeSavedForEachSubdomain[*it].push_back(nodeIndexFromEntity(e, 2));
+              // NodesToBeSavedForEachSubdomain[*it].push_back(nodeIndexFromEntity(e, 3));
 
               tmpE.nodes.push_back(nodeIndexFromEntity(e, 0));
               tmpE.nodes.push_back(nodeIndexFromEntity(e, 1));
               tmpE.nodes.push_back(nodeIndexFromEntity(e, 3));
               tmpE.nodes.push_back(nodeIndexFromEntity(e, 2));
+              // tmpE.nodes.push_back(nodeIndexFromEntity(e, 2));
+              // tmpE.nodes.push_back(nodeIndexFromEntity(e, 3));
+
             } else if (5 == element_type){
               NodesToBeSavedForEachSubdomain[*it].push_back(nodeIndexFromEntity(e, 0));
               NodesToBeSavedForEachSubdomain[*it].push_back(nodeIndexFromEntity(e, 1));
@@ -346,28 +353,25 @@ namespace Dune {
 
       for(int incrSD=0; incrSD<partitions_; incrSD++){
         files[incrSD] << "$EndElements" << std::endl;
+
+        files[incrSD].close();
       }
 
-      // // It can't be read directly by gmshreader:: Replaced by annother mm vector
-      // for(int incrSD=0; incrSD<partitions_; incrSD++){
-      //   files[incrSD] << "$NodeData" << std::endl;
-      //   files[incrSD] << 1 << std::endl;
-      //   files[incrSD] << "Global index" << std::endl;
-      //   files[incrSD] << 0 << std::endl; // NO < real-tag >
-      //   files[incrSD] << 0 << std::endl; // NO < integer-tag >
-
-      //   for(int incr=0; incr<NodesToBeSavedForEachSubdomain[incrSD].size(); incr++)
-      //     files[incrSD] << incr+1 << " " << NodesToBeSavedForEachSubdomain[incrSD][incr] << std::endl;
-
-      //   files[incrSD] << "$EndNodeData" << std::endl;
-      // }
-
+      // Save local to global indices (for vertices and cells) out of the .msh file
+      // because the gmshReader currently implemented (2.7) doesn't read multiple
+      // tags for elements (only physical groups) and any tags for nodes
       for(int incrSD=0; incrSD<partitions_; incrSD++){
-        Dune::BlockVector<Dune::FieldVector<int, 1>> LocalToGlobal(NodesToBeSavedForEachSubdomain[incrSD].size());
+        Dune::BlockVector<Dune::FieldVector<int, 1>> LocalToGlobalELEMENT(ElementsToBeSavedForEachSubdomain[incrSD].size());
+        for (int i=0; i<ElementsToBeSavedForEachSubdomain[incrSD].size();i++)
+          LocalToGlobalELEMENT[i]=ElementsToBeSavedForEachSubdomain[incrSD][i].index;
+        std::string filename_ltgE = path_to_storage  + std::to_string(incrSD) + "_LocalToGlobalElement.mm";
+        Dune::storeMatrixMarket(LocalToGlobalELEMENT, filename_ltgE, 15);
+
+        Dune::BlockVector<Dune::FieldVector<int, 1>> LocalToGlobalNODE(NodesToBeSavedForEachSubdomain[incrSD].size());
         for (int i=0; i<NodesToBeSavedForEachSubdomain[incrSD].size();i++)
-          LocalToGlobal[i]=NodesToBeSavedForEachSubdomain[incrSD][i];
-        std::string filename_ltg = path_to_storage  + std::to_string(incrSD) + "_SubMeshIDToGlobal.mm";
-        Dune::storeMatrixMarket(LocalToGlobal, filename_ltg, 15);
+          LocalToGlobalNODE[i]=NodesToBeSavedForEachSubdomain[incrSD][i];
+        std::string filename_ltgN = path_to_storage  + std::to_string(incrSD) + "_LocalToGlobalNode.mm";
+        Dune::storeMatrixMarket(LocalToGlobalNODE, filename_ltgN, 15);
       }
     }
 

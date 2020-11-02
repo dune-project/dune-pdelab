@@ -3,6 +3,8 @@
 #endif
 
 #include <dune/pdelab.hh>
+#include <dune/pdelab/backend/istl/geneo/nonoverlapping/geneobasisOnline.hh>
+#include <dune/pdelab/backend/istl/geneo/nonoverlapping/geneobasisfromfiles.hh>
 
 /*
  * Defining a Darcy problem with alternating layers of permeability and a high contrast
@@ -99,107 +101,17 @@ public:
   }
 };
 
-template <typename V_>
-struct AddGatherScatter
-{
-    static typename V_::value_type gather(const V_ &a, int i)
-    {
-        return a[i]; // I am sending my value
-    }
-    static void scatter(V_ &a, typename V_::value_type v, int i)
-    {
-        a[i] += v; // add what I receive to my value
-    }
-};
-
-template<typename V_>
-struct MultiGatherScatter
-{
-  static typename V_::value_type gather(const V_& a, int i)
-  {
-    return (*a.localVector_)[i];
-  }
-  static void scatterWithRank (V_& a, typename V_::value_type v, int i, int proc)
-  {
-    (*a.getVectorForRank(proc))[i]=v;
-  }
-};
-
-template<typename GV, typename Vector, typename Matrix, typename rank_type>
-class MultiVectorBundle { // TODO : recreate this function without using adapter which will disappear when we will solve online sequentially
-public:
-  typedef typename Vector::value_type value_type;
-
-  MultiVectorBundle(Dune::NonoverlappingOverlapAdapter<GV, Vector, Matrix>& adapter, std::vector<rank_type> neighbor_ranks)
-  : neighboringRanks_(neighbor_ranks),
-    neighbor_basis(0)
-  {
-    for (auto& rank : neighboringRanks_) {
-      neighbor_basis.push_back(std::make_shared<Vector>(adapter.getExtendedSize()));
-    }
-  }
-
-  std::shared_ptr<Vector> getVectorForRank(int rank) {
-    for (int i = 0; i < neighboringRanks_.size(); i++) {
-      if (neighboringRanks_[i] == rank) {
-        return neighbor_basis[i];
-      }
-    }
-    DUNE_THROW(Dune::Exception, "Trying to access vector for unknown neighbor rank!");
-    return nullptr;
-  }
-
-  void print() {
-    for (size_t i = 0; i < neighboringRanks_.size(); i++) {
-      Dune::printvector(std::cout, *(neighbor_basis[i]), "remote vec from neighbor " + std::to_string(neighboringRanks_[i]), "");
-    }
-  }
-
-  std::shared_ptr<Vector> localVector_;
-  std::vector<std::shared_ptr<Vector> > neighbor_basis;
-  std::vector<int> neighboringRanks_;
-};
-
-template <class X>
-class SubdomainBasisFromOffline {
-
-  public:
-
-  NonoverlappingGenEOBasisFromFiles(std::string& basename, int verbose = 0) {
-
-    // std::ostringstream osrank;
-    // osrank << adapter.gridView().comm().rank();
-    // int basis_size;
-
-    // // Get the basis size from file
-    // std::string filename_basis_size = basename+ "_" + osrank.str() + "_size.txt";
-    // std::ifstream input_basis_size;
-    // input_basis_size.open(filename_basis_size, std::ios::in);
-    // if (!input_basis_size.is_open())
-    //   DUNE_THROW(IOError, "Could not open file: " << filename_basis_size);
-    // input_basis_size >> basis_size;
-    // input_basis_size.close();
-    // this->local_basis.resize(basis_size);
-
-    // for (int basis_index = 0; basis_index < this->local_basis.size(); basis_index++) {
-
-    //   std::shared_ptr<X> ev = std::make_shared<X>();
-    //   std::ostringstream rfilename;
-    //   rfilename<< basename <<  "_" << basis_index  << "_" << adapter.gridView().comm().rank() << ".mm";
-    //   std::ifstream file;
-    //   file.open(rfilename.str().c_str(), std::ios::in);
-    //   if(!file)
-    //     DUNE_THROW(IOError, "Could not open file: " << rfilename.str().c_str());
-    //   Dune::readMatrixMarket(*ev,file);
-    //   file.close();
-
-    //   this->local_basis[basis_index] = ev;
-    // }
-  }
-
-};
-
 void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper& helper) {
+
+  // ~~~~~~~~~~~~~~~~~~
+  // ReCreate offline hierarchy
+  // ~~~~~~~~~~~~~~~~~~
+  std::string path_to_storage = "Offline/";
+
+  // ~~~~~~~~~~~~~~~~~~
+  // Define what subdomain need to be solved
+  // ~~~~~~~~~~~~~~~~~~
+  std::vector<int> targeted = {0}; // Subdomains that need a second solve
 
   // ~~~~~~~~~~~~~~~~~~
 //  Grid set up
@@ -212,13 +124,13 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   typedef Dune::UGGrid<dim> GRID;
   Dune::GridFactory<GRID> factory;
-  Dune::GmshReader<GRID>::read(factory, "grids/24x24.msh", true, true);
+  Dune::GmshReader<GRID>::read(factory, path_to_storage + std::to_string(targeted[0]) + "_subdomain.msh", true, true);
   std::unique_ptr<GRID> grid (factory.createGrid());
 
   typedef typename GRID::LeafGridView GV;
   auto gv = grid->leafGridView();
 
-  grid->loadBalance();
+  // grid->loadBalance();
 
 
   // ~~~~~~~~~~~~~~~~~~
@@ -287,289 +199,234 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   M A(go);
   go.jacobian(x,A);
   // set up and assemble right hand side w.r.t. l(v)-a(u_g,v)
-  // V d(gfs,0.0);
-  // go.residual(x,d); // The rhs is loaded from offline directly restricted in the coarse spaces
+  V d(gfs,0.0);
+  go.residual(x,d); // The rhs is loaded from offline directly restricted in the coarse spaces
 
   // ~~~~~~~~~~~~~~~~~~
 //  Solving process begin here: First some parameters
   // ~~~~~~~~~~~~~~~~~~
   double eigenvalue_threshold = -1;
-  const int algebraic_overlap = 1;
+  const int algebraic_overlap = 0;
   int nev = 30;
   int nev_arpack = nev;
   // double shift = 0.001;
 
-  std::vector<int> rank_to_be_solved = {0}; // Rank that need a second solve
-
-  std::ifstream file;
-  std::string path_to_storage = "Offline/";
-
   using Dune::PDELab::Backend::native;
 
-  // ~~~~~~~~~~~~~~~~~~
-//  ADAPTER :: TODO remove adapter which is created for a parallel solve
-  // ~~~~~~~~~~~~~~~~~~
-  Dune::NonoverlappingOverlapAdapter<GV, Vector, Matrix> adapter(gv, native(A), nonzeros, algebraic_overlap);
-  using Attribute = Dune::EPISAttribute;
-  Dune::AllSet<Attribute> allAttribute;
-  auto allinterface = std::shared_ptr<Dune::Interface>(new Dune::Interface());
-  allinterface->build(*adapter.getRemoteIndices(), allAttribute, allAttribute); // all to all communication
-  // build up buffered communicator allowing communication over a dof vector
-  auto communicator = std::shared_ptr<Dune::BufferedCommunicator>(new Dune::BufferedCommunicator());
-  communicator->build<Vector>(*allinterface);
+//   // ~~~~~~~~~~~~~~~~~~
+// //  ADAPTER :: TODO remove adapter which is created for a parallel solve
+//   // ~~~~~~~~~~~~~~~~~~
+//   Dune::NonoverlappingOverlapAdapter<GV, Vector, Matrix> adapter(gv, native(A), nonzeros, algebraic_overlap);
+//   using Attribute = Dune::EPISAttribute;
+//   Dune::AllSet<Attribute> allAttribute;
+//   auto allinterface = std::shared_ptr<Dune::Interface>(new Dune::Interface());
+//   allinterface->build(*adapter.getRemoteIndices(), allAttribute, allAttribute); // all to all communication
+//   // build up buffered communicator allowing communication over a dof vector
+//   auto communicator = std::shared_ptr<Dune::BufferedCommunicator>(new Dune::BufferedCommunicator());
+//   communicator->build<Vector>(*allinterface);
 
-  auto communicatorWithRank = std::shared_ptr<DuneWithRank::BufferedCommunicator>(new DuneWithRank::BufferedCommunicator());
-  communicatorWithRank->build<Vector>(*allinterface);
+//   auto communicatorWithRank = std::shared_ptr<DuneWithRank::BufferedCommunicator>(new DuneWithRank::BufferedCommunicator());
+//   communicatorWithRank->build<Vector>(*allinterface);
 
-  // ~~~~~~~ Version from subdomainprojectedcoarsespace.hh ~~~~~~~
-  // using Attribute = EPISAttribute;
-  // Dune::AllSet<Attribute> allAttribute;
-  // auto allinterface = std::shared_ptr<Dune::Interface>(new Dune::Interface());
-  // allinterface->build(*adapter_.getRemoteIndices(),allAttribute,allAttribute); // all to all communication
-  // auto communicator = std::shared_ptr<DuneWithRank::BufferedCommunicator>(new DuneWithRank::BufferedCommunicator());
-  // communicator->build<X>(*allinterface);
+//   // ~~~~~~~ Version from subdomainprojectedcoarsespace.hh ~~~~~~~
+//   // using Attribute = EPISAttribute;
+//   // Dune::AllSet<Attribute> allAttribute;
+//   // auto allinterface = std::shared_ptr<Dune::Interface>(new Dune::Interface());
+//   // allinterface->build(*adapter_.getRemoteIndices(),allAttribute,allAttribute); // all to all communication
+//   // auto communicator = std::shared_ptr<DuneWithRank::BufferedCommunicator>(new DuneWithRank::BufferedCommunicator());
+//   // communicator->build<X>(*allinterface);
 
-  auto geneo_matrices = setupGenEOMatrices(go, adapter, A);
-  std::shared_ptr<Matrix> A_extended = std::get<0>(geneo_matrices);
-  std::shared_ptr<Matrix> A_overlap_extended = std::get<1>(geneo_matrices);
-  std::shared_ptr<Vector> part_unity = std::get<2>(geneo_matrices);
+//   auto geneo_matrices = setupGenEOMatrices(go, adapter, A);
+//   std::shared_ptr<Matrix> A_extended = std::get<0>(geneo_matrices);
+//   std::shared_ptr<Matrix> A_overlap_extended = std::get<1>(geneo_matrices);
+//   std::shared_ptr<Vector> part_unity = std::get<2>(geneo_matrices);
 
   // ~~~~~~~~~~~~~~~~~~
 //  Load a vector describing local basis sizes (number of EV) and creating the vector of offsets (to reach indices in the coarse space)
   // ~~~~~~~~~~~~~~~~~~
-  std::string filename_lb = path_to_storage + "local_basis_sizes.txt";
-  std::vector<int> local_basis_sizes(adapter.gridView().comm().size()), local_offset(adapter.gridView().comm().size()+1);
-  file.open(filename_lb.c_str(), std::ios::in);
-  int count=0;
+  Vector lb;
+  std::ifstream file_lb;
+  std::string filename_lb = path_to_storage + "localBasisSizes.mm";
+  file_lb.open(filename_lb.c_str(), std::ios::in);
+  Dune::readMatrixMarket(lb,file_lb);
+  file_lb.close();
+
+
+  const int number_of_rank_used_offline = lb.size();
+
+
+  std::vector<int> local_basis_sizes(number_of_rank_used_offline), local_offset(number_of_rank_used_offline+1);
   local_offset[0]=0;
-  for (std::string line; std::getline(file, line); ) {
-    int value = std::stoi(line);
-    local_basis_sizes[count] = value;
-    local_offset[count+1] = value+local_offset[count];
-    if(adapter.gridView().comm().rank()==0)
-      std::cout << "local_basis_sizes : " << local_basis_sizes[count] << ", local_offset : " << local_offset[count] << std::endl;
-    count++;
+  for (int i=0; i<lb.size();i++) {
+    local_basis_sizes[i] = lb[i];
+    local_offset[i+1] = lb[i]+local_offset[i];
   }
-  file.close();
+
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //  Load the coarse matrix
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  CoarseMatrix AH;
+  std::ifstream file_AH;
+  std::string filename_AH = path_to_storage + "OfflineAH.mm";
+  file_AH.open(filename_AH.c_str(), std::ios::in);
+  Dune::readMatrixMarket(AH,file_AH);
+  file_AH.close();
+  // if(adapter.gridView().comm().rank()==0) {
+  //   std::cout << AH.N() << std::endl;
+  //   std::cout << AH.M() << std::endl;}
+
+
+  // ~~~~~~~~~~~~~~~~~~
+  // Load PoU
+  // ~~~~~~~~~~~~~~~~~~
+  // TODO : Only load the one associated to targeted[0] :: need to load more if needed
+  Vector PoU(A.N());
+  std::string filename_PoU = path_to_storage + std::to_string(targeted[0]) + "_PoU.mm";
+  std::ifstream file_PoU;
+  file_PoU.open(filename_PoU.c_str(), std::ios::in);
+  Dune::readMatrixMarket(PoU,file_PoU);
+  file_PoU.close();
+  // std::shared_ptr<Vector> part_unity = std::make_shared<Vector>(PoU.N(), PoU);
+  // std::shared_ptr<Matrix> A_ptr = std::make_shared<Matrix>(A);
+
+  // ~~~~~~~~~~~~~~~~~~
+  // Load Neighbour ranks
+  // ~~~~~~~~~~~~~~~~~~
+  // TODO : Only load the one associated to targeted[0] :: need to load more if needed
+  Vector NR(A.N());
+  std::string filename_NR = path_to_storage + std::to_string(targeted[0]) + "_neighborRanks.mm";
+  std::ifstream file_NR;
+  file_NR.open(filename_NR.c_str(), std::ios::in);
+  Dune::readMatrixMarket(NR,file_NR);
+  file_NR.close();
+
 
   // ~~~~~~~~~~~~~~~~~~
 //  Subdomain basis computation or loading
   // ~~~~~~~~~~~~~~~~~~
-  std::string basename = path_to_storage + "EV";
-  std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> subdomainbasis;
+  std::vector<std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>>> subdomainbasis(number_of_rank_used_offline);
   // Load from offline the EV basis & recompute if needed
-  std::vector<int>::iterator it = std::find(std::begin(rank_to_be_solved), std::end(rank_to_be_solved), adapter.gridView().comm().rank());
-  if (it != rank_to_be_solved.end()) {
-    subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_overlap_extended, part_unity, eigenvalue_threshold, nev, nev_arpack);
+  for (int iter_over_subdomains=0; iter_over_subdomains<number_of_rank_used_offline; iter_over_subdomains++) {
+    std::vector<int>::iterator it = std::find(std::begin(targeted), std::end(targeted), iter_over_subdomains);
 
-    // Problem with the PARTICULAR SOLUTION
-    // This new subdomain has no particular solution so the size of the new EV is reduced by 1
-    // Several possibilities:
-    // get only the particular solution from offline and add it to the subdomain basis:
+    if (it != targeted.end()) { // Recompute subdomain basis for the targeted subdomain
+      subdomainbasis[iter_over_subdomains] = std::make_shared<Dune::PDELab::GenEOBasisOnline<GO, Matrix, Vector>>(native(A), PoU, eigenvalue_threshold, nev, nev_arpack);
 
-    // recompute the particular solution for this subdomain:
+      // TODO:: Problem with the PARTICULAR SOLUTION
+      // This new subdomain has no particular solution so the size of the new EV is reduced by 1
+      // Several possibilities:
+      // get only the particular solution from offline and add it to the subdomain basis:
+      // recompute the particular solution for this subdomain:
+      // not use any particular solution for this subdomain but the vector local_basis_sizes and local offset have to change:
 
-    // not use any particular solution for this subdomain but the vector local_basis_sizes and local offset have to change:
-    local_basis_sizes[adapter.gridView().comm().rank()] -= 1;
-    for (int j=adapter.gridView().comm().rank()+1; j<local_basis_sizes.size(); j++) {
-      local_offset[j]-=1;
+      // local_basis_sizes[targeted[0]] -= 1;
+      // for (int j=targeted[0]+1; j<local_basis_sizes.size(); j++){
+      //   local_offset[j]-=1;
+      // }
+
+    } else { // Load other subdomain basis from Offline
+      // TODO :: only load neighbour subdomain basis, see exactly what we need after
+      subdomainbasis[iter_over_subdomains] = std::make_shared<Dune::PDELab::GenEOBasisFromFiles<GO, Matrix, Vector>>(path_to_storage, local_basis_sizes[iter_over_subdomains], iter_over_subdomains, 2);
     }
-
-  } else {
-    subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasisFromFiles<GV, Matrix, Vector>>(adapter, basename);
   }
 
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  Load the coarse matrix
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  CoarseMatrix AH;
-  std::string filename = path_to_storage + "OfflineAH.mm";
-  file.open(filename.c_str(), std::ios::in);
-  Dune::readMatrixMarket(AH,file);
-  file.close();
-  // if(adapter.gridView().comm().rank()==0) {
-  //   std::cout << AH.N() << std::endl;
-  //   std::cout << AH.M() << std::endl;}
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //  Modify AH
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  typedef int rank_type;
-  rank_type affected_rank, ranks, my_rank, max_local_basis_size, my_offset, cnt;
-
-  affected_rank = rank_to_be_solved[0]; // TODO for loop on rank_to_be_solved
-  my_rank = adapter.gridView().comm().rank();
-
-  std::vector<rank_type> neighbor_ranks = adapter.findNeighboringRanks(); // TODO replace when adapter will be removed :: from Offline
-
-  ranks = local_basis_sizes.size();
-  max_local_basis_size = *std::max_element(local_basis_sizes.begin(),local_basis_sizes.end());
-  my_offset = local_offset[my_rank];
-
-  // ~~~~~~~~~~~~~~~~~~
-  //  Pre-step : create a vector with all subdomain basis
-  // ~~~~~~~~~~~~~~~~~~
-  // Objective access all subdomain basis from a only proc without using a communicator
-
-  std::vector< std::vector< std::shared_ptr<Vector> > > all_subdomainbasis;
-  all_subdomainbasis.resize(ranks);
-  for (int rank_index=0; rank_index < all_subdomainbasis.size(); rank_index++) {
-    // std::cout << "my_rank: " << my_rank << ", rank_index: " << rank_index << std::endl;
-    if(my_rank == rank_index) {
-      std::cout << "my_rank: " << my_rank << ", rank_index: " << rank_index << std::endl;
-      std::cout << "ici all_subdomain filling" << std::endl;
-      all_subdomainbasis[rank_index].resize(subdomainbasis->basis_size());
-      std::cout << "all_subdomainbasis[rank_index].size(): " << all_subdomainbasis[rank_index].size() << std::endl;
-      for (int basis_index=0; basis_index<all_subdomainbasis[rank_index].size(); basis_index++){
-        all_subdomainbasis[rank_index][basis_index] = subdomainbasis->get_basis_vector(basis_index);
-      }
-    }
-  }
-
-  if (my_rank==0) {
-    std::cout << "all_subdomainbasis[1].size() for rank 0: " << all_subdomainbasis[1].size() << std::endl;
-  }
-
-  // std::cout << "ici all_subdomain filling" << std::endl;
-  // all_subdomainbasis[my_rank].resize(subdomainbasis->basis_size());
-  // for (int basis_index=0; basis_index<all_subdomainbasis[my_rank].size(); basis_index++){
-  //   all_subdomainbasis[my_rank][basis_index] = subdomainbasis->get_basis_vector(basis_index);
-  // }
+  int max_local_basis_size = *std::max_element(local_basis_sizes.begin(),local_basis_sizes.end());
+  int my_offset = local_offset[targeted[0]];
 
   // ~~~~~~~~~~~~~~~~~~
   //  Create a vector of AH entries modification
   // ~~~~~~~~~~~~~~~~~~
 
-  if (my_rank == affected_rank) {
-    std::cout << "Only the proc " << adapter.gridView().comm().rank() << " is used." << std::endl;
+  // Set up container for storing rows of coarse matrix associated with current rank
+  std::vector<std::vector<std::vector<Matrix::field_type> > > local_rows;
+  local_rows.resize(local_basis_sizes[targeted[0]]);
+  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
+    local_rows[basis_index].resize(NR.size()+1);
+  }
 
-    std::cout << "local_basis_sizes.size(): " << local_basis_sizes.size() << std::endl;
-    std::cout << "my_offset: " << my_offset << std::endl;
+  for (int basis_index_remote = 0; basis_index_remote < max_local_basis_size; basis_index_remote++) {
 
-    std::cout << "Initializing local_rows: " << std::endl;
-
-    // Set up container for storing rows of coarse matrix associated with current rank
-    std::vector<std::vector<std::vector<Matrix::field_type> > > local_rows(local_basis_sizes[my_rank]);
-    for (rank_type basis_index = 0; basis_index < local_basis_sizes[my_rank]; basis_index++) {
-      local_rows[basis_index].resize(neighbor_ranks.size()+1);
-    }
-
-    std::cout << "... done " << std::endl;
-    std::cout << "local_rows size: " << local_rows.size() << std::endl;
-    std::cout << "local_rows[i] size: " << local_rows[my_rank].size() << std::endl;
-
-    MultiVectorBundle<GV, Vector, Matrix, rank_type> bundle(adapter, neighbor_ranks);
-
-    std::cout << "bundle is created" << std::endl;
-
-    for (rank_type basis_index_remote = 0; basis_index_remote < max_local_basis_size; basis_index_remote++) {
-
-      std::cout << basis_index_remote << std::endl;
-      // Communicate one basis vectors of every subdomain to all of its neighbors in one go
-      // If the current rank has already communicated all its basis vectors, just pass zeros
-      // if (basis_index_remote < local_basis_sizes[my_rank]) { bundle.localVector_ = subdomainbasis->get_basis_vector(basis_index_remote); }
-      // else { bundle.localVector_ = std::make_shared<Vector>(adapter.getExtendedSize()); }
-
-      std::cout << "ici" << std::endl;
-
-      // communicatorWithRank->forward<MultiGatherScatter<MultiVectorBundle<GV, Vector, Matrix, rank_type>>>(bundle,bundle); // make function known in other subdomains
-      std::cout << "la" << std::endl;
-
-      // Compute local products of basis functions with discretization matrix
-      if (basis_index_remote < local_basis_sizes[my_rank]) {
-        auto basis_vector = *subdomainbasis->get_basis_vector(basis_index_remote);
-        Vector Atimesv(adapter.getExtendedSize());
-        (*A_extended).mv(basis_vector, Atimesv);
-        for (rank_type basis_index = 0; basis_index < local_basis_sizes[my_rank]; basis_index++) {
-          Matrix::field_type entry = *subdomainbasis->get_basis_vector(basis_index)*Atimesv;
-          local_rows[basis_index][neighbor_ranks.size()].push_back(entry);
-        }
-      }
-
-      // Compute products of discretization matrix with local and remote vectors
-      for (std::size_t neighbor_id = 0; neighbor_id < neighbor_ranks.size(); neighbor_id++) {
-        if (basis_index_remote >= local_basis_sizes[neighbor_ranks[neighbor_id]])
-          continue;
-        std::cout << "neighbor_ranks[neighbor_id]: " << neighbor_ranks[neighbor_id] << std::endl;
-        std::cout << "all_subdomainbasis.size(): " << all_subdomainbasis.size() << std::endl;
-        std::cout << "all_subdomainbasis[neighbor_ranks[neighbor_id]].size(): " << all_subdomainbasis[neighbor_ranks[neighbor_id]].size() << std::endl;
-        std::shared_ptr<Vector> basis_vector = all_subdomainbasis[neighbor_ranks[neighbor_id]][basis_index_remote]; // bundle.getVectorForRank(neighbor_ranks[neighbor_id]); //*bundle.neighbor_basis[neighbor_id];
-        std::cout << "ici" << std::endl;
-        Vector Atimesv(adapter.getExtendedSize());
-        (*A_extended).mv(*basis_vector, Atimesv);
-        for (rank_type basis_index = 0; basis_index < local_basis_sizes[my_rank]; basis_index++) {
-          Matrix::field_type entry = *subdomainbasis->get_basis_vector(basis_index)*Atimesv;
-          local_rows[basis_index][neighbor_id].push_back(entry);
-        }
+    // Compute local products of basis functions with discretization matrix
+    if (basis_index_remote < local_basis_sizes[targeted[0]]) {
+      auto basis_vector = *subdomainbasis[targeted[0]]->get_basis_vector(basis_index_remote);
+      Vector Atimesv(A.N());
+      native(A).mv(basis_vector, Atimesv);
+      for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
+        Matrix::field_type entry = *subdomainbasis[targeted[0]]->get_basis_vector(basis_index)*Atimesv;
+        local_rows[basis_index][NR.size()].push_back(entry);
       }
     }
 
-    std::cout << "Filling the vector local_rows of size " << local_rows.size() << " is done." << std::endl;
+    // Compute products of discretization matrix with local and remote vectors
+    // for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
+    //   if (basis_index_remote >= local_basis_sizes[NR[neighbor_id]])
+    //     continue;
+    //   auto basis_vector = *subdomainbasis[NR[neighbor_id]]->get_basis_vector(basis_index_remote);
+    //   Vector Atimesv(A.N());
+    //   native(A).mv(basis_vector, Atimesv);
+    //   for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
+    //     Matrix::field_type entry = *subdomainbasis[targeted[0]]->get_basis_vector(basis_index)*Atimesv;
+    //     local_rows[basis_index][neighbor_id].push_back(entry);
+    //   }
+    // }
+  }
 
+  // ~~~~~~~~~~~~~~~~~~
+  //  Modify AH entries
+  // ~~~~~~~~~~~~~~~~~~
 
-    // ~~~~~~~~~~~~~~~~~~
-    //  Modify AH entries
-    // ~~~~~~~~~~~~~~~~~~
-
-    rank_type row_id = 0;
-    // Modify AH entries with just computed local_rows
-    for (rank_type basis_index = 0; basis_index < local_basis_sizes[my_rank]; basis_index++) {
-      // Communicate number of entries in this row
-      rank_type couplings = 0;
-      couplings = local_basis_sizes[my_rank];
-      for (rank_type neighbor_id : neighbor_ranks) {
-        couplings += local_basis_sizes[neighbor_id];
-      }
-      adapter.gridView().comm().broadcast(&couplings, 1, my_rank);
-
-      // Communicate row's pattern
-      rank_type entries_pos[couplings];
-      cnt = 0;
-      for (rank_type basis_index2 = 0; basis_index2 < local_basis_sizes[my_rank]; basis_index2++) {
-        entries_pos[cnt] = my_offset + basis_index2;
-        cnt++;
-      }
-      for (std::size_t neighbor_id = 0; neighbor_id < neighbor_ranks.size(); neighbor_id++) {
-        rank_type neighbor_offset = local_offset[neighbor_ranks[neighbor_id]];
-        for (rank_type basis_index2 = 0; basis_index2 < local_basis_sizes[neighbor_ranks[neighbor_id]]; basis_index2++) {
-          entries_pos[cnt] = neighbor_offset + basis_index2;
-          cnt++;
-        }
-      }
-
-      std::cout << "Filling the vector entries_pos is done." << std::endl;
-
-
-      adapter.gridView().comm().broadcast(entries_pos, couplings, my_rank);
-
-      // Communicate actual entries
-      Matrix::field_type entries[couplings];
-      cnt = 0;
-      for (rank_type basis_index2 = 0; basis_index2 < local_basis_sizes[my_rank]; basis_index2++) {
-        entries[cnt] = local_rows[basis_index][neighbor_ranks.size()][basis_index2];
-        cnt++;
-      }
-      for (std::size_t neighbor_id = 0; neighbor_id < neighbor_ranks.size(); neighbor_id++) {
-        for (rank_type basis_index2 = 0; basis_index2 < local_basis_sizes[neighbor_ranks[neighbor_id]]; basis_index2++) {
-          entries[cnt] = local_rows[basis_index][neighbor_id][basis_index2];
-          cnt++;
-        }
-      }
-      adapter.gridView().comm().broadcast(entries, couplings, my_rank);
-
-      std::cout << "Filling the vector entries is done." << std::endl;
-
-      // Set matrix entries
-      for (rank_type i = 0; i < couplings; i++) {
-        AH[row_id][entries_pos[i]] = entries[i];
-      }
-
-      std::cout << "Filling AH of size " << AH.N() << "x" << AH.M() << " is done." << std::endl;
-      std::cout << couplings << " entries have been changed." << std::endl;
-
-      row_id++;
+  int row_id = local_offset[targeted[0]];
+  // Modify AH entries with just computed local_rows
+  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
+    // Communicate number of entries in this row
+    int couplings = local_basis_sizes[targeted[0]];
+    for (int neighbor_id : NR) {
+      couplings += local_basis_sizes[neighbor_id];
     }
+
+    // Communicate row's pattern
+    int entries_pos[couplings];
+    int cnt = 0;
+    for (int basis_index2 = 0; basis_index2 < local_basis_sizes[targeted[0]]; basis_index2++) {
+      entries_pos[cnt] = my_offset + basis_index2;
+      cnt++;
+    }
+    // for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
+    //   int neighbor_offset = local_offset[NR[neighbor_id]];
+    //   for (int basis_index2 = 0; basis_index2 < local_basis_sizes[NR[neighbor_id]]; basis_index2++) {
+    //     entries_pos[cnt] = neighbor_offset + basis_index2;
+    //     cnt++;
+    //   }
+    // }
+
+    // Communicate actual entries
+    Matrix::field_type entries[couplings];
+    cnt = 0;
+    for (int basis_index2 = 0; basis_index2 < local_basis_sizes[targeted[0]]; basis_index2++) {
+      entries[cnt] = local_rows[basis_index][NR.size()][basis_index2];
+      cnt++;
+    }
+    // for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
+    //   for (int basis_index2 = 0; basis_index2 < local_basis_sizes[NR[neighbor_id]]; basis_index2++) {
+    //     entries[cnt] = local_rows[basis_index][neighbor_id][basis_index2];
+    //     cnt++;
+    //   }
+    // }
+
+    // Set matrix entries
+    for (int i = 0; i < couplings; i++){
+      // std::cout << "ici entries[i]:" << entries[i] << std::endl;
+      // std::cout << "ici entries_pos[i]:" << entries_pos[i] << std::endl;
+      AH[row_id][entries_pos[i]] = entries[i];
+    }
+
+    row_id++;
   }
 
   // ~~~~~~~~~~~~~~~~~~
@@ -581,10 +438,11 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   CoarseVector coarse_d;
   // coarse_space->restrict(b,coarse_d);
   // From Offline
+  std::ifstream file_cb;
   std::string filename_cb = path_to_storage + "OfflineCoarseb.mm";
-  file.open(filename_cb.c_str(), std::ios::in);
-  Dune::readMatrixMarket(coarse_d,file);
-  file.close();
+  file_cb.open(filename_cb.c_str(), std::ios::in);
+  Dune::readMatrixMarket(coarse_d,file_cb);
+  file_cb.close();
 
   // ~~~~~~~~~~~~~~~~~~
 //  Solve the coarse space system
@@ -597,33 +455,46 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   coarse_solver.apply(coarse_v,coarse_d,result);
 
   // ~~~~~~~~~~~~~~~~~~
-//  Prolongate the solution in order to have vsol on the fine space : vsol = RH^T * coarse_v = RH^T * AH^-1 * RH * b
+//  Prolongate the solution and restrict it in order to have vsol on the nonoverlapping fine space : vsol = RH^T * coarse_v = RH^T * AH^-1 * RH * b
   // ~~~~~~~~~~~~~~~~~~
-  Vector v_fine_vovlp(adapter.getExtendedSize()); // TODO get rid of adapter in the sequential solve
+  Vector v_fine_ovlp(A.N());
+
+  V v(gfs, 0.0); // TODO find the correct size of v because gfs changed an fill it properly
+
   // Prolongate result
-  v_fine_vovlp = 0.0;
-  for (int basis_index = 0; basis_index < local_basis_sizes[gv.comm().rank()]; basis_index++) {
-    Vector local_result(*subdomainbasis->get_basis_vector(basis_index));
-    local_result *= coarse_v[local_offset[gv.comm().rank()] + basis_index];
-    v_fine_vovlp += local_result;
+  v_fine_ovlp = 0.0;
+  for (int iter_over_subdomains=0; iter_over_subdomains<number_of_rank_used_offline; iter_over_subdomains++) {
+    for (int basis_index = 0; basis_index < local_basis_sizes[iter_over_subdomains]; basis_index++) {
+      Vector local_result(*subdomainbasis[iter_over_subdomains]->get_basis_vector(basis_index));
+      local_result *= coarse_v[local_offset[iter_over_subdomains] + basis_index];
+      v_fine_ovlp += local_result;
+    }
+
+    Vector Restrict(A.N()); // Overlapped subdomain to nonoverlapped subdomain
+    std::string filename_restrict = path_to_storage + std::to_string(targeted[0]) + "_restrict.mm";
+    std::ifstream file_restrict;
+    file_restrict.open(filename_restrict.c_str(), std::ios::in);
+    Dune::readMatrixMarket(Restrict,file_restrict);
+    file_restrict.close();
+
+    for (int i=0; i<Restrict.size(); i++)
+      std::cout << Restrict[i] << std::endl;
+
   }
 
-  communicator->forward<AddGatherScatter<Vector>>(v_fine_vovlp, v_fine_vovlp);
 
-  V v(gfs, 0.0);
-  adapter.restrictVector(v_fine_vovlp, v);
-  native(x) -= v;
 
-  // ~~~~~~~~~~~~~~~~~~
-//  Write solution to VTK
-  // ~~~~~~~~~~~~~~~~~~
-  Dune::VTKWriter<GV> vtkwriter(gv);
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  DGF xdgf(gfs,x);
-  typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
-  auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
-  vtkwriter.addVertexData(adapt);
-  vtkwriter.write("nonovlptestgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type);
+
+//   // ~~~~~~~~~~~~~~~~~~
+// //  Write solution to VTK
+//   // ~~~~~~~~~~~~~~~~~~
+//   Dune::VTKWriter<GV> vtkwriter(gv);
+//   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+//   DGF xdgf(gfs,x);
+//   typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
+//   auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
+//   vtkwriter.addVertexData(adapt);
+//   vtkwriter.write("nonovlptestgeneo_basis_" + basis_type + "_part_unity_" + part_unity_type);
 
   // ~~~~~~~~~~~~~~~~~~
   // Visualise all the basis in vtk format

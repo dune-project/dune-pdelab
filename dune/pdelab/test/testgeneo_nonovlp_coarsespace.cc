@@ -128,7 +128,7 @@ public:
     typename Traits::DomainType xglobal = e.geometry().global(x);
 
     RF perm1 = 1e0;
-    RF perm2 = 1e0; // FIXME we want high contrast
+    RF perm2 = 1e5; // FIXME we want high contrast
     RF layer_thickness = 1.0 / 40.0;
 
     RF coeff = (int)std::floor(xglobal[0] / layer_thickness) % 2 == 0 ? perm1 : perm2;
@@ -208,15 +208,30 @@ public:
 template <typename V_>
 struct AddGatherScatter
 {
-    static typename V_::value_type gather(const V_ &a, int i)
-    {
-        return a[i]; // I am sending my value
-    }
-    static void scatter(V_ &a, typename V_::value_type v, int i)
-    {
-        a[i] += v; // add what I receive to my value
-    }
+  static typename V_::value_type gather(const V_ &a, int i)
+  {
+      return a[i]; // I am sending my value
+  }
+  static void scatter(V_& a, typename V_::value_type v, int i)
+  {
+      a[i] += v; // add what I receive to my value
+  }
 };
+
+// template <typename V_>
+// struct GatherGlobalIndex
+// {
+//   static typename V_::value_type gather(const V_& a, int i)
+//   {
+//       return a[i]; // I am sending my value
+//   }
+//   static void scatter(V_& a, typename V_::value_type v, int i)
+//   {
+//     a[i] = v; // add what I receive to my value
+//     // if(a[i]<2)
+//     //   a[i] += v; // add what I receive to my value
+//   }
+// };
 
 /**
  * \brief Takes a partition and extends all subdomains by a number of layers given by overlap
@@ -252,8 +267,6 @@ std::vector<std::set<unsigned>> grow_subdomains (const GV& gv, unsigned partitio
           subdomainsv[indexset.index(v)].insert(partition[indexset.index(e)]);
         }
 
-    std::cout << "ici 1" << std::endl;
-
     // in each round extend overlap by one
     for (int rounds=0; rounds<overlap; rounds++)
     {
@@ -271,8 +284,6 @@ std::vector<std::set<unsigned>> grow_subdomains (const GV& gv, unsigned partitio
               subdomainsv[indexset.index(e.template subEntity<dim>(i))].insert(j);
         }
     }
-
-    std::cout << "ici 2" << std::endl;
 
     // now convert again to elements: element is in subdomain if *all* vertices are in subdomain
     std::vector<std::set<unsigned>> subdomainse(indexset.size(0)); // set of subdomains for each element
@@ -322,7 +333,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   // ~~~~~~~~~~~~~~~~~~
   std::string path_to_storage = "Offline/";
 
-
   // ~~~~~~~~~~~~~~~~~~
 //  Grid set up
   // ~~~~~~~~~~~~~~~~~~
@@ -340,12 +350,73 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   typedef typename GRID::LeafGridView GV;
   auto gv = grid->leafGridView();
 
-  const int algebraic_overlap = 2;
+  // auto indexset = gv.indexSet();
 
- // Transfer partitioning from ParMETIS to our grid
+  const int algebraic_overlap = 5;
+
+
+  // if (gv.comm().rank()==0){
+  //   // Create a vector from GFS ordering to node ordering
+  //   int v_size = grid->levelIndexSet(0).size(gv.indexSet().types(0)[1]);
+  //   std::vector<std::pair<int, int>> gfs2node(v_size);
+
+  //   int cnt=0;
+  //   for (const auto& vertex : vertices(gv)){
+  //     assert(cnt<v_size);
+  //     gfs2node[cnt] = std::make_pair(gv.indexSet().index(vertex),cnt);
+  //     std::cout << gfs2node[cnt].first << " : " << gfs2node[cnt].second << std::endl;
+  //     cnt+=1;
+  //   }
+  // }
+
+  // ~~~~~~~~~~~~~~~~~~
+//  Associate to each global element its global ID
+  // ~~~~~~~~~~~~~~~~~~
+  // Dune::gridlevellist<GRID>(*grid, 0, "");
+
+  // // Getting map global ID to global Index
+  // int length;
+  // if(gv.comm().rank()==0)
+  //   length = grid->levelIndexSet(0).size(grid->levelIndexSet(0).types(0)[0]);
+  //   // std::cout << "elements size: " << grid->levelIndexSet(0).size(grid->levelIndexSet(0).types(0)[0]) << std::endl;
+  // gv.comm().broadcast(&length, 1, 0);
+  // std::vector<long unsigned int> Element_GlobalIndex_to_GlobalID(length);
+  // for (const auto& element : elements(levelGridView(*grid, 0)))
+  //   Element_GlobalIndex_to_GlobalID[grid->levelIndexSet(0).index(element)] = grid->globalIdSet().template id<0>(element);
+
+  // // if (gv.comm().barrier()==0)
+  // for (int i=0; i<Element_GlobalIndex_to_GlobalID.size();i++)
+  //   gv.comm().broadcast(&Element_GlobalIndex_to_GlobalID[i], 1, 0);
+
+  // ~~~~~~~~~~~~~~~~~~
+//  Associate to each global Vertex its global ID
+  // ~~~~~~~~~~~~~~~~~~
+  // Dune::gridlevellist<GRID>(*grid, 0, "");
+
+  // Getting map global ID to global Index
+  int length;
+  if(gv.comm().rank()==0){
+    length = grid->levelIndexSet(0).size(gv.indexSet().types(0)[1]);
+    std::cout << "nodes size: " << length << std::endl;
+  }
+  gv.comm().broadcast(&length, 1, 0);
+  std::vector<long unsigned int> Vertices_GlobalIndex_to_GlobalID(length);
+
+  if(gv.comm().rank()==0)
+    for (const auto& vertex : vertices(gv))
+      Vertices_GlobalIndex_to_GlobalID[gv.indexSet().index(vertex)] = gv.grid().globalIdSet().id(vertex);
+
+
+  // // if (gv.comm().barrier()==0)
+  for (int i=0; i<Vertices_GlobalIndex_to_GlobalID.size();i++)
+    gv.comm().broadcast(&Vertices_GlobalIndex_to_GlobalID[i], 1, 0);
+    // std::cout << i << " : " << Vertices_GlobalIndex_to_GlobalID[i] << std::endl;
+
+
+  // Transfer partitioning from ParMETIS to our grid
 #if PARMETIS_MAJOR_VERSION
   // ~~~~~~~~~~~~~~~~~~
-  // Save domain decomposition
+  // Save domain decomposition (meshes)
   // ~~~~~~~~~~~~~~~~~~
   // First recreate the overlapped subdomain
   unsigned subdomains = grid->comm().size();
@@ -363,8 +434,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   grid->loadBalance();
 #endif
 
-  // Dune::gridlevellist<GRID>(*grid, 0, "");
-
   // ~~~~~~~~~~~~~~~~~~
 //  Type definitions
   // ~~~~~~~~~~~~~~~~~~
@@ -378,7 +447,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   using ESExcluder = Dune::PDELab::EntitySetExcluder<Vector, GV>;
   auto ghost_excluder = std::make_shared<Dune::PDELab::EntitySetGhostExcluder<Vector, GV>>();
-
 
   using ES = Dune::PDELab::ExcluderEntitySet<GV,Dune::Partitions::All, ESExcluder>;
   ES es(gv, ghost_excluder);
@@ -442,7 +510,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 //  Solving process begin here: First some parameters
   // ~~~~~~~~~~~~~~~~~~
   double eigenvalue_threshold = -1;
-  int nev = 30;
+  int nev = 3;
   int nev_arpack = nev;
   // double shift = 0.001;
 
@@ -465,6 +533,15 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   auto rank = adapter.gridView().comm().rank();
 
+  V vect(gfs, 0.0);
+  adapter.restrictVector(*part_unity, native(vect));
+
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,Dune::refinementLevels(0));
+  Dune::PDELab::vtk::DefaultFunctionNameGenerator fieldname;
+  fieldname.prefix("PoU");
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,vect,fieldname);
+  vtkwriter.write("PoU",Dune::VTK::ascii);
+
   // ~~~~~~~~~~~~~~~~~~
   // Save new2old / old2new index to be able to reproduce extension/reduction online
   // ~~~~~~~~~~~~~~~~~~
@@ -476,10 +553,177 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   for (int i=0; i<new2old_localindex.size();i++) { n2o[i]=new2old_localindex[i]; }
   for (int i=0; i<old2new_localindex.size();i++) { o2n[i]=old2new_localindex[i]; }
 
-  std::string filename_n2o = path_to_storage + std::to_string(rank) + "_new2old.mm";
+  std::string filename_n2o = path_to_storage + std::to_string(rank) + "_restrict.mm";
   Dune::storeMatrixMarket(n2o, filename_n2o, 15);
-  std::string filename_o2n = path_to_storage + std::to_string(rank) + "_old2new.mm";
+  std::string filename_o2n = path_to_storage + std::to_string(rank) + "_extend.mm";
   Dune::storeMatrixMarket(o2n, filename_o2n, 15);
+
+
+
+  // ~~~~~~~~~~~~~~~~~~
+// Get local index to global id
+  // ~~~~~~~~~~~~~~~~~~
+
+  // auto vertices_globalID_by_subdomain = adapter.get_globalid();
+
+  using GlobalId = typename GV::Grid::GlobalIdSet::IdType;
+  using AttributedLocalIndex = Dune::ParallelLocalIndex<Attribute>;
+  using ParallelIndexSet = Dune::ParallelIndexSet<GlobalId,AttributedLocalIndex,256>;
+  auto lookup = Dune::GlobalLookupIndexSet<ParallelIndexSet>(*adapter.getEpis().parallelIndexSet(), adapter.getExtendedSize());
+
+  // int cntfound=0;
+  // int cntnot=0;
+  Dune::BlockVector<Dune::FieldVector<int, 1>> global_indices(adapter.getExtendedSize());
+  for (int incrSD=0; incrSD<global_indices.size(); incrSD++){
+    auto it = std::find(Vertices_GlobalIndex_to_GlobalID.begin(), Vertices_GlobalIndex_to_GlobalID.end(), lookup.pair(incrSD)->global());
+    if (it != Vertices_GlobalIndex_to_GlobalID.end()){
+      // if (rank==0){
+      //   cntfound+=1;
+      //   std::cout << "found : " << *it << std::endl;
+      // }
+      global_indices[incrSD] = std::distance(Vertices_GlobalIndex_to_GlobalID.begin(), it);
+    }
+    // else {
+    //   if (rank==0){
+    //     cntnot+=1;
+    //     std::cout << "not found : " << lookup.pair(incrSD)->global() << std::endl;
+    //   }
+    // }
+  }
+
+  std::string filename_GI = path_to_storage + std::to_string(rank) + "_GI.mm";
+  Dune::storeMatrixMarket(global_indices, filename_GI, 15);
+
+
+  // if(rank==0){
+  //   for (int i=0; i<vertices_globalID_by_subdomain.size();i++){
+  //     auto my_pair = lookup[vertices_globalID_by_subdomain[i]];
+  //     std::cout << vertices_globalID_by_subdomain[i] << std::endl;
+  //     std::cout << my_pair << std::endl;
+  //     std::cout << global_indices[i] << std::endl;
+  //   }
+  // }
+  // auto vertices_globalID_by_subdomain = adapter.get_globalid();
+
+  // if (rank==1){
+  //   std::cout << "local size : " << vertices_globalID_by_subdomain.size() << std::endl;
+  //   std::cout << "local size with ovlp : " << adapter.getExtendedSize() << std::endl;
+  // }
+
+  // if (rank==1)
+  //   for (int i=0; i<vertices_globalID_by_subdomain.size(); i++)
+  //     std::cout << i << " : " << vertices_globalID_by_subdomain[i] << std::endl;
+
+  // if (rank==1){
+  //   std::cout << std::endl;
+  //   std::cout << std::endl;
+  // }
+
+  // std::vector<long unsigned int> vertices_globalID_by_ovlp_subdomain(adapter.getExtendedSize());
+  // for (int i=0; i<adapter.getExtendedSize(); i++)
+  //   vertices_globalID_by_ovlp_subdomain[i] = 1;
+
+  // std::cout << "new2old_localindex.size() : " << old2new_localindex.size() << std::endl;
+  // for (int i=0; i<old2new_localindex.size(); i++)
+  //   vertices_globalID_by_ovlp_subdomain[old2new_localindex[i]] = vertices_globalID_by_subdomain[i];
+
+  // if (rank==1)
+  //   for (int i=0; i<vertices_globalID_by_ovlp_subdomain.size(); i++)
+  //     std::cout << i << " : " << vertices_globalID_by_ovlp_subdomain[i] << std::endl;
+
+  // communicator->forward<GatherGlobalIndex<std::vector<long unsigned int>>>(vertices_globalID_by_ovlp_subdomain,vertices_globalID_by_ovlp_subdomain); // make function known in other subdomains
+
+  // if (rank==1){
+  //   std::cout << std::endl;
+  //   std::cout << std::endl;
+  // }
+
+  // if (rank==1)
+  //   for (int i=0; i<vertices_globalID_by_ovlp_subdomain.size(); i++)
+  //     std::cout << i << " : " << vertices_globalID_by_ovlp_subdomain[i] << std::endl;
+
+  // ~~~~~~~~~~~~~~~~~~
+  // Associate local ovlp vectors to global indices
+  // ~~~~~~~~~~~~~~~~~~
+
+  // int cntnot=0;
+  // int cntnot=0;
+  // Dune::BlockVector<Dune::FieldVector<int, 1>> global_indices(adapter.getExtendedSize());
+  // for (int incrSD=0; incrSD<global_indices.size(); incrSD++){
+  //   auto it = std::find(Vertices_GlobalIndex_to_GlobalID.begin(), Vertices_GlobalIndex_to_GlobalID.end(), vertices_globalID_by_ovlp_subdomain[incrSD]);
+
+  //   if (it != Vertices_GlobalIndex_to_GlobalID.end()){
+  //     if (rank==0){
+  //       cntfound+=1;
+  //       std::cout << "found : " << *it << std::endl;
+  //     }
+  //     global_indices[incrSD] = std::distance(Vertices_GlobalIndex_to_GlobalID.begin(), it);
+  //   } else {
+  //     if (rank==0){
+  //       cntnot+=1;
+  //       std::cout << "not found : " << vertices_globalID_by_ovlp_subdomain[incrSD]<< std::endl;
+  //     }
+  //   }
+  // }
+
+  // if (rank==0){
+  //   std::cout << "cntfound : " << cntfound << ", cntnot : " << cntnot << std::endl;
+  // }
+  // std::string filename_GI = path_to_storage + std::to_string(rank) + "_GI.mm";
+  // Dune::storeMatrixMarket(global_indices, filename_GI, 15);
+
+  // ~~~~~~~~~~~~~~~~~~
+// Get local index to global id 1
+  // ~~~~~~~~~~~~~~~~~~
+
+  // auto vertices_globalID_by_subdomain = adapter.get_globalid();
+  // // std::cout << "local size : " << vertices_globalID_by_subdomain.size() << std::endl;
+
+  // // ~~~~~~~~~~~~~~~~~~
+  // // Associate local vectors to global indices
+  // // ~~~~~~~~~~~~~~~~~~
+
+  // int cntfound=0;
+  // int cntnot=0;
+  // Dune::BlockVector<Dune::FieldVector<int, 1>> global_indices(vertices_globalID_by_subdomain.size());
+  // for (int incrSD=0; incrSD<vertices_globalID_by_subdomain.size(); incrSD++){
+  //   auto it = std::find(vertices_globalID_by_subdomain.begin(), vertices_globalID_by_subdomain.end(), vertices_globalID_by_subdomain[incrSD]);
+
+  //   if (it != vertices_globalID_by_subdomain.end()){
+  //     global_indices[incrSD] = std::distance(vertices_globalID_by_subdomain.begin(), it);
+  //     if(rank==1)
+  //       std::cout << global_indices[incrSD] << std::endl;
+  //   }
+  // }
+
+  // Dune::BlockVector<Dune::FieldVector<int, 1>> ovlp_global_indices(adapter.getExtendedSize());
+  // for (int i=0; i<adapter.getExtendedSize(); i++)
+  //   ovlp_global_indices[i] = -1;
+
+  // std::cout << "new2old_localindex.size() : " << new2old_localindex.size() << std::endl;
+  // for (int i=0; i<new2old_localindex.size(); i++)
+  //   ovlp_global_indices[i] = global_indices[new2old_localindex[i]];
+
+  // if (rank==2)
+  //   for (int i=0; i<ovlp_global_indices.size(); i++)
+  //     std::cout << i << " : " << ovlp_global_indices[i] << std::endl;
+
+
+  // communicator->forward<GatherGlobalIndex<Dune::BlockVector<Dune::FieldVector<int, 1>>>>(ovlp_global_indices,ovlp_global_indices); // make function known in other subdomains
+
+  // if (rank==1)
+  //   for (int i=0; i<ovlp_global_indices.size(); i++)
+  //     std::cout << i << " : " << ovlp_global_indices[i] << std::endl;
+
+  // ~~~~~~~~~~~~~~~~~~
+// Save PoU
+  // ~~~~~~~~~~~~~~~~~~
+  Dune::BlockVector<Dune::FieldVector<K, 1>> PoU((*part_unity).size());
+  for (int i=0; i<(*part_unity).size();i++)
+    PoU[i]=(*part_unity)[i];
+  std::string filename_PoU = path_to_storage + std::to_string(rank) + "_PoU.mm";
+  Dune::storeMatrixMarket(PoU, filename_PoU, 15);
+
 
   // ~~~~~~~~~~~~~~~~~~
   // Save neighbor ranks vector
@@ -497,7 +741,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 //  Subdomain basis computations
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> subdomainbasis;
-  subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_overlap_extended, part_unity, eigenvalue_threshold, nev, nev_arpack);
+  subdomainbasis = std::make_shared<Dune::PDELab::NonoverlappingGenEOBasis<GO, Matrix, Vector>>(adapter, A_extended, A_extended, part_unity, eigenvalue_threshold, nev, nev_arpack);
 
   // ~~~~~~~~~~~~~~~~~~
   //  Particular solution
@@ -527,34 +771,34 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   Matrix A_dirichlet = *A_extended;
   // Apply Dirichlet conditions to matrix on processor boundaries, inferred from partition of unity
   for (auto rIt=A_dirichlet.begin(); rIt!=A_dirichlet.end(); ++rIt){
-      for(int block_i = 0; block_i < block_size; block_i++){
-          if ((*part_unity)[rIt.index()][block_i] == .0){
-              for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
-                  for(int block_j = 0; block_j < block_size; block_j++){
-                      (*cIt)[block_i][block_j] = (rIt.index() == cIt.index() && block_i == block_j) ? 1.0 : 0.0;
-                  }
-              }
+    for(int block_i = 0; block_i < block_size; block_i++){
+      if ((*part_unity)[rIt.index()][block_i] == .0){
+        for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
+          for(int block_j = 0; block_j < block_size; block_j++){
+              (*cIt)[block_i][block_j] = (rIt.index() == cIt.index() && block_i == block_j) ? 1.0 : 0.0;
           }
+        }
       }
+    }
   }
   Vector b_cpy(b);
   for (auto rIt=A_dirichlet.begin(); rIt!=A_dirichlet.end(); ++rIt) {
-      for(int block_i = 0; block_i < block_size; block_i++){
-          bool isDirichlet = true;
-          for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
-              for(int block_j = 0; block_j < block_size; block_j++){
-                  if ((rIt.index() != cIt.index() || block_i!=block_j) && (*cIt)[block_i][block_j] != 0.0){
-                      isDirichlet = false;
-                      break;
-                  }
-              }
-              if(!isDirichlet) break;
+    for(int block_i = 0; block_i < block_size; block_i++){
+      bool isDirichlet = true;
+      for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
+        for(int block_j = 0; block_j < block_size; block_j++){
+          if ((rIt.index() != cIt.index() || block_i!=block_j) && (*cIt)[block_i][block_j] != 0.0){
+            isDirichlet = false;
+            break;
           }
-          if (isDirichlet){
-              b_cpy[rIt.index()] = .0;
-              b[rIt.index()] = .0;
-          }
+        }
+        if(!isDirichlet) break;
       }
+      if (isDirichlet){
+        b_cpy[rIt.index()] = .0;
+        b[rIt.index()] = .0;
+      }
+    }
   }
 
   // ~~~~~~~~~~~~~~~~~~
@@ -564,10 +808,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   Dune::UMFPack<Matrix> subdomain_solver(A_dirichlet, false);
   Dune::InverseOperatorResult result1;
   subdomain_solver.apply(ui,b_cpy,result1);
-  subdomainbasis->append(ui);
-
-  // save the subdomain basis for the online go (here to keep the particular solution)
-  // subdomainbasis->to_file(basename, rank);
+  // subdomainbasis->append(ui);
 
   // ~~~~~~~~~~~~~~~~~~
   // Save local basis sizes
@@ -611,8 +852,10 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   CoarseVector coarse_d(coarse_space->basis_size(), coarse_space->basis_size());
   coarse_space->restrict(b,coarse_d);
   // Save the coarse rhs
-  std::string filename_cb = path_to_storage + "OfflineCoarseb.mm";
-  Dune::storeMatrixMarket(coarse_d, filename_cb, 15);
+  if (rank==0){
+    std::string filename_cb = path_to_storage + "OfflineCoarseb.mm";
+    Dune::storeMatrixMarket(coarse_d, filename_cb, 15);
+  }
 
   // ~~~~~~~~~~~~~~~~~~
 // Solve the coarse space system  ::TODO:: MAKE THAT OPTIONAL for a normal offline go
@@ -635,14 +878,24 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   native(x) -= v;
 
+
+  // Communicate local fine space dimensions to be able to initialize solution vector in the online phase
+  Dune::BlockVector<Dune::FieldVector<int, 1>> local_nonovlp_sizes(adapter.gridView().comm().size());
+  int local_nonovlp_size = native(v).size();
+  adapter.gridView().comm().allgather(&local_nonovlp_size, 1, local_nonovlp_sizes.data());
+  if (rank==0) {
+    std::string filename_lns = path_to_storage + "localNovlpSizes.mm";
+    Dune::storeMatrixMarket(local_basis_sizes, filename_lns, 15);
+  }
+
   // Write solution to VTK
-  Dune::VTKWriter<GV> vtkwriter(gv);
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  DGF xdgf(gfs,x);
-  typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
-  auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
-  vtkwriter.addVertexData(adapt);
-  vtkwriter.write("solution");
+  // Dune::VTKWriter<GV> vtkwriter(gv);
+  // typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+  // DGF xdgf(gfs,x);
+  // typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
+  // auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
+  // vtkwriter.addVertexData(adapt);
+  // vtkwriter.write("solution");
 
   // ~~~~~~~~~~~~~~~~~~
 // Visualise all the basis in vtk format

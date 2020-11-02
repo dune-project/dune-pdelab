@@ -80,7 +80,19 @@ dune_add_test(SOURCES testgeneo_nonovlp_online.cc
               CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
               )
 
-dune_add_test(SOURCES testgeneo_nonovlp_PartialUseOfAGrid.cc
+dune_add_test(SOURCES Unittest_SubdomainMeshSave.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_recomputation_of_stiffness_block.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_online_EV_vs_Offline_EV.cc
               MPI_RANKS 2
               TIMEOUT 300
               CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND

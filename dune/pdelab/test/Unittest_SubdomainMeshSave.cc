@@ -383,107 +383,107 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   sdwriter.write("", "subdomain.msh");
 
 
-  grid->loadBalance(partition, 0);
+//   grid->loadBalance(partition, 0);
 
-  // ~~~~~~~~~~~~~~~~~~
-//  Type definitions
-  // ~~~~~~~~~~~~~~~~~~
-  const int components = 1;
-  using K = double;
-  using Vector = Dune::BlockVector<Dune::FieldVector<K,components>>;
-  using Matrix = Dune::BCRSMatrix<Dune::FieldMatrix<K,components,components>>;
+//   // ~~~~~~~~~~~~~~~~~~
+// //  Type definitions
+//   // ~~~~~~~~~~~~~~~~~~
+//   const int components = 1;
+//   using K = double;
+//   using Vector = Dune::BlockVector<Dune::FieldVector<K,components>>;
+//   using Matrix = Dune::BCRSMatrix<Dune::FieldMatrix<K,components,components>>;
 
-  typedef Dune::BlockVector<Dune::FieldVector<K, 1>> CoarseVector;
-  typedef Dune::BCRSMatrix<Dune::FieldMatrix<K, 1, 1>> CoarseMatrix;
+//   typedef Dune::BlockVector<Dune::FieldVector<K, 1>> CoarseVector;
+//   typedef Dune::BCRSMatrix<Dune::FieldMatrix<K, 1, 1>> CoarseMatrix;
 
-  using ESExcluder = Dune::PDELab::EntitySetExcluder<Vector, GV>;
-  auto ghost_excluder = std::make_shared<Dune::PDELab::EntitySetGhostExcluder<Vector, GV>>();
-
-
-  using ES = Dune::PDELab::ExcluderEntitySet<GV,Dune::Partitions::All, ESExcluder>;
-  ES es(gv, ghost_excluder);
-
-  // make problem parameters
-  typedef GenericEllipticProblem<ES,NumberType> Problem;
-  Problem problem;
-  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
-  BCType bctype(es,problem);
-
-  using Dune::PDELab::Backend::native;
-
-  // ~~~~~~~~~~~~~~~~~~
-//  FE fine Space definition
-  // ~~~~~~~~~~~~~~~~~~
-  typedef typename ES::Grid::ctype DF;
-  // instantiate finite element maps
-  typedef Dune::PDELab::QkLocalFiniteElementMap<ES,DF,double,1> FEM;
-  FEM fem(es);
-  // function space with no constraints on processor boundaries, needed for the GenEO eigenproblem
-  typedef Dune::PDELab::GridFunctionSpace<ES,FEM,
-                                          Dune::PDELab::ConformingDirichletConstraints,
-                                          Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>
-                                          > GFS;
-  GFS gfs(es,fem);
-  int verbose = 0;
-  if (gfs.gridView().comm().rank()==0) verbose = 2;
-  // make a degree of freedom vector on fine grid and initialize it with interpolation of Dirichlet condition
-  typedef Dune::PDELab::Backend::Vector<GFS,NumberType> V;
-  V x(gfs,0.0);
-  // Extract domain boundary constraints from problem definition, apply trace to solution vector
-  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
-  G g(es,problem);
-  Dune::PDELab::interpolate(g,gfs,x);
-  // Set up constraints containers with boundary constraints, but without processor constraints
-  typedef typename GFS::template ConstraintsContainer<NumberType>::Type CC;
-  auto cc = CC();
-  // assemble constraints
-  Dune::PDELab::constraints(bctype,gfs,cc);
-  // set initial guess
-  V x0(gfs,0.0);
-  Dune::PDELab::copy_nonconstrained_dofs(cc,x0,x);
-  // LocalOperator for given problem
-  typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
-  LOP lop(problem);
-  // LocalOperator wrapper zeroing out subdomains' interiors in order to set up overlap matrix
-  typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
-  // Construct GridOperators from LocalOperators
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
-  auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
-  // Assemble fine grid matrix defined without processor constraints
-  typedef typename GO::Jacobian M;
-  M A(go);
-  go.jacobian(x,A);
-  // set up and assemble right hand side w.r.t. l(v)-a(u_g,v)
-  V d(gfs,0.0);
-  go.residual(x,d);
+//   using ESExcluder = Dune::PDELab::EntitySetExcluder<Vector, GV>;
+//   auto ghost_excluder = std::make_shared<Dune::PDELab::EntitySetGhostExcluder<Vector, GV>>();
 
 
-  // Write solution to VTK
-  Dune::VTKWriter<GV> vtkwriter(gv);
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  DGF xdgf(gfs,x);
-  typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
-  auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
-  vtkwriter.addVertexData(adapt);
-  vtkwriter.write("vtksol");
+//   using ES = Dune::PDELab::ExcluderEntitySet<GV,Dune::Partitions::All, ESExcluder>;
+//   ES es(gv, ghost_excluder);
 
-  // ~~~~~~~~~~~~~~~~~~
-// Visualise all the basis in vtk format
-  // ~~~~~~~~~~~~~~~~~~
-  // for (int basis_index = 0; basis_index < subdomainbasis->basis_size(); basis_index++) {
-  //     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,Dune::refinementLevels(0));
-  //     V vect(gfs, 0.0);
-  //     adapter.restrictVector(native(*subdomainbasis->get_basis_vector(basis_index)), native(vect));
+//   // make problem parameters
+//   typedef GenericEllipticProblem<ES,NumberType> Problem;
+//   Problem problem;
+//   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
+//   BCType bctype(es,problem);
 
-  //     int rank = adapter.gridView().comm().rank();
-  //     std::string filename = "BasisVector_"+std::to_string(basis_index);
+//   using Dune::PDELab::Backend::native;
 
-  //     Dune::PDELab::vtk::DefaultFunctionNameGenerator fieldname;
-  //     fieldname.prefix("EV");
+//   // ~~~~~~~~~~~~~~~~~~
+// //  FE fine Space definition
+//   // ~~~~~~~~~~~~~~~~~~
+//   typedef typename ES::Grid::ctype DF;
+//   // instantiate finite element maps
+//   typedef Dune::PDELab::QkLocalFiniteElementMap<ES,DF,double,1> FEM;
+//   FEM fem(es);
+//   // function space with no constraints on processor boundaries, needed for the GenEO eigenproblem
+//   typedef Dune::PDELab::GridFunctionSpace<ES,FEM,
+//                                           Dune::PDELab::ConformingDirichletConstraints,
+//                                           Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,1>
+//                                           > GFS;
+//   GFS gfs(es,fem);
+//   int verbose = 0;
+//   if (gfs.gridView().comm().rank()==0) verbose = 2;
+//   // make a degree of freedom vector on fine grid and initialize it with interpolation of Dirichlet condition
+//   typedef Dune::PDELab::Backend::Vector<GFS,NumberType> V;
+//   V x(gfs,0.0);
+//   // Extract domain boundary constraints from problem definition, apply trace to solution vector
+//   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
+//   G g(es,problem);
+//   Dune::PDELab::interpolate(g,gfs,x);
+//   // Set up constraints containers with boundary constraints, but without processor constraints
+//   typedef typename GFS::template ConstraintsContainer<NumberType>::Type CC;
+//   auto cc = CC();
+//   // assemble constraints
+//   Dune::PDELab::constraints(bctype,gfs,cc);
+//   // set initial guess
+//   V x0(gfs,0.0);
+//   Dune::PDELab::copy_nonconstrained_dofs(cc,x0,x);
+//   // LocalOperator for given problem
+//   typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
+//   LOP lop(problem);
+//   // LocalOperator wrapper zeroing out subdomains' interiors in order to set up overlap matrix
+//   typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
+//   // Construct GridOperators from LocalOperators
+//   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
+//   auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
+//   // Assemble fine grid matrix defined without processor constraints
+//   typedef typename GO::Jacobian M;
+//   M A(go);
+//   go.jacobian(x,A);
+//   // set up and assemble right hand side w.r.t. l(v)-a(u_g,v)
+//   V d(gfs,0.0);
+//   go.residual(x,d);
 
-  //     Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,vect,fieldname);
-  //     vtkwriter.write(filename,Dune::VTK::ascii);
-  // }
+
+//   // Write solution to VTK
+//   Dune::VTKWriter<GV> vtkwriter(gv);
+//   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+//   DGF xdgf(gfs,x);
+//   typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
+//   auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
+//   vtkwriter.addVertexData(adapt);
+//   vtkwriter.write("vtksol");
+
+//   // ~~~~~~~~~~~~~~~~~~
+// // Visualise all the basis in vtk format
+//   // ~~~~~~~~~~~~~~~~~~
+//   // for (int basis_index = 0; basis_index < subdomainbasis->basis_size(); basis_index++) {
+//   //     Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,Dune::refinementLevels(0));
+//   //     V vect(gfs, 0.0);
+//   //     adapter.restrictVector(native(*subdomainbasis->get_basis_vector(basis_index)), native(vect));
+
+//   //     int rank = adapter.gridView().comm().rank();
+//   //     std::string filename = "BasisVector_"+std::to_string(basis_index);
+
+//   //     Dune::PDELab::vtk::DefaultFunctionNameGenerator fieldname;
+//   //     fieldname.prefix("EV");
+
+//   //     Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,vect,fieldname);
+//   //     vtkwriter.write(filename,Dune::VTK::ascii);
+//   // }
 }
 
 // #endif

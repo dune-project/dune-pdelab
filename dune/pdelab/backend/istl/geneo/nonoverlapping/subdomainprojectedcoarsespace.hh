@@ -276,18 +276,6 @@ namespace Dune {
 
     public:
 
-      void local_basis_sizes_to_file(std::string basename) {
-        if(gridView_.comm().rank()==0) {
-          std::ofstream output_basis_size;
-          std::string filename = basename + ".txt";
-          output_basis_size.open(filename, std::ios::out);
-          for (rank_type i = 0; i < ranks_; i++) {
-            output_basis_size << local_basis_sizes_[i] << std::endl;
-          }
-          output_basis_size.close();
-        }
-      }
-
       void restrict (const X& fine, COARSE_V& restricted) const override {
 
         rank_type recvcounts[ranks_];

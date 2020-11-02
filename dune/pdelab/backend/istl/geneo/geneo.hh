@@ -13,7 +13,6 @@
 #include <dune/pdelab/backend/istl/geneo/nonoverlapping/geneo_matrix_setup.hh>
 #include <dune/pdelab/backend/istl/geneo/nonoverlapping/novlp_operators.hh>
 #include <dune/pdelab/backend/istl/geneo/nonoverlapping/novlp_geneo_preconditioner.hh>
-#include <dune/pdelab/backend/istl/geneo/nonoverlapping/novlp_geneo_preconditioner_fromfiles.hh>
 #include <dune/pdelab/backend/istl/geneo/nonoverlapping/communicator_with_rank.hh>
 #include <dune/pdelab/backend/istl/geneo/nonoverlapping/variablesizecommunicator_with_rank.hh>
 
