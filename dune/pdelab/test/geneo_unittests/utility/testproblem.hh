@@ -5,6 +5,8 @@
 #include "config.h"
 #endif
 
+#include <cmath>
+
 #include <dune/pdelab.hh>
 
 
@@ -175,11 +177,9 @@ namespace Utility
 
 
   // Poisson problem, where the coefficient is zero in outside the overlap
-  // region. We do not need virtual functions here, as we only instantiate the
-  // problems themselves once and virtual functions would result in
-  // unneccessary performance overhead
-  // TODO: Currently zero outside overlap for this subdomain. Needs to include
-  //       the overlap of the other subdomains as well.
+  // region for the process. We do not need virtual functions here, as we only
+  // instantiate the problems themselves once and virtual functions would
+  // result in unneccessary performance overhead
   template<class GV, typename DF, typename RF>
   class PoissonZeroInterior : public PoissonTestProblem<GV, DF, RF>
   {
@@ -223,6 +223,45 @@ namespace Utility
         return I;
       }
       }
+    }
+  };
+
+
+  // Poisson problem, with a heterogeneous coefficient and adjustable contrast.
+  // Again, no virtual functions needed here
+  template<class GV, typename DF, typename RF>
+  class PoissonHeterogeneous : public PoissonTestProblem<GV, DF, RF>
+  {
+  public:
+
+    // use Traits of the parent class
+    using Traits = typename PoissonTestProblem<GV, DF, RF>::Traits;
+
+    PoissonHeterogeneous()
+      : PoissonTestProblem<GV, DF, RF>()
+    {}
+
+    PoissonHeterogeneous(const GV& gv, BC bc, DF contrast)
+      : PoissonTestProblem<GV, DF, RF>(gv, bc, contrast)
+    {}
+
+
+    // permeability tensor
+    typename Traits::PermTensorType
+    A(const typename Traits::ElementType& e,
+      const typename Traits::DomainType& x) const
+    {
+      typename Traits::DomainType xglobal{ e.geometry().global(x) };
+
+      RF layerwidth{ 0.1 };
+      RF contrast{ PoissonTestProblem<GV, DF, RF>::coeffValue_ + 1.0 };
+      RF cVal{ (int(std::floor(xglobal[1] / layerwidth)) % 2 == 0) ? contrast
+                                                                   : 1.0 };
+
+      typename Traits::PermTensorType I{{ cVal, 0.0 },
+                                        { 0.0 , cVal}};
+
+      return I;
     }
   };
 
