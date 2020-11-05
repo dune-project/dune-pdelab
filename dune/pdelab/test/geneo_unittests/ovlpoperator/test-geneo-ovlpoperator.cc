@@ -133,7 +133,7 @@ int main(int argc, char** argv)
   std::string filename{ "referencematrix_" + std::to_string(mpirank) };
 
   auto refmat{ native(GO::Jacobian(ovlpgo)) };
-  Dune::loadMatrixMarket(refmat, std::string(filename));
+  Dune::loadMatrixMarket(refmat, filename);
 
   // compare overlap matrix to reference matrix
   if (!Utility::matrices_equal(natovlpmat, refmat))
