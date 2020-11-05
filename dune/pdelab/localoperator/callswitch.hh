@@ -408,14 +408,14 @@ namespace Dune {
       auto skipEntity = [](const auto& lop, auto&... args)
       {
         using LOP = std::decay_t<decltype(lop)>;
-        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doSelectiveEntity>::
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doSkipEntity>::
           skip_entity(lop, args...);
       };
 
       auto skipIntersection = [](const auto& lop, auto&... args)
       {
         using LOP = std::decay_t<decltype(lop)>;
-        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doSelectiveIntersection>::
+        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doSkipIntersection>::
           skip_intersection(lop, args...);
       };
 

@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_GRIDOPERATOR_COMMON_LOCALASSEMBLERENGINEBASE_HH
 #define DUNE_PDELAB_GRIDOPERATOR_COMMON_LOCALASSEMBLERENGINEBASE_HH
 
+#include <dune/common/deprecated.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -268,17 +270,24 @@ namespace Dune {
         //! @name Assembly methods
         //! @{
 
+        //! Deprecated. Use `skipEntity` insted
+        template<typename EG>
+        DUNE_DEPRECATED bool assembleCell(const EG & eg)
+        {
+          return skipEntity(eg);
+        }
+
         //! Method for per-cell assembly setup and possibly aborting assembly of current cell
         //! - returns false by default to continue cell assembly.
         template<typename EG>
-        bool assembleCell(const EG & eg)
+        bool skipEntity(const EG & eg)
         {
           return false;
         }
 
         //! - returns false by default to continue intersection assembly.
         template<typename IG>
-        bool assembleIntersection(const IG & ig)
+        bool skipIntersection(const IG & ig)
         {
           return false;
         }

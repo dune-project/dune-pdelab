@@ -89,12 +89,12 @@ namespace Dune {
 
       //! \brief Whether to do selective cell assembly, i.e. whether
       //!        or not skip_entity() should be called.
-      enum { doSelectiveEntity            =
-             std::disjunction_v<std::integral_constant<bool,Args::doSelectiveEntity>...>              };
+      enum { doSkipEntity            =
+             std::disjunction_v<std::integral_constant<bool,Args::doSkipEntity>...>              };
       //! \brief Whether to do selective intersection assembly, i.e. whether
       //!        or not skip_intersection() should be called.
-      enum { doSelectiveIntersection      =
-             std::disjunction_v<std::integral_constant<bool,Args::doSelectiveIntersection>...>        };
+      enum { doSkipIntersection      =
+             std::disjunction_v<std::integral_constant<bool,Args::doSkipIntersection>...>        };
 
       ////////////////////////////
 
@@ -199,7 +199,7 @@ namespace Dune {
         applyLops(LocalOperatorApply::skipIntersection, ig, skip);
       }
 
-      //! \} Methods for the sparsity pattern
+      //! \} Methods for selective assembly
 
       //////////////////////////////////////////////////////////////////////
       //

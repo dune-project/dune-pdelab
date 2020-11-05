@@ -126,15 +126,15 @@ namespace Dune{
           cell.
        */
       template<class EG>
-      bool assembleCell(const EG & eg) const
+      bool skipEntity(const EG & eg) const
       {
         bool skip = false;
         static_assert(
           models<impl::HasDoSkipEntity,LOP>(),
-          "Your local operator does not provide the 'doSelectiveEntity' flag. "
+          "Your local operator does not provide the 'doSkipEntity' flag. "
           "If you are porting a previous implementation, set the flag to false"
           );
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doSelectiveEntity>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doSkipEntity>::
           skip_entity(*lop,eg,skip);
         return skip;
       }
@@ -146,15 +146,15 @@ namespace Dune{
           intersection.
        */
       template<class IG>
-      bool assembleIntersection(const IG & ig) const
+      bool skipIntersection(const IG & ig) const
       {
         bool skip = false;
         static_assert(
           models<impl::HasDoSkipIntersection,LOP>(),
-          "Your local operator does not provide the 'doSelectiveIntersection' flag. "
+          "Your local operator does not provide the 'doSkipIntersection' flag. "
           "If you are porting a previous implementation, set the flag to false"
           );
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doSelectiveIntersection>::
+        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doSkipIntersection>::
           skip_intersection(*lop,ig,skip);
         return skip;
       }

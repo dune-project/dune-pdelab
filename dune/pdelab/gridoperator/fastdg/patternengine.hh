@@ -172,9 +172,9 @@ namespace Dune{
           cell.
        */
       template<typename EG>
-      bool assembleCell(const EG & eg)
+      bool skipEntity(const EG & eg)
       {
-        return localAssembler().assembleCell(eg);
+        return localAssembler().skipEntity(eg);
       }
 
       /** Assemble on a given intersection without function spaces.
@@ -184,9 +184,9 @@ namespace Dune{
           intersection.
        */
       template<typename IG>
-      bool assembleIntersection(const IG & ig)
+      bool skipIntersection(const IG & ig)
       {
-        return localAssembler().assembleIntersection(ig);
+        return localAssembler().skipIntersection(ig);
       }
 
       //! Called when the local function space is about to be rebound or

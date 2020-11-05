@@ -23,10 +23,10 @@ namespace Dune
 
             //! \brief Whether to do selective assembly on the elements,
             //!        i.e. whether or not skip_entity() should be called.
-            enum { /*! \hideinitializer */ doSelectiveEntity = false };
+            enum { /*! \hideinitializer */ doSkipEntity = false };
             //! \brief Whether to do selective assembly on the intersections,
             //!        i.e. whether or not skip_intersection() should be called.
-            enum { /*! \hideinitializer */ doSelectiveIntersection = false };
+            enum { /*! \hideinitializer */ doSkipIntersection = false };
 
             //! \} Flags selective assembly
 

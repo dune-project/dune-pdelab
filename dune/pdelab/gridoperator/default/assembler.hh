@@ -120,7 +120,7 @@ namespace Dune{
 
             ElementGeometry<Element> eg(element);
 
-            if(assembler_engine.assembleCell(eg))
+            if(assembler_engine.skipEntity(eg))
               continue;
 
             // Bind local test function space to element
@@ -158,7 +158,7 @@ namespace Dune{
 
                     IntersectionGeometry<Intersection> ig(intersection,intersection_index);
 
-                    if(assembler_engine.assembleIntersection(ig))
+                    if(assembler_engine.skipIntersection(ig))
                       continue;
 
                     auto intersection_data = classifyIntersection(entity_set,intersection);
