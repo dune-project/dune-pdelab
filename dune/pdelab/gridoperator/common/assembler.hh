@@ -1,5 +1,8 @@
 #ifndef DUNE_PDELAB_GRIDOPERATOR_COMMON_ASSEMBLER_HH
 #define DUNE_PDELAB_GRIDOPERATOR_COMMON_ASSEMBLER_HH
+
+#include <dune/common/deprecated.hh>
+
 #include <gridoperatorutilities.hh>
 #include <assemblerutilties.hh>
 
@@ -71,6 +74,13 @@ namespace Dune {
          @{
        */
 
+      //! Deprecated. Use `skipEntity` instead
+      template<typename EG>
+      DUNE_DEPRECATED bool assembleCell(const EG & eg)
+      {
+         return false;
+      }
+
       /** Assembling method which is called for a given grid cell. It
       is called before the local function spaces are bound to the cell
       and the coefficients for the local trial function space are
@@ -81,7 +91,7 @@ namespace Dune {
       due to binding of the local function spaces etc.
       */
       template<typename EG>
-      bool assembleCell(const EG & eg);
+      bool skipEntity(const EG & eg);
 
       /** Assembling method which is called for a given grid intersection. It
       is called after the cell local function space is bound and before the
@@ -93,7 +103,7 @@ namespace Dune {
       due to binding of the local function spaces etc.
       */
       template<typename IG>
-      bool assembleIntersection(const IG & ig);
+      bool skipIntersection(const IG & ig);
 
       /** Assembling for a codim 0 entity part for trial and test
       local function spaces.

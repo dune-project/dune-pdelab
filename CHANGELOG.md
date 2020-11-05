@@ -14,6 +14,11 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   Added an optional method to skip entities/intersections and avoid costly and unnecessary bind/assembly.
+    To activate them one has to set the `doSkipEntity`/`doSkipIntersection` flags and implement the
+    `skip_entity`/`skip_intersection` methods in the local operator. See local operator interface for
+    detailed information.
+
 -   Change the local operator interface for nonlinear jacobian apply methods. The vector representing the
     current solution (x) and the vector that the jacobian is applied on (z) can now have different type. Note:
     This is a change in the interface description of the local operator interface but will not break any user

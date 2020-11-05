@@ -25,7 +25,7 @@ namespace Dune{
       {
         template<typename LO>
         auto require(LO&& lo) -> decltype(
-           Concept::requireConvertible<bool>(LO::doSelectiveEntity)
+           Concept::requireConvertible<bool>(LO::doSkipEntity)
           );
       };
 
@@ -33,7 +33,7 @@ namespace Dune{
       {
         template<typename LO>
         auto require(LO&& lo) -> decltype(
-          Concept::requireConvertible<bool>(LO::doSelectiveIntersection)
+          Concept::requireConvertible<bool>(LO::doSkipIntersection)
           );
       };
 

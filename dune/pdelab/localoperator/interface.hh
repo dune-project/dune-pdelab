@@ -87,8 +87,8 @@ namespace Dune {
     {
     public:
 
-      static const bool doSelectiveEntity = false;
-      static const bool doSelectiveIntersection = false;
+      static const bool doSkipEntity = false;
+      static const bool doSkipIntersection = false;
       static const bool doPatternVolume = true;
       static const bool doPatternVolumePostSkeleton = true;
       static const bool doPatternSkeleton = true;
@@ -112,7 +112,7 @@ namespace Dune {
       /**
        * \param eg   ElementGeometry describing the entity.
        *
-       * This method is controlled by the flag \ref doSelectiveEntity. For a
+       * This method is controlled by the flag \ref doSkipEntity. For a
        * given element, it is called *before* the any other local method. If
        * return value is true, all volume, skeleton, and boundary methods are
        * skipped.
@@ -126,7 +126,7 @@ namespace Dune {
       /**
        * \param ig     IntersectionGeometry describing the intersection.
        *
-       * This method is controlled by the flag \ref doSelectiveIntersection. For
+       * This method is controlled by the flag \ref doSkipIntersection. For
        * a given intersection, it is called *after* local volume methods and
        * *before* any skeleton and boundary methods. If return value is true,
        * all skeleton, and boundary methods are skipped.

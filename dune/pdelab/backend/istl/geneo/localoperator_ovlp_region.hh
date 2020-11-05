@@ -28,8 +28,8 @@ namespace Dune {
       }
 
       // selective assembly flags
-      enum { doSelectiveEntity = LocalOperatorBase::doSelectiveEntity };
-      enum { doSelectiveIntersection = LocalOperatorBase::doSelectiveIntersection };
+      enum { doSkipEntity = LocalOperatorBase::doSkipEntity };
+      enum { doSkipIntersection = LocalOperatorBase::doSkipIntersection };
 
       // pattern assembly flags
       enum { doPatternVolume = LocalOperatorBase::doPatternVolume };
