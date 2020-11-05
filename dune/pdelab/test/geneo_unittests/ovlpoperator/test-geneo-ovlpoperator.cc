@@ -111,8 +111,8 @@ int main(int argc, char** argv)
   // define corresponding GridOperator
   constexpr int maxNonzeros{ Dune::StaticPower<2*ORD+1, DIM>::power };
   using GO =
-    Dune::PDELab::GridOperator<GFS, GFS, LOP, MBE, DF, RF, RF, CC, CC>;
-  auto ovlpgo{ GO(gfs, cc, gfs, cc, lop, MBE(maxNonzeros)) };
+    Dune::PDELab::GridOperator<GFS, GFS, OvlpLOP, MBE, DF, RF, RF, CC, CC>;
+  auto ovlpgo{ GO(gfs, cc, gfs, cc, ovlplop, MBE(maxNonzeros)) };
 
   // interpolate the boundary conditions
   Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem>
