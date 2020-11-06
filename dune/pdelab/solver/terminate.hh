@@ -18,7 +18,12 @@ namespace Dune::PDELab
     virtual bool terminate() = 0;
 
     virtual void setParameters(const ParameterTree&) = 0;
-  };
+
+    virtual void printParameters() const
+    {
+      std::cout << "NewtonMethod::_terminate->printParameters() is not implemented." << std::endl;
+    }
+};
 
 
   template <typename Solver>
@@ -44,6 +49,12 @@ namespace Dune::PDELab
     {
       _maxIterations = parameterTree.get<unsigned int>("MaxIterations", _maxIterations);
       _force_iteration = parameterTree.get<bool>("ForceIteration", _force_iteration);
+    }
+
+    virtual void printParameters() const override
+    {
+      std::cout << "Terminate.MaxIterations. " << _maxIterations << std::endl;
+      std::cout << "Terminate.ForceIteration " << _force_iteration << std::endl;
     }
 
     //! Set the maximum iterations allowed in the Newton solver

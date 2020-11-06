@@ -22,6 +22,12 @@ namespace Dune::PDELab
 
     //! Set parameters
     virtual void setParameters(const ParameterTree&) = 0;
+
+    //! Print paramters
+    virtual void printParameters() const
+    {
+      std::cout << "NewtonMethod::_lineSearch->printParameters() is not implemented." << std::endl;
+    }
   };
 
 
@@ -43,6 +49,9 @@ namespace Dune::PDELab
     }
 
     virtual void setParameters(const ParameterTree&) override {}
+
+    // there are none parameters to print
+    virtual void printParameters() const override {}
 
   private:
     Solver& _solver;
@@ -176,6 +185,14 @@ namespace Dune::PDELab
       _lineSearchDampingFactor = parameterTree.get<Real>("DampingFactor",
                                                          _lineSearchDampingFactor);
       _acceptBest = parameterTree.get<bool>("AcceptBest", _acceptBest);
+    }
+
+    virtual void printParameters() const override
+    {
+      std::cout << "LineSearch.MaxIterations.. " << _lineSearchMaxIterations << std::endl;
+      std::cout << "LineSearch.DampingFactor.. " << _lineSearchDampingFactor << std::endl;
+      std::cout << "LineSearch.AcceptBest..... " << _acceptBest << std::endl;
+      std::cout << "LineSearch.ForceAcceptBest " << _forceAcceptBest << std::endl;
     }
 
   private:
