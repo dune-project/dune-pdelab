@@ -19,18 +19,12 @@
 
 #include <dune/pdelab.hh>
 
+#include <dune/pdelab/test/geneo_unittests/utility.hh>
+
 
 // symbolic constants for the dimension of the domain
 constexpr int TWODIM { 2 };
 constexpr int THREEDIM { 3 };
-
-
-// Comparison with 1.0 for floating point types
-template<typename T>
-bool is_numeric_one(const T& x, double eps=1e-8)
-{
-  return (std::abs(x - 1.0) <= std::max(std::abs(x), 1.0) * eps);
-}
 
 
 std::string generate_filename(const Dune::ParameterTree& ptree)
@@ -51,85 +45,6 @@ std::string generate_filename(const Dune::ParameterTree& ptree)
 }
 
 
-// The Sarkis partition of unity needs information about the size and structure
-// of the grid, so we use this container class for easier passing of arguments
-template<typename GVCoord>
-class GridParameters2d
-{
-public:
-  const int ovlp;
-  const Dune::FieldVector<GVCoord, TWODIM> upperRight;
-  const std::bitset<TWODIM> isPeriodic;
-  const std::array<int, TWODIM> nCells;
-  const std::array<int, TWODIM> subdomLayout;
-
-  GridParameters2d(const Dune::ParameterTree& ptree) :
-    ovlp { ptree.get<int>("grid.overlap") },
-    upperRight { ptree.get<double>("grid.LX"),
-                ptree.get<double>("grid.LY") },
-    isPeriodic("00"),
-    nCells { ptree.get<int>("grid.nCellsX"),
-            ptree.get<int>("grid.nCellsY") },
-    subdomLayout { ptree.get<int>("grid.nSubdomX"),
-                  ptree.get<int>("grid.nSubdomY") }
-  {}
-};
-
-
-// In 3 dimensions, Sarkis partition of unity is not yet supported. We still
-// use a Grid Parameters container for consistency
-template<typename GVCoord>
-class GridParameters3d
-{
-public:
-  const int ovlp;
-  const Dune::FieldVector<GVCoord, THREEDIM> upperRight;
-  const std::bitset<THREEDIM> isPeriodic;
-  const std::array<int, THREEDIM> nCells;
-  const std::array<int, THREEDIM> subdomLayout;
-
-  GridParameters3d(const Dune::ParameterTree& ptree) :
-    ovlp { ptree.get<int>("grid.overlap") },
-    upperRight { ptree.get<double>("grid.LX"),
-                ptree.get<double>("grid.LY"),
-                ptree.get<double>("grid.LZ") },
-    isPeriodic("000"),
-    nCells { ptree.get<int>("grid.nCellsX"),
-            ptree.get<int>("grid.nCellsY"),
-            ptree.get<int>("grid.nCellsZ") },
-    subdomLayout { ptree.get<int>("grid.nSubdomX"),
-                  ptree.get<int>("grid.nSubdomY"),
-                  ptree.get<int>("grid.nSubdomZ") }
-  {}
-};
-
-
-template<class GV, class GFS, class V>
-void write_vtk(const std::string& filename, const GV& gv, const GFS& gfs,
-               const V& partUnity, const int ord)
-{
-  using DGF = Dune::PDELab::DiscreteGridFunction<GFS, V>;
-  DGF partUnityDGF(gfs, partUnity);
-
-  // prepare the VTKWriter and write to file
-  int subsampling { ord };
-  using VTKWRITER = Dune::SubsamplingVTKWriter<GV>;
-  VTKWRITER vtkwriter(gv, Dune::refinementIntervals(subsampling));
-
-  using VTKF = Dune::PDELab::VTKGridFunctionAdapter<DGF>;
-
-  // write partition of unity to file
-  std::string outputname { "partition_of_unity" };
-
-  vtkwriter.addVertexData(
-    std::shared_ptr<VTKF>(new VTKF(partUnityDGF, outputname)));
-  vtkwriter.write(filename, Dune::VTK::ascii);
-
-  std::cout << "Partition of unity written to vtk file." << std::endl;
-  return;
-}
-
-
 // sanity check: do the partition of unity functions add up to 1 at every
 // point? Or more precisely:
 // \sum\limits_{j=1}^N R_j^T \Theta_j(v|_{\Omega_j}) = v, \forall v \in V_h
@@ -147,7 +62,7 @@ void perform_sanity_check(const GFS& gfs, V& partUnity)
   // ones, so we iterate through the vector and check at runtime.
   for (const auto& entry : partUnity)
   {
-    if (!is_numeric_one(entry))
+    if (!Utility::is_numeric_one(entry))
     {
       DUNE_THROW(Dune::Exception,"Sanity check failed! "
                  "Partition of unity does not add up to 1.0.");
@@ -198,7 +113,7 @@ void standardTestdriver(const GV& gv, const FEM& fem, const int ord,
   using V = Dune::PDELab::Backend::Vector<GFS, RangeField>;
   auto partUnity { std::make_shared<V>(standardPartitionOfUnity<V>(gfs, cc)) };
 
-  write_vtk(filename, gv, gfs, *partUnity, ord);
+  Utility::write_gridfunction_vtk(filename, gv, gfs, *partUnity, ord);
   perform_sanity_check(gfs, *partUnity);
 
   return;
@@ -243,7 +158,7 @@ void sarkisTestdriver(const GV& gv, const FEM& fem, const GP& gp,
                                          gp.subdomLayout.at(0),
                                          gp.subdomLayout.at(1))) };
 
-  write_vtk(filename, gv, gfs, *partUnity, ord);
+  Utility::write_gridfunction_vtk(filename, gv, gfs, *partUnity, ord);
   perform_sanity_check(gfs, *partUnity);
 
   return;
@@ -285,7 +200,7 @@ int main(int argc, char** argv)
 
   if (dim == TWODIM)
   {
-    GridParameters2d<GVCoord> gp(ptree);
+    Utility::GridParameters<GVCoord, TWODIM> gp(ptree);
 
     // grid partitioning
     using Partitioner = Dune::YaspFixedSizePartitioner<TWODIM>;
@@ -329,7 +244,7 @@ int main(int argc, char** argv)
   }
   else if (dim == THREEDIM)
   {
-    GridParameters3d<GVCoord> gp(ptree);
+    Utility::GridParameters<GVCoord, THREEDIM> gp(ptree);
 
     // grid partitioning
     using Partitioner = Dune::YaspFixedSizePartitioner<THREEDIM>;
