@@ -14,9 +14,7 @@
 #include <dune/pdelab.hh>
 
 // includes specific to the GenEO unit tests
-#include <dune/pdelab/test/geneo_unittests/utility/gridparameters.hh>
-#include <dune/pdelab/test/geneo_unittests/utility/testproblem.hh>
-#include <dune/pdelab/test/geneo_unittests/utility/fuzzycompare.hh>
+#include <dune/pdelab/test/geneo_unittests/utility.hh>
 
 
 constexpr int DIM{ 2 }; // the dimension of the domain
