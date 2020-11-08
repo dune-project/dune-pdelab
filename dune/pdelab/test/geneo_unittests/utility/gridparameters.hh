@@ -61,7 +61,7 @@ namespace Utility
   public:
 
     const int ovlp;
-    const Dune::FieldVector<GVCoord, 2> upperRight;
+    const Dune::FieldVector<GVCoord, 3> upperRight;
     const std::bitset<3> isPeriodic;
     const std::array<int, 3> nCells;
     const std::array<int, 3> subdomLayout;
