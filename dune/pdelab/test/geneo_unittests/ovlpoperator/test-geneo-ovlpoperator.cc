@@ -91,8 +91,9 @@ int main(int argc, char** argv)
 
   // create Poisson problem with heterogeneous coefficient
   using Problem = Utility::PoissonHeterogeneous<GV, DF, RF>;
+  DF layerwidth{ 0.1 };
   RF contrast{ 1e2 };
-  Problem problem(gv, bcType, contrast);
+  Problem problem(gv, bcType, layerwidth, contrast);
 
   // map problem boundary conditions to corresponding entities on the grid
   Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem>

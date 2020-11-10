@@ -232,6 +232,11 @@ namespace Utility
   template<class GV, typename DF, typename RF>
   class PoissonHeterogeneous : public PoissonTestProblem<GV, DF, RF>
   {
+  private:
+
+    DF layerwidth_;
+
+
   public:
 
     // use Traits of the parent class
@@ -239,10 +244,12 @@ namespace Utility
 
     PoissonHeterogeneous()
       : PoissonTestProblem<GV, DF, RF>()
+      , layerwidth_{ 0.1 }
     {}
 
-    PoissonHeterogeneous(const GV& gv, BC bc, DF contrast)
+    PoissonHeterogeneous(const GV& gv, BC bc, DF layerwidth, RF contrast)
       : PoissonTestProblem<GV, DF, RF>(gv, bc, contrast)
+      , layerwidth_{ layerwidth }
     {}
 
 
@@ -253,10 +260,9 @@ namespace Utility
     {
       typename Traits::DomainType xglobal{ e.geometry().global(x) };
 
-      RF layerwidth{ 0.1 };
       RF contrast{ PoissonTestProblem<GV, DF, RF>::coeffValue_ + 1.0 };
-      RF cVal{ (int(std::floor(xglobal[1] / layerwidth)) % 2 == 0) ? contrast
-                                                                   : 1.0 };
+      RF cVal{ (int(std::floor(xglobal[1] / layerwidth_)) % 2 == 0) ? contrast
+                                                                    : 1.0 };
 
       typename Traits::PermTensorType I{{ cVal, 0.0 },
                                         { 0.0 , cVal}};
