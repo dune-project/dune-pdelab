@@ -1,2 +1,2 @@
 add_subdirectory(partitionofunity)
-add_subdirectory(ovlpoperator)
+add_subdirectory(overlapoperator)
