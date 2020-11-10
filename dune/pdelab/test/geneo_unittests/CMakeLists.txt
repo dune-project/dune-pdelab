@@ -1,2 +1,3 @@
 add_subdirectory(partitionofunity)
 add_subdirectory(overlapoperator)
+add_subdirectory(twolevelschwarz)
