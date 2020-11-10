@@ -3,11 +3,9 @@
 #endif
 
 #include <dune/pdelab.hh>
+
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/geneobasisOnline.hh>
 
-// #include <dune/grid/common/gridinfo.hh> // visualize grid information -> could be remove at the end
-
-// #include <dune/pdelab/test/testordering.cc>
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/SubDomainGmshReader.hh>
 
 /*
@@ -190,8 +188,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   typedef typename GRID::LeafGridView GV;
   auto gv = grid->leafGridView();
 
-  // Dune::gridlevellist<GRID>(*grid, 0, "");
-
   // ~~~~~~~~~~~~~~~~~~
 //  Type definitions
   // ~~~~~~~~~~~~~~~~~~
@@ -310,33 +306,34 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   std::vector<int> DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<Vector>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
 
+  // ~~~~~~~~~~~~~~~~~~
+  // Load Neighbour ranks
+  // ~~~~~~~~~~~~~~~~~~
+  // TODO : Only load the one associated to targeted[0] :: need to load more if needed
+  Vector NR;
+  std::string filename_NR = path_to_storage + std::to_string(targeted[0]) + "_neighborRanks.mm";
+  std::ifstream file_NR;
+  file_NR.open(filename_NR.c_str(), std::ios::in);
+  Dune::readMatrixMarket(NR,file_NR);
+  file_NR.close();
 
   // ~~~~~~~~~~~~~~~~~~
   // Load PoU
   // ~~~~~~~~~~~~~~~~~~
-  Vector PoU(A.N());
+  // TODO : For now, only load the one associated to targeted[0] :: need to load more for neighbour
+  Vector PoU;
   std::string filename_PoU = path_to_storage + std::to_string(targeted[0]) + "_PoU.mm";
   std::ifstream file_PoU;
   file_PoU.open(filename_PoU.c_str(), std::ios::in);
   Dune::readMatrixMarket(PoU,file_PoU);
   file_PoU.close();
+  // std::shared_ptr<Vector> part_unity = std::make_shared<Vector>(PoU.N(), PoU);
+  // std::shared_ptr<Matrix> A_ptr = std::make_shared<Matrix>(A);
 
-  V newPoU(gfs, 0.0);
   Vector nPoU(v_size);
-  // int cnt=0;
   for (int i=0; i<v_size; i++){
-    native(newPoU)[DofOffline_to_DofOnline[i]] = PoU[i];
     nPoU[DofOffline_to_DofOnline[i]] = PoU[i];
-    // cnt+=1;
   }
-
-  /* Write a field in the vtu file */
-  Dune::VTKWriter<GV> vtkwriter(gv);
-  DGF xdgf(gfs,newPoU);
-  auto adapt = std::make_shared<ADAPT>(xdgf,"PoU");
-  vtkwriter.addVertexData(adapt);
-  vtkwriter.write("PoU",Dune::VTK::ascii);
-
 
   // ~~~~~~~~~~~~~~~~~~
 //  Subdomain basis computation or loading
@@ -344,9 +341,9 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   int basis_size = local_basis_sizes[targeted[0]];
 
+  // First : compute the new targeted subdomain basis
   std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> online_subdomainbasis;
   online_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisOnline<GO, Matrix, Vector>>(native(A), nPoU, eigenvalue_threshold, nev, nev_arpack);
-
 
   for (int i=0; i<basis_size; i++){
     /* Plot EV */
@@ -359,27 +356,166 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
     DGF xdgfEV(gfs,EV);
     auto adaptEV = std::make_shared<ADAPT>(xdgfEV,"EV");
     vtkwriterEV.addVertexData(adaptEV);
-    vtkwriterEV.write("EV-"+std::to_string(i),Dune::VTK::ascii);
+    vtkwriterEV.write("Targeted"+std::to_string(targeted[0])+"-EV-"+std::to_string(i),Dune::VTK::ascii);
   }
 
-  std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> offline_subdomainbasis;
+  // Then : load other subdomain basis from offline and transfer them in the targeted subdomain space
+  std::vector<std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>>> neighbour_subdomainbasis(NR.size());
 
-  offline_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisFromFiles<GO, Matrix, Vector>>(path_to_storage, basis_size, targeted[0]);
+  for (int iter_over_subdomains=0; iter_over_subdomains<NR.size(); iter_over_subdomains++) {
 
-  for (int i=0; i<basis_size; i++){
-    /* Plot EV */
-    Dune::VTKWriter<GV> vtkwriterEV(gv);
-    V EV(gfs,0.0);
+    Vector offlineNeighbourDoF2GI;
+    int int_Nnumber = NR[iter_over_subdomains];
+    std::string filename_ = path_to_storage + std::to_string(int_Nnumber) + "_GI.mm";
+    std::ifstream file_;
+    file_.open(filename_.c_str(), std::ios::in);
+    Dune::readMatrixMarket(offlineNeighbourDoF2GI,file_);
+    file_.close();
 
-    for (int j=0; j<v_size; j++){
-      native(EV)[DofOffline_to_DofOnline[j]] = (*offline_subdomainbasis->get_basis_vector(i))[j];
+    // for(int i=0; i<offlineNeighbourDoF2GI.size();i++){
+    //   std::cout << i << " : " << offlineDoF2GI[i] << " :: " << offlineNeighbourDoF2GI[i] << std::endl;
+    // }
+
+    neighbour_subdomainbasis[iter_over_subdomains] = std::make_shared<Dune::PDELab::NeighbourBasis<GO, Matrix, Vector>>(path_to_storage, local_basis_sizes[NR[iter_over_subdomains]], NR[iter_over_subdomains], offlineDoF2GI, offlineNeighbourDoF2GI, 2);
+
+    for (int i=0; i<local_basis_sizes[iter_over_subdomains]; i++){
+      auto tmp = *neighbour_subdomainbasis[iter_over_subdomains]->get_basis_vector(i);
+      for (int j=0; j<v_size; j++){
+        (*neighbour_subdomainbasis[iter_over_subdomains]->get_basis_vector(i))[DofOffline_to_DofOnline[j]] = tmp[j];
+      }
     }
-    /* Write a field in the vtu file */
-    DGF xdgfEV(gfs,EV);
-    auto adaptEV = std::make_shared<ADAPT>(xdgfEV,"EV");
-    vtkwriterEV.addVertexData(adaptEV);
-    vtkwriterEV.write("offEV-"+std::to_string(i),Dune::VTK::ascii);
+
+    for (int i=0; i<local_basis_sizes[NR[iter_over_subdomains]]; i++){
+      /* Plot EV */
+      Dune::VTKWriter<GV> vtkwriterEV(gv);
+      V EV(gfs,0.0);
+
+      native(EV) = *neighbour_subdomainbasis[iter_over_subdomains]->get_basis_vector(i);
+
+      /* Write a field in the vtu file */
+      DGF xdgfEV(gfs,EV);
+      auto adaptEV = std::make_shared<ADAPT>(xdgfEV,"EV");
+      vtkwriterEV.addVertexData(adaptEV);
+      vtkwriterEV.write("Neighbour"+std::to_string(int_Nnumber)+"-EV-"+std::to_string(i),Dune::VTK::ascii);
+    }
+
   }
+
+
+  // Need to create a true neighbour subdomain basis
+
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//  Modify AH
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //  Load the coarse matrix
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // CoarseMatrix AH;
+  // std::ifstream file_AH;
+  // std::string filename_AH = path_to_storage + "OfflineAH.mm";
+  // file_AH.open(filename_AH.c_str(), std::ios::in);
+  // Dune::readMatrixMarket(AH,file_AH);
+  // file_AH.close();
+  // // std::cout << AH.N() << std::endl;
+  // // std::cout << AH.M() << std::endl;}
+
+  // int max_local_basis_size = *std::max_element(local_basis_sizes.begin(),local_basis_sizes.end());
+  // int my_offset = local_offset[targeted[0]];
+
+  // // ~~~~~~~~~~~~~~~~~~
+  // //  Create a vector of AH entries modification
+  // // ~~~~~~~~~~~~~~~~~~
+
+  // // Set up container for storing rows of coarse matrix associated with current rank
+  // std::vector<std::vector<std::vector<Matrix::field_type> > > local_rows;
+  // local_rows.resize(local_basis_sizes[targeted[0]]);
+  // for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
+  //   local_rows[basis_index].resize(NR.size()+1);
+  // }
+
+  // for (int basis_index_remote = 0; basis_index_remote < max_local_basis_size; basis_index_remote++) {
+
+  //   // Compute local products of basis functions with discretization matrix
+  //   if (basis_index_remote < local_basis_sizes[targeted[0]]) {
+  //     auto basis_vector = *subdomainbasis[targeted[0]]->get_basis_vector(basis_index_remote);
+  //     Vector Atimesv(A.N());
+  //     native(A).mv(basis_vector, Atimesv);
+  //     for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
+  //       Matrix::field_type entry = *subdomainbasis[targeted[0]]->get_basis_vector(basis_index)*Atimesv;
+  //       local_rows[basis_index][NR.size()].push_back(entry);
+  //     }
+  //   }
+
+  //   // Compute products of discretization matrix with local and remote vectors
+  //   // for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
+  //   //   if (basis_index_remote >= local_basis_sizes[NR[neighbor_id]])
+  //   //     continue;
+  //   //   auto basis_vector = *subdomainbasis[NR[neighbor_id]]->get_basis_vector(basis_index_remote);
+  //   //   Vector Atimesv(A.N());
+  //   //   native(A).mv(basis_vector, Atimesv);
+  //   //   for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
+  //   //     Matrix::field_type entry = *subdomainbasis[targeted[0]]->get_basis_vector(basis_index)*Atimesv;
+  //   //     local_rows[basis_index][neighbor_id].push_back(entry);
+  //   //   }
+  //   // }
+  // }
+
+
+  // // ~~~~~~~~~~~~~~~~~~
+  // //  Modify AH entries
+  // // ~~~~~~~~~~~~~~~~~~
+
+  // int row_id = local_offset[targeted[0]];
+  // // Modify AH entries with just computed local_rows
+  // for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
+  //   // Communicate number of entries in this row
+  //   int couplings = local_basis_sizes[targeted[0]];
+  //   for (int neighbor_id : NR) {
+  //     couplings += local_basis_sizes[neighbor_id];
+  //   }
+
+  //   // Communicate row's pattern
+  //   int entries_pos[couplings];
+  //   int cnt = 0;
+  //   for (int basis_index2 = 0; basis_index2 < local_basis_sizes[targeted[0]]; basis_index2++) {
+  //     entries_pos[cnt] = my_offset + basis_index2;
+  //     cnt++;
+  //   }
+  //   // for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
+  //   //   int neighbor_offset = local_offset[NR[neighbor_id]];
+  //   //   for (int basis_index2 = 0; basis_index2 < local_basis_sizes[NR[neighbor_id]]; basis_index2++) {
+  //   //     entries_pos[cnt] = neighbor_offset + basis_index2;
+  //   //     cnt++;
+  //   //   }
+  //   // }
+
+  //   // Communicate actual entries
+  //   Matrix::field_type entries[couplings];
+  //   cnt = 0;
+  //   for (int basis_index2 = 0; basis_index2 < local_basis_sizes[targeted[0]]; basis_index2++) {
+  //     entries[cnt] = local_rows[basis_index][NR.size()][basis_index2];
+  //     cnt++;
+  //   }
+  //   // for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
+  //   //   for (int basis_index2 = 0; basis_index2 < local_basis_sizes[NR[neighbor_id]]; basis_index2++) {
+  //   //     entries[cnt] = local_rows[basis_index][neighbor_id][basis_index2];
+  //   //     cnt++;
+  //   //   }
+  //   // }
+
+
+  //   // Set matrix entries
+  //   for (int i = 0; i < couplings; i++){
+  //     // std::cout << "ici entries[i]:" << entries[i] << std::endl;
+  //     std::cout << "Before AH[row_id][entries_pos[i]]= " << AH[row_id][entries_pos[i]] << std::endl;
+  //     AH[row_id][entries_pos[i]] = entries[i];
+  //     std::cout << "Then AH[row_id][entries_pos[i]]= " << AH[row_id][entries_pos[i]] << std::endl;
+  //   }
+
+  //   row_id++;
+  // }
 
 }
 
@@ -395,156 +531,3 @@ int main(int argc, char **argv)
 
   return 0;
 }
-
-
-/////////////////////// KEEP ALL PREVIOUS TESTS FOR NOW
-
-  // int cntE=0;
-  // std::vector<int> nodes_from_elements;
-  // nodes_from_elements.push_back(0);
-  // for (const auto& e : elements(gv)){
-  //   for (unsigned int i=0; i < e.subEntities(dim); i++){
-  //     std::cout << " " << i << ":" << grid->levelIndexSet(0).subIndex(e,i,dim) << std::endl;
-  //     auto it = std::find(nodes_from_elements.begin(), nodes_from_elements.end(), grid->levelIndexSet(0).subIndex(e,i,dim));
-  //     if (it == nodes_from_elements.end()){
-  //       nodes_from_elements.push_back(grid->levelIndexSet(0).subIndex(e,i,dim));
-  //     }
-  //   }
-  //   cntE+=1;
-  // }
-
-
-  // std::cout << "v_size : " << v_size << std::endl;
-  // std::cout << "this vector size : " << nodes_from_elements.size() << std::endl;
-  // for(int i=0; i<nodes_from_elements.size(); i++)
-  //   std::cout << nodes_from_elements[i] << std::endl;
-
-  //   // // Create a vector from GFS ordering to node ordering
-  // std::vector<std::pair<int, int>> element_nodes_ordering(v_size);
-
-  // int cnt=0;
-  // for(int i=0; i<nodes_from_elements.size(); i++) {
-  //   element_nodes_ordering[cnt] = std::make_pair(nodes_from_elements[i],cnt);
-  //   // std::cout << element_nodes_ordering[cnt].first << " : " << element_nodes_ordering[cnt].second << std::endl;
-  //   cnt+=1;
-  // }
-  // std::sort(element_nodes_ordering.begin(), element_nodes_ordering.end());
-
-  // V newPoU(gfs, 0.0);
-  // cnt=0;
-  // // for (const auto& vertex : vertices(gv)){
-  // for(int i=0; i<v_size; i++){
-  //   std::cout << cnt << " // " << element_nodes_ordering[cnt].second << std::endl;
-  //   // std::cout << i << " // " << std::endl;
-
-  //   native(newPoU)[cnt] = tmp[element_nodes_ordering[cnt].second];
-  //   // native(newPoU)[cnt] = tmp[gfs2node[cnt].second];
-  //   // native(newPoU)[cnt] = tmp[cnt];
-  //   // std::cout << cnt << " // " << native(newPoU)[cnt] << std::endl;
-  //   cnt+=1;
-  // }
-
-  // Dune::VTKWriter<GV> vtkwriter(gv);
-  // typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  // DGF xdgf(gfs,newPoU);
-  // typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
-  // auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
-  // vtkwriter.addVertexData(adapt);
-  // vtkwriter.write("solution");
-
-/////////////////////
-
-
-  // check_ordering(gfs);
-  // auto ordering = gfs.ordering();
-
-  // // auto map_lfs_indices = ordering.map_lfs_indices();
-
-  // std::cout << ordering.blockCount() << std::endl; // size of the ordering
-  // // for(int i=0; i<ordering.size(); i++){
-  // //   std::cout << ordering[i] << " : " << i << std::endl;
-  // // }
-
-  // const typename GFS::Ordering& ordering = gfs.ordering();
-  // Dune::PDELab::LocalFunctionSpace<GFS> lfs(gfs);
-
-/////////////////////
-
-
-  // using LFS = Dune::PDELab::LocalFunctionSpace<GFS>;
-  // using LFSCache = Dune::PDELab::LFSIndexCache<LFS>;
-
-  // std::shared_ptr<V> data;
-  // std::shared_ptr<const GFS> pgfs;
-  // Dune::PDELab::LocalFunctionSpace<GFS> lfs(gfs);
-  // LFSCache lfs_cache(lfs);
-
-  // int iter=0;
-
-  // for (const auto& e : elements(gv)){
-  //   std::vector<int> nodes_from_elements;
-  //   for (unsigned int i=0; i < e.subEntities(dim); i++){
-  //     // std::cout << " " << i << ":" << grid->levelIndexSet(0).subIndex(e,i,dim) << std::endl;
-  //     // auto it = std::find(nodes_from_elements.begin(), nodes_from_elements.end(), grid->levelIndexSet(0).subIndex(e,i,dim));
-  //     // if (it == nodes_from_elements.end()){
-  //     nodes_from_elements.push_back(grid->levelIndexSet(0).subIndex(e,i,dim));
-  //     // }
-  //   }
-
-  //   // auto gt = e.type();
-  //   // auto index = gfs.entitySet().indexSet().index(e);
-  //   // std::cout << index << std::endl;
-  //   // for (auto it = nodes_from_elements.begin(); it != nodes_from_elements.end(); ++it) {
-
-  //   //   GFS::Ordering::Traits::DOFIndexAccessor::store(*it,gt,index,0);
-
-  //   // }
-
-  //   typename V::template LocalView<LFSCache> p_view(*data);
-  //   lfs.bind(e);
-  //   lfs_cache.update();
-  //   // std::cout << iter << std::endl;
-
-  //   std::vector<int> pw(lfs.size()-1);
-  //   p_view.bind(lfs_cache);
-  //   p_view.read(pw);
-
-  //   // std::cout << lfs_cache.dofIndex(0) << ", " << lfs_cache.dofIndex(1) << ", " << lfs_cache.dofIndex(2) << ", " << lfs_cache.dofIndex(3) << std::endl;
-  //   // for (int i=0; i<4; i++) {
-  //   //   assert(lfs_cache.dofIndex(i).entityIndex()[1]==nodes_from_elements[i]);
-  //   //   std::cout << lfs_cache.dofIndex(i).entityIndex()[1] << ", " << nodes_from_elements[i] << std::endl;
-  //   // }
-  //   // auto test = lfs_cache.dofIndex(0).entityIndex()[1];
-
-
-  //   iter+=1;
-  // }
-
-/////////////////////
-
-  // // Create a vector from GFS ordering to node ordering
-  // std::vector<std::pair<int, int>> gfs2node(v_size);
-
-  // cnt=0;
-  // for (const auto& vertex : vertices(gv)){
-  //   assert(cnt<v_size);
-  //   gfs2node[cnt] = std::make_pair(gv.indexSet().index(vertex),cnt);
-  //   std::cout << gfs2node[cnt].first << " :/: " << gfs2node[cnt].second << std::endl;
-  //   cnt+=1;
-  // }
-  // std::sort(gfs2node.begin(), gfs2node.end());
-
-
-  // V newPoU2(gfs, 0.0);
-  // cnt=0;
-  // for (const auto& vertex : vertices(gv)){
-  // // for(int i=0; i<v_size; i++){
-  //   // std::cout << gv.indexSet().index(vertex) << " // " << cnt << std::endl;
-  //   // std::cout << i << " // " << std::endl;
-
-  //   // native(newPoU2)[cnt] = tmp[element_nodes_ordering[cnt].second];
-  //   native(newPoU2)[cnt] = tmp[element_nodes_ordering[gfs2node[cnt].second].second];
-  //   // native(newPoU)[cnt] = tmp[cnt];
-  //   // std::cout << cnt << " // " << native(newPoU)[cnt] << std::endl;
-  //   cnt+=1;
-  // }

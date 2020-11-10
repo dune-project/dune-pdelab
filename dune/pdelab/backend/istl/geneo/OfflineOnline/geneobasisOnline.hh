@@ -124,7 +124,71 @@ namespace Dune {
       }
     };
 
+    template<class GridView, class M, class Vector>
+    class GenEOBasisFromFiles : public SubdomainBasis<Vector>
+    { // For testing
 
+    public:
+
+      GenEOBasisFromFiles(std::string& path_to_storage, int basis_size, int subdomain_number, int verbose = 0) {
+
+        if (verbose > 1) std::cout << "Getting EV basis for subdomain: " << subdomain_number << " from offline." << std::endl;
+
+        this->local_basis.resize(basis_size);
+
+        for (int basis_index = 0; basis_index < basis_size; basis_index++) {
+          std::shared_ptr<Vector> ev = std::make_shared<Vector>();
+          std::string filename_EV = path_to_storage + std::to_string(subdomain_number) + "_EV_" + std::to_string(basis_index) + ".mm";
+          std::ifstream file_EV;
+          file_EV.open(filename_EV.c_str(), std::ios::in);
+          Dune::readMatrixMarket(*ev,file_EV);
+          file_EV.close();
+
+          this->local_basis[basis_index] = ev;
+        }
+      }
+    };
+
+    template<class GridView, class M, class Vector>
+    class NeighbourBasis : public SubdomainBasis<Vector>
+    {
+
+    public:
+
+      NeighbourBasis(std::string& path_to_storage, int basis_size, int subdomain_number, Vector& offlineDoF2GI, Vector& offlineNeighbourDoF2GI, int verbose = 0) {
+
+        if (verbose > 1) std::cout << "Getting EV basis for neighbour subdomain: " << subdomain_number << " from offline." << std::endl;
+
+        this->local_basis.resize(basis_size);
+
+        std::vector<std::pair<int, int>> N2T;
+        for(int i=0; i<offlineNeighbourDoF2GI.size();i++){
+          auto it = std::find(offlineDoF2GI.begin(), offlineDoF2GI.end(), offlineNeighbourDoF2GI[i]);
+          if (it != offlineDoF2GI.end()){
+            N2T.push_back(std::make_pair(i,std::distance(offlineDoF2GI.begin(),it)));
+            // std::cout << i << " : " << std::distance(offlineDoF2GI.begin(),it) << std::endl;
+          }
+        }
+
+        for (int basis_index = 0; basis_index < basis_size; basis_index++) {
+          Vector ev;
+          std::string filename_EV = path_to_storage + std::to_string(subdomain_number) + "_EV_" + std::to_string(basis_index) + ".mm";
+          std::ifstream file_EV;
+          file_EV.open(filename_EV.c_str(), std::ios::in);
+          Dune::readMatrixMarket(ev,file_EV);
+          file_EV.close();
+
+          std::shared_ptr<Vector> ev_moved = std::make_shared<Vector>();
+
+          ev_moved->resize(offlineDoF2GI.size());
+          for(int i=0; i<N2T.size();i++){
+            (*ev_moved)[N2T[i].second] = ev[N2T[i].first];
+          }
+
+          this->local_basis[basis_index] = ev_moved;
+        }
+      }
+    };
   }
 }
 

@@ -87,22 +87,45 @@ namespace Dune {
       for(int incrSD=0; incrSD< iterators.size(); incrSD++)
         iterators[incrSD]=0;
 
-      for (const auto& vertex : vertices(gv)) {
 
-        const auto globalCoord = vertex.geometry().center();
-        const auto nodeIndex = gv.indexSet().index(vertex);
+      // std::vector<std::pair<int, int>> nodes(gv.indexSet().size(dim));
+      // std::vector<Dune::FieldVector<double, dimWorld>> coords(gv.indexSet().size(dim));
+      std::vector<std::pair<int, int>> nodes;
+      std::vector<Dune::FieldVector<double, dimWorld>> coords;
+
+      int incr=0;
+      for (const auto& vertex : vertices(gv)) { // Apparently we need to sort vertices for 3D UGrid
+        auto globalCoord = vertex.geometry().center();
+        auto nodeIndex = gv.indexSet().index(vertex);
+        nodes.push_back(std::make_pair(nodeIndex, incr));
+        coords.push_back(globalCoord);
+        incr+=1;
+      }
+
+      std::sort(nodes.begin(), nodes.end());
+      // for(int incrV=0; incrV<nodes.size(); incrV++){
+      //   std::cout << incrV << " :: " << nodes[incrV].first << " :: " << nodes[incrV].second << std::endl;
+      // }
+
+
+      // for (const auto& vertex : vertices(gv)) {
+      //   const auto globalCoord = vertex.geometry().center();
+      //   const auto nodeIndex = gv.indexSet().index(vertex);
+
+      for(int incrV=0; incrV<nodes.size(); incrV++){
 
         for(int incrSD=0; incrSD< subdomains_number; incrSD++){
-          // std::cout << "nodeIndex = " << nodeIndex << ", NodesToBeSavedForEachSubdomain[iterators[incrSD]] = " << NodesToBeSavedForEachSubdomain[incrSD][iterators[incrSD]] << std::endl;
-          if(nodeIndex==NodesToBeSavedForEachSubdomain[incrSD][iterators[incrSD]]){
-            if (1 == dimWorld)
-              files[incrSD] << iterators[incrSD]+1 << " " << globalCoord[0] << " " << 0 << " " << 0 << std::endl;
-            else if (2 == dimWorld)
-              files[incrSD] << iterators[incrSD]+1 << " " << globalCoord[0] << " " << globalCoord[1] << " " << 0 << std::endl;
-            else // (3 == dimWorld)
-              files[incrSD] << iterators[incrSD]+1 << " " << globalCoord[0] << " " << globalCoord[1] << " " << globalCoord[2] << std::endl;
 
-            NodesMapBack[incrSD][nodeIndex] = iterators[incrSD]+1;
+          if(nodes[incrV].first==NodesToBeSavedForEachSubdomain[incrSD][iterators[incrSD]]){
+
+            if (1 == dimWorld)
+              files[incrSD] << iterators[incrSD]+1 << " " << coords[nodes[incrV].second][0] << " " << 0 << " " << 0 << std::endl;
+            else if (2 == dimWorld)
+              files[incrSD] << iterators[incrSD]+1 << " " << coords[nodes[incrV].second][0] << " " << coords[nodes[incrV].second][1] << " " << 0 << std::endl;
+            else // (3 == dimWorld)
+              files[incrSD] << iterators[incrSD]+1 << " " << coords[nodes[incrV].second][0] << " " << coords[nodes[incrV].second][1] << " " << coords[nodes[incrV].second][2] << std::endl;
+
+            NodesMapBack[incrSD][nodes[incrV].first] = iterators[incrSD]+1;
             iterators[incrSD]+=1;
           }
         }

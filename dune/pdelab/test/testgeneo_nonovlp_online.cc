@@ -3,8 +3,8 @@
 #endif
 
 #include <dune/pdelab.hh>
-#include <dune/pdelab/backend/istl/geneo/nonoverlapping/geneobasisOnline.hh>
-#include <dune/pdelab/backend/istl/geneo/nonoverlapping/geneobasisfromfiles.hh>
+#include <dune/pdelab/backend/istl/geneo/OfflineOnline/geneobasisOnline.hh>
+#include <dune/pdelab/backend/istl/geneo/OfflineOnline/geneobasisfromfiles.hh>
 
 /*
  * Defining a Darcy problem with alternating layers of permeability and a high contrast

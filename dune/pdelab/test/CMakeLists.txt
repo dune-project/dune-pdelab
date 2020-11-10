@@ -92,6 +92,12 @@ dune_add_test(SOURCES Unittest_recomputation_of_stiffness_block.cc
               CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
               )
 
+dune_add_test(SOURCES Unittest_neighbour2target.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
 dune_add_test(SOURCES Unittest_online_EV_vs_Offline_EV.cc
               MPI_RANKS 2
               TIMEOUT 300
