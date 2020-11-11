@@ -90,11 +90,15 @@ namespace Dune {
       //! \brief Whether to do selective cell assembly, i.e. whether
       //!        or not skip_entity() should be called.
       enum { doSkipEntity            =
-             std::disjunction_v<std::integral_constant<bool,Args::doSkipEntity>...>              };
+             std::conjunction_v<std::integral_constant<bool,Args::doSkipEntity>...>                   };
+      static_assert(not doSkipEntity, "skip methods are not supported in combined local operators");
+
+
       //! \brief Whether to do selective intersection assembly, i.e. whether
       //!        or not skip_intersection() should be called.
       enum { doSkipIntersection      =
-             std::disjunction_v<std::integral_constant<bool,Args::doSkipIntersection>...>        };
+             std::conjunction_v<std::integral_constant<bool,Args::doSkipIntersection>...>             };
+      static_assert(not doSkipIntersection, "skip methods are not supported in combined local operators");
 
       ////////////////////////////
 
@@ -166,40 +170,6 @@ namespace Dune {
       enum { isLinear = std::conjunction_v<std::integral_constant<bool,Args::isLinear>...> };
 
       //! \} Control flags
-
-      //////////////////////////////////////////////////////////////////////
-      //
-      //! \name Methods selective assembly
-      //! \{
-      //
-
-      //! get an element's contribution to the sparsity pattern
-      /**
-       * \note Summands with zero weight don't contribute to the sparsity
-       *       pattern, and the calls to the pattern methods are eliminated at
-       *       run-time.
-       */
-      template<typename EG>
-      void skip_entity
-      ( const EG& eg, bool& skip) const
-      {
-        applyLops(LocalOperatorApply::skipEntity, eg, skip);
-      }
-
-      //! get an element's contribution to the sparsity pattern
-      /**
-       * \note Summands with zero weight don't contribute to the sparsity
-       *       pattern, and the calls to the pattern methods are eliminated at
-       *       run-time.
-       */
-      template<typename IG>
-      void skip_intersection
-      ( const IG& ig, bool& skip) const
-      {
-        applyLops(LocalOperatorApply::skipIntersection, ig, skip);
-      }
-
-      //! \} Methods for selective assembly
 
       //////////////////////////////////////////////////////////////////////
       //
