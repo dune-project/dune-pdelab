@@ -169,7 +169,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   // ~~~~~~~~~~~~~~~~~~
   // Define what subdomain need to be solved
   // ~~~~~~~~~~~~~~~~~~
-  std::vector<int> targeted = {0}; // Subdomains that need a second solve
+  std::vector<int> targeted = {1}; // Subdomains that need a second solve
 
   // ~~~~~~~~~~~~~~~~~~
 //  Grid set up
@@ -400,123 +400,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
     }
 
   }
-
-
-  // Need to create a true neighbour subdomain basis
-
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  Modify AH
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  //  Load the coarse matrix
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // CoarseMatrix AH;
-  // std::ifstream file_AH;
-  // std::string filename_AH = path_to_storage + "OfflineAH.mm";
-  // file_AH.open(filename_AH.c_str(), std::ios::in);
-  // Dune::readMatrixMarket(AH,file_AH);
-  // file_AH.close();
-  // // std::cout << AH.N() << std::endl;
-  // // std::cout << AH.M() << std::endl;}
-
-  // int max_local_basis_size = *std::max_element(local_basis_sizes.begin(),local_basis_sizes.end());
-  // int my_offset = local_offset[targeted[0]];
-
-  // // ~~~~~~~~~~~~~~~~~~
-  // //  Create a vector of AH entries modification
-  // // ~~~~~~~~~~~~~~~~~~
-
-  // // Set up container for storing rows of coarse matrix associated with current rank
-  // std::vector<std::vector<std::vector<Matrix::field_type> > > local_rows;
-  // local_rows.resize(local_basis_sizes[targeted[0]]);
-  // for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-  //   local_rows[basis_index].resize(NR.size()+1);
-  // }
-
-  // for (int basis_index_remote = 0; basis_index_remote < max_local_basis_size; basis_index_remote++) {
-
-  //   // Compute local products of basis functions with discretization matrix
-  //   if (basis_index_remote < local_basis_sizes[targeted[0]]) {
-  //     auto basis_vector = *subdomainbasis[targeted[0]]->get_basis_vector(basis_index_remote);
-  //     Vector Atimesv(A.N());
-  //     native(A).mv(basis_vector, Atimesv);
-  //     for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-  //       Matrix::field_type entry = *subdomainbasis[targeted[0]]->get_basis_vector(basis_index)*Atimesv;
-  //       local_rows[basis_index][NR.size()].push_back(entry);
-  //     }
-  //   }
-
-  //   // Compute products of discretization matrix with local and remote vectors
-  //   // for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
-  //   //   if (basis_index_remote >= local_basis_sizes[NR[neighbor_id]])
-  //   //     continue;
-  //   //   auto basis_vector = *subdomainbasis[NR[neighbor_id]]->get_basis_vector(basis_index_remote);
-  //   //   Vector Atimesv(A.N());
-  //   //   native(A).mv(basis_vector, Atimesv);
-  //   //   for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-  //   //     Matrix::field_type entry = *subdomainbasis[targeted[0]]->get_basis_vector(basis_index)*Atimesv;
-  //   //     local_rows[basis_index][neighbor_id].push_back(entry);
-  //   //   }
-  //   // }
-  // }
-
-
-  // // ~~~~~~~~~~~~~~~~~~
-  // //  Modify AH entries
-  // // ~~~~~~~~~~~~~~~~~~
-
-  // int row_id = local_offset[targeted[0]];
-  // // Modify AH entries with just computed local_rows
-  // for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-  //   // Communicate number of entries in this row
-  //   int couplings = local_basis_sizes[targeted[0]];
-  //   for (int neighbor_id : NR) {
-  //     couplings += local_basis_sizes[neighbor_id];
-  //   }
-
-  //   // Communicate row's pattern
-  //   int entries_pos[couplings];
-  //   int cnt = 0;
-  //   for (int basis_index2 = 0; basis_index2 < local_basis_sizes[targeted[0]]; basis_index2++) {
-  //     entries_pos[cnt] = my_offset + basis_index2;
-  //     cnt++;
-  //   }
-  //   // for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
-  //   //   int neighbor_offset = local_offset[NR[neighbor_id]];
-  //   //   for (int basis_index2 = 0; basis_index2 < local_basis_sizes[NR[neighbor_id]]; basis_index2++) {
-  //   //     entries_pos[cnt] = neighbor_offset + basis_index2;
-  //   //     cnt++;
-  //   //   }
-  //   // }
-
-  //   // Communicate actual entries
-  //   Matrix::field_type entries[couplings];
-  //   cnt = 0;
-  //   for (int basis_index2 = 0; basis_index2 < local_basis_sizes[targeted[0]]; basis_index2++) {
-  //     entries[cnt] = local_rows[basis_index][NR.size()][basis_index2];
-  //     cnt++;
-  //   }
-  //   // for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
-  //   //   for (int basis_index2 = 0; basis_index2 < local_basis_sizes[NR[neighbor_id]]; basis_index2++) {
-  //   //     entries[cnt] = local_rows[basis_index][neighbor_id][basis_index2];
-  //   //     cnt++;
-  //   //   }
-  //   // }
-
-
-  //   // Set matrix entries
-  //   for (int i = 0; i < couplings; i++){
-  //     // std::cout << "ici entries[i]:" << entries[i] << std::endl;
-  //     std::cout << "Before AH[row_id][entries_pos[i]]= " << AH[row_id][entries_pos[i]] << std::endl;
-  //     AH[row_id][entries_pos[i]] = entries[i];
-  //     std::cout << "Then AH[row_id][entries_pos[i]]= " << AH[row_id][entries_pos[i]] << std::endl;
-  //   }
-
-  //   row_id++;
-  // }
-
 }
 
 

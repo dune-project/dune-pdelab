@@ -391,126 +391,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   Dune::storeMatrixMarket(global_indices, filename_GI, 15);
 
 
-  // if(rank==0){
-  //   for (int i=0; i<vertices_globalID_by_subdomain.size();i++){
-  //     auto my_pair = lookup[vertices_globalID_by_subdomain[i]];
-  //     std::cout << vertices_globalID_by_subdomain[i] << std::endl;
-  //     std::cout << my_pair << std::endl;
-  //     std::cout << global_indices[i] << std::endl;
-  //   }
-  // }
-  // auto vertices_globalID_by_subdomain = adapter.get_globalid();
-
-  // if (rank==1){
-  //   std::cout << "local size : " << vertices_globalID_by_subdomain.size() << std::endl;
-  //   std::cout << "local size with ovlp : " << adapter.getExtendedSize() << std::endl;
-  // }
-
-  // if (rank==1)
-  //   for (int i=0; i<vertices_globalID_by_subdomain.size(); i++)
-  //     std::cout << i << " : " << vertices_globalID_by_subdomain[i] << std::endl;
-
-  // if (rank==1){
-  //   std::cout << std::endl;
-  //   std::cout << std::endl;
-  // }
-
-  // std::vector<long unsigned int> vertices_globalID_by_ovlp_subdomain(adapter.getExtendedSize());
-  // for (int i=0; i<adapter.getExtendedSize(); i++)
-  //   vertices_globalID_by_ovlp_subdomain[i] = 1;
-
-  // std::cout << "new2old_localindex.size() : " << old2new_localindex.size() << std::endl;
-  // for (int i=0; i<old2new_localindex.size(); i++)
-  //   vertices_globalID_by_ovlp_subdomain[old2new_localindex[i]] = vertices_globalID_by_subdomain[i];
-
-  // if (rank==1)
-  //   for (int i=0; i<vertices_globalID_by_ovlp_subdomain.size(); i++)
-  //     std::cout << i << " : " << vertices_globalID_by_ovlp_subdomain[i] << std::endl;
-
-  // communicator->forward<GatherGlobalIndex<std::vector<long unsigned int>>>(vertices_globalID_by_ovlp_subdomain,vertices_globalID_by_ovlp_subdomain); // make function known in other subdomains
-
-  // if (rank==1){
-  //   std::cout << std::endl;
-  //   std::cout << std::endl;
-  // }
-
-  // if (rank==1)
-  //   for (int i=0; i<vertices_globalID_by_ovlp_subdomain.size(); i++)
-  //     std::cout << i << " : " << vertices_globalID_by_ovlp_subdomain[i] << std::endl;
-
-  // ~~~~~~~~~~~~~~~~~~
-  // Associate local ovlp vectors to global indices
-  // ~~~~~~~~~~~~~~~~~~
-
-  // int cntnot=0;
-  // int cntnot=0;
-  // Dune::BlockVector<Dune::FieldVector<int, 1>> global_indices(adapter.getExtendedSize());
-  // for (int incrSD=0; incrSD<global_indices.size(); incrSD++){
-  //   auto it = std::find(Vertices_GlobalIndex_to_GlobalID.begin(), Vertices_GlobalIndex_to_GlobalID.end(), vertices_globalID_by_ovlp_subdomain[incrSD]);
-
-  //   if (it != Vertices_GlobalIndex_to_GlobalID.end()){
-  //     if (rank==0){
-  //       cntfound+=1;
-  //       std::cout << "found : " << *it << std::endl;
-  //     }
-  //     global_indices[incrSD] = std::distance(Vertices_GlobalIndex_to_GlobalID.begin(), it);
-  //   } else {
-  //     if (rank==0){
-  //       cntnot+=1;
-  //       std::cout << "not found : " << vertices_globalID_by_ovlp_subdomain[incrSD]<< std::endl;
-  //     }
-  //   }
-  // }
-
-  // if (rank==0){
-  //   std::cout << "cntfound : " << cntfound << ", cntnot : " << cntnot << std::endl;
-  // }
-  // std::string filename_GI = path_to_storage + std::to_string(rank) + "_GI.mm";
-  // Dune::storeMatrixMarket(global_indices, filename_GI, 15);
-
-  // ~~~~~~~~~~~~~~~~~~
-// Get local index to global id 1
-  // ~~~~~~~~~~~~~~~~~~
-
-  // auto vertices_globalID_by_subdomain = adapter.get_globalid();
-  // // std::cout << "local size : " << vertices_globalID_by_subdomain.size() << std::endl;
-
-  // // ~~~~~~~~~~~~~~~~~~
-  // // Associate local vectors to global indices
-  // // ~~~~~~~~~~~~~~~~~~
-
-  // int cntfound=0;
-  // int cntnot=0;
-  // Dune::BlockVector<Dune::FieldVector<int, 1>> global_indices(vertices_globalID_by_subdomain.size());
-  // for (int incrSD=0; incrSD<vertices_globalID_by_subdomain.size(); incrSD++){
-  //   auto it = std::find(vertices_globalID_by_subdomain.begin(), vertices_globalID_by_subdomain.end(), vertices_globalID_by_subdomain[incrSD]);
-
-  //   if (it != vertices_globalID_by_subdomain.end()){
-  //     global_indices[incrSD] = std::distance(vertices_globalID_by_subdomain.begin(), it);
-  //     if(rank==1)
-  //       std::cout << global_indices[incrSD] << std::endl;
-  //   }
-  // }
-
-  // Dune::BlockVector<Dune::FieldVector<int, 1>> ovlp_global_indices(adapter.getExtendedSize());
-  // for (int i=0; i<adapter.getExtendedSize(); i++)
-  //   ovlp_global_indices[i] = -1;
-
-  // std::cout << "new2old_localindex.size() : " << new2old_localindex.size() << std::endl;
-  // for (int i=0; i<new2old_localindex.size(); i++)
-  //   ovlp_global_indices[i] = global_indices[new2old_localindex[i]];
-
-  // if (rank==2)
-  //   for (int i=0; i<ovlp_global_indices.size(); i++)
-  //     std::cout << i << " : " << ovlp_global_indices[i] << std::endl;
-
-
-  // communicator->forward<GatherGlobalIndex<Dune::BlockVector<Dune::FieldVector<int, 1>>>>(ovlp_global_indices,ovlp_global_indices); // make function known in other subdomains
-
-  // if (rank==1)
-  //   for (int i=0; i<ovlp_global_indices.size(); i++)
-  //     std::cout << i << " : " << ovlp_global_indices[i] << std::endl;
-
   // ~~~~~~~~~~~~~~~~~~
 // Save PoU
   // ~~~~~~~~~~~~~~~~~~
@@ -646,7 +526,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   // adapter.extendVector(native(d), b); // if comment: this could already been declared and filled for the particular solution
   // Initializate a load vector (right hand side) in the coarse space : coarse_d = RH * b
   CoarseVector coarse_d(coarse_space->basis_size(), coarse_space->basis_size());
-  coarse_space->restrict(b,coarse_d);
+  coarse_space-> (b,coarse_d);
   // Save the coarse rhs
   if (rank==0){
     std::string filename_cb = path_to_storage + "OfflineCoarseb.mm";
