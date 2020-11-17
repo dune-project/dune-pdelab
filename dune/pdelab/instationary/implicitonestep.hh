@@ -223,6 +223,12 @@ namespace Dune {
                 res.total.linear_solver_iterations += step_result.linear_solver_iterations;
                 res.total.nonlinear_solver_iterations += step_result.nonlinear_solver_iterations;
                 res.total.timesteps += 1;
+
+                // delete intermediate steps
+                for (unsigned i=1; i<r; ++i) delete x[i];
+                if (r < method->s())
+                  delete x[r];
+
                 throw;
               }
             PDESolverResult pderes = pdesolver.result();
@@ -362,6 +368,12 @@ namespace Dune {
                 res.total.linear_solver_iterations += step_result.linear_solver_iterations;
                 res.total.nonlinear_solver_iterations += step_result.nonlinear_solver_iterations;
                 res.total.timesteps += 1;
+
+                // delete intermediate steps
+                for (unsigned i=1; i<r; ++i) delete x[i];
+                if (r < method->s())
+                  delete x[r];
+
                 throw;
               }
             PDESolverResult pderes = pdesolver.result();
