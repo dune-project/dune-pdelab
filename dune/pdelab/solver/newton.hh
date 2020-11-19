@@ -227,9 +227,22 @@ namespace Dune::PDELab
         // Prepare step
         //=============
         auto start = Clock::now();
-        prepareStep(solution);
+        try{
+          prepareStep(solution);
+        }
+        catch (...)
+        {
+          // Keep track of statistics when the method fails. We record
+          // independently the time spent in non-converging attempts.
+          // Check OneStepMethod to see how these data are propagated.
+          auto end = Clock::now();
+          assembler_time += end-start;
+          _result.assembler_time = to_seconds(assembler_time);
+          throw;
+        }
         auto end = Clock::now();
         assembler_time += end -start;
+        _result.assembler_time = to_seconds(assembler_time);
 
         // Store defect
         _previousDefect = _result.defect;
@@ -243,11 +256,22 @@ namespace Dune::PDELab
         if constexpr (linearSolverIsMatrixFree<LinearSolver>()){
           _linearSolver.setLinearizationPoint(solution);
         }
-        linearSolve();
+        try{
+          linearSolve();
+        }
+        catch (...)
+        {
+          // Separately catch statistics for linear solver failures.
+          end = Clock::now();
+          linear_solver_time += end-start;
+          _result.linear_solver_time = to_seconds(linear_solver_time);
+          _result.linear_solver_iterations = _linearSolver.result().iterations;
+          throw;
+        }
         end = Clock::now();
         linear_solver_time += end -start;
-        _result.linear_solver_time += to_seconds(linear_solver_time);
-        _result.linear_solver_iterations += _linearSolver.result().iterations;
+        _result.linear_solver_time = to_seconds(linear_solver_time);
+        _result.linear_solver_iterations = _linearSolver.result().iterations;
 
         //===================================
         // Do line search and update solution
