@@ -56,7 +56,7 @@ namespace Dune::PDELab
    *   Newton since the default reduction for the linear systems is quite
    *   low. You can change this through setMinLinearReduction()
    *
-   * \tparam GridOperator_ Grid operator for evaluation of resdidual and Jacobian
+   * \tparam GridOperator_ Grid operator for evaluation of residual and Jacobian
    * \tparam LinearSolver_ Solver backend for solving linear system of equations
    */
   template <typename GridOperator_, typename LinearSolver_>
@@ -84,6 +84,9 @@ namespace Dune::PDELab
     //! Type of results
     using Result = PDESolverResult<Real>;
 
+    //! Type of line search interface
+    using LineSearch = LineSearchInterface<Domain>;
+
     //! Return results
     const Result& result() const
     {
@@ -107,15 +110,18 @@ namespace Dune::PDELab
           // Interpolate periodic constraints / hanging nodes
           _gridOperator.localAssembler().backtransform(solution);
         }
-        if (_verbosity>=3)
-              std::cout << "      Reassembling matrix..." << std::endl;
-        *_jacobian = Real(0.0);
-        _gridOperator.jacobian(solution, *_jacobian);
-        _reassembled = true;
+        if constexpr (!linearSolverIsMatrixFree<LinearSolver>()){
+          if (_verbosity>=3)
+            std::cout << "      Reassembling matrix..." << std::endl;
+          *_jacobian = Real(0.0);
+          _gridOperator.jacobian(solution, *_jacobian);
+          _reassembled = true;
+        }
       }
 
       _linearReduction = _minLinearReduction;
-      if (not _fixedLinearReduction){
+      // corner case: ForceIteration==true. Use _minLinearReduction when initial defect is less than AbsoluteLimit.
+      if (not _fixedLinearReduction && !(_result.iterations==0 && _result.first_defect<_absoluteLimit)){
         // Determine maximum defect, where Newton is converged.
         using std::min;
         using std::max;
@@ -125,10 +131,9 @@ namespace Dune::PDELab
         // reduction of at least current_defect^2/prev_defect^2.  For the
         // last newton step a linear reduction of
         // 1/10*end_defect/current_defect is sufficient for convergence.
-        if (stop_defect/(10*_result.defect) > _result.defect*_result.defect/(_previousDefect*_previousDefect))
-          _linearReduction = stop_defect/(10*_result.defect);
-        else
-          _linearReduction = min(_minLinearReduction, _result.defect*_result.defect/(_previousDefect*_previousDefect));
+        _linearReduction =
+          max( stop_defect/(10*_result.defect),
+            min(_minLinearReduction, _result.defect*_result.defect/(_previousDefect*_previousDefect)) );
         }
 
         if (_verbosity >= 3)
@@ -142,12 +147,19 @@ namespace Dune::PDELab
       if (_verbosity >= 4)
         std::cout << "      Solving linear system..." << std::endl;
 
-      // If the jacobian was not reassembled we might save some work in the solver backend
-      Impl::setLinearSystemReuse(_linearSolver, not _reassembled);
+      if constexpr (!linearSolverIsMatrixFree<LinearSolver>()){
+        // If the jacobian was not reassembled we might save some work in the solver backend
+        Impl::setLinearSystemReuse(_linearSolver, not _reassembled);
+      }
 
       // Solve the linear system
       _correction = 0.0;
-      _linearSolver.apply(*_jacobian, _correction, _residual, _linearReduction);
+      if constexpr (linearSolverIsMatrixFree<LinearSolver>()){
+        _linearSolver.apply(_correction, _residual, _linearReduction);
+      }
+      else{
+        _linearSolver.apply(*_jacobian, _correction, _residual, _linearReduction);
+      }
 
       if (not _linearSolver.result().converged)
         DUNE_THROW(NewtonLinearSolverError,
@@ -198,8 +210,10 @@ namespace Dune::PDELab
       //==========================
       // Calculate Jacobian matrix
       //==========================
-      if (not _jacobian)
-        _jacobian = std::make_shared<Jacobian>(_gridOperator);
+      if constexpr (!linearSolverIsMatrixFree<LinearSolver>()){
+        if (not _jacobian)
+          _jacobian = std::make_shared<Jacobian>(_gridOperator);
+      }
 
       //=========================
       // Nonlinear iteration loop
@@ -237,6 +251,11 @@ namespace Dune::PDELab
         // Solve linear system
         //====================
         start = Clock::now();
+
+        // Important: In the matrix-free case we need to set the current linearization point!
+        if constexpr (linearSolverIsMatrixFree<LinearSolver>()){
+          _linearSolver.setLinearizationPoint(solution);
+        }
         try{
           linearSolve();
         }
@@ -313,8 +332,10 @@ namespace Dune::PDELab
                   << "   (" << std::setprecision(4) << _result.elapsed << "s)"
                   << std::endl;
 
-      if (not _keepMatrix)
-        _jacobian.reset();
+      if constexpr (!linearSolverIsMatrixFree<LinearSolver>()){
+        if (not _keepMatrix)
+          _jacobian.reset();
+      }
     }
 
     //! Update _residual and defect in _result
@@ -522,13 +543,25 @@ namespace Dune::PDELab
       _terminate = terminate;
     }
 
+    //! Return a pointer to the stored termination criterion
+    std::shared_ptr<TerminateInterface> getTerminate() const
+    {
+      return _terminate;
+    }
+
     /**\brief Set the line search
      *
      * See getLineSearch() for already implemented line searches
      */
-    void setLineSearch(std::shared_ptr<LineSearchInterface<Domain>> lineSearch)
+    void setLineSearch(std::shared_ptr<LineSearch> lineSearch)
     {
       _lineSearch = lineSearch;
+    }
+
+    //! Return a pointer to the stored line search
+    std::shared_ptr<LineSearch> getLineSearch() const
+    {
+      return _lineSearch;
     }
 
     //! Construct Newton using default parameters with default parameters
@@ -573,7 +606,7 @@ namespace Dune::PDELab
     std::shared_ptr<Domain> _previousSolution;
 
     std::shared_ptr<TerminateInterface> _terminate;
-    std::shared_ptr<LineSearchInterface<Domain>> _lineSearch;
+    std::shared_ptr<LineSearch> _lineSearch;
 
     // Class for storing results
     Result _result;
