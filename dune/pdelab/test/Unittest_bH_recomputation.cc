@@ -5,9 +5,8 @@
 #include <dune/pdelab.hh>
 
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/geneobasisOnline.hh>
-#include <dune/pdelab/backend/istl/geneo/OfflineOnline/OnlineTools.hh>
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/SubDomainGmshReader.hh>
-
+#include <dune/pdelab/backend/istl/geneo/OfflineOnline/OnlineTools.hh>
 /*
  * Defining a Darcy problem with alternating layers of permeability and a high contrast
  */
@@ -189,24 +188,24 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   go.jacobian(x,A);
   // set up and assemble right hand side w.r.t. l(v)-a(u_g,v)
   V fine_b(gfs,0.0);
-  go.residual(x,fine_b); // The rhs is loaded from offline directly restricted in the coarse spaces
+  go.residual(x,fine_b);
 
   // ~~~~~~~~~~~~~~~~~~
 //  Solving process begin here: First some parameters
   // ~~~~~~~~~~~~~~~~~~
   double eigenvalue_threshold = -1;
   // const int algebraic_overlap = 0;
-  int nev = 10;
+  int nev = 3;
   int nev_arpack = nev;
   // double shift = 0.001;
 
   using Dune::PDELab::Backend::native;
-
   std::size_t v_size = A.N();
 
   /* Define vtk writer utils */
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
+
 
   // ~~~~~~~~~~~~~~~~~~
 //  Load a vector describing local basis sizes (number of EV) and creating the vector of offsets (to reach indices in the coarse space)
@@ -240,16 +239,6 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   std::vector<int> DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<Vector>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
 
   // ~~~~~~~~~~~~~~~~~~
-  // Load Neighbour ranks
-  // ~~~~~~~~~~~~~~~~~~
-  Vector NR;
-  std::string filename_NR = path_to_storage + std::to_string(targeted[0]) + "_neighborRanks.mm";
-  std::ifstream file_NR;
-  file_NR.open(filename_NR.c_str(), std::ios::in);
-  Dune::readMatrixMarket(NR,file_NR);
-  file_NR.close();
-
-  // ~~~~~~~~~~~~~~~~~~
   // Load PoU
   // ~~~~~~~~~~~~~~~~~~
   Vector PoU;
@@ -274,136 +263,6 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> online_subdomainbasis;
   online_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisOnline<GO, Matrix, Vector>>(native(A), nPoU, eigenvalue_threshold, nev, nev_arpack);
 
-
-  // Then : load other subdomain basis from offline and transfer them in the targeted subdomain space
-  std::vector<std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>>> neighbour_subdomainbasis(NR.size());
-
-  for (int iter_over_subdomains=0; iter_over_subdomains<NR.size(); iter_over_subdomains++) {
-
-    Vector offlineNeighbourDoF2GI;
-    int int_Nnumber = NR[iter_over_subdomains];
-    std::string filename_ = path_to_storage + std::to_string(int_Nnumber) + "_GI.mm";
-    std::ifstream file_;
-    file_.open(filename_.c_str(), std::ios::in);
-    Dune::readMatrixMarket(offlineNeighbourDoF2GI,file_);
-    file_.close();
-
-    neighbour_subdomainbasis[iter_over_subdomains] = std::make_shared<Dune::PDELab::NeighbourBasis<GO, Matrix, Vector>>(path_to_storage, local_basis_sizes[NR[iter_over_subdomains]], NR[iter_over_subdomains], offlineDoF2GI, offlineNeighbourDoF2GI, 2);
-
-    for (int i=0; i<local_basis_sizes[iter_over_subdomains]; i++){
-      auto tmp = *neighbour_subdomainbasis[iter_over_subdomains]->get_basis_vector(i);
-      for (int j=0; j<v_size; j++){
-        (*neighbour_subdomainbasis[iter_over_subdomains]->get_basis_vector(i))[DofOffline_to_DofOnline[j]] = tmp[j];
-      }
-    }
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  Modify AH
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  //  Load the coarse matrix
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  CoarseMatrix AH;
-  std::ifstream file_AH;
-  std::string filename_AH = path_to_storage + "OfflineAH.mm";
-  file_AH.open(filename_AH.c_str(), std::ios::in);
-  Dune::readMatrixMarket(AH,file_AH);
-  file_AH.close();
-  // std::cout << AH.N() << std::endl;
-  // std::cout << AH.M() << std::endl;}
-
-  int max_local_basis_size = *std::max_element(local_basis_sizes.begin(),local_basis_sizes.end());
-  int my_offset = local_offset[targeted[0]];
-
-  // ~~~~~~~~~~~~~~~~~~
-  //  Create a vector of AH entries modification
-  // ~~~~~~~~~~~~~~~~~~
-
-  // Set up container for storing rows of coarse matrix associated with current rank
-  std::vector<std::vector<std::vector<Matrix::field_type> > > local_rows;
-  local_rows.resize(local_basis_sizes[targeted[0]]);
-  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-    local_rows[basis_index].resize(NR.size()+1);
-  }
-
-  for (int basis_index_remote = 0; basis_index_remote < max_local_basis_size; basis_index_remote++) {
-
-    // Compute local products of basis functions with discretization matrix
-    if (basis_index_remote < local_basis_sizes[targeted[0]]) {
-      auto basis_vector = *online_subdomainbasis->get_basis_vector(basis_index_remote);
-      Vector Atimesv(A.N());
-      native(A).mv(basis_vector, Atimesv);
-      for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-        Matrix::field_type entry = *online_subdomainbasis->get_basis_vector(basis_index)*Atimesv;
-        local_rows[basis_index][NR.size()].push_back(entry);
-      }
-    }
-
-    // Compute products of discretization matrix with local and remote vectors
-    for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
-      if (basis_index_remote >= local_basis_sizes[NR[neighbor_id]])
-        continue;
-      auto basis_vector = *neighbour_subdomainbasis[neighbor_id]->get_basis_vector(basis_index_remote);
-      Vector Atimesv(A.N());
-      native(A).mv(basis_vector, Atimesv);
-      for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-        Matrix::field_type entry = *online_subdomainbasis->get_basis_vector(basis_index)*Atimesv;
-        local_rows[basis_index][neighbor_id].push_back(entry);
-      }
-    }
-  }
-
-  // ~~~~~~~~~~~~~~~~~~
-  //  Modify AH entries
-  // ~~~~~~~~~~~~~~~~~~
-
-  int row_id = local_offset[targeted[0]];
-  // Modify AH entries with just computed local_rows
-  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-    // Communicate number of entries in this row
-    int couplings = local_basis_sizes[targeted[0]];
-    for (int neighbor_id : NR) {
-      couplings += local_basis_sizes[neighbor_id];
-    }
-
-    // Communicate row's pattern
-    int entries_pos[couplings];
-    int cnt = 0;
-    for (int basis_index2 = 0; basis_index2 < local_basis_sizes[targeted[0]]; basis_index2++) {
-      entries_pos[cnt] = my_offset + basis_index2;
-      cnt++;
-    }
-    for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
-      int neighbor_offset = local_offset[NR[neighbor_id]];
-      for (int basis_index2 = 0; basis_index2 < local_basis_sizes[NR[neighbor_id]]; basis_index2++) {
-        entries_pos[cnt] = neighbor_offset + basis_index2;
-        cnt++;
-      }
-    }
-
-    // Communicate actual entries
-    Matrix::field_type entries[couplings];
-    cnt = 0;
-    for (int basis_index2 = 0; basis_index2 < local_basis_sizes[targeted[0]]; basis_index2++) {
-      entries[cnt] = local_rows[basis_index][NR.size()][basis_index2];
-      cnt++;
-    }
-    for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
-      for (int basis_index2 = 0; basis_index2 < local_basis_sizes[NR[neighbor_id]]; basis_index2++) {
-        entries[cnt] = local_rows[basis_index][neighbor_id][basis_index2];
-        cnt++;
-      }
-    }
-
-    // Set matrix entries
-    for (int i = 0; i < couplings; i++){
-      AH[row_id][entries_pos[i]] = entries[i];
-    }
-    row_id++;
-  }
-
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //  Modify bH
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -414,6 +273,8 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   Dune::readMatrixMarket(bH,file_bH);
   file_bH.close();
 
+  int max_local_basis_size = *std::max_element(local_basis_sizes.begin(),local_basis_sizes.end());
+  int my_offset = local_offset[targeted[0]];
   Matrix::field_type buf_defect_local[local_basis_sizes[targeted[0]]];
 
   for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
@@ -422,45 +283,23 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
       buf_defect_local[basis_index] += (*online_subdomainbasis->get_basis_vector(basis_index))[i] * native(fine_b)[i];
   }
 
+  std::cout << "Offline bH: " << std::endl;
+  std::cout << "[" << bH[my_offset];
+  for (int i = 1; i < local_basis_sizes[targeted[0]]; i++){
+    std::cout << "  " <<  bH[i+my_offset];
+  }
+  std::cout << "]" << std::endl;
+
   for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
     bH[basis_index+my_offset] = buf_defect_local[basis_index];
   }
 
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  Coarse space solve
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  int global_basis_size = std::accumulate(local_basis_sizes.begin(), local_basis_sizes.end(), 0.0);
-
-  // Objective :  find x = RH^T * AH^-1 * RH * b
-  // Use of UMFPack to solve the problem [AH * coarse_v = RH * b] instead of inversing AH :: objective is to have [coarse_v = AH^-1 *  RH * b]
-  Dune::UMFPack<CoarseMatrix> coarse_solver(AH, false); // Is there something better than UMFPACK?
-  CoarseVector coarse_sol(global_basis_size, global_basis_size);
-  Dune::InverseOperatorResult result;
-  coarse_solver.apply(coarse_sol,bH,result);
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  Saves
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  // Save the coarse solution to further prolongate it over the offline domaine in post-processing
-  std::string filename_coarse_sol = path_to_storage + "coarse-sol_w_subdomain-" + std::to_string(targeted[0]) + "_recomputed.mm";
-  Dune::storeMatrixMarket(coarse_sol, filename_coarse_sol, 15);
-
-  // Plot a part of the solution over the online domain
-  V prolongated(gfs,0.0);
-  // Prolongate result
-  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-    Vector local_result(*online_subdomainbasis->get_basis_vector(basis_index));
-    local_result *= coarse_sol[my_offset + basis_index];
-    native(prolongated) += local_result;
+  std::cout << "Online bH: " << std::endl;
+  std::cout << "[" << bH[my_offset];
+  for (int i = 1; i < local_basis_sizes[targeted[0]]; i++){
+    std::cout << "  " <<  bH[i+my_offset];
   }
-
-  Dune::VTKWriter<GV> vtkwriter(gv);
-  /* Write a field in the vtu file */
-  DGF xdgf(gfs,prolongated);
-  auto adapt = std::make_shared<ADAPT>(xdgf,"Solution");
-  vtkwriter.addVertexData(adapt);
-  vtkwriter.write("onlineSol",Dune::VTK::ascii);
+  std::cout << "]" << std::endl;
 
 }
 

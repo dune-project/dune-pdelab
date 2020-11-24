@@ -86,7 +86,13 @@ dune_add_test(SOURCES Unittest_SubdomainMeshSave.cc
               CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
               )
 
-dune_add_test(SOURCES Unittest_recomputation_of_stiffness_block.cc
+dune_add_test(SOURCES Unittest_AH_recomputation.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_bH_recomputation.cc
               MPI_RANKS 2
               TIMEOUT 300
               CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND

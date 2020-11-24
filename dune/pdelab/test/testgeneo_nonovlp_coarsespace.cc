@@ -12,8 +12,9 @@
 #include <dune/grid/utility/parmetisgridpartitioner.hh>
 
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/SubDomainGmshWriter.hh>
-
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/partitioner.hh>
+
+#include <dune/pdelab/backend/istl/geneo/OfflineOnline/OfflineTools.hh>
 
 /*
  * Defining a Darcy problem with alternating layers of permeability and a high contrast
@@ -123,7 +124,7 @@ struct AddGatherScatter
   }
 };
 
-void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper& helper) {
+void driver(Dune::MPIHelper& helper) {
 
   // ~~~~~~~~~~~~~~~~~~
   // Create offline hierarchy
@@ -151,21 +152,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 
   const int algebraic_overlap = 2;
 
-
-  // if (gv.comm().rank()==0){
-  //   // Create a vector from GFS ordering to node ordering
-  //   int v_size = grid->levelIndexSet(0).size(gv.indexSet().types(0)[1]);
-  //   std::vector<std::pair<int, int>> gfs2node(v_size);
-
-  //   int cnt=0;
-  //   for (const auto& vertex : vertices(gv)){
-  //     assert(cnt<v_size);
-  //     gfs2node[cnt] = std::make_pair(gv.indexSet().index(vertex),cnt);
-  //     std::cout << gfs2node[cnt].first << " : " << gfs2node[cnt].second << std::endl;
-  //     cnt+=1;
-  //   }
-  // }
-
   // ~~~~~~~~~~~~~~~~~~
 //  Associate to each global element its global ID
   // ~~~~~~~~~~~~~~~~~~
@@ -188,8 +174,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   // ~~~~~~~~~~~~~~~~~~
 //  Associate to each global Vertex its global ID
   // ~~~~~~~~~~~~~~~~~~
-  // Dune::gridlevellist<GRID>(*grid, 0, "");
-
   // Getting map global ID to global Index
   int length;
   if(gv.comm().rank()==0){
@@ -203,12 +187,9 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
     for (const auto& vertex : vertices(gv))
       Vertices_GlobalIndex_to_GlobalID[gv.indexSet().index(vertex)] = gv.grid().globalIdSet().id(vertex);
 
-
-  // // if (gv.comm().barrier()==0)
   for (int i=0; i<Vertices_GlobalIndex_to_GlobalID.size();i++)
     gv.comm().broadcast(&Vertices_GlobalIndex_to_GlobalID[i], 1, 0);
     // std::cout << i << " : " << Vertices_GlobalIndex_to_GlobalID[i] << std::endl;
-
 
   // Transfer partitioning from ParMETIS to our grid
 #if PARMETIS_MAJOR_VERSION
@@ -307,7 +288,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
 //  Solving process begin here: First some parameters
   // ~~~~~~~~~~~~~~~~~~
   double eigenvalue_threshold = -1;
-  int nev = 3;
+  int nev = 10;
   int nev_arpack = nev;
   // double shift = 0.001;
 
@@ -340,7 +321,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   vtkwriter.write("PoU",Dune::VTK::ascii);
 
   // ~~~~~~~~~~~~~~~~~~
-  // Save new2old / old2new index to be able to reproduce extension/reduction online
+  // Save new2old / old2new index -> potentially useful to post-process online calculus
   // ~~~~~~~~~~~~~~~~~~
 
   auto new2old_localindex = adapter.get_new2old_localindex();
@@ -359,8 +340,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   // ~~~~~~~~~~~~~~~~~~
 // Get local index to global id
   // ~~~~~~~~~~~~~~~~~~
-
-  // auto vertices_globalID_by_subdomain = adapter.get_globalid();
 
   using GlobalId = typename GV::Grid::GlobalIdSet::IdType;
   using AttributedLocalIndex = Dune::ParallelLocalIndex<Attribute>;
@@ -516,9 +495,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   std::string filename = path_to_storage + "OfflineAH.mm";
   Dune::storeMatrixMarket(*AH, filename, 15);
 
-  // // Save the sizes of local basis
-  // coarse_space->local_basis_sizes_to_file(path_to_storage + "local_basis_sizes");
-
   // ~~~~~~~~~~~~~~~~~~
 //  Coarse space right hand side and saving
   // ~~~~~~~~~~~~~~~~~~
@@ -526,7 +502,7 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   // adapter.extendVector(native(d), b); // if comment: this could already been declared and filled for the particular solution
   // Initializate a load vector (right hand side) in the coarse space : coarse_d = RH * b
   CoarseVector coarse_d(coarse_space->basis_size(), coarse_space->basis_size());
-  coarse_space-> (b,coarse_d);
+  coarse_space->restrict(b,coarse_d);
   // Save the coarse rhs
   if (rank==0){
     std::string filename_cb = path_to_storage + "OfflineCoarseb.mm";
@@ -546,32 +522,23 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   // ~~~~~~~~~~~~~~~~~~
 // Prolongate the solution in order to have v_fine_vovlp on the fine space : v_fine_vovlp = RH^T * coarse_v = RH^T * AH^-1 * RH * b
   // ~~~~~~~~~~~~~~~~~~
-  Vector v_fine_vovlp(adapter.getExtendedSize());
-  coarse_space->prolongate(coarse_v, v_fine_vovlp);
-  communicator->forward<AddGatherScatter<Vector>>(v_fine_vovlp, v_fine_vovlp);
+  Vector v_fine_ovlp(adapter.getExtendedSize());
+  coarse_space->prolongate(coarse_v, v_fine_ovlp);
+  communicator->forward<AddGatherScatter<Vector>>(v_fine_ovlp, v_fine_ovlp);
   V v(gfs, 0.0);
-  adapter.restrictVector(v_fine_vovlp, v);
+  adapter.restrictVector(v_fine_ovlp, v);
 
-  native(x) -= v;
+  // native(x) -= v;
 
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+  typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
 
-  // Communicate local fine space dimensions to be able to initialize solution vector in the online phase
-  Dune::BlockVector<Dune::FieldVector<int, 1>> local_nonovlp_sizes(adapter.gridView().comm().size());
-  int local_nonovlp_size = native(v).size();
-  adapter.gridView().comm().allgather(&local_nonovlp_size, 1, local_nonovlp_sizes.data());
-  if (rank==0) {
-    std::string filename_lns = path_to_storage + "localNovlpSizes.mm";
-    Dune::storeMatrixMarket(local_basis_sizes, filename_lns, 15);
-  }
-
-  // Write solution to VTK
-  // Dune::VTKWriter<GV> vtkwriter(gv);
-  // typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  // DGF xdgf(gfs,x);
-  // typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
-  // auto adapt = std::make_shared<ADAPT>(xdgf,"solution");
-  // vtkwriter.addVertexData(adapt);
-  // vtkwriter.write("solution");
+  /* Write solution to VTK */
+  Dune::VTKWriter<GV> vtkwriterSol(gv);
+  DGF xdgfSol(gfs,v);
+  auto adaptSol = std::make_shared<ADAPT>(xdgfSol,"solution");
+  vtkwriterSol.addVertexData(adaptSol);
+  vtkwriterSol.write("Offline_solution");
 
   // ~~~~~~~~~~~~~~~~~~
 // Visualise all the basis in vtk format
@@ -600,7 +567,7 @@ int main(int argc, char **argv)
   // initialize MPI, finalize is done automatically on exit
   Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc,argv);
 
-  driver("geneo", "standard", helper);
+  driver(helper);
 
   return 0;
 }

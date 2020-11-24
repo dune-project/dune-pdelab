@@ -5,7 +5,7 @@
 #include <dune/pdelab.hh>
 
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/geneobasisOnline.hh>
-
+#include <dune/pdelab/backend/istl/geneo/OfflineOnline/OnlineTools.hh>
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/SubDomainGmshReader.hh>
 
 /*
@@ -103,73 +103,7 @@ public:
   }
 };
 
-template<typename Vector>
-std::vector<int> offlineDoF2GI2gmsh2onlineDoF(int subdomain_ID, std::vector<int>& gmsh2dune, Vector& offlineDoF2GI, const std::string path_to_storage){
-
-  Vector gmsh2GI;
-  std::string filename_gmsh2GI = path_to_storage + std::to_string(subdomain_ID) + "_LocalToGlobalNode.mm";
-  std::ifstream file_gmsh2GI;
-  file_gmsh2GI.open(filename_gmsh2GI.c_str(), std::ios::in);
-  Dune::readMatrixMarket(gmsh2GI,file_gmsh2GI);
-  file_gmsh2GI.close();
-
-  assert(gmsh2GI.size()==offlineDoF2GI.size());
-
-  int v_size = gmsh2GI.size();
-
-  // /* First method to deal with online2GI and offline2GI */
-  // std::vector<int> GI2gmsh;
-  // auto result = std::max_element(online2GI.begin(), online2GI.end());
-  // GI2gmsh.resize(online2GI[std::distance(online2GI.begin(), result)]);
-  // for(int i=0; i<GI2gmsh.size(); i++)
-  //   GI2gmsh[i]=-1;
-  // for(int i=0; i<v_size; i++){
-  //   GI2gmsh[online2GI[i]] = i;
-  // }
-  // /* End first method */
-
-  /* Second method to deal with online2GI and offline2GI */
-  std::vector<std::pair<int, int>> gmsh(v_size), offlineDoF(v_size);
-  for(int i=0; i<v_size; i++){
-    gmsh[i] = std::make_pair(gmsh2GI[i],i);
-    offlineDoF[i] = std::make_pair(offlineDoF2GI[i],i);
-  }
-  std::sort(gmsh.begin(), gmsh.end());
-  std::sort(offlineDoF.begin(), offlineDoF.end());
-  /* End second method */
-
-  std::vector<int> indices_change(v_size);
-  // Change order from Dof offline to offline global
-  for(int i=0; i<v_size; i++){ // go through dof offline ordering
-    // indices_change[i] = GI2gmsh[offlineDoF[i]];
-    indices_change[offlineDoF[i].second] = gmsh[i].second;
-  }
-
-  auto tmp = indices_change;
-  // We know that a re-ordering of nodes is done during the GmshReader operation
-  for(int i=0; i<v_size; i++){ // go through dof offline ordering
-    indices_change[i] = gmsh2dune[tmp[i]];
-  }
-
-  // /* Visualise changes in terminal */
-  // for(int i=0; i<v_size; i++){ // go through dof offline ordering
-  //   std::cout << i << " -> " << indices_change[i] << std::endl;
-  // }
-
-  return indices_change;
-}
-
-void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper& helper) {
-
-  // ~~~~~~~~~~~~~~~~~~
-  // ReCreate offline hierarchy
-  // ~~~~~~~~~~~~~~~~~~
-  std::string path_to_storage = "Offline/";
-
-  // ~~~~~~~~~~~~~~~~~~
-  // Define what subdomain need to be solved
-  // ~~~~~~~~~~~~~~~~~~
-  std::vector<int> targeted = {0}; // Subdomains that need a second solve
+void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHelper& helper) {
 
   // ~~~~~~~~~~~~~~~~~~
 //  Grid set up
@@ -253,9 +187,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   typedef typename GO::Jacobian M;
   M A(go);
   go.jacobian(x,A);
-  // set up and assemble right hand side w.r.t. l(v)-a(u_g,v)
-  V d(gfs,0.0);
-  go.residual(x,d); // The rhs is loaded from offline directly restricted in the coarse spaces
 
   // ~~~~~~~~~~~~~~~~~~
 //  Solving process begin here: First some parameters
@@ -309,7 +240,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   // ~~~~~~~~~~~~~~~~~~
   // Load Neighbour ranks
   // ~~~~~~~~~~~~~~~~~~
-  // TODO : Only load the one associated to targeted[0] :: need to load more if needed
   Vector NR;
   std::string filename_NR = path_to_storage + std::to_string(targeted[0]) + "_neighborRanks.mm";
   std::ifstream file_NR;
@@ -320,15 +250,12 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   // ~~~~~~~~~~~~~~~~~~
   // Load PoU
   // ~~~~~~~~~~~~~~~~~~
-  // TODO : For now, only load the one associated to targeted[0] :: need to load more for neighbour
   Vector PoU;
   std::string filename_PoU = path_to_storage + std::to_string(targeted[0]) + "_PoU.mm";
   std::ifstream file_PoU;
   file_PoU.open(filename_PoU.c_str(), std::ios::in);
   Dune::readMatrixMarket(PoU,file_PoU);
   file_PoU.close();
-  // std::shared_ptr<Vector> part_unity = std::make_shared<Vector>(PoU.N(), PoU);
-  // std::shared_ptr<Matrix> A_ptr = std::make_shared<Matrix>(A);
 
   Vector nPoU(v_size);
   for (int i=0; i<v_size; i++){
@@ -345,7 +272,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> online_subdomainbasis;
   online_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisOnline<GO, Matrix, Vector>>(native(A), nPoU, eigenvalue_threshold, nev, nev_arpack);
 
-
   // Then : load other subdomain basis from offline and transfer them in the targeted subdomain space
   std::vector<std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>>> neighbour_subdomainbasis(NR.size());
 
@@ -359,10 +285,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
     Dune::readMatrixMarket(offlineNeighbourDoF2GI,file_);
     file_.close();
 
-    // for(int i=0; i<offlineNeighbourDoF2GI.size();i++){
-    //   std::cout << i << " : " << offlineDoF2GI[i] << " :: " << offlineNeighbourDoF2GI[i] << std::endl;
-    // }
-
     neighbour_subdomainbasis[iter_over_subdomains] = std::make_shared<Dune::PDELab::NeighbourBasis<GO, Matrix, Vector>>(path_to_storage, local_basis_sizes[NR[iter_over_subdomains]], NR[iter_over_subdomains], offlineDoF2GI, offlineNeighbourDoF2GI, 2);
 
     for (int i=0; i<local_basis_sizes[iter_over_subdomains]; i++){
@@ -372,10 +294,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
       }
     }
   }
-
-
-  // Need to create a true neighbour subdomain basis
-
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //  Modify AH
@@ -390,8 +308,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
   file_AH.open(filename_AH.c_str(), std::ios::in);
   Dune::readMatrixMarket(AH,file_AH);
   file_AH.close();
-  // std::cout << AH.N() << std::endl;
-  // std::cout << AH.M() << std::endl;}
 
   int max_local_basis_size = *std::max_element(local_basis_sizes.begin(),local_basis_sizes.end());
   int my_offset = local_offset[targeted[0]];
@@ -433,8 +349,6 @@ void driver(std::string basis_type, std::string part_unity_type, Dune::MPIHelper
       }
     }
   }
-
-
 
   // ~~~~~~~~~~~~~~~~~~
   //  Modify AH entries
@@ -515,10 +429,16 @@ int main(int argc, char **argv)
 {
   using Dune::PDELab::Backend::native;
 
+  // Offline folder
+  std::string path_to_storage = "Offline/";
+
+  // Define what subdomain need to be solved
+  std::vector<int> targeted = {1}; // Subdomains that need a second solve
+
   // initialize MPI, finalize is done automatically on exit
   Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc,argv);
 
-  driver("geneo", "standard", helper);
+  driver(path_to_storage, targeted, helper);
 
   return 0;
 }
