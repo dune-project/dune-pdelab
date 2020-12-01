@@ -133,6 +133,8 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   typedef Dune::BlockVector<Dune::FieldVector<K, 1>> CoarseVector;
   typedef Dune::BCRSMatrix<Dune::FieldMatrix<K, 1, 1>> CoarseMatrix;
 
+  typedef Dune::BlockVector<Dune::FieldVector<int, 1>> vector1i;
+
   using ESExcluder = Dune::PDELab::EntitySetExcluder<Vector, GV>;
   auto ghost_excluder = std::make_shared<Dune::PDELab::EntitySetGhostExcluder<Vector, GV>>();
 
@@ -193,7 +195,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // ~~~~~~~~~~~~~~~~~~
   double eigenvalue_threshold = -1;
   // const int algebraic_overlap = 0;
-  int nev = 3;
+  int nev = 4;
   int nev_arpack = nev;
   // double shift = 0.001;
 
@@ -209,13 +211,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // ~~~~~~~~~~~~~~~~~~
 //  Load a vector describing local basis sizes (number of EV) and creating the vector of offsets (to reach indices in the coarse space)
   // ~~~~~~~~~~~~~~~~~~
-  Vector lb;
-  std::ifstream file_lb;
-  std::string filename_lb = path_to_storage + "localBasisSizes.mm";
-  file_lb.open(filename_lb.c_str(), std::ios::in);
-  Dune::readMatrixMarket(lb,file_lb);
-  file_lb.close();
-
+  vector1i lb = FromOffline<vector1i>(path_to_storage, "localBasisSizes");
   const int number_of_rank_used_offline = lb.size();
 
   std::vector<int> local_basis_sizes(number_of_rank_used_offline), local_offset(number_of_rank_used_offline+1);
@@ -228,35 +224,18 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // ~~~~~~~~~~~~~~~~~~
   // Load the indices transformation
   // ~~~~~~~~~~~~~~~~~~
-  Vector offlineDoF2GI;
-  std::string filename_off2GI = path_to_storage + std::to_string(targeted[0]) + "_GI.mm";
-  std::ifstream file_off2GI;
-  file_off2GI.open(filename_off2GI.c_str(), std::ios::in);
-  Dune::readMatrixMarket(offlineDoF2GI,file_off2GI);
-  file_off2GI.close();
-
-  std::vector<int> DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<Vector>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
+  vector1i offlineDoF2GI = FromOffline<vector1i>(path_to_storage, "GI", targeted[0]);
+  std::vector<int> DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<vector1i>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
 
   // ~~~~~~~~~~~~~~~~~~
   // Load Neighbour ranks
   // ~~~~~~~~~~~~~~~~~~
-  Vector NR;
-  std::string filename_NR = path_to_storage + std::to_string(targeted[0]) + "_neighborRanks.mm";
-  std::ifstream file_NR;
-  file_NR.open(filename_NR.c_str(), std::ios::in);
-  Dune::readMatrixMarket(NR,file_NR);
-  file_NR.close();
+  vector1i NR = FromOffline<vector1i>(path_to_storage, "neighborRanks", targeted[0]);
 
   // ~~~~~~~~~~~~~~~~~~
   // Load PoU
   // ~~~~~~~~~~~~~~~~~~
-  Vector PoU;
-  std::string filename_PoU = path_to_storage + std::to_string(targeted[0]) + "_PoU.mm";
-  std::ifstream file_PoU;
-  file_PoU.open(filename_PoU.c_str(), std::ios::in);
-  Dune::readMatrixMarket(PoU,file_PoU);
-  file_PoU.close();
-
+  Vector PoU = FromOffline<Vector>(path_to_storage, "PoU", targeted[0]);
   Vector nPoU(v_size);
   for (int i=0; i<v_size; i++){
     nPoU[DofOffline_to_DofOnline[i]] = PoU[i];
@@ -291,15 +270,10 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
 
   for (int iter_over_subdomains=0; iter_over_subdomains<NR.size(); iter_over_subdomains++) {
 
-    Vector offlineNeighbourDoF2GI;
     int int_Nnumber = NR[iter_over_subdomains];
-    std::string filename_ = path_to_storage + std::to_string(int_Nnumber) + "_GI.mm";
-    std::ifstream file_;
-    file_.open(filename_.c_str(), std::ios::in);
-    Dune::readMatrixMarket(offlineNeighbourDoF2GI,file_);
-    file_.close();
+    vector1i offlineNeighbourDoF2GI = FromOffline<vector1i>(path_to_storage, "GI", int_Nnumber);
 
-    neighbour_subdomainbasis[iter_over_subdomains] = std::make_shared<Dune::PDELab::NeighbourBasis<GO, Matrix, Vector>>(path_to_storage, local_basis_sizes[NR[iter_over_subdomains]], NR[iter_over_subdomains], offlineDoF2GI, offlineNeighbourDoF2GI, 2);
+    neighbour_subdomainbasis[iter_over_subdomains] = std::make_shared<Dune::PDELab::NeighbourBasis<GO, Matrix, Vector, vector1i>>(path_to_storage, local_basis_sizes[NR[iter_over_subdomains]], NR[iter_over_subdomains], offlineDoF2GI, offlineNeighbourDoF2GI, 2);
 
     for (int i=0; i<local_basis_sizes[iter_over_subdomains]; i++){
       auto tmp = *neighbour_subdomainbasis[iter_over_subdomains]->get_basis_vector(i);

@@ -16,7 +16,7 @@ class GenericEllipticProblem
 {
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
-public:
+  public:
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
   //! tensor diffusion coefficient
@@ -133,6 +133,8 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   typedef Dune::BlockVector<Dune::FieldVector<K, 1>> CoarseVector;
   typedef Dune::BCRSMatrix<Dune::FieldMatrix<K, 1, 1>> CoarseMatrix;
 
+  typedef Dune::BlockVector<Dune::FieldVector<int, 1>> vector1i;
+
   using ESExcluder = Dune::PDELab::EntitySetExcluder<Vector, GV>;
   auto ghost_excluder = std::make_shared<Dune::PDELab::EntitySetGhostExcluder<Vector, GV>>();
 
@@ -140,7 +142,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   ES es(gv, ghost_excluder);
 
   // make problem parameters
-  typedef GenericEllipticProblem<ES,NumberType> Problem;
+  typedef GenericEllipticProblem<ES,K> Problem;
   Problem problem;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
   BCType bctype(es,problem);
@@ -161,14 +163,14 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   int verbose = 0;
   if (gfs.gridView().comm().rank()==0) verbose = 2;
   // make a degree of freedom vector on fine grid and initialize it with interpolation of Dirichlet condition
-  typedef Dune::PDELab::Backend::Vector<GFS,NumberType> V;
+  typedef Dune::PDELab::Backend::Vector<GFS,K> V;
   V x(gfs,0.0);
   // Extract domain boundary constraints from problem definition, apply trace to solution vector
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
   G g(es,problem);
   Dune::PDELab::interpolate(g,gfs,x);
   // Set up constraints containers with boundary constraints, but without processor constraints
-  typedef typename GFS::template ConstraintsContainer<NumberType>::Type CC;
+  typedef typename GFS::template ConstraintsContainer<K>::Type CC;
   auto cc = CC();
   // assemble constraints
   Dune::PDELab::constraints(bctype,gfs,cc);
@@ -181,7 +183,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // LocalOperator wrapper zeroing out subdomains' interiors in order to set up overlap matrix
   typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   // Construct GridOperators from LocalOperators
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,K,K,K,CC,CC> GO;
   auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
   // Assemble fine grid matrix defined without processor constraints
   typedef typename GO::Jacobian M;
@@ -196,7 +198,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // ~~~~~~~~~~~~~~~~~~
   double eigenvalue_threshold = -1;
   // const int algebraic_overlap = 0;
-  int nev = 10;
+  int nev = 4;
   int nev_arpack = nev;
   // double shift = 0.001;
 
@@ -211,13 +213,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // ~~~~~~~~~~~~~~~~~~
 //  Load a vector describing local basis sizes (number of EV) and creating the vector of offsets (to reach indices in the coarse space)
   // ~~~~~~~~~~~~~~~~~~
-  Vector lb;
-  std::ifstream file_lb;
-  std::string filename_lb = path_to_storage + "localBasisSizes.mm";
-  file_lb.open(filename_lb.c_str(), std::ios::in);
-  Dune::readMatrixMarket(lb,file_lb);
-  file_lb.close();
-
+  vector1i lb = FromOffline<vector1i>(path_to_storage, "localBasisSizes");
   const int number_of_rank_used_offline = lb.size();
 
   std::vector<int> local_basis_sizes(number_of_rank_used_offline), local_offset(number_of_rank_used_offline+1);
@@ -230,65 +226,40 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // ~~~~~~~~~~~~~~~~~~
   // Load the indices transformation
   // ~~~~~~~~~~~~~~~~~~
-  Vector offlineDoF2GI;
-  std::string filename_off2GI = path_to_storage + std::to_string(targeted[0]) + "_GI.mm";
-  std::ifstream file_off2GI;
-  file_off2GI.open(filename_off2GI.c_str(), std::ios::in);
-  Dune::readMatrixMarket(offlineDoF2GI,file_off2GI);
-  file_off2GI.close();
-
-  std::vector<int> DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<Vector>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
+  vector1i offlineDoF2GI = FromOffline<vector1i>(path_to_storage, "GI", targeted[0]);
+  std::vector<int> DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<vector1i>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
 
   // ~~~~~~~~~~~~~~~~~~
   // Load Neighbour ranks
   // ~~~~~~~~~~~~~~~~~~
-  Vector NR;
-  std::string filename_NR = path_to_storage + std::to_string(targeted[0]) + "_neighborRanks.mm";
-  std::ifstream file_NR;
-  file_NR.open(filename_NR.c_str(), std::ios::in);
-  Dune::readMatrixMarket(NR,file_NR);
-  file_NR.close();
+  vector1i NR = FromOffline<vector1i>(path_to_storage, "neighborRanks", targeted[0]);
 
   // ~~~~~~~~~~~~~~~~~~
   // Load PoU
   // ~~~~~~~~~~~~~~~~~~
-  Vector PoU;
-  std::string filename_PoU = path_to_storage + std::to_string(targeted[0]) + "_PoU.mm";
-  std::ifstream file_PoU;
-  file_PoU.open(filename_PoU.c_str(), std::ios::in);
-  Dune::readMatrixMarket(PoU,file_PoU);
-  file_PoU.close();
-
+  Vector PoU = FromOffline<Vector>(path_to_storage, "PoU", targeted[0]);
   Vector nPoU(v_size);
   for (int i=0; i<v_size; i++){
     nPoU[DofOffline_to_DofOnline[i]] = PoU[i];
   }
 
   // ~~~~~~~~~~~~~~~~~~
-//  Subdomain basis computation or loading
+//  Subdomain basis computation and loading for neighbours
   // ~~~~~~~~~~~~~~~~~~
-
-  int basis_size = local_basis_sizes[targeted[0]];
 
   // First : compute the new targeted subdomain basis
   std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> online_subdomainbasis;
   online_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisOnline<GO, Matrix, Vector>>(native(A), nPoU, eigenvalue_threshold, nev, nev_arpack);
-
 
   // Then : load other subdomain basis from offline and transfer them in the targeted subdomain space
   std::vector<std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>>> neighbour_subdomainbasis(NR.size());
 
   for (int iter_over_subdomains=0; iter_over_subdomains<NR.size(); iter_over_subdomains++) {
 
-    Vector offlineNeighbourDoF2GI;
     int int_Nnumber = NR[iter_over_subdomains];
-    std::string filename_ = path_to_storage + std::to_string(int_Nnumber) + "_GI.mm";
-    std::ifstream file_;
-    file_.open(filename_.c_str(), std::ios::in);
-    Dune::readMatrixMarket(offlineNeighbourDoF2GI,file_);
-    file_.close();
+    vector1i offlineNeighbourDoF2GI = FromOffline<vector1i>(path_to_storage, "GI", int_Nnumber);
 
-    neighbour_subdomainbasis[iter_over_subdomains] = std::make_shared<Dune::PDELab::NeighbourBasis<GO, Matrix, Vector>>(path_to_storage, local_basis_sizes[NR[iter_over_subdomains]], NR[iter_over_subdomains], offlineDoF2GI, offlineNeighbourDoF2GI, 2);
+    neighbour_subdomainbasis[iter_over_subdomains] = std::make_shared<Dune::PDELab::NeighbourBasis<GO, Matrix, Vector, vector1i>>(path_to_storage, local_basis_sizes[NR[iter_over_subdomains]], NR[iter_over_subdomains], offlineDoF2GI, offlineNeighbourDoF2GI, 2);
 
     for (int i=0; i<local_basis_sizes[iter_over_subdomains]; i++){
       auto tmp = *neighbour_subdomainbasis[iter_over_subdomains]->get_basis_vector(i);
@@ -299,132 +270,36 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  Modify AH
+//  Update AH & bH
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  //  Load the coarse matrix
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  CoarseMatrix AH;
-  std::ifstream file_AH;
-  std::string filename_AH = path_to_storage + "OfflineAH.mm";
-  file_AH.open(filename_AH.c_str(), std::ios::in);
-  Dune::readMatrixMarket(AH,file_AH);
-  file_AH.close();
-  // std::cout << AH.N() << std::endl;
-  // std::cout << AH.M() << std::endl;}
+  // int basis_size = local_basis_sizes[targeted[0]];
+  // std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> offline_subdomainbasis;
+  // offline_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisFromFiles<GO, Matrix, Vector>>(path_to_storage, basis_size, targeted[0]);
+  // for (int i=0; i<basis_size; i++){
+  //   Vector tmp = *offline_subdomainbasis->get_basis_vector(i);
+  //   for (int j=0; j<v_size; j++){
+  //     (*offline_subdomainbasis->get_basis_vector(i))[DofOffline_to_DofOnline[j]] = tmp[j];
+  //   }
+  // }
 
-  int max_local_basis_size = *std::max_element(local_basis_sizes.begin(),local_basis_sizes.end());
-  int my_offset = local_offset[targeted[0]];
+  // Load the coarse matrix
+  CoarseMatrix AH = FromOffline<CoarseMatrix>(path_to_storage, "OfflineAH");
+  UpdateAH<Vector, Matrix, CoarseMatrix, vector1i>(AH, native(A), online_subdomainbasis, neighbour_subdomainbasis, local_basis_sizes, local_offset, NR, targeted[0]);
+  // UpdateAH<Vector, Matrix, CoarseMatrix, vector1i>(AH, native(A), offline_subdomainbasis, neighbour_subdomainbasis, local_basis_sizes, local_offset, NR, targeted[0]);
 
-  // ~~~~~~~~~~~~~~~~~~
-  //  Create a vector of AH entries modification
-  // ~~~~~~~~~~~~~~~~~~
+  // Vector OffFineb = FromOffline<Vector>(path_to_storage, "fineb", targeted[0]);
+  // assert(OffFineb.N() == v_size);
+  // Vector nfineb(v_size);
+  // for (int i=0; i<v_size; i++){
+  //   nfineb[DofOffline_to_DofOnline[i]] = OffFineb[i];
+  // }
 
-  // Set up container for storing rows of coarse matrix associated with current rank
-  std::vector<std::vector<std::vector<Matrix::field_type> > > local_rows;
-  local_rows.resize(local_basis_sizes[targeted[0]]);
-  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-    local_rows[basis_index].resize(NR.size()+1);
-  }
-
-  for (int basis_index_remote = 0; basis_index_remote < max_local_basis_size; basis_index_remote++) {
-
-    // Compute local products of basis functions with discretization matrix
-    if (basis_index_remote < local_basis_sizes[targeted[0]]) {
-      auto basis_vector = *online_subdomainbasis->get_basis_vector(basis_index_remote);
-      Vector Atimesv(A.N());
-      native(A).mv(basis_vector, Atimesv);
-      for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-        Matrix::field_type entry = *online_subdomainbasis->get_basis_vector(basis_index)*Atimesv;
-        local_rows[basis_index][NR.size()].push_back(entry);
-      }
-    }
-
-    // Compute products of discretization matrix with local and remote vectors
-    for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
-      if (basis_index_remote >= local_basis_sizes[NR[neighbor_id]])
-        continue;
-      auto basis_vector = *neighbour_subdomainbasis[neighbor_id]->get_basis_vector(basis_index_remote);
-      Vector Atimesv(A.N());
-      native(A).mv(basis_vector, Atimesv);
-      for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-        Matrix::field_type entry = *online_subdomainbasis->get_basis_vector(basis_index)*Atimesv;
-        local_rows[basis_index][neighbor_id].push_back(entry);
-      }
-    }
-  }
-
-  // ~~~~~~~~~~~~~~~~~~
-  //  Modify AH entries
-  // ~~~~~~~~~~~~~~~~~~
-
-  int row_id = local_offset[targeted[0]];
-  // Modify AH entries with just computed local_rows
-  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-    // Communicate number of entries in this row
-    int couplings = local_basis_sizes[targeted[0]];
-    for (int neighbor_id : NR) {
-      couplings += local_basis_sizes[neighbor_id];
-    }
-
-    // Communicate row's pattern
-    int entries_pos[couplings];
-    int cnt = 0;
-    for (int basis_index2 = 0; basis_index2 < local_basis_sizes[targeted[0]]; basis_index2++) {
-      entries_pos[cnt] = my_offset + basis_index2;
-      cnt++;
-    }
-    for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
-      int neighbor_offset = local_offset[NR[neighbor_id]];
-      for (int basis_index2 = 0; basis_index2 < local_basis_sizes[NR[neighbor_id]]; basis_index2++) {
-        entries_pos[cnt] = neighbor_offset + basis_index2;
-        cnt++;
-      }
-    }
-
-    // Communicate actual entries
-    Matrix::field_type entries[couplings];
-    cnt = 0;
-    for (int basis_index2 = 0; basis_index2 < local_basis_sizes[targeted[0]]; basis_index2++) {
-      entries[cnt] = local_rows[basis_index][NR.size()][basis_index2];
-      cnt++;
-    }
-    for (std::size_t neighbor_id = 0; neighbor_id < NR.size(); neighbor_id++) {
-      for (int basis_index2 = 0; basis_index2 < local_basis_sizes[NR[neighbor_id]]; basis_index2++) {
-        entries[cnt] = local_rows[basis_index][neighbor_id][basis_index2];
-        cnt++;
-      }
-    }
-
-    // Set matrix entries
-    for (int i = 0; i < couplings; i++){
-      AH[row_id][entries_pos[i]] = entries[i];
-    }
-    row_id++;
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  Modify bH
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  CoarseVector bH;
-  std::ifstream file_bH;
-  std::string filename_bH = path_to_storage + "OfflineCoarseb.mm";
-  file_bH.open(filename_bH.c_str(), std::ios::in);
-  Dune::readMatrixMarket(bH,file_bH);
-  file_bH.close();
-
-  Matrix::field_type buf_defect_local[local_basis_sizes[targeted[0]]];
-
-  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-    buf_defect_local[basis_index] = 0.0;
-    for (std::size_t i = 0; i < fine_b.N(); i++)
-      buf_defect_local[basis_index] += (*online_subdomainbasis->get_basis_vector(basis_index))[i] * native(fine_b)[i];
-  }
-
-  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-    bH[basis_index+my_offset] = buf_defect_local[basis_index];
-  }
+  // Load the coarse vector
+  CoarseVector bH = FromOffline<CoarseVector>(path_to_storage, "OfflineCoarseb");
+  UpdatebH<Vector, CoarseVector>(bH, native(fine_b), online_subdomainbasis, local_basis_sizes, local_offset, targeted[0]);
+  // UpdatebH<Vector, CoarseVector>(bH, native(fine_b), offline_subdomainbasis, local_basis_sizes, local_offset, targeted[0]);
+  // UpdatebH<Vector, CoarseVector>(bH, nfineb, offline_subdomainbasis, local_basis_sizes, local_offset, targeted[0]);
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //  Coarse space solve
@@ -446,12 +321,19 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   std::string filename_coarse_sol = path_to_storage + "coarse-sol_w_subdomain-" + std::to_string(targeted[0]) + "_recomputed.mm";
   Dune::storeMatrixMarket(coarse_sol, filename_coarse_sol, 15);
 
+  Vector OffcoarseSol = FromOffline<Vector>(path_to_storage, "pristineSol");
+
+  // std::cout << "Offline / Online coarse sol: " << std::endl;
+  // for (int i = 0; i < coarse_sol.N(); i++)
+  //   std::cout << OffcoarseSol[i] << " / " <<  coarse_sol[i] << std::endl;
+
   // Plot a part of the solution over the online domain
   V prolongated(gfs,0.0);
   // Prolongate result
   for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
     Vector local_result(*online_subdomainbasis->get_basis_vector(basis_index));
-    local_result *= coarse_sol[my_offset + basis_index];
+    // Vector local_result(*offline_subdomainbasis->get_basis_vector(basis_index));
+    local_result *= coarse_sol[local_offset[targeted[0]] + basis_index];
     native(prolongated) += local_result;
   }
 

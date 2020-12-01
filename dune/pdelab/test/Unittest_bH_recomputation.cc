@@ -132,6 +132,8 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   typedef Dune::BlockVector<Dune::FieldVector<K, 1>> CoarseVector;
   typedef Dune::BCRSMatrix<Dune::FieldMatrix<K, 1, 1>> CoarseMatrix;
 
+  typedef Dune::BlockVector<Dune::FieldVector<int, 1>> vector1i;
+
   using ESExcluder = Dune::PDELab::EntitySetExcluder<Vector, GV>;
   auto ghost_excluder = std::make_shared<Dune::PDELab::EntitySetGhostExcluder<Vector, GV>>();
 
@@ -149,7 +151,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // ~~~~~~~~~~~~~~~~~~
   typedef typename ES::Grid::ctype DF;
   // instantiate finite element maps
-  typedef Dune::PDELab::QkLocalFiniteElementMap<ES,DF,double,1> FEM;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<ES,DF,NumberType,1> FEM;
   FEM fem(es);
   // function space with no constraints on processor boundaries, needed for the GenEO eigenproblem
   typedef Dune::PDELab::GridFunctionSpace<ES,FEM,
@@ -190,12 +192,14 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   V fine_b(gfs,0.0);
   go.residual(x,fine_b);
 
+  // std::cout << fine_b.N() << std::endl;
+
   // ~~~~~~~~~~~~~~~~~~
 //  Solving process begin here: First some parameters
   // ~~~~~~~~~~~~~~~~~~
   double eigenvalue_threshold = -1;
   // const int algebraic_overlap = 0;
-  int nev = 3;
+  int nev = 4;
   int nev_arpack = nev;
   // double shift = 0.001;
 
@@ -210,13 +214,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // ~~~~~~~~~~~~~~~~~~
 //  Load a vector describing local basis sizes (number of EV) and creating the vector of offsets (to reach indices in the coarse space)
   // ~~~~~~~~~~~~~~~~~~
-  Vector lb;
-  std::ifstream file_lb;
-  std::string filename_lb = path_to_storage + "localBasisSizes.mm";
-  file_lb.open(filename_lb.c_str(), std::ios::in);
-  Dune::readMatrixMarket(lb,file_lb);
-  file_lb.close();
-
+  vector1i lb = FromOffline<vector1i>(path_to_storage, "localBasisSizes");
   const int number_of_rank_used_offline = lb.size();
 
   std::vector<int> local_basis_sizes(number_of_rank_used_offline), local_offset(number_of_rank_used_offline+1);
@@ -229,75 +227,79 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // ~~~~~~~~~~~~~~~~~~
   // Load the indices transformation
   // ~~~~~~~~~~~~~~~~~~
-  Vector offlineDoF2GI;
-  std::string filename_off2GI = path_to_storage + std::to_string(targeted[0]) + "_GI.mm";
-  std::ifstream file_off2GI;
-  file_off2GI.open(filename_off2GI.c_str(), std::ios::in);
-  Dune::readMatrixMarket(offlineDoF2GI,file_off2GI);
-  file_off2GI.close();
-
-  std::vector<int> DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<Vector>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
+  vector1i offlineDoF2GI = FromOffline<vector1i>(path_to_storage, "GI", targeted[0]);
+  std::vector<int> DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<vector1i>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
 
   // ~~~~~~~~~~~~~~~~~~
   // Load PoU
   // ~~~~~~~~~~~~~~~~~~
-  Vector PoU;
-  std::string filename_PoU = path_to_storage + std::to_string(targeted[0]) + "_PoU.mm";
-  std::ifstream file_PoU;
-  file_PoU.open(filename_PoU.c_str(), std::ios::in);
-  Dune::readMatrixMarket(PoU,file_PoU);
-  file_PoU.close();
-
+  Vector PoU = FromOffline<Vector>(path_to_storage, "PoU", targeted[0]);
   Vector nPoU(v_size);
   for (int i=0; i<v_size; i++){
     nPoU[DofOffline_to_DofOnline[i]] = PoU[i];
   }
 
   // ~~~~~~~~~~~~~~~~~~
-//  Subdomain basis computation or loading
+  // Multiply fine b by PoU
+  // ~~~~~~~~~~~~~~~~~~
+  // for (int i=0; i<v_size; i++){
+  //   native(fine_b)[i] *= nPoU[i];
+  // }
+
+  Vector OffFineb = FromOffline<Vector>(path_to_storage, "fineb", targeted[0]);
+  assert(OffFineb.N() == v_size);
+  Vector nfineb(v_size);
+  for (int i=0; i<v_size; i++){
+    nfineb[DofOffline_to_DofOnline[i]] = OffFineb[i];
+  }
+
+  Dune::VTKWriter<GV> vtkwriter(gv);
+  V toplot(gfs,0.0);
+  native(toplot) = nfineb;
+  /* Write a field in the vtu file */
+  DGF xdgf(gfs,toplot);
+  auto adapt = std::make_shared<ADAPT>(xdgf,"offline");
+  vtkwriter.addVertexData(adapt);
+  DGF xdgf2(gfs,fine_b);
+  auto adapt2 = std::make_shared<ADAPT>(xdgf2,"online");
+  vtkwriter.addVertexData(adapt2);
+  vtkwriter.write("RHS",Dune::VTK::ascii);
+
+  // ~~~~~~~~~~~~~~~~~~
+//  Subdomain basis computation and loading for neighbours
   // ~~~~~~~~~~~~~~~~~~
 
-  int basis_size = local_basis_sizes[targeted[0]];
-
-  // First : compute the new targeted subdomain basis
-  std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> online_subdomainbasis;
+  std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> online_subdomainbasis, offline_subdomainbasis;
   online_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisOnline<GO, Matrix, Vector>>(native(A), nPoU, eigenvalue_threshold, nev, nev_arpack);
+
+  // int basis_size = local_basis_sizes[targeted[0]];
+  // offline_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisFromFiles<GO, Matrix, Vector>>(path_to_storage, basis_size, targeted[0]);
+  // for (int i=0; i<basis_size; i++){
+  //   Vector tmp = *offline_subdomainbasis->get_basis_vector(i);
+  //   for (int j=0; j<v_size; j++){
+  //     (*offline_subdomainbasis->get_basis_vector(i))[DofOffline_to_DofOnline[j]] = tmp[j];
+  //   }
+  // }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //  Modify bH
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  CoarseVector bH;
-  std::ifstream file_bH;
-  std::string filename_bH = path_to_storage + "OfflineCoarseb.mm";
-  file_bH.open(filename_bH.c_str(), std::ios::in);
-  Dune::readMatrixMarket(bH,file_bH);
-  file_bH.close();
-
-  int max_local_basis_size = *std::max_element(local_basis_sizes.begin(),local_basis_sizes.end());
-  int my_offset = local_offset[targeted[0]];
-  Matrix::field_type buf_defect_local[local_basis_sizes[targeted[0]]];
-
-  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-    buf_defect_local[basis_index] = 0.0;
-    for (std::size_t i = 0; i < fine_b.N(); i++)
-      buf_defect_local[basis_index] += (*online_subdomainbasis->get_basis_vector(basis_index))[i] * native(fine_b)[i];
-  }
+  CoarseVector bH = FromOffline<CoarseVector>(path_to_storage, "OfflineCoarseb");
 
   std::cout << "Offline bH: " << std::endl;
-  std::cout << "[" << bH[my_offset];
-  for (int i = 1; i < local_basis_sizes[targeted[0]]; i++){
-    std::cout << "  " <<  bH[i+my_offset];
+  std::cout << "[" << bH[0];
+  for (int i = 1; i < bH.N(); i++){
+    std::cout << "  " <<  bH[i];
   }
   std::cout << "]" << std::endl;
 
-  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
-    bH[basis_index+my_offset] = buf_defect_local[basis_index];
-  }
+  UpdatebH<Vector, CoarseVector>(bH, native(fine_b), online_subdomainbasis, local_basis_sizes, local_offset, targeted[0]);
+  // UpdatebH<Vector, CoarseVector>(bH, nfineb, offline_subdomainbasis, local_basis_sizes, local_offset, targeted[0]);
 
   std::cout << "Online bH: " << std::endl;
-  std::cout << "[" << bH[my_offset];
-  for (int i = 1; i < local_basis_sizes[targeted[0]]; i++){
-    std::cout << "  " <<  bH[i+my_offset];
+  std::cout << "[" << bH[0];
+  for (int i = 1; i < bH.N(); i++){
+    std::cout << "  " <<  bH[i];
   }
   std::cout << "]" << std::endl;
 

@@ -70,7 +70,7 @@ namespace Dune {
 
         // Setup Arpack for solving generalized eigenproblem
         std::cout << "ARPACK setup...";
-        ArpackGeneo::ArPackPlusPlus_Algorithms<Matrix, Vector> arpack(A);
+        ArpackGeneo::ArPackPlusPlus_Algorithms<Matrix, Vector> arpack(A, 100000, 1);
         std::cout << " done" << std::endl;
         double eps = 0.0;
 
@@ -149,13 +149,13 @@ namespace Dune {
       }
     };
 
-    template<class GridView, class M, class Vector>
+    template<class GridView, class M, class Vector, class vector1i>
     class NeighbourBasis : public SubdomainBasis<Vector>
     {
 
     public:
 
-      NeighbourBasis(std::string& path_to_storage, int basis_size, int subdomain_number, Vector& offlineDoF2GI, Vector& offlineNeighbourDoF2GI, int verbose = 0) {
+      NeighbourBasis(std::string& path_to_storage, int basis_size, int subdomain_number, vector1i& offlineDoF2GI, vector1i& offlineNeighbourDoF2GI, int verbose = 0) {
 
         if (verbose > 1) std::cout << "Getting EV basis for neighbour subdomain: " << subdomain_number << " from offline." << std::endl;
 
