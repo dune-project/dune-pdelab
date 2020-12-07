@@ -97,50 +97,14 @@ class ParticularSolution {
     A_(A)
   {
 
-    block_size = Vector::block_type::dimension;
-    // Apply Dirichlet conditions to matrix on processor boundaries, inferred from partition of unity
-    for (auto rIt=A_->begin(); rIt!=A_->end(); ++rIt){
-      for(int block_i = 0; block_i < block_size; block_i++){
-        if (part_unity[rIt.index()][block_i] == .0) {
-          for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt)
-          {
-            for(int block_j = 0; block_j < block_size; block_j++){
-              (*cIt)[block_i][block_j] = (rIt.index() == cIt.index() && block_i == block_j) ? 1.0 : 0.0;
-            }
-          }
-        }
-      }
-    }
-
     b_.resize(adapter_.getExtendedSize());
 
-  }
-
-  void DirichletOnRHS(Vector& b) {
-    for (auto rIt=A_->begin(); rIt!=A_->end(); ++rIt) {
-      for(int block_i = 0; block_i < block_size; block_i++){
-        bool isDirichlet = true;
-        for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
-          for(int block_j = 0; block_j < block_size; block_j++){
-            if ((rIt.index() != cIt.index() || block_i!=block_j) && (*cIt)[block_i][block_j] != 0.0){
-              isDirichlet = false;
-              break;
-            }
-          }
-          if(!isDirichlet) break;
-        }
-        if (isDirichlet){
-          b[rIt.index()] = .0;
-        }
-      }
-    }
   }
 
   void constantRHS(double value=1.0) {
     for(auto it = b_.begin(); it!=b_.end(); ++it)
       b_[it.index()] += value;
 
-    DirichletOnRHS(b_);
   }
 
   void randomRHS(double value=1.0) {
@@ -149,7 +113,6 @@ class ParticularSolution {
       b_[it.index()] = value*(-1.0 + 2.0* (std::rand()+0.0) / (RAND_MAX + 1.0));
     }
 
-    DirichletOnRHS(b_);
   }
 
   void exactRHS(Vector d) {
@@ -164,7 +127,6 @@ class ParticularSolution {
     adapter_.extendVector(d, b_);
     communicator->forward<AddGatherScatter<Vector>>(b_,b_); // make function known in other subdomains
 
-    DirichletOnRHS(b_);
   }
 
   void solveAndAppend(Dune::PDELab::SubdomainBasis<Vector>& subdomainbasis) {
@@ -179,7 +141,6 @@ class ParticularSolution {
   Dune::NonoverlappingOverlapAdapter<GridView, Vector, Matrix> adapter_;
   std::shared_ptr<Matrix> A_ = nullptr;
   Vector b_;
-  int block_size;
 };
 
 

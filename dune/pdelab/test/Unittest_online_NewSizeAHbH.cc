@@ -7,101 +7,7 @@
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/geneobasisOnline.hh>
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/OnlineTools.hh>
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/SubDomainGmshReader.hh>
-
-/*
- * Defining a Darcy problem with alternating layers of permeability and a high contrast
- */
-template<typename GV, typename RF>
-class GenericEllipticProblem
-{
-  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
-
-  public:
-  typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
-
-  //! tensor diffusion coefficient
-  typename Traits::PermTensorType
-  A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::DomainType xglobal = e.geometry().global(x);
-
-    RF perm1 = 1e0;
-    RF perm2 = 1e5; // FIXME we want high contrast
-    RF layer_thickness = 1.0 / 40.0;
-
-    RF coeff = (int)std::floor(xglobal[0] / layer_thickness) % 2 == 0 ? perm1 : perm2;
-
-    typename Traits::PermTensorType I;
-    I[0][0] = coeff;
-    I[0][1] = 0;
-    I[1][0] = 0;
-    I[1][1] = coeff;
-    return I;
-  }
-
-  //! tensor diffusion constant per cell? return false if you want more than one evaluation of A per cell.
-  static constexpr bool permeabilityIsConstantPerCell()
-  {
-    return true;
-  }
-
-  //! velocity field
-  typename Traits::RangeType
-  b (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::RangeType v(0.0);
-    return v;
-  }
-
-  //! sink term
-  typename Traits::RangeFieldType
-  c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! source term
-  typename Traits::RangeFieldType
-  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    return 1.0;
-  }
-
-  BCType
-  bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    typename Traits::DomainType xglobal = is.geometry().global(x);
-    if (!(xglobal[0]<1E-6 || xglobal[0]>1.0-1E-6))
-      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
-    else
-      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
-  }
-
-  //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType
-  g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::DomainType xglobal = e.geometry().global(x);
-    /*if (xglobal[0] > 1.0-1E-6)
-      return 1.0;
-    else*/
-      return 0.0;
-  }
-
-  //! flux boundary condition
-  typename Traits::RangeFieldType
-  j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! outflow boundary condition
-  typename Traits::RangeFieldType
-  o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return 0.0;
-  }
-};
+#include <dune/pdelab/backend/istl/geneo/OfflineOnline/GenericEllipticProblem.hh>
 
 void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHelper& helper) {
 
@@ -191,7 +97,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   go.jacobian(x,A);
   // set up and assemble right hand side w.r.t. l(v)-a(u_g,v)
   V fine_b(gfs,0.0);
-  go.residual(x,fine_b); // The rhs is loaded from offline directly restricted in the coarse spaces
+  go.residual(x,fine_b);
 
   // ~~~~~~~~~~~~~~~~~~
 //  Solving process begin here: First some parameters
@@ -251,6 +157,17 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> online_subdomainbasis;
   online_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisOnline<GO, Matrix, Vector>>(native(A), nPoU, eigenvalue_threshold, nev, nev_arpack);
 
+  // ~~~~~~~~~~~~~~~~~~
+//  Particular solution
+  // ~~~~~~~~~~~~~~~~~~
+  int nb_part = 0;
+  auto PartSol = ParticularSolution<Vector, Matrix>(native(A));
+  PartSol.exactRHS(native(fine_b));
+  PartSol.solveAndAppend(*online_subdomainbasis, nb_part);
+
+
+  int delta_basis_size = nev + nb_part - local_basis_sizes[targeted[0]];
+
   // Then : load other subdomain basis from offline and transfer them in the targeted subdomain space
   std::vector<std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>>> neighbour_subdomainbasis(NR.size());
 
@@ -273,38 +190,18 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
 //  Update AH & bH
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  // int basis_size = local_basis_sizes[targeted[0]];
-  // std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> offline_subdomainbasis;
-  // offline_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisFromFiles<GO, Matrix, Vector>>(path_to_storage, basis_size, targeted[0]);
-  // for (int i=0; i<basis_size; i++){
-  //   Vector tmp = *offline_subdomainbasis->get_basis_vector(i);
-  //   for (int j=0; j<v_size; j++){
-  //     (*offline_subdomainbasis->get_basis_vector(i))[DofOffline_to_DofOnline[j]] = tmp[j];
-  //   }
-  // }
-
   // Load the coarse matrix
   CoarseMatrix AH = FromOffline<CoarseMatrix>(path_to_storage, "OfflineAH");
-  UpdateAH<Vector, Matrix, CoarseMatrix, vector1i>(AH, native(A), online_subdomainbasis, neighbour_subdomainbasis, local_basis_sizes, local_offset, NR, targeted[0]);
-  // UpdateAH<Vector, Matrix, CoarseMatrix, vector1i>(AH, native(A), offline_subdomainbasis, neighbour_subdomainbasis, local_basis_sizes, local_offset, NR, targeted[0]);
-
-  // Vector OffFineb = FromOffline<Vector>(path_to_storage, "fineb", targeted[0]);
-  // assert(OffFineb.N() == v_size);
-  // Vector nfineb(v_size);
-  // for (int i=0; i<v_size; i++){
-  //   nfineb[DofOffline_to_DofOnline[i]] = OffFineb[i];
-  // }
+  UpdateAHNewSize<Vector, Matrix, CoarseMatrix, vector1i>(AH, native(A), online_subdomainbasis, neighbour_subdomainbasis, local_basis_sizes, local_offset, targeted[0], delta_basis_size, path_to_storage);
 
   // Load the coarse vector
   CoarseVector bH = FromOffline<CoarseVector>(path_to_storage, "OfflineCoarseb");
-  UpdatebH<Vector, CoarseVector>(bH, native(fine_b), online_subdomainbasis, local_basis_sizes, local_offset, targeted[0]);
-  // UpdatebH<Vector, CoarseVector>(bH, native(fine_b), offline_subdomainbasis, local_basis_sizes, local_offset, targeted[0]);
-  // UpdatebH<Vector, CoarseVector>(bH, nfineb, offline_subdomainbasis, local_basis_sizes, local_offset, targeted[0]);
+  UpdatebHNewSize<Vector, CoarseVector>(bH, native(fine_b), online_subdomainbasis, local_basis_sizes, local_offset, targeted[0], delta_basis_size);
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //  Coarse space solve
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  int global_basis_size = std::accumulate(local_basis_sizes.begin(), local_basis_sizes.end(), 0.0);
+  int global_basis_size = std::accumulate(local_basis_sizes.begin(), local_basis_sizes.end(), 0.0) + delta_basis_size;
 
   // Objective :  find x = RH^T * AH^-1 * RH * b
   // Use of UMFPack to solve the problem [AH * coarse_v = RH * b] instead of inversing AH :: objective is to have [coarse_v = AH^-1 *  RH * b]
@@ -321,7 +218,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   std::string filename_coarse_sol = path_to_storage + "coarse-sol_w_subdomain-" + std::to_string(targeted[0]) + "_recomputed.mm";
   Dune::storeMatrixMarket(coarse_sol, filename_coarse_sol, 15);
 
-  Vector OffcoarseSol = FromOffline<Vector>(path_to_storage, "pristineSol");
+  CoarseVector OffcoarseSol = FromOffline<CoarseVector>(path_to_storage, "pristineSol");
 
   // std::cout << "Offline / Online coarse sol: " << std::endl;
   // for (int i = 0; i < coarse_sol.N(); i++)
@@ -330,7 +227,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // Plot a part of the solution over the online domain
   V prolongated(gfs,0.0);
   // Prolongate result
-  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
+  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]] + delta_basis_size; basis_index++) {
     Vector local_result(*online_subdomainbasis->get_basis_vector(basis_index));
     // Vector local_result(*offline_subdomainbasis->get_basis_vector(basis_index));
     local_result *= coarse_sol[local_offset[targeted[0]] + basis_index];
@@ -344,6 +241,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   vtkwriter.addVertexData(adapt);
   vtkwriter.write("onlineSol",Dune::VTK::ascii);
 
+  // TODO find a good test to do
 }
 
 

@@ -15,101 +15,7 @@
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/partitioner.hh>
 
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/OfflineTools.hh>
-
-/*
- * Defining a Darcy problem with alternating layers of permeability and a high contrast
- */
-template<typename GV, typename RF>
-class GenericEllipticProblem
-{
-  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
-
-  public:
-  typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
-
-  //! tensor diffusion coefficient
-  typename Traits::PermTensorType
-  A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::DomainType xglobal = e.geometry().global(x);
-
-    RF perm1 = 1e0;
-    RF perm2 = 1e5; // FIXME we want high contrast
-    RF layer_thickness = 1.0 / 40.0;
-
-    RF coeff = (int)std::floor(xglobal[0] / layer_thickness) % 2 == 0 ? perm1 : perm2;
-
-    typename Traits::PermTensorType I;
-    I[0][0] = coeff;
-    I[0][1] = 0;
-    I[1][0] = 0;
-    I[1][1] = coeff;
-    return I;
-  }
-
-  //! tensor diffusion constant per cell? return false if you want more than one evaluation of A per cell.
-  static constexpr bool permeabilityIsConstantPerCell()
-  {
-    return true;
-  }
-
-  //! velocity field
-  typename Traits::RangeType
-  b (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::RangeType v(0.0);
-    return v;
-  }
-
-  //! sink term
-  typename Traits::RangeFieldType
-  c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! source term
-  typename Traits::RangeFieldType
-  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    return 1.0;
-  }
-
-  BCType
-  bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    typename Traits::DomainType xglobal = is.geometry().global(x);
-    if (!(xglobal[0]<1E-6 || xglobal[0]>1.0-1E-6))
-      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
-    else
-      return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
-  }
-
-  //! Dirichlet boundary condition value
-  typename Traits::RangeFieldType
-  g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::DomainType xglobal = e.geometry().global(x);
-    /*if (xglobal[0] > 1.0-1E-6)
-      return 1.0;
-    else*/
-      return 0.0;
-  }
-
-  //! flux boundary condition - Neumann
-  typename Traits::RangeFieldType
-  j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return 0.0;
-  }
-
-  //! outflow boundary condition
-  typename Traits::RangeFieldType
-  o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-  {
-    return 0.0;
-  }
-};
+#include <dune/pdelab/backend/istl/geneo/OfflineOnline/GenericEllipticProblem.hh>
 
 void driver(Dune::MPIHelper& helper) {
 
@@ -153,7 +59,7 @@ void driver(Dune::MPIHelper& helper) {
   auto overlappingsubdomains = grow_subdomains(gv,subdomains,partition,uoverlap,extensionmethod);
 
   // Write subdomain as a msh file
-  Dune::SubDomainGmshWriter<GV> sdwriter(gv, overlappingsubdomains, subdomains);
+  Dune::SubDomainGmshWriter<GV> sdwriter(gv, overlappingsubdomains, subdomains, 16);
   sdwriter.write(path_to_storage, "subdomain.msh");
 
   grid->loadBalance(partition, 0);
@@ -324,8 +230,6 @@ void driver(Dune::MPIHelper& helper) {
   // PartSol.exactRHS(native(d));
   // PartSol.solveAndAppend(*subdomainbasis);
   // TODO :: compute the particular solution just on certain subdomains not all
-  // TODO :: Application of dirichlet condition to the right hand side of the global
-  // TODO :: Add the particular solution online
 
   // ~~~~~~~~~~~~~~~~~~
   // Save local basis sizes
@@ -365,7 +269,6 @@ void driver(Dune::MPIHelper& helper) {
   adapter.extendVector(native(d), b);
   communicator->forward<AddGatherScatter<Vector>>(b,b); // make function known in other subdomains
 
-  std::cout << b.N() << std::endl;
   Vector b_offline(b.N());
   for (int i=0; i<b.N();i++)
     b_offline[i]=b[i];
@@ -408,6 +311,13 @@ void driver(Dune::MPIHelper& helper) {
   // ~~~~~~~~~~~~~~~~~~
   Vector v_fine_ovlp(adapter.getExtendedSize());
   coarse_space->prolongate(coarse_v, v_fine_ovlp);
+
+  Vector fineSolOffline(v_fine_ovlp.N());
+  for (int i=0; i<v_fine_ovlp.N();i++)
+    fineSolOffline[i]=v_fine_ovlp[i];
+  std::string filename_fineSolSubdomainOnly = path_to_storage + std::to_string(gv.comm().rank()) + "_fineSolSubdomainOnly.mm";
+  Dune::storeMatrixMarket(fineSolOffline, filename_fineSolSubdomainOnly, 15);
+
   communicator->forward<AddGatherScatter<Vector>>(v_fine_ovlp, v_fine_ovlp);
   V v(gfs, 0.0);
   adapter.restrictVector(v_fine_ovlp, v);

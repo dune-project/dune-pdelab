@@ -9,7 +9,6 @@
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/SubDomainGmshReader.hh>
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/GenericEllipticProblem.hh>
 
-
 void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHelper& helper) {
 
   // ~~~~~~~~~~~~~~~~~~
@@ -49,7 +48,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   ES es(gv, ghost_excluder);
 
   // make problem parameters
-  typedef GenericEllipticProblem<ES,NumberType> Problem;
+  typedef GenericEllipticProblem<ES,K> Problem;
   Problem problem;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
   BCType bctype(es,problem);
@@ -70,14 +69,14 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   int verbose = 0;
   if (gfs.gridView().comm().rank()==0) verbose = 2;
   // make a degree of freedom vector on fine grid and initialize it with interpolation of Dirichlet condition
-  typedef Dune::PDELab::Backend::Vector<GFS,NumberType> V;
+  typedef Dune::PDELab::Backend::Vector<GFS,K> V;
   V x(gfs,0.0);
   // Extract domain boundary constraints from problem definition, apply trace to solution vector
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
   G g(es,problem);
   Dune::PDELab::interpolate(g,gfs,x);
   // Set up constraints containers with boundary constraints, but without processor constraints
-  typedef typename GFS::template ConstraintsContainer<NumberType>::Type CC;
+  typedef typename GFS::template ConstraintsContainer<K>::Type CC;
   auto cc = CC();
   // assemble constraints
   Dune::PDELab::constraints(bctype,gfs,cc);
@@ -90,12 +89,15 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // LocalOperator wrapper zeroing out subdomains' interiors in order to set up overlap matrix
   typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   // Construct GridOperators from LocalOperators
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,K,K,K,CC,CC> GO;
   auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
   // Assemble fine grid matrix defined without processor constraints
   typedef typename GO::Jacobian M;
   M A(go);
   go.jacobian(x,A);
+  // set up and assemble right hand side w.r.t. l(v)-a(u_g,v)
+  V fine_b(gfs,0.0);
+  go.residual(x,fine_b);
 
   // ~~~~~~~~~~~~~~~~~~
 //  Solving process begin here: First some parameters
@@ -113,7 +115,6 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   /* Define vtk writer utils */
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
-
 
   // ~~~~~~~~~~~~~~~~~~
 //  Load a vector describing local basis sizes (number of EV) and creating the vector of offsets (to reach indices in the coarse space)
@@ -152,8 +153,6 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
 //  Subdomain basis computation and loading for neighbours
   // ~~~~~~~~~~~~~~~~~~
 
-  int basis_size = local_basis_sizes[targeted[0]];
-
   // First : compute the new targeted subdomain basis
   std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> online_subdomainbasis;
   online_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisOnline<GO, Matrix, Vector>>(native(A), nPoU, eigenvalue_threshold, nev, nev_arpack);
@@ -176,66 +175,97 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
     }
   }
 
+
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  Modify AH
+//  Update AH & bH
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  //  Load the coarse matrix
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  int basis_size = local_basis_sizes[targeted[0]];
+  std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> offline_subdomainbasis;
+  offline_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisFromFiles<GO, Matrix, Vector>>(path_to_storage, basis_size, targeted[0]);
+  for (int i=0; i<basis_size; i++){
+    Vector tmp = *offline_subdomainbasis->get_basis_vector(i);
+    for (int j=0; j<v_size; j++){
+      (*offline_subdomainbasis->get_basis_vector(i))[DofOffline_to_DofOnline[j]] = tmp[j];
+    }
+  }
+
+  // Load the coarse matrix
   CoarseMatrix AH = FromOffline<CoarseMatrix>(path_to_storage, "OfflineAH");
-
-  CoarseMatrix AH_copy = AH;
-
-  std::cout << "Offline AH :" << std::endl;
-  // Plot what is now AH
-  for (int row_id = 0; row_id < AH.N(); row_id++){
-    double value = AH[row_id][0];
-    if (std::abs(value) > 1e-6){std::cout << value;}
-    else{std::cout << 0.0;}
-    for (int i = 1; i < AH.M(); i++){
-      value = AH[row_id][i];
-      if (std::abs(value) > 1e-6){std::cout << ", " << value;}
-      else {std::cout << ", " << 0.0;}
-    }
-    std::cout << std::endl;
-  }
-  std::cout << std::endl;
-
   UpdateAH<Vector, Matrix, CoarseMatrix, vector1i>(AH, native(A), online_subdomainbasis, neighbour_subdomainbasis, local_basis_sizes, local_offset, NR, targeted[0]);
+  // UpdateAH<Vector, Matrix, CoarseMatrix, vector1i>(AH, native(A), offline_subdomainbasis, neighbour_subdomainbasis, local_basis_sizes, local_offset, NR, targeted[0]);
 
-  std::cout << "Online AH :" << std::endl;
-  // Plot what is now AH
-  for (int row_id = 0; row_id < AH.N(); row_id++){
-    double value = AH[row_id][0];
-    if (std::abs(value) > 1e-6){std::cout << value;}
-    else{std::cout << 0.0;}
-    for (int i = 1; i < AH.M(); i++){
-      value = AH[row_id][i];
-      if (std::abs(value) > 1e-6){std::cout << ", " << value;}
-      else {std::cout << ", " << 0.0;}
-    }
-    std::cout << std::endl;
+  Vector OffFineb = FromOffline<Vector>(path_to_storage, "fineb", targeted[0]);
+  assert(OffFineb.N() == v_size);
+  Vector nfineb(v_size);
+  for (int i=0; i<v_size; i++){
+    nfineb[DofOffline_to_DofOnline[i]] = OffFineb[i];
   }
-  std::cout << std::endl;
 
-  std::cout << "Difference absolute :" << std::endl;
-  // Plot what is now AH
-  for (int row_id = 0; row_id < AH.N(); row_id++){
-    double value = std::abs(AH[row_id][0]) - std::abs(AH_copy[row_id][0]);
-    // if (std::abs(AH[row_id][0]) > 1) {value = value / std::abs(AH[row_id][0]);}
-    if (std::abs(value) > 1e-6) {std::cout << value;}
-    else{std::cout << 0.0;}
-    for (int i = 1; i < AH.M(); i++){
-      value = std::abs(AH[row_id][i]) - std::abs(AH_copy[row_id][i]);
-      // if (std::abs(AH[row_id][i]) > 1) {value = value / std::abs(AH[row_id][i]);}
-      if (std::abs(value) > 1e-6) {std::cout << ", " << value;}
-      else {std::cout << ", " << 0.0;}
-    }
-    std::cout << std::endl;
+  // Load the coarse vector
+  CoarseVector bH = FromOffline<CoarseVector>(path_to_storage, "OfflineCoarseb");
+  UpdatebH<Vector, CoarseVector>(bH, native(fine_b), online_subdomainbasis, local_basis_sizes, local_offset, targeted[0]);
+  // UpdatebH<Vector, CoarseVector>(bH, native(fine_b), offline_subdomainbasis, local_basis_sizes, local_offset, targeted[0]);
+  // UpdatebH<Vector, CoarseVector>(bH, nfineb, offline_subdomainbasis, local_basis_sizes, local_offset, targeted[0]);
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//  Coarse space solve
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  int global_basis_size = std::accumulate(local_basis_sizes.begin(), local_basis_sizes.end(), 0.0);
+
+  // Objective :  find x = RH^T * AH^-1 * RH * b
+  // Use of UMFPack to solve the problem [AH * coarse_v = RH * b] instead of inversing AH :: objective is to have [coarse_v = AH^-1 *  RH * b]
+  Dune::UMFPack<CoarseMatrix> coarse_solver(AH, false); // Is there something better than UMFPACK?
+  CoarseVector coarse_sol(global_basis_size, global_basis_size);
+  Dune::InverseOperatorResult result;
+  coarse_solver.apply(coarse_sol,bH,result);
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//  Saves
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  // Save the coarse solution to further prolongate it over the offline domaine in post-processing
+  std::string filename_coarse_sol = path_to_storage + "coarse-sol_w_subdomain-" + std::to_string(targeted[0]) + "_recomputed.mm";
+  Dune::storeMatrixMarket(coarse_sol, filename_coarse_sol, 15);
+
+  CoarseVector OffcoarseSol = FromOffline<CoarseVector>(path_to_storage, "pristineSol");
+
+  // std::cout << "Offline / Online coarse sol: " << std::endl;
+  // for (int i = 0; i < coarse_sol.N(); i++)
+  //   std::cout << OffcoarseSol[i] << " / " <<  coarse_sol[i] << std::endl;
+
+  // Plot a part of the solution over the online domain
+  V prolongated(gfs,0.0);
+  // Prolongate result
+  for (int basis_index = 0; basis_index < local_basis_sizes[targeted[0]]; basis_index++) {
+    Vector local_result(*online_subdomainbasis->get_basis_vector(basis_index));
+    // Vector local_result(*offline_subdomainbasis->get_basis_vector(basis_index));
+    local_result *= coarse_sol[local_offset[targeted[0]] + basis_index];
+    native(prolongated) += local_result;
   }
-  std::cout << std::endl;
 
+  Vector OffFineSol = FromOffline<Vector>(path_to_storage, "fineSolSubdomainOnly", targeted[0]);
+  Vector nOffFineSol(v_size);
+  for (int i=0; i<v_size; i++){
+    nOffFineSol[DofOffline_to_DofOnline[i]] = OffFineSol[i];
+  }
+  // std::cout << "Offline / Online fine sol: " << std::endl;
+  std::vector<double> diff(nOffFineSol.N());
+  for (int i = 0; i < nOffFineSol.N(); i++){
+    // std::cout << nOffFineSol[i] << " / " <<  native(prolongated)[i] << std::endl;
+    diff[i] = std::abs(nOffFineSol[i] -  native(prolongated)[i]);
+    // if(diff[i]>1e-8) {std::cout << diff[i] << std::endl;}
+    // else {std::cout << 0.0 << std::endl;}
+  }
+  std::cout << "Max difference: " <<  *std::max_element(diff.begin(), diff.end()) << std::endl;
+  std::cout << "Average difference: " <<  std::accumulate(diff.begin(), diff.end(),0.0) / (diff.size()+0.0) << std::endl;
+
+  Dune::VTKWriter<GV> vtkwriter(gv);
+  /* Write a field in the vtu file */
+  DGF xdgf(gfs,prolongated);
+  auto adapt = std::make_shared<ADAPT>(xdgf,"Solution");
+  vtkwriter.addVertexData(adapt);
+  vtkwriter.write("onlineSol",Dune::VTK::ascii);
 }
 
 

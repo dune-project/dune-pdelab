@@ -68,13 +68,19 @@ dune_add_test(SOURCES testgeneo_nonovlp.cc
               CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
               )
 
-dune_add_test(SOURCES testgeneo_nonovlp_coarsespace.cc
+dune_add_test(SOURCES test_offline.cc
               MPI_RANKS 2
               TIMEOUT 300
               CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
               )
 
-dune_add_test(SOURCES testgeneo_nonovlp_online.cc
+dune_add_test(SOURCES test_online.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_online_NewSizeAHbH.cc
               MPI_RANKS 2
               TIMEOUT 300
               CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
@@ -93,6 +99,12 @@ dune_add_test(SOURCES Unittest_AH_recomputation.cc
               )
 
 dune_add_test(SOURCES Unittest_bH_recomputation.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_solution_OnOff.cc
               MPI_RANKS 2
               TIMEOUT 300
               CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
