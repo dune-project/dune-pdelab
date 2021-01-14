@@ -78,15 +78,15 @@ dune_add_test(SOURCES testlocaloperatorinterface.cc)
 
 dune_add_test(SOURCES testpk2dinterpolation.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-add_dune_alberta_flags(testpk2dinterpolation)
+add_dune_alberta_flags(testpk2dinterpolation WORLDDIM 2)
 
 dune_add_test(SOURCES testpk.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-add_dune_alberta_flags(testpk)
+add_dune_alberta_flags(testpk WORLDDIM 2)
 
 dune_add_test(SOURCES testpoisson.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-add_dune_alberta_flags(testpoisson)
+add_dune_alberta_flags(testpoisson WORLDDIM 2)
 
 dune_add_test(SOURCES testmatrixfree.cc)
 
@@ -94,11 +94,11 @@ dune_add_test(SOURCES testchunkedblockordering.cc)
 
 dune_add_test(SOURCES testrt0.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-add_dune_alberta_flags(testrt0)
+add_dune_alberta_flags(testrt0 WORLDDIM 2)
 
 dune_add_test(SOURCES testrt02dgridfunctionspace.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-add_dune_alberta_flags(testrt02dgridfunctionspace)
+add_dune_alberta_flags(testrt02dgridfunctionspace WORLDDIM 2)
 
 dune_add_test(SOURCES testutilities.cc)
 
