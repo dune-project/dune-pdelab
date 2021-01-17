@@ -6,6 +6,7 @@
 
 #include <dune/common/deprecated.hh>
 
+#include<dune/pdelab/common/topologyutility.hh>
 #include<dune/pdelab/finiteelementmap/finiteelementmap.hh>
 #include<dune/pdelab/finiteelement/l2orthonormal.hh>
 
@@ -33,9 +34,8 @@ namespace Dune {
 
       static constexpr std::size_t size(GeometryType gt)
       {
-DUNE_NO_DEPRECATED_BEGIN
-        if (gt == GeometryType(bt,d))
-DUNE_NO_DEPRECATED_END
+        auto geometryType = geometryTypeFromBasicType(bt, d);
+        if (gt == geometryType)
           return BasisTraits::template Size<k,d>::value;
         else
           return 0;

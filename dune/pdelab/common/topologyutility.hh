@@ -40,6 +40,49 @@ namespace Dune {
     };
 
 
+    /** Extract Dune::GeometryType from Dune::GeometryType::BasicType
+     *
+     * Note: Dune::GeometryType used to have constructors taking a BasicType
+     * and the dimension. This utility function can be used as a replacement.
+     */
+    Dune::GeometryType geometryTypeFromBasicType(Dune::GeometryType::BasicType basicType, int dim){
+
+      unsigned int topologyId(0);
+
+      if (dim > 1){
+        switch( basicType )
+        {
+        case GeometryType::simplex :
+          topologyId = 0;
+          break;
+        case GeometryType::cube :
+          topologyId = ((1 << dim) - 1);
+          break;
+        case GeometryType::pyramid :
+          if (dim == 3)
+            topologyId = 0b0011;
+          else
+            DUNE_THROW( RangeError,
+                        "Invalid basic geometry type: no pyramids for dimension " << dim << "." );
+          break;
+        case GeometryType::prism :
+          if (dim == 3)
+            topologyId = 0b0101;
+          else
+            DUNE_THROW( RangeError,
+                        "Invalid basic geometry type: no prisms for dimension " << dim << "." );
+          break;
+        case GeometryType::none :
+          break;
+        default :
+          DUNE_THROW( RangeError,
+                      "Invalid basic geometry type: " << basicType << " for dimension " << dim << "." );
+        }
+      }
+
+      return Dune::GeometryType(topologyId, dim);
+    }
+
   } // namespace PDELab
 } // namespace Dune
 

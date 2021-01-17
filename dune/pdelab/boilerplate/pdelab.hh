@@ -58,6 +58,7 @@
 #include <dune/istl/paamg/amg.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/functionutilities.hh>
+#include <dune/pdelab/common/topologyutility.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/constraints/conforming.hh>
@@ -1396,7 +1397,8 @@ namespace Dune {
             // constructor making the grid function space an all that is needed
             P0Space (const GV& gridview) : gv(gridview), conb()
             {
-                femp = std::shared_ptr<FEM>(new FEM(Dune::GeometryType(gt,dim)));
+                auto geometryType = geometryTypeFromBasicType(gt, dim);
+                femp = std::shared_ptr<FEM>(new FEM(geometryType));
                 gfsp = std::shared_ptr<GFS>(new GFS(gv,*femp));
                 // initialize ordering
                 gfsp->update();
