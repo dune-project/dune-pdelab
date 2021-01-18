@@ -1,8 +1,6 @@
 #ifndef DUNE_PDELAB_GRIDOPERATOR_COMMON_ASSEMBLER_HH
 #define DUNE_PDELAB_GRIDOPERATOR_COMMON_ASSEMBLER_HH
 
-#include <dune/common/deprecated.hh>
-
 #include <gridoperatorutilities.hh>
 #include <assemblerutilties.hh>
 
@@ -76,7 +74,7 @@ namespace Dune {
 
       //! Deprecated. Use `skipEntity` instead
       template<typename EG>
-      DUNE_DEPRECATED bool assembleCell(const EG & eg)
+      [[deprecated]] bool assembleCell(const EG & eg)
       {
          return false;
       }

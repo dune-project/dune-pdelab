@@ -4,8 +4,6 @@
 #ifndef DUNE_PDELAB_GRIDOPERATOR_COMMON_LOCALASSEMBLERENGINEBASE_HH
 #define DUNE_PDELAB_GRIDOPERATOR_COMMON_LOCALASSEMBLERENGINEBASE_HH
 
-#include <dune/common/deprecated.hh>
-
 namespace Dune {
   namespace PDELab {
 
@@ -272,7 +270,7 @@ namespace Dune {
 
         //! Deprecated. Use `skipEntity` insted
         template<typename EG>
-        DUNE_DEPRECATED bool assembleCell(const EG & eg)
+        [[deprecated]] bool assembleCell(const EG & eg)
         {
           return skipEntity(eg);
         }
