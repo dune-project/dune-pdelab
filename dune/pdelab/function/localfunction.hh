@@ -67,6 +67,59 @@ namespace PDELab {
 
   };
 
+  template<class F>
+  class DynamicPowerLocalFunction
+    : public TypeTree::DynamicPowerNode<F>
+  {
+    typedef TypeTree::DynamicPowerNode<F> NodeType;
+  public:
+    typedef DynamicPowerDifferentiableFunctionLocalViewTag ImplementationTag;
+
+    //! Set the time in all leaf nodes of this function tree
+    template <typename TT>
+    void setTime(TT time){
+      PowerCompositeSetTimeVisitor<TT> visitor(time);
+      TypeTree::applyToTree(*this,visitor);
+    }
+
+    template <typename Entity>
+    void bind(const Entity & e){
+      Imp::PowerCompositeBindVisitor<Entity> visitor(e);
+      TypeTree::applyToTree(*this,visitor);
+    }
+
+    void unbind(){
+      Imp::PowerCompositeUnbindVisitor visitor;
+      TypeTree::applyToTree(*this,visitor);
+    }
+
+    //! Default Constructor
+    DynamicPowerLocalFunction()
+    {}
+
+    //! Construct a PowerGridFunction with k clones of the function t
+    DynamicPowerLocalFunction (F& f)
+      : NodeType(f) {}
+
+    /** \brief Initialize all children with different function objects
+     *
+     *  @param t0 The initializer for the first child.
+     *  @param t1 The initializer for the second child.
+     *  @param ... more initializers
+     */
+    template<typename C0, typename C1, typename... Children>
+    DynamicPowerLocalFunction (C0&& c0, C1&& c1, Children&&... children)
+      : NodeType(std::forward(c0), std::forward(c1), std::forward(children)...)
+    {
+    }
+
+    //! Transformation Constructor, taking the set of new children
+    DynamicPowerLocalFunction(const std::vector<Dune::shared_ptr<F>>& children)
+      : NodeType(children)
+    {}
+
+  };
+
   template<typename... Children>
   class CompositeLocalFunction
     : public TypeTree::CompositeNode<Children...>
@@ -163,6 +216,10 @@ namespace PDELab {
   template<typename PowerNode>
   Dune::TypeTree::SimplePowerNodeTransformation<PowerNode,GridFunctionToLocalViewTransformation,PowerLocalFunction>
   registerNodeTransformation(PowerNode* p, GridFunctionToLocalViewTransformation* t, PowerGridFunctionTag* tag);
+
+  template<typename DynamicPowerNode>
+  Dune::TypeTree::SimpleDynamicPowerNodeTransformation<DynamicPowerNode,GridFunctionToLocalViewTransformation,DynamicPowerLocalFunction>
+  registerNodeTransformation(DynamicPowerNode* p, GridFunctionToLocalViewTransformation* t, DynamicPowerGridFunctionTag* tag);
 
   template<typename CompositeNode>
   Dune::TypeTree::SimpleCompositeNodeTransformation<CompositeNode,GridFunctionToLocalViewTransformation,CompositeLocalFunction>

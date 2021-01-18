@@ -430,6 +430,14 @@ namespace Dune {
 
         };
 
+        template<typename LFS,
+                typename Child,
+                typename TreePath>
+        inline bool visitChild(const LFS& n, const Child& c, const TreePath& p)
+        {
+          return true;
+        }
+
         //! Helper function for extracting (or building) the component name and adding
         //! the component to the VTKWriter.
         template<typename DGF, typename TreePath>

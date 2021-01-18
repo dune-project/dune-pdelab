@@ -119,6 +119,97 @@ namespace Dune {
     power_gfs_to_entityblocked_ordering_descriptor<GFS,Transformation>
     register_power_gfs_to_ordering_descriptor(GFS*,Transformation*,EntityBlockedOrderingTag*);
 
+    template<typename ChildOrdering>
+    class DynamicPowerEntityBlockedLocalOrdering
+      : public TypeTree::DynamicPowerNode<ChildOrdering>
+      , public LocalOrderingBase<typename ChildOrdering::Traits::EntitySet,
+                                 typename ChildOrdering::Traits::DOFIndex,
+                                 typename ChildOrdering::Traits::ContainerIndex>
+    {
+
+      typedef TypeTree::DynamicPowerNode<ChildOrdering> NodeT;
+      typedef LocalOrderingBase<typename ChildOrdering::Traits::EntitySet,
+                                typename ChildOrdering::Traits::DOFIndex,
+                                typename ChildOrdering::Traits::ContainerIndex> BaseT;
+
+    public:
+
+      static const bool consume_tree_index = true;
+
+      typedef typename BaseT::Traits Traits;
+
+      DynamicPowerEntityBlockedLocalOrdering(const typename NodeT::NodeStorage& child_storage, bool container_blocked)
+        : NodeT(child_storage)
+        , BaseT(*this,container_blocked,nullptr)
+      {}
+
+      const typename Traits::EntitySet& entitySet() const
+      {
+        return this->child(0).entitySet();
+      }
+
+    };
+
+    template<typename GFS, typename Transformation>
+    struct dynamic_power_gfs_to_local_ordering_descriptor<GFS,Transformation,EntityBlockedOrderingTag>
+    {
+
+      static const bool recursive = true;
+
+      template<typename TC>
+      struct result
+      {
+        typedef DynamicPowerEntityBlockedLocalOrdering<TC> type;
+        typedef std::shared_ptr<type> storage_type;
+      };
+
+      template<typename TC>
+      static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const std::vector<std::shared_ptr<TC>>& children)
+      {
+        return typename result<TC>::type(children,gfs.backend().blocked(gfs));
+      }
+
+      template<typename TC>
+      static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t, const std::vector<std::shared_ptr<TC>>& children)
+      {
+        return std::make_shared<typename result<TC>::type>(children,gfs->backend().blocked(*gfs));
+      }
+
+    };
+
+
+
+    template<typename GFS, typename Transformation>
+    struct dynamic_power_gfs_to_entityblocked_ordering_descriptor
+    {
+
+      static const bool recursive = false;
+
+      typedef TypeTree::TransformTree<GFS,gfs_to_local_ordering<Transformation> > LocalOrderingTransformation;
+      typedef typename LocalOrderingTransformation::Type LocalOrdering;
+
+      typedef GridViewOrdering<LocalOrdering> transformed_type;
+
+      typedef std::shared_ptr<transformed_type> transformed_storage_type;
+
+      static transformed_type transform(const GFS& gfs, const Transformation& t)
+      {
+        transformed_type r(make_tuple(std::make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked(gfs),const_cast<GFS*>(&gfs));
+        return std::move(r);
+      }
+
+      static transformed_storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t)
+      {
+        transformed_storage_type r(std::make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked(*gfs),const_cast<GFS*>(gfs.get())));
+        return std::move(r);
+      }
+
+    };
+
+    template<typename GFS, typename Transformation>
+    dynamic_power_gfs_to_entityblocked_ordering_descriptor<GFS,Transformation>
+    register_dynamic_power_gfs_to_ordering_descriptor(GFS*,Transformation*,EntityBlockedOrderingTag*);
+
 
 
     template<typename... Children>

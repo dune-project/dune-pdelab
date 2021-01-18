@@ -30,18 +30,16 @@ namespace Dune {
       typedef std::vector<CI> CIVector;
       typedef std::vector<DI> DIVector;
 
-    private:
-
-      static const size_type leaf_count = TypeTree::TreeInfo<Ordering>::leafCount;
-
     public:
 
-      typedef std::array<size_type,leaf_count + 1> Offsets;
+
+      typedef typename TreeContainerHelper<size_type,Ordering>::type Offsets;
 
       EntityIndexCache(const GFS& gfs)
         : _gfs(gfs)
         , _container_indices(gfs.maxLocalSize())
         , _dof_indices(map_dof_indices ? gfs.maxLocalSize() : 0)
+        , _offsets(TypeTree::leafCount(gfs.ordering())+1)
       {
         std::fill(_offsets.begin(),_offsets.end(),0);
       }
@@ -74,7 +72,7 @@ namespace Dune {
 
       size_type size() const
       {
-        return _offsets[leaf_count];
+        return _offsets[TypeTree::leafCount(_gfs.ordering())];
       }
 
       const Offsets& offsets() const

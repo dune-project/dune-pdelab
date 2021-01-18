@@ -250,6 +250,12 @@ namespace Dune {
 
 
     template<typename GFS, typename Transformation, typename U>
+    struct dynamic_power_gfs_to_local_ordering_descriptor<GFS,Transformation,ordering::Permuted<U> >
+      : public dynamic_power_gfs_to_local_ordering_descriptor<GFS,Transformation,U>
+    {};
+
+
+    template<typename GFS, typename Transformation, typename U>
     struct composite_gfs_to_local_ordering_descriptor<GFS,Transformation,ordering::Permuted<U> >
       : public composite_gfs_to_local_ordering_descriptor<GFS,Transformation,U>
     {};

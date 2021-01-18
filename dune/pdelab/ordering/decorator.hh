@@ -326,9 +326,116 @@ namespace Dune {
       register_power_gfs_to_ordering_descriptor(GFS*,Transformation*,decorated_ordering_tag<D,U>*);
 
 
+      template<typename GFS, typename Transformation, typename OrderingTag>
+      struct recursive_dynamic_power_gfs_to_decorated
+      {
+
+        static const bool recursive = true;
+
+        template<typename TC>
+        struct result
+        {
+
+          typedef typename dynamic_power_gfs_to_ordering_descriptor<
+            GFS,
+            Transformation,
+            typename OrderingTag::Undecorated
+            >::type undecorated_descriptor;
+
+          typedef typename undecorated_descriptor::template result<TC>::type undecorated_type;
+          typedef typename gfs_to_decorator_descriptor<
+            GFS,
+            Transformation,
+            undecorated_type,
+            OrderingTag,
+            typename OrderingTag::Decorator
+            >::type decorator_descriptor;
+
+          typedef typename decorator_descriptor::transformed_type type;
+          typedef typename decorator_descriptor::transformed_storage_type storage_type;
+
+        };
+
+        template<typename TC>
+        static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const std::array<std::shared_ptr<TC>,TypeTree::StaticDegree<GFS>::value>& children)
+        {
+          return result<TC>::decorator_descriptor::transform(gfs,t,std::make_shared<typename result<TC>::undecorated_type>(result<TC>::undecorated_descriptor::transform(gfs,t,children)));
+        }
+
+        template<typename TC>
+        static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs_pointer, const Transformation& t, const std::array<std::shared_ptr<TC>,TypeTree::StaticDegree<GFS>::value>& children)
+        {
+          return result<TC>::decorator_descriptor::transform(gfs_pointer,t,result<TC>::undecorated_descriptor::transform_storage(gfs_pointer,t,children));
+        }
+
+      };
 
 
+      template<typename GFS, typename Transformation, typename OrderingTag>
+      struct nonrecursive_dynamic_power_gfs_to_decorated
+      {
 
+        static const bool recursive = false;
+
+        typedef typename dynamic_power_gfs_to_ordering_descriptor<
+          GFS,
+          Transformation,
+          typename OrderingTag::Undecorated
+          >::type undecorated_descriptor;
+
+        typedef typename undecorated_descriptor::transformed_type undecorated_type;
+
+        typedef typename gfs_to_decorator_descriptor<
+          GFS,
+          Transformation,
+          undecorated_type,
+          OrderingTag,
+          typename OrderingTag::Decorator
+          >::type decorator_descriptor;
+
+        typedef typename decorator_descriptor::transformed_type transformed_type;
+        typedef typename decorator_descriptor::transformed_storage_type transformed_storage_type;
+
+        static transformed_type transform(const GFS& gfs, const Transformation& t)
+        {
+          return decorator_descriptor::transform(gfs,t,std::make_shared<undecorated_type>(undecorated_descriptor::transform(gfs,t)));
+        }
+
+        static transformed_storage_type transform_storage(std::shared_ptr<const GFS>& gfs_pointer, const Transformation& t)
+        {
+          return decorator_descriptor::transform_storage(gfs_pointer,t,undecorated_descriptor::transform_storage(gfs_pointer,t));
+        }
+
+      };
+
+
+      template<typename GFS, typename Transformation, typename OrderingTag>
+      struct dynamic_power_gfs_to_decorated
+        : public std::conditional<
+            dynamic_power_gfs_to_ordering_descriptor<
+              GFS,
+              Transformation,
+              typename OrderingTag::Undecorated
+              >::type::recursive,
+            recursive_dynamic_power_gfs_to_decorated<
+              GFS,
+              Transformation,
+              OrderingTag
+              >,
+            nonrecursive_dynamic_power_gfs_to_decorated<
+              GFS,
+              Transformation,
+              OrderingTag>
+          >::type
+      {};
+
+      template<typename GFS, typename Transformation, typename D, typename U>
+      dynamic_power_gfs_to_decorated<
+        GFS,
+        Transformation,
+        decorated_ordering_tag<D,U>
+        >
+      register_dynamic_power_gfs_to_ordering_descriptor(GFS*,Transformation*,decorated_ordering_tag<D,U>*);
 
       template<typename GFS, typename Transformation, typename OrderingTag>
       struct recursive_composite_gfs_to_decorated

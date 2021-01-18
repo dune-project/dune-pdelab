@@ -58,7 +58,7 @@ namespace Dune {
       {
         // include size of leaf ordering offsets and of the rank if necessary
         return gfs.dataHandleSize(e) * sizeof(E)
-          + (gfs.sendLeafSizes() ? TypeTree::TreeInfo<typename GFS::Ordering>::leafCount * sizeof(size_type) : 0)
+          + (gfs.sendLeafSizes() ? TypeTree::leafCount(gfs.ordering()) * sizeof(size_type) : 0)
           + (transmitRank() ? sizeof(int) : 0);
       }
 
@@ -135,8 +135,6 @@ namespace Dune {
 
       typedef typename CommunicationDescriptor::DataType DataType;
       typedef typename GFS::Traits::SizeType size_type;
-
-      static const size_type leaf_count = TypeTree::TreeInfo<typename GFS::Ordering>::leafCount;
 
       GFSDataHandle(const GFS& gfs, V& v, GatherScatter gather_scatter = GatherScatter(), CommunicationDescriptor communication_descriptor = CommunicationDescriptor())
         : _gfs(gfs)

@@ -33,10 +33,20 @@ void test (const GV& gv)
     Dune::PDELab::ISTL::VectorBackend<>, Dune::PDELab::LexicographicOrderingTag> PowerGFS;
   PowerGFS powergfs(q2gfs);
 
-  // composite grid function space
+  // dynamic power grid function space
+  typedef Dune::PDELab::DynamicPowerGridFunctionSpace<Q2GFS,
+    Dune::PDELab::ISTL::VectorBackend<>, Dune::PDELab::LexicographicOrderingTag> DynamicPowerGFS;
+  DynamicPowerGFS dynamicpowergfs(q2gfs,q2gfs);
+
+  // composite grid function space (static power)
   typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTL::VectorBackend<>,
       Dune::PDELab::LexicographicOrderingTag,PowerGFS,Q1GFS> CompositeGFS;
   CompositeGFS compositegfs(powergfs,q1gfs);
+
+  // composite grid function space (dynamic power)
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTL::VectorBackend<>,
+      Dune::PDELab::LexicographicOrderingTag,DynamicPowerGFS,Q1GFS> DynamicCompositeGFS;
+  DynamicCompositeGFS dynamiccompositegfs(dynamicpowergfs,q1gfs);
 
   // make coefficent Vectors - we need to make copies of the spaces because we stuck
   // them in a hierarchy
@@ -44,11 +54,34 @@ void test (const GV& gv)
   Q2GFS q2gfs2(gv,q22dfem);
   V x(q2gfs2);
   x = 0.0;
+
   using VP = Dune::PDELab::Backend::Vector<PowerGFS,double>;
   Q2GFS q2gfs_pc(gv,q22dfem);
   PowerGFS powergfs2(q2gfs_pc);
   VP xp(powergfs2);
   xp = 0.0;
+
+  using VDP = Dune::PDELab::Backend::Vector<DynamicPowerGFS,double>;
+  Q2GFS q2gfs_dpc(gv,q22dfem);
+  DynamicPowerGFS dynamicpowergfs2(q2gfs_dpc,q2gfs_dpc);
+  VDP xdp(dynamicpowergfs2);
+  xdp = 0.0;
+
+  using VC = Dune::PDELab::Backend::Vector<CompositeGFS,double>;
+  Q2GFS q2gfs_c(gv,q22dfem);
+  Q1GFS q1gfs_c(gv,q12dfem);
+  PowerGFS powergfs_c(q2gfs_c);
+  CompositeGFS compositegfs2(powergfs_c,q1gfs_c);
+  VC xc(compositegfs2);
+  xc = 0.0;
+
+  using VDC = Dune::PDELab::Backend::Vector<DynamicCompositeGFS,double>;
+  Q2GFS q2gfs_dc(gv,q22dfem);
+  Q1GFS q1gfs_dc(gv,q12dfem);
+  DynamicPowerGFS dynamicpowergfs_dc(q2gfs_dc,q2gfs_dc);
+  DynamicCompositeGFS dynamiccompositegfs2(dynamicpowergfs_dc,q1gfs_dc);
+  VDC xdc(dynamiccompositegfs2);
+  xdc = 0.0;
 
   // make local function space object
   typedef Dune::PDELab::AnySpaceTag Tag;
@@ -68,11 +101,31 @@ void test (const GV& gv)
   VPView xp_view(xp);
   Dune::PDELab::LocalVector<double, Tag> xlp(powerlfs.maxSize());
 
+  typedef typename Dune::PDELab::LocalFunctionSpace<DynamicPowerGFS> DynamicPowerLFS;
+  DynamicPowerLFS dynamicpowerlfs(dynamicpowergfs2);
+  typedef Dune::PDELab::LFSIndexCache<DynamicPowerLFS> DynamicPowerLFSCache;
+  DynamicPowerLFSCache dynamicpowerlfsCache(dynamicpowerlfs);
+  typedef typename VDP::template ConstLocalView<DynamicPowerLFSCache> VDPView;
+  VDPView xdp_view(xdp);
+  Dune::PDELab::LocalVector<double, Tag> xldp(dynamicpowerlfs.maxSize());
+
   typedef typename Dune::PDELab::LocalFunctionSpace<CompositeGFS> CompositeLFS;
-  CompositeLFS compositelfs(compositegfs);
-  //typedef Dune::PDELab::LFSIndexCache<CompositeLFS> CompositeLFSCache;
-  //CompositeLFSCache compositelfsCache(compositelfs);
-  //  std::vector<double> xlc(compositelfs.maxSize());
+  CompositeLFS compositelfs(compositegfs2);
+  typedef Dune::PDELab::LFSIndexCache<CompositeLFS> CompositeLFSCache;
+  CompositeLFSCache compositelfsCache(compositelfs);
+  // typedef typename VC::template ConstLocalView<CompositeLFS> VCView;
+  // VCView xc_view(xdp);
+  // Dune::PDELab::LocalVector<double, Tag> xlc(compositelfs.maxSize());
+
+  typedef typename Dune::PDELab::LocalFunctionSpace<DynamicCompositeGFS> DynamicCompositeLFS;
+  DynamicCompositeLFS dynamiccompositelfs(dynamiccompositegfs2);
+  typedef Dune::PDELab::LFSIndexCache<DynamicCompositeLFS> DynamicCompositeLFSCache;
+  DynamicCompositeLFSCache dynamiccompositelfsCache(dynamiccompositelfs);
+  // typedef typename VC::template ConstLocalView<CompositeLFS> VCView;
+  // VCView xc_view(xdp);
+  // Dune::PDELab::LocalVector<double, Tag> xlc(compositelfs.maxSize());
+
+
 
   typedef Dune::TypeTree::StaticTreePath<1> Path1;
   typedef Dune::PDELab::GridFunctionSubSpace<CompositeGFS, Path1> SubGFS1;
@@ -81,11 +134,13 @@ void test (const GV& gv)
   SubLFS1 sublfs1(subgfs1);
 
   // loop over elements
+  std::cout << "=============================" << std::endl;
   typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
   for (ElementIterator it = gv.template begin<0>();
        it!=gv.template end<0>(); ++it)
     {
       q2lfs.bind(*it);
+      std::cout << "Q2LFS:" << std::endl;
       q2lfs.debug();
       q2lfsCache.update();
       x_view.bind(q2lfsCache);
@@ -94,6 +149,7 @@ void test (const GV& gv)
       assert(q2lfs.size() ==
           q2lfs.localVectorSize());
 
+      std::cout << "PowerLFS:" << std::endl;
       powerlfs.bind(*it);
       powerlfs.debug();
       powerlfsCache.update();
@@ -106,6 +162,24 @@ void test (const GV& gv)
       assert(powerlfs.localVectorSize() ==
           powerlfs.template child<1>().localVectorSize());
 
+      std::cout << "DynamicPowerLFS:" << std::endl;
+      dynamicpowerlfs.bind(*it);
+      dynamicpowerlfs.debug();
+      dynamicpowerlfsCache.update();
+      xdp_view.bind(dynamicpowerlfsCache);
+      xdp_view.read(xldp);
+      assert(dynamicpowerlfs.size() ==
+          dynamicpowerlfs.localVectorSize());
+      assert(dynamicpowerlfs.localVectorSize() ==
+          dynamicpowerlfs.child(0).localVectorSize());
+      assert(dynamicpowerlfs.localVectorSize() ==
+          dynamicpowerlfs.child(1).localVectorSize());
+
+      // dynamic and static power trees should have the same indices
+      for (size_t i = 0; i < powerlfs.size(); i++)
+        assert(dynamicpowerlfsCache.containerIndex(i)==powerlfsCache.containerIndex(i));
+
+      std::cout << "CompositeLFS:" << std::endl;
       compositelfs.bind(*it);
       compositelfs.debug();
       assert(compositelfs.size() ==
@@ -118,6 +192,24 @@ void test (const GV& gv)
           compositelfs.template child<0>().template child<1>().localVectorSize());
       assert(compositelfs.localVectorSize() ==
           compositelfs.template child<1>().localVectorSize());
+
+      std::cout << "DynamicCompositeLFS:" << std::endl;
+      dynamiccompositelfs.bind(*it);
+      dynamiccompositelfs.debug();
+      assert(dynamiccompositelfs.size() ==
+          dynamiccompositelfs.localVectorSize());
+      assert(dynamiccompositelfs.localVectorSize() ==
+          dynamiccompositelfs.template child<0>().localVectorSize());
+      assert(dynamiccompositelfs.localVectorSize() ==
+          dynamiccompositelfs.template child<0>().child(0).localVectorSize());
+      assert(dynamiccompositelfs.localVectorSize() ==
+          dynamiccompositelfs.template child<0>().child(1).localVectorSize());
+      assert(dynamiccompositelfs.localVectorSize() ==
+          dynamiccompositelfs.template child<1>().localVectorSize());
+
+      // dynamic and static power trees should have the same indices
+      for (size_t i = 0; i < compositelfs.size(); i++)
+        assert(dynamiccompositelfsCache.containerIndex(i)==compositelfsCache.containerIndex(i));
 
       // check LFS<SubSpace<CompositeSpace,1>> == LFS<CompositeSpace>::Child<1>
       sublfs1.bind(*it);

@@ -68,6 +68,9 @@ struct test<2> {
         Dune::PDELab:: EntityBlockedOrderingTag> PGFS17B;
     PGFS17B pgfs17b(gfs2);
 
+    typedef Dune::PDELab::DynamicPowerGridFunctionSpace<GFS2,Dune::PDELab::ISTL::VectorBackend<> > DPGFS;
+    DPGFS dpgfs({gfs2,gfs2,gfs2});
+
     // make coefficent Vectors - we need to use copies of the spaces because the original
     // spaces are now part of a larger hierarchy
     {

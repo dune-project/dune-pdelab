@@ -462,6 +462,106 @@ namespace Dune {
       {}
     };
 
+    template<typename T>
+    struct DynamicPowerConstraintsParameters
+      : public TypeTree::DynamicPowerNode<T>
+    {
+      typedef TypeTree::DynamicPowerNode<T> BaseT;
+
+      DynamicPowerConstraintsParameters()
+        : BaseT()
+      {}
+
+      DynamicPowerConstraintsParameters(T& c)
+        : BaseT(c)
+      {}
+
+      DynamicPowerConstraintsParameters (T& c0,
+                              T& c1)
+        : BaseT(c0,c1)
+      {}
+
+      DynamicPowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2)
+        : BaseT(c0,c1,c2)
+      {}
+
+      DynamicPowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3)
+        : BaseT(c0,c1,c2,c3)
+      {}
+
+      DynamicPowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4)
+        : BaseT(c0,c1,c2,c3,c4)
+      {}
+
+      DynamicPowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4,
+                              T& c5)
+        : BaseT(c0,c1,c2,c3,c4,c5)
+      {}
+
+      DynamicPowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4,
+                              T& c5,
+                              T& c6)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6)
+      {}
+
+      DynamicPowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4,
+                              T& c5,
+                              T& c6,
+                              T& c7)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7)
+      {}
+
+      DynamicPowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4,
+                              T& c5,
+                              T& c6,
+                              T& c7,
+                              T& c8)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8)
+      {}
+
+      DynamicPowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4,
+                              T& c5,
+                              T& c6,
+                              T& c7,
+                              T& c8,
+                              T& c9)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
+      {}
+
+      DynamicPowerConstraintsParameters (const std::vector<std::shared_ptr<T>>& children)
+        : BaseT(children)
+      {}
+    };
+
 #ifndef DOXYGEN
 
     //! wraps a BoundaryGridFunction in a OldStyleConstraintsParameter class

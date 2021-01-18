@@ -36,6 +36,8 @@ namespace Dune {
       enum{
         //! \brief True if this grid function space is composed of others.
         isComposite = 1,
+        //! \brief True if it has a dynamic number of childen
+        isDynamic = 0,
         //! \brief number of child spaces
         noChilds = k
       };
