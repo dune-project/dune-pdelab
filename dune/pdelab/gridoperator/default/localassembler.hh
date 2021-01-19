@@ -108,6 +108,42 @@ namespace Dune{
         return lop_;
       }
 
+      /** Assemble on a given cell without function spaces.
+
+          \return If true, the assembling for this cell is assumed to
+          be complete and the assembler continues with the next grid
+          cell.
+       */
+      template<class EG>
+      bool skipEntity(const EG & eg) const
+      {
+        static_assert(
+            models<Impl::HasDoSkipEntity, LOP>(),
+            "Your local operator does not provide the 'doSkipEntity' flag. "
+            "If you are porting a previous implementation, set the flag to "
+            "false");
+        return Dune::PDELab::LocalAssemblerCallSwitch<
+            LOP, LOP::doSkipEntity>::skip_entity(lop_, eg);
+      }
+
+      /** Assemble on a given intersection without function spaces.
+
+          \return If true, the assembling for this intersection is assumed to
+          be complete and the assembler continues with the next grid
+          intersection.
+       */
+      template<class IG>
+      bool skipIntersection(const IG & ig) const
+      {
+        static_assert(models<Impl::HasDoSkipIntersection, LOP>(),
+                      "Your local operator does not provide the "
+                      "'doSkipIntersection' flag. "
+                      "If you are porting a previous implementation, set the "
+                      "flag to false");
+        return Dune::PDELab::LocalAssemblerCallSwitch<
+            LOP, LOP::doSkipIntersection>::skip_intersection(lop_, ig);
+      }
+
       //! Notifies the local assembler about the current time of
       //! assembling. Should be called before assembling if the local
       //! operator has time dependencies.

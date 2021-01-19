@@ -268,10 +268,24 @@ namespace Dune {
         //! @name Assembly methods
         //! @{
 
+        //! Deprecated. Use `skipEntity` insted
+        template<typename EG>
+        [[deprecated]] bool assembleCell(const EG & eg)
+        {
+          return skipEntity(eg);
+        }
+
         //! Method for per-cell assembly setup and possibly aborting assembly of current cell
         //! - returns false by default to continue cell assembly.
         template<typename EG>
-        bool assembleCell(const EG & eg)
+        bool skipEntity(const EG & eg)
+        {
+          return false;
+        }
+
+        //! - returns false by default to continue intersection assembly.
+        template<typename IG>
+        bool skipIntersection(const IG & ig)
         {
           return false;
         }

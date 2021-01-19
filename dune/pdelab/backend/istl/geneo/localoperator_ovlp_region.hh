@@ -27,6 +27,10 @@ namespace Dune {
         gfs.gridView().communicate(addh,Dune::All_All_Interface,Dune::ForwardCommunication);
       }
 
+      // selective assembly flags
+      enum { doSkipEntity = LocalOperatorBase::doSkipEntity };
+      enum { doSkipIntersection = LocalOperatorBase::doSkipIntersection };
+
       // pattern assembly flags
       enum { doPatternVolume = LocalOperatorBase::doPatternVolume };
       enum { doPatternSkeleton = LocalOperatorBase::doPatternSkeleton };
@@ -46,6 +50,18 @@ namespace Dune {
 
       enum { doSkeletonTwoSided = LocalOperatorBase::doSkeletonTwoSided };
       enum { isLinear = LocalOperatorBase::isLinear };
+
+      template<typename EG>
+      bool skip_entity (const EG& eg) const
+      {
+        return baseop.skip_entity(eg);
+      }
+
+      template<typename IG>
+      bool skip_intersection (const IG& ig) const
+      {
+        return baseop.skip_intersection(ig);
+      }
 
       template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume (const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern) const
