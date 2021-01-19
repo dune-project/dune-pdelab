@@ -90,13 +90,13 @@ namespace Dune {
       //! \brief Whether to do selective cell assembly, i.e. whether
       //!        or not skip_entity() should be called.
       enum { doSkipEntity            =
-             std::conjunction_v<std::integral_constant<bool,Args::doSkipEntity>...>                   };
+             std::disjunction_v<std::integral_constant<bool,Args::doSkipEntity>...>                   };
 
 
       //! \brief Whether to do selective intersection assembly, i.e. whether
       //!        or not skip_intersection() should be called.
       enum { doSkipIntersection      =
-             std::conjunction_v<std::integral_constant<bool,Args::doSkipIntersection>...>             };
+             std::disjunction_v<std::integral_constant<bool,Args::doSkipIntersection>...>             };
 
       ////////////////////////////
 
