@@ -52,15 +52,15 @@ namespace Dune {
       enum { isLinear = LocalOperatorBase::isLinear };
 
       template<typename EG>
-      void skip_entity (const EG& eg, bool& skip) const
+      bool skip_entity (const EG& eg) const
       {
-        baseop.skip_entity(eg,skip);
+        return baseop.skip_entity(eg);
       }
 
       template<typename IG>
-      void skip_intersection (const IG& ig, bool& skip) const
+      bool skip_intersection (const IG& ig) const
       {
-        baseop.skip_intersection(ig,skip);
+        return baseop.skip_intersection(ig);
       }
 
       template<typename LFSU, typename LFSV, typename LocalPattern>

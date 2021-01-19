@@ -51,13 +51,15 @@ namespace Dune {
       // Selective assembly methods
       //================
       template<typename EG>
-      static void skip_entity (const LOP& lop, const EG& eg, bool& skip)
+      static bool skip_entity (const LOP& lop, const EG& eg)
       {
+        return false;
       }
 
       template<typename IG>
-      static void skip_intersection (const LOP& lop, const IG& ig, bool& skip)
+      static bool skip_intersection (const LOP& lop, const IG& ig)
       {
+        return false;
       }
 
       //================
@@ -196,15 +198,17 @@ namespace Dune {
       // Selective assembly methods
       //================
       template<typename EG>
-      static void skip_entity (const LOP& lop, const EG& eg, bool& skip)
+      static bool skip_entity (const LOP& lop, const EG& eg)
       {
-        lop.skip_entity(eg,skip);
+        static_assert(models<Impl::HasSkipEntity<EG>,LOP>());
+        return lop.skip_entity(eg);
       }
 
       template<typename IG>
-      static void skip_intersection (const LOP& lop, const IG& ig, bool& skip)
+      static bool skip_intersection (const LOP& lop, const IG& ig)
       {
-        lop.skip_intersection(ig,skip);
+        static_assert(models<Impl::HasSkipIntersection<IG>,LOP>());
+        return lop.skip_intersection(ig);
       }
 
       //================
@@ -408,14 +412,14 @@ namespace Dune {
       auto skipEntity = [](const auto& lop, auto&... args)
       {
         using LOP = std::decay_t<decltype(lop)>;
-        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doSkipEntity>::
+        return Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doSkipEntity>::
           skip_entity(lop, args...);
       };
 
       auto skipIntersection = [](const auto& lop, auto&... args)
       {
         using LOP = std::decay_t<decltype(lop)>;
-        Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doSkipIntersection>::
+        return Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doSkipIntersection>::
           skip_intersection(lop, args...);
       };
 

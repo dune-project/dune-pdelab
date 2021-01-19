@@ -15,7 +15,7 @@ namespace Dune{
 
 #ifndef DOXYGEN
 
-    namespace impl {
+    namespace Impl {
 
       // ********************************************************************************
       // concept checks that test whether a local operator provides a given flag

@@ -117,15 +117,13 @@ namespace Dune{
       template<class EG>
       bool skipEntity(const EG & eg) const
       {
-        bool skip = false;
         static_assert(
-          models<impl::HasDoSkipEntity,LOP>(),
-          "Your local operator does not provide the 'doSkipEntity' flag. "
-          "If you are porting a previous implementation, set the flag to false"
-          );
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doSkipEntity>::
-          skip_entity(lop_,eg,skip);
-        return skip;
+            models<Impl::HasDoSkipEntity, LOP>(),
+            "Your local operator does not provide the 'doSkipEntity' flag. "
+            "If you are porting a previous implementation, set the flag to "
+            "false");
+        return Dune::PDELab::LocalAssemblerCallSwitch<
+            LOP, LOP::doSkipEntity>::skip_entity(lop_, eg);
       }
 
       /** Assemble on a given intersection without function spaces.
@@ -137,15 +135,13 @@ namespace Dune{
       template<class IG>
       bool skipIntersection(const IG & ig) const
       {
-        bool skip = false;
-        static_assert(
-          models<impl::HasDoSkipIntersection,LOP>(),
-          "Your local operator does not provide the 'doSkipIntersection' flag. "
-          "If you are porting a previous implementation, set the flag to false"
-          );
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doSkipIntersection>::
-          skip_intersection(lop_,ig,skip);
-        return skip;
+        static_assert(models<Impl::HasDoSkipIntersection, LOP>(),
+                      "Your local operator does not provide the "
+                      "'doSkipIntersection' flag. "
+                      "If you are porting a previous implementation, set the "
+                      "flag to false");
+        return Dune::PDELab::LocalAssemblerCallSwitch<
+            LOP, LOP::doSkipIntersection>::skip_intersection(lop_, ig);
       }
 
       //! Notifies the local assembler about the current time of

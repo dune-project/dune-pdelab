@@ -118,9 +118,11 @@ namespace Dune {
        * skipped.
        */
       template<typename EG>
-      void skip_entity
-      ( const EG& eg, bool& skip) const
-      {}
+      bool skip_entity
+      ( const EG& eg) const
+      {
+        return false;
+      }
 
       //! whether to assembly methods associated with a given intersection
       /**
@@ -132,9 +134,11 @@ namespace Dune {
        * all skeleton, and boundary methods are skipped.
        */
       template<typename IG>
-      void skip_intersection
-      ( const IG& ig, bool& skip) const
-      {}
+      bool skip_intersection
+      ( const IG& ig) const
+      {
+        return false;
+      }
 
       //! \} Methods for selective assembly
 
