@@ -188,7 +188,44 @@ namespace Dune {
             AF_exterior_.mv(*basis_vector, Atimesv);
 
             for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
-              field_type entry = *subdomainbasis_->get_basis_vector(basis_index)*Atimesv;
+              field_type entry=0.0;
+              std::vector<double> contribution((*subdomainbasis_->get_basis_vector(basis_index)).N());
+              for(int vect_iterator=0; vect_iterator<(*subdomainbasis_->get_basis_vector(basis_index)).N(); vect_iterator++){
+                for(int j=0; j<3; j++){
+                  contribution[vect_iterator] = (*subdomainbasis_->get_basis_vector(basis_index))[vect_iterator][j] * Atimesv[vect_iterator][j];
+                  entry+= (*subdomainbasis_->get_basis_vector(basis_index))[vect_iterator][j] * Atimesv[vect_iterator][j];
+                }
+              }
+
+
+
+              // if(basis_index == 0 && basis_index_remote == 0 && ((my_rank_==0 && neighbor_ranks_[neighbor_id]==1)||(my_rank_==1 && neighbor_ranks_[neighbor_id]==0))){
+              if(basis_index == 0 && basis_index_remote == 0){
+                std::cout << entry << " | " << my_rank_ << " | " << neighbor_ranks_[neighbor_id] << std::endl;
+                // for(int it = 0; it<(*subdomainbasis_->get_basis_vector(basis_index)).N(); it++){
+                //   // if ((my_rank_==0 && it==363) || (my_rank_==1 && it==60)){
+                //   // if ((my_rank_==0 && it==190) || (my_rank_==1 && it==386)){
+                //   // if (my_rank_==1){
+                //   //   int i1=it;
+                //   //   // if (std::abs(Atimesv[it][0]) > 0.0001 && std::abs(Atimesv[it][1]) > 0.0001 && std::abs(Atimesv[it][2]) > 0.0001){
+                //   //   // if (std::abs(Atimesv[it]) > 0.0001){
+                //   //     std::cout << my_rank_ << " | i       | " << it << std::endl;
+                //   //     std::cout << my_rank_ << " | contrib | " << contribution[it] << std::endl;
+                //   //     std::cout << my_rank_ << " | Phi[i]  | " << (*subdomainbasis_->get_basis_vector(basis_index))[it] << std::endl;
+                //   //     std::cout << my_rank_ << " | Psy*A[i]| " << Atimesv[it] << std::endl;
+                //   //     std::cout << my_rank_ << " | Psy[i]  | " << (*basis_vector)[it] << std::endl;
+                //   //     std::cout << my_rank_ << " | A[i][i]  | " << AF_exterior_[i1][i1] << std::endl;
+                //   //     // std::cout << i1 << " || " << i1 << std::endl;
+                //   //     // std::cout << my_rank_ << " | Aii[0]  | " << AF_exterior_[i1][i1][0][0] << ", " << AF_exterior_[i1][i1][0][1] << ", " << AF_exterior_[i1][i1][0][2] << std::endl;
+                //   //     // std::cout << my_rank_ << " | Aii[1]  | " << AF_exterior_[i1][i1][1][0] << ", " << AF_exterior_[i1][i1][1][1] << ", " << AF_exterior_[i1][i1][1][2] << std::endl;
+                //   //     // std::cout << my_rank_ << " | Aii[2]  | " << AF_exterior_[i1][i1][2][0] << ", " << AF_exterior_[i1][i1][2][1] << ", " << AF_exterior_[i1][i1][2][2] << std::endl;
+                //   //     std::cout << std::endl;
+                //   //   // }
+                //   // }
+                // }
+
+
+              }
               local_rows[basis_index][neighbor_id].push_back(entry);
             }
           }

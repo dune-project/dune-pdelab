@@ -24,17 +24,6 @@ void driver(Dune::MPIHelper& helper) {
   // ~~~~~~~~~~~~~~~~~~
   std::string path_to_storage = "Offline/";
 
-  //  Type definitions
-  const int components = 1;
-  using K = double;
-  using Vector = Dune::BlockVector<Dune::FieldVector<K,components>>;
-  using Matrix = Dune::BCRSMatrix<Dune::FieldMatrix<K,components,components>>;
-
-  typedef Dune::BlockVector<Dune::FieldVector<K, 1>> CoarseVector;
-  typedef Dune::BCRSMatrix<Dune::FieldMatrix<K, 1, 1>> CoarseMatrix;
-
-  typedef Dune::BlockVector<Dune::FieldVector<int, 1>> vector1i;
-
   // ~~~~~~~~~~~~~~~~~~
 //  Grid set up
   // ~~~~~~~~~~~~~~~~~~
@@ -42,7 +31,7 @@ void driver(Dune::MPIHelper& helper) {
   const unsigned int dim = 2;
   const unsigned int degree = 1;
   const std::size_t nonzeros = std::pow(2*degree+1,dim);
-  typedef double RF;
+  typedef double NumberType;
 
   typedef Dune::UGGrid<dim> GRID;
   Dune::GridFactory<GRID> factory;
@@ -78,6 +67,19 @@ void driver(Dune::MPIHelper& helper) {
   grid->loadBalance();
 #endif
 
+  // ~~~~~~~~~~~~~~~~~~
+//  Type definitions
+  // ~~~~~~~~~~~~~~~~~~
+  const int components = 1;
+  using K = double;
+  using Vector = Dune::BlockVector<Dune::FieldVector<K,components>>;
+  using Matrix = Dune::BCRSMatrix<Dune::FieldMatrix<K,components,components>>;
+
+  typedef Dune::BlockVector<Dune::FieldVector<K, 1>> CoarseVector;
+  typedef Dune::BCRSMatrix<Dune::FieldMatrix<K, 1, 1>> CoarseMatrix;
+
+  typedef Dune::BlockVector<Dune::FieldVector<int, 1>> vector1i;
+
   using ESExcluder = Dune::PDELab::EntitySetExcluder<Vector, GV>;
   auto ghost_excluder = std::make_shared<Dune::PDELab::EntitySetGhostExcluder<Vector, GV>>();
 
@@ -85,7 +87,7 @@ void driver(Dune::MPIHelper& helper) {
   ES es(gv, ghost_excluder);
 
   // make problem parameters
-  typedef GenericEllipticProblem<ES,RF> Problem;
+  typedef GenericEllipticProblem<ES,NumberType> Problem;
   Problem problem;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
   BCType bctype(es,problem);
@@ -108,18 +110,17 @@ void driver(Dune::MPIHelper& helper) {
   int verbose = 0;
   if (gfs.gridView().comm().rank()==0) verbose = 2;
   // make a degree of freedom vector on fine grid and initialize it with interpolation of Dirichlet condition
-  typedef Dune::PDELab::Backend::Vector<GFS,RF> V;
+  typedef Dune::PDELab::Backend::Vector<GFS,NumberType> V;
   V x(gfs,0.0);
   // Extract domain boundary constraints from problem definition, apply trace to solution vector
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
   G g(es,problem);
   Dune::PDELab::interpolate(g,gfs,x);
   // Set up constraints containers with boundary constraints, but without processor constraints
-  typedef typename GFS::template ConstraintsContainer<RF>::Type CC;
+  typedef typename GFS::template ConstraintsContainer<NumberType>::Type CC;
   auto cc = CC();
   // assemble constraints
   Dune::PDELab::constraints(bctype,gfs,cc);
-  std::cout << "constrained dofs=" << cc.size() << " of " << gfs.globalSize() << std::endl;
   // set initial guess
   V x0(gfs,0.0);
   Dune::PDELab::copy_nonconstrained_dofs(cc,x0,x);
@@ -129,13 +130,7 @@ void driver(Dune::MPIHelper& helper) {
   // LocalOperator wrapper zeroing out subdomains' interiors in order to set up overlap matrix
   typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   // Construct GridOperators from LocalOperators
-  typedef Dune::PDELab::GridOperator<
-    GFS,GFS,  /* ansatz and test space */
-    LOP,      /* local operator */
-    MBE,      /* matrix backend */
-    RF,RF,RF, /* domain, range, jacobian field type*/
-    CC,CC     /* constraints for ansatz and test space */
-    > GO;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,CC,CC> GO;
   auto go = GO(gfs,cc,gfs,cc,lop,MBE(nonzeros));
   // Assemble fine grid matrix defined without processor constraints
   typedef typename GO::Jacobian M;
@@ -144,22 +139,6 @@ void driver(Dune::MPIHelper& helper) {
   // set up and assemble right hand side w.r.t. l(v)-a(u_g,v)
   V d(gfs,0.0);
   go.residual(x,d);
-
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
-
-  if (gv.comm().rank()==1){
-    std::cout << "Size: " << native(A).N() << " ; " << native(A).M() << std::endl;
-    int cnt=0;
-    for (auto rIt=native(A).begin(); rIt!=native(A).end(); ++rIt){
-      std::cout << "[ ";
-      for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
-        std::cout << (*cIt) << "   ";
-      }
-      std::cout << "] " << cnt << std::endl;
-      cnt+=1;
-    }
-  }
 
   // ~~~~~~~~~~~~~~~~~~
 //  Solving process begin here: First some parameters
@@ -188,62 +167,14 @@ void driver(Dune::MPIHelper& helper) {
 
   auto rank = adapter.gridView().comm().rank();
 
-  if (gv.comm().rank()==1){
-    std::cout << "Size: " << (*A_extended).N() << " ; " << (*A_extended).M() << std::endl;
-    int cnt=0;
-    for (auto rIt=A_extended->begin(); rIt!=A_extended->end(); ++rIt){
-      std::cout << "[ ";
-      for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
-        std::cout << (*cIt) << "   ";
-      }
-      std::cout << "] " << cnt << std::endl;
-      cnt+=1;
-    }
-  }
-
-  // /* Plot partition of unity for comparison with online runs */
-  // V vect(gfs, 0.0);
-  // adapter.restrictVector(*part_unity, native(vect));
-  // Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,Dune::refinementLevels(0));
-  // Dune::PDELab::vtk::DefaultFunctionNameGenerator fieldname;
-  // fieldname.prefix("PoU");
-  // Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,vect,fieldname);
-  // vtkwriter.write("PoU",Dune::VTK::ascii);
-
-  // if (rank==0){
-  //   for (auto rIt=native(A).begin(); rIt!=native(A).end(); ++rIt){
-  //     std::cout << "[ ";
-  //     for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
-  //       std::cout << *cIt << "   ";
-  //     }
-  //     std::cout << "]" << std::endl;
-  //   }
-  // }
-
-  /* Write solution to VTK */
-  Dune::VTKWriter<GV> vtkwriterAdiag(gv);
-  V DIAG(gfs,0.0);
-  for(int i=0; i<32; i++)
-    native(DIAG)[i] = 0;
-  for(int i=32; i<DIAG.N(); i++)
-    native(DIAG)[i] = native(A)[i][i];
-  DGF xdgfAdiag(gfs,DIAG);
-  auto adaptAdiag = std::make_shared<ADAPT>(xdgfAdiag,"Adiag");
-  vtkwriterAdiag.addVertexData(adaptAdiag);
-  vtkwriterAdiag.write("Adiag");
-
-  /* Write solution to VTK */
-  Dune::VTKWriter<GV> vtkwriterAdiager(gv);
-  Vector tmpDiagA_extended((*part_unity).size());
-  for(int i=0; i<tmpDiagA_extended.N(); i++)
-    tmpDiagA_extended[i] = (*A_extended)[i][i];
-  V DIAGER(gfs,0.0);
-  adapter.restrictVector(tmpDiagA_extended, native(DIAGER));
-  DGF xdgfAdiager(gfs,DIAGER);
-  auto adaptAdiager = std::make_shared<ADAPT>(xdgfAdiager,"Adiager");
-  vtkwriterAdiager.addVertexData(adaptAdiager);
-  vtkwriterAdiager.write("Adiager");
-
+  /* Plot partition of unity for comparison with online runs */
+  V vect(gfs, 0.0);
+  adapter.restrictVector(*part_unity, native(vect));
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,Dune::refinementLevels(0));
+  Dune::PDELab::vtk::DefaultFunctionNameGenerator fieldname;
+  fieldname.prefix("PoU");
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,vect,fieldname);
+  vtkwriter.write("PoU",Dune::VTK::ascii);
 
   // ~~~~~~~~~~~~~~~~~~
 // Store new2old / old2new index -> potentially useful to post-process online calculus
@@ -391,6 +322,8 @@ void driver(Dune::MPIHelper& helper) {
 
   // native(x) -= v;
 
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+  typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
 
   /* Write solution to VTK */
   Dune::VTKWriter<GV> vtkwriterSol(gv);

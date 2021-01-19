@@ -119,21 +119,20 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // ~~~~~~~~~~~~~~~~~~
 //  Load a vector describing local basis sizes (number of EV) and creating the vector of offsets (to reach indices in the coarse space)
   // ~~~~~~~~~~~~~~~~~~
-  vector1i lb = FromOffline<vector1i>(path_to_storage, "localBasisSizes");
-  const int number_of_rank_used_offline = lb.size();
+  vector1i local_basis_sizes = FromOffline<vector1i>(path_to_storage, "localBasisSizes");
+  const int number_of_rank_used_offline = local_basis_sizes.size();
 
-  std::vector<int> local_basis_sizes(number_of_rank_used_offline), local_offset(number_of_rank_used_offline+1);
+  vector1i local_offset(number_of_rank_used_offline+1);
   local_offset[0]=0;
-  for (int i=0; i<lb.size();i++) {
-    local_basis_sizes[i] = lb[i];
-    local_offset[i+1] = lb[i]+local_offset[i];
+  for (int i=0; i<local_basis_sizes.size();i++) {
+    local_offset[i+1] = local_basis_sizes[i]+local_offset[i];
   }
 
   // ~~~~~~~~~~~~~~~~~~
   // Load the indices transformation
   // ~~~~~~~~~~~~~~~~~~
   vector1i offlineDoF2GI = FromOffline<vector1i>(path_to_storage, "GI", targeted[0]);
-  std::vector<int> DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<vector1i>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
+  vector1i DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<vector1i>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
 
   // ~~~~~~~~~~~~~~~~~~
   // Load Neighbour ranks
@@ -160,13 +159,12 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // ~~~~~~~~~~~~~~~~~~
 //  Particular solution
   // ~~~~~~~~~~~~~~~~~~
-  int nb_part = 0;
   auto PartSol = ParticularSolution<Vector, Matrix>(native(A));
   PartSol.exactRHS(native(fine_b));
-  PartSol.solveAndAppend(*online_subdomainbasis, nb_part);
+  PartSol.solveAndAppend(*online_subdomainbasis);
 
 
-  int delta_basis_size = nev + nb_part - local_basis_sizes[targeted[0]];
+  int delta_basis_size = online_subdomainbasis->basis_size() - local_basis_sizes[targeted[0]];
 
   // Then : load other subdomain basis from offline and transfer them in the targeted subdomain space
   std::vector<std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>>> neighbour_subdomainbasis(NR.size());
@@ -176,7 +174,7 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
     int int_Nnumber = NR[iter_over_subdomains];
     vector1i offlineNeighbourDoF2GI = FromOffline<vector1i>(path_to_storage, "GI", int_Nnumber);
 
-    neighbour_subdomainbasis[iter_over_subdomains] = std::make_shared<Dune::PDELab::NeighbourBasis<GO, Matrix, Vector, vector1i>>(path_to_storage, local_basis_sizes[NR[iter_over_subdomains]], NR[iter_over_subdomains], offlineDoF2GI, offlineNeighbourDoF2GI, 2);
+    neighbour_subdomainbasis[iter_over_subdomains] = std::make_shared<Dune::PDELab::NeighbourBasis<GO, Matrix, Vector, vector1i>>(path_to_storage, local_basis_sizes[NR[iter_over_subdomains]], NR[iter_over_subdomains], offlineDoF2GI, offlineNeighbourDoF2GI);
 
     for (int i=0; i<local_basis_sizes[iter_over_subdomains]; i++){
       auto tmp = *neighbour_subdomainbasis[iter_over_subdomains]->get_basis_vector(i);
@@ -217,12 +215,6 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // Save the coarse solution to further prolongate it over the offline domaine in post-processing
   std::string filename_coarse_sol = path_to_storage + "coarse-sol_w_subdomain-" + std::to_string(targeted[0]) + "_recomputed.mm";
   Dune::storeMatrixMarket(coarse_sol, filename_coarse_sol, 15);
-
-  CoarseVector OffcoarseSol = FromOffline<CoarseVector>(path_to_storage, "pristineSol");
-
-  // std::cout << "Offline / Online coarse sol: " << std::endl;
-  // for (int i = 0; i < coarse_sol.N(); i++)
-  //   std::cout << OffcoarseSol[i] << " / " <<  coarse_sol[i] << std::endl;
 
   // Plot a part of the solution over the online domain
   V prolongated(gfs,0.0);

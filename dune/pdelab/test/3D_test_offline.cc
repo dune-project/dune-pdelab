@@ -15,7 +15,7 @@
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/partitioner.hh>
 
 #include <dune/pdelab/backend/istl/geneo/OfflineOnline/OfflineTools.hh>
-#include <dune/pdelab/backend/istl/geneo/OfflineOnline/GenericEllipticProblem.hh>
+#include <dune/pdelab/backend/istl/geneo/OfflineOnline/GenericEllipticProblem3D.hh>
 
 void driver(Dune::MPIHelper& helper) {
 
@@ -39,14 +39,14 @@ void driver(Dune::MPIHelper& helper) {
 //  Grid set up
   // ~~~~~~~~~~~~~~~~~~
   // define parameters
-  const unsigned int dim = 2;
+  const unsigned int dim = 3;
   const unsigned int degree = 1;
   const std::size_t nonzeros = std::pow(2*degree+1,dim);
   typedef double RF;
 
   typedef Dune::UGGrid<dim> GRID;
   Dune::GridFactory<GRID> factory;
-  Dune::GmshReader<GRID>::read(factory, "grids/24x24.msh", true, true);
+  Dune::GmshReader<GRID>::read(factory, "grids/stiffener_hex.msh", true, true);
   std::unique_ptr<GRID> grid (factory.createGrid());
 
   typedef typename GRID::LeafGridView GV;
@@ -148,18 +148,17 @@ void driver(Dune::MPIHelper& helper) {
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   typedef Dune::PDELab::VTKGridFunctionAdapter<DGF> ADAPT;
 
-  if (gv.comm().rank()==1){
-    std::cout << "Size: " << native(A).N() << " ; " << native(A).M() << std::endl;
-    int cnt=0;
-    for (auto rIt=native(A).begin(); rIt!=native(A).end(); ++rIt){
-      std::cout << "[ ";
-      for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
-        std::cout << (*cIt) << "   ";
-      }
-      std::cout << "] " << cnt << std::endl;
-      cnt+=1;
-    }
-  }
+  // if (gv.comm().rank()==1){
+  //   int cnt=0;
+  //   for (auto rIt=native(A).begin(); rIt!=native(A).end(); ++rIt){
+  //     std::cout << "[ ";
+  //     for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
+  //       std::cout << (*cIt) << "   ";
+  //     }
+  //     std::cout << "] " << cnt << std::endl;
+  //     cnt+=1;
+  //   }
+  // }
 
   // ~~~~~~~~~~~~~~~~~~
 //  Solving process begin here: First some parameters
@@ -188,18 +187,17 @@ void driver(Dune::MPIHelper& helper) {
 
   auto rank = adapter.gridView().comm().rank();
 
-  if (gv.comm().rank()==1){
-    std::cout << "Size: " << (*A_extended).N() << " ; " << (*A_extended).M() << std::endl;
-    int cnt=0;
-    for (auto rIt=A_extended->begin(); rIt!=A_extended->end(); ++rIt){
-      std::cout << "[ ";
-      for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
-        std::cout << (*cIt) << "   ";
-      }
-      std::cout << "] " << cnt << std::endl;
-      cnt+=1;
+  // if (gv.comm().rank()==0){
+  int cnt=0;
+  for (auto rIt=A_extended->begin(); rIt!=A_extended->end(); ++rIt){
+    std::cout << gv.comm().rank() << " >> [ ";
+    for (auto cIt=rIt->begin(); cIt!=rIt->end(); ++cIt){
+      std::cout << (*cIt) << "   ";
     }
+    std::cout << "] " << cnt << std::endl;
+    cnt+=1;
   }
+  // }
 
   // /* Plot partition of unity for comparison with online runs */
   // V vect(gfs, 0.0);
@@ -221,16 +219,16 @@ void driver(Dune::MPIHelper& helper) {
   // }
 
   /* Write solution to VTK */
-  Dune::VTKWriter<GV> vtkwriterAdiag(gv);
-  V DIAG(gfs,0.0);
-  for(int i=0; i<32; i++)
-    native(DIAG)[i] = 0;
-  for(int i=32; i<DIAG.N(); i++)
-    native(DIAG)[i] = native(A)[i][i];
-  DGF xdgfAdiag(gfs,DIAG);
-  auto adaptAdiag = std::make_shared<ADAPT>(xdgfAdiag,"Adiag");
-  vtkwriterAdiag.addVertexData(adaptAdiag);
-  vtkwriterAdiag.write("Adiag");
+  // Dune::VTKWriter<GV> vtkwriterAdiag(gv);
+  // V DIAG(gfs,0.0);
+  // // for(int i=0; i<32; i++)
+  // //   native(DIAG)[i] = 0;
+  // for(int i=0; i<DIAG.N(); i++)
+  //   native(DIAG)[i] = native(A)[i][i];
+  // DGF xdgfAdiag(gfs,DIAG);
+  // auto adaptAdiag = std::make_shared<ADAPT>(xdgfAdiag,"Adiag");
+  // vtkwriterAdiag.addVertexData(adaptAdiag);
+  // vtkwriterAdiag.write("Adiag");
 
   /* Write solution to VTK */
   Dune::VTKWriter<GV> vtkwriterAdiager(gv);

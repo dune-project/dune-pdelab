@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_GENERIC_ELLIPTIC_PROBLEM_HH
-#define DUNE_PDELAB_GENERIC_ELLIPTIC_PROBLEM_HH
+#ifndef DUNE_PDELAB_GENERIC_ELLIPTIC_PROBLEM_3D_HH
+#define DUNE_PDELAB_GENERIC_ELLIPTIC_PROBLEM_3D_HH
 
 /*
  * Defining a Darcy problem with alternating layers of permeability and a high contrast
@@ -29,6 +29,11 @@ class GenericEllipticProblem
     I[0][1] = 0;
     I[1][0] = 0;
     I[1][1] = coeff;
+    I[2][2] = coeff;
+    I[0][2] = 0;
+    I[2][0] = 0;
+    I[2][1] = 0;
+    I[1][2] = 0;
     return I;
   }
 
@@ -64,7 +69,7 @@ class GenericEllipticProblem
   bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     typename Traits::DomainType xglobal = is.geometry().global(x);
-    if (!(xglobal[0]<1E-6 || xglobal[0]>1.0-1E-6))
+    if (!(xglobal[0]< -2+1E-6 || xglobal[0]>8.0-1E-6))
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
     else
       return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;

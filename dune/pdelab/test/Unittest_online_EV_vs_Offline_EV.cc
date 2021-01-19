@@ -40,7 +40,6 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
 
   typedef Dune::BlockVector<Dune::FieldVector<K, 1>> CoarseVector;
   typedef Dune::BCRSMatrix<Dune::FieldMatrix<K, 1, 1>> CoarseMatrix;
-
   typedef Dune::BlockVector<Dune::FieldVector<int, 1>> vector1i;
 
   using ESExcluder = Dune::PDELab::EntitySetExcluder<Vector, GV>;
@@ -119,21 +118,20 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // ~~~~~~~~~~~~~~~~~~
 //  Load a vector describing local basis sizes (number of EV) and creating the vector of offsets (to reach indices in the coarse space)
   // ~~~~~~~~~~~~~~~~~~
-  vector1i lb = FromOffline<vector1i>(path_to_storage, "localBasisSizes");
-  const int number_of_rank_used_offline = lb.size();
+  vector1i local_basis_sizes = FromOffline<vector1i>(path_to_storage, "localBasisSizes");
+  const int number_of_rank_used_offline = local_basis_sizes.size();
 
-  std::vector<int> local_basis_sizes(number_of_rank_used_offline), local_offset(number_of_rank_used_offline+1);
+  vector1i local_offset(number_of_rank_used_offline+1);
   local_offset[0]=0;
-  for (int i=0; i<lb.size();i++) {
-    local_basis_sizes[i] = lb[i];
-    local_offset[i+1] = lb[i]+local_offset[i];
+  for (int i=0; i<local_basis_sizes.size();i++) {
+    local_offset[i+1] = local_basis_sizes[i]+local_offset[i];
   }
 
   // ~~~~~~~~~~~~~~~~~~
   // Load the indices transformation
   // ~~~~~~~~~~~~~~~~~~
   vector1i offlineDoF2GI = FromOffline<vector1i>(path_to_storage, "GI", targeted[0]);
-  std::vector<int> DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<vector1i>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
+  vector1i DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<vector1i>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
 
   // ~~~~~~~~~~~~~~~~~~
   // Load PoU
@@ -180,16 +178,13 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   }
 
   std::shared_ptr<Dune::PDELab::SubdomainBasis<Vector>> offline_subdomainbasis;
-  offline_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisFromFiles<GO, Matrix, Vector>>(path_to_storage, basis_size, targeted[0]);
+  offline_subdomainbasis = std::make_shared<Dune::PDELab::GenEOBasisFromFiles<GO, Matrix, Vector, vector1i>>(path_to_storage, basis_size, targeted[0], DofOffline_to_DofOnline);
 
   for (int i=0; i<basis_size; i++){
     /* Plot EV */
     Dune::VTKWriter<GV> vtkwriterEV(gv);
     V EV(gfs,0.0);
-
-    for (int j=0; j<v_size; j++){
-      native(EV)[DofOffline_to_DofOnline[j]] = (*offline_subdomainbasis->get_basis_vector(i))[j];
-    }
+    native(EV) = *offline_subdomainbasis->get_basis_vector(i);
     /* Write a field in the vtu file */
     DGF xdgfEV(gfs,EV);
     auto adaptEV = std::make_shared<ADAPT>(xdgfEV,"EV");
@@ -208,7 +203,7 @@ int main(int argc, char **argv)
   std::string path_to_storage = "Offline/";
 
   // Define what subdomain need to be solved
-  std::vector<int> targeted = {1}; // Subdomains that need a second solve
+  std::vector<int> targeted = {2}; // Subdomains that need a second solve
 
   // initialize MPI, finalize is done automatically on exit
   Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc,argv);

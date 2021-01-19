@@ -122,21 +122,20 @@ void driver(std::string path_to_storage, std::vector<int> targeted, Dune::MPIHel
   // ~~~~~~~~~~~~~~~~~~
 //  Load a vector describing local basis sizes (number of EV) and creating the vector of offsets (to reach indices in the coarse space)
   // ~~~~~~~~~~~~~~~~~~
-  vector1i lb = FromOffline<vector1i>(path_to_storage, "localBasisSizes");
-  const int number_of_rank_used_offline = lb.size();
+  vector1i local_basis_sizes = FromOffline<vector1i>(path_to_storage, "localBasisSizes");
+  const int number_of_rank_used_offline = local_basis_sizes.size();
 
-  std::vector<int> local_basis_sizes(number_of_rank_used_offline), local_offset(number_of_rank_used_offline+1);
+  vector1i local_offset(number_of_rank_used_offline+1);
   local_offset[0]=0;
-  for (int i=0; i<lb.size();i++) {
-    local_basis_sizes[i] = lb[i];
-    local_offset[i+1] = lb[i]+local_offset[i];
+  for (int i=0; i<local_basis_sizes.size();i++) {
+    local_offset[i+1] = local_basis_sizes[i]+local_offset[i];
   }
 
   // ~~~~~~~~~~~~~~~~~~
   // Load the indices transformation
   // ~~~~~~~~~~~~~~~~~~
   vector1i offlineDoF2GI = FromOffline<vector1i>(path_to_storage, "GI", targeted[0]);
-  std::vector<int> DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<vector1i>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
+  vector1i DofOffline_to_DofOnline = offlineDoF2GI2gmsh2onlineDoF<vector1i>(targeted[0], gmsh2dune, offlineDoF2GI, path_to_storage);
 
   // ~~~~~~~~~~~~~~~~~~
   // Load PoU

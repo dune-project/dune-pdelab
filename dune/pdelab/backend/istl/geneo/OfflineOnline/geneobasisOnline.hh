@@ -124,13 +124,13 @@ namespace Dune {
       }
     };
 
-    template<class GridView, class M, class Vector>
+    template<class GridView, class M, class Vector, typename vector1i>
     class GenEOBasisFromFiles : public SubdomainBasis<Vector>
     { // For testing
 
     public:
 
-      GenEOBasisFromFiles(std::string& path_to_storage, int basis_size, int subdomain_number, int verbose = 0) {
+      GenEOBasisFromFiles(std::string& path_to_storage, int basis_size, int subdomain_number, vector1i& indiceChange, std::string defectID="", int verbose = 0) {
 
         if (verbose > 1) std::cout << "Getting EV basis for subdomain: " << subdomain_number << " from offline." << std::endl;
 
@@ -138,11 +138,17 @@ namespace Dune {
 
         for (int basis_index = 0; basis_index < basis_size; basis_index++) {
           std::shared_ptr<Vector> ev = std::make_shared<Vector>();
-          std::string filename_EV = path_to_storage + std::to_string(subdomain_number) + "_EV_" + std::to_string(basis_index) + ".mm";
+          std::string filename_EV = path_to_storage + std::to_string(subdomain_number) + "_" + defectID + "EV_" + std::to_string(basis_index) + ".mm";
           std::ifstream file_EV;
           file_EV.open(filename_EV.c_str(), std::ios::in);
-          Dune::readMatrixMarket(*ev,file_EV);
+          Vector tmp;
+          Dune::readMatrixMarket(tmp,file_EV);
           file_EV.close();
+
+          ev->resize(tmp.N());
+          for (int j=0; j<tmp.N(); j++){
+            (*ev)[indiceChange[j]] = tmp[j];
+          }
 
           this->local_basis[basis_index] = ev;
         }
@@ -155,7 +161,7 @@ namespace Dune {
 
     public:
 
-      NeighbourBasis(std::string& path_to_storage, int basis_size, int subdomain_number, vector1i& offlineDoF2GI, vector1i& offlineNeighbourDoF2GI, int verbose = 0) {
+      NeighbourBasis(std::string& path_to_storage, int basis_size, int subdomain_number, vector1i& offlineDoF2GI, vector1i& offlineNeighbourDoF2GI, std::string defectID="", int verbose = 0) {
 
         if (verbose > 1) std::cout << "Getting EV basis for neighbour subdomain: " << subdomain_number << " from offline." << std::endl;
 
@@ -172,7 +178,7 @@ namespace Dune {
 
         for (int basis_index = 0; basis_index < basis_size; basis_index++) {
           Vector ev;
-          std::string filename_EV = path_to_storage + std::to_string(subdomain_number) + "_EV_" + std::to_string(basis_index) + ".mm";
+          std::string filename_EV = path_to_storage + std::to_string(subdomain_number) + "_" + defectID + "EV_" + std::to_string(basis_index) + ".mm";
           std::ifstream file_EV;
           file_EV.open(filename_EV.c_str(), std::ios::in);
           Dune::readMatrixMarket(ev,file_EV);
