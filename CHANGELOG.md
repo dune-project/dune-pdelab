@@ -14,6 +14,10 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+
+-   All `pattern_` methods now also get passed the entity/intersection.
+    See the local operator interface for detailed information.
+
 -   Change the local operator interface for nonlinear jacobian apply methods. The vector representing the
     current solution (x) and the vector that the jacobian is applied on (z) can now have different type. Note:
     This is a change in the interface description of the local operator interface but will not break any user
