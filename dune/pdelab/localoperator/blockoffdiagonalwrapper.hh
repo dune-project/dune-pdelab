@@ -5,6 +5,8 @@
 
 #include <dune/pdelab/common/intersectiontype.hh>
 #include <dune/pdelab/localoperator/blockdiagonalwrapper.hh>
+#include <dune/pdelab/localoperator/callswitch.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -142,12 +144,28 @@ namespace Dune {
       {}
 
       // define sparsity pattern connecting self and neighbor dofs
+      // TODO: remove switch below once this is removed
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       void pattern_skeleton (const LFSU& lfsu_s, const LFSV& lfsv_s, const LFSU& lfsu_n, const LFSV& lfsv_n,
                              LocalPattern& pattern_sn,
                              LocalPattern& pattern_ns) const
       {
         _localOperator.pattern_skeleton (lfsu_s, lfsv_s, lfsu_n, lfsv_n, pattern_sn, pattern_ns);
+      }
+
+
+      // define sparsity pattern connecting self and neighbor dofs
+      template<typename IG, typename LFSU, typename LFSV, typename LocalPattern>
+      void pattern_skeleton (const IG& ig, const LFSU& lfsu_s, const LFSV& lfsv_s, const LFSU& lfsu_n, const LFSV& lfsv_n,
+                             LocalPattern& pattern_sn,
+                             LocalPattern& pattern_ns) const
+      {
+        // This switch simply helps as work around for the deprecation of the
+        // pattern signature with no intersection. After that signature is
+        // removed, a direct call from the local operator will be safe
+        Impl::LocalAssemblerCallSwitchHelper<LocalOperator,true>::pattern_skeleton(_localOperator,
+            ig, lfsu_s, lfsv_s, lfsu_n, lfsv_n, pattern_sn, pattern_ns);
       }
 
       template<typename IG, typename LFSU, typename X, typename LFSV, typename MAT>
