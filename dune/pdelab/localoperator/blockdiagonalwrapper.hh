@@ -6,6 +6,7 @@
 
 #include <dune/pdelab/common/intersectiontype.hh>
 #include <dune/pdelab/localoperator/jacobianapplyhelper.hh>
+#include <dune/pdelab/localoperator/callswitch.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -115,11 +116,26 @@ namespace Dune {
       {}
 
       // define sparsity pattern of operator representation
+      // TODO: remove switch below once this is removed
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       void pattern_volume (const LFSU& lfsu, const LFSV& lfsv,
                            LocalPattern& pattern) const
       {
         _localOperator.pattern_volume(lfsu, lfsv, pattern);
+      }
+
+
+      // define sparsity pattern of operator representation
+      template<typename EG, typename LFSU, typename LFSV, typename LocalPattern>
+      void pattern_volume (const EG& eg, const LFSU& lfsu, const LFSV& lfsv,
+                           LocalPattern& pattern) const
+      {
+        // This switch simply helps as work around for the deprecation of the
+        // pattern signature with no entity. After that signature is
+        // removed, a direct call from the local operator will be safe
+        Impl::LocalAssemblerCallSwitchHelper<LocalOperator,true>::pattern_volume(_localOperator,
+            eg, lfsu, lfsv, pattern);
       }
 
       template<typename EG, typename LFSU, typename X, typename LFSV, typename MAT>

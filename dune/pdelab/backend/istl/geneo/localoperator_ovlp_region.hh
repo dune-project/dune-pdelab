@@ -3,6 +3,7 @@
 
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
+#include <dune/pdelab/localoperator/callswitch.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -48,6 +49,7 @@ namespace Dune {
       enum { isLinear = LocalOperatorBase::isLinear };
 
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       void pattern_volume (const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern) const
       {
         if (entity_is_interior(lfsu))
@@ -55,7 +57,19 @@ namespace Dune {
         baseop.pattern_volume(lfsu, lfsv, pattern);
       }
 
+      template<typename EG, typename LFSU, typename LFSV, typename LocalPattern>
+      void pattern_volume (const EG& eg, const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern) const
+      {
+        if (entity_is_interior(lfsu))
+          return;
+        // This switch simply helps as work around for the deprecation of the
+        // pattern signature with no entity. After that signature is
+        // removed, a direct call from the local operator will be safe
+        Impl::LocalAssemblerCallSwitchHelper<LocalOperatorBase,true>::pattern_volume(baseop, eg, lfsu, lfsv, pattern);
+      }
+
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       void pattern_skeleton (const LFSU& lfsu_s, const LFSV& lfsv_s, const LFSU& lfsu_n, const LFSV& lfsv_n, LocalPattern& pattern_sn, LocalPattern& pattern_ns) const
       {
         if (entity_is_interior(lfsu_s))
@@ -63,7 +77,16 @@ namespace Dune {
         baseop.pattern_skeleton(lfsu_s, lfsv_s, lfsu_n, lfsv_n, pattern_sn, pattern_ns);
       }
 
+      template<typename IG, typename LFSU, typename LFSV, typename LocalPattern>
+      void pattern_skeleton (const IG& ig, const LFSU& lfsu_s, const LFSV& lfsv_s, const LFSU& lfsu_n, const LFSV& lfsv_n, LocalPattern& pattern_sn, LocalPattern& pattern_ns) const
+      {
+        if (entity_is_interior(lfsu_s))
+          return;
+        Impl::LocalAssemblerCallSwitchHelper<LocalOperatorBase,true>::pattern_skeleton(baseop, ig, lfsu_s, lfsv_s, lfsu_n, lfsv_n, pattern_sn, pattern_ns);
+      }
+
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       void pattern_volume_post_skeleton (const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern) const
       {
         if (entity_is_interior(lfsu))
@@ -71,12 +94,29 @@ namespace Dune {
         baseop.pattern_volume(lfsu, lfsv, pattern);
       }
 
+      template<typename EG, typename LFSU, typename LFSV, typename LocalPattern>
+      void pattern_volume_post_skeleton (const EG& eg, const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern) const
+      {
+        if (entity_is_interior(lfsu))
+          return;
+        Impl::LocalAssemblerCallSwitchHelper<LocalOperatorBase,true>::pattern_volume_post_skeleton(baseop, eg, lfsu, lfsv, pattern);
+      }
+
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       void pattern_boundary (const LFSU& lfsu_s, const LFSV& lfsv_s, LocalPattern& pattern_ss) const
       {
         if (entity_is_interior(lfsu_s))
           return;
         baseop.pattern_boundary (lfsu_s, lfsv_s, pattern_ss);
+      }
+
+      template<typename IG, typename LFSU, typename LFSV, typename LocalPattern>
+      void pattern_boundary (const IG& ig, const LFSU& lfsu_s, const LFSV& lfsv_s, LocalPattern& pattern_ss) const
+      {
+        if (entity_is_interior(lfsu_s))
+          return;
+        Impl::LocalAssemblerCallSwitchHelper<LocalOperatorBase,true>::pattern_boundary(baseop, ig, lfsu_s, lfsv_s, pattern_ss);
       }
 
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
