@@ -13,6 +13,51 @@ namespace Dune {
 
     /** \internal */
 
+#ifndef DOXYGEN
+
+      // ********************************************************************************
+      // concept checks that test whether a local operator provides a given method
+      // ********************************************************************************
+
+      template<class... Args>
+      struct HasPatternVolume
+      {
+        template<class LOP>
+        auto require(LOP&& lop) -> decltype(
+          lop.pattern_volume(std::declval<Args>()...)
+          );
+      };
+
+      template<class... Args>
+      struct HasPatternVolumePostSkeleton
+      {
+        template<class LOP>
+        auto require(LOP&& lop) -> decltype(
+          lop.pattern_volume_post_skeleton(std::declval<Args>()...)
+          );
+      };
+
+      template<class... Args>
+      struct HasPatternSkeleton
+      {
+        template<class LOP>
+        auto require(LOP&& lop) -> decltype(
+          lop.pattern_skeleton(std::declval<Args>()...)
+          );
+      };
+
+      template<class... Args>
+      struct HasPatternBoundary
+      {
+        template<class LOP>
+        auto require(LOP&& lop) -> decltype(
+          lop.pattern_boundary(std::declval<Args>()...)
+          );
+      };
+
+#endif // DOXYGEN
+
+
     // compile time switching of function call
     template<typename LOP, bool doIt, bool isLinear = LOP::isLinear>
     struct LocalAssemblerCallSwitchHelper
@@ -21,25 +66,61 @@ namespace Dune {
       // Pattern methods
       //================
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       static void pattern_volume (const LOP& lop, const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern)
       {
       }
+
+      template<typename EG, typename LFSU, typename LFSV, typename LocalPattern>
+      static void pattern_volume (const LOP& lop, const EG& eg, const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern)
+      {
+      }
+
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       static void pattern_volume_post_skeleton
       ( const LOP& lop,
         const LFSU& lfsu, const LFSV& lfsv,
         LocalPattern& pattern)
       {
       }
+
+      template<typename EG, typename LFSU, typename LFSV, typename LocalPattern>
+      static void pattern_volume_post_skeleton
+      ( const LOP& lop, const EG& eg,
+        const LFSU& lfsu, const LFSV& lfsv,
+        LocalPattern& pattern)
+      {
+      }
+
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       static void pattern_skeleton (const LOP& lop, const LFSU& lfsu_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const LFSV& lfsv_n,
         LocalPattern& pattern_sn,
         LocalPattern& pattern_ns)
       {
       }
+
+      template<typename IG, typename LFSU, typename LFSV, typename LocalPattern>
+      static void pattern_skeleton (const LOP& lop, const IG& ig,
+        const LFSU& lfsu_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const LFSV& lfsv_n,
+        LocalPattern& pattern_sn,
+        LocalPattern& pattern_ns)
+      {
+      }
+
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       static void pattern_boundary(const LOP& lop,
+        const LFSU& lfsu_s, const LFSV& lfsv_s,
+        LocalPattern& pattern_ss)
+      {
+      }
+
+      template<typename IG, typename LFSU, typename LFSV, typename LocalPattern>
+      static void pattern_boundary(const LOP& lop, const IG& ig,
         const LFSU& lfsu_s, const LFSV& lfsv_s,
         LocalPattern& pattern_ss)
       {
@@ -152,11 +233,31 @@ namespace Dune {
       // Pattern methods
       //================
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       static void pattern_volume (const LOP& lop, const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern)
       {
-        lop.pattern_volume(lfsu,lfsv,pattern);
+        lop.pattern_volume(lfsu, lfsv, pattern);
       }
+
+      template<typename EG, typename LFSU, typename LFSV, typename LocalPattern>
+      static void pattern_volume (const LOP& lop, const EG& eg, const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern)
+      {
+        if constexpr (models<HasPatternVolume<decltype(lfsu), decltype(lfsv),
+                                              decltype(pattern)>,
+                             LOP>())
+          pattern_volume(lop, lfsu, lfsv, pattern);
+        else {
+          static_assert(
+              models<HasPatternVolume<decltype(eg), decltype(lfsu),
+                                      decltype(lfsv), decltype(pattern)>,
+                     LOP>(),
+              "Local operator must provide a valid 'pattern_volume' signature");
+          lop.pattern_volume(eg, lfsu, lfsv, pattern);
+        }
+      }
+
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       static void pattern_volume_post_skeleton
       ( const LOP& lop,
         const LFSU& lfsu, const LFSV& lfsv,
@@ -164,21 +265,86 @@ namespace Dune {
       {
         lop.pattern_volume_post_skeleton(lfsu,lfsv,pattern);
       }
+
+     template<typename EG, typename LFSU, typename LFSV, typename LocalPattern>
+      static void pattern_volume_post_skeleton
+      ( const LOP& lop, const EG& eg,
+        const LFSU& lfsu, const LFSV& lfsv,
+        LocalPattern& pattern)
+      {
+       if constexpr (models<
+                         HasPatternVolumePostSkeleton<
+                             decltype(lfsu), decltype(lfsv), decltype(pattern)>,
+                         LOP>())
+         pattern_volume_post_skeleton(lop, lfsu, lfsv, pattern);
+       else {
+         static_assert(
+             models<HasPatternVolumePostSkeleton<decltype(eg), decltype(lfsu),
+                                                 decltype(lfsv),
+                                                 decltype(pattern)>,
+                    LOP>(),
+             "Local operator must provide a valid "
+             "'pattern_volume_post_skeleton' signature");
+         lop.pattern_volume_post_skeleton(eg, lfsu, lfsv, pattern);
+       }
+      }
+
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       static void pattern_skeleton (const LOP& lop, const LFSU& lfsu_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const LFSV& lfsv_n,
         LocalPattern& pattern_sn,
         LocalPattern& pattern_ns)
       {
-        lop.pattern_skeleton(lfsu_s,lfsv_s,lfsu_n,lfsv_n,
-          pattern_sn, pattern_ns);
+        lop.pattern_skeleton(lfsu_s,lfsv_s,lfsu_n,lfsv_n,pattern_sn, pattern_ns);
       }
+
+
+      template<typename IG, typename LFSU, typename LFSV, typename LocalPattern>
+      static void pattern_skeleton (const LOP& lop, const IG& ig,
+        const LFSU& lfsu_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const LFSV& lfsv_n,
+        LocalPattern& pattern_sn,
+        LocalPattern& pattern_ns)
+      {
+        using OldModel = HasPatternSkeleton<decltype(lfsu_s), decltype(lfsv_s),
+                                   decltype(lfsu_n), decltype(lfsv_n),
+                                   decltype(pattern_sn), decltype(pattern_ns)>;
+        using NewModel = HasPatternSkeleton<decltype(ig), decltype(lfsu_s), decltype(lfsv_s),
+                                   decltype(lfsu_n), decltype(lfsv_n),
+                                   decltype(pattern_sn), decltype(pattern_ns)>;
+        if constexpr (models<OldModel,LOP>())
+          pattern_skeleton(lop,lfsu_s,lfsv_s,lfsu_n,lfsv_n,pattern_sn, pattern_ns);
+        else {
+          static_assert(models<NewModel,LOP>(),
+            "Local operator must provide a valid 'pattern_skeleton' signature");
+          lop.pattern_skeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,pattern_sn, pattern_ns);
+        }
+      }
+
       template<typename LFSU, typename LFSV, typename LocalPattern>
+      [[deprecated]]
       static void pattern_boundary(const LOP& lop,
         const LFSU& lfsu_s, const LFSV& lfsv_s,
         LocalPattern& pattern_ss)
       {
         lop.pattern_boundary(lfsu_s,lfsv_s,pattern_ss);
+      }
+
+      template<typename IG, typename LFSU, typename LFSV, typename LocalPattern>
+      static void pattern_boundary(const LOP& lop, const IG& ig,
+        const LFSU& lfsu_s, const LFSV& lfsv_s,
+        LocalPattern& pattern_ss)
+      {
+        if constexpr (models<HasPatternBoundary<decltype(lfsu_s), decltype(lfsv_s),
+                                   decltype(pattern_ss)>,LOP>())
+          pattern_boundary(lop,lfsu_s,lfsv_s,pattern_ss);
+        else {
+          static_assert(models<HasPatternBoundary<decltype(ig),decltype(lfsu_s), decltype(lfsv_s),
+                                   decltype(pattern_ss)>,LOP>(),
+            "Local operator must provide a valid 'pattern_boundary' signature");
+          lop.pattern_boundary(ig,lfsu_s,lfsv_s,pattern_ss);
+        }
       }
 
       //==============

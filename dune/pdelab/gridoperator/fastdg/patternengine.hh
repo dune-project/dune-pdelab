@@ -196,7 +196,7 @@ namespace Dune{
       void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolume>::
-          pattern_volume(lop,lfsu_cache.localFunctionSpace(),lfsv_cache.localFunctionSpace(),localpattern);
+          pattern_volume(lop,eg,lfsu_cache.localFunctionSpace(),lfsv_cache.localFunctionSpace(),localpattern);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -204,7 +204,7 @@ namespace Dune{
                               const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternSkeleton>::
-          pattern_skeleton(lop,
+          pattern_skeleton(lop,ig,
                            lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace(),
                            lfsu_n_cache.localFunctionSpace(),lfsv_n_cache.localFunctionSpace(),
                            localpattern_sn, localpattern_ns);
@@ -214,7 +214,7 @@ namespace Dune{
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternBoundary>::
-          pattern_boundary(lop,lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace(),localpattern);
+          pattern_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace(),localpattern);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -239,7 +239,7 @@ namespace Dune{
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolumePostSkeleton>::
-          pattern_volume_post_skeleton(lop,lfsu_cache.localFunctionSpace(),lfsv_cache.localFunctionSpace(),localpattern);
+          pattern_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),lfsv_cache.localFunctionSpace(),localpattern);
       }
 
 

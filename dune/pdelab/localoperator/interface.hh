@@ -108,6 +108,7 @@ namespace Dune {
 
       //! get an element's contribution to the sparsity pattern
       /**
+       * \param eg      ElementGeometry describing the entity.
        * \param lfsu    LocalFunctionSpace of the trial GridFunctionSpace.
        * \param lfsv    LocalFunctionSpace of the test GridFunctionSpace.
        * \param pattern Local sparsity pattern.
@@ -119,15 +120,16 @@ namespace Dune {
        * given element, it is called *before* the pattern_skeleton() and/or
        * pattern_boundary() methods are called (if they are called at all).
        */
-      template<typename LFSU, typename LFSV, typename LocalPattern>
+      template<typename EG, typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume
-      ( const LFSU& lfsu, const LFSV& lfsv,
+      ( const EG& eg, const LFSU& lfsu, const LFSV& lfsv,
         LocalPattern& pattern) const
       {}
 
       //! \brief get an element's contribution to the sparsity pattern after
       //!        the intersections have been handled
       /**
+       * \param eg      ElementGeometry describing the entity.
        * \param lfsu    LocalFunctionSpace of the trial GridFunctionSpace.
        * \param lfsv    LocalFunctionSpace of the test GridFunctionSpace.
        * \param pattern Local sparsity pattern.
@@ -139,14 +141,15 @@ namespace Dune {
        * given element, it is called *before* the pattern_skeleton() and/or
        * pattern_boundary() methods are called (if they are called at all).
        */
-      template<typename LFSU, typename LFSV, typename LocalPattern>
+      template<typename EG, typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume_post_skeleton
-      ( const LFSU& lfsu, const LFSV& lfsv,
+      ( const EG& eg, const LFSU& lfsu, const LFSV& lfsv,
         LocalPattern& pattern) const
       {}
 
       //! get an internal intersection's contribution to the sparsity pattern
       /**
+       * \param ig         IntersectionGeometry describing the intersection.
        * \param lfsu_s     LocalFunctionSpace of the trial GridFunctionSpace
        *                   in the inside entity.
        * \param lfsv_s     LocalFunctionSpace of the test GridFunctionSpace
@@ -166,9 +169,10 @@ namespace Dune {
        * pattern_boundary(), but after the call to pattern_volume() and before
        * the call to pattern_volume_post_skeleton().
        */
-      template<typename LFSU, typename LFSV, typename LocalPattern>
+      template<typename IG, typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_skeleton
-      ( const LFSU& lfsu_s, const LFSV& lfsv_s,
+      ( const IG& ig,
+        const LFSU& lfsu_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const LFSV& lfsv_n,
         LocalPattern& pattern_sn,
         LocalPattern& pattern_ns) const
@@ -176,6 +180,7 @@ namespace Dune {
 
       //! get a boundary intersection's contribution to the sparsity pattern
       /**
+       * \param ig         IntersectionGeometry describing the intersection.
        * \param lfsu_s     LocalFunctionSpace of the trial GridFunctionSpace
        *                   in the inside entity.
        * \param lfsv_s     LocalFunctionSpace of the test GridFunctionSpace
@@ -190,9 +195,9 @@ namespace Dune {
        * pattern_skeleton(), but after the call to pattern_volume() and before
        * the call to pattern_volume_post_skeleton().
        */
-      template<typename LFSU, typename LFSV, typename LocalPattern>
+      template<typename IG, typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_boundary
-      ( const LFSU& lfsu_s, const LFSV& lfsv_s,
+      ( const IG& ig, const LFSU& lfsu_s, const LFSV& lfsv_s,
         LocalPattern& pattern_ss) const
       {}
 

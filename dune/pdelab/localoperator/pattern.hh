@@ -15,8 +15,8 @@ namespace Dune {
     public:
 
       // define sparsity pattern of operator representation
-      template<typename LFSU, typename LFSV, typename LocalPattern>
-      void pattern_volume (const LFSU& lfsu, const LFSV& lfsv,
+      template<typename EG, typename LFSU, typename LFSV, typename LocalPattern>
+      void pattern_volume (const EG& eg, const LFSU& lfsu, const LFSV& lfsv,
                            LocalPattern& pattern) const
       {
         for (size_t i=0; i<lfsv.size(); ++i)
@@ -31,8 +31,10 @@ namespace Dune {
     public:
 
       // define sparsity pattern connecting self and neighbor dofs
-      template<typename LFSU, typename LFSV, typename LocalPattern>
-      void pattern_skeleton (const LFSU& lfsu_s, const LFSV& lfsv_s, const LFSU& lfsu_n, const LFSV& lfsv_n,
+      template<typename IG, typename LFSU, typename LFSV, typename LocalPattern>
+      void pattern_skeleton (const IG& ig,
+                            const LFSU& lfsu_s, const LFSV& lfsv_s,
+                            const LFSU& lfsu_n, const LFSV& lfsv_n,
                             LocalPattern& pattern_sn,
                             LocalPattern& pattern_ns) const
       {
@@ -52,8 +54,8 @@ namespace Dune {
     public:
 
       // define sparsity pattern connecting dofs on boundary elements
-      template<typename LFSU, typename LFSV, typename LocalPattern>
-      void pattern_boundary(const LFSU& lfsu_s, const LFSV& lfsv_s,
+      template<typename IG, typename LFSU, typename LFSV, typename LocalPattern>
+      void pattern_boundary(const IG& ig, const LFSU& lfsu_s, const LFSV& lfsv_s,
                             LocalPattern& pattern_ss) const
       {
         for (unsigned int i=0; i<lfsv_s.size(); ++i)
