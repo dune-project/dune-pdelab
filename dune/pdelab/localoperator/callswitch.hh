@@ -11,12 +11,57 @@ namespace Dune {
 
     namespace Impl {
 
+
+#ifndef DOXYGEN
+
+      // ********************************************************************************
+      // concept checks that test whether a local operator provides a given apply method
+      // these are used to emit better error messages for the two variants of
+      // apply methods
+      // ********************************************************************************
+
+      template<typename... Args>
+      struct HasSkipEntity
+      {
+        template<typename LO>
+        auto require(LO&& lo) -> decltype(
+           Concept::requireConvertible<bool>(lo.skip_entity(std::declval<Args>()...))
+          );
+      };
+
+      template<typename... Args>
+      struct HasSkipIntersection
+      {
+        template<typename LO>
+        auto require(LO&& lo) -> decltype(
+          Concept::requireConvertible<bool>(lo.skip_intersection(std::declval<Args>()...))
+          );
+      };
+
+#endif // DOXYGEN
+
+
     /** \internal */
 
     // compile time switching of function call
     template<typename LOP, bool doIt, bool isLinear = LOP::isLinear>
     struct LocalAssemblerCallSwitchHelper
     {
+      //================
+      // Selective assembly methods
+      //================
+      template<typename EG>
+      static bool skip_entity (const LOP& lop, const EG& eg)
+      {
+        return false;
+      }
+
+      template<typename IG>
+      static bool skip_intersection (const LOP& lop, const IG& ig)
+      {
+        return false;
+      }
+
       //================
       // Pattern methods
       //================
@@ -148,6 +193,24 @@ namespace Dune {
     template<typename LOP>
     struct LocalAssemblerCallSwitchHelper<LOP,true,true>
     {
+
+      //================
+      // Selective assembly methods
+      //================
+      template<typename EG>
+      static bool skip_entity (const LOP& lop, const EG& eg)
+      {
+        static_assert(models<Impl::HasSkipEntity<EG>,LOP>());
+        return lop.skip_entity(eg);
+      }
+
+      template<typename IG>
+      static bool skip_intersection (const LOP& lop, const IG& ig)
+      {
+        static_assert(models<Impl::HasSkipIntersection<IG>,LOP>());
+        return lop.skip_intersection(ig);
+      }
+
       //================
       // Pattern methods
       //================
@@ -345,6 +408,20 @@ namespace Dune {
 
     /* we use a nested empty namespace to allow for multiple symbols and avoid issues with the ODR */
     namespace LocalOperatorApply { namespace {
+
+      auto skipEntity = [](const auto& lop, auto&... args)
+      {
+        using LOP = std::decay_t<decltype(lop)>;
+        return Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doSkipEntity>::
+          skip_entity(lop, args...);
+      };
+
+      auto skipIntersection = [](const auto& lop, auto&... args)
+      {
+        using LOP = std::decay_t<decltype(lop)>;
+        return Impl::LocalAssemblerCallSwitchHelper<LOP,LOP::doSkipIntersection>::
+          skip_intersection(lop, args...);
+      };
 
       auto patternVolume = [](const auto& lop, auto&... args)
       {

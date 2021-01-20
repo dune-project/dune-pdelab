@@ -337,11 +337,24 @@ namespace Dune{
       //! @{
 
       template<typename EG>
-      bool assembleCell(const EG & eg)
+      bool skipEntity(const EG & eg)
       {
-        bool rv = true;
-        rv &= lae0->assembleCell(eg);
-        rv &= lae1->assembleCell(eg);
+        bool rv = lae0->skipEntity(eg);
+        if (rv != lae1->skipEntity(eg))
+          DUNE_THROW(NotImplemented,
+                     "Spatial and temporal local operators are not allowed "
+                     "to have different custom cell assembly rules");
+        return rv;
+      }
+
+      template<typename IG>
+      bool skipIntersection(const IG & ig)
+      {
+        bool rv = lae0->skipIntersection(ig);
+        if (rv != lae1->skipIntersection(ig))
+          DUNE_THROW(NotImplemented,
+                     "Spatial and temporal local operators are not allowed "
+                     "to have different custom intersection assembly rules");
         return rv;
       }
 

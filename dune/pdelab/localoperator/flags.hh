@@ -18,6 +18,18 @@ namespace Dune
         class LocalOperatorDefaultFlags
         {
         public:
+            //! \name Flags selective assembly
+            //! \{
+
+            //! \brief Whether to do selective assembly on the elements,
+            //!        i.e. whether or not skip_entity() should be called.
+            enum { /*! \hideinitializer */ doSkipEntity = false };
+            //! \brief Whether to do selective assembly on the intersections,
+            //!        i.e. whether or not skip_intersection() should be called.
+            enum { /*! \hideinitializer */ doSkipIntersection = false };
+
+            //! \} Flags selective assembly
+
             //! \name Flags for the sparsity pattern
             //! \{
 

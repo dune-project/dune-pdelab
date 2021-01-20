@@ -86,6 +86,20 @@ namespace Dune {
       < bool, ( ( T::doAlphaSkeleton || T::doLambdaSkeleton) && T::doSkeletonTwoSided)>;
 
     public:
+
+      //! \brief Whether to do selective cell assembly, i.e. whether
+      //!        or not skip_entity() should be called.
+      enum { doSkipEntity            =
+             std::disjunction_v<std::integral_constant<bool,Args::doSkipEntity>...>                   };
+
+
+      //! \brief Whether to do selective intersection assembly, i.e. whether
+      //!        or not skip_intersection() should be called.
+      enum { doSkipIntersection      =
+             std::disjunction_v<std::integral_constant<bool,Args::doSkipIntersection>...>             };
+
+      ////////////////////////////
+
       //! \brief Whether to assemble the pattern on the elements, i.e. whether
       //!        or not pattern_volume() should be called.
       enum { doPatternVolume             =
@@ -154,6 +168,50 @@ namespace Dune {
       enum { isLinear = std::conjunction_v<std::integral_constant<bool,Args::isLinear>...> };
 
       //! \} Control flags
+
+      //////////////////////////////////////////////////////////////////////
+      //
+      //! \name Methods for selective assembly
+      //! \{
+      //
+
+      //! whether to assembly methods associated with a given entity
+      template<typename EG>
+      bool skip_entity
+      ( const EG& eg) const
+      {
+        // check that all operators return the same
+        bool different_skips = false;
+        Hybrid::forEach(std::make_index_sequence<sizeof...(Args)>{},
+          [&](auto i) {
+            different_skips ^= getSummand<i>().skip_entity(eg);
+            }
+          );
+        if (different_skips)
+          DUNE_THROW(RangeError, "CombinedOperator is not allowed to have "
+                                  "different skip_entity results");
+        return getSummand<0>().skip_entity(eg);
+      }
+
+      //! whether to assembly methods associated with a given intersection
+      template<typename IG>
+      bool skip_intersection
+      ( const IG& ig) const
+      {
+        // check that all operators return the same
+        bool different_skips = false;
+        Hybrid::forEach(std::make_index_sequence<sizeof...(Args)>{},
+          [&](auto i) {
+            different_skips ^= getSummand<i>().skip_intersection(ig);
+            }
+          );
+        if (different_skips)
+          DUNE_THROW(RangeError, "CombinedOperator is not allowed to have "
+                                  "different skip_intersection results");
+        return getSummand<0>().skip_intersection(ig);
+      }
+
+      //! \} Methods for selective assembly
 
       //////////////////////////////////////////////////////////////////////
       //
