@@ -68,6 +68,90 @@ dune_add_test(SOURCES testgeneo_nonovlp.cc
               CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
               )
 
+dune_add_test(SOURCES test_offline.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES 3D_test_offline.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES test_online.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES online_UpdateLocalBasis.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES online_CoarseSpaceUpdate.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_CoarseSpaceUpdateAndSolve_plotTempSolution.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_plotOnlineOnAllSubdomains.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_online_NewSizeAHbH.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_SubdomainMeshSave.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_AH_recomputation.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_bH_recomputation.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_solution_OnOff.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_neighbour2target.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES Unittest_online_EV_vs_Offline_EV.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
 dune_add_test(SOURCES testschwarznonoverlapping.cc
               MPI_RANKS 4
               TIMEOUT 300

@@ -1286,6 +1286,23 @@ namespace Dune {
       for (typename ScalarVector::size_type i=0; i<new2old_localindex_.size(); i++)
         restricted[new2old_localindex_[i]] = extended[i];
     }
+    std::vector<LocalIndex> get_old2new_localindex() {
+      return epis_.originalToExtendedLocalIndex();
+    }
+
+    std::vector<LocalIndex> get_new2old_localindex() {
+      return new2old_localindex_;
+    }
+
+    std::vector<typename GridView::Grid::GlobalIdSet::IdType> get_globalid() {
+      auto& indexset = gv_.indexSet();
+      auto& globalidset = gv_.grid().globalIdSet();
+      using GlobalID = typename GridView::Grid::GlobalIdSet::IdType;
+      std::vector<GlobalID> globalid(indexset.size(GridView::Grid::dimension));
+      for (const auto& v : vertices(gv_,Dune::Partitions::all))
+        globalid[indexset.index(v)] = globalidset.id(v);
+      return globalid;
+    }
 
   private:
 
