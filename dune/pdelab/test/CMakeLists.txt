@@ -13,7 +13,8 @@ dune_add_test(SOURCES testnewton.cc
 
 dune_add_test(SOURCES testoldnewton.cc)
 
-dune_add_test(SOURCES testinstationary.cc)
+dune_add_test(SOURCES testinstationary.cc
+              CMAKE_GUARD SUPERLU_FOUND)
 
 dune_add_test(SOURCES testanalytic.cc)
 
@@ -63,6 +64,19 @@ dune_add_test(SOURCES testgeneo.cc
               TIMEOUT 300
               CMAKE_GUARD SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
               )
+
+dune_add_test(SOURCES testgeneo_nonovlp.cc
+              MPI_RANKS 2
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND ARPACKPP_FOUND
+              )
+
+dune_add_test(SOURCES testschwarznonoverlapping.cc
+              MPI_RANKS 4
+              TIMEOUT 300
+              CMAKE_GUARD UG_FOUND SuiteSparse_UMFPACK_FOUND
+              )
+
 
 dune_add_test(SOURCES testdglegendre.cc)
 

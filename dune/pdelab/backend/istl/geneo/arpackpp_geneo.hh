@@ -182,7 +182,7 @@ namespace ArpackGeneo
     template<typename Vector>
     static inline void arrayToVector(const Real* data, Vector& v)
     {
-      std::copy(data,data + v.flatsize(),v.begin());
+      std::copy(data,data + v.size(),v.begin());
     }
 
     //! Get vector v as a block vector object which is compatible to
@@ -230,12 +230,11 @@ namespace ArpackGeneo
    *
    * \author Sebastian Westerheide.
    */
-  template <typename BCRSMatrix, typename BlockVectorWrapper>
+  template <typename BCRSMatrix, typename BlockVector>
   class ArPackPlusPlus_Algorithms
   {
   public:
 
-    using BlockVector = Dune::PDELab::Backend::Native<BlockVectorWrapper>;
     typedef typename BlockVector::field_type Real;
 
   public:
@@ -269,7 +268,7 @@ namespace ArpackGeneo
 
 
     inline void computeGenNonSymMinMagnitude (const BCRSMatrix& b_, const Real& epsilon,
-                                              std::vector<BlockVectorWrapper>& x, std::vector<Real>& lambda, Real sigma) const
+                                              std::vector<BlockVector>& x, std::vector<Real>& lambda, Real sigma) const
     {
       // print verbosity information
       if (verbosity_level_ > 0)
@@ -338,7 +337,7 @@ namespace ArpackGeneo
       for (int i = 0; i < nev; i++) {
         lambda[i] = sigma+1./ev[index[i]];
         Real* x_raw = dprob.RawEigenvector(index[i]);
-        WrappedMatrix::arrayToVector(x_raw,x[i]);
+        WrappedMatrix::arrayToDomainBlockVector(x_raw,x[i]);
       }
 
       // obtain number of Arnoldi update iterations actually taken
