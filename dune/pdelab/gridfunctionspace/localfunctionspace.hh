@@ -15,6 +15,7 @@
 
 #include <dune/typetree/typetree.hh>
 
+#include <dune/pdelab/finiteelementmap/utility.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 
@@ -610,11 +611,22 @@ namespace Dune {
       template<typename Entity, typename DOFIndexIterator, bool fast>
       void dofIndices(const Entity& e, DOFIndexIterator it, DOFIndexIterator endit, std::integral_constant<bool,fast>)
       {
+        using FEM = typename GFS::Traits::FiniteElementMap;
+        constexpr bool custom_dof_index = Std::is_detected_v<HasCustomDOFIndex,FEM,Entity,DOFIndex>;
+        auto accessor = typename GFS::Ordering::Traits::DOFIndexAccessor{};
+
         if (fast)
           {
-            auto gt = e.type();
-            auto index = this->gridFunctionSpace().entitySet().indexSet().index(e);
-            GFS::Ordering::Traits::DOFIndexAccessor::store(*it,gt,index,0);
+            if constexpr (custom_dof_index)
+              {
+                this->gridFunctionSpace().finiteElementMap().dofIndex(accessor,e,*it,0);
+              }
+            else
+              {
+                auto gt = e.type();
+                auto index = this->gridFunctionSpace().entitySet().indexSet().index(e);
+                accessor.store(*it,gt,index,0);
+              }
             ++it;
           }
         else
@@ -626,22 +638,28 @@ namespace Dune {
             using EntitySet = typename GFS::Traits::EntitySet;
             auto es = this->gridFunctionSpace().entitySet();
 
-            auto refEl = Dune::ReferenceElements<double,EntitySet::dimension>::general(this->pfe->type());
-
             for (std::size_t i = 0; i < std::size_t(coeffs.size()); ++i, ++it)
               {
-                // get geometry type of subentity
-                auto gt = refEl.type(coeffs.localKey(i).subEntity(),
-                  coeffs.localKey(i).codim());
+              if constexpr (custom_dof_index)
+                {
+                  this->gridFunctionSpace().finiteElementMap().dofIndex(accessor,e,*it,i);
+                }
+              else
+                {
+                  auto refEl = Dune::ReferenceElements<double,EntitySet::dimension>::general(this->pfe->type());
 
-                // evaluate consecutive index of subentity
-                auto index = es.indexSet().subIndex(e,
-                  coeffs.localKey(i).subEntity(),
-                  coeffs.localKey(i).codim());
+                  // get geometry type of subentity
+                  auto gt = refEl.type(coeffs.localKey(i).subEntity(),
+                    coeffs.localKey(i).codim());
 
-                // store data
-                GFS::Ordering::Traits::DOFIndexAccessor::store(*it,gt,index,coeffs.localKey(i).index());
+                  // evaluate consecutive index of subentity
+                  auto index = es.indexSet().subIndex(e,
+                    coeffs.localKey(i).subEntity(),
+                    coeffs.localKey(i).codim());
 
+                  // store data
+                  accessor.store(*it,gt,index,coeffs.localKey(i).index());
+                }
                 // make sure we don't write past the end of the iterator range
                 assert(it != endit);
               }

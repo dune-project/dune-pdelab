@@ -11,6 +11,7 @@
 #include <dune/common/std/make_array.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include<dune/grid/yaspgrid.hh>
+#include"../finiteelementmap/p0globalfem.hh"
 #include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/pkfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
@@ -53,6 +54,8 @@ void testpk (const GV& gv)
 
   // instantiate finite element maps
   auto gt = Dune::GeometryTypes::simplex(dim);
+  typedef Dune::PDELab::P0GlobalFiniteElementMap<DF,double,dim> P0GFEM;
+  P0GFEM p0gfem(gt);
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,dim> P0FEM;
   P0FEM p0fem(gt);
   typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,1> P1FEM;
@@ -64,6 +67,8 @@ void testpk (const GV& gv)
   typedef Dune::PDELab::NoConstraints CON;
 
   // make a grid function space
+  typedef Dune::PDELab::GridFunctionSpace<GV,P0GFEM,CON,VBE> P0GGFS;
+  P0GGFS p0ggfs(gv,p0gfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,CON,VBE> P0GFS;
   P0GFS p0gfs(gv,p0fem);
   typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,CON,VBE> P1GFS;
@@ -72,6 +77,9 @@ void testpk (const GV& gv)
   PkGFS pkgfs(gv,pkfem);
 
   // make coefficent Vectors
+  using P0GV = Dune::PDELab::Backend::Vector<P0GGFS, double>;
+  P0GV p0gxg(p0ggfs);
+  p0gxg = 0.0;
   using P0V = Dune::PDELab::Backend::Vector<P0GFS, double>;
   P0V p0xg(p0gfs);
   p0xg = 0.0;
@@ -87,11 +95,14 @@ void testpk (const GV& gv)
   FType f(gv);
 
   // do interpolation
+  Dune::PDELab::interpolate(f,p0ggfs,p0gxg);
   Dune::PDELab::interpolate(f,p0gfs,p0xg);
   Dune::PDELab::interpolate(f,p1gfs,p1xg);
   Dune::PDELab::interpolate(f,pkgfs,pkxg);
 
   // make discrete function object
+  typedef Dune::PDELab::DiscreteGridFunction<P0GGFS,P0GV> P0GDGF;
+  P0GDGF p0gdgf(p0ggfs,p0gxg);
   typedef Dune::PDELab::DiscreteGridFunction<P0GFS,P0V> P0DGF;
   P0DGF p0dgf(p0gfs,p0xg);
   typedef Dune::PDELab::DiscreteGridFunction<P1GFS,P1V> P1DGF;
@@ -99,8 +110,12 @@ void testpk (const GV& gv)
   typedef Dune::PDELab::DiscreteGridFunction<PkGFS,PkV> PkDGF;
   PkDGF pkdgf(pkgfs,pkxg);
 
+  assert(p0ggfs.size() == p0gxg.N());
+  assert(p0ggfs.size() == 1);
+
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
+  vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<P0GDGF> >(p0gdgf,"p0g"));
   vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<P0DGF> >(p0dgf,"p0"));
   vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<P1DGF> >(p1dgf,"p1"));
   vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<PkDGF> >(pkdgf,"pk"));
