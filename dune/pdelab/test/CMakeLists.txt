@@ -46,6 +46,9 @@ dune_add_test(SOURCES testelectrodynamic.cc
 
 dune_add_test(SOURCES testfunction.cc)
 
+dune_add_test(SOURCES testfunctionsbasis.cc
+              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
+
 dune_add_test(SOURCES testgridfunctionspace.cc)
 
 dune_add_test(SOURCES testgridfunctionspace-fixedsize.cc)

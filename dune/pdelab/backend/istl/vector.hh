@@ -8,13 +8,18 @@
 #include <dune/istl/bvector.hh>
 #include <dune/typetree/typetree.hh>
 
+#include <dune/functions/backends/istlvectorbackend.hh>
+
+#include <dune/pdelab/common/concepts.hh>
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/tags.hh>
+#include <dune/pdelab/backend/common/sizeinfo.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/common/aliasedvectorview.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/backend/istl/vectorhelpers.hh>
 #include <dune/pdelab/backend/istl/vectoriterator.hh>
+#include <dune/pdelab/gridfunctionspace/functionspacebasis.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
@@ -30,6 +35,17 @@ namespace Dune {
 
         friend Backend::impl::Wrapper<C>;
 
+        using BasisTraits = PDELab::BasisTraits<GFS>;
+
+        static void resizeVector(std::shared_ptr<const GFS>& pgfs, C& container)
+        {
+          // get size information and resize vector ...
+          auto & gfs = *pgfs;
+          auto sz = Backend::sizeInfo(gfs);
+          auto v = Functions::istlVectorBackend(container);
+          v.resize(sz);
+        }
+
       public:
         typedef typename C::field_type ElementType;
         typedef ElementType E;
@@ -41,7 +57,7 @@ namespace Dune {
 
         using value_type = E;
 
-        typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
+        typedef typename BasisTraits::ContainerIndex ContainerIndex;
 
         typedef ISTL::vector_iterator<C> iterator;
         typedef ISTL::vector_iterator<const C> const_iterator;
@@ -61,9 +77,11 @@ namespace Dune {
 
         BlockVector(const BlockVector& rhs)
           : _gfs(rhs._gfs)
-          , _container(std::make_shared<Container>(_gfs->ordering().blockCount()))
+          , _container(std::make_shared<Container>())
+          // , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
         {
-          ISTL::dispatch_vector_allocation(_gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          resizeVector(_gfs,*_container);
+          // ISTL::dispatch_vector_allocation(_gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
           (*_container) = rhs.native();
         }
 
@@ -74,9 +92,11 @@ namespace Dune {
 
         BlockVector (std::shared_ptr<const GFS> gfs, Backend::attached_container = Backend::attached_container())
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(gfs->ordering().blockCount()))
+          , _container(std::make_shared<Container>())
+          // , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
         {
-          ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          resizeVector(_gfs,*_container);
+          // ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         }
 
         //! Creates an BlockVector without allocating an underlying ISTL vector.
@@ -93,15 +113,17 @@ namespace Dune {
           : _gfs(gfs)
           , _container(stackobject_to_shared_ptr(container))
         {
-          _container->resize(gfs->ordering().blockCount());
-          ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          resizeVector(_gfs,*_container);
+          // ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         }
 
         BlockVector (std::shared_ptr<const GFS> gfs, const E& e)
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(gfs->ordering().blockCount()))
+          , _container(std::make_shared<Container>())
+          // , _container(std::make_shared<Container>(GFST::blockCount(_gfs)))
         {
-          ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          resizeVector(_gfs,*_container);
+          // ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
           (*_container)=e;
         }
 
@@ -335,19 +357,37 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-      // helper struct invoking the GFS tree -> ISTL vector reduction
-      template<typename GFS, typename E>
-      struct BlockVectorSelectorHelper
-      {
+      // helper struct invoking the FunctionSpace / Basis tree -> ISTL vector reduction
+      template<typename GFS, typename E, typename Enable = void>
+      struct BlockVectorSelectorHelper;
 
+      // specialization for PDELab GridFunctionSpace
+      template<typename GFS, typename E>
+      struct BlockVectorSelectorHelper<
+        GFS,E,
+        std::enable_if_t<isGridFunctionSpace<GFS>()>>
+      {
         typedef typename TypeTree::AccumulateType<
           GFS,
           ISTL::vector_creation_policy<E>
           >::type vector_descriptor;
 
-        typedef BlockVector<GFS,typename vector_descriptor::vector_type> Type;
-
+        using Blocking = typename vector_descriptor::blocking;
+        using Container = typename VectorType<E,Blocking>::Type;
+        using Type = BlockVector<GFS,Container>;
       };
+
+      // specialization for dune-functions basis
+      template<typename FSB, typename E>
+      struct BlockVectorSelectorHelper<
+        FSB,E,
+        std::enable_if_t<isBasisInfo<FSB>()>>
+      {
+        using Blocking = PDELab::Blocking::Blocking_t<typename FSB::Basis>;
+        using Container = typename VectorType<E,Blocking>::Type;
+        using Type = BlockVector<FSB,Container>;
+      };
+
 
 #endif // DOXYGEN
 

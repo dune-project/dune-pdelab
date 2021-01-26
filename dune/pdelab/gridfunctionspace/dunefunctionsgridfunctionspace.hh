@@ -383,6 +383,19 @@ namespace Dune {
             return this->child(Indices::_0).size();
           }
 
+          bool containerBlocked() const {
+            return false;
+          }
+
+          std::size_t childOrderingCount() const
+          {
+            return 0;
+          }
+
+          auto childOrdering(std::size_t) const {
+            return *this;
+          }
+
           /** \brief Same as size(), because block size is always 1
            */
           size_type blockCount() const

@@ -19,6 +19,12 @@ namespace Dune {
 
       namespace tags {
 
+        //! Tag describing any other vector
+        struct other_vector
+        {
+          typedef other_vector base_tag;
+        };
+
         //! Tag describing a BlockVector.
         struct block_vector
         {
@@ -132,8 +138,6 @@ namespace Dune {
         // Tag extraction
         // ********************************************************************************
 
-#ifdef DOXYGEN
-
         //! Extracts the container tag from T.
         /**
          * \tparam T  The container type to tag.
@@ -142,15 +146,10 @@ namespace Dune {
         struct container
         {
           //! The container tag associated with T.
-          typedef ImplementationDefined type;
+          typedef other_vector type;
         };
 
-#else // DOXYGEN
-
-        // There is no standard implementation.
-        template<typename T>
-        struct container;
-
+#ifndef DOXYGEN
 
         template<typename Block, typename Alloc>
         struct container<Dune::BlockVector<Block,Alloc> >
@@ -217,6 +216,9 @@ namespace Dune {
           typedef field_matrix_1_1 type;
         };
 
+        template<typename T>
+        using container_t = typename container<T>::type;
+
 #endif // DOXYGEN
 
       } // namespace tags
@@ -233,7 +235,7 @@ namespace Dune {
       template<typename T>
       typename tags::container<T>::type container_tag(const T&)
       {
-        return typename tags::container<T>::type();
+        return tags::container_t<T>();
       }
 
     } // namespace ISTL
