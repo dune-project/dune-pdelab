@@ -1,13 +1,13 @@
 #!/bin/sh
 
 # Update package manager
-apt update
+sudo apt update
 
 # Install required dependencies
-apt install -y git cmake pkg-config g++ gfortran
+sudo apt install -y git cmake pkg-config g++ gfortran
 
 # Install some frequently used optional dependencies
-apt install -y libsuitesparse-dev openmpi-bin libopenmpi-dev libparmetis-dev libarpack++2-dev libsuperlu-dev
+sudo apt install -y libsuitesparse-dev openmpi-bin libopenmpi-dev libparmetis-dev libarpack++2-dev libsuperlu-dev
 
 
 # Create new directory to build in
