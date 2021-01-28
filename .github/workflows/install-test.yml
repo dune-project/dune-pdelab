@@ -35,4 +35,4 @@ jobs:
       run: |
         apt update
         apt install sudo
-        ./doc/installation/install-pdelab-basic.sh
+        sudo -E ./doc/installation/install-pdelab-basic.sh
