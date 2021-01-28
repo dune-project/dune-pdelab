@@ -16,7 +16,8 @@ jobs:
   install-test:
     name: Testing Installation on ${{ matrix.image }}
     runs-on: ubuntu-latest
-    container: ${{ matrix.image }}
+    container:
+      image: ${{ matrix.image }}
     strategy:
       matrix:
         image:
@@ -30,4 +31,6 @@ jobs:
 
     - name: Execute installation script
       run: |
-        sudo ./doc/installation/install-pdelab-basic.sh
+        apt update
+        apt install sudo
+        ./doc/installation/install-pdelab-basic.sh
