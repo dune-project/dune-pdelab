@@ -15,10 +15,11 @@ on:
 jobs:
   install-test:
     name: Testing Installation on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
     strategy:
       matrix:
-        os: [ubuntu-18.04, ubuntu-20.04]
+        image: [ubuntu:18.04, ubuntu:latest, ubuntu:rolling]
 
     steps:
     - name: Checking out the PDELab repository
