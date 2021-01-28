@@ -26,4 +26,4 @@ jobs:
 
     - name: Execute installation script
       run: |
-        sudo ./doc/installation/install-basic-pdelab.sh
+        sudo ./doc/installation/install-pdelab-basic.sh
