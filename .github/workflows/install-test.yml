@@ -19,7 +19,10 @@ jobs:
     container: ${{ matrix.image }}
     strategy:
       matrix:
-        image: [ubuntu:18.04, ubuntu:latest, ubuntu:rolling]
+        image:
+          - ubuntu:18.04
+          - ubuntu:latest
+          - ubuntu:rolling
 
     steps:
     - name: Checking out the PDELab repository
