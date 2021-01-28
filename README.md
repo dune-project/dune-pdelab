@@ -1,6 +1,8 @@
 PDELab
 ======
 
+![Installation instructions](https://github.com/dune-project/dune-pdelab/workflows/Automated%20Installation%20test/badge.svg)
+
 This is version 2.7-git of the PDELab library.
 
 [PDELab][0] is a PDE solver toolbox built on top of DUNE, the [Distributed and Unified
