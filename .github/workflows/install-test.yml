@@ -14,7 +14,7 @@ on:
 
 jobs:
   install-test:
-    name: Testing Installation on ${{ matrix.os }}
+    name: Testing Installation on ${{ matrix.image }}
     runs-on: ubuntu-latest
     container: ${{ matrix.image }}
     strategy:
