@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Update package manager
 apt update
 
