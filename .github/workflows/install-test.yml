@@ -30,6 +30,8 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Execute installation script
+      env:
+        DEBIAN_FRONTEND: noninteractive
       run: |
         apt update
         apt install sudo
