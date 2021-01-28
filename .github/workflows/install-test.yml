@@ -1,0 +1,29 @@
+name: Automated Installation test
+
+on:
+  # We run CI on pushes to the main branch
+  push:
+    branches:
+      - master
+      - ci-install-instructions
+  # as well as upon manual triggers through the 'Actions' tab of the Github UI
+  workflow_dispatch:
+  # Additionally, we run Monday morning 6AM, so that we can react quickly if things break
+  schedule:
+  - cron: "0 5 * * 1"
+
+jobs:
+  install-test:
+    name: Testing Installation on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04]
+
+    steps:
+    - name: Checking out the PDELab repository
+      uses: actions/checkout@v2
+
+    - name: Execute installation script
+      run: |
+        sudo ./doc/installation/install-basic-pdelab.sh
