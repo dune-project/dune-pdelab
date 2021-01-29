@@ -1,7 +1,7 @@
 PDELab
 ======
 
-![Installation instructions](https://github.com/dune-project/dune-pdelab/workflows/Automated%20Installation%20test/badge.svg)
+![Installation instructions](https://github.com/dune-project/dune-pdelab/workflows/install-test/badge.svg)
 
 This is version 2.7-git of the PDELab library.
 
