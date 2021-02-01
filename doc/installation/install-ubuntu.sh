@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# We expect all commands to exit successfully
+set -e
+
 # Update package manager
 apt update
 

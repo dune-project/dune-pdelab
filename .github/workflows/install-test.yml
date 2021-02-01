@@ -13,8 +13,8 @@ on:
   - cron: "0 5 * * 1"
 
 jobs:
-  install-test:
-    name: Testing Installation on ${{ matrix.image }}
+  ubuntu-install-test:
+    name: Testing Ubuntu Installation on ${{ matrix.image }}
     runs-on: ubuntu-latest
     container:
       image: ${{ matrix.image }}
@@ -36,3 +36,15 @@ jobs:
         apt update
         apt install sudo
         sudo -E ./doc/installation/install-ubuntu.sh
+
+  macos-install-test:
+    name: Testing MacOS Installation
+    runs-on: macos-10.15
+
+    steps:
+    - name: Checking out the PDELab repository
+      uses: actions/checkout@v2
+
+    - name: Execute installation script
+      run: |
+        ./doc/installation/install-macos.sh

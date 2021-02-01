@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# We expect all commands to exit successfully
+set -e
+
 # Create new directory to build in
 mkdir my-dune
 cd my-dune
