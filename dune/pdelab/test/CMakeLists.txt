@@ -77,6 +77,7 @@ dune_add_test(SOURCES testlocalmatrix.cc)
 dune_add_test(SOURCES testlocaloperatorinterface.cc)
 
 dune_add_test(SOURCES testpk2dinterpolation.cc
+              TIMEOUT 600
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
 add_dune_alberta_flags(testpk2dinterpolation WORLDDIM 2)
 
