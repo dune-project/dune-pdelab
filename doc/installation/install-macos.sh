@@ -11,6 +11,3 @@ brew install cmake gcc pkg-config
 
 # Install some frequently used optional dependencies
 brew install open-mpi gmp superlu suite-sparse eigen metis
-
-# Run the setup-dune script
-./doc/installation/setup-dune.sh
