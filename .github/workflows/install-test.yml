@@ -1,0 +1,51 @@
+name: install-test
+
+on:
+  # We run CI on pushes to the main branch
+  push:
+    branches:
+      - master
+  # as well as upon manual triggers through the 'Actions' tab of the Github UI
+  workflow_dispatch:
+  # Additionally, we run Monday morning 6AM, so that we can react quickly if things break
+  schedule:
+  - cron: "0 5 * * 1"
+
+jobs:
+  ubuntu-install-test:
+    name: Testing Ubuntu Installation on ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+    strategy:
+      matrix:
+        image:
+          - ubuntu:18.04
+          - ubuntu:latest
+          - ubuntu:rolling
+
+    steps:
+    - name: Checking out the PDELab repository
+      uses: actions/checkout@v2
+
+    - name: Execute installation script
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        apt update
+        apt install sudo
+        sudo -E ./doc/installation/install-ubuntu.sh
+        ./doc/installation/setup-dune.sh
+
+  macos-install-test:
+    name: Testing MacOS Installation
+    runs-on: macos-10.15
+
+    steps:
+    - name: Checking out the PDELab repository
+      uses: actions/checkout@v2
+
+    - name: Execute installation script
+      run: |
+        ./doc/installation/install-macos.sh
+        ./doc/installation/setup-dune.sh
