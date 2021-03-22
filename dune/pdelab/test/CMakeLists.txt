@@ -201,4 +201,6 @@ dune_add_test(SOURCES test-blocked-istl-ordering.cc)
 
 dune_add_test(SOURCES testtimedependentboundary_ovlpqk.cc)
 
+dune_add_test(SOURCES testnewton-printparameters.cc)
+
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vtk)

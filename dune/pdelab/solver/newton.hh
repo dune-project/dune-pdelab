@@ -564,6 +564,41 @@ namespace Dune::PDELab
       return _lineSearch;
     }
 
+    /**\brief Output NewtonMethod parameters
+     *
+     * Setting parameters using ParameterTree is quite error prone.
+     * Checking parameters without setting up the debugger can be useful.
+     */
+    void printParameters(const std::string& _name = "NewtonMethod") const
+    {
+      // Change boolalpha flag to output true/false in full, not 0/1.
+      // Restoring to previous setting is guaranteed.
+      auto ioflags = std::cout.flags();
+      std::cout.setf(std::ios_base::boolalpha);
+      std::cout << _name << " parameters:\n";
+      std::cout << "Verbosity............... " << _verbosity << std::endl;
+      std::cout << "Reduction............... " << _reduction << std::endl;
+      std::cout << "AbsoluteLimit........... " << _absoluteLimit << std::endl;
+      std::cout << "KeepMatrix.............. " << _keepMatrix << std::endl;
+      std::cout << "UseMaxNorm.............. " << _useMaxNorm << std::endl;
+      std::cout << "MinLinearReduction...... " << _minLinearReduction << std::endl;
+      std::cout << "FixedLinearReduction.... " << _fixedLinearReduction << std::endl;
+      std::cout << "ReassembleThreshold..... " << _reassembleThreshold << std::endl;
+      std::cout << "HangingNodeModifications " << _hangingNodeModifications << std::endl;
+      try
+      {
+        _terminate->printParameters();
+        _lineSearch->printParameters();
+      }
+      catch (...)
+      {
+        // guarantee restoring previous std::cout flags
+        std::cout.flags(ioflags);
+        throw;
+      }
+      std::cout.flags(ioflags);
+    }
+
     //! Construct Newton using default parameters with default parameters
     /**
        in p
