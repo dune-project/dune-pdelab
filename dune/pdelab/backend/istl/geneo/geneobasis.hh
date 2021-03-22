@@ -48,11 +48,17 @@ namespace Dune {
         if (nev_arpack < nev)
           DUNE_THROW(Dune::Exception,"nev_arpack is less then nev!");
 
+        const int block_size = X::block_type::dimension;
+
         // X * A_0 * X
         M ovlp_mat(AF_ovlp);
         for (auto row_iter = native(ovlp_mat).begin(); row_iter != native(ovlp_mat).end(); row_iter++) {
           for (auto col_iter = row_iter->begin(); col_iter != row_iter->end(); col_iter++) {
-            *col_iter *= native(part_unity)[row_iter.index()] * native(part_unity)[col_iter.index()];
+            for (int block_row = 0; block_row < block_size; block_row++) {
+              for (int block_col = 0; block_col < block_size; block_col++) {
+                (*col_iter)[block_row][block_col] *= native(part_unity)[row_iter.index()][block_row] * native(part_unity)[col_iter.index()][block_col];
+              }
+            }
           }
         }
 
