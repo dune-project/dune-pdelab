@@ -157,7 +157,7 @@ int main(int argc, char** argv)
 
     // Use some nonsense parameters to ensure that setting them explicitly works
     Dune::ParameterTree ptree;
-    ptree["Verbosity"] = "4";
+    ptree["VerbosityLevel"] = "4";
     ptree["UseMaxNorm"] = "1";
     ptree["LineSearch.DampingFactor"] = "0.3";
     ptree["Terminate.MaxIterations"] = "0";
