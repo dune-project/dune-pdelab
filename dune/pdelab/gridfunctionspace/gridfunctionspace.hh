@@ -241,10 +241,10 @@ namespace Dune {
         DUNE_DEPRECATED_MSG("GridFunctionSpaces now internally use an EntitySet instead of a GridView, please replace the template parameter and the first constructor parameter by an EntitySet").
 #endif
         : BaseT(backend,ordering_tag)
-        , _es(gridview)
         , pfem(stackobject_to_shared_ptr(fem))
         , _pce(stackobject_to_shared_ptr(ce))
       {
+        this->setEntitySet(typename Traits::EntitySet{gridview});
       }
 
       //! constructor
@@ -253,10 +253,11 @@ namespace Dune {
         DUNE_DEPRECATED_MSG("GridFunctionSpaces now internally use an EntitySet instead of a GridView, please replace the template parameter and the first constructor parameter by an EntitySet").
 #endif
         : BaseT(backend,ordering_tag)
-        , _es(gridview)
         , pfem(fem)
         , _pce(ce)
-      {}
+      {
+        this->setEntitySet(typename Traits::EntitySet{gridview});
+      }
 
       //! constructor
       GridFunctionSpace (const typename Traits::GridView& gridview, const FEM& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
@@ -264,10 +265,11 @@ namespace Dune {
         DUNE_DEPRECATED_MSG("GridFunctionSpaces now internally use an EntitySet instead of a GridView, please replace the template parameter and the first constructor parameter by an EntitySet").
 #endif
         : BaseT(backend,ordering_tag)
-        , _es(gridview)
         , pfem(stackobject_to_shared_ptr(fem))
         , _pce(std::make_shared<CE>())
-      {}
+      {
+        this->setEntitySet(typename Traits::EntitySet{gridview});
+      }
 
       //! constructor
       GridFunctionSpace (const typename Traits::GridView& gridview, const std::shared_ptr<const FEM>& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
@@ -275,10 +277,11 @@ namespace Dune {
         DUNE_DEPRECATED_MSG("GridFunctionSpaces now internally use an EntitySet instead of a GridView, please replace the template parameter and the first constructor parameter by an EntitySet").
 #endif
         : BaseT(backend,ordering_tag)
-        , _es(gridview)
         , pfem(fem)
         , _pce(std::make_shared<CE>())
-      {}
+      {
+        this->setEntitySet(typename Traits::EntitySet{gridview});
+      }
 
 
       // ****************************************************************************************************
@@ -289,47 +292,37 @@ namespace Dune {
       //! constructor
       GridFunctionSpace (const typename Traits::EntitySet& entitySet, const FEM& fem, const CE& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : BaseT(backend,ordering_tag)
-        , _es(entitySet)
         , pfem(stackobject_to_shared_ptr(fem))
         , _pce(stackobject_to_shared_ptr(ce))
       {
+        this->setEntitySet(entitySet);
       }
 
       //! constructor
       GridFunctionSpace (const typename Traits::EntitySet& entitySet, const std::shared_ptr<const FEM>& fem, const std::shared_ptr<const CE>& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : BaseT(backend,ordering_tag)
-        , _es(entitySet)
         , pfem(fem)
         , _pce(ce)
-      {}
+      {
+        this->setEntitySet(entitySet);
+      }
 
       //! constructor
       GridFunctionSpace (const typename Traits::EntitySet& entitySet, const FEM& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : BaseT(backend,ordering_tag)
-        , _es(entitySet)
         , pfem(stackobject_to_shared_ptr(fem))
         , _pce(std::make_shared<CE>())
-      {}
+      {
+        this->setEntitySet(entitySet);
+      }
 
       //! constructor
       GridFunctionSpace (const typename Traits::EntitySet& entitySet, const std::shared_ptr<const FEM>& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : BaseT(backend,ordering_tag)
-        , _es(entitySet)
         , pfem(fem)
         , _pce(std::make_shared<CE>())
-      {}
-
-
-      //! get grid view
-      const typename Traits::GridView& gridView () const
       {
-        return _es.gridView();
-      }
-
-      //! get EntitySet
-      const typename Traits::EntitySet& entitySet () const
-      {
-        return _es;
+        this->setEntitySet(entitySet);
       }
 
       //! get finite element map
@@ -431,7 +424,6 @@ namespace Dune {
         _ordering = std::make_shared<Ordering>(ordering_transformation::transform(*this));
       }
 
-      typename Traits::EntitySet _es;
       std::shared_ptr<FEM const> pfem;
       std::shared_ptr<CE const> _pce;
 

@@ -462,11 +462,12 @@ namespace Dune {
        * construction.  This must be done by a separate call to update().
        * This particular ordering however can be used right away.
        */
-      GridViewOrdering(const typename NodeT::NodeStorage& local_ordering, bool container_blocked, typename BaseT::GFSData* gfs_data)
-        : NodeT(local_ordering)
-        , BaseT(*this,container_blocked,gfs_data,this)
-        , _es(localOrdering().entitySet())
-      {
+      GridViewOrdering(const typename NodeT::NodeStorage &local_ordering,
+                       bool container_blocked,
+                       typename BaseT::GFSData *gfs_data,
+                       const EntitySet &entity_Set)
+          : NodeT(local_ordering),
+            BaseT(*this, container_blocked, gfs_data, this), _es(entity_Set) {
         // make sure to switch off container blocking handling in the local ordering,
         // we already handle it in the GridViewOrdering
         localOrdering().disable_container_blocking();

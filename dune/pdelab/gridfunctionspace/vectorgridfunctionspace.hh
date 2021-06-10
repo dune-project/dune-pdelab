@@ -280,10 +280,21 @@ namespace Dune {
 
     private:
 
+      void update_entity_set() const
+      {
+        if (not this->hasEntitySet()) {
+          auto es_visitor = impl::common_entity_set<typename Traits::EntitySet>{};
+          TypeTree::applyToTree(*this, es_visitor);
+          assert(es_visitor._entity_set);
+          this->_entity_set = *es_visitor._entity_set;
+        }
+      }
+
       // This method here is to avoid a double update of the Ordering when the user calls
       // GFS::update() before GFS::ordering().
       void create_ordering() const
       {
+        update_entity_set();
         _ordering = std::make_shared<Ordering>(ordering_transformation::transform(*this));
       }
 

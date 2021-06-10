@@ -3,6 +3,8 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_GRIDFUNCTIONSPACEBASE_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_GRIDFUNCTIONSPACEBASE_HH
 
+#include <optional>
+
 #include <dune/typetree/visitor.hh>
 #include <dune/typetree/traversal.hh>
 
@@ -125,6 +127,22 @@ namespace Dune {
       };
 
 
+      template<class EntitySet>
+      struct common_entity_set
+        : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
+      {
+        template<typename T, typename TreePath>
+        void leaf(T&& t, TreePath treePath) {
+          if (not _entity_set)
+            _entity_set = t.entitySet();
+          else if (*_entity_set != t.entitySet())
+            DUNE_THROW(GridFunctionSpaceHierarchyError, "Entity sets should match!");
+        }
+
+        std::optional<EntitySet> _entity_set;
+      };
+
     } // namespace impl
 
 #endif // DOXYGEN
@@ -204,8 +222,7 @@ namespace Dune {
        */
       void update(bool force = false)
       {
-        auto entity_set = gfs().entitySet();
-        entity_set.update(force);
+        _entity_set->update(force); //TODO: apply to tree!
         // We bypass the normal access using ordering() here to avoid a double
         // update if the Ordering has not been created yet.
         if (!gfs()._ordering)
@@ -231,6 +248,31 @@ namespace Dune {
       const typename Traits::Backend& backend() const
       {
         return _backend;
+      }
+
+      //! get grid view
+      const typename Traits::GridView& gridView () const
+      {
+        assert(_entity_set && "entity set shall be set manually since version 2.9");
+        return _entity_set->gridView();
+      }
+
+      //! get EntitySet
+      const typename Traits::EntitySet& entitySet () const
+      {
+        assert(_entity_set && "entity set shall be set manually since version 2.9");
+        return *_entity_set;
+      }
+
+      //! get EntitySet
+      bool hasEntitySet () const
+      {
+        return _entity_set.has_value();
+      }
+
+      void setEntitySet(const typename Traits::EntitySet& entity_set)
+      {
+        _entity_set = entity_set;
       }
 
       typename Traits::OrderingTag& orderingTag()
@@ -260,6 +302,8 @@ namespace Dune {
         ordering.update();
         TypeTree::applyToTree(ordering,impl::update_ordering_data<typename Traits::SizeType>(ordering));
       }
+
+      mutable std::optional<typename Traits::EntitySet> _entity_set;
 
     private:
 

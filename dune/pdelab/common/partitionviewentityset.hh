@@ -300,6 +300,17 @@ namespace Dune {
         return _index_set->update(force);
       }
 
+      bool operator==(const PartitionViewEntitySet& other) const {
+        if (_index_set == other._index_set)
+          return true;
+        else
+          return *_index_set == *other._index_set;
+      }
+
+      bool operator!=(const PartitionViewEntitySet& other) const {
+        return not (*this == other);
+      }
+
     private:
 
       std::shared_ptr<IndexSet> _index_set;
@@ -447,6 +458,23 @@ namespace Dune {
       bool needsUpdate() const
       {
         return _needs_update;
+      }
+
+      bool operator==(const PartitionViewEntitySetIndexSetBase& other) const {
+        // lets assume that underlying grid vies are equal if everything else is equal
+        return (_wanted_codims == other._wanted_codims)
+            && (_needs_update == other._needs_update)
+            && (_wanted_codims == other._wanted_codims)
+            && (_active_geometry_types == other._active_geometry_types)
+            && (_active_codims == other._active_codims)
+            && (_gt_offsets == other._gt_offsets)
+            && (_mapped_gt_offsets == other._mapped_gt_offsets)
+            && (_geometry_types == other._geometry_types);
+            // && (_per_codim_geometry_types == other._per_codim_geometry_types); // not needed??
+      }
+
+      bool operator!=(const PartitionViewEntitySetIndexSetBase& other) const {
+        return not (*this == other);
       }
 
     protected:
@@ -640,6 +668,15 @@ namespace Dune {
       {
         if (initialize)
           update(true);
+      }
+
+      bool operator==(const PartitionViewEntitySetIndexSet& other) const {
+        return (static_cast<Base>(this) == static_cast<Base>(other))
+            && (_indices == other._indices);
+      }
+
+      bool operator!=(const PartitionViewEntitySetIndexSet& other) const {
+        return not (*this == other);
       }
 
     private:
