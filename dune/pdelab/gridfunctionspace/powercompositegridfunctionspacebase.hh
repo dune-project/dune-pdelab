@@ -99,6 +99,14 @@ namespace Dune {
 
       typedef O OrderingTag;
 
+      //! get grid view partition
+      const typename Traits::EntitySet& entitySet () const
+      {
+        if (not this->_entity_set)
+          return BaseT::_entity_set.emplace(gfs().template child<0>().entitySet());
+        return BaseT::entitySet();
+      }
+
       PowerCompositeGridFunctionSpaceBase(const B& backend, const OrderingTag& ordering_tag)
         : BaseT(backend,ordering_tag)
       {}

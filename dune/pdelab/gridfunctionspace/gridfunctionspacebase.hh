@@ -272,7 +272,7 @@ namespace Dune {
 
       void setEntitySet(const typename Traits::EntitySet& entity_set)
       {
-        _entity_set = entity_set;
+        _entity_set.emplace(entity_set);
       }
 
       typename Traits::OrderingTag& orderingTag()
