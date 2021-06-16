@@ -138,7 +138,9 @@ namespace Dune {
           if (not _entity_set)
             _entity_set = t.entitySet();
           else if (*_entity_set != t.entitySet())
-            DUNE_THROW(GridFunctionSpaceHierarchyError, "Entity sets should match!");
+            DUNE_THROW(
+                GridFunctionSpaceHierarchyError,
+                "Use same entity sets for every space that is entity blocked!");
         }
 
         std::optional<EntitySet> _entity_set;
@@ -155,8 +157,8 @@ namespace Dune {
         , public TypeTree::DynamicTraversal
       {
         update_leaf_entity_set(const std::optional<EntitySet>& entity_set, bool force_update)
-          : _entity_set{entity_set}
-          , _force_update{force_update}
+          : _force_update{force_update}
+          , _entity_set{entity_set}
         {}
 
         template<typename GFSNode, typename TreePath>
@@ -252,9 +254,9 @@ namespace Dune {
        */
       void update(bool force = false)
       {
-        _entity_set->update(force);
+        gfs().entitySet().update(force);
         auto update_leaf_es = impl::update_leaf_entity_set{_entity_set, force};
-        TypeTree::applyToTree(*this, update_leaf_es);
+        TypeTree::applyToTree(gfs(), update_leaf_es);
         // We bypass the normal access using ordering() here to avoid a double
         // update if the Ordering has not been created yet.
         if (!gfs()._ordering)
@@ -285,7 +287,7 @@ namespace Dune {
       //! get grid view
       const typename Traits::GridView& gridView () const
       {
-        return entitySet().gridView();
+        return gfs().entitySet().gridView();
       }
 
       //! get EntitySet
@@ -300,7 +302,6 @@ namespace Dune {
         assert(_entity_set && "No entity set has been assigned to this node");
         return *_entity_set;
       }
-
 
       //! get EntitySet
       bool hasEntitySet () const
