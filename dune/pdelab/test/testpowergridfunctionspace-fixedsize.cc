@@ -184,12 +184,13 @@ int main(int argc, char **argv) {
     const int blockSize = Dune::QkStuff::QkSize<degree, dim>::value;
 
     using GV = Dune::YaspGrid<dim>::LeafGridView;
+    using ES = Dune::PDELab::AllEntitySet<GV>;
     using FEM = WrappedFiniteElementMap<GV, double, degree, dim>;
     using VBE =
         Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,
                                           blockSize>;
     using GFS =
-        Dune::PDELab::GridFunctionSpace<GV, FEM, Dune::PDELab::NoConstraints,
+        Dune::PDELab::GridFunctionSpace<ES, FEM, Dune::PDELab::NoConstraints,
                                         VBE>;
     using PVBE = Dune::PDELab::ISTL::VectorBackend<>;
     using POT =
@@ -200,8 +201,9 @@ int main(int argc, char **argv) {
     GV gv = grid.leafGridView();
     FEM fem0(gv, 2);
     FEM fem1(gv, 3);
-    auto gfs0 = std::make_shared<GFS>(gv, fem0);
-    auto gfs1 = std::make_shared<GFS>(gv, fem1);
+    ES es{gv};
+    auto gfs0 = std::make_shared<GFS>(es, fem0);
+    auto gfs1 = std::make_shared<GFS>(es, fem1);
 
     {
       PGFS pgfs(*gfs0, *gfs1, PVBE(), POT(blockSize));
