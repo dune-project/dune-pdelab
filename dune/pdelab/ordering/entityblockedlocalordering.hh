@@ -112,7 +112,7 @@ namespace Dune {
       static transformed_storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t)
       {
         auto es_visitor = impl::common_entity_set<EntitySet>{};
-        TypeTree::applyToTree(gfs, es_visitor);
+        TypeTree::applyToTree(*gfs, es_visitor);
         assert(es_visitor._entity_set);
         auto& es = *es_visitor._entity_set;
         auto local_ordering = LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>());
