@@ -127,6 +127,7 @@ namespace Dune {
       };
 
 
+      //! Checks that every leaf node has the same entity set
       template<class EntitySet>
       struct common_entity_set
         : public TypeTree::TreeVisitor
@@ -140,6 +141,35 @@ namespace Dune {
             DUNE_THROW(GridFunctionSpaceHierarchyError, "Entity sets should match!");
         }
 
+        std::optional<EntitySet> _entity_set;
+      };
+
+      /**
+       * @brief  Updates every entity set in leaf nodes
+       * @details Potentially, every leaf node has a different entity set.
+       *  We only update the first of common entity sets
+       */
+      template<class EntitySet>
+      struct update_leaf_entity_set
+        : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
+      {
+        update_leaf_entity_set(const std::optional<EntitySet>& entity_set, bool force_update)
+          : _entity_set{entity_set}
+          , _force_update{force_update}
+        {}
+
+        template<typename GFSNode, typename TreePath>
+        void leaf(GFSNode&& gfs_node, TreePath treePath) {
+          if (not _entity_set)
+            _entity_set = gfs_node.entitySet();
+          if (*_entity_set != gfs_node.entitySet()) {
+            gfs_node.entitySet().update(_force_update);
+            _entity_set = gfs_node.entitySet();
+          }
+        }
+
+        bool _force_update;
         std::optional<EntitySet> _entity_set;
       };
 
@@ -222,7 +252,9 @@ namespace Dune {
        */
       void update(bool force = false)
       {
-        _entity_set->update(force); //TODO: apply to tree!
+        _entity_set->update(force);
+        auto update_leaf_es = impl::update_leaf_entity_set{_entity_set, force};
+        TypeTree::applyToTree(*this, update_leaf_es);
         // We bypass the normal access using ordering() here to avoid a double
         // update if the Ordering has not been created yet.
         if (!gfs()._ordering)
@@ -253,16 +285,22 @@ namespace Dune {
       //! get grid view
       const typename Traits::GridView& gridView () const
       {
-        assert(_entity_set && "entity set shall be set manually since version 2.9");
-        return _entity_set->gridView();
+        return entitySet().gridView();
       }
 
       //! get EntitySet
       const typename Traits::EntitySet& entitySet () const
       {
-        assert(_entity_set && "entity set shall be set manually since version 2.9");
+        assert(_entity_set && "No entity set has been assigned to this node");
         return *_entity_set;
       }
+
+      typename Traits::EntitySet& entitySet ()
+      {
+        assert(_entity_set && "No entity set has been assigned to this node");
+        return *_entity_set;
+      }
+
 
       //! get EntitySet
       bool hasEntitySet () const
