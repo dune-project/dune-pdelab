@@ -21,40 +21,60 @@
 
 #include "gridexamples.hh"
 
-template <class LOP> struct MultiDomainLocalOperatorFEMAdapter : public LOP {
-  MultiDomainLocalOperatorFEMAdapter(const LOP &lop) : LOP(lop) {}
+/**
+ * @brief Simple version for a multidomain of ConvectionDiffusionFEM
+ * @details Here, we know that child spaces may live in different
+ *    entity sets. Thus, this class checks if the received entity is in one
+ *    (out of two) child spaces. If check succeeds, we forward assembly to the
+ *    base class with the respective child function space.
+ *    Notice that interior intersection of domains is not treated at all (if
+ *    treated, it should be done in skeleton method), therefore, those interior
+ *    boundaries result in Neumann BC.
+ */
+template <class Problem, class FEM>
+struct MultiDomainConvectionDiffusionFEM
+    : public Dune::PDELab::ConvectionDiffusionFEM<Problem, FEM> {
+
+  using Base = Dune::PDELab::ConvectionDiffusionFEM<Problem, FEM>;
+
+  MultiDomainConvectionDiffusionFEM(Problem &problem) : Base{problem} {}
 
   template <typename EG, typename LFSU, typename X, typename LFSV, typename R>
   void alpha_volume(const EG &eg, const LFSU &lfsu, const X &x,
                     const LFSV &lfsv, R &r) const {
     if (lfsu.child(0).gridFunctionSpace().entitySet().contains(eg.entity()))
-      LOP::alpha_volume(eg, lfsu.child(0), x, lfsv.child(0), r);
+      Base::alpha_volume(eg, lfsu.child(0), x, lfsv.child(0), r);
     if (lfsu.child(1).gridFunctionSpace().entitySet().contains(eg.entity()))
-      LOP::alpha_volume(eg, lfsu.child(1), x, lfsv.child(1), r);
+      Base::alpha_volume(eg, lfsu.child(1), x, lfsv.child(1), r);
   }
 
   template <typename EG, typename LFSU, typename X, typename LFSV, typename M>
   void jacobian_volume(const EG &eg, const LFSU &lfsu, const X &x,
                        const LFSV &lfsv, M &mat) const {
     if (lfsu.child(0).gridFunctionSpace().entitySet().contains(eg.entity()))
-      LOP::jacobian_volume(eg, lfsu.child(0), x, lfsv.child(0), mat);
+      Base::jacobian_volume(eg, lfsu.child(0), x, lfsv.child(0), mat);
     if (lfsu.child(1).gridFunctionSpace().entitySet().contains(eg.entity()))
-      LOP::jacobian_volume(eg, lfsu.child(1), x, lfsv.child(1), mat);
+      Base::jacobian_volume(eg, lfsu.child(1), x, lfsv.child(1), mat);
   }
 
   template <typename IG, typename LFSU, typename X, typename LFSV, typename R>
   void alpha_boundary(const IG &ig, const LFSU &lfsu_s, const X &x_s,
                       const LFSV &lfsv_s, R &r_s) const {
-    // if (lfsu.child(0).gridFunctionSpace().entitySet().contains(eg.entity()))
-    //   LOP::jacobian_volume(eg,lfsu.child(0), x, lfsv.child(0),mat);
-    // if (lfsu.child(1).gridFunctionSpace().entitySet().contains(eg.entity()))
-    //   LOP::jacobian_volume(eg,lfsu.child(1), x, lfsv.child(1),mat);
+    if (lfsu_s.child(0).gridFunctionSpace().entitySet().contains(ig.inside()))
+      Base::alpha_boundary(ig, lfsu_s.child(0), x_s, lfsv_s.child(0), r_s);
+    if (lfsu_s.child(1).gridFunctionSpace().entitySet().contains(ig.inside()))
+      Base::alpha_boundary(ig, lfsu_s.child(1), x_s, lfsv_s.child(1), r_s);
   }
 
   // jacobian contribution from boundary
   template <typename IG, typename LFSU, typename X, typename LFSV, typename M>
   void jacobian_boundary(const IG &ig, const LFSU &lfsu_s, const X &x_s,
-                         const LFSV &lfsv_s, M &mat_s) const {}
+                         const LFSV &lfsv_s, M &mat_s) const {
+    if (lfsu_s.child(0).gridFunctionSpace().entitySet().contains(ig.inside()))
+      Base::jacobian_boundary(ig, lfsu_s.child(0), x_s, lfsv_s.child(0), mat_s);
+    if (lfsu_s.child(1).gridFunctionSpace().entitySet().contains(ig.inside()))
+      Base::jacobian_boundary(ig, lfsu_s.child(1), x_s, lfsv_s.child(1), mat_s);
+  }
 };
 
 // ===============================================================
@@ -165,35 +185,37 @@ public:
 // Problem setup and solution
 //===============================================================
 
-// generate a P1 function and output it
 template <typename Grid, typename FEM, typename CON>
 void poisson(const Grid &grid, const FEM &fem_1, const FEM &fem_2,
              std::string filename, int q) {
   using Dune::PDELab::Backend::native;
 
   // constants and types
-  typedef typename FEM::Traits::FiniteElementType::Traits::LocalBasisType::
-      Traits::RangeFieldType R;
+  using R = typename FEM::Traits::FiniteElementType::Traits::LocalBasisType::
+      Traits::RangeFieldType;
 
   using GV = typename Grid::SubDomainGrid::LeafGridView;
   using EntitySet = Dune::PDELab::AllEntitySet<GV>;
-  EntitySet assembly_es{grid.subDomain(0).leafGridView()};
-  EntitySet gfs_es_1{grid.subDomain(1).leafGridView()};
-  EntitySet gfs_es_2{grid.subDomain(2).leafGridView()};
+  // create entity sets for each subdomain
+  EntitySet es_1{grid.subDomain(1).leafGridView()};
+  EntitySet es_2{grid.subDomain(2).leafGridView()};
 
   // make function space
-  typedef Dune::PDELab::GridFunctionSpace<EntitySet, FEM, CON,
-                                          Dune::PDELab::ISTL::VectorBackend<>>
-      DomainGFS;
-  DomainGFS gfs_1(gfs_es_1, fem_1);
-  DomainGFS gfs_2(gfs_es_2, fem_2);
-  gfs_1.name("solution_1");
-  gfs_2.name("solution_2");
+  using VBE = Dune::PDELab::ISTL::VectorBackend<>;
+  using DomainGFS = Dune::PDELab::GridFunctionSpace<EntitySet, FEM, CON, VBE>;
+  // create two grid function spaces with different entity sets!
+  DomainGFS gfs_1(es_1, fem_1);
+  DomainGFS gfs_2(es_2, fem_2);
+  gfs_1.name("domain_1");
+  gfs_2.name("domain_2");
 
-  using GFS =
-      Dune::PDELab::PowerGridFunctionSpace<DomainGFS, 2,
-                                           Dune::PDELab::ISTL::VectorBackend<>>;
+  // combine them with a power GFS
+  using GFS = Dune::PDELab::PowerGridFunctionSpace<DomainGFS, 2,VBE>;
   GFS gfs{gfs_1, gfs_2};
+
+  // the root node is in charge of the assembly loop, thus we need another
+  // entity set that contains entities needed in every child space
+  EntitySet assembly_es{grid.subDomain(0).leafGridView()};
   gfs.setEntitySet(assembly_es);
 
   // make model problem
@@ -209,21 +231,18 @@ void poisson(const Grid &grid, const FEM &fem_1, const FEM &fem_2,
   Dune::PDELab::constraints(bctype, gfs, cg);
 
   // make local operator
-  typedef Dune::PDELab::ConvectionDiffusionFEM<Problem, FEM> LOP;
-  LOP lop(problem);
-
-  using MDLOP = MultiDomainLocalOperatorFEMAdapter<LOP>;
-  MDLOP md_lop{lop};
+  using LOP = MultiDomainConvectionDiffusionFEM<Problem, FEM>;
+  LOP lop{problem};
 
   typedef Dune::PDELab::ISTL::BCRSMatrixBackend<> MBE;
   MBE mbe(
       27); // 27 is too large / correct for all test cases, so should work fine
 
   // make grid operator
-  typedef Dune::PDELab::GridOperator<GFS, GFS, MDLOP, MBE, double, double,
-                                     double, C, C>
+  typedef Dune::PDELab::GridOperator<GFS, GFS, LOP, MBE, double, double, double,
+                                     C, C>
       GridOperator;
-  GridOperator gridoperator(gfs, cg, gfs, cg, md_lop, mbe);
+  GridOperator gridoperator(gfs, cg, gfs, cg, lop, mbe);
 
   // make coefficent Vector and initialize it from a function
   // There is some weird shuffling around here - please leave it in,
@@ -245,7 +264,7 @@ void poisson(const Grid &grid, const FEM &fem_1, const FEM &fem_2,
   G g_2(gfs_2.gridView(), problem);
   auto g = Dune::PDELab::PowerGridFunction<G, 2>{g_1, g_2};
   Dune::PDELab::interpolate(g, gfs, x0);
-  // Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
+  Dune::PDELab::set_nonconstrained_dofs(cg, 0.0, x0);
 
   // represent operator as a matrix
   // There is some weird shuffling around here - please leave it in,
@@ -266,7 +285,6 @@ void poisson(const Grid &grid, const FEM &fem_1, const FEM &fem_2,
     m = m2;
   }
   gridoperator.jacobian(x0, m);
-  //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // evaluate residual w.r.t initial guess
   typedef typename GridOperator::Traits::Range RV;
@@ -288,16 +306,6 @@ void poisson(const Grid &grid, const FEM &fem_1, const FEM &fem_2,
   Dune::Richardson<typename DV::Container, typename RV::Container> richardson(
       1.0);
 
-  //   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
-  //     Dune::Amg::FirstDiagonal> > Criterion;
-  //   typedef Dune::SeqSSOR<M,V,V> Smoother;
-  //   typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments
-  //   SmootherArgs; SmootherArgs smootherArgs; smootherArgs.iterations = 2; int
-  //   maxlevel = 20, coarsenTarget = 100; Criterion criterion(maxlevel,
-  //   coarsenTarget); criterion.setMaxDistance(2); typedef
-  //   Dune::Amg::AMG<Dune::MatrixAdapter<M,V,V>,V,Smoother> AMG; AMG
-  //   amg(opa,criterion,smootherArgs,1,1);
-
   Dune::CGSolver<typename DV::Container> solvera(opa, ilu0, 1E-10, 5000, 2);
   // FIXME: Use ISTLOnTheFlyOperator in the second solver again
   Dune::CGSolver<typename DV::Container> solverb(opa, richardson, 1E-10, 5000,
@@ -311,10 +319,25 @@ void poisson(const Grid &grid, const FEM &fem_1, const FEM &fem_2,
   x += x0;
 
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(grid.subDomain(0).leafGridView(),
-                                Dune::VTK::nonconforming);
-  Dune::PDELab::addSolutionToVTKWriter(vtkwriter, gfs, x);
-  vtkwriter.write(filename, Dune::VTK::ascii);
+  //   using the whole space would be fine, but it would return many zero where
+  //   the sub-domains is not defined. So it is more convinient to use
+  //   sub-spaces (notice that using gfs_1 and gfs_2 will not work as they do
+  //   not contain any ordering)
+  {
+    using Path = Dune::TypeTree::HybridTreePath<Dune::index_constant<0>>;
+    Dune::PDELab::GridFunctionSubSpace<GFS,Path> sub_gfs{gfs};
+    Dune::VTKWriter<GV> vtkwriter(grid.subDomain(1).leafGridView());
+    Dune::PDELab::addSolutionToVTKWriter(vtkwriter, sub_gfs, x);
+    vtkwriter.write(filename + "-1", Dune::VTK::ascii);
+  }
+
+  {
+    using Path = Dune::TypeTree::HybridTreePath<Dune::index_constant<1>>;
+    Dune::PDELab::GridFunctionSubSpace<GFS,Path> sub_gfs{gfs};
+    Dune::VTKWriter<GV> vtkwriter(grid.subDomain(2).leafGridView());
+    Dune::PDELab::addSolutionToVTKWriter(vtkwriter, sub_gfs, x);
+    vtkwriter.write(filename + "-2", Dune::VTK::ascii);
+  }
 }
 
 // creates a multidomain grid with 3 domain.
@@ -374,147 +397,8 @@ int main(int argc, char **argv) {
 
       // solve problem
       poisson<Grid, FEM, Dune::PDELab::ConformingDirichletConstraints>(
-          *md_grid, fem_1, fem_2, "poisson_yasp_Q1_2d", 2);
+          *md_grid, fem_1, fem_2, "poisson_yasp_Q1_2d-multidomain", 2);
     }
-
-    //     // YaspGrid Q2 2D test
-    //     {
-    //       // make grid
-    //       Dune::FieldVector<double,2> L(1.0);
-    //       std::array<int,2> N(Dune::filledArray<2,int>(1));
-    //       Dune::YaspGrid<2> grid(L,N);
-    //       grid.globalRefine(3);
-
-    //       // get view
-    //       typedef Dune::YaspGrid<2>::LeafGridView GV;
-    //       const GV& gv=grid.leafGridView();
-
-    //       // make finite element map
-    //       typedef GV::Grid::ctype DF;
-    //       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,2> FEM;
-    //       FEM fem(gv);
-
-    //       // solve problem
-    //       //
-    //       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q2_2d",2);
-    //     }
-
-    //     // YaspGrid Q1 3D test
-    //     {
-    //       // make grid
-    //       Dune::FieldVector<double,3> L(1.0);
-    //       std::array<int,3> N(Dune::filledArray<3,int>(1));
-    //       Dune::YaspGrid<3> grid(L,N);
-    //       grid.globalRefine(3);
-
-    //       // get view
-    //       typedef Dune::YaspGrid<3>::LeafGridView GV;
-    //       const GV& gv=grid.leafGridView();
-
-    //       // make finite element map
-    //       typedef GV::Grid::ctype DF;
-    //       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
-    //       FEM fem(gv);
-
-    //       // solve problem
-    //       //
-    //       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q1_3d",2);
-    //     }
-
-    //     // YaspGrid Q2 3D test
-    //     {
-    //       // make grid
-    //       Dune::FieldVector<double,3> L(1.0);
-    //       std::array<int,3> N(Dune::filledArray<3,int>(1));
-    //       Dune::YaspGrid<3> grid(L,N);
-    //       grid.globalRefine(3);
-
-    //       // get view
-    //       typedef Dune::YaspGrid<3>::LeafGridView GV;
-    //       const GV& gv=grid.leafGridView();
-
-    //       // make finite element map
-    //       typedef GV::Grid::ctype DF;
-    //       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,2> FEM;
-    //       FEM fem(gv);
-
-    //       // solve problem
-    //       //
-    //       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q2_3d",2);
-    //     }
-
-    //     // UG Pk 2D test
-    // #if HAVE_UG
-    //     {
-    //       // make grid
-    //       std::shared_ptr<Dune::UGGrid<2> >
-    //       grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
-    //       grid->globalRefine(4);
-
-    //       // get view
-    //       typedef Dune::UGGrid<2>::LeafGridView GV;
-    //       const GV& gv=grid->leafGridView();
-
-    //       // make finite element map
-    //       typedef GV::Grid::ctype DF;
-    //       const int k=3;
-    //       const int q=2*k;
-    //       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,k> FEM;
-    //       FEM fem(gv);
-
-    //       // solve problem
-    //       //
-    //       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_UG_Pk_2d",q);
-    //     }
-    // #endif
-
-    // #if HAVE_ALBERTA
-    //     {
-    //       // make grid
-    //       AlbertaUnitSquare grid;
-    //       grid.globalRefine(8);
-
-    //       // get view
-    //       typedef AlbertaUnitSquare::LeafGridView GV;
-    //       const GV& gv=grid.leafGridView();
-
-    //       // make finite element map
-    //       typedef GV::Grid::ctype DF;
-    //       const int k=3;
-    //       const int q=2*k;
-    //       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,k> FEM;
-    //       FEM fem(gv);
-
-    //       // solve problem
-    //       //
-    //       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_Alberta_Pk_2d",q);
-    //     }
-    // #endif
-
-    // #if HAVE_DUNE_ALUGRID
-    //     {
-    //       using ALUType = Dune::ALUGrid<2, 2, Dune::simplex,
-    //       Dune::nonconforming>; auto alugrid =
-    //       Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype,
-    //       2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0),
-    //       Dune::Std::make_array(1u, 1u)); alugrid->globalRefine(4);
-
-    //       // get view
-    //       using GV = ALUType::LeafGridView;
-    //       auto gv = alugrid->leafGridView();
-
-    //       // make finite element map
-    //       typedef ALUType::ctype DF;
-    //       const int k=3;
-    //       const int q=2*k;
-    //       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,k> FEM;
-    //       FEM fem(gv);
-
-    //       // solve problem
-    //       //
-    //       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_ALU_Pk_2d",q);
-    //     }
-    // #endif
 
     // test passed
     return 0;
