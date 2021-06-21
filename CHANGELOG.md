@@ -14,6 +14,11 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   Grid function space trees can now accept different entity sets if the ordering allows it.
+    This is in particular very useful when used together with `dune-multidomaingrid`, which allows
+    to create different sub domains on a given grid. The test `dune/pdelab/test/testpoisson-multidomain.cc`
+    gives an example of usage.
+
 -   Added an optional method to skip entities/intersections and avoid costly and unnecessary bind/assembly.
     To activate them one has to set the `doSkipEntity`/`doSkipIntersection` flags and implement the
     `skip_entity`/`skip_intersection` methods in the local operator. See local operator interface for
