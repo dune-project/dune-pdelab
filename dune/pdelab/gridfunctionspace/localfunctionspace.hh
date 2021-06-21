@@ -597,9 +597,9 @@ namespace Dune {
       //! get finite element
       const typename Traits::FiniteElementType& finiteElement () const
       {
-        assert((this->n != 0) &&
-               "Local function spaces with no associated entities should not "
-               "query local finite element");
+        assert((this->n != 0 && pfe) &&
+               "Local function spaces with no support (bound entity is not"
+               "contained in the entity set) should not query `finiteElement()`");
         assert(pfe);
         return *pfe;
       }

@@ -290,28 +290,39 @@ namespace Dune {
         return gfs().entitySet().gridView();
       }
 
-      //! get EntitySet
+      //! get entity set
       const typename Traits::EntitySet& entitySet () const
       {
         assert(_entity_set && "No entity set has been assigned to this node");
         return *_entity_set;
       }
 
+      //! get entity set
       typename Traits::EntitySet& entitySet ()
       {
         assert(_entity_set && "No entity set has been assigned to this node");
         return *_entity_set;
       }
 
-      //! get EntitySet
-      bool hasEntitySet () const
-      {
-        return _entity_set.has_value();
-      }
 
-      void setEntitySet(const typename Traits::EntitySet& entity_set)
+      /**
+       * @brief Set the Entity Set object to this grid function space
+       * @details The passed entity set will be stored and modified by the grid
+       *          function space. In case of a tree, all entity sets below an
+       *          entity blocking tag are expected to be the same, otherwise,
+       *          the ordering will issue an exception. (e.g. compartments with
+       *          different function spaces). Additionally, the root node in a
+       *          grid function space tree may also contain a different partition
+       *          which will be used in the assembly process (e.g. a union of
+       *          all entity sets from leaf nodes). If no other entity set was
+       *          given, the root node will usually take the first leaf node
+       *          entity set.
+       *
+       * @param entity_set An object of the type PartitionViewEntitySet
+       */
+      void setEntitySet(typename Traits::EntitySet entity_set)
       {
-        _entity_set.emplace(entity_set);
+        _entity_set.emplace(std::move(entity_set));
       }
 
       typename Traits::OrderingTag& orderingTag()

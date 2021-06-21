@@ -166,23 +166,28 @@ namespace Dune {
     };
 
     /** \brief A grid function space.
+     *  \details Representation of a function space in a grid. Here, the entity
+     *    set.
      *
-     *  \tparam GV   Type implementing GridView
-     *  \tparam FEM  Type implementing FiniteElementMapInterface
+     *  \tparam ES   Entity Set type (See PartitionViewEntitySet). Respresents
+     *               the sub set of entities where the finite element map has
+     *               support.
+     *  \tparam FEM  Type implementing FiniteElementMapInterface. A map from
+     *               entity to local finite element.
      *  \tparam CE   Type for constraints assembler
      *  \tparam B    Backend type
      *  \tparam O    Ordering tag
      */
-    template<typename GV, typename FEM, typename CE=NoConstraints,
+    template<typename ES, typename FEM, typename CE=NoConstraints,
              typename B=ISTL::VectorBackend<>, typename O=DefaultLeafOrderingTag>
     class GridFunctionSpace
       : public TypeTree::LeafNode
       , public GridFunctionSpaceBase<
-                 GridFunctionSpace<GV,FEM,CE,B,O>,
-                 GridFunctionSpaceTraits<GV,FEM,CE,B,O>
+                 GridFunctionSpace<ES,FEM,CE,B,O>,
+                 GridFunctionSpaceTraits<ES,FEM,CE,B,O>
                  >
       , public GridFunctionOutputParameters
-      , public DataHandleProvider<GridFunctionSpace<GV,FEM,CE,B,O> >
+      , public DataHandleProvider<GridFunctionSpace<ES,FEM,CE,B,O> >
     {
 
       typedef TypeTree::TransformTree<GridFunctionSpace,gfs_to_ordering<GridFunctionSpace> > ordering_transformation;
@@ -192,7 +197,7 @@ namespace Dune {
 
     public:
       //! export Traits class
-      typedef GridFunctionSpaceTraits<GV,FEM,CE,B,O> Traits;
+      typedef GridFunctionSpaceTraits<ES,FEM,CE,B,O> Traits;
 
     private:
 
@@ -200,8 +205,8 @@ namespace Dune {
 
     public:
 
-      typedef typename GV::Traits::template Codim<0>::Entity Element;
-      typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
+      typedef typename ES::Traits::template Codim<0>::Entity Element;
+      typedef typename ES::Traits::template Codim<0>::Iterator ElementIterator;
 
       DUNE_DEPRECATED
       typedef O SizeTag;
@@ -289,38 +294,92 @@ namespace Dune {
       // ****************************************************************************************************
 
 
-      //! constructor
-      GridFunctionSpace (const typename Traits::EntitySet& entitySet, const FEM& fem, const CE& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : BaseT(backend,ordering_tag)
-        , pfem(stackobject_to_shared_ptr(fem))
-        , _pce(stackobject_to_shared_ptr(ce))
+      /**
+       * @brief Construct a new Grid Function Space object
+       * @warning The entity set internals will be modified according to the
+       *          finite element map used codimensions
+       * @warning This version of the constructor takes a reference on the fem
+       *          and the ce. Therefore, these objects shall live longer than
+       *          the grid function space!
+       *
+       * @param entitySet     Copy of an entity set
+       * @param fem           Finite Element Map
+       * @param ce            Constraints Assembler
+       * @param backend       Vector backend
+       * @param ordering_tag  Ordering tag
+       */
+      GridFunctionSpace(typename Traits::EntitySet entitySet, const FEM &fem,
+                        const CE &ce, const B &backend = B(),
+                        const OrderingTag &ordering_tag = OrderingTag())
+          : BaseT(backend, ordering_tag), pfem(stackobject_to_shared_ptr(fem)),
+            _pce(stackobject_to_shared_ptr(ce)) {
+        this->setEntitySet(std::move(entitySet));
+      }
+
+      /**
+       * @copybrief GridFunctionSpace
+       * @warning The entity set internals will be modified according to the
+       *          finite element map used codimensions
+       *
+       * @param entitySet     Copy of an entity set
+       * @param fem           Finite Element Map pointer
+       * @param ce            Constraints Assembler pointer
+       * @param backend       Vector backend
+       * @param ordering_tag  Ordering tag
+       */
+      GridFunctionSpace(typename Traits::EntitySet entitySet,
+                        const std::shared_ptr<const FEM> &fem,
+                        const std::shared_ptr<const CE> &ce,
+                        const B &backend = B(),
+                        const OrderingTag &ordering_tag = OrderingTag())
+          : BaseT(backend, ordering_tag)
+          , pfem(fem)
+          , _pce(ce)
       {
         this->setEntitySet(entitySet);
       }
 
-      //! constructor
-      GridFunctionSpace (const typename Traits::EntitySet& entitySet, const std::shared_ptr<const FEM>& fem, const std::shared_ptr<const CE>& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : BaseT(backend,ordering_tag)
-        , pfem(fem)
-        , _pce(ce)
+      /**
+       * @copybrief GridFunctionSpace
+       * @warning The entity set internals will be modified according to the
+       *          finite element map used codimensions
+       * @warning This version of the constructor takes a reference on the fem.
+       *          Therefore, these objects shall live longer than the grid
+       *          function space!
+       *
+       * @param entitySet     Copy of an entity set
+       * @param fem           Finite Element Map
+       * @param backend       Vector backend
+       * @param ordering_tag  Ordering tag
+       */
+      GridFunctionSpace(typename Traits::EntitySet entitySet,
+                        const FEM &fem,
+                        const B &backend = B(),
+                        const OrderingTag &ordering_tag = OrderingTag())
+          : BaseT(backend, ordering_tag)
+          , pfem(stackobject_to_shared_ptr(fem))
+          , _pce(std::make_shared<CE>())
       {
         this->setEntitySet(entitySet);
       }
 
-      //! constructor
-      GridFunctionSpace (const typename Traits::EntitySet& entitySet, const FEM& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : BaseT(backend,ordering_tag)
-        , pfem(stackobject_to_shared_ptr(fem))
-        , _pce(std::make_shared<CE>())
-      {
-        this->setEntitySet(entitySet);
-      }
-
-      //! constructor
-      GridFunctionSpace (const typename Traits::EntitySet& entitySet, const std::shared_ptr<const FEM>& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : BaseT(backend,ordering_tag)
-        , pfem(fem)
-        , _pce(std::make_shared<CE>())
+      /**
+       * @copybrief GridFunctionSpace
+       * @warning The entity set internals will be modified according to the
+       *          finite element map used codimensions
+       *
+       * @param entitySet     Copy of an entity set
+       * @param fem           Finite Element Map pointer
+       * @param backend       Vector backend
+       * @param ordering_tag  Ordering tag
+       */
+      GridFunctionSpace(typename Traits::EntitySet entitySet,
+                        const std::shared_ptr<const FEM> &fem,
+                        const B &backend = B(),
+                        const OrderingTag &ordering_tag = OrderingTag())
+          : BaseT(backend, ordering_tag)
+          , pfem(fem)
+          , _pce(std::make_shared<CE>())
       {
         this->setEntitySet(entitySet);
       }
