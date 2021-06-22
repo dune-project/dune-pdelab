@@ -218,7 +218,7 @@ namespace Dune {
         , n(0)
       {}
 
-      //! \brief get current size
+      //! \brief number of degrees of freedom contained in this lfs node
       typename Traits::IndexContainer::size_type size () const
       {
         return n;
