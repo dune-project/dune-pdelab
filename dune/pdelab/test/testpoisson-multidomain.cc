@@ -1,6 +1,18 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
+/**
+ * @brief Multiple-Domain Grid Function Space test for Poisson
+ *
+ * * This test tests a multidomain setup realized by having different entity
+ *   sets in different parts of the GFS tree.
+ * * This is only a conceptual test and implements no coupling between subdomians.
+ *   For this reason it doesn't lead to the correct solution of the poisson
+ *   problem on the whole domain. Instead, wach sub domain solves poisson individually.
+ * * This test does not check against a known solution, we just exect that it runs
+ *   without major failures.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
