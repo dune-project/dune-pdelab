@@ -140,7 +140,11 @@ namespace Dune {
           else if (*_entity_set != t.entitySet())
             DUNE_THROW(
                 GridFunctionSpaceHierarchyError,
-                "Use same entity sets for every space that is entity blocked!");
+                "Use same entity sets for every space that is entity blocked! "
+                "A reason for getting this error is creating GridFunctionSpaces with "
+                "a grid view in the constructor. To solve this, create an entity set"
+                "(e.g. AllEntitySet<GV>) and use one instance to construct all of your GridFunctionSpaces."
+);
         }
 
         std::optional<EntitySet> _entity_set;
