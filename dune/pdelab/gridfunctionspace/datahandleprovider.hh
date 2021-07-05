@@ -323,6 +323,14 @@ namespace Dune {
 
         setup_dof_indices(dof_indices,size,ei,map_dof_indices_value);
 
+#ifndef NDEBUG
+        // this checks that gfs has common entity set on leaf nodes (throw if that's not the case)
+        // in case of multidomain gfs, indices_for_entity will fail
+        // because DOFIndex will have wrong entity indices
+        auto es_visitor = impl::common_entity_set<typename GFS::Traits::EntitySet>{};
+        TypeTree::applyToTree(gfs(), es_visitor);
+#endif
+
         indices_for_entity<
           DOFIndex,
           ContainerIndex,

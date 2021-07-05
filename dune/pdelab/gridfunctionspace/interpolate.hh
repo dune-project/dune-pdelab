@@ -109,13 +109,16 @@ namespace Dune {
         typename std::enable_if<F::isLeaf && LFS::isLeaf>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
-          std::vector<typename XG::ElementType> xl(lfs.size());
+          if (lfs.size() == 0)
+            return;
 
-          FiniteElementInterfaceSwitch<typename LFS::Traits::FiniteElement>::interpolation(lfs.finiteElement()).
-            interpolate(f, xl);
+          std::vector<typename XG::ElementType> xl(lfs.size());
+          FiniteElementInterfaceSwitch<typename LFS::Traits::FiniteElement>::
+              interpolation(lfs.finiteElement())
+                  .interpolate(f, xl);
 
           // write coefficients into local vector
-          xg.write_sub_container(lfs,xl);
+          xg.write_sub_container(lfs, xl);
         }
 
         // interpolate PowerLFS from scalar-valued function

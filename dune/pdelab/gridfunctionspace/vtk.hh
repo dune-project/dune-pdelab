@@ -205,9 +205,11 @@ namespace Dune {
 
           y = 0;
 
-          FESwitch::basis(_lfs.finiteElement()).evaluateFunction(x,_basis);
-          for (std::size_t i = 0; i < _lfs.size(); ++i)
-            y.axpy(_data->_x_local(_lfs,i),_basis[i]);
+          if (_lfs.size()) {
+            FESwitch::basis(_lfs.finiteElement()).evaluateFunction(x,_basis);
+            for (std::size_t i = 0; i < _lfs.size(); ++i)
+              y.axpy(_data->_x_local(_lfs,i),_basis[i]);
+          }
         }
 
         //! get a reference to the GridView

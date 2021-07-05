@@ -103,6 +103,18 @@ namespace Dune {
     };
 
 
+    /**
+     * @brief Partition view (or entity set) of a grid view
+     * @details The partition view creates an index set for the given partition
+     *          which allows to exclude unused codimensions. Additionally, it
+     *          allows to retreive a unique index for every entity contained in
+     *          the index set (Similar to the MCMG mapper functionality).
+     *          This is particularly useful when working with Local Finite
+     *          Elements that do not attach DOFs to all codimensions.
+     * @note A copy of this class is a shallow copy on the underlying index set
+     * @tparam GV Grid view
+     * @tparam P  PartitionSet to restrict view of the entity set
+     */
     template<typename GV, typename P>
     class PartitionViewEntitySet
     {
@@ -298,6 +310,23 @@ namespace Dune {
       bool update(bool force = false)
       {
         return _index_set->update(force);
+      }
+
+      /**
+       * @brief Compare to another partition view
+       * @details This check only succeeds for copies of this class
+       *
+       * @param other Another partition view
+       * @return true if other shares the same index set as this
+       * @return false otherwise
+       */
+      bool operator==(const PartitionViewEntitySet& other) const {
+        return _index_set == other._index_set;
+      }
+
+      //! Compare to another partition view
+      bool operator!=(const PartitionViewEntitySet& other) const {
+        return not (*this == other);
       }
 
     private:

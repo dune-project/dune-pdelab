@@ -14,6 +14,15 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   Grid function space (GFS) trees can now accept different entity sets per node if the ordering allows it.
+    That is, all entity sets below an entity blocking tag are expected to be the same, otherwise, the ordering
+    will issue an exception. Additionally, the root node in a grid function space tree may also contain a
+    different partition which will be used in the assembly process (e.g. a union of all entity sets from leaf nodes).
+    If no other entity set was given, the root node will usually take the first leaf node entity set.
+    This is in particular very useful when used together with `dune-multidomaingrid`, which allows
+    to create different sub domains on a given grid. The test `dune/pdelab/test/testpoisson-multidomain.cc`
+    gives an example of usage.
+
 -   Added an optional method to skip entities/intersections and avoid costly and unnecessary bind/assembly.
     To activate them one has to set the `doSkipEntity`/`doSkipIntersection` flags and implement the
     `skip_entity`/`skip_intersection` methods in the local operator. See local operator interface for

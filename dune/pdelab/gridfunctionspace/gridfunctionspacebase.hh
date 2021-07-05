@@ -3,6 +3,8 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_GRIDFUNCTIONSPACEBASE_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_GRIDFUNCTIONSPACEBASE_HH
 
+#include <optional>
+
 #include <dune/typetree/visitor.hh>
 #include <dune/typetree/traversal.hh>
 
@@ -125,6 +127,58 @@ namespace Dune {
       };
 
 
+      //! Checks that every leaf node has the same entity set
+      template<class EntitySet>
+      struct common_entity_set
+        : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
+      {
+        template<typename T, typename TreePath>
+        void leaf(T&& t, TreePath treePath) {
+          if (not _entity_set)
+            _entity_set = t.entitySet();
+          else if (*_entity_set != t.entitySet())
+            DUNE_THROW(
+                GridFunctionSpaceHierarchyError,
+                "Use same entity sets for every space that is entity blocked! "
+                "A reason for getting this error is creating GridFunctionSpaces with "
+                "a grid view in the constructor. To solve this, create an entity set"
+                "(e.g. AllEntitySet<GV>) and use one instance to construct all of your GridFunctionSpaces."
+);
+        }
+
+        std::optional<EntitySet> _entity_set;
+      };
+
+      /**
+       * @brief  Updates every entity set in leaf nodes
+       * @details Potentially, every leaf node has a different entity set.
+       *  We only update the first of common entity sets
+       */
+      template<class EntitySet>
+      struct update_leaf_entity_set
+        : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
+      {
+        update_leaf_entity_set(const std::optional<EntitySet>& entity_set, bool force_update)
+          : _force_update{force_update}
+          , _entity_set{entity_set}
+        {}
+
+        template<typename GFSNode, typename TreePath>
+        void leaf(GFSNode&& gfs_node, TreePath treePath) {
+          if (not _entity_set)
+            _entity_set = gfs_node.entitySet();
+          if (*_entity_set != gfs_node.entitySet()) {
+            gfs_node.entitySet().update(_force_update);
+            _entity_set = gfs_node.entitySet();
+          }
+        }
+
+        bool _force_update;
+        std::optional<EntitySet> _entity_set;
+      };
+
     } // namespace impl
 
 #endif // DOXYGEN
@@ -204,8 +258,9 @@ namespace Dune {
        */
       void update(bool force = false)
       {
-        auto entity_set = gfs().entitySet();
-        entity_set.update(force);
+        gfs().entitySet().update(force);
+        auto update_leaf_es = impl::update_leaf_entity_set{_entity_set, force};
+        TypeTree::applyToTree(gfs(), update_leaf_es);
         // We bypass the normal access using ordering() here to avoid a double
         // update if the Ordering has not been created yet.
         if (!gfs()._ordering)
@@ -231,6 +286,47 @@ namespace Dune {
       const typename Traits::Backend& backend() const
       {
         return _backend;
+      }
+
+      //! get grid view
+      const typename Traits::GridView& gridView () const
+      {
+        return gfs().entitySet().gridView();
+      }
+
+      //! get entity set
+      const typename Traits::EntitySet& entitySet () const
+      {
+        assert(_entity_set && "No entity set has been assigned to this node");
+        return *_entity_set;
+      }
+
+      //! get entity set
+      typename Traits::EntitySet& entitySet ()
+      {
+        assert(_entity_set && "No entity set has been assigned to this node");
+        return *_entity_set;
+      }
+
+
+      /**
+       * @brief Set the Entity Set object to this grid function space
+       * @details The passed entity set will be stored and modified by the grid
+       *          function space. In case of a tree, all entity sets below an
+       *          entity blocking tag are expected to be the same, otherwise,
+       *          the ordering will issue an exception. (e.g. compartments with
+       *          different function spaces). Additionally, the root node in a
+       *          grid function space tree may also contain a different partition
+       *          which will be used in the assembly process (e.g. a union of
+       *          all entity sets from leaf nodes). If no other entity set was
+       *          given, the root node will usually take the first leaf node
+       *          entity set.
+       *
+       * @param entity_set An object of the type PartitionViewEntitySet
+       */
+      void setEntitySet(typename Traits::EntitySet entity_set)
+      {
+        _entity_set.emplace(std::move(entity_set));
       }
 
       typename Traits::OrderingTag& orderingTag()
@@ -260,6 +356,8 @@ namespace Dune {
         ordering.update();
         TypeTree::applyToTree(ordering,impl::update_ordering_data<typename Traits::SizeType>(ordering));
       }
+
+      mutable std::optional<typename Traits::EntitySet> _entity_set;
 
     private:
 
