@@ -30,4 +30,127 @@
 
   @defgroup Backend Backends
   @ingroup  PDELab
+
+
+  @addtogroup Ordering
+  @{
+    @brief Map between DOFIndex and ContainerIndex
+
+    ## Overview
+
+    The main purpose of the ordering library is to provide mappings from
+    DOFIndex to ContainerIndex.
+
+    - The DOFIndex represents a unique Degree of Freedom index in the Grid
+      Function Space Tree (See DOFIndex documentation).
+
+    - The ContainerIndex is a MultiIndex that encodes the access to a backend
+      container. The ordering library is in charge of providing such indices.
+      In a nested container (e.g. `BlockVector<FieldVector<double,2>>`) each
+      index in the MultiIndex will determine the accessor on each of the depths
+      of the container going from inner container to outer container (e.g. the
+      MultiIndex `{1,10}` in a nested vector `vec` is accessed with
+      `vec[10][1]`).
+
+    ## Ordering Tree
+
+    A final ordering is a type tree that is very similar to the Grid Function
+    Space Tree. The ordering tree has the same structure but may have additional intermediate nodes.
+    However, a main difference is that intermediate nodes are added in order
+    to account for additional node transformations to the ContainerIndex.
+
+Tree example:
+
+Power GFS node -->   *                *
+                     |\               |\
+                     | \              * *     <-- Additional intermediate node e.g. GV ordering nodes
+                     |  \             |  \
+Leaf GFS node -->    *   *            *   *   <-- e.g. Local ordering nodes
+
+Possible intermediate nodes:
+  - Grid View Ordering node
+  - Chunked Ordering node
+  - Permuted Ordering node
+    ### Ordering Node
+
+    The main task of an ordering node is to modify or add the **last**
+    index of a partially constructed ContainerIndex based on a part of a DOFIndex.
+
+    - Container indices are built left to right. That is, starting from inner
+      to outer container indices. This implies that to construct one container
+      index out of a DOFIndex, the ordering tree should be traversed from a
+      leaf node towards the root node.
+
+    - Blocked: When a node orders a new block in the container, it appends a
+      value to the container index. Typically, the appended value is the
+      index of the DOFIndex that is being processed.
+
+    - Non-Blocked: In this case the node modifies the last value of the
+      container index. In other words, it needs to put the last modified index
+      into the context of the a bigger tree strucutre. Typically, this is done
+      by adding an offset according to a merging strategy.
+
+
+    ### Local Ordering Tree
+
+    The local ordering is a special kind of ordering tree where all
+    ContainerIndex for a given entity index are ordered consecutively
+    starting at index `0`. Notice that it is an ordering itself and also
+    work as described above, but because their indexation starts at `0`,
+    they are placed at the bottom of the tree so that other ordering nodes
+    can merge them in a meaningful way.
+
+    ### Grid View Ordering Node
+
+    This kind of node holds **one** local ordering tree as a child and puts the
+    local ordering ContainerIndex in context of all the entities in an entity
+    set. Typically, this node keeps a list of offsets for each entity index.
+    This offset is added or appendend to the last index of the ContainerIndex
+    created by the local ordering.
+
+    ## Size of sub-blocks
+
+    The ContainerIndex is meant to access a container. However, in an arbitrarily
+    nested container, every sub-block container may have a different size
+    necessary to store every possible ContainerIndex from the ordering. To solve
+    this, the ordering root node offers a `size(SizePrefix)` method that gives a
+    size for every possible container.
+
+    In particular, it computes the size required for a given prefix of a
+    ContainerIndex. We say that the container index is a complete
+    MultiIndex path to the container and that a prefix is a partial
+    MultiIndex refering to the outer containers of a system of nested
+    containers (e.g. vector of vectors).
+
+    For example, posible prefixes to the container index `{1,4,10}` are
+    `{}`, `{10}`, and  `{4,10}`, and each of these prefixes will
+    yield different sizes that are big enough to accommodate all possible
+    sub-prefixes. Following the example above, the sizes should be at least
+    11, 5, and 2. The `size(SizePrefix)` method also accepts ContainerIndex
+    (i.e. full MultiIndex `{1,4,10}`), but since containers are not expected
+    to be blocked further down, it returns 0.
+
+    In dune-function terms, the root ordering node will act as a size provider.
+    However, notice that order of the SizePrefix has the same semantics as the
+    ContainerIndex and need to be reversed when used with dune-functions
+    algorithms. See SizeProviderAdapter for more details on this.
+
+    ### Computation of sizes
+
+    The comuptation of sizes should be thought as an inverse of the
+    ContainerIndex transformation. For a partial ContainerIndex, it traverses
+    the tree top to bottom. Since the ContainerIndex encodes the ordering path
+    to an leaf node by either adding an offset or by appending a tree path, the
+    calculation on each node consumes the last index of the ContainerIndex in
+    the same way as it was created, and tries to find an offset range where
+    such index is contained. Once this range is found, the tree path down the
+    tree may be reconstrcted or the size of the offset range may be returned if
+    all indices where consumed.
+
+    @see SizeProviderAdapter
+    @see MultiIndex
+    @see DOFIndex
+
+  @}
+
 */

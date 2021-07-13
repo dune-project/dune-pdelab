@@ -7,6 +7,7 @@
 #include <dune/common/shared_ptr.hh>
 #include <dune/istl/bvector.hh>
 #include <dune/typetree/typetree.hh>
+#include <dune/functions/backends/istlvectorbackend.hh>
 
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/tags.hh>
@@ -63,7 +64,7 @@ namespace Dune {
           : _gfs(rhs._gfs)
           , _container(std::make_shared<Container>(_gfs->ordering().blockCount()))
         {
-          ISTL::dispatch_vector_allocation(_gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          resize();
           (*_container) = rhs.native();
         }
 
@@ -74,9 +75,9 @@ namespace Dune {
 
         BlockVector (std::shared_ptr<const GFS> gfs, Backend::attached_container = Backend::attached_container())
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(gfs->ordering().blockCount()))
+          , _container(std::make_shared<Container>())
         {
-          ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          resize();
         }
 
         //! Creates an BlockVector without allocating an underlying ISTL vector.
@@ -93,15 +94,14 @@ namespace Dune {
           : _gfs(gfs)
           , _container(stackobject_to_shared_ptr(container))
         {
-          _container->resize(gfs->ordering().blockCount());
-          ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          resize();
         }
 
         BlockVector (std::shared_ptr<const GFS> gfs, const E& e)
           : _gfs(gfs)
-          , _container(std::make_shared<Container>(gfs->ordering().blockCount()))
+          , _container(std::make_shared<Container>())
         {
-          ISTL::dispatch_vector_allocation(gfs->ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+          resize();
           (*_container)=e;
         }
 
@@ -126,6 +126,22 @@ namespace Dune {
         BlockVector (const GFS& gfs, const E& e)
           : BlockVector(Dune::stackobject_to_shared_ptr(gfs), e)
         {}
+
+        /**
+         * @brief Resize container for a given function space ordering
+         * @details This function goes recursively to each block in
+         *          the vector and tries to resize it according to the ordering
+         *          object. In terms of dune-functions, the ordering is then the
+         *          size provider.
+         */
+        void resize()
+        {
+          assert(_gfs);
+          auto b = Functions::istlVectorBackend(*_container);
+          SizeProviderAdapter size_provider{_gfs->orderingStorage()};
+          static_assert(decltype(size_provider)::size_prefix_order == MultiIndexOrder::Outer2Inner);
+          b.resize(size_provider);
+        }
 
         void detach()
         {

@@ -123,6 +123,13 @@ namespace Dune {
           index[1] = entity_index;
         }
 
+        template<typename Index, typename SizeType>
+        static void store(Index& index, SizeType geometry_index, SizeType entity_index)
+        {
+          index[0] = geometry_index;
+          index[1] = entity_index;
+        }
+
       };
 
       template<typename DOFIndex>
@@ -161,6 +168,8 @@ namespace Dune {
 
       typedef std::size_t SizeType;
 
+      using SizePrefix = MultiIndex<SizeType,ContainerIndex::max_depth>;
+
       typedef DefaultDOFIndexAccessor DOFIndexAccessor;
 
     };
@@ -175,6 +184,8 @@ namespace Dune {
       typedef CI ContainerIndex;
 
       typedef SizeType_ SizeType;
+
+      using SizePrefix = MultiIndex<SizeType,ContainerIndex::max_depth>;
 
       typedef SimpleDOFIndexAccessor DOFIndexAccessor;
 
@@ -330,6 +341,83 @@ namespace Dune {
       {}
 
     };
+
+    //! Information about order semantics on multi-indices
+    enum class MultiIndexOrder {
+      //! indices are ordered from inner to outer container: {inner,...,outer}
+      Inner2Outer,
+      //! indices are ordered from outer to inner container: {outer,...,inner}
+      Outer2Inner,
+    };
+
+    /**
+     * @brief Adapter to create a size provider from an ordering
+     * @details This adapter is meant to be used in allocation and
+     *   resizing of vectors containers.
+     *   In particular, this adapter is needed because the ordering library give
+     *   sizes for multi-indices ordered with Inner2Outer semantis, while
+     *   resizing algorithms are faster and easier when using Outer2Inner
+     *   semantics.
+     *
+     *   - This class makes type erasure on the ordering type.
+     *   - This class has value semantics.
+     *
+     * @tparam SizeType_ return type of the size method
+     * @tparam SizePrefix_ argument type of the size method
+     * @tparam Order enum with MultiIndexOrder semantics of the adapter
+     *
+     * @tparam Ordering  Ordering tree from grid function space
+     */
+    template <class SizeType_, class SizePrefix_, MultiIndexOrder Order = MultiIndexOrder::Outer2Inner>
+    struct SizeProviderAdapter {
+
+      template <class Ordering>
+      SizeProviderAdapter(const std::shared_ptr<const Ordering>& ordering)
+          : _size_provider(
+                [=](const SizePrefix &size) { return ordering->size(size); })
+      {
+        static_assert(Ordering::size_prefix_order == MultiIndexOrder::Inner2Outer);
+      }
+
+      //! Partial MultiIndex of a ContainerIndex
+      using SizePrefix = SizePrefix_;
+
+      //! Type that refers to the size of containers
+      using SizeType = SizeType_;
+
+      //! Inform about SizePrefix multi-index order semantics
+      static constexpr MultiIndexOrder size_prefix_order = Order;
+
+      /**
+       * @brief Gives the size for a given prefix
+       * @param prefix  MultiIndex with a partial path to a container
+       * @return Traits::SizeType  The size required for such a path
+       */
+      auto size(const SizePrefix &prefix) const {
+        if constexpr (size_prefix_order == MultiIndexOrder::Outer2Inner) {
+          // reversing Outer2Inner prefix into a Inner2Outer prefix
+          SizePrefix i2o_prefix;
+          i2o_prefix.resize(prefix.size());
+          std::reverse_copy(prefix.begin(), prefix.end(),i2o_prefix.begin());
+          // forward size request to ordering with new Inner2Outer prefix
+          return _size_provider(i2o_prefix);
+        } else {
+          // prefix is already Inner2Outer, forward to size provider
+          return _size_provider(prefix);
+        }
+      }
+
+    private:
+
+      const std::function<SizeType(const SizePrefix &)> _size_provider;
+    };
+
+    //! template deduction guide for orderings
+    template<class Ordering>
+    SizeProviderAdapter(const std::shared_ptr<const Ordering>& ordering)
+        -> SizeProviderAdapter<typename Ordering::Traits::SizeType,
+                              typename Ordering::Traits::SizePrefix>;
+
 
    //! \} group Ordering
   } // namespace PDELab

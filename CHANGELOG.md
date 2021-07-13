@@ -14,6 +14,11 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   Orderings are now able to give a `size` for every partial container indice. This was something that
+    `blockCount()` could not give on local orderings. This basically unifies the interface for global and
+    local orderings and allows for more complicated blockings on local orderings. Resizing of containers is
+    managed internally on the backends, thus no changes are required for normal use cases.
+
 -   Grid function space (GFS) trees can now accept different entity sets per node if the ordering allows it.
     That is, all entity sets below an entity blocking tag are expected to be the same, otherwise, the ordering
     will issue an exception. Additionally, the root node in a grid function space tree may also contain a

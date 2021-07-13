@@ -14,7 +14,9 @@
 #include <dune/common/parallel/mpihelper.hh>
 
 #include <dune/grid/yaspgrid.hh>
+#if HAVE_DUNE_ALUGRID
 #include <dune/alugrid/grid.hh>
+#endif
 #include <dune/grid/common/scsgmapper.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 
@@ -23,48 +25,51 @@
 template<typename GFS>
 void check_ordering(const GFS& gfs)
 {
-    const typename GFS::Ordering& ordering = gfs.ordering();
+    const auto& ordering = gfs.ordering();
 
-    Dune::PDELab::LocalFunctionSpace<GFS> lfs(gfs);
+    Dune::PDELab::LocalFunctionSpace lfs{gfs};
+    Dune::PDELab::LFSIndexCache lfs_cache{lfs};
 
-    typedef typename GFS::Traits::GridView GV;
-
-    for (typename GV::template Codim<0>::Iterator it = gfs.gridView().template begin<0>();
-         it != gfs.gridView().template end<0>(); ++it)
+    for (const auto& element : elements(gfs.entitySet()))
     {
-      lfs.bind(*it);
+      // lfs computes dof indices
+      lfs.bind(element);
+      // cache computes container indices
+      lfs_cache.update();
 
-      std::vector<typename GFS::Ordering::Traits::DOFIndex> vdi(lfs.size());
-      std::vector<typename GFS::Ordering::Traits::ContainerIndex> vci(lfs.size());
-      std::array<std::size_t,Dune::TypeTree::TreeInfo<GFS>::leafCount> leaf_sizes;
-      std::fill(begin(leaf_sizes),end(leaf_sizes),0);
-      for (unsigned i = 0; i < lfs.size(); ++i)
-      {
-        vdi[i] = lfs.dofIndex(i);
-      }
-      Dune::PDELab::map_dof_indices_to_container_indices<
-        typename decltype(vdi)::iterator,
-        typename decltype(vci)::iterator,
-        typename decltype(leaf_sizes)::iterator,
-        Dune::TypeTree::TreeInfo<GFS>::depth,
-        false
-        > visitor(begin(vdi),begin(vci),begin(leaf_sizes));
+      for (unsigned i = 0; i < lfs.size(); ++i) {
+        // get i-th local dof index
+        auto di = lfs.dofIndex(i);
+        // map dof index to a container index (from ordering)
+        auto ci_map = ordering.mapIndex(di);
+        // map local index to a container index (from cache)
+        auto ci_cache_i = lfs_cache.containerIndex(i);
+        // map dof index to a container index (from cache)
+        auto ci_cache_di = lfs_cache.containerIndex(di);
+        if (ci_map != ci_cache_i or ci_map != ci_cache_di)
+          DUNE_THROW(Dune::RangeError, "Container index mappings do not match");
 
-      Dune::TypeTree::applyToTree(ordering,visitor);
-
-      for (unsigned i = 0; i < lfs.size(); ++i)
-      {
-        const typename GFS::Ordering::Traits::DOFIndex& di = lfs.dofIndex(i);
-        typename GFS::Ordering::Traits::ContainerIndex ci;
-        ordering.mapIndex(di.view(),ci);
-        std::cout << di << "    " << vci[i] << "    " << ci << std::endl;
+        // check that all size prefixes fit the current container index
+        auto size_prefix = ci_map;
+        while (size_prefix.size() != 0) {
+          // get outer container index in the prefix
+          auto block_index = size_prefix.back();
+          // calculate the size for a container that would hold such block
+          size_prefix.pop_back();
+          auto size = ordering.size(size_prefix);
+          // the index should always fit into the size
+          if (size <= block_index)
+            DUNE_THROW(Dune::RangeError, "Size for CI prefix '"
+                                             << size_prefix
+                                             << "' cannot fit sub-block '"
+                                             << block_index << "'");
+        }
       }
     }
 
     using V = Dune::PDELab::Backend::Vector<GFS,double>;
     V x(gfs);
     x = 0.0;
-    std::cout << std::endl;
 }
 
 
@@ -207,11 +212,13 @@ struct test<3,true> {
     // make a grid function space
     typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS;
     P0GFS p0gfs(gv,p0fem);
+    check_ordering(p0gfs);
 // Doesn't work, we need a grid with triangular elemets for that
 //  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM> P1GFS;
 //  P1GFS p1gfs(gv,p1fem);
     typedef Dune::PDELab::GridFunctionSpace<GV,Q1FEM> Q1GFS;
     Q1GFS q1gfs(gv,q1fem);
+    check_ordering(q1gfs);
   }
 };
 
@@ -227,6 +234,7 @@ int main(int argc, char** argv)
   //Maybe initialize Mpi
   Dune::MPIHelper::instance(argc, argv);
 
+#if HAVE_DUNE_ALUGRID
   // 2D
   {
     std::cout << "2D tests" << std::endl;
@@ -257,6 +265,7 @@ int main(int argc, char** argv)
     std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
     testleafgridfunction<false>(grid->leafGridView());
   }
+#endif
 
   // 3D
   {

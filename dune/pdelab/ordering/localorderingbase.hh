@@ -7,6 +7,8 @@
 #include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
 
+#include <dune/common/rangeutilities.hh>
+
 #include <vector>
 
 namespace Dune {
@@ -15,6 +17,14 @@ namespace Dune {
     //! \addtogroup Ordering
     //! \{
 
+    /**
+     * @brief Entity-wise orderings.
+     * @details A tree structure of this class is able to provide
+     * (multi-index) indexations for each entity in an entity set.
+     * @tparam ES Entity Set
+     * @tparam DI DOFIndex
+     * @tparam CI ContainerIndex
+     */
     template<typename ES, typename DI, typename CI>
     class LocalOrderingBase
     {
@@ -44,10 +54,6 @@ namespace Dune {
       template<typename size_type>
       friend struct ::Dune::PDELab::impl::update_ordering_data;
 
-      typedef std::vector<LocalOrderingBase*> ChildVector;
-      typedef typename ChildVector::iterator ChildIterator;
-      typedef typename ChildVector::const_iterator ConstChildIterator;
-
     public:
 
       static const bool has_dynamic_ordering_children = true;
@@ -55,6 +61,14 @@ namespace Dune {
       static const bool consume_tree_index = true;
 
       typedef LocalOrderingTraits<ES,DI,CI> Traits;
+
+      //! Partial MultiIndex of a ContainerIndex
+      using SizePrefix = typename Traits::SizePrefix;
+
+      //! Inform about SizePrefix multi-index order semantics
+      static constexpr MultiIndexOrder size_prefix_order = MultiIndexOrder::Inner2Outer;
+      //! Inform about ContainerIndex multi-index order semantics
+      static constexpr MultiIndexOrder container_index_order = MultiIndexOrder::Inner2Outer;
 
       static constexpr auto GT_UNUSED = ~std::size_t(0);
 
@@ -69,12 +83,12 @@ namespace Dune {
                            typename Traits::TreeIndexView mi,
                            typename Traits::ContainerIndex& ci) const
       {
-        if (_child_count == 0)
+        if (_child_count == 0) // leaf nodes
           {
             assert(mi.size() == 1 && "MultiIndex length must match GridFunctionSpace tree depth");
             ci.push_back(mi.back());
           }
-        else
+        else // inner nodes
           {
             const typename Traits::SizeType child_index = mi.back();
             if (!mi.empty())
@@ -101,52 +115,65 @@ namespace Dune {
       }
 
 
+      /**
+       * @brief Set last index of container indices
+       * @details For a (view) list of dof indices, this method will fill or
+       * append the last index of the same ammount of container indices.
+       *
+       * @tparam ItIn       DOFIndexViewIterator<DOFIterator>
+       * @tparam ItOut      std::vector<CI>::iterator
+       * @param begin       begin iterator for (view) list of dof indices
+       * @param end         begin iterator for (view) list of dof indices
+       * @param out         begin iterator of container indices to be filled out
+       */
       template<typename ItIn, typename ItOut>
       void map_lfs_indices(const ItIn begin, const ItIn end, ItOut out) const
       {
-        if (_child_count == 0)
-          {
-            for (ItIn in = begin; in != end; ++in, ++out)
-              {
-                assert(in->size() == 1 && "MultiIndex length must match GridFunctionSpace tree depth");
-                out->push_back(in->treeIndex().back());
-              }
+        if (_child_count == 0) // leaf nodes
+        {
+          for (ItIn in = begin; in != end; ++in, ++out) {
+            assert(in->size() == 1 &&
+                   "MultiIndex length must match GridFunctionSpace tree depth");
+            out->push_back(in->treeIndex().back());
           }
-        else if (_container_blocked)
-          {
-            for (ItIn in = begin; in != end; ++in, ++out)
-              out->push_back(in->treeIndex().back());
+        } else if (_container_blocked) // blocked inner nodes
+        {
+          for (ItIn in = begin; in != end; ++in, ++out)
+            out->push_back(in->treeIndex().back());
+        } else if (_fixed_size) // non-blocked inner nodes with fixed sizes
+        {
+          for (ItIn in = begin; in != end; ++in, ++out) {
+            const typename Traits::SizeType child_index =
+                in->treeIndex().back();
+            const typename Traits::SizeType gt_index =
+                Traits::DOFIndexAccessor::geometryType(*in);
+            if (child_index > 0) {
+              const typename Traits::SizeType index =
+                  gt_index * _child_count + child_index - 1;
+              out->back() += _gt_dof_offsets[index];
+            }
           }
-        else if (_fixed_size)
-          {
-            for (ItIn in = begin; in != end; ++in, ++out)
-              {
-                const typename Traits::SizeType child_index = in->treeIndex().back();
-                const typename Traits::SizeType gt_index = Traits::DOFIndexAccessor::geometryType(*in);
-                if (child_index > 0)
-                  {
-                    const typename Traits::SizeType index = gt_index * _child_count + child_index - 1;
-                    out->back() += _gt_dof_offsets[index];
-                  }
-              }
-          }
-        else
-          {
-            for (ItIn in = begin; in != end; ++in, ++out)
-              {
-                const typename Traits::SizeType child_index = in->treeIndex().back();
-                if (child_index > 0)
-                  {
-                    const typename Traits::SizeType gt_index = Traits::DOFIndexAccessor::geometryType(*in);
-                    const typename Traits::SizeType entity_index = Traits::DOFIndexAccessor::entityIndex(*in);
+        } else // non-blocked inner nodes with variable sizes
+        {
+          for (ItIn in = begin; in != end; ++in, ++out) {
+            const typename Traits::SizeType child_index =
+                in->treeIndex().back();
+            if (child_index > 0) {
+              const typename Traits::SizeType gt_index =
+                  Traits::DOFIndexAccessor::geometryType(*in);
+              const typename Traits::SizeType entity_index =
+                  Traits::DOFIndexAccessor::entityIndex(*in);
 
-                    assert(_gt_used[gt_index]);
+              assert(_gt_used[gt_index]);
 
-                    const typename Traits::SizeType index = (_gt_entity_offsets[gt_index] + entity_index) * _child_count + child_index - 1;
-                    out->back() += _entity_dof_offsets[index];
-                  }
-              }
+              const typename Traits::SizeType index =
+                  (_gt_entity_offsets[gt_index] + entity_index) *
+                      _child_count +
+                  child_index - 1;
+              out->back() += _entity_dof_offsets[index];
+            }
           }
+        }
       }
 
       template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
@@ -252,6 +279,68 @@ namespace Dune {
           }
       }
 
+    protected:
+
+      /**
+       * @brief Gives the size for a given entity and prefix
+       * @details This method is used by typetree class derived from this class
+       *
+       * @param node TypeTree version of this class
+       * @param prefix  MultiIndex with a partial path to a container
+       * @param index Entity index to compute the size
+       * @return Traits::SizeType  The size required for such a path.
+       */
+      template<class Node>
+      typename Traits::SizeType
+      node_size(const Node& node, typename Traits::SizePrefix prefix,
+           const typename Traits::DOFIndex::EntityIndex &index) const {
+        using size_type = typename Traits::size_type;
+
+        // prefix wants the size for this node
+        if (prefix.size() == 0)
+          return node.size(index);
+
+        if constexpr (Node::isLeaf) {
+          return 0; // Assume leaf local orderings are always field vectors
+        } else {
+          // the next index to find out its size
+          auto back_index = prefix.back();
+          // task: find child local ordering because it should know its own size
+          std::size_t _child;
+
+          if (node.containerBlocked()) {
+            // in this case back index is the child ordering itself
+            _child = back_index;
+            prefix.pop_back();
+          } else {
+            // here we need to find the child that describes the back_index (solve child in map_lfs_indices)
+            const size_type gt_index = Traits::DOFIndexAccessor::GeometryIndex::geometryType(index);
+            const size_type entity_index = Traits::DOFIndexAccessor::GeometryIndex::entityIndex(index);
+            auto dof_begin = node._fixed_size ? node._gt_dof_offsets.begin() : node._entity_dof_offsets.begin();
+            auto dof_end = node._fixed_size ? node._gt_dof_offsets.end() : node._entity_dof_offsets.end();
+            auto dof_it = std::prev(std::upper_bound(dof_begin, dof_end, back_index));
+            size_type dof_dist = std::distance(dof_begin, dof_it);
+            if (node._fixed_size)
+              _child = dof_dist - gt_index * node._child_count + 1;
+            else
+              _child = dof_dist - (node._gt_entity_offsets[gt_index] + entity_index) * node._child_count + 1;
+          }
+
+          assert(node.degree() > _child);
+          typename Traits::SizeType _size;
+          // create a dynamic or static index range
+          auto indices = Dune::range(node.degree());
+          // get size for required child
+          Hybrid::forEach(indices, [&](auto i){
+            if (i == _child)
+              _size = node.child(i).size(prefix, index);
+          });
+
+          return _size;
+        }
+      }
+
+    public:
       typename Traits::SizeType offset(const typename Traits::SizeType geometry_type_index, const typename Traits::SizeType entity_index, const typename Traits::SizeType child_index) const
       {
         assert(child_index < _child_count);
@@ -309,6 +398,16 @@ namespace Dune {
 
     protected:
 
+      bool containerBlocked() const
+      {
+        return _container_blocked;
+      }
+
+      std::size_t childOrderingCount() const
+      {
+        return _child_count;
+      }
+
       LocalOrderingBase& childOrdering(typename Traits::SizeType i)
       {
         return *_children[i];
@@ -337,11 +436,8 @@ namespace Dune {
       void setup_fixed_size_possible()
       {
         _fixed_size_possible = true;
-        for (ConstChildIterator it = _children.begin(),
-               end_it = _children.end();
-             it != end_it;
-             ++it)
-          _fixed_size_possible = _fixed_size_possible && (*it)->_fixed_size_possible;
+        for (const auto& child : _children)
+          _fixed_size_possible &= child->_fixed_size_possible;
       }
 
 

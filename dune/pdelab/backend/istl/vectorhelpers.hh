@@ -76,22 +76,26 @@ namespace Dune {
 
 
       template<typename Vector>
+      [[deprecated]]
       void resize_vector(tags::block_vector, Vector& v, std::size_t size, bool copy_values)
       {
         v.resize(size);
       }
 
       template<typename Vector>
+      [[deprecated]]
       void resize_vector(tags::field_vector, Vector& v, std::size_t size, bool copy_values)
       {
       }
 
       template<typename DI, typename CI, typename Container>
+      [[deprecated]]
       void allocate_vector(tags::field_vector, const OrderingBase<DI,CI>& ordering, Container& c)
       {
       }
 
       template<typename DI, typename CI, typename Container>
+      [[deprecated]]
       void allocate_vector(tags::block_vector, const OrderingBase<DI,CI>& ordering, Container& c)
       {
         for (std::size_t i = 0; i < ordering.childOrderingCount(); ++i)
@@ -107,12 +111,14 @@ namespace Dune {
       }
 
       template<typename Ordering, typename Container>
+      [[deprecated]]
       void dispatch_vector_allocation(const Ordering& ordering, Container& c, HierarchicContainerAllocationTag tag)
       {
         allocate_vector(container_tag(c),ordering,c);
       }
 
       template<typename Ordering, typename Container>
+      [[deprecated]]
       void dispatch_vector_allocation(const Ordering& ordering, Container& c, FlatContainerAllocationTag tag)
       {
         resize_vector(container_tag(c),c,ordering.blockCount(),false);

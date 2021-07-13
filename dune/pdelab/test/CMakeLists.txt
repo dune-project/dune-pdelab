@@ -137,8 +137,7 @@ dune_add_test(SOURCES testeigenbackend.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
               CMAKE_GUARD EIGEN3_FOUND)
 
-dune_add_test(SOURCES testordering.cc
-              CMAKE_GUARD dune-alugrid_FOUND)
+dune_add_test(SOURCES testordering.cc)
 
 dune_add_test(SOURCES testloadbalancing.cc
               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
