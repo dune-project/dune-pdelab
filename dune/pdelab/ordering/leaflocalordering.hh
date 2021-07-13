@@ -74,6 +74,23 @@ namespace Dune {
         this->_fixed_size_possible = true;
       }
 
+      using BaseT::size;
+
+      /**
+       * @brief Returns the size for a given prefix
+       * @details This computes the size required for a given prefix of a
+       *  container index.
+       *
+       * @param prefix  MultiIndex with a partial path to a container
+       * @param index Entity index to compute the size
+       * @return Traits::SizeType  The size required for such a path.
+       */
+      typename Traits::SizeType
+      size(const typename Traits::SizePrefix& prefix,
+           const typename Traits::DOFIndex::EntityIndex &index) const {
+        return this->node_size(*this,prefix,index);
+      }
+
     private:
 
       typedef FiniteElementInterfaceSwitch<

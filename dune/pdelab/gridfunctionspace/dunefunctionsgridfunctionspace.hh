@@ -167,6 +167,7 @@ namespace Dune {
              * i.e., an integer.
              */
             using ContainerIndex = PDELab::MultiIndex<std::size_t,1>;
+            using SizePrefix     = PDELab::MultiIndex<std::size_t,1>;
             using size_type      = std::size_t;
             using SizeType       = size_type;
 
@@ -175,12 +176,23 @@ namespace Dune {
 
           using DOFIndex       = typename Traits::DOFIndex;
           using ContainerIndex = typename Traits::ContainerIndex;
+          using SizePrefix     = typename Traits::SizePrefix;
           using size_type      = std::size_t;
+
+          //! Inform about SizePrefix multi-index order semantics
+          static constexpr MultiIndexOrder size_prefix_order = MultiIndexOrder::Inner2Outer;
+          //! Inform about ContainerIndex multi-index order semantics
+          static constexpr MultiIndexOrder container_index_order = MultiIndexOrder::Inner2Outer;
 
           LeafOrdering(const GridFunctionSpace& gfs)
             : _gfs(gfs)
           {
             update();
+          }
+
+          size_type size(SizePrefix prefix) const
+          {
+            return _gfs.basis().size(prefix);
           }
 
           size_type size() const
@@ -367,8 +379,14 @@ namespace Dune {
 
           static const bool consume_tree_index = false;
 
+          //! Inform about SizePrefix multi-index order semantics
+          static constexpr MultiIndexOrder size_prefix_order = MultiIndexOrder::Inner2Outer;
+          //! Inform about ContainerIndex multi-index order semantics
+          static constexpr MultiIndexOrder container_index_order = MultiIndexOrder::Inner2Outer;
+
           using DOFIndex       = typename Traits::DOFIndex;
           using ContainerIndex = typename Traits::ContainerIndex;
+          using SizePrefix     = typename Traits::SizePrefix;
           using size_type      = std::size_t;
 
           using CacheTag       = DuneFunctionsCacheTag;
@@ -377,6 +395,11 @@ namespace Dune {
           Ordering(const GridFunctionSpace& gfs)
             : TypeTree::CompositeNode<LeafOrdering>(LeafOrdering(gfs))
           {}
+
+          size_type size(SizePrefix prefix) const
+          {
+            return this->child(Indices::_0).size(prefix);
+          }
 
           size_type size() const
           {
@@ -463,7 +486,7 @@ namespace Dune {
           , _df_basis(std::move(df_basis))
           , _finiteElementMap(_df_basis)
           , _pce(std::move(ce))
-          , _ordering(*this)
+          , _ordering(std::make_shared<Ordering>(*this))
         {}
 
         GridFunctionSpace (std::shared_ptr<DFBasis> df_basis)
@@ -471,7 +494,7 @@ namespace Dune {
           , _df_basis(std::move(df_basis))
           , _finiteElementMap(_df_basis)
           , _pce(std::make_shared<CE>())
-          , _ordering(*this)
+          , _ordering(std::make_shared<Ordering>(*this))
         {}
 
         //! get grid view
@@ -507,27 +530,32 @@ namespace Dune {
         //! Direct access to the DOF ordering.
         const Ordering& ordering() const
         {
+          return *_ordering;
+        }
+
+        std::shared_ptr<const Ordering> orderingStorage() const
+        {
           return _ordering;
         }
 
         typename Traits::SizeType size() const
         {
-          return _ordering.size();
+          return _ordering->size();
         }
 
         typename Traits::SizeType blockCount() const
         {
-          return _ordering.blockCount();
+          return _ordering->blockCount();
         }
 
         typename Traits::SizeType globalSize() const
         {
-          return _ordering.size();
+          return _ordering->size();
         }
 
         typename Traits::SizeType maxLocalSize () const
         {
-          return _ordering.maxLocalSize();
+          return _ordering->maxLocalSize();
         }
 
         /** \brief Update the indexing information of the GridFunctionSpace.
@@ -541,7 +569,7 @@ namespace Dune {
           _df_basis->update(_es.gridView());
           _finiteElementMap.update();
           // Apparently there is no need to update the constraints assembler '_pce';
-          _ordering.update();
+          _ordering->update();
         }
 
         const std::string& name() const
@@ -570,7 +598,7 @@ namespace Dune {
         std::shared_ptr<DFBasis> _df_basis;
         typename Traits::FiniteElementMap _finiteElementMap;
         std::shared_ptr<CE const> _pce;
-        Ordering _ordering;
+        std::shared_ptr<Ordering> _ordering;
         std::string _name;
       };
 

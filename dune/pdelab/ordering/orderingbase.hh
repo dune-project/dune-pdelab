@@ -37,6 +37,14 @@ namespace Dune {
 
       typedef DefaultLFSCacheTag CacheTag;
 
+      //! Partial MultiIndex of a ContainerIndex
+      using SizePrefix = typename Traits::SizePrefix;
+
+      //! Inform about SizePrefix multi-index order semantics
+      static constexpr MultiIndexOrder size_prefix_order = MultiIndexOrder::Inner2Outer;
+      //! Inform about ContainerIndex multi-index order semantics
+      static constexpr MultiIndexOrder container_index_order = MultiIndexOrder::Inner2Outer;
+
       static const bool has_dynamic_ordering_children = true;
 
       static const bool consume_tree_index = true;

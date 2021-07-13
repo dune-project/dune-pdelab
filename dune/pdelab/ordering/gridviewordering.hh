@@ -429,7 +429,7 @@ namespace Dune {
 
     };
 
-
+    //! Transforms a local ordering (entity-wise order) into a global ordering
     template<typename LocalOrdering>
     class GridViewOrdering
       : public TypeTree::CompositeNode<LocalOrdering>
@@ -503,6 +503,58 @@ namespace Dune {
       virtual ~GridViewOrdering() override = default;
 
 #endif // DOXYGEN
+
+      using BaseT::size;
+
+      /**
+       * @brief Gives the size for a given prefix
+       * @param prefix  MultiIndex with a partial path to a container
+       * @return Traits::SizeType  The size required for such a path.
+       */
+      typename Traits::SizeType size(typename Traits::SizePrefix prefix) const
+      {
+        using size_type = typename Traits::SizeType;
+        if (prefix.size() == Traits::SizePrefix::max_depth)
+          return 0; // all indices in prefix were consumed, no more sizes to provide
+        if (prefix.size() == 0) // prefix wants the size of this depth
+          return _block_count; // blocked or not, this gives the number of blocks/dofs in next node hierarchy
+
+        // we first have to figure out the entity index
+        typename Traits::DOFIndex::EntityIndex entity_index;
+
+        // the next index to find out its size
+        auto back_index = prefix.back();
+        // we just need to make the inverse computation of the mapIndex funtion to find the entity index
+        if (_container_blocked) {
+          prefix.pop_back();
+          auto gt_begin = _fixed_size ? _gt_dof_offsets.begin() : _gt_entity_offsets.begin();
+          auto gt_end = _fixed_size ? _gt_dof_offsets.end() : _gt_entity_offsets.end();
+          auto gt_it = std::prev(std::upper_bound(gt_begin, gt_end, back_index));
+          size_type gt = std::distance(gt_begin, gt_it);
+          assert(back_index >= *gt_it);
+          size_type ei = back_index - *gt_it;
+          Traits::DOFIndexAccessor::GeometryIndex::store(entity_index,gt,ei);
+        } else {
+          auto dof_begin = _fixed_size ? _gt_dof_offsets.begin() : _entity_dof_offsets.begin();
+          auto dof_end = _fixed_size ? _gt_dof_offsets.end() : _entity_dof_offsets.end();
+          auto dof_it = std::prev(std::upper_bound(dof_begin, dof_end, back_index));
+          size_type dof_dist = std::distance(dof_begin, dof_it);
+          if (_fixed_size) {
+            // On fixed size, entity index is not used down the tree. Set max to trigger segfault if this does not hold.
+            Traits::DOFIndexAccessor::GeometryIndex::store(entity_index,dof_dist,~size_type{0});
+          } else {
+            auto gt_begin = _gt_entity_offsets.begin();
+            auto gt_end = _gt_entity_offsets.end();
+            auto gt_it = std::prev(std::upper_bound(gt_begin, gt_end, dof_dist));
+            size_type gt = std::distance(gt_begin, gt_it);
+            assert(dof_dist >= *gt_it);
+            size_type ei = dof_dist - *gt_it;
+            Traits::DOFIndexAccessor::GeometryIndex::store(entity_index,gt,ei);
+          }
+        }
+        // then, the local ordering knows the size for a given entity.
+        return localOrdering().size(prefix, entity_index);
+      }
 
       LocalOrdering& localOrdering()
       {

@@ -13,6 +13,7 @@
 #include <dune/common/stdstreams.hh>
 #include <dune/common/typetraits.hh>
 #include <dune/common/deprecated.hh>
+#include <dune/common/hybridutilities.hh>
 
 #include <dune/typetree/compositenode.hh>
 #include <dune/typetree/powernode.hh>
@@ -51,7 +52,22 @@ namespace Dune {
         : NodeT(child_storage)
         , BaseT(*this,container_blocked,nullptr)
       {}
+
+      using BaseT::size;
+
+      /**
+       * @brief Returns the size for a given prefix
+       * @param prefix  MultiIndex with a partial path to a container
+       * @param index Entity index to compute the size
+       * @return Traits::SizeType  The size required for such a path.
+       */
+      typename Traits::SizeType
+      size(const typename Traits::SizePrefix& prefix,
+           const typename Traits::DOFIndex::EntityIndex &index) const {
+        return this->node_size(*this,prefix,index);
+      }
     };
+
 
     template<typename GFS, typename Transformation>
     struct power_gfs_to_local_ordering_descriptor<GFS,Transformation,EntityBlockedOrderingTag>
@@ -158,6 +174,24 @@ namespace Dune {
         : Node(children...)
         , Base(*this,container_blocked,nullptr)
       {}
+
+      using Base::size;
+
+      /**
+       * @brief Returns the size for a given prefix
+       * @details This computes the size required for a given prefix of a
+       *  container index.
+       *
+       * @param prefix  MultiIndex with a partial path to a container
+       * @param index Entity index to compute the size
+       * @return Traits::SizeType  The size required for such a path.
+       */
+      typename Traits::SizeType
+      size(const typename Traits::SizePrefix &prefix,
+           const typename Traits::DOFIndex::EntityIndex &index) const {
+        return this->node_size(*this,prefix,index);
+      }
+
     };
 
 
