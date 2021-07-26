@@ -25,7 +25,7 @@ namespace Dune {
 
     public:
 
-      typedef OrderingTraits<DI,CI> Traits;
+      typedef OrderingTraits<DI,CI,MultiIndexOrder::Inner2Outer> Traits;
 
     protected:
 
@@ -36,14 +36,6 @@ namespace Dune {
       typedef HierarchicContainerAllocationTag ContainerAllocationTag;
 
       typedef DefaultLFSCacheTag CacheTag;
-
-      //! Partial MultiIndex of a ContainerIndex
-      using SizePrefix = typename Traits::SizePrefix;
-
-      //! Inform about SizePrefix multi-index order semantics
-      static constexpr MultiIndexOrder size_prefix_order = MultiIndexOrder::Inner2Outer;
-      //! Inform about ContainerIndex multi-index order semantics
-      static constexpr MultiIndexOrder container_index_order = MultiIndexOrder::Inner2Outer;
 
       static const bool has_dynamic_ordering_children = true;
 

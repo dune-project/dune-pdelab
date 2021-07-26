@@ -56,15 +56,15 @@ namespace Dune {
       using BaseT::size;
 
       /**
-       * @brief Returns the size for a given prefix
-       * @param prefix  MultiIndex with a partial path to a container
+       * @brief Returns the size for a given suffix
+       * @param suffix  MultiIndex with a partial path to a container
        * @param index Entity index to compute the size
        * @return Traits::SizeType  The size required for such a path.
        */
       typename Traits::SizeType
-      size(const typename Traits::SizePrefix& prefix,
+      size(const typename Traits::ContainerIndex& suffix,
            const typename Traits::DOFIndex::EntityIndex &index) const {
-        return this->node_size(*this,prefix,index);
+        return this->node_size(*this,suffix,index);
       }
     };
 
@@ -178,18 +178,18 @@ namespace Dune {
       using Base::size;
 
       /**
-       * @brief Returns the size for a given prefix
-       * @details This computes the size required for a given prefix of a
+       * @brief Returns the size for a given suffix
+       * @details This computes the size required for a given suffix of a
        *  container index.
        *
-       * @param prefix  MultiIndex with a partial path to a container
+       * @param suffix  MultiIndex with a partial path to a container
        * @param index Entity index to compute the size
        * @return Traits::SizeType  The size required for such a path.
        */
       typename Traits::SizeType
-      size(const typename Traits::SizePrefix &prefix,
+      size(const typename Traits::ContainerIndex &suffix,
            const typename Traits::DOFIndex::EntityIndex &index) const {
-        return this->node_size(*this,prefix,index);
+        return this->node_size(*this,suffix,index);
       }
 
     };

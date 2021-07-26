@@ -113,35 +113,35 @@ Possible intermediate nodes:
     The ContainerIndex is meant to access a container. However, in an arbitrarily
     nested container, every sub-block container may have a different size
     necessary to store every possible ContainerIndex from the ordering. To solve
-    this, the ordering root node offers a `size(SizePrefix)` method that gives a
-    size for every possible container.
+    this, the ordering root node offers a `size(ContainerIdex)` method that
+    gives a size for every possible container.
 
-    In particular, it computes the size required for a given prefix of a
+    In particular, it computes the size required for a given suffix of a
     ContainerIndex. We say that the container index is a complete
-    MultiIndex path to the container and that a prefix is a partial
+    MultiIndex path to the container and that a suffix is a partial
     MultiIndex refering to the outer containers of a system of nested
     containers (e.g. vector of vectors).
 
-    For example, posible prefixes to the container index `{1,4,10}` are
-    `{}`, `{10}`, and  `{4,10}`, and each of these prefixes will
+    For example, posible suffixes to the container index `{1,4,10}` are
+    `{}`, `{10}`, and  `{4,10}`, and each of these suffixes will
     yield different sizes that are big enough to accommodate all possible
-    sub-prefixes. Following the example above, the sizes should be at least
-    11, 5, and 2. The `size(SizePrefix)` method also accepts ContainerIndex
-    (i.e. full MultiIndex `{1,4,10}`), but since containers are not expected
-    to be blocked further down, it returns 0.
+    sub-suffixes. Following the example above, the sizes should be at least
+    11, 5, and 2. The `size(ContainerIndex)` method also accepts full container
+    index (i.e. full MultiIndex `{1,4,10}`), but since containers are not
+    expected to be blocked further down, it returns 0.
 
     In dune-function terms, the root ordering node will act as a size provider.
-    However, notice that order of the SizePrefix has the same semantics as the
-    ContainerIndex and need to be reversed when used with dune-functions
+    However, notice that order of the `SizePrefix` has the same semantics as the
+    `ContainerIndex` and need to be reversed when used with dune-functions
     algorithms. See SizeProviderAdapter for more details on this.
 
     ### Computation of sizes
 
     The comuptation of sizes should be thought as an inverse of the
-    ContainerIndex transformation. For a partial ContainerIndex, it traverses
+    ContainerIndex transformation. For a ContainerIndex suffix, it traverses
     the tree top to bottom. Since the ContainerIndex encodes the ordering path
     to an leaf node by either adding an offset or by appending a tree path, the
-    calculation on each node consumes the last index of the ContainerIndex in
+    calculation on each node consumes the last index of the suffix in
     the same way as it was created, and tries to find an offset range where
     such index is contained. Once this range is found, the tree path down the
     tree may be reconstrcted or the size of the offset range may be returned if

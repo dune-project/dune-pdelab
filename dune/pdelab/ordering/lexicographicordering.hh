@@ -148,26 +148,26 @@ namespace Dune {
       using Base::size;
 
       /**
-       * @brief Gives the size for a given prefix
-       * @param prefix  MultiIndex with a partial path to a container
+       * @brief Gives the size for a given suffix
+       * @param suffix  MultiIndex with a partial path to a container
        * @return Traits::SizeType  The size required for such a path.
        */
-      typename Traits::SizeType size(typename Traits::SizePrefix prefix) const {
-        if (prefix.size() == Traits::SizePrefix::max_depth)
-          return 0; // all indices in prefix were consumed, no more sizes to provide
+      typename Traits::SizeType size(typename Traits::ContainerIndex suffix) const {
+        if (suffix.size() == Traits::ContainerIndex::max_depth)
+          return 0; // all indices in suffix were consumed, no more sizes to provide
 
-        if (prefix.size() == 0)
+        if (suffix.size() == 0)
           return this->blockCount();
 
         if (this->containerBlocked()) {
-          auto child = prefix.back();
+          auto child = suffix.back();
           assert(this->degree() > child);
-          prefix.pop_back();
-          return this->child(child).size(prefix);
+          suffix.pop_back();
+          return this->child(child).size(suffix);
         } else {
-          auto it = std::upper_bound(this->_child_block_offsets.begin(), this->_child_block_offsets.end(), prefix.back());
+          auto it = std::upper_bound(this->_child_block_offsets.begin(), this->_child_block_offsets.end(), suffix.back());
           std::size_t child = *std::prev(it);
-          return this->child(child).size(prefix);
+          return this->child(child).size(suffix);
         }
       }
 
@@ -269,15 +269,15 @@ namespace Dune {
       using Base::size;
 
       /**
-       * @brief Gives the size for a given prefix
-       * @param prefix  MultiIndex with a partial path to a container
+       * @brief Gives the size for a given suffix
+       * @param suffix  MultiIndex with a partial path to a container
        * @return Traits::SizeType  The size required for such a path.
        */
-      typename Traits::SizeType size(typename Traits::SizePrefix prefix) const {
-        if (prefix.size() == Traits::SizePrefix::max_depth)
-          return 0; // all indices in prefix were consumed, no more sizes to provide
+      typename Traits::SizeType size(typename Traits::ContainerIndex suffix) const {
+        if (suffix.size() == Traits::ContainerIndex::max_depth)
+          return 0; // all indices in suffix were consumed, no more sizes to provide
 
-        if (prefix.size() == 0)
+        if (suffix.size() == 0)
           return this->blockCount();
 
         auto indices = std::make_index_sequence<Node::degree()>{};
@@ -285,17 +285,17 @@ namespace Dune {
         std::size_t _child;
 
         if (this->containerBlocked()) {
-          _child = prefix.back();
+          _child = suffix.back();
           assert(this->degree() > _child);
-          prefix.pop_back();
+          suffix.pop_back();
         } else {
-          auto it = std::upper_bound(this->_child_block_offsets.begin(), this->_child_block_offsets.end(), prefix.back());
+          auto it = std::upper_bound(this->_child_block_offsets.begin(), this->_child_block_offsets.end(), suffix.back());
           _child = *std::prev(it);
         }
 
         Hybrid::forEach(indices, [&](auto i){
           if (i == _child)
-            _size = this->template child<i>().size(prefix);
+            _size = this->template child<i>().size(suffix);
         });
         return _size;
       }

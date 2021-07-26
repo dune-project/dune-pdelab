@@ -49,18 +49,18 @@ void check_ordering(const GFS& gfs)
         if (ci_map != ci_cache_i or ci_map != ci_cache_di)
           DUNE_THROW(Dune::RangeError, "Container index mappings do not match");
 
-        // check that all size prefixes fit the current container index
-        auto size_prefix = ci_map;
-        while (size_prefix.size() != 0) {
-          // get outer container index in the prefix
-          auto block_index = size_prefix.back();
+        // check that all size suffixes fit the current container index
+        auto size_suffix = ci_map;
+        while (size_suffix.size() != 0) {
+          // get outer container index in the suffix
+          auto block_index = size_suffix.back();
           // calculate the size for a container that would hold such block
-          size_prefix.pop_back();
-          auto size = ordering.size(size_prefix);
+          size_suffix.pop_back();
+          auto size = ordering.size(size_suffix);
           // the index should always fit into the size
           if (size <= block_index)
-            DUNE_THROW(Dune::RangeError, "Size for CI prefix '"
-                                             << size_prefix
+            DUNE_THROW(Dune::RangeError, "Size for CI suffix '"
+                                             << size_suffix
                                              << "' cannot fit sub-block '"
                                              << block_index << "'");
         }

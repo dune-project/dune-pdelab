@@ -167,22 +167,19 @@ namespace Dune {
              * i.e., an integer.
              */
             using ContainerIndex = PDELab::MultiIndex<std::size_t,1>;
-            using SizePrefix     = PDELab::MultiIndex<std::size_t,1>;
             using size_type      = std::size_t;
             using SizeType       = size_type;
 
             using DOFIndexAccessor = Dune::PDELab::DefaultDOFIndexAccessor;
+
+            //! Inform about ContainerIndex multi-index order semantics
+            static constexpr MultiIndexOrder ContainerIndexOrder = MultiIndexOrder::Inner2Outer;
           };
 
           using DOFIndex       = typename Traits::DOFIndex;
           using ContainerIndex = typename Traits::ContainerIndex;
-          using SizePrefix     = typename Traits::SizePrefix;
           using size_type      = std::size_t;
 
-          //! Inform about SizePrefix multi-index order semantics
-          static constexpr MultiIndexOrder size_prefix_order = MultiIndexOrder::Inner2Outer;
-          //! Inform about ContainerIndex multi-index order semantics
-          static constexpr MultiIndexOrder container_index_order = MultiIndexOrder::Inner2Outer;
 
           LeafOrdering(const GridFunctionSpace& gfs)
             : _gfs(gfs)
@@ -190,9 +187,9 @@ namespace Dune {
             update();
           }
 
-          size_type size(SizePrefix prefix) const
+          size_type size(ContainerIndex suffix) const
           {
-            return _gfs.basis().size(prefix);
+            return _gfs.basis().size(suffix);
           }
 
           size_type size() const
@@ -379,14 +376,8 @@ namespace Dune {
 
           static const bool consume_tree_index = false;
 
-          //! Inform about SizePrefix multi-index order semantics
-          static constexpr MultiIndexOrder size_prefix_order = MultiIndexOrder::Inner2Outer;
-          //! Inform about ContainerIndex multi-index order semantics
-          static constexpr MultiIndexOrder container_index_order = MultiIndexOrder::Inner2Outer;
-
           using DOFIndex       = typename Traits::DOFIndex;
           using ContainerIndex = typename Traits::ContainerIndex;
-          using SizePrefix     = typename Traits::SizePrefix;
           using size_type      = std::size_t;
 
           using CacheTag       = DuneFunctionsCacheTag;
@@ -396,9 +387,9 @@ namespace Dune {
             : TypeTree::CompositeNode<LeafOrdering>(LeafOrdering(gfs))
           {}
 
-          size_type size(SizePrefix prefix) const
+          size_type size(ContainerIndex suffix) const
           {
-            return this->child(Indices::_0).size(prefix);
+            return this->child(Indices::_0).size(suffix);
           }
 
           size_type size() const
