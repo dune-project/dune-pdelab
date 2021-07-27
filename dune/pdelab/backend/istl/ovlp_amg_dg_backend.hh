@@ -448,6 +448,17 @@ namespace Dune {
     DGPrec       preconditioner for DG problem
     Solver       solver to be used on the complete problem
     int s        size of global index to be used in AMG
+
+    Note: The subspace matrix is calculated by a triple matrix product with the
+    fine space DG matrix passed into the apply method. This only works if this
+    DG matrix does not contain P0ParallelConstraints. In order to achieve this
+    behaviour you should use this solver backend with a StationaryLinearProblem
+    or Newton solver that was created using a grid operator with empty
+    constranints. See the overlapping test case in
+
+    dune-pdelab/dune/pdelab/test-dg-amg.cc
+
+    for an example.
 */
 template<class DGGO, class DGCC, class CGGFS, class CGCC, class TransferLOP,
          template<class,class,class,int> class DGPrec, template<class> class Solver, int s=96>
@@ -505,6 +516,11 @@ private:
   bool firstapply;
   bool usesuperlu;
   std::size_t low_order_space_entries_per_row;
+
+  // Parameters for DG smoother
+  double smoother_relaxation = 0.92; // Relaxation parameter of DG smoother
+  int n1=3; // Number of DG pre-smoothing steps
+  int n2=3; // Number of DG post-smoothing steps
 
   CGTODGLOP cgtodglop;  // local operator to assemble prolongation matrix
   PGO pgo;              // grid operator to assemble prolongation matrix
@@ -653,6 +669,25 @@ public:
   }
 
 
+  //! set number of presmoothing steps on the DG level
+  void setDGSmootherRelaxation(double relaxation_)
+  {
+    smoother_relaxation = relaxation_;
+  }
+
+  //! set number of presmoothing steps on the DG level
+  void setNoDGPreSmoothSteps(int n1_)
+  {
+    n1 = n1_;
+  }
+
+  //! set number of postsmoothing steps on the DG level
+  void setNoDGPostSmoothSteps(int n2_)
+  {
+    n2 = n2_;
+  }
+
+
   /*! \brief solve the given linear system
 
     \param[in] A the given matrix
@@ -734,12 +769,11 @@ public:
 
     // set up hybrid DG/CG preconditioner
     typedef DGPrec<Matrix,Vector,Vector,1> DGPrecType;
-    DGPrecType dgprec(native(A),1,0.92);
-    //DGPrecType dgprec(native(A),0.92);
+    DGPrecType dgprec(native(A),1,smoother_relaxation);
     typedef Dune::PDELab::ISTL::ParallelHelper<GFS> DGHELPER;
     typedef OvlpDGAMGPrec<GFS,Matrix,DGPrecType,DGCC,CGGFS,AMG,CGCC,P,DGHELPER,Comm> HybridPrec;
     HybridPrec hybridprec(gfs,native(A),dgprec,dgcc,cggfs,*amg,cgcc,native(pmatrix),
-                          this->parallelHelper(),oocc,3,3);
+                          this->parallelHelper(),oocc,n1,n2);
 
     // /********/
     // /* Test */

@@ -190,6 +190,11 @@ namespace Dune {
       bool usesuperlu;
       std::size_t low_order_space_entries_per_row;
 
+      // Parameters for DG smoother
+      int smoother_relaxation = 1.0; // Relaxation parameter of DG smoother
+      int n1=2; // Number of DG pre-smoothing steps
+      int n2=2; // Number of DG post-smoothing steps
+
       CGTODGLOP cgtodglop;  // local operator to assemble prolongation matrix
       PGO pgo;              // grid operator to assemble prolongation matrix
       PMatrix pmatrix;      // wrapped prolongation matrix
@@ -306,6 +311,24 @@ namespace Dune {
         return reuse;
       }
 
+      //! set number of presmoothing steps on the DG level
+      void setDGSmootherRelaxation(double relaxation_)
+      {
+        smoother_relaxation = relaxation_;
+      }
+
+      //! set number of presmoothing steps on the DG level
+      void setNoDGPreSmoothSteps(int n1_)
+      {
+        n1 = n1_;
+      }
+
+      //! set number of postsmoothing steps on the DG level
+      void setNoDGPostSmoothSteps(int n2_)
+      {
+        n2 = n2_;
+      }
+
       /*! \brief solve the given linear system
 
         \param[in] A the given matrix
@@ -358,9 +381,9 @@ namespace Dune {
 
         // set up hybrid DG/CG preconditioner
         Dune::MatrixAdapter<Matrix,Vector,Vector> op(native(A));
-        DGPrec<Matrix,Vector,Vector,1> dgprec(native(A),1,1);
+        DGPrec<Matrix,Vector,Vector,1> dgprec(native(A),1,smoother_relaxation);
         typedef SeqDGAMGPrec<Matrix,DGPrec<Matrix,Vector,Vector,1>,AMG,P> HybridPrec;
-        HybridPrec hybridprec(native(A),dgprec,*amg,native(pmatrix),2,2);
+        HybridPrec hybridprec(native(A),dgprec,*amg,native(pmatrix),n1,n2);
 
         // set up solver
         Solver<Vector> solver(op,hybridprec,reduction,maxiter,verbose);
