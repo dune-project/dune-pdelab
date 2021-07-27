@@ -139,6 +139,7 @@ namespace Dune {
           assert(_gfs);
           auto b = Functions::istlVectorBackend(*_container);
           SizeProviderAdapter size_provider{_gfs->orderingStorage()};
+          static_assert(decltype(size_provider)::ContainerIndexOrder == MultiIndexOrder::Outer2Inner);
           b.resize(size_provider);
         }
 
