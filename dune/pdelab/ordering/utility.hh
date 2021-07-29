@@ -28,6 +28,15 @@ namespace Dune {
 
     };
 
+    //! Information about order semantics on multi-indices
+    enum class MultiIndexOrder {
+      //! indices are ordered from inner to outer container: {inner,...,outer}
+      Inner2Outer,
+      //! indices are ordered from outer to inner container: {outer,...,inner}
+      Outer2Inner,
+    };
+
+
 #ifndef DOXYGEN
 
     namespace ordering {
@@ -158,7 +167,7 @@ namespace Dune {
     };
 
 
-    template<typename DI, typename CI>
+    template<typename DI, typename CI, MultiIndexOrder CIOrder = MultiIndexOrder::Outer2Inner>
     struct SimpleOrderingTraits
     {
 
@@ -168,15 +177,15 @@ namespace Dune {
 
       typedef std::size_t SizeType;
 
-      using SizePrefix = MultiIndex<SizeType,ContainerIndex::max_depth>;
-
       typedef DefaultDOFIndexAccessor DOFIndexAccessor;
 
+      //! Inform about ContainerIndex multi-index order semantics
+      static constexpr MultiIndexOrder ContainerIndexOrder = CIOrder;
     };
 
 
-    template<typename SizeType_, typename CI>
-    struct SimpleOrderingTraits<SimpleDOFIndex<SizeType_>,CI>
+    template<typename SizeType_, typename CI, MultiIndexOrder CIOrder>
+    struct SimpleOrderingTraits<SimpleDOFIndex<SizeType_>,CI,CIOrder>
     {
 
       typedef SimpleDOFIndex<SizeType_> DOFIndex;
@@ -185,18 +194,15 @@ namespace Dune {
 
       typedef SizeType_ SizeType;
 
-      using SizePrefix = MultiIndex<SizeType,ContainerIndex::max_depth>;
-
       typedef SimpleDOFIndexAccessor DOFIndexAccessor;
 
+      //! Inform about ContainerIndex multi-index order semantics
+      static constexpr MultiIndexOrder ContainerIndexOrder = CIOrder;
     };
 
-
-
-    template<typename DI, typename CI>
-    struct OrderingTraits
-      : public SimpleOrderingTraits<DI,CI>
-    {
+    template <typename DI, typename CI,
+              MultiIndexOrder CIOrder = MultiIndexOrder::Outer2Inner>
+    struct OrderingTraits : public SimpleOrderingTraits<DI, CI, CIOrder> {
 
       // The maximum dimension supported (length of bitsets)
       // 32 dimensions should probably be fine for now... ;-)
@@ -211,20 +217,14 @@ namespace Dune {
 
       typedef typename DI::size_type SizeType;
       typedef typename DI::size_type size_type;
-
     };
 
-
-    template<typename ES, typename DI, typename CI>
-    struct LocalOrderingTraits
-      : public OrderingTraits<DI,
-                              CI
-                              >
-    {
+    template <typename ES, typename DI, typename CI,
+              MultiIndexOrder CIOrder = MultiIndexOrder::Outer2Inner>
+    struct LocalOrderingTraits : public OrderingTraits<DI, CI, CIOrder> {
 
       using EntitySet = ES;
       using GridView = typename ES::GridView;
-
     };
 
     template<typename ES, typename DI, typename CI>
@@ -342,14 +342,6 @@ namespace Dune {
 
     };
 
-    //! Information about order semantics on multi-indices
-    enum class MultiIndexOrder {
-      //! indices are ordered from inner to outer container: {inner,...,outer}
-      Inner2Outer,
-      //! indices are ordered from outer to inner container: {outer,...,inner}
-      Outer2Inner,
-    };
-
     /**
      * @brief Adapter to create a size provider from an ordering
      * @details This adapter is meant to be used in allocation and
@@ -361,46 +353,54 @@ namespace Dune {
      *
      *   - This class makes type erasure on the ordering type.
      *   - This class has value semantics.
+     *   - This class always receives container indices with Outer2Inner order
      *
      * @tparam SizeType_ return type of the size method
-     * @tparam SizePrefix_ argument type of the size method
-     * @tparam Order enum with MultiIndexOrder semantics of the adapter
-     *
-     * @tparam Ordering  Ordering tree from grid function space
+     * @tparam ContainerIndex_ argument type of the size method
+     * @tparam OriginOrder enum with MultiIndexOrder semantics of the origin ordering
      */
-    template <class SizeType_, class SizePrefix_, MultiIndexOrder Order = MultiIndexOrder::Outer2Inner>
+    template <class Size, class ContainerIndex_, MultiIndexOrder OriginOrder>
     struct SizeProviderAdapter {
 
+      /**
+       * @brief Construct a new Size Provider Adapter object
+       *
+       * @tparam Ordering  The type of the ordering to adapt
+       * @param ordering   A shared pointer to the ordering
+       */
       template <class Ordering>
-      SizeProviderAdapter(const std::shared_ptr<const Ordering>& ordering)
-          : _size_provider(
-                [=](const SizePrefix &size) { return ordering->size(size); })
-      {
-        static_assert(Ordering::size_prefix_order == MultiIndexOrder::Inner2Outer);
+      SizeProviderAdapter(const std::shared_ptr<const Ordering> &ordering)
+          : _size_provider([=](const ContainerIndex_ &partial_multiindex) {
+              return ordering->size(partial_multiindex);
+            }) {
+        static_assert(Ordering::Traits::ContainerIndexOrder == OriginOrder);
       }
 
       //! Partial MultiIndex of a ContainerIndex
-      using SizePrefix = SizePrefix_;
+      using ContainerIndex = ContainerIndex_;
+
+      //! Partial MultiIndex of a ContainerIndex
+      using SizePrefix = ContainerIndex;
 
       //! Type that refers to the size of containers
-      using SizeType = SizeType_;
+      using SizeType = Size;
 
-      //! Inform about SizePrefix multi-index order semantics
-      static constexpr MultiIndexOrder size_prefix_order = Order;
+      //! Inform about ContainerIndex multi-index order semantics
+      static constexpr MultiIndexOrder ContainerIndexOrder = MultiIndexOrder::Outer2Inner;
 
       /**
        * @brief Gives the size for a given prefix
        * @param prefix  MultiIndex with a partial path to a container
        * @return Traits::SizeType  The size required for such a path
        */
-      auto size(const SizePrefix &prefix) const {
-        if constexpr (size_prefix_order == MultiIndexOrder::Outer2Inner) {
-          // reversing Outer2Inner prefix into a Inner2Outer prefix
-          SizePrefix i2o_prefix;
-          i2o_prefix.resize(prefix.size());
-          std::reverse_copy(prefix.begin(), prefix.end(),i2o_prefix.begin());
-          // forward size request to ordering with new Inner2Outer prefix
-          return _size_provider(i2o_prefix);
+      SizeType size(const SizePrefix &prefix) const {
+        if constexpr (OriginOrder == MultiIndexOrder::Inner2Outer) {
+          // reversing Outer2Inner prefix into a Inner2Outer suffix
+          ContainerIndex suffix;
+          suffix.resize(prefix.size());
+          std::reverse_copy(prefix.begin(), prefix.end(),suffix.begin());
+          // forward size request to ordering with new Inner2Outer suffix
+          return _size_provider(suffix);
         } else {
           // prefix is already Inner2Outer, forward to size provider
           return _size_provider(prefix);
@@ -409,14 +409,15 @@ namespace Dune {
 
     private:
 
-      const std::function<SizeType(const SizePrefix &)> _size_provider;
+      const std::function<SizeType(const ContainerIndex &)> _size_provider;
     };
 
     //! template deduction guide for orderings
     template<class Ordering>
     SizeProviderAdapter(const std::shared_ptr<const Ordering>& ordering)
         -> SizeProviderAdapter<typename Ordering::Traits::SizeType,
-                              typename Ordering::Traits::SizePrefix>;
+                              typename Ordering::Traits::ContainerIndex,
+                              Ordering::Traits::ContainerIndexOrder>;
 
 
    //! \} group Ordering

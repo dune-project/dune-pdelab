@@ -60,15 +60,7 @@ namespace Dune {
 
       static const bool consume_tree_index = true;
 
-      typedef LocalOrderingTraits<ES,DI,CI> Traits;
-
-      //! Partial MultiIndex of a ContainerIndex
-      using SizePrefix = typename Traits::SizePrefix;
-
-      //! Inform about SizePrefix multi-index order semantics
-      static constexpr MultiIndexOrder size_prefix_order = MultiIndexOrder::Inner2Outer;
-      //! Inform about ContainerIndex multi-index order semantics
-      static constexpr MultiIndexOrder container_index_order = MultiIndexOrder::Inner2Outer;
+      typedef LocalOrderingTraits<ES,DI,CI,MultiIndexOrder::Inner2Outer> Traits;
 
       static constexpr auto GT_UNUSED = ~std::size_t(0);
 
@@ -282,36 +274,36 @@ namespace Dune {
     protected:
 
       /**
-       * @brief Gives the size for a given entity and prefix
+       * @brief Gives the size for a given entity and suffix
        * @details This method is used by typetree class derived from this class
        *
        * @param node TypeTree version of this class
-       * @param prefix  MultiIndex with a partial path to a container
+       * @param suffix  MultiIndex with a partial path to a container
        * @param index Entity index to compute the size
        * @return Traits::SizeType  The size required for such a path.
        */
       template<class Node>
       typename Traits::SizeType
-      node_size(const Node& node, typename Traits::SizePrefix prefix,
+      node_size(const Node& node, typename Traits::ContainerIndex suffix,
            const typename Traits::DOFIndex::EntityIndex &index) const {
         using size_type = typename Traits::size_type;
 
-        // prefix wants the size for this node
-        if (prefix.size() == 0)
+        // suffix wants the size for this node
+        if (suffix.size() == 0)
           return node.size(index);
 
         if constexpr (Node::isLeaf) {
           return 0; // Assume leaf local orderings are always field vectors
         } else {
           // the next index to find out its size
-          auto back_index = prefix.back();
+          auto back_index = suffix.back();
           // task: find child local ordering because it should know its own size
           std::size_t _child;
 
           if (node.containerBlocked()) {
             // in this case back index is the child ordering itself
             _child = back_index;
-            prefix.pop_back();
+            suffix.pop_back();
           } else {
             // here we need to find the child that describes the back_index (solve child in map_lfs_indices)
             const size_type gt_index = Traits::DOFIndexAccessor::GeometryIndex::geometryType(index);
@@ -333,7 +325,7 @@ namespace Dune {
           // get size for required child
           Hybrid::forEach(indices, [&](auto i){
             if (i == _child)
-              _size = node.child(i).size(prefix, index);
+              _size = node.child(i).size(suffix, index);
           });
 
           return _size;

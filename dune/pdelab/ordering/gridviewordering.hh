@@ -507,26 +507,26 @@ namespace Dune {
       using BaseT::size;
 
       /**
-       * @brief Gives the size for a given prefix
-       * @param prefix  MultiIndex with a partial path to a container
+       * @brief Gives the size for a given suffix
+       * @param suffix  MultiIndex with a partial path to a container
        * @return Traits::SizeType  The size required for such a path.
        */
-      typename Traits::SizeType size(typename Traits::SizePrefix prefix) const
+      typename Traits::SizeType size(typename Traits::ContainerIndex suffix) const
       {
         using size_type = typename Traits::SizeType;
-        if (prefix.size() == Traits::SizePrefix::max_depth)
-          return 0; // all indices in prefix were consumed, no more sizes to provide
-        if (prefix.size() == 0) // prefix wants the size of this depth
+        if (suffix.size() == Traits::ContainerIndex::max_depth)
+          return 0; // all indices in suffix were consumed, no more sizes to provide
+        if (suffix.size() == 0) // suffix wants the size of this depth
           return _block_count; // blocked or not, this gives the number of blocks/dofs in next node hierarchy
 
         // we first have to figure out the entity index
         typename Traits::DOFIndex::EntityIndex entity_index;
 
         // the next index to find out its size
-        auto back_index = prefix.back();
+        auto back_index = suffix.back();
         // we just need to make the inverse computation of the mapIndex funtion to find the entity index
         if (_container_blocked) {
-          prefix.pop_back();
+          suffix.pop_back();
           auto gt_begin = _fixed_size ? _gt_dof_offsets.begin() : _gt_entity_offsets.begin();
           auto gt_end = _fixed_size ? _gt_dof_offsets.end() : _gt_entity_offsets.end();
           auto gt_it = std::prev(std::upper_bound(gt_begin, gt_end, back_index));
@@ -553,7 +553,7 @@ namespace Dune {
           }
         }
         // then, the local ordering knows the size for a given entity.
-        return localOrdering().size(prefix, entity_index);
+        return localOrdering().size(suffix, entity_index);
       }
 
       LocalOrdering& localOrdering()
