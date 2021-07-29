@@ -308,7 +308,7 @@ namespace Dune {
         , _pointDiagonalLocalOperator(pointDiagonalLocalOperator)
         , _gridFunctionSpace(gridFunctionSpace)
         , _solverStatistics(solverStatiscits)
-        , _mapper(gridFunctionSpace.gridView().grid())
+        , _mapper(gridFunctionSpace.gridView())
         , _invDiagonalCache(_mapper.size())
         , _solveroptions(solveroptions)
         , _verbose(verbose)
@@ -444,7 +444,7 @@ namespace Dune {
       PointDiagonalLocalOperator _pointDiagonalLocalOperator;
       const GridFunctionSpace& _gridFunctionSpace;
       SolverStatistics<int>& _solverStatistics;
-      typename Dune::LeafSingleCodimSingleGeomTypeMapper<Grid, 0> _mapper;
+      typename Dune::SingleCodimSingleGeomTypeMapper<GridView, 0> _mapper;
       mutable std::vector<InvDiagonal> _invDiagonalCache;
       mutable BlockSolverOptions _solveroptions;
       const int _verbose;
