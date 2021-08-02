@@ -7,6 +7,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/parametertree.hh>
+#include <dune/common/typetraits.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
@@ -51,7 +52,7 @@ namespace Dune {
   template<class Basis>
   struct VectorBasisInterfaceSwitch<
     Basis, typename std::enable_if<
-             Std::to_true_type<
+             Dune::AlwaysTrue<
                std::integral_constant<
                  std::size_t,
                  Basis::Traits::dimDomain

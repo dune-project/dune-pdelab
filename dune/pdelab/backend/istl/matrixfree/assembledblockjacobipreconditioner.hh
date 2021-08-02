@@ -132,7 +132,7 @@ namespace Dune {
                                                       const bool verbose=0)
         : _blockDiagonalLocalOperator(blockDiagonalLocalOperator)
         , _gridFunctionSpace(gridFunctionSpace)
-        , _mapper(gridFunctionSpace.gridView().grid())
+        , _mapper(gridFunctionSpace.gridView())
         , _precCache(_mapper.size())
         , _verbose(verbose)
         , _requireSetup(true)
@@ -235,7 +235,7 @@ namespace Dune {
     private :
       BlockDiagonalLocalOperator _blockDiagonalLocalOperator;
       const GridFunctionSpace& _gridFunctionSpace;
-      typename Dune::LeafSingleCodimSingleGeomTypeMapper<Grid, 0> _mapper;
+      typename Dune::SingleCodimSingleGeomTypeMapper<GridView, 0> _mapper;
       mutable std::vector<TupleType> _precCache;
       const int _verbose;
       bool _requireSetup;
