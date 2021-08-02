@@ -202,9 +202,9 @@ namespace Dune
       }
 
       //! \brief Evaluate partial derivative of all shape functions
-      void partial(const std::array<unsigned int,Traits::dimDomain>& DUNE_UNUSED(order),
-                   const typename Traits::DomainType& DUNE_UNUSED(in),
-                   std::vector<typename Traits::RangeType>& DUNE_UNUSED(out)) const
+      void partial(const std::array<unsigned int,Traits::dimDomain>& order,
+                   const typename Traits::DomainType& in,
+                   std::vector<typename Traits::RangeType>& out) const
       {
         auto totalOrder = std::accumulate(order.begin(), order.end(), 0);
         if (totalOrder == 0) {
