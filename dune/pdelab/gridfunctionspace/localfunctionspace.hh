@@ -99,10 +99,11 @@ namespace Dune {
         void leaf(Node& node, TreePath treePath)
         {
           node.offset = offset;
-          if (not node.pgfs->entitySet().contains(e)) {
+          node.pfe = nullptr;
+          node._in_entity_set = node.pgfs->entitySet().contains(e);
+          if (not node._in_entity_set) {
             node.n = 0;
           } else if (fast) {
-            node.pfe = nullptr;
             node.n = node.pgfs->finiteElementMap().maxLocalSize();
             Node::FESwitch::setStore(node.pfe,
                                      node.pgfs->finiteElementMap().find(e));
@@ -597,9 +598,10 @@ namespace Dune {
       //! get finite element
       const typename Traits::FiniteElementType& finiteElement () const
       {
-        assert((this->n != 0 && pfe) &&
-               "Local function spaces with no support (bound entity is not"
-               "contained in the entity set) should not query `finiteElement()`");
+        assert((_in_entity_set && pfe) &&
+               "Local function spaces outside their entity set should not "
+               "request `finiteElement()`. To check if function has support "
+               "use: `size()!= 0`");
         assert(pfe);
         return *pfe;
       }
@@ -684,6 +686,8 @@ namespace Dune {
 
       //    private:
       typename FESwitch::Store pfe;
+    private:
+      bool _in_entity_set;
     };
 
     // Register LeafGFS -> LocalFunctionSpace transformation
