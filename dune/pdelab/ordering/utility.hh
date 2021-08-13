@@ -167,7 +167,7 @@ namespace Dune {
     };
 
 
-    template<typename DI, typename CI, MultiIndexOrder CIOrder = MultiIndexOrder::Outer2Inner>
+    template<typename DI, typename CI, MultiIndexOrder CIOrder = MultiIndexOrder::Inner2Outer>
     struct SimpleOrderingTraits
     {
 
@@ -201,7 +201,7 @@ namespace Dune {
     };
 
     template <typename DI, typename CI,
-              MultiIndexOrder CIOrder = MultiIndexOrder::Outer2Inner>
+              MultiIndexOrder CIOrder = MultiIndexOrder::Inner2Outer>
     struct OrderingTraits : public SimpleOrderingTraits<DI, CI, CIOrder> {
 
       // The maximum dimension supported (length of bitsets)
@@ -402,7 +402,7 @@ namespace Dune {
           // forward size request to ordering with new Inner2Outer suffix
           return _size_provider(suffix);
         } else {
-          // prefix is already Inner2Outer, forward to size provider
+          // prefix is already Outer2Inner, forward to size provider
           return _size_provider(prefix);
         }
       }
