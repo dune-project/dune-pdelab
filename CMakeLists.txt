@@ -38,6 +38,14 @@ dune_library_add_sources(dunepdelab SOURCES
   dune/pdelab/common/logtag.cc
 )
 
+# Configuration options
+option(COVERAGE_REPORT "Enable coverage compiler flags")
+
+if(COVERAGE_REPORT)
+  target_compile_options(dunepdelab PUBLIC --coverage)
+  target_link_libraries(dunepdelab PUBLIC gcov)
+endif()
+
 add_subdirectory(doc)
 add_subdirectory(dune/pdelab)
 add_subdirectory(cmake/modules)
