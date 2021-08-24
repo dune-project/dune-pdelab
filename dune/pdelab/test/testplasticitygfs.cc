@@ -85,6 +85,8 @@ int main(int argc, char* argv[]) try {
 
   typedef GridType::LeafGridView GridView;
   GridView gridView = grid->leafGridView();
+  using EntitySet = PDELab::AllEntitySet<GridView>;
+  EntitySet entitySet{gridView};
 
   // The number of values needed to store one plastic strain tensor
   const size_t nPlasticStrainComponents = (dim == 2) ? 2 : 5;
@@ -99,21 +101,21 @@ int main(int argc, char* argv[]) try {
   FEM fem;
 
   typedef PDELab::VectorGridFunctionSpace<
-    GridView, FEM, dim, PDELab::ISTL::VectorBackend<>,
+    EntitySet, FEM, dim, PDELab::ISTL::VectorBackend<>,
       PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::none,1>, PDELab::ConformingDirichletConstraints,
       PDELab::EntityBlockedOrderingTag, PDELab::DefaultLeafOrderingTag>
       DisplacementGFS;
 
-  DisplacementGFS displacementGFS(gridView, fem);
+  DisplacementGFS displacementGFS(entitySet, fem);
   displacementGFS.name("displacement");
 
   typedef PDELab::VectorGridFunctionSpace<
-      GridView, FEM, nPlasticStrainComponents, PDELab::ISTL::VectorBackend<>,
+      EntitySet, FEM, nPlasticStrainComponents, PDELab::ISTL::VectorBackend<>,
       PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::none,1>, PDELab::ConformingDirichletConstraints,
       PDELab::EntityBlockedOrderingTag, PDELab::DefaultLeafOrderingTag>
       PlasticStrainGFS;
 
-  PlasticStrainGFS plasticStrainGFS(gridView, fem);
+  PlasticStrainGFS plasticStrainGFS(entitySet, fem);
   plasticStrainGFS.name("plastic strain");
 
   typedef PDELab::ISTL::VectorBackend<PDELab::ISTL::Blocking::fixed> VBE;
@@ -123,6 +125,15 @@ int main(int argc, char* argv[]) try {
 
   // sets up composition of spaces
   CompositeGFS gfscomp(displacementGFS, plasticStrainGFS);
+
+  {
+    // regression test https://gitlab.dune-project.org/pdelab/dune-pdelab/-/issues/183
+    // create and update ordering eagerly
+    gfscomp.orderingStorage();
+    // ensure the gfs is initialized
+    std::cout << gfscomp.size() << std::endl;
+
+  }
 
   ///////////////////////////////////////////////////////////////
   // make grid operator
@@ -152,6 +163,10 @@ int main(int argc, char* argv[]) try {
   std::cout << "Matrix type: " << className<MatrixType>() << std::endl;
   std::cout << "Vector type: " << className<VectorType>() << std::endl;
 
-} catch (Exception e) {
-  std::cout << e << std::endl;
+} catch (Exception& e) {
+  std::cout << "DUNE error: " << e.what() << std::endl;
+  return 1;
+} catch (std::exception& e) {
+  std::cout << "Unknown error: " << e.what() << std::endl;
+  return 1;
 }

@@ -257,7 +257,7 @@ namespace Dune {
         if (!_ordering)
           {
             create_ordering();
-            _ordering->update();
+            this->update(*_ordering);
           }
         return _ordering;
       }
@@ -273,7 +273,7 @@ namespace Dune {
         if (!_ordering)
           {
             create_ordering();
-            _ordering->update();
+            this->update(*_ordering);
           }
         return _ordering;
       }
