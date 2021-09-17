@@ -265,13 +265,13 @@ namespace Dune::PDELab
           end = Clock::now();
           linear_solver_time += end-start;
           _result.linear_solver_time = to_seconds(linear_solver_time);
-          _result.linear_solver_iterations = _linearSolver.result().iterations;
+          _result.linear_solver_iterations += _linearSolver.result().iterations;
           throw;
         }
         end = Clock::now();
         linear_solver_time += end -start;
         _result.linear_solver_time = to_seconds(linear_solver_time);
-        _result.linear_solver_iterations = _linearSolver.result().iterations;
+        _result.linear_solver_iterations += _linearSolver.result().iterations;
 
         //===================================
         // Do line search and update solution
