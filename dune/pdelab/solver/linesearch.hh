@@ -3,11 +3,11 @@
 #ifndef DUNE_PDELAB_SOLVER_LINESEARCH_HH
 #define DUNE_PDELAB_SOLVER_LINESEARCH_HH
 
+#include <dune/pdelab/solver/newtonerrors.hh>
+
 
 namespace Dune::PDELab
 {
-
-  class LineSearchError : public Exception {};
 
   //! Abstract base class describing the line search interface
   template <typename Domain>
