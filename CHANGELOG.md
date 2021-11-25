@@ -14,6 +14,8 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   Added Raviart Thomas finite element map of order 0 for 3D simplices.
+
 -   Fix bug where `VectorGridFunctionSpace` would not initialize base data when using `orderingStorage`
     instead of `ordering`.
 
