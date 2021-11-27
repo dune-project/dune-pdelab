@@ -4,5 +4,5 @@ Module: dune-pdelab
 Version: 2.7-git
 Maintainer: dune-pdelab@lists.dune-project.org
 Depends: dune-grid (>= 2.7) dune-localfunctions (>= 2.7) dune-istl (>= 2.7) dune-typetree (>= 2.7) dune-functions (>= 2.7)
-Suggests: dune-alugrid, dune-multidomaingrid
+Suggests: dune-alugrid dune-multidomaingrid
 Whitespace-Hook: Yes
