@@ -53,9 +53,9 @@ void check_ordering(const GFS& gfs)
         auto size_suffix = ci_map;
         while (size_suffix.size() != 0) {
           // get outer container index in the suffix
-          auto block_index = size_suffix.back();
+          auto block_index = size_suffix.front();
           // calculate the size for a container that would hold such block
-          size_suffix.pop_back();
+          size_suffix.pop_front();
           auto size = ordering.size(size_suffix);
           // the index should always fit into the size
           if (not (size > block_index))

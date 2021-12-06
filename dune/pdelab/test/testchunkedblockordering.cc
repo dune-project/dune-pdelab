@@ -85,9 +85,8 @@ int main(int argc, char** argv)
 
       th_gfs.update();
 
-      std::cout << th_gfs.ordering().size() << " " << th_gfs.ordering().blockCount() << std::endl;
-      std::cout << th_gfs.ordering().template child<0>().size() << " " << th_gfs.ordering().template child<0>().blockCount() << std::endl;
-
+      Dune::PDELab::SizeProviderAdapter size_provider{std::as_const(th_gfs).orderingStorage()};
+      assert(size_provider.size({}) == th_gfs.ordering().blockCount());
     }
 
     // test passed
