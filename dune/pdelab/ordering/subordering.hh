@@ -181,6 +181,11 @@ namespace Dune {
         return baseOrdering().size();
       }
 
+      typename Traits::SizeType size(const typename Traits::ContainerIndex& suffix) const
+      {
+        return baseOrdering().size(suffix);
+      }
+
       //! Returns the block count of the BaseOrdering.
       typename Traits::SizeType blockCount() const
       {

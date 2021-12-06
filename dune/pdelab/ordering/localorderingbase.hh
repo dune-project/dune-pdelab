@@ -319,16 +319,20 @@ namespace Dune {
           }
 
           assert(node.degree() > _child);
-          typename Traits::SizeType _size;
-          // create a dynamic or static index range
-          auto indices = Dune::range(node.degree());
-          // get size for required child
-          Hybrid::forEach(indices, [&](auto i){
-            if (i == _child)
-              _size = node.child(i).size(suffix, index);
-          });
+          if constexpr (Node::isPower) {
+            return node.child(_child).size(suffix, index);
+          } else {
+            typename Traits::SizeType _size;
+            // create a dynamic or static index range
+            auto indices = Dune::range(node.degree());
+            // get size for required child
+            Hybrid::forEach(indices, [&](auto i){
+              if (i == _child)
+                _size = node.child(i).size(suffix, index);
+            });
 
-          return _size;
+            return _size;
+          }
         }
       }
 

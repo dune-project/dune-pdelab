@@ -58,11 +58,11 @@ void check_ordering(const GFS& gfs)
           size_suffix.pop_back();
           auto size = ordering.size(size_suffix);
           // the index should always fit into the size
-          if (size <= block_index)
-            DUNE_THROW(Dune::RangeError, "Size for CI suffix '"
-                                             << size_suffix
-                                             << "' cannot fit sub-block '"
-                                             << block_index << "'");
+          if (not (size > block_index))
+            DUNE_THROW(Dune::RangeError, "Size `" << size << "` for CI suffix '"
+                                   << size_suffix
+                                   << "' is not big enough to hold sub-block '"
+                                   << block_index << "'");
         }
       }
     }
@@ -266,6 +266,19 @@ int main(int argc, char** argv)
     testleafgridfunction<false>(grid->leafGridView());
   }
 #endif
+
+
+  // 2D
+  {
+    std::cout << "2D tests" << std::endl;
+    // need a grid in order to test grid functions
+    Dune::FieldVector<double,2> L(1.0);
+    std::array<int,2> N(Dune::filledArray<2,int>(1));
+    Dune::YaspGrid<2> grid(L,N);
+    grid.globalRefine(1);
+
+    testleafgridfunction<true>(grid.leafGridView());
+  }
 
   // 3D
   {

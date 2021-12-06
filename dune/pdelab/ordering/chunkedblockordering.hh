@@ -223,6 +223,23 @@ namespace Dune {
         this->_block_count = ordering().blockCount() / _tag.blockSize();
       }
 
+      using BaseT::size;
+
+      typename Traits::SizeType size(typename Traits::ContainerIndex suffix) const
+      {
+        if (suffix.size() == 0)
+          return this->_block_count;
+        if (suffix.size() == 1)
+          return _tag.blockSize();
+
+        auto block_index = suffix.back();
+        suffix.pop_back();
+        auto inner_index = suffix.back();
+
+        suffix.back() = _tag.blockSize() * block_index + inner_index;
+        return ordering().size(suffix);
+      }
+
     private:
 
       const ordering::chunked::tag_base& _tag;
