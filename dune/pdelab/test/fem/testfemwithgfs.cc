@@ -123,7 +123,7 @@ void test_2d_simplex(const Constraints& constraints, const VBE& vbe)
       test_fem(*pfem,gv,constraints,vbe);
     }
 
-#elif HAVE_UG
+#elif HAVE_DUNE_UGGRID
 
     {
       // make grid
@@ -179,7 +179,7 @@ void test_3d_simplex(const Constraints& constraints, const VBE& vbe)
       test_fem(*pfem,gv,constraints,vbe);
     }
 
-#elif HAVE_UG
+#elif HAVE_DUNE_UGGRID
 
     {
       // make grid

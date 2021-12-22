@@ -31,14 +31,14 @@
 #include <dune/grid/onedgrid.hh>
 #include <dune/grid/io/file/vtk.hh>
 #include <dune/grid/yaspgrid.hh>
-#if HAVE_UG
+#if HAVE_DUNE_UGGRID
 #include <dune/grid/uggrid.hh>
 #endif
 #if HAVE_ALBERTA
 #include<dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
 #endif
-#if HAVE_UG
+#if HAVE_DUNE_UGGRID
 #include<dune/grid/uggrid.hh>
 #endif
 #if HAVE_DUNE_ALUGRID

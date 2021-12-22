@@ -167,7 +167,7 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-#if HAVE_UG
+#if HAVE_DUNE_UGGRID
     std::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
   	uggrid->globalRefine(3);
     testp1(uggrid->leafGridView());
