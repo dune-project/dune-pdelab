@@ -9,7 +9,7 @@
 #include <dune/common/stdstreams.hh>
 #include <dune/common/typetraits.hh>
 
-#if HAVE_UG && PDELAB_SEQUENTIAL_UG
+#if HAVE_DUNE_UGGRID && PDELAB_SEQUENTIAL_UG
 // We need the UGGrid declaration for the assertion
 #include <dune/grid/uggrid.hh>
 #endif
@@ -445,7 +445,7 @@ namespace Dune {
       void assertParallelUG(T comm)
       {}
 
-#if HAVE_UG && PDELAB_SEQUENTIAL_UG
+#if HAVE_DUNE_UGGRID && PDELAB_SEQUENTIAL_UG
       template<int dim>
       void assertParallelUG(Dune::CollectiveCommunication<Dune::UGGrid<dim> > comm)
       {

@@ -21,7 +21,7 @@
 #if HAVE_DUNE_ALUGRID
 #include <dune/alugrid/grid.hh>
 #endif
-#if HAVE_UG
+#if HAVE_DUNE_UGGRID
 #include <dune/grid/uggrid.hh>
 #endif
 
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
     run_test<3>(alugrid, result, 25000, "alu-triangle");
 #endif
 
-#if HAVE_UG
+#if HAVE_DUNE_UGGRID
     test(UnitTriangleMaker          <Dune::UGGrid<2>            >(),
          result, 250000, "ug-triangle");
     test(TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >(),

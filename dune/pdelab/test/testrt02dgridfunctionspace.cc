@@ -18,7 +18,7 @@
 #if HAVE_DUNE_ALUGRID
 #include <dune/alugrid/grid.hh>
 #endif
-#if HAVE_UG
+#if HAVE_DUNE_UGGRID
 #include <dune/grid/uggrid.hh>
 #include <dune/grid/uggrid/uggridfactory.hh>
 #endif
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
     result = 0;
 #endif // HAVE_DUNE_ALUGRID
 
-#if HAVE_UG
+#if HAVE_DUNE_UGGRID
     std::cout << "UG" << std::endl;
     {
       typedef Dune::UGGrid<2> Grid;

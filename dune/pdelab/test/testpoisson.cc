@@ -361,7 +361,7 @@ int main(int argc, char** argv)
     }
 
     // UG Pk 2D test
-#if HAVE_UG
+#if HAVE_DUNE_UGGRID
     {
       // make grid
       std::shared_ptr<Dune::UGGrid<2> > grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
