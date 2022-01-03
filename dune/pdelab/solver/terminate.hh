@@ -39,6 +39,7 @@ namespace Dune::PDELab
       if (_force_iteration && _solver.result().iterations == 0)
         return false;
       auto converged = _solver.result().defect < _solver.getAbsoluteLimit() || _solver.result().defect < _solver.result().first_defect * _solver.getReduction();
+      _solver.result().converged = converged;
       if (_solver.result().iterations >= _maxIterations && not _solver.result().converged)
         DUNE_THROW(TerminateError,
                    "Terminate::terminate(): Maximum iteration count reached");

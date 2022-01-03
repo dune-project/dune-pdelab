@@ -88,7 +88,7 @@ namespace Dune::PDELab
     using LineSearch = LineSearchInterface<Domain>;
 
     //! Return results
-    const Result& result() const
+    Result& result()
     {
       if (not _resultValid)
         DUNE_THROW(NewtonError, "NewtonMethod::result() called before NewtonMethod::solve()");
@@ -640,7 +640,6 @@ namespace Dune::PDELab
     Range _residual;
     Domain _correction;
     std::shared_ptr<Jacobian> _jacobian;
-    std::shared_ptr<Domain> _previousSolution;
 
     std::shared_ptr<TerminateInterface> _terminate;
     std::shared_ptr<LineSearch> _lineSearch;
