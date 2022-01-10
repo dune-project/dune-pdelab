@@ -189,8 +189,9 @@ namespace Dune {
         typename Dune::template FieldTraits<E>::real_type two_norm() const
         {
           using namespace std::placeholders;
+          using std::sqrt;
           typedef typename Dune::template FieldTraits<E>::real_type Real;
-          return std::sqrt(std::accumulate(_container->begin(),_container->end(),Real(0),std::bind(std::plus<Real>(),_1,std::bind(abs2<E>(),_2))));
+          return sqrt(std::accumulate(_container->begin(),_container->end(),Real(0),std::bind(std::plus<Real>(),_1,std::bind(abs2<E>(),_2))));
         }
 
         typename Dune::template FieldTraits<E>::real_type one_norm() const

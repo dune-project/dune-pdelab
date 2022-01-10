@@ -1268,6 +1268,7 @@ namespace Dune {
       template<typename GM, typename X>
       void evaluate_estimators (GM& grid, double time, double dt, const X& eta_space,  const X& eta_time, double energy_timeslab)
       {
+        using std::sqrt;
         accept=false;
         adapt_dt=false;
         adapt_grid=false;

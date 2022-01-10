@@ -37,8 +37,9 @@ namespace Dune {
       void evaluate(const typename Traits::ElementType &e,
                     const typename Traits::DomainType &x,
                     typename Traits::RangeType &y) const {
+        using std::sqrt;
         gf.evaluate(e,x,y);
-        y[0] = std::sqrt(y[0]);
+        y[0] = sqrt(y[0]);
       }
 
       const typename Traits::GridViewType& getGridView() const {

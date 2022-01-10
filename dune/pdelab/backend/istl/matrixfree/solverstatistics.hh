@@ -86,6 +86,7 @@ namespace Dune{
        * Calculates standard deviation
        */
       const double stddev() const {
+        using std::sqrt;
         double s_local = (double) std::accumulate(data.begin(),data.end(),0);
         double ss_local = (double) std::inner_product(data.begin(),data.end(),
                                                       data.begin(),0);

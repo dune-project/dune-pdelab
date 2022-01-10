@@ -168,6 +168,7 @@ namespace Dune {
       */
       virtual double norm (const X& x) const override
       {
+        using std::sqrt;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 

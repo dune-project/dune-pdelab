@@ -52,6 +52,7 @@ namespace Dune {
       template<typename T1, typename T2, typename T3>
       static void eigenvalues (T1 eps, T1 mu, const Dune::FieldVector<T2,2*dim>& e)
       {
+        using std::sqrt;
         T1 s = 1.0/sqrt(mu*eps); //speed of light s = 1/sqrt(\mu \epsilon)
         e[0] = s;
         e[1] = s;
@@ -75,6 +76,7 @@ namespace Dune {
       template<typename T1, typename T2, typename T3>
       static void eigenvectors (T1 eps, T1 mu, const Dune::FieldVector<T2,dim>& n, Dune::FieldMatrix<T3,2*dim,2*dim>& R)
       {
+        using std::sqrt;
         T1 a=n[0], b=n[1], c=n[2];
 
         Dune::FieldVector<T2,dim> re, im;
@@ -595,6 +597,7 @@ namespace Dune {
         using RF = typename DGSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType;
         using size_type = typename DGSpace::Traits::SizeType;
+        using std::sqrt;
 
         // get local function space that is identical for all components
         const auto& dgspace_s = child(lfsv_s,_0);

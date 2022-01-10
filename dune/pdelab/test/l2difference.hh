@@ -29,7 +29,8 @@ double l2difference2 (const U& u, const V &v, int qorder=1)
 template<typename U, typename V> 
 double l2difference (const U& u, const V &v, int qorder=1)
 {
-  return std::sqrt(l2difference2(u, v, qorder));
+  using std::sqrt;
+  return sqrt(l2difference2(u, v, qorder));
 }
 
 #endif // DUNE_PDELAB_TEST_L2DIFFERENCE_HH
