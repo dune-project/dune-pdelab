@@ -47,7 +47,8 @@ template<typename U>
 typename U::Traits::RangeFieldType
 l2norm (const U& u, int qorder=1)
 {
-  return std::sqrt(l2norm2(u, qorder));
+  using std::sqrt;
+  return sqrt(l2norm2(u, qorder));
 }
 
 #endif // DUNE_PDELAB_TEST_L2NORM_HH

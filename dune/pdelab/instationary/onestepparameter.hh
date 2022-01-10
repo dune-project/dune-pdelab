@@ -448,6 +448,7 @@ namespace Dune {
 
       Alexander2Parameter ()
       {
+        using std::sqrt;
         alpha = 1.0 - 0.5*sqrt(2.0);
 
         D[0] = 0.0;     D[1] = alpha;     D[2] = 1.0;
@@ -524,6 +525,7 @@ namespace Dune {
 
       FractionalStepParameter ()
       {
+        using std::sqrt;
         R alpha, theta, thetap, beta;
         theta = 1.0 - 0.5*sqrt(2.0);
         thetap = 1.0-2.0*theta;

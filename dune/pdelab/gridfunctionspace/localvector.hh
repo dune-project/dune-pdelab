@@ -306,6 +306,7 @@ namespace Dune {
       //! Return Euclidean norm of vector
       value_type two_norm() const
       {
+        using std::sqrt;
         value_type nrm=0.0;
         nrm = std::inner_product(_container.begin(),_container.end(),
                                  _container.begin(),

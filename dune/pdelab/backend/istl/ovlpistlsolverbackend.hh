@@ -120,6 +120,7 @@ namespace Dune {
       */
       virtual double norm (const X& x) const override
       {
+        using std::sqrt;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
@@ -407,7 +408,7 @@ namespace Dune {
       template<typename X>
       typename Dune::template FieldTraits<typename X::ElementType >::real_type norm (const X& x) const
       {
-        using namespace std;
+        using std::sqrt;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
@@ -449,7 +450,7 @@ namespace Dune {
 
       virtual typename X::Container::field_type norm (const X& x) const override
       {
-        using namespace std;
+        using std::sqrt;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
