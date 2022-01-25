@@ -39,7 +39,7 @@ namespace Dune {
       {};
 
       template<typename T>
-      DUNE_DEPRECATED_MSG("Starting from PDELab 2.6, parameter classes must have a method `bool permeabilityIsConstantPerCell()`. For now, we assume a default value of true.")
+      [[deprecated("Starting from PDELab 2.6, parameter classes must have a method `bool permeabilityIsConstantPerCell()`. For now, we assume a default value of true.")]]
       constexpr
       std::enable_if_t<
         not hasPermeabilityIsConstantPerCell<T>::value,
