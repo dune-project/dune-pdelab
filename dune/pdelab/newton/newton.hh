@@ -795,16 +795,16 @@ namespace Dune
       typedef TrlV TrialVector;
 
     public:
+      [[deprecated("This Newton is deprecated. Use NewtonMethod from dune/pdelab/solver/newton.hh instead.")]]
       Newton(const GridOperator& go, TrialVector& u_, Solver& solver_)
-        DUNE_DEPRECATED_MSG("This Newton is deprecated. Use NewtonMethod from dune/pdelab/solver/newton.hh instead.")
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
         , NewtonSolver<GOS,S,TrlV,TstV>(go,u_,solver_)
         , NewtonTerminate<GOS,TrlV,TstV>(go,u_)
         , NewtonLineSearch<GOS,TrlV,TstV>(go,u_)
         , NewtonPrepareStep<GOS,TrlV,TstV>(go,u_)
       {}
+      [[deprecated("This Newton is deprecated. Use NewtonMethod from dune/pdelab/solver/newton.hh instead.")]]
       Newton(const GridOperator& go, Solver& solver_)
-        DUNE_DEPRECATED_MSG("This Newton is deprecated. Use NewtonMethod from dune/pdelab/solver/newton.hh instead.")
         : NewtonBase<GOS,TrlV,TstV>(go)
         , NewtonSolver<GOS,S,TrlV,TstV>(go,solver_)
         , NewtonTerminate<GOS,TrlV,TstV>(go)

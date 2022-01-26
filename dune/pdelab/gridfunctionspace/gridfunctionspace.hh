@@ -208,7 +208,7 @@ namespace Dune {
       typedef typename ES::Traits::template Codim<0>::Entity Element;
       typedef typename ES::Traits::template Codim<0>::Iterator ElementIterator;
 
-      DUNE_DEPRECATED
+      [[deprecated]]
       typedef O SizeTag;
 
       typedef O OrderingTag;
@@ -243,7 +243,7 @@ namespace Dune {
       //! constructor
       GridFunctionSpace (const typename Traits::GridView& gridview, const FEM& fem, const CE& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
 #if DUNE_PDELAB_WARN_ON_GRIDVIEW_BASED_GFS
-        DUNE_DEPRECATED_MSG("GridFunctionSpaces now internally use an EntitySet instead of a GridView, please replace the template parameter and the first constructor parameter by an EntitySet").
+        [[deprecated("GridFunctionSpaces now internally use an EntitySet instead of a GridView, please replace the template parameter and the first constructor parameter by an EntitySet.")]]
 #endif
         : BaseT(backend,ordering_tag)
         , pfem(stackobject_to_shared_ptr(fem))
@@ -255,7 +255,7 @@ namespace Dune {
       //! constructor
       GridFunctionSpace (const typename Traits::GridView& gridview, const std::shared_ptr<const FEM>& fem, const std::shared_ptr<const CE>& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
 #if DUNE_PDELAB_WARN_ON_GRIDVIEW_BASED_GFS
-        DUNE_DEPRECATED_MSG("GridFunctionSpaces now internally use an EntitySet instead of a GridView, please replace the template parameter and the first constructor parameter by an EntitySet").
+        [[deprecated("GridFunctionSpaces now internally use an EntitySet instead of a GridView, please replace the template parameter and the first constructor parameter by an EntitySet.")]]
 #endif
         : BaseT(backend,ordering_tag)
         , pfem(fem)
@@ -267,7 +267,7 @@ namespace Dune {
       //! constructor
       GridFunctionSpace (const typename Traits::GridView& gridview, const FEM& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
 #if DUNE_PDELAB_WARN_ON_GRIDVIEW_BASED_GFS
-        DUNE_DEPRECATED_MSG("GridFunctionSpaces now internally use an EntitySet instead of a GridView, please replace the template parameter and the first constructor parameter by an EntitySet").
+        [[deprecated("GridFunctionSpaces now internally use an EntitySet instead of a GridView, please replace the template parameter and the first constructor parameter by an EntitySet.")]]
 #endif
         : BaseT(backend,ordering_tag)
         , pfem(stackobject_to_shared_ptr(fem))
@@ -279,7 +279,7 @@ namespace Dune {
       //! constructor
       GridFunctionSpace (const typename Traits::GridView& gridview, const std::shared_ptr<const FEM>& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
 #if DUNE_PDELAB_WARN_ON_GRIDVIEW_BASED_GFS
-        DUNE_DEPRECATED_MSG("GridFunctionSpaces now internally use an EntitySet instead of a GridView, please replace the template parameter and the first constructor parameter by an EntitySet").
+        [[deprecated("GridFunctionSpaces now internally use an EntitySet instead of a GridView, please replace the template parameter and the first constructor parameter by an EntitySet.")]]
 #endif
         : BaseT(backend,ordering_tag)
         , pfem(fem)
