@@ -182,7 +182,7 @@ public:
      * usable.
      */
     Range
-    operator()(const Domain& coord)
+    operator()(const Domain& coord) const
     {
       return evaluate<diffOrder>(coord);
     };
