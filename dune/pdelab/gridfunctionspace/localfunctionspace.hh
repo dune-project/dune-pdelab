@@ -99,18 +99,16 @@ namespace Dune {
         void leaf(Node& node, TreePath treePath)
         {
           node.offset = offset;
-          node.pfe = nullptr;
+          node.unbindFiniteElement();
           node._in_entity_set = node.pgfs->entitySet().contains(e);
           if (not node._in_entity_set) {
             node.n = 0;
           } else if (fast) {
             node.n = node.pgfs->finiteElementMap().maxLocalSize();
-            Node::FESwitch::setStore(node.pfe,
-                                     node.pgfs->finiteElementMap().find(e));
+            node.bindFiniteElement(node.pgfs->finiteElementMap().find(e));
           } else {
-            Node::FESwitch::setStore(node.pfe,
-                                     node.pgfs->finiteElementMap().find(e));
-            node.n = Node::FESwitch::basis(*node.pfe).size();
+            node.bindFiniteElement(node.pgfs->finiteElementMap().find(e));
+            node.n = Node::FESwitch::basis(node.finiteElement()).size();
           }
           offset += node.n;
         }
@@ -684,9 +682,22 @@ namespace Dune {
         BaseT::bind(*this,e,fast_);
       }
 
-      //    private:
-      typename FESwitch::Store pfe;
+      void bindFiniteElement(const typename Traits::FiniteElementType& finite_element) noexcept {
+        pfe = &finite_element;
+      }
+
+      void bindFiniteElement(typename Traits::FiniteElementType&& finite_element) noexcept {
+        ofe = std::move(finite_element);
+        pfe = &(*ofe);
+      }
+
+      void unbindFiniteElement() noexcept {
+        pfe = nullptr;
+      }
+
     private:
+      const typename Traits::FiniteElementType * pfe;
+      std::optional<const typename Traits::FiniteElementType> ofe;
       bool _in_entity_set;
     };
 
