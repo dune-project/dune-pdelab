@@ -99,8 +99,9 @@ namespace Dune {
 
       void collect_used_geometry_types_from_cell(const typename Traits::EntitySet::Element& cell)
       {
-        const typename FESwitch::Coefficients& coeffs =
-          FESwitch::coefficients(_fem->find(cell));
+        // notice that we keep the finite element alive on this scope (important if rvalue)
+        const auto& fe = _fem->find(cell);
+        const typename FESwitch::Coefficients& coeffs = FESwitch::coefficients(fe);
 
         this->_max_local_size = std::max(this->_max_local_size,coeffs.size());
 
@@ -123,8 +124,9 @@ namespace Dune {
         if (this->_fixed_size_possible)
           std::fill(gt_sizes.begin(),gt_sizes.end(),0);
 
-        const typename FESwitch::Coefficients& coeffs =
-          FESwitch::coefficients(_fem->find(cell));
+        // notice that we keep the finite element alive on this scope (important if rvalue)
+        const auto& fe = _fem->find(cell);
+        const typename FESwitch::Coefficients& coeffs = FESwitch::coefficients(fe);
 
         this->_max_local_size = std::max(this->_max_local_size,coeffs.size());
 
