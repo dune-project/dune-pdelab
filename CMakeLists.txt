@@ -47,7 +47,7 @@ if(COVERAGE_REPORT)
 endif()
 
 add_subdirectory(doc)
-add_subdirectory(dune/pdelab)
+add_subdirectory(dune)
 add_subdirectory(cmake/modules)
 add_subdirectory(lib)
 
