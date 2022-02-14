@@ -86,7 +86,22 @@ int main(int argc, char** argv)
       th_gfs.update();
 
       Dune::PDELab::SizeProviderAdapter size_provider{std::as_const(th_gfs).orderingStorage()};
-      assert(size_provider.size({}) == th_gfs.ordering().blockCount());
+      using MultiIndex = typename decltype(size_provider)::SizePrefix;
+      MultiIndex mi;
+      assert(size_provider.size(mi) == 2); // 2 blocks -> {P,V}
+      mi.push_back(1); // index for P
+      if (size_provider.size(mi) != gv.size(2)) // dofs on P -> vertices on the grid
+        DUNE_THROW(Dune::RangeError, "Container size for pressure coefficients doesn't match");
+      mi.back() = 0;  // index for V
+      auto chucks = 2*(gv.size(2)+gv.size(1)+gv.size(0))/chunk_size; // dofs on V -> 2*(vertices+facets+cells)
+      if (size_provider.size(mi) != chucks)
+        DUNE_THROW(Dune::RangeError, "Container size for velocity coefficients doesn't match");
+      mi.push_back(0);  // index for chuck i-th on V
+      for (std::size_t i = 0; i != chucks; ++i) {
+        mi.back() = i;
+        if (size_provider.size(mi) != chunk_size) // always chunck size
+          DUNE_THROW(Dune::RangeError, "Container chunck size doesn't match");
+      }
     }
 
     // test passed
