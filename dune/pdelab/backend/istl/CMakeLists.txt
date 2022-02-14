@@ -1,4 +1,5 @@
 add_subdirectory(geneo)
+add_subdirectory(matrixfree)
 
 install(FILES
   bcrsmatrix.hh

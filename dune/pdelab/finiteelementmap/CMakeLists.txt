@@ -19,6 +19,7 @@ install(FILES bdm1cube2dfem.hh
               rt0cube2dfem.hh
               rt0cube3dfem.hh
               rt0simplex2dfem.hh
+              rt0simplex3dfem.hh
               rt1cube2dfem.hh
               rt1cube3dfem.hh
               rt1simplex2dfem.hh
