@@ -14,6 +14,10 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   Fix preformance bug introduced in `dune-localfunctions` due to usage of
+    FiniteElementInterfaceSwitch::setStore. Now, the finite element is stored
+    in a shared pointer iff the finite element map returns an rvalue object.
+
 -   Added Raviart Thomas finite element map of order 0 for 3D simplices.
 
 -   Fix bug where `VectorGridFunctionSpace` would not initialize base data when using `orderingStorage`
