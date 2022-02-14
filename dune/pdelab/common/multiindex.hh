@@ -156,7 +156,7 @@ namespace Dune {
         this->push_back(index);
       }
 
-      //! Erases the last element of the vector, O(1) time.
+      //! Erases the first element of the multi-index, O(N) time.
       void pop_front()
       {
         size_type sz = this->size();
