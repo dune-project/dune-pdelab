@@ -11,6 +11,10 @@ namespace Dune::PDELab
   class NewtonError : public Exception {};
   class NewtonDefectError : public NewtonError {};
   class NewtonLinearSolverError : public NewtonError {};
+
+  // Exception classes used by interfaces within NewtonSolver
+  class TerminateError : public NewtonError {};
+  class LineSearchError : public NewtonError {};
 }
 
 #endif // DOXYGEN

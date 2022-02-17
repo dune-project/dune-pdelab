@@ -3,11 +3,10 @@
 #ifndef DUNE_PDELAB_SOLVER_TERMINATE_HH
 #define DUNE_PDELAB_SOLVER_TERMINATE_HH
 
+#include <dune/pdelab/solver/newtonerrors.hh>
+
 namespace Dune::PDELab
 {
-
-  class TerminateError : public Exception {};
-
 
   class TerminateInterface
   {
