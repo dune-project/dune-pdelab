@@ -34,6 +34,7 @@ namespace Dune {
 
       //! The maximum possible depth of the MultiIndex.
       static const std::size_t max_depth = n;
+      using typename base_type::size_type;
 
       class View
       {
@@ -153,6 +154,15 @@ namespace Dune {
       {
         this->clear();
         this->push_back(index);
+      }
+
+      //! Erases the first element of the multi-index, O(N) time.
+      void pop_front()
+      {
+        size_type sz = this->size();
+        assert(not this->empty());
+        std::copy(std::begin(*this)+1, std::begin(*this)+sz, std::begin(*this));
+        this->resize(--sz);
       }
 
       //! Writes a pretty representation of the MultiIndex to the given std::ostream.

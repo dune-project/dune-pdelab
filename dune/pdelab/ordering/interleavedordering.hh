@@ -51,10 +51,10 @@ namespace Dune {
           // This check looks a little weird, but there is always one offset more than
           // there are blocks (the first offsets is 0, and the last one is the "offset
           // beyond the end" to encode the size of the final child).
-          if (node.CHILDREN != ordering_tag.offsets().size() - 1)
+          if (node.degree() + 1 != ordering_tag.offsets().size())
             DUNE_THROW(OrderingStructureError,
                        "Invalid block structure for InterleavedOrdering: "
-                       << node.CHILDREN << " children, but "
+                       << node.degree() << " children, but "
                        << (ordering_tag.offsets().size() - 1) << " block sizes.");
         }
 
@@ -72,7 +72,8 @@ namespace Dune {
                   size_type index = out->back();
                   size_type block_index = index / child_block_size;
                   size_type offset = index % child_block_size;
-                  out->back() = child_block_offset + offset;
+                  size_type block_offset = child_block_offset + offset;
+                  out->back() = block_offset;
                   out->push_back(block_index);
                 }
             }
@@ -87,7 +88,8 @@ namespace Dune {
                   size_type index = out->back();
                   size_type block_index = index / child_block_size;
                   size_type offset = index % child_block_size;
-                  out->back() = block_index * block_size + child_block_offset + offset;
+                  size_type block_offset = child_block_offset + offset;
+                  out->back() = block_index * block_size + block_offset;
                 }
             }
         }
@@ -107,8 +109,9 @@ namespace Dune {
                   size_type child_block_size = this->_child_block_merge_offsets[child_index + 1] - child_block_offset;
                   size_type index = ci_out->back();
                   size_type block_index = index / child_block_size;
-                  size_type offset =index % child_block_size;
-                  ci_out->back() = child_block_offset + offset;
+                  size_type offset = index % child_block_size;
+                  size_type block_offset = child_block_offset + offset;
+                  ci_out->back() = block_offset;
                   ci_out->push_back(block_index);
                 }
             }
@@ -130,6 +133,69 @@ namespace Dune {
           return 0;
         }
 
+        using BaseT::size;
+
+        typename Traits::SizeType size(typename Traits::ContainerIndex suffix) const
+        {
+          if (suffix.size() == 0)
+            return this->_block_count;
+
+          // block_size: the interleaving is partitioned into `n` blocks with size `block_size`
+          const auto& block_size = this->_child_block_merge_offsets.back();
+          // block_index: i-th block in this partitioning
+          std::size_t block_index = std::numeric_limits<std::size_t>::max();
+          // block_offset: index within the i-th block
+          std::size_t block_offset = std::numeric_limits<std::size_t>::max();
+
+          if (this->containerBlocked()) {
+            block_index = suffix.back();
+            if (suffix.size() == 1) {
+              assert(block_index < this->_block_count);
+              return block_size;
+            }
+            suffix.pop_back();
+            block_offset = suffix.back();
+            assert(block_offset < block_size);
+          } else {
+            block_index = suffix.back() / block_size;
+            assert(block_index < this->_block_count);
+            block_offset = suffix.back() % block_size;
+          }
+          assert(block_index < this->_child_block_offsets.back());
+
+          const auto& merge_begin = std::begin(this->_child_block_merge_offsets);
+          const auto& merge_end = std::end(this->_child_block_merge_offsets);
+
+          auto child_block_offset_it = std::prev(std::upper_bound(merge_begin, merge_end, block_offset));
+          // child_index: child node for whom `block_offset` belongs to
+          std::size_t child_index = std::distance(merge_begin, child_block_offset_it);
+          // child_block_offset: first index of the child within the block
+          auto child_block_offset = *child_block_offset_it;
+          // child_block_size: number of indices within the block partition that belong to the child
+          auto child_block_size = *std::next(child_block_offset_it) - child_block_offset;
+
+          // reconstruct index within the child ordering
+          suffix.back() = child_block_size * block_index + block_offset;
+
+          // and delegate the rest of the suffix to the child ordering
+          assert(node().degree() > child_index);
+          if constexpr (Node::isPower)
+            return node().child(child_index).size(suffix);
+          else {
+            typename Traits::SizeType _size;
+            // unfold all (tuple) children and find the child index that we want
+            Hybrid::forEach(Dune::range(node().degree()), [&](auto i){
+              if (i == child_index)
+                _size = node().child(i).size(suffix);
+            });
+            return _size;
+          }
+        }
+
+      private:
+        //! Cast to node implementation (Barton–Nackman trick)
+        const Node& node() const { return static_cast<const Node&>(*this); }
+        Node& node() { return static_cast<Node&>(*this); }
       };
 
     } // namespace interleaved_ordering

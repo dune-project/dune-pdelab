@@ -247,15 +247,16 @@ namespace Dune {
             size_type child_block_size = _child_block_merge_offsets[child_index + 1] - child_block_offset;
             size_type block_index = ci.back() / child_block_size;
             size_type offset = ci.back() % child_block_size;
+            size_type block_offset = child_block_offset + offset;
             if (_container_blocked)
               {
-                ci.back() = child_block_offset + offset;
+                ci.back() = block_offset;
                 ci.push_back(block_index);
               }
             else
               {
                 size_type block_size = _child_block_merge_offsets.back();
-                ci.back() = block_index * block_size + child_block_offset + offset;
+                ci.back() = block_index * block_size + block_offset;
               }
           }
       }
