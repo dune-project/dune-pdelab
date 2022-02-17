@@ -100,7 +100,7 @@ namespace Dune {
     /**
      * \tparam T          type to represent time values
      * \tparam IGOS       assembler for instationary problems
-     * \tparam LS         backend to solve diagonal linear system
+     * \tparam LS         backend to solve linear system
      * \tparam TrlV       vector type to represent coefficients of solutions
      * \tparam TstV       vector type to represent residuals
      * \tparam TC         time controller class
@@ -124,13 +124,55 @@ namespace Dune {
        * there).
        * Use SimpleTimeController that does not control the time step.
        */
+      [[deprecated(
+        "Constructor with default assigned reduction is no longer supported. "
+        "Use the new constructor by passing a suitable reduction to the linear "
+        "system. In particular, use a dummy reduction (i.e. 0.99) on systems "
+        "known to have diagonal mass matrices (e.g. FV or DG) and where the "
+        "linear solver performs a block inversion on the first iteration "
+        "(essentially any). Otherwise, specify a proper reduction suitable "
+        "for your needs."
+        )]]
       ExplicitOneStepMethod(const TimeSteppingParameterInterface<T>& method_, IGOS& igos_, LS& ls_)
         : method(&method_), igos(igos_), ls(ls_), verbosityLevel(1), step(1), D(igos),
-          tc(new SimpleTimeController<T>()), allocated(true)
+          tc(new SimpleTimeController<T>()), allocated(true), ls_reduct{0.99}
       {
         if (method->implicit())
           DUNE_THROW(Exception,"explicit one step method called with implicit scheme");
         if (igos.trialGridFunctionSpace().gridView().comm().rank()>0)
+          verbosityLevel = 0;
+      }
+
+      /**
+       * @brief Construct a new Explicit One Step Method object
+       * @note The contructed method object stores references to the object it
+       * is constructed with, so these objects should be valid for as long as
+       * the constructed object is used (or until setMethod() is called).
+       * @note Use SimpleTimeController that does not control the time step.
+       * @param method_     A time stepping strategy
+       * @param igos_       An instationary local operator
+       * @param ls_         A linear solver backend
+       * @param ls_reduct_  Reduction for the linear solver
+       * @see ExplicitOneStepMethod::setReduction
+       */
+      ExplicitOneStepMethod(const TimeSteppingParameterInterface<T>& method_,
+                            IGOS& igos_,
+                            LS& ls_,
+                            double ls_reduct_)
+        : method(&method_)
+        , igos(igos_)
+        , ls(ls_)
+        , verbosityLevel(1)
+        , step(1)
+        , D(igos)
+        , tc(new SimpleTimeController<T>())
+        , allocated(true)
+        , ls_reduct{ ls_reduct_ }
+      {
+        if (method->implicit())
+          DUNE_THROW(Exception,
+                     "explicit one step method called with implicit scheme");
+        if (igos.trialGridFunctionSpace().gridView().comm().rank() > 0)
           verbosityLevel = 0;
       }
 
@@ -146,12 +188,53 @@ namespace Dune {
        * constructed object is used (or until setMethod() is called, see
        * there).
        */
+      [[deprecated(
+        "Constructor with default assigned reduction is no longer supported. "
+        "Use the new constructor by passing a suitable reduction to the linear "
+        "system. In particular, use a dummy reduction (i.e. 0.99) on systems \n"
+        "known to have diagonal mass matrices (e.g. FV or DG) and where the \n"
+        "linear solver performs a block inversion on the first iteration \n"
+        "(essentially any). Otherwise, specify a proper reduction suitable \n"
+        "for your needs.\n"
+        )]]
       ExplicitOneStepMethod(const TimeSteppingParameterInterface<T>& method_, IGOS& igos_, LS& ls_, TC& tc_)
         : method(&method_), igos(igos_), ls(ls_), verbosityLevel(1), step(1), D(igos),
-          tc(&tc_), allocated(false)
+          tc(&tc_), allocated(false), ls_reduct{0.99}
       {
         if (method->implicit())
           DUNE_THROW(Exception,"explicit one step method called with implicit scheme");
+      }
+
+      /**
+       * @brief Construct a new Explicit One Step Method object
+       * @note The contructed method object stores references to the object it
+       * is constructed with, so these objects should be valid for as long as
+       * the constructed object is used (or until setMethod() is called).
+       * @note Use SimpleTimeController that does not control the time step.
+       * @param method_     A time stepping strategy
+       * @param igos_       An instationary local operator
+       * @param ls_         A linear solver backend
+       * @param ls_reduct_  Reduction for the linear solver
+       * @see ExplicitOneStepMethod::setReduction
+       */
+      ExplicitOneStepMethod(const TimeSteppingParameterInterface<T>& method_,
+                            IGOS& igos_,
+                            LS& ls_,
+                            TC& tc_,
+                            double ls_reduct_)
+        : method(&method_)
+        , igos(igos_)
+        , ls(ls_)
+        , verbosityLevel(1)
+        , step(1)
+        , D(igos)
+        , tc(&tc_)
+        , allocated(false)
+        , ls_reduct{ ls_reduct_ }
+      {
+        if (method->implicit())
+          DUNE_THROW(Exception,
+                     "explicit one step method called with implicit scheme");
       }
 
       ~ExplicitOneStepMethod ()
@@ -170,6 +253,19 @@ namespace Dune {
 
       //! change number of current step
       void setStepNumber(int newstep) { step = newstep; }
+
+      /**
+       * @brief Set the Reduction for linear system soltion
+       * @details This reduction is applied to the solution of the linear
+       *          systems resulting from the shu-osher RK form for each stage.
+       *          In cases when the mass matrix is known to be diagonal of block
+       *          diagonal and an appropiate linear solver is provided
+       *          (e.g. BlockJacobi, Gauss-Seidel), it's sufficient to set this
+       *          to 0.99.
+       *
+       * @param ls_reduction_ Reduction for the linear system solution
+       */
+      void setReduction(const double& ls_reduction_) { ls_reduct = ls_reduction_; }
 
       //! redefine the method to be used; can be done before every step
       /**
@@ -344,13 +440,13 @@ namespace Dune {
                         << "Combining residuals with selected dt... done."
                         << std::endl;
 
-            // solve diagonal system
+            // solve linear system
             if (verbosityLevel>=4)
-              std::cout << stagetag << "Solving diagonal system..."
+              std::cout << stagetag << "Solving linear system..."
                         << std::endl;
-            ls.apply(D,*x[r],alpha,0.99); // dummy reduction
+            ls.apply(D,*x[r],alpha,ls_reduct);
             if (verbosityLevel>=4)
-              std::cout << stagetag << "Solving diagonal system... done."
+              std::cout << stagetag << "Solving linear system... done."
                         << std::endl;
 
             // apply slope limiter to new solution (e.g DG scheme)
@@ -562,18 +658,18 @@ namespace Dune {
 
 
             // Set up residual formulation (for Dx[r]=alpha) and
-            // compute update by solving diagonal system
+            // compute update by solving linear system
             using Backend::native;
             native(D).mv(native(*x[r]), native(residual));
             residual -= alpha;
             auto cc = igos.trialConstraints();
             Dune::PDELab::set_constrained_dofs(cc, 0.0, residual);
             if (verbosityLevel>=4)
-              std::cout << stagetag << "Solving diagonal system..."
+              std::cout << stagetag << "Solving linear system..."
                         << std::endl;
-            ls.apply(D, update, residual, 0.99); // dummy reduction
+            ls.apply(D, update, residual, ls_reduct);
             if (verbosityLevel>=4)
-              std::cout << stagetag << "Solving diagonal system... done."
+              std::cout << stagetag << "Solving linear system... done."
                         << std::endl;
             *x[r] -= update;
 
@@ -628,6 +724,7 @@ namespace Dune {
       M D;
       TimeControllerInterface<T> *tc;
       bool allocated;
+      double ls_reduct;
     };
 
     /** @} */

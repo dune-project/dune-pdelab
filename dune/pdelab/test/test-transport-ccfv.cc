@@ -388,7 +388,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   // <<<8>>> time-stepper
   typedef Dune::PDELab::CFLTimeController<Real,IGO> TC;
   TC tc(0.999,igo);
-  Dune::PDELab::ExplicitOneStepMethod<Real,IGO,LS,V,V,TC> osm(method,igo,ls,tc);
+  Dune::PDELab::ExplicitOneStepMethod<Real,IGO,LS,V,V,TC> osm(method,igo,ls,tc,0.99);
   osm.setVerbosityLevel(2);
 
   // <<<9>>> initial value and initial value for first time step with b.c. set

@@ -168,7 +168,7 @@ bool do_simulation (double T, double dt, GM& grid, std::string basename)
   Dune::PDELab::ExplicitEulerParameter<NumberType> method_explicit;
   typedef Dune::PDELab::ExplicitOneStepMethod<NumberType,typename ASSEMBLER_EXPLICIT::GO,typename SBE_EXPLICIT::LS,V,V>
     OSM_EXPLICIT;
-  OSM_EXPLICIT osm_explicit(method_explicit,*assembler_explicit,*sbe_explicit);
+  OSM_EXPLICIT osm_explicit(method_explicit,*assembler_explicit,*sbe_explicit,0.99);
   osm_explicit.setVerbosityLevel(1);
 
   // graphics for initial guess
