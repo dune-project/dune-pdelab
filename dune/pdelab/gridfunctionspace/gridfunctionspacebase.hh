@@ -308,7 +308,9 @@ namespace Dune {
         return *_entity_set;
       }
 
-
+#ifndef DUNE_PDELAB_ENABLE_EXPERIMENTAL_MULTIDOMAIN_SUPPORT
+    protected:
+#endif
       /**
        * @brief Set the Entity Set object to this grid function space
        * @details The passed entity set will be stored and modified by the grid
@@ -328,6 +330,8 @@ namespace Dune {
       {
         _entity_set.emplace(std::move(entity_set));
       }
+
+    public:
 
       typename Traits::OrderingTag& orderingTag()
       {

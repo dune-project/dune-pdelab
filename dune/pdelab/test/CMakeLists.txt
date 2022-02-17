@@ -90,7 +90,9 @@ dune_add_test(SOURCES testpoisson.cc
 add_dune_alberta_flags(testpoisson WORLDDIM 2)
 
 dune_add_test(SOURCES testpoisson-multidomain.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
+              COMPILE_DEFINITIONS
+                GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
+                DUNE_PDELAB_ENABLE_EXPERIMENTAL_MULTIDOMAIN_SUPPORT=1
               CMAKE_GUARD dune-multidomaingrid_FOUND)
 
 dune_add_test(SOURCES testmatrixfree.cc)
