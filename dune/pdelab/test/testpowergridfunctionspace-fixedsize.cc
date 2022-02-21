@@ -171,6 +171,16 @@ private:
 };
 
 int main(int argc, char **argv) {
+  bool passed = true;
+  /**
+  * The finite element map makes that only entities with index % 2 != 0 or index % 3 != 0 have non-zero degrees of freedom.
+  * With a grid of 4 elements, the first element will have zero degrees of freedom.
+  * A bloked vector backend leads to an ordering that should ignore the container index for such element.
+  * Thus, the ordering should have 3 entity blocks (Remember: grid has 4 entities)
+  * The chunking is trying to block 3 blocks into another outer block.
+  * If this is not the case, the chunking will be rejected because the chunking should be exact.
+  */
+
   try {
     // Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
@@ -193,10 +203,6 @@ int main(int argc, char **argv) {
         Dune::PDELab::GridFunctionSpace<ES, FEM, Dune::PDELab::NoConstraints,
                                         VBE>;
     using PVBE = Dune::PDELab::ISTL::VectorBackend<>;
-    using POT =
-        Dune::PDELab::ordering::Chunked<Dune::PDELab::EntityBlockedOrderingTag>;
-    using PGFS = Dune::PDELab::PowerGridFunctionSpace<
-        GFS, 2, Dune::PDELab::ISTL::VectorBackend<>, POT>;
 
     GV gv = grid.leafGridView();
     FEM fem0(gv, 2);
@@ -206,22 +212,73 @@ int main(int argc, char **argv) {
     auto gfs1 = std::make_shared<GFS>(es, fem1);
 
     {
-      PGFS pgfs(*gfs0, *gfs1, PVBE(), POT(blockSize));
+      using Tag = Dune::PDELab::EntityBlockedOrderingTag;
+      using PGFS = Dune::PDELab::PowerGridFunctionSpace<GFS, 2, PVBE, Tag>;
+      using SizeSuffix = typename PGFS::Ordering::Traits::ContainerIndex;
+      PGFS pgfs(*gfs0, *gfs1, PVBE());
+      pgfs.ordering();
+      if (pgfs.ordering().size(SizeSuffix{}) != 3)
+        DUNE_THROW(Dune::RangeError,
+          "Non-Chunked ordering should have 3 blocks. One for every used entity.");
+    }
+
+    using POT =
+        Dune::PDELab::ordering::Chunked<Dune::PDELab::EntityBlockedOrderingTag>;
+    using PGFS = Dune::PDELab::PowerGridFunctionSpace<GFS, 2, PVBE, POT>;
+
+    // check that chunking is possible (container_size % chunk_size == 0)
+    {
+      POT chucked_tag(3);
+      PGFS pgfs(*gfs0, *gfs1, PVBE(), chucked_tag);
       pgfs.ordering();
     }
 
     {
-      std::array<std::shared_ptr<GFS>,2> containter{gfs0,gfs1};
-      PGFS pgfs(containter, PVBE(), POT(blockSize));
+      POT chucked_tag(3);
+      std::array<std::shared_ptr<GFS>, 2> containter{gfs0, gfs1};
+      PGFS pgfs(containter, PVBE(), chucked_tag);
       pgfs.ordering();
     }
 
-    return 0;
+    {
+      POT chucked_tag(1);
+      PGFS pgfs(*gfs0, *gfs1, PVBE(), chucked_tag);
+      pgfs.ordering();
+    }
+
+    {
+      POT chucked_tag(1);
+      std::array<std::shared_ptr<GFS>, 2> containter{gfs0, gfs1};
+      PGFS pgfs(containter, PVBE(), chucked_tag);
+      pgfs.ordering();
+    }
+
+    // check that chunking is possible (container_size % chunk_size != 0)
+    try {
+      POT chucked_tag(4);
+      PGFS pgfs(*gfs0, *gfs1, PVBE(), chucked_tag);
+      pgfs.ordering();
+      passed &= false;
+    } catch (...) {
+    }
+
+    try {
+      POT chucked_tag(4);
+      std::array<std::shared_ptr<GFS>, 2> containter{gfs0, gfs1};
+      PGFS pgfs(containter, PVBE(), chucked_tag);
+      pgfs.ordering();
+      passed &= false;
+    } catch (...) {
+    }
+
   } catch (Dune::Exception &e) {
     std::cerr << "Dune reported error: " << e << std::endl;
-    return 1;
+    passed &= false;
   } catch (...) {
     std::cerr << "Unknown exception thrown!" << std::endl;
-    return 1;
+    passed &= false;
   }
+
+  std::cout << passed << std::endl;
+  return !passed;
 }
