@@ -358,6 +358,8 @@ namespace Dune {
 
       using IndexType = Index;
 
+      static const dim_type dimension = Traits::dimension;
+
       constexpr static Index invalidIndex()
       {
         return Traits::invalidIndex();
@@ -525,6 +527,7 @@ namespace Dune {
 
     public:
 
+      using typename Base::Traits;
       using typename Base::Index;
       using typename Base::Partitions;
       using typename Base::size_type;
@@ -617,11 +620,8 @@ namespace Dune {
           }
       }
 
-
-    public:
-
-      template<typename E>
-      Index index(const E& e) const
+      template<class Entity>
+      Index indexImpl(const Entity& e) const
       {
         assert(!needsUpdate());
         assert(Partitions::contains(e.partitionType()));
@@ -631,7 +631,7 @@ namespace Dune {
       }
 
       template<typename E>
-      Index subIndex(const E& e, size_type i, dim_type codim) const
+      Index subIndexImpl(const E& e, size_type i, dim_type codim) const
       {
         assert(!needsUpdate());
         assert(Partitions::contains(e.partitionType()));
@@ -641,6 +641,28 @@ namespace Dune {
         return _indices[_gt_offsets[gt_index] + baseIndexSet().subIndex(e,i,codim)];
       }
 
+    public:
+
+      template<int cc>
+      Index index(const typename Traits::template Codim<cc>::Entity& e) const {
+        return indexImpl(e);
+      }
+
+      template<class Entity>
+      Index index(const Entity& e) const {
+        return indexImpl(e);
+      }
+
+      template<int cc>
+      Index subIndex(const typename Traits::template Codim<cc>::Entity& e, size_type i, dim_type codim) const {
+        return subIndexImpl(e,i,codim);
+      }
+
+
+      template<typename E>
+      Index subIndex(const E& e, size_type i, dim_type codim) const {
+        return subIndexImpl(e,i,codim);
+      }
 
       template<typename E>
       Index uniqueIndex(const E& e) const
@@ -693,6 +715,7 @@ namespace Dune {
 
     public:
 
+      using typename Base::Traits;
       using typename Base::Index;
       using typename Base::Partitions;
       using typename Base::size_type;
@@ -715,10 +738,27 @@ namespace Dune {
         return true;
       }
 
+      template<typename E>
+      Index subIndexImpl(const E& e, size_type i, dim_type codim) const
+      {
+#ifndef NDEBUG
+        auto gt = ReferenceElements<typename Base::Traits::CoordinateField,GV::dimension>::general(e.type()).type(i,codim);
+        assert(contains(gt));
+#endif
+        return baseIndexSet().subIndex(e,i,codim);
+      }
+
     public:
 
       template<typename E>
       Index index(const E& e) const
+      {
+        assert(contains(e.type()));
+        return baseIndexSet().index(e);
+      }
+
+      template<int cc>
+      Index index(const typename Traits::template Codim<cc>::Entity& e) const
       {
         assert(contains(e.type()));
         return baseIndexSet().index(e);
@@ -731,14 +771,15 @@ namespace Dune {
         return baseIndexSet().index(e) + _mapped_gt_offsets[Dune::GlobalGeometryTypeIndex::index(e.type())];
       }
 
+
+      template<int cc>
+      Index subIndex(const typename Traits::template Codim<cc>::Entity& e, size_type i, dim_type codim) const {
+        return subIndexImpl(e,i,codim);
+      }
+
       template<typename E>
-      Index subIndex(const E& e, size_type i, dim_type codim) const
-      {
-#ifndef NDEBUG
-        auto gt = ReferenceElements<typename Base::Traits::CoordinateField,GV::dimension>::general(e.type()).type(i,codim);
-        assert(contains(gt));
-#endif
-        return baseIndexSet().subIndex(e,i,codim);
+      Index subIndex(const E& e, size_type i, dim_type codim) const {
+        return subIndexImpl(e,i,codim);
       }
 
       template<typename E>
