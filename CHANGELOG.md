@@ -1,9 +1,9 @@
 PDELab
 ======
 
-This is the 2.8 version of PDELab, a PDE discretization toolkit built
-on top of the [DUNE][] framework. It is intended to be used with the 2.8
-release of the Dune core modules. License information can be found in the file
+This is the 2.9-git version of PDELab, a PDE discretization toolkit built
+on top of the [DUNE][] framework. It is intended to be used with the master
+branch of the Dune core modules. License information can be found in the file
 [LICENSE.md][].
 
 If you need help, please ask on our [mailing list][]. Bugs can also be submitted
@@ -11,6 +11,10 @@ to the [PDELab bugtracker][] instead.
 
 Changes
 =======
+
+PDELab git master (will be PDELab 2.9)
+--------------------------------------
+
 
 PDELab 2.8
 ----------
