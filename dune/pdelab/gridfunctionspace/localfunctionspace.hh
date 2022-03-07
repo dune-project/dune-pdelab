@@ -3,7 +3,8 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_LOCALFUNCTIONSPACE_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_LOCALFUNCTIONSPACE_HH
 
-#include<vector>
+#include <vector>
+#include <memory>
 
 #include <dune/common/stdstreams.hh>
 #include <dune/common/shared_ptr.hh>
@@ -99,18 +100,16 @@ namespace Dune {
         void leaf(Node& node, TreePath treePath)
         {
           node.offset = offset;
-          node.pfe = nullptr;
+          node.unbindFiniteElement();
           node._in_entity_set = node.pgfs->entitySet().contains(e);
           if (not node._in_entity_set) {
             node.n = 0;
           } else if (fast) {
             node.n = node.pgfs->finiteElementMap().maxLocalSize();
-            Node::FESwitch::setStore(node.pfe,
-                                     node.pgfs->finiteElementMap().find(e));
+            node.bindFiniteElement(node.pgfs->finiteElementMap().find(e));
           } else {
-            Node::FESwitch::setStore(node.pfe,
-                                     node.pgfs->finiteElementMap().find(e));
-            node.n = Node::FESwitch::basis(*node.pfe).size();
+            node.bindFiniteElement(node.pgfs->finiteElementMap().find(e));
+            node.n = Node::FESwitch::basis(node.finiteElement()).size();
           }
           offset += node.n;
         }
@@ -684,9 +683,39 @@ namespace Dune {
         BaseT::bind(*this,e,fast_);
       }
 
-      //    private:
-      typename FESwitch::Store pfe;
+      /**
+       * @brief Binds a finite element to the local space
+       * If the finite element is lvalue, the caller (i.e. FEM) must guarantee
+       * the lifetime of the object since we only keep a view on it. On the other
+       * hand, if it is rvalue, we store it locally but we require the object to
+       * be fully movable.
+       * @tparam FE rvalue or lvalue type of the finite element
+       * @param fe the finite element to be bound
+       */
+      template<class FE>
+      void bindFiniteElement(FE&& fe) {
+        static_assert(std::is_same_v<std::decay_t<FE>, typename Traits::FiniteElementType>);
+        if constexpr (std::is_rvalue_reference_v<FE&&>) {
+          static_assert(std::is_move_constructible_v<FE>);
+          static_assert(std::is_move_assignable_v<FE>);
+          if (spe)
+            (*spe) = std::move(fe);
+          else
+            spe = std::make_shared<typename Traits::FiniteElementType>(std::move(fe));
+          pfe = spe.get();
+        } else {
+          pfe = &fe;
+        }
+      }
+
+      //! Release view of the bound finite element
+      void unbindFiniteElement() noexcept {
+        pfe = nullptr;
+      }
+
     private:
+      const typename Traits::FiniteElementType * pfe;
+      std::shared_ptr<typename Traits::FiniteElementType> spe;
       bool _in_entity_set;
     };
 
