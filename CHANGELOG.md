@@ -1,8 +1,8 @@
 PDELab
 ======
 
-This is the 2.7-git version of PDELab, a PDE discretization toolkit built
-on top of the [DUNE][] framework. It is intended to be used with the 2.7
+This is the 2.8 version of PDELab, a PDE discretization toolkit built
+on top of the [DUNE][] framework. It is intended to be used with the 2.8
 release of the Dune core modules. License information can be found in the file
 [LICENSE.md][].
 
@@ -12,8 +12,9 @@ to the [PDELab bugtracker][] instead.
 Changes
 =======
 
-PDELab git master (will be PDELab 2.7)
---------------------------------------
+PDELab 2.8
+----------
+
 -   Fix preformance bug introduced in `dune-localfunctions` due to usage of
     FiniteElementInterfaceSwitch::setStore. Now, the finite element is stored
     in a shared pointer iff the finite element map returns an rvalue object.
@@ -50,6 +51,9 @@ PDELab git master (will be PDELab 2.7)
     To activate them one has to set the `doSkipEntity`/`doSkipIntersection` flags and implement the
     `skip_entity`/`skip_intersection` methods in the local operator. See local operator interface for
     detailed information.
+
+PDELab 2.7
+----------
 
 -   Change the local operator interface for nonlinear jacobian apply methods. The vector representing the
     current solution (x) and the vector that the jacobian is applied on (z) can now have different type. Note:
