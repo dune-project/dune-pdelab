@@ -14,7 +14,15 @@ Changes
 
 PDELab git master (will be PDELab 2.7)
 --------------------------------------
+-   Fix preformance bug introduced in `dune-localfunctions` due to usage of
+    FiniteElementInterfaceSwitch::setStore. Now, the finite element is stored
+    in a shared pointer iff the finite element map returns an rvalue object.
+
 -   Explicit one step method now requires to set a reduction for the linear solver !553
+
+-   Fix preformance bug introduced in `dune-localfunctions` due to usage of
+    FiniteElementInterfaceSwitch::setStore. Now, the finite element is stored
+    in a shared pointer iff the finite element map returns an rvalue object.
 
 -   Added Raviart Thomas finite element map of order 0 for 3D simplices.
 

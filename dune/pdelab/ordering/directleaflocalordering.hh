@@ -209,10 +209,9 @@ namespace Dune {
 
       void collect_used_geometry_types_from_cell(const typename Traits::GridView::template Codim<0>::Entity& cell)
       {
-        FESwitch::setStore(_fe_store,_fem->find(cell));
-
-        const typename FESwitch::Coefficients& coeffs =
-          FESwitch::coefficients(*_fe_store);
+        // notice that we keep the finite element alive on this scope (important if rvalue)
+        const auto& fe = _fem->find(cell);
+        const typename FESwitch::Coefficients& coeffs = FESwitch::coefficients(fe);
 
         _max_local_size = std::max(_max_local_size,coeffs.size());
 
@@ -250,10 +249,9 @@ namespace Dune {
         if (this->_fixed_size_possible)
           std::fill(_local_gt_dof_sizes.begin(),_local_gt_dof_sizes.end(),0);
 
-        FESwitch::setStore(_fe_store,_fem->find(cell));
-
-        const typename FESwitch::Coefficients& coeffs =
-          FESwitch::coefficients(*_fe_store);
+        // notice that we keep the finite element alive on this scope (important if rvalue)
+        const auto& fe = _fem->find(cell);
+        const typename FESwitch::Coefficients& coeffs = FESwitch::coefficients(fe);
 
         typedef typename Traits::SizeType size_type;
 
@@ -324,7 +322,6 @@ namespace Dune {
     protected:
 
       std::shared_ptr<const FEM> _fem;
-      typename FESwitch::Store _fe_store;
 
       ES _es;
       bool _fixed_size;
