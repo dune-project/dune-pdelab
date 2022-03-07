@@ -683,10 +683,6 @@ namespace Dune {
         BaseT::bind(*this,e,fast_);
       }
 
-      // void bindFiniteElement(const typename Traits::FiniteElementType& finite_element) noexcept {
-      //   pfe = &finite_element;
-      // }
-
       /**
        * @brief Binds a finite element to the local space
        * If the finite element is lvalue, the caller (i.e. FEM) must guarantee
@@ -699,14 +695,14 @@ namespace Dune {
       template<class FE>
       void bindFiniteElement(FE&& fe) {
         static_assert(std::is_same_v<std::decay_t<FE>, typename Traits::FiniteElementType>);
-        if constexpr (std::is_rvalue_reference_v<FE>) {
+        if constexpr (std::is_rvalue_reference_v<FE&&>) {
           static_assert(std::is_move_constructible_v<FE>);
           static_assert(std::is_move_assignable_v<FE>);
           if (spe)
             (*spe) = std::move(fe);
           else
             spe = std::make_shared<typename Traits::FiniteElementType>(std::move(fe));
-          pfe = &spe;
+          pfe = spe.get();
         } else {
           pfe = &fe;
         }
