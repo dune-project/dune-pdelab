@@ -25,7 +25,10 @@ PDELab git master (will be PDELab 2.7)
 -   Fix bug where `VectorGridFunctionSpace` would not initialize base data when using `orderingStorage`
     instead of `ordering`.
 
--   Orderings are now able to give a `size` for every partial container indice. This was something that
+-   Fixed an indexation bug where entity blocking of non-fixed size orderings was assuming that
+    every grid entity contained at least one degree of freedom.
+
+-   Orderings are now able to give a `size` for every partial container index. This was something that
     `blockCount()` could not give on local orderings. This basically unifies the interface for global and
     local orderings and allows for more complicated blockings on local orderings. Resizing of containers is
     managed internally on the backends, thus no changes are required for normal use cases.
