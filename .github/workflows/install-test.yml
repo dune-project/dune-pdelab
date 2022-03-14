@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         image:
-          - ubuntu:18.04
+          - ubuntu:20.04
           - ubuntu:latest
           - ubuntu:rolling
 
@@ -39,7 +39,7 @@ jobs:
 
   macos-install-test:
     name: Testing MacOS Installation
-    runs-on: macos-10.15
+    runs-on: macos-11
 
     steps:
     - name: Checking out the PDELab repository
