@@ -31,8 +31,8 @@ namespace Dune {
                 {
                     if (order == k)
                     {
-                        typedef Dune::QkLocalFiniteElement<D,R,d,k> QkLFE;
-                        typedef Dune::PkLocalFiniteElement<D,R,d,k> PkLFE;
+                        typedef Dune::LagrangeCubeLocalFiniteElement<D,R,d,k> QkLFE;
+                        typedef Dune::LagrangeSimplexLocalFiniteElement<D,R,d,k> PkLFE;
                         typedef typename C::value_type ptr;
                         c[0] = ptr(new LocalFiniteElementVirtualImp<QkLFE>(QkLFE()));
                         c[1] = ptr(new LocalFiniteElementVirtualImp<PkLFE>(PkLFE()));
