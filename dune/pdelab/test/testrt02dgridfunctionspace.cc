@@ -8,7 +8,6 @@
 #include <sstream>
 
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/std/make_array.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 #if HAVE_ALBERTA
@@ -97,7 +96,7 @@ int main(int argc, char** argv)
     std::cout << "ALU" << std::endl;
     {
       using ALUType = Dune::ALUGrid<2, 2, Dune::simplex, Dune::nonconforming>;
-      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::Std::make_array(1u, 1u));
+      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), std::array<uint,2>{1u, 1u});
       alugrid->globalRefine(4);
 
       rt02DGridFunctionSpace(alugrid->leafGridView(), "alu");

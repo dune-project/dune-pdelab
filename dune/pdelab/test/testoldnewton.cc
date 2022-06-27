@@ -154,9 +154,9 @@ int main(int argc, char** argv)
     // Create Netwon solver
     using LinearSolver = Dune::PDELab::ISTLBackend_SEQ_SuperLU;
     LinearSolver linearSolver(false);
-    const double reduction = 1e-7;
     using Solver = Dune::PDELab::Newton<GridOperator, LinearSolver, CoefficientVector>;
     Solver solver(gridOperator, coefficientVector, linearSolver);
+    solver.setReduction(1e-7);
 
     // Solve PDE
     solver.apply(coefficientVector);

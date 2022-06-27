@@ -25,7 +25,6 @@
 #include <string>
 
 #include <dune/common/filledarray.hh>
-#include <dune/common/std/make_array.hh>
 
     /** \brief Parameter class for solving the linear heat equation with time dependent boundary
      *

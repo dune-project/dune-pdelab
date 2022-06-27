@@ -24,7 +24,6 @@
 
 #include <dune/common/filledarray.hh>
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/std/make_array.hh>
 #include <dune/grid/multidomaingrid.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/yaspgrid.hh>

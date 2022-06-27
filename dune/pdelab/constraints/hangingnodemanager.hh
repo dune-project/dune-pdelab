@@ -338,13 +338,10 @@ namespace Dune {
 
                 //std::cout << "Extra check for SIMPLICES:" << std::endl;
 
-                unsigned int intersection_index = 0;
-
                 bool bJumpOut = false;
 
                 // Loop over faces
                 for(const auto& intersection : intersections(gv,cell)) {
-                  ++intersection_index;
 
                   // only internal faces need to be taken care of
                   if(!intersection.boundary()) {

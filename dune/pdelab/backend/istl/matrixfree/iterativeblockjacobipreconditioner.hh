@@ -336,7 +336,7 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
       void alpha_volume(const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
       {
-        const int size = lfsu.size();
+        const std::size_t size = lfsu.size();
         assert(lfsv.size() == size);
 
         // Assemble point diagonal

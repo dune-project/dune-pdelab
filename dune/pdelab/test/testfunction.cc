@@ -219,7 +219,6 @@ void testgridviewfunction (const GV& gv)
         localf.bind(*it);
         Dune::FieldVector<double,1> value;
         Dune::FieldMatrix<double,1,dim> jacobian;
-        Dune::FieldMatrix<double,dim,dim> hessian;
         Dune::FieldVector<double,dim> pos(0.0);
         auto gpos = it->geometry().global(pos);
         value = localf(pos);
@@ -233,7 +232,7 @@ void testgridviewfunction (const GV& gv)
  * does not implement it and the maxDiffOrder based magic to not have these trigger
  * compile errors had to be removed because of upstream changes in dune-localfunctions.
         if (maxDiffOrder >= 2) {
-            hessian = derivative(derivative(localf))(pos);
+            Dune::FieldMatrix<double,dim,dim> hessian = derivative(derivative(localf))(pos);
             assert(std::abs(hessian[0][0] - k*(k-1)*pow(gpos[0],k-2)) < 1e-6);
             assert(std::abs(hessian[0][1]) < 1e-6);
             assert(std::abs(hessian[1][1]) < 1e-6);
