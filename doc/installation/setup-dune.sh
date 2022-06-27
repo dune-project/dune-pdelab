@@ -19,7 +19,7 @@ git clone https://gitlab.dune-project.org/staging/dune-functions.git
 git clone https://gitlab.dune-project.org/pdelab/dune-pdelab.git
 
 # Choose a release version for all modules
-./dune-common/bin/dunecontrol git checkout releases/2.7
+./dune-common/bin/dunecontrol git checkout releases/2.8
 
 # Build dune-pdelab and its dependencies
 ./dune-common/bin/dunecontrol --builddir=$PWD/build --module=dune-pdelab all
