@@ -45,7 +45,7 @@ namespace Dune {
      * Note: Dune::GeometryType used to have constructors taking a BasicType
      * and the dimension. This utility function can be used as a replacement.
      */
-    Dune::GeometryType geometryTypeFromBasicType(Dune::GeometryType::BasicType basicType, int dim){
+    inline Dune::GeometryType geometryTypeFromBasicType(Dune::GeometryType::BasicType basicType, int dim){
 
       unsigned int topologyId(0);
 
