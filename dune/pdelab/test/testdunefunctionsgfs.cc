@@ -224,8 +224,6 @@ void solveParallelPoissonProblem()
                                                   CON> GridFunctionSpace;
   GridFunctionSpace gridFunctionSpace(basis);
 
-  using FEM = GridFunctionSpace::Traits::FEM;
-
   gridFunctionSpace.name("Vh");
 
   // Assemble constraints

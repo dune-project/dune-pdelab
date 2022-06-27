@@ -2,7 +2,7 @@
 #define DUNE_PDELAB_BACKEND_ISTL_OVLP_AMG_DG_BACKEND_HH
 
 #include <dune/common/parametertree.hh>
-#include <dune/common/power.hh>
+#include <dune/common/math.hh>
 
 #include <dune/istl/matrixmatrix.hh>
 
@@ -185,21 +185,16 @@ namespace Dune {
       void gather (MessageBuffer& buff, const EntityType& e) const
       {
         IndexType myindex = indexSet.index(e);
-        //std::cout << gv.comm().rank() << ": begin gather local=" << myindex << std::endl;
         typename M::row_type myrow = m[myindex];
         typename M::row_type::iterator endit=myrow.end();
-        size_t count = 0;
         for (typename M::row_type::iterator it=myrow.begin(); it!=endit; ++it)
           {
             typename LocalToGlobalMap::const_iterator find=l2g.find(it.index());
             if (find!=l2g.end())
               {
                 buff.write(std::make_pair(find->second,*it));
-                //std::cout << gv.comm().rank() << ":   ==> local=" << find->first << " global=" << find->second << std::endl;
-                count++;
               }
           }
-        //std::cout << gv.comm().rank() << ": end gather row=" << myindex << " size=" << count << std::endl;
       }
 
       /*! unpack data from message buffer to user
@@ -212,7 +207,6 @@ namespace Dune {
         IndexType myindex = indexSet.index(e);
         std::cout << gv.comm().rank() << ": begin scatter local=" << myindex << " size=" << n << std::endl;
         DataType x;
-        size_t count = 0;
         for (size_t i=0; i<n; ++i)
           {
             buff.read(x);
@@ -229,12 +223,9 @@ namespace Dune {
                     std::cout << gv.comm().rank() << ":   compare i=" << myindex << " j=" << nbindex
                               << " norm=" << block.infinity_norm() << std::endl;
 
-                    count++;
-                    //std::cout << gv.comm().rank() << ":   --> local=" << find->first << " global=" << find->second << std::endl;
                   }
               }
           }
-        //std::cout << gv.comm().rank() << ": end scatter row=" << myindex << " size=" << count << std::endl;
       }
 
       //! constructor
@@ -599,7 +590,7 @@ public:
     , reuse(reuse_)
     , firstapply(true)
     , usesuperlu(usesuperlu_)
-    , low_order_space_entries_per_row(StaticPower<3,GFS::Traits::GridView::dimension>::power)
+    , low_order_space_entries_per_row(Dune::power(3,GFS::Traits::GridView::dimension))
     , cgtodglop()
     , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
     , pmatrix(pgo)
@@ -642,7 +633,7 @@ public:
     , reuse(params.get<bool>("reuse",false))
     , firstapply(true)
     , usesuperlu(params.get<bool>("use_superlu",true))
-    , low_order_space_entries_per_row(params.get<std::size_t>("low_order_space.entries_per_row",StaticPower<3,GFS::Traits::GridView::dimension>::power))
+    , low_order_space_entries_per_row(params.get<std::size_t>("low_order_space.entries_per_row",Dune::power(3,GFS::Traits::GridView::dimension)))
     , cgtodglop()
     , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
     , pmatrix(pgo)

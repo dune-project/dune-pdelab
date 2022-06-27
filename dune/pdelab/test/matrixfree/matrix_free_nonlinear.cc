@@ -356,8 +356,9 @@ int main(int argc, char** argv)
     //==============
     // Solve the PDE
     //==============
-    const double reduction = initree.get<double>("solver.reduction", 1e-12);
     Solver solver(gridOperator, linearSolver);
+    // const double reduction = initree.get<double>("solver.reduction", 1e-12);
+    // solver.setReduction(reduction);
     std::cout << "Solve with matrix-based solver" << std::endl;
     solver.apply(coefficientVector);
     auto result = solver.result();

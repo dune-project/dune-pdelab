@@ -1,7 +1,7 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_SEQ_AMG_DG_BACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_SEQ_AMG_DG_BACKEND_HH
 
-#include <dune/common/power.hh>
+#include <dune/common/math.hh>
 #include <dune/common/parametertree.hh>
 
 #include <dune/istl/matrixmatrix.hh>
@@ -210,7 +210,7 @@ namespace Dune {
         , reuse(reuse_)
         , firstapply(true)
         , usesuperlu(usesuperlu_)
-        , low_order_space_entries_per_row(StaticPower<3,GFS::Traits::GridView::dimension>::power)
+        , low_order_space_entries_per_row(Dune::power(3,GFS::Traits::GridView::dimension))
         , cgtodglop()
         , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
         , pmatrix(pgo)
@@ -244,7 +244,7 @@ namespace Dune {
         , reuse(params.get<bool>("reuse", false))
         , firstapply(true)
         , usesuperlu(params.get<bool>("use_superlu",true))
-        , low_order_space_entries_per_row(params.get<std::size_t>("low_order_space.entries_per_row",StaticPower<3,GFS::Traits::GridView::dimension>::power))
+        , low_order_space_entries_per_row(params.get<std::size_t>("low_order_space.entries_per_row",Dune::power(3,GFS::Traits::GridView::dimension)))
         , cgtodglop()
         , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
         , pmatrix(pgo)

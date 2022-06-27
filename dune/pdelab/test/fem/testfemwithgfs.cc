@@ -11,7 +11,6 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/typetraits.hh>
-#include <dune/common/std/make_array.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -107,7 +106,7 @@ void test_2d_simplex(const Constraints& constraints, const VBE& vbe)
     {
       // make grid
       using ALUType = Dune::ALUGrid<2, 2, Dune::simplex, Dune::nonconforming>;
-      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), Dune::Std::make_array(1u, 1u));
+      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 2>(0.0), Dune::FieldVector<ALUType::ctype, 2>(1.0), std::array<uint,2>{1u, 1u});
       alugrid->globalRefine(3);
 
       // get view
@@ -163,7 +162,7 @@ void test_3d_simplex(const Constraints& constraints, const VBE& vbe)
 
     {
       using ALUType = Dune::ALUGrid<3, 3, Dune::simplex, Dune::nonconforming>;
-      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 3>(0.0), Dune::FieldVector<ALUType::ctype, 3>(1.0), Dune::Std::make_array(1u, 1u, 1u));
+      auto alugrid = Dune::StructuredGridFactory<ALUType>::createSimplexGrid(Dune::FieldVector<ALUType::ctype, 3>(0.0), Dune::FieldVector<ALUType::ctype, 3>(1.0), std::array<uint,3>{1u, 1u, 1u});
       alugrid->globalRefine(3);
 
       // get view

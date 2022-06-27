@@ -281,7 +281,7 @@ namespace Dune {
           return this->blockCount();
 
         auto indices = std::make_index_sequence<Node::degree()>{};
-        typename Traits::SizeType _size;
+        auto _size = std::numeric_limits<typename Traits::SizeType>::max();
         std::size_t _child;
 
         if (this->containerBlocked()) {
