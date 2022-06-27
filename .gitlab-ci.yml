@@ -60,7 +60,7 @@ debian:10--gcc:
   artifacts:
     reports:
       junit: junit/*.xml
-      cobertura: coverage.xml
+  #    cobertura: coverage.xml
   # gcovr reports results (`--print-summary` option above). With this line we extract the
   # result (% of covered lines) to report them in gitlab
   coverage: /^\s*lines:\s*\d+.\d+\%/
