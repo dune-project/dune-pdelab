@@ -8,7 +8,7 @@
 #include <dune/common/deprecated.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/geometry/type.hh>
-#include <dune/localfunctions/lagrange/pk.hh>
+#include<dune/localfunctions/lagrange/lagrangesimplex.hh>
 
 #include "finiteelementmap.hh"
 

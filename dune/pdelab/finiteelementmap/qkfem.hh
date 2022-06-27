@@ -6,7 +6,7 @@
 
 #include <cstddef>
 
-#include <dune/localfunctions/lagrange/qk.hh>
+#include <dune/localfunctions/lagrange/lagrangecube.hh>
 #include <dune/pdelab/finiteelementmap/finiteelementmap.hh>
 
 namespace Dune {
@@ -16,7 +16,7 @@ namespace Dune {
     //! \ingroup FiniteElementMap
     template<typename GV, typename D, typename R, std::size_t k>
     class QkLocalFiniteElementMap
-      : public SimpleLocalFiniteElementMap<Dune::QkLocalFiniteElement<D,R,GV::dimension,k>,GV::dimension>
+      : public SimpleLocalFiniteElementMap<Dune::LagrangeCubeLocalFiniteElement<D,R,GV::dimension,k>,GV::dimension>
     {
 
     public:
