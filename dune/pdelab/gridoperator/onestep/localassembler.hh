@@ -92,6 +92,8 @@ namespace Dune{
       //! The type of the one step parameter object
       typedef Dune::PDELab::TimeSteppingParameterInterface<Real> OneStepParameters;
 
+      static constexpr bool isLinear() { return LA0::isLinear() and LA1::isLinear();}
+
       //! Constructor with empty constraints
       OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, typename Traits::Residual & const_residual_)
         : Base(la0_.trialConstraints(),la0_.testConstraints()),
