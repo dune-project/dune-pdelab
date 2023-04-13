@@ -63,11 +63,7 @@ dune_project()
 set(DUNE_TEST_MAGIC OFF)
 
 # create main library target and set up its properties
-dune_add_library(dunepdelab
-  NO_EXPORT
-  EXPORT_NAME
-    PDELab
-)
+add_library(dunepdelab)
 
 target_compile_features(dunepdelab
   PUBLIC
