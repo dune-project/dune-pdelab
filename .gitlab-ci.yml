@@ -33,9 +33,9 @@ variables:
     - "cores:4"
     - "mem:16G"
 
-debian:10--gcc:
+debian:11--gcc:
   <<: *common
-  image: registry.dune-project.org/docker/ci/debian:10
+  image: registry.dune-project.org/docker/ci/debian:11
   before_script:
     - *dune_setup
     - echo "CMAKE_FLAGS+=' -DCOVERAGE_REPORT=ON' " >> /duneci/cmake-flags/overage.opts
@@ -48,7 +48,7 @@ debian:10--gcc:
     # - Only works for gcc
     # - The gcov executable needs to match the version of the gcc toolchain
     GCOVR_OPTS:
-      --gcov-executable gcov-7
+      --gcov-executable gcov-10
       --root $CI_PROJECT_DIR
       --exclude $CI_PROJECT_DIR/dune/pdelab/test
       --exclude $CI_PROJECT_DIR/build-cmake
@@ -56,7 +56,7 @@ debian:10--gcc:
       --xml-pretty
       --print-summary
       --output $CI_PROJECT_DIR/coverage.xml
-    DUNECI_TOOLCHAIN: gcc-7-17
+    DUNECI_TOOLCHAIN: gcc-10-20
   artifacts:
     reports:
       junit: junit/*.xml
@@ -67,13 +67,13 @@ debian:10--gcc:
   # result (% of covered lines) to report them in gitlab
   coverage: /^\s*lines:\s*\d+.\d+\%/
 
-debian:10--clang:
+debian:11--clang:
   <<: *common
-  image: registry.dune-project.org/docker/ci/debian:10
+  image: registry.dune-project.org/docker/ci/debian:11
   before_script:
     - *dune_setup
   variables:
-    DUNECI_TOOLCHAIN: clang-6-17
+    DUNECI_TOOLCHAIN: clang-11-20
   artifacts:
     reports:
       junit: junit/*.xml
