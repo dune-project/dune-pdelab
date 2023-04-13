@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.6)
 
 # check if this project is called as its own cmake project (i.e. not as subdirectory)
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
-  # ...if so, find dune-assembler as if this was a downstream project
+  # ...if so, find dune-pdelab as if this was a downstream project
   find_package(Dune::PDELab REQUIRED IMPORTED)
   dune_project()
 endif()
@@ -268,6 +268,6 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vtk)
 
 # check if this project is called as its own cmake project (i.e. not as subdirectory)
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
-  # ...if so, find dune-assembler as if this was a downstream project
+  # ...if so, find dune-pdelab as if this was a downstream project
   finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
 endif()
