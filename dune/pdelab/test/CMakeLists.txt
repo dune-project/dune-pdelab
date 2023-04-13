@@ -45,7 +45,6 @@ target_compile_options(dune-pdelab-test INTERFACE
 
 target_link_libraries(dune-pdelab-test INTERFACE
   Dune::PDELab
-  GTest::gtest
   $<$<BOOL:${COVERAGE_REPORT}>:gcov>
 )
 
