@@ -1,5 +1,5 @@
 project(dune-pdelab-tests CXX)
-cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.6)
 
 # check if this project is called as its own cmake project (i.e. not as subdirectory)
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
