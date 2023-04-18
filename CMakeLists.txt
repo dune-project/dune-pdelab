@@ -16,13 +16,13 @@ endif()
 
 # find dune-common and set the module path
 find_package(dune-common REQUIRED)
-list(APPEND CMAKE_MODULE_PATH
-  "${dune-common_MODULE_PATH}"
-  "${PROJECT_SOURCE_DIR}/cmake/modules")
-
-find_package(TBB)
-find_package(Threads)
+list(APPEND CMAKE_MODULE_PATH "${dune-common_MODULE_PATH}")
 find_package(OpenMP)
+
+set(DUNE_CUSTOM_PKG_CONFIG_SECTION "
+include(CMakeFindDependencyMacro)
+find_dependency(OpenMP)
+")
 
 if (DUNE_PDELAB_ENABLE_TRACING)
   # declare and populate perfetto
@@ -38,7 +38,10 @@ if (DUNE_PDELAB_ENABLE_TRACING)
   if(NOT perfetto_POPULATED)
     message("-- Populating Perfetto")
     FetchContent_Populate(perfetto)
-    add_library(perfetto-sdk STATIC "${perfetto_SOURCE_DIR}/sdk/perfetto.cc")
+    # add_library(perfetto-sdk STATIC "${perfetto_SOURCE_DIR}/sdk/perfetto.cc")
+    dune_add_library(perfetto-sdk STATIC
+      SOURCES "${perfetto_SOURCE_DIR}/sdk/perfetto.cc"
+      EXPORT_NAME Perfetto::SDK)
     target_link_libraries(perfetto-sdk PUBLIC $<$<BOOL:${Threads_FOUND}>:Threads::Threads>)
     target_compile_definitions(perfetto-sdk INTERFACE HAVE_PERFETTO)
     install(DIRECTORY ${perfetto_SOURCE_DIR}/sdk DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/external/perfetto-sdk)
@@ -47,9 +50,6 @@ if (DUNE_PDELAB_ENABLE_TRACING)
         $<BUILD_INTERFACE:${perfetto_SOURCE_DIR}/sdk>
         $<INSTALL_INTERFACE:dune/external/perfetto-sdk>
       )
-    install(TARGETS perfetto-sdk EXPORT dune-pdelab-targets RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-    add_library(Dune::Perfetto::SDK ALIAS perfetto-sdk)
-    set_property(TARGET perfetto-sdk PROPERTY EXPORT_NAME Perfetto::SDK)
   endif()
 endif()
 
@@ -63,7 +63,7 @@ dune_project()
 set(DUNE_TEST_MAGIC OFF)
 
 # create main library target and set up its properties
-add_library(dunepdelab)
+dune_add_library(dunepdelab EXPORT_NAME PDELab)
 
 target_compile_features(dunepdelab
   PUBLIC
@@ -75,19 +75,16 @@ target_link_libraries(dunepdelab
     ${DUNE_LIBS}
     $<$<BOOL:${TBB_FOUND}>:TBB::tbb>
     $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
-    $<$<TARGET_EXISTS:Dune::Perfetto::SDK>:Dune::Perfetto::SDK>
+    $<$<BOOL:${DUNE_PDELAB_ENABLE_TRACING}>:Dune::Perfetto::SDK>
 )
 
 target_sources(dunepdelab
   PRIVATE
     $<$<NOT:$<BOOL:${MINGW}>>:dune/pdelab/common/clock.cc>
-    $<$<TARGET_EXISTS:Dune::Perfetto::SDK>:dune/pdelab/common/trace.cc>
+    $<$<BOOL:${DUNE_PDELAB_ENABLE_TRACING}>:dune/pdelab/common/trace.cc>
     dune/pdelab/common/hostname.cc
     dune/pdelab/common/logtag.cc
 )
-
-add_library(Dune::PDELab ALIAS dunepdelab)
-set_property(TARGET dunepdelab PROPERTY EXPORT_NAME PDELab)
 
 add_subdirectory(doc)
 add_subdirectory(dune)
@@ -96,23 +93,3 @@ add_subdirectory(lib)
 
 # finalize the dune project, e.g. generating config.h etc.
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
-
-# taget configuration for downstream projects
-install(TARGETS dunepdelab
-        EXPORT dune-pdelab-targets
-        LIBRARY DESTINATION "${DUNE_INSTALL_LIBDIR}"
-        ARCHIVE DESTINATION "${DUNE_INSTALL_LIBDIR}"
-)
-
-# export targets to be used with installed tree
-install(EXPORT dune-pdelab-targets
-        FILE dune-pdelab-targets.cmake
-        NAMESPACE Dune::
-        DESTINATION "${DUNE_INSTALL_LIBDIR}/cmake/dune-pdelab"
-)
-
-# export targets to be used with build tree
-export(EXPORT dune-pdelab-targets
-       FILE "${CMAKE_CURRENT_BINARY_DIR}/dune-pdelab-targets.cmake"
-       NAMESPACE Dune::
-)
