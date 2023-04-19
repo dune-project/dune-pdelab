@@ -1,4 +1,9 @@
 include(UseEigen)
+include(UseOpenMP)
+
+if(DUNE_PDELAB_ENABLE_TRACING)
+  include(UsePerfetto)
+endif()
 
 # Trying to run a sequential UG in a parallel PDELab application
 # will result in very subtle errors. We therefore issue a warning

@@ -2,7 +2,7 @@
 project("dune-pdelab" C CXX)
 
 # general stuff
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.13)
 
 # configuration options
 option(DUNE_PDELAB_ENABLE_TRACING "Enable tracing with Perfetto")
@@ -17,41 +17,6 @@ endif()
 # find dune-common and set the module path
 find_package(dune-common REQUIRED)
 list(APPEND CMAKE_MODULE_PATH "${dune-common_MODULE_PATH}")
-find_package(OpenMP)
-
-set(DUNE_CUSTOM_PKG_CONFIG_SECTION "
-include(CMakeFindDependencyMacro)
-find_dependency(OpenMP)
-")
-
-if (DUNE_PDELAB_ENABLE_TRACING)
-  # declare and populate perfetto
-  include(FetchContent)
-  message("-- Declaring Perfetto")
-  FetchContent_Declare(
-    perfetto
-    GIT_REPOSITORY https://android.googlesource.com/platform/external/perfetto
-    GIT_TAG        v32.1
-  )
-
-  # configure perfetto targets
-  if(NOT perfetto_POPULATED)
-    message("-- Populating Perfetto")
-    FetchContent_Populate(perfetto)
-    # add_library(perfetto-sdk STATIC "${perfetto_SOURCE_DIR}/sdk/perfetto.cc")
-    dune_add_library(perfetto-sdk STATIC
-      SOURCES "${perfetto_SOURCE_DIR}/sdk/perfetto.cc"
-      EXPORT_NAME Perfetto::SDK)
-    target_link_libraries(perfetto-sdk PUBLIC $<$<BOOL:${Threads_FOUND}>:Threads::Threads>)
-    target_compile_definitions(perfetto-sdk INTERFACE HAVE_PERFETTO)
-    install(DIRECTORY ${perfetto_SOURCE_DIR}/sdk DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/external/perfetto-sdk)
-    target_include_directories(perfetto-sdk
-      PUBLIC
-        $<BUILD_INTERFACE:${perfetto_SOURCE_DIR}/sdk>
-        $<INSTALL_INTERFACE:dune/external/perfetto-sdk>
-      )
-  endif()
-endif()
 
 # include the dune macros
 include(DuneMacros)
@@ -75,7 +40,7 @@ target_link_libraries(dunepdelab
     ${DUNE_LIBS}
     $<$<BOOL:${TBB_FOUND}>:TBB::tbb>
     $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
-    $<$<BOOL:${DUNE_PDELAB_ENABLE_TRACING}>:Dune::Perfetto::SDK>
+    $<$<BOOL:${DUNE_PDELAB_ENABLE_TRACING}>:Perfetto::SDK>
 )
 
 target_sources(dunepdelab
