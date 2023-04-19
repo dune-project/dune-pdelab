@@ -29,6 +29,7 @@ target_compile_options(dunepdelab-test
 target_link_libraries(dunepdelab-test
   INTERFACE
     dunepdelab
+    GTest::gtest
     $<$<BOOL:${COVERAGE_REPORT}>:gcov>
 )
 
@@ -39,6 +40,8 @@ target_compile_features(dunepdelab-test
 
 # add test target to dune packages so that dune_add_test links agains it
 dune_register_package_flags(LIBRARIES dunepdelab-test)
+
+add_subdirectory(common)
 
 # include tests executables
 add_subdirectory(fem)

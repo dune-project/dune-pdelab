@@ -32,9 +32,13 @@ namespace Dune {
 
     public:
 
+      typedef typename base_type::value_type value_type;
+      typedef typename base_type::const_reference reference;
+      typedef typename base_type::const_reference const_reference;
+      typedef typename base_type::size_type size_type;
+
       //! The maximum possible depth of the MultiIndex.
       static const std::size_t max_depth = n;
-      using typename base_type::size_type;
 
       class View
       {
@@ -156,13 +160,87 @@ namespace Dune {
         this->push_back(index);
       }
 
-      //! Erases the first element of the multi-index, O(N) time.
+      friend reference front(MultiIndex& mi){
+        return mi.front();
+      }
+
+      friend const_reference front(const MultiIndex& mi){
+        return mi.front();
+      }
+
+      friend reference back(MultiIndex& mi) {
+        return mi.back();
+      }
+
+      friend const_reference back(const MultiIndex& mi) {
+        return mi.back();
+      }
+
+      friend MultiIndex push_back(MultiIndex mi, const value_type& t)
+      {
+        mi.push_back(t);
+        return mi;
+      }
+
+      //! Appends an element to the beginning of a vector, up to the maximum size n, O(n) time.
+      void push_front(const value_type& t)
+      {
+        size_type sz = this->size() + 1;
+        this->resize(sz);
+        std::copy_backward(std::begin(*this), std::begin(*this)+sz-1, std::begin(*this)+sz);
+        (*this)[0] = t;
+      }
+
+      friend MultiIndex push_front(MultiIndex mi, const value_type& t)
+      {
+        mi.push_front(t);
+        return mi;
+      }
+
+      friend MultiIndex pop_back(MultiIndex mi)
+      {
+        mi.pop_back();
+        return mi;
+      }
+
+      //! Erases the last element of the vector, O(1) time.
       void pop_front()
       {
         size_type sz = this->size();
         assert(not this->empty());
-        std::copy(std::begin(*this)+1, std::begin(*this)+sz, std::begin(*this));
+        if (sz > 1)
+          std::copy(std::begin(*this)+1, std::begin(*this)+sz, std::begin(*this));
         this->resize(--sz);
+      }
+
+      friend MultiIndex pop_front(MultiIndex mi)
+      {
+        mi.pop_front();
+        return mi;
+      }
+
+      friend MultiIndex& accumulate_back(MultiIndex& mi, const value_type& t) {
+        mi.back() += t;
+        return mi;
+      }
+
+      friend MultiIndex& accumulate_front(MultiIndex& mi, const value_type& t) {
+        mi.front() += t;
+        return mi;
+      }
+
+      friend MultiIndex join(MultiIndex head, const MultiIndex& tail) {
+        assert(head.size() + tail.size() <= MultiIndex::max_size());
+        size_type head_size = head.size();
+        head.resize(head.size() + tail.size());
+        std::copy(head.begin()+head_size, head.end(), tail.begin());
+        return head;
+      }
+
+      friend MultiIndex reverse(MultiIndex rv) {
+        if constexpr (MultiIndex::max_size() > 1)
+          std::reverse(rv.begin(),rv.end());
+        return rv;
       }
 
       //! Writes a pretty representation of the MultiIndex to the given std::ostream.
