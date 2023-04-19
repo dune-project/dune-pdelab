@@ -34,7 +34,7 @@ if (NOT GTest_FOUND)
   endif()
 endif()
 
-# create main library target
+# create main testing library
 dune_add_library(dunepdelab-test INTERFACE NO_EXPORT)
 
 target_compile_options(dunepdelab-test INTERFACE
@@ -47,6 +47,9 @@ target_link_libraries(dunepdelab-test INTERFACE
   dunepdelab
   $<$<BOOL:${COVERAGE_REPORT}>:gcov>
 )
+
+# add test target to dune packages so that dune_add_test links agains it
+dune_register_package_flags(LIBRARIES dunepdelab-test)
 
 # include tests executables
 add_subdirectory(fem)
