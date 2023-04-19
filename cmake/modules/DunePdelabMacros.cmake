@@ -1,8 +1,8 @@
-include(UseEigen)
-include(UseOpenMP)
+include(DuneAddEigen)
+include(DuneAddOpenMP)
 
 if(DUNE_PDELAB_ENABLE_TRACING)
-  include(UsePerfetto)
+  include(DuneAddPerfetto)
 endif()
 
 # Trying to run a sequential UG in a parallel PDELab application

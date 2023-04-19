@@ -1,6 +1,7 @@
 install(FILES DunePdelabMacros.cmake
-              UseEigen.cmake
+              DuneAddEigen.cmake
               DuneAddGTest.cmake
+              DuneAddOpenMP.cmake
+              DuneAddPerfetto.cmake
               UsePerfetto.cmake
-              UseOpenMP.cmake
         DESTINATION ${DUNE_INSTALL_MODULEDIR})
