@@ -19,15 +19,22 @@ include(DuneAddGTest)
 # create main testing library
 dune_add_library(dunepdelab-test INTERFACE NO_EXPORT)
 
-target_compile_options(dunepdelab-test INTERFACE
-  -Wall
-  -pedantic
-  $<$<BOOL:${COVERAGE_REPORT}>:--coverage>
+target_compile_options(dunepdelab-test
+  INTERFACE
+    -Wall
+    -pedantic
+    $<$<BOOL:${COVERAGE_REPORT}>:--coverage>
 )
 
-target_link_libraries(dunepdelab-test INTERFACE
-  dunepdelab
-  $<$<BOOL:${COVERAGE_REPORT}>:gcov>
+target_link_libraries(dunepdelab-test
+  INTERFACE
+    dunepdelab
+    $<$<BOOL:${COVERAGE_REPORT}>:gcov>
+)
+
+target_compile_features(dunepdelab-test
+  INTERFACE
+    cxx_std_20
 )
 
 # add test target to dune packages so that dune_add_test links agains it

@@ -30,11 +30,6 @@ set(DUNE_TEST_MAGIC OFF)
 # create main library target and set up its properties
 dune_add_library(dunepdelab EXPORT_NAME PDELab)
 
-target_compile_features(dunepdelab
-  PUBLIC
-    cxx_std_20
-)
-
 target_link_libraries(dunepdelab
   PUBLIC
     ${DUNE_LIBS}
