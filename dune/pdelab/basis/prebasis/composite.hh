@@ -1,8 +1,8 @@
-#ifndef DUNE_ASSEMBLER_SPACE_COMPOSITE_HH
-#define DUNE_ASSEMBLER_SPACE_COMPOSITE_HH
+#ifndef DUNE_PDELAB_BASIS_PREBASIS_COMPOSITE_HH
+#define DUNE_PDELAB_BASIS_PREBASIS_COMPOSITE_HH
 
-#include <dune/assembler/space/concept.hh>
-#include <dune/assembler/space/base.hh>
+#include <dune/pdelab/basis/prebasis/concept.hh>
+#include <dune/pdelab/basis/prebasis/node.hh>
 
 #include <dune/typetree/compositenode.hh>
 #include <dune/typetree/dynamicpowernode.hh>
@@ -15,7 +15,7 @@
 #include <tuple>
 #include <vector>
 
-namespace Dune::Assembler {
+namespace Dune::PDELab::inline Experimental {
 
 /**
  * @brief Array node of Space
@@ -25,20 +25,20 @@ namespace Dune::Assembler {
  * @tparam degree           Size of the array
  */
 template<class MergingStrategy,
-         Concept::Impl::SpaceNode Node,
+         Concept::Impl::PreBasisNode Node,
          std::size_t degree>
-class ArraySpace
+class PreBasisArray
   : public TypeTree::PowerNode<Node, degree>
-  , public SpaceNode<SpaceNodeTraits<MergingStrategy>>
+  , public PreBasisNode<PreBasisNodeTraits<MergingStrategy>>
 {
 private:
   using TreeNode = TypeTree::PowerNode<Node, degree>;
-  using BaseNode = SpaceNode<SpaceNodeTraits<MergingStrategy>>;
+  using BaseNode = PreBasisNode<PreBasisNodeTraits<MergingStrategy>>;
 
 public:
   using typename BaseNode::Traits;
 
-  ArraySpace(
+  PreBasisArray(
     const MergingStrategy& merging_strategy,
     const std::array<std::shared_ptr<Node>, degree>& nodes)
     : TreeNode{ nodes }
@@ -46,7 +46,7 @@ public:
   {
   }
 
-  ArraySpace(const ArraySpace&) = default;
+  PreBasisArray(const PreBasisArray&) = default;
 };
 
 /**
@@ -54,16 +54,16 @@ public:
  *
  * @param merging_strategy  Merging strategy
  * @param nodes             Array of Space
- * @return auto             ArraySpace
+ * @return auto             PreBasisArray
  */
-template<class MergingStrategy, class Node, std::size_t degree>
+template<class MergingStrategy, Concept::Impl::PreBasisNode Node, std::size_t degree>
 auto
-makeCompositeSpace(const MergingStrategy& merging_strategy, const std::array<Node, degree>& nodes)
+composite(const MergingStrategy& merging_strategy, const std::array<Node, degree>& nodes)
 {
   std::array<std::shared_ptr<Node>, degree> storage;
   for (std::size_t i = 0; i < degree; ++i)
     storage[i] = std::make_shared<Node>(nodes[i]);
-  using DFS = ArraySpace<MergingStrategy, Node, degree>;
+  using DFS = PreBasisArray<MergingStrategy, Node, degree>;
   return DFS{ merging_strategy, storage };
 }
 
@@ -73,25 +73,25 @@ makeCompositeSpace(const MergingStrategy& merging_strategy, const std::array<Nod
  * @tparam MergingStrategy  Merging strategy
  * @tparam Node             A Space node type
  */
-template<class MergingStrategy, Concept::Impl::SpaceNode Node>
-class VectorSpace
+template<class MergingStrategy, Concept::Impl::PreBasisNode Node>
+class PreBasisVector
   : public TypeTree::DynamicPowerNode<Node>
-  , public SpaceNode<SpaceNodeTraits<MergingStrategy>>
+  , public PreBasisNode<PreBasisNodeTraits<MergingStrategy>>
 {
 private:
   using TreeNode = TypeTree::DynamicPowerNode<Node>;
-  using BaseNode = SpaceNode<SpaceNodeTraits<MergingStrategy>>;
+  using BaseNode = PreBasisNode<PreBasisNodeTraits<MergingStrategy>>;
 
 public:
   using typename BaseNode::Traits;
 
-  VectorSpace(const MergingStrategy& merging_strategy, const std::vector<std::shared_ptr<Node>>& nodes)
+  PreBasisVector(const MergingStrategy& merging_strategy, const std::vector<std::shared_ptr<Node>>& nodes)
     : TreeNode{ nodes }
     , BaseNode{ merging_strategy }
   {
   }
 
-  VectorSpace(const VectorSpace&) = default;
+  PreBasisVector(const PreBasisVector&) = default;
 };
 
 /**
@@ -99,16 +99,16 @@ public:
  *
  * @param merging_strategy  Merging strategy
  * @param nodes             Vector of Space
- * @return auto             VectorSpace
+ * @return auto             PreBasisVector
  */
-template<class MergingStrategy, class Node>
+template<class MergingStrategy, Concept::Impl::PreBasisNode Node>
 auto
-makeCompositeSpace(const MergingStrategy& merging_strategy, const std::vector<Node>& nodes)
+composite(const MergingStrategy& merging_strategy, const std::vector<Node>& nodes)
 {
   std::vector<std::shared_ptr<Node>> storage(nodes.size());
   for (std::size_t i = 0; i < nodes.size(); ++i)
     storage[i] = std::make_shared<Node>(nodes[i]);
-  using DFS = VectorSpace<MergingStrategy, Node>;
+  using DFS = PreBasisVector<MergingStrategy, Node>;
   return DFS{ merging_strategy, storage };
 }
 
@@ -118,25 +118,25 @@ makeCompositeSpace(const MergingStrategy& merging_strategy, const std::vector<No
  * @tparam MergingStrategy  Merging strategy
  * @tparam Nodes            Space node types
  */
-template<class MergingStrategy, Concept::Impl::SpaceNode... Nodes>
-class TupleSpace
+template<class MergingStrategy, Concept::Impl::PreBasisNode... Nodes>
+class PreBasisTuple
   : public TypeTree::CompositeNode<Nodes...>
-  , public SpaceNode<SpaceNodeTraits<MergingStrategy>>
+  , public PreBasisNode<PreBasisNodeTraits<MergingStrategy>>
 {
 private:
   using TreeNode = TypeTree::CompositeNode<Nodes...>;
-  using BaseNode = SpaceNode<SpaceNodeTraits<MergingStrategy>>;
+  using BaseNode = PreBasisNode<PreBasisNodeTraits<MergingStrategy>>;
 
 public:
   using typename BaseNode::Traits;
 
-  TupleSpace(const MergingStrategy& merging_strategy, const std::tuple<std::shared_ptr<Nodes>...>& nodes)
+  PreBasisTuple(const MergingStrategy& merging_strategy, const std::tuple<std::shared_ptr<Nodes>...>& nodes)
     : TreeNode{ nodes }
     , BaseNode{ merging_strategy }
   {
   }
 
-  TupleSpace(const TupleSpace&) = default;
+  PreBasisTuple(const PreBasisTuple&) = default;
 };
 
 /**
@@ -144,11 +144,11 @@ public:
  *
  * @param merging_strategy  Merging strategy
  * @param nodes             Tuple of Space
- * @return auto             TupleSpace
+ * @return auto             PreBasisTuple
  */
-template<class MergingStrategy, class... Nodes>
+template<class MergingStrategy, Concept::Impl::PreBasisNode... Nodes>
 auto
-makeCompositeSpace(const MergingStrategy& merging_strategy, const std::tuple<Nodes...>& nodes)
+composite(const MergingStrategy& merging_strategy, const std::tuple<Nodes...>& nodes)
 {
   using TypeTuple = std::tuple<Nodes...>;
   using Storage = std::tuple<std::shared_ptr<Nodes>...>;
@@ -159,10 +159,10 @@ makeCompositeSpace(const MergingStrategy& merging_strategy, const std::tuple<Nod
         std::get<i>(nodes))... };
     },
     sequence);
-  using DFS = TupleSpace<MergingStrategy, Nodes...>;
+  using DFS = PreBasisTuple<MergingStrategy, Nodes...>;
   return DFS{ merging_strategy, storage };
 }
 
-} // namespace Dune::Assembler
+} // namespace Dune::PDELab::inline Experimental
 
-#endif // DUNE_ASSEMBLER_SPACE_COMPOSITE_HH
+#endif // DUNE_PDELAB_BASIS_PREBASIS_COMPOSITE_HH

@@ -1,14 +1,15 @@
-#ifndef DUNE_ASSEMBLER_SPACE_CONSTRAINTS_CONTAINER_EMPTY_HH
-#define DUNE_ASSEMBLER_SPACE_CONSTRAINTS_CONTAINER_EMPTY_HH
+#ifndef DUNE_PDELAB_BASIS_CONSTRAINTS_CONTAINER_EMPTY_HH
+#define DUNE_PDELAB_BASIS_CONSTRAINTS_CONTAINER_EMPTY_HH
 
-#include <dune/assembler/concepts/space.hh>
-
+// #include <dune/pdelab/concepts/space.hh>
+#include <dune/pdelab/concepts/tree.hh>
 #include <dune/typetree/leafnode.hh>
 
 #include <utility>
 #include <span>
+#include <memory>
 
-namespace Dune::Assembler {
+namespace Dune::PDELab::inline Experimental {
 
   template<Concept::MultiIndex ContainerIndex, Dune::Concept::GridView EntitySet>
   struct EmptyConstraintsContainer : public TypeTree::LeafNode {
@@ -26,8 +27,8 @@ namespace Dune::Assembler {
 
     static std::size_t size() { return 0; }
 
-    void globalCompress(Concept::Space auto space) {}
-    void localCompress(Concept::LocalSpaceTree auto& lspace_tree) {}
+    void globalCompress(/*Concept::Space*/ auto space) {}
+    void localCompress(/*Concept::LocalSpaceTree*/ auto& lspace_tree) {}
 
     class LeafLocalView : public TypeTree::LeafNode {
     public:
@@ -75,6 +76,6 @@ namespace Dune::Assembler {
   };
 
 
-} // namespace Dune::Assembler
+} // namespace Dune::PDELab::inline Experimental
 
-#endif // DUNE_ASSEMBLER_SPACE_CONSTRAINTS_CONTAINER_EMPTY_HH
+#endif // DUNE_PDELAB_BASIS_CONSTRAINTS_CONTAINER_EMPTY_HH

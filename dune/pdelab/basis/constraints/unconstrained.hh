@@ -1,15 +1,15 @@
-#ifndef DUNE_ASSEMBLER_SPACE_CONSTRAINTS_UNCONSTRAINED_HH
-#define DUNE_ASSEMBLER_SPACE_CONSTRAINTS_UNCONSTRAINED_HH
+#ifndef DUNE_PDELAB_BASIS_CONSTRAINTS_UNCONSTRAINED_HH
+#define DUNE_PDELAB_BASIS_CONSTRAINTS_UNCONSTRAINED_HH
 
-#include <dune/assembler/concepts/multiindex.hh>
+#include <dune/pdelab/concepts/multiindex.hh>
 
-#include <dune/assembler/space/constraints/container_empty.hh>
+#include <dune/pdelab/basis/constraints/container_empty.hh>
 
 #include <dune/typetree/leafnode.hh>
 
 #include <dune/grid/concepts/gridview.hh>
 
-namespace Dune::Assembler {
+namespace Dune::PDELab::Experimental {
 
   struct Unconstrained : public TypeTree::LeafNode {
 
@@ -23,24 +23,24 @@ namespace Dune::Assembler {
     static constexpr bool doConstrainSkeleton() {return false;}
     static constexpr bool doConstrainVolume()   {return false;}
 
-    void constrainVolume(const Concept::LocalSpaceTree auto& lspace, auto& container) const
+    void constrainVolume(/*const Concept::LocalSpaceTree*/ auto& lspace, auto& container) const
     {}
 
     void constrainSkeleton(
       const Dune::Concept::Intersection auto& intersection,
-      const Concept::LocalSpaceTree auto& lspace_in,
-      const Concept::LocalSpaceTree auto& lspace_out,
+      const /*Concept::LocalSpaceTree*/ auto& lspace_in,
+      const /*Concept::LocalSpaceTree*/ auto& lspace_out,
       auto& container) const
     {}
 
     void constrainBoundary(
       const Dune::Concept::Intersection auto& intersection,
-      const Concept::LocalSpaceTree auto& lspace_in,
+      const /*Concept::LocalSpaceTree*/ auto& lspace_in,
       auto& container) const
     {}
   };
 
 
-} // namespace Dune::Assembler
+} // namespace Dune::PDELab::Experimental
 
-#endif // DUNE_ASSEMBLER_SPACE_CONSTRAINTS_UNCONSTRAINED_HH
+#endif // DUNE_PDELAB_BASIS_CONSTRAINTS_UNCONSTRAINED_HH

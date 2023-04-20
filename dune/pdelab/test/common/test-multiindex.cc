@@ -44,11 +44,11 @@ TEST(TestMultiIndex, TestReservedMultiIndex) {
 }
 
 TEST(TestMultiIndex, TestHybridMultiIndex) {
-  using Dune::TypeTree::hybridTreePath;
+  using Dune::TypeTree::treePath;
   using namespace Dune::PDELab;
   using namespace Dune::Indices;
 
-  constexpr Concept::MultiIndex auto mi = hybridTreePath(_1,3,_2,5);
+  constexpr Concept::MultiIndex auto mi = treePath(_1,3,_2,5);
 
   EXPECT_EQ(mi[_0], 1);
   EXPECT_EQ(mi[3], 5);
@@ -71,8 +71,8 @@ TEST(TestMultiIndex, TestHybridMultiIndex) {
   // std::unordered_map<MI, int> map;
 
   // map[mi] = 2;
-  // map[hybridTreePath(_1,4,_2,6)] = 3;
+  // map[treePath(_1,4,_2,6)] = 3;
 
   // EXPECT_EQ(map[mi], 2);
-  // EXPECT_EQ(map[hybridTreePath(_1,4,_2,6)], 3);
+  // EXPECT_EQ(map[treePath(_1,4,_2,6)], 3);
 }

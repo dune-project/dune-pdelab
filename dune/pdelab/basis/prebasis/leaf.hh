@@ -1,15 +1,15 @@
-#ifndef DUNE_ASSEMBLER_SPACE_LEAF_HH
-#define DUNE_ASSEMBLER_SPACE_LEAF_HH
+#ifndef DUNE_PDELAB_BASIS_PREBASIS_LEAF_HH
+#define DUNE_PDELAB_BASIS_PREBASIS_LEAF_HH
 
-#include <dune/assembler/space/base.hh>
-#include <dune/assembler/space/constraints/unconstrained.hh>
+#include <dune/pdelab/basis/prebasis/node.hh>
+#include <dune/pdelab/basis/constraints/unconstrained.hh>
 
 #include <dune/typetree/leafnode.hh>
 
 #include <memory>
 #include <utility>
 
-namespace Dune::Assembler {
+namespace Dune::PDELab::inline Experimental {
 
 /**
  * @brief Traits for leaf Space
@@ -19,8 +19,8 @@ namespace Dune::Assembler {
  * @tparam CON  Constraint operator
  */
 template<class MS, class FEM, class CO>
-struct LeafSpaceTraits
-  : public SpaceNodeTraits<MS>
+struct PreBasisLeafTraits
+  : public PreBasisNodeTraits<MS>
 {
   //! Finite element map
   using FiniteElementMap = FEM;
@@ -36,11 +36,11 @@ struct LeafSpaceTraits
  * @tparam CON  Constraint
  */
 template<class MergingStrategy, class FiniteElementMap, class ConstraintsOperator>
-class LeafSpace
+class PreBasis
   : public TypeTree::LeafNode
-  , public SpaceNode<LeafSpaceTraits<MergingStrategy,FiniteElementMap,ConstraintsOperator>>
+  , public PreBasisNode<PreBasisLeafTraits<MergingStrategy,FiniteElementMap,ConstraintsOperator>>
 {
-  using BaseNode = SpaceNode<LeafSpaceTraits<MergingStrategy,FiniteElementMap,ConstraintsOperator>>;
+  using BaseNode = PreBasisNode<PreBasisLeafTraits<MergingStrategy,FiniteElementMap,ConstraintsOperator>>;
   using TreeNode = TypeTree::LeafNode;
 
 public:
@@ -55,7 +55,7 @@ public:
    * @param fem               Finite element mapper
    * @param constraints_op       ConstraintsOperator
    */
-  LeafSpace(const MergingStrategy& merging_strategy,
+  PreBasis(const MergingStrategy& merging_strategy,
             std::shared_ptr<const FiniteElementMap> fem,
             const ConstraintsOperator& constraints_op)
     : BaseNode{ merging_strategy }
@@ -65,7 +65,7 @@ public:
   }
 
   //! Copy constructor
-  LeafSpace(const LeafSpace&) = default;
+  PreBasis(const PreBasis&) = default;
 
   //! Get finite element map
   const FiniteElementMap& finiteElementMap() const
@@ -80,13 +80,13 @@ public:
 
 
   //! Compare if two leaf nodes are the same
-  bool operator==(const LeafSpace& other) const
+  bool operator==(const PreBasis& other) const
   {
     return (other._finite_element_map == _finite_element_map);
   }
 
   //! Compare if two leaf nodes are different
-  bool operator!=(const LeafSpace& other) const
+  bool operator!=(const PreBasis& other) const
   {
     return not(*this == other);
   }
@@ -111,24 +111,24 @@ template<class MergingStrategy,
          class FiniteElementMapStorage,
          class ConstraintsOperator>
 auto
-makeLeafSpace(const MergingStrategy& merging_strategy,
+makePreBasis(const MergingStrategy& merging_strategy,
               FiniteElementMapStorage fem,
               const ConstraintsOperator& constraints_op)
 {
   using FEM = std::remove_const_t<typename FiniteElementMapStorage::element_type>;
-  using LeafDFS = LeafSpace<MergingStrategy, FEM, ConstraintsOperator>;
+  using LeafDFS = PreBasis<MergingStrategy, FEM, ConstraintsOperator>;
   return LeafDFS{ merging_strategy, std::move(fem), constraints_op };
 }
 
 template<class MergingStrategy,
          class FiniteElementMapStorage>
 auto
-makeLeafSpace(const MergingStrategy& merging_strategy,
+makePreBasis(const MergingStrategy& merging_strategy,
               FiniteElementMapStorage fem)
 {
-  return makeLeafSpace(merging_strategy, std::move(fem), Unconstrained{});
+  return makePreBasis(merging_strategy, std::move(fem), Unconstrained{});
 }
 
-} // namespace Dune::Assembler
+} // namespace Dune::PDELab::inline Experimental
 
-#endif // DUNE_ASSEMBLER_SPACE_LEAF_HH
+#endif // DUNE_PDELAB_BASIS_PREBASIS_LEAF_HH

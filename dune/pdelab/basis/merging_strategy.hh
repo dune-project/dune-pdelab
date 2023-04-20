@@ -1,23 +1,23 @@
-#ifndef DUNE_ASSEMBLER_DISCRETE_FUNCTION_SPACE_MERGING_STRATEGY_HH
-#define DUNE_ASSEMBLER_DISCRETE_FUNCTION_SPACE_MERGING_STRATEGY_HH
+#ifndef DUNE_PDELAB_BASIS_MERGING_STRATEGY_HH
+#define DUNE_PDELAB_BASIS_MERGING_STRATEGY_HH
 
 //! maximum grid world dimension
-#ifndef DUNE_ASSEMBLER_MAX_WORLDDIM
-#define DUNE_ASSEMBLER_MAX_WORLDDIM 32
+#ifndef DUNE_PDELAB_MAX_WORLDDIM
+#define DUNE_PDELAB_MAX_WORLDDIM 32
 #endif
 
 #include <dune/grid/concepts/gridview.hh>
 
 #include <bitset>
 
-namespace Dune::Assembler {
+namespace Dune::PDELab::inline Experimental {
 inline namespace Strategy {
 
 template<bool ContainerBlocked>
 struct DefaultStrategy
 {
   using SizeType = std::size_t;
-  using CodimFlag = std::bitset<DUNE_ASSEMBLER_MAX_WORLDDIM>;
+  using CodimFlag = std::bitset<DUNE_PDELAB_MAX_WORLDDIM>;
   static constexpr bool Blocked = ContainerBlocked;
 };
 
@@ -75,6 +75,6 @@ blockedByEntity(const EntitySet& entity_Set)
 
 } // namespace Strategy
 
-} // namespace Dune::Assembler
+} // namespace Dune::PDELab::inline Experimental
 
-#endif // DUNE_ASSEMBLER_DISCRETE_FUNCTION_SPACE_MERGING_STRATEGY_HH
+#endif // DUNE_PDELAB_BASIS_MERGING_STRATEGY_HH

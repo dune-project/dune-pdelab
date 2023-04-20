@@ -1,10 +1,10 @@
-#ifndef DUNE_ASSEMBLER_SPACE_BASE_HH
-#define DUNE_ASSEMBLER_SPACE_BASE_HH
+#ifndef DUNE_PDELAB_BASIS_PREBASIS_NODE_HH
+#define DUNE_PDELAB_BASIS_PREBASIS_NODE_HH
 
 #include <string>
 #include <utility>
 
-namespace Dune::Assembler {
+namespace Dune::PDELab::inline Experimental {
 
 /**
  * @brief Traits for Space nodes
@@ -12,7 +12,7 @@ namespace Dune::Assembler {
  * @tparam MS  a merging strategy
  */
 template<class MS>
-struct SpaceNodeTraits
+struct PreBasisNodeTraits
 {
   using MergingStrategy = MS;
 };
@@ -23,7 +23,7 @@ struct SpaceNodeTraits
  * @tparam NodeTraits Traits for this node
  */
 template<class NodeTraits>
-class SpaceNode
+class PreBasisNode
 {
 public:
   using Traits = NodeTraits;
@@ -34,7 +34,7 @@ public:
    * @param merging_strategy  rvalue or lvalue merging strategy
    */
   template<class MergingStrategy>
-  SpaceNode(MergingStrategy&& merging_strategy)
+  PreBasisNode(MergingStrategy&& merging_strategy)
     : _merging_strategy{ std::forward<MergingStrategy>(merging_strategy) }
   {
   }
@@ -62,6 +62,6 @@ private:
   typename Traits::MergingStrategy _merging_strategy;
 };
 
-} // namespace Dune::Assembler
+} // namespace Dune::PDELab::inline Experimental
 
-#endif // DUNE_ASSEMBLER_SPACE_BASE_HH
+#endif // DUNE_PDELAB_BASIS_PREBASIS_NODE_HH

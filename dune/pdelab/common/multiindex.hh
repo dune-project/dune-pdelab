@@ -3,9 +3,11 @@
 #ifndef DUNE_PDELAB_COMMON_MULTIINDEX_HH
 #define DUNE_PDELAB_COMMON_MULTIINDEX_HH
 
-#include <dune/common/reservedvector.hh>
+#include <dune/typetree/treepath.hh>
+
 #include <dune/geometry/typeindex.hh>
 
+#include <dune/common/reservedvector.hh>
 #include <dune/common/hash.hh>
 
 #include <algorithm>
@@ -153,6 +155,30 @@ namespace Dune {
       {
         this->resize(view.size());
       }
+
+
+      MultiIndex(const ReservedVector<T,n>& rv) : ReservedVector<T,n>{rv}
+      {}
+
+      template<std::size_t _n>
+      requires (n != _n)
+      MultiIndex(const MultiIndex<T,_n>& rv)
+      {
+        assert(rv.size() <= n);
+        this->resize(rv.size());
+        for (std::size_t i = 0; i < std::min(n,_n); ++i)
+          (*this)[i] = rv[i];
+      }
+
+      template<class... U>
+      MultiIndex(const TypeTree::HybridTreePath<U...>& tp)
+      {
+        this->resize(tp.size());
+        Dune::Hybrid::forEach(tp.enumerate(),[&](auto i){
+          (*this)[i] = tp[i];
+        });
+      }
+
 
       void set(typename ReservedVector<T,n>::value_type index)
       {

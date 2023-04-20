@@ -1,13 +1,13 @@
-#ifndef DUNE_ASSEMBLER_SPACE_ORDERING_HH
-#define DUNE_ASSEMBLER_SPACE_ORDERING_HH
+#ifndef DUNE_PDELAB_BASIS_ORDERING_HH
+#define DUNE_PDELAB_BASIS_ORDERING_HH
 
-#include <dune/assembler/space/concept.hh>
-#include <dune/assembler/space/ordering/entity.hh>
-#include <dune/assembler/space/ordering/entityset.hh>
-#include <dune/assembler/space/ordering/lexicographic.hh>
-#include <dune/assembler/space/merging_strategy.hh>
+#include <dune/pdelab/basis/concept.hh>
+// #include <dune/pdelab/basis/ordering/entity.hh>
+// #include <dune/pdelab/basis/ordering/entityset.hh>
+// #include <dune/pdelab/basis/ordering/lexicographic.hh>
+// #include <dune/pdelab/basis/merging_strategy.hh>
 
-namespace Dune::Assembler::Impl {
+namespace Dune::PDELab::Impl {
 
   /**
    * @brief Make an ordering pointer for a given discrete function spaces tree
@@ -20,12 +20,12 @@ namespace Dune::Assembler::Impl {
    * @param space   The spaces for which to create an ordering
    * @return auto   A pointer to an ordering usable by DiscreteFunctionSpace
    */
-  template <Concept::Impl::SpaceTree Space>
-  auto makeOrdering(const Space &space)
-  {
-    return makeOrdering(space, space.mergingStrategy());
-  }
+  // template <Concept::Impl::SpaceTree Space>
+  // auto makeOrdering(const Space &space)
+  // {
+  //   return makeOrdering(space, space.mergingStrategy());
+  // }
 
-} // namespace Dune::Assembler::Impl
+} // namespace Dune::PDELab::Impl
 
-#endif // DUNE_ASSEMBLER_SPACE_ORDERING_HH
+#endif // DUNE_PDELAB_BASIS_ORDERING_HH

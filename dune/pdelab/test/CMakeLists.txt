@@ -42,6 +42,7 @@ target_compile_features(dunepdelab-test
 dune_register_package_flags(LIBRARIES dunepdelab-test)
 
 add_subdirectory(common)
+add_subdirectory(basis)
 
 # include tests executables
 add_subdirectory(fem)
