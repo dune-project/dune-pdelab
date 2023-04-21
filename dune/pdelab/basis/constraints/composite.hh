@@ -1,7 +1,7 @@
-#ifndef DUNE_ASSEMBLER_SPACE_CONSTRAINTS_COMPOSITE_HH
-#define DUNE_ASSEMBLER_SPACE_CONSTRAINTS_COMPOSITE_HH
+#ifndef DUNE_PDELAB_BASIS_CONSTRAINTS_COMPOSITE_HH
+#define DUNE_PDELAB_BASIS_CONSTRAINTS_COMPOSITE_HH
 
-#include <dune/assembler/concepts/tree.hh>
+#include <dune/pdelab/concepts/tree.hh>
 
 #include <dune/typetree/compositenode.hh>
 #include <dune/typetree/dynamicpowernode.hh>
@@ -13,7 +13,7 @@
 #include <tuple>
 #include <vector>
 
-namespace Dune::Assembler {
+namespace Dune::PDELab::inline Experimental {
 
 template<Concept::Tree Node, std::size_t degree>
 struct ArrayConstraints
@@ -114,6 +114,6 @@ auto makeCompositeConstraints(const std::tuple<Nodes...>& nodes)
 
 // }
 
-} // namespace Dune::Assembler
+} // namespace Dune::PDELab::inline Experimental
 
-#endif // DUNE_ASSEMBLER_SPACE_CONSTRAINTS_COMPOSITE_HH
+#endif // DUNE_PDELAB_BASIS_CONSTRAINTS_COMPOSITE_HH

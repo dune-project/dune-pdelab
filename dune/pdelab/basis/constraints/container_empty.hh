@@ -1,9 +1,11 @@
 #ifndef DUNE_PDELAB_BASIS_CONSTRAINTS_CONTAINER_EMPTY_HH
 #define DUNE_PDELAB_BASIS_CONSTRAINTS_CONTAINER_EMPTY_HH
 
-// #include <dune/pdelab/concepts/space.hh>
+#include <dune/pdelab/concepts/basis.hh>
 #include <dune/pdelab/concepts/tree.hh>
+
 #include <dune/typetree/leafnode.hh>
+#include <dune/typetree/dynamicpowernode.hh>
 
 #include <utility>
 #include <span>
@@ -27,8 +29,8 @@ namespace Dune::PDELab::inline Experimental {
 
     static std::size_t size() { return 0; }
 
-    void globalCompress(/*Concept::Space*/ auto space) {}
-    void localCompress(/*Concept::LocalSpaceTree*/ auto& lspace_tree) {}
+    void globalCompress(Concept::Basis auto space) {}
+    void localCompress(Concept::LocalBasisTree auto& lbasis_tree) {}
 
     class LeafLocalView : public TypeTree::LeafNode {
     public:

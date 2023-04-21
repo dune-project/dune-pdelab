@@ -1,11 +1,11 @@
 #ifndef DUNE_PDELAB_BASIS_ORDERING_HH
 #define DUNE_PDELAB_BASIS_ORDERING_HH
 
-#include <dune/pdelab/basis/concept.hh>
-// #include <dune/pdelab/basis/ordering/entity.hh>
-// #include <dune/pdelab/basis/ordering/entityset.hh>
-// #include <dune/pdelab/basis/ordering/lexicographic.hh>
-// #include <dune/pdelab/basis/merging_strategy.hh>
+#include <dune/pdelab/basis/prebasis/concept.hh>
+#include <dune/pdelab/basis/ordering/entity.hh>
+#include <dune/pdelab/basis/ordering/entityset.hh>
+#include <dune/pdelab/basis/ordering/lexicographic.hh>
+#include <dune/pdelab/basis/merging_strategy.hh>
 
 namespace Dune::PDELab::Impl {
 
@@ -16,15 +16,15 @@ namespace Dune::PDELab::Impl {
    * place to introduce ordering transformations over indices such as chunking,
    * mappings or simple change of multi-index types.
    *
-   * @tparam Space  A discrete function space tree
-   * @param space   The spaces for which to create an ordering
-   * @return auto   A pointer to an ordering usable by DiscreteFunctionSpace
+   * @tparam PreBasis   A discrete function space tree
+   * @param pre_basis   The spaces for which to create an ordering
+   * @return auto     A pointer to an ordering usable by Basis
    */
-  // template <Concept::Impl::SpaceTree Space>
-  // auto makeOrdering(const Space &space)
-  // {
-  //   return makeOrdering(space, space.mergingStrategy());
-  // }
+  template <Concept::Impl::PreBasisTree PreBasis>
+  auto makeOrdering(const PreBasis &pre_basis)
+  {
+    return makeOrdering(pre_basis, pre_basis.mergingStrategy());
+  }
 
 } // namespace Dune::PDELab::Impl
 

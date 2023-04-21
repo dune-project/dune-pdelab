@@ -1,19 +1,18 @@
-#ifndef DUNE_ASSEMBLER_SPACE_ORDERING_ENTITY_SET_HH
-#define DUNE_ASSEMBLER_SPACE_ORDERING_ENTITY_SET_HH
+#ifndef DUNE_PDELAB_BASIS_ORDERING_ENTITY_SET_HH
+#define DUNE_PDELAB_BASIS_ORDERING_ENTITY_SET_HH
 
-#include <dune/assembler/space/ordering/entity.hh>
-#include <dune/assembler/space/merging_strategy.hh>
+#include <dune/pdelab/basis/ordering/entity.hh>
+#include <dune/pdelab/basis/merging_strategy.hh>
+#include <dune/pdelab/basis/prebasis/concept.hh>
 
-#include <dune/assembler/common/concurrency/vector_adaptivelock.hh>
-#include <dune/assembler/common/concurrency/vector_spinlock.hh>
-#include <dune/assembler/common/concurrency/vector_bitspinlock.hh>
-#include <dune/assembler/common/concurrency/memory_region.hh>
-#include <dune/assembler/common/entity_cast.hh>
+// #include <dune/pdelab/common/concurrency/vector_adaptivelock.hh>
+// #include <dune/pdelab/common/concurrency/vector_spinlock.hh>
+#include <dune/pdelab/common/concurrency/vector_bitspinlock.hh>
+#include <dune/pdelab/common/entity_cast.hh>
 
-#include <dune/assembler/concepts/treenode.hh>
-#include <dune/assembler/concepts/lockable.hh>
-#include <dune/assembler/concepts/multiindex.hh>
-#include <dune/assembler/space/concept.hh>
+#include <dune/pdelab/concepts/treenode.hh>
+#include <dune/pdelab/concepts/lockable.hh>
+#include <dune/pdelab/concepts/multiindex.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
@@ -27,13 +26,13 @@
 #include <thread>
 #include <mutex>
 
-#ifndef DUNE_ASSEMBLER_VECTOR_LOCK_TYPE
-#define DUNE_ASSEMBLER_VECTOR_LOCK_TYPE VectorBitSpinLock // VectorSpinLock, VectorBitSpinLock, VectorAdaptiveLock
+#ifndef DUNE_PDELAB_VECTOR_LOCK_TYPE
+#define DUNE_PDELAB_VECTOR_LOCK_TYPE VectorBitSpinLock // VectorSpinLock, VectorBitSpinLock, VectorAdaptiveLock
 #endif
 
-namespace Dune::Assembler::Impl {
+namespace Dune::PDELab::inline Experimental::Impl {
 
-    using VectorLockType = DUNE_ASSEMBLER_VECTOR_LOCK_TYPE;
+    using VectorLockType = DUNE_PDELAB_VECTOR_LOCK_TYPE;
 
   template<Concept::TreeNode EntityOrdering, class MS>
   class EntitySetOrdering : public EntityOrdering {
@@ -271,8 +270,8 @@ namespace Dune::Assembler::Impl {
 
     public:
 
-      LocalIndexSet(EntityLocalIndexSet&& elspace, const std::shared_ptr<GlobalOrdering>& ordering, EntitySetOrdering& _entity_set_ordering, SubSpacePath sub_space_path)
-        : EntityLocalIndexSet{std::move(elspace)}
+      LocalIndexSet(EntityLocalIndexSet&& elbasis, const std::shared_ptr<GlobalOrdering>& ordering, EntitySetOrdering& _entity_set_ordering, SubSpacePath sub_space_path)
+        : EntityLocalIndexSet{std::move(elbasis)}
         , _ordering{ordering}
         , _entity_set_ordering{_entity_set_ordering}
         , _sub_space_path{sub_space_path}
@@ -354,8 +353,8 @@ namespace Dune::Assembler::Impl {
     public:
       using Element = typename EntitySet::template Codim<0>::Entity;
 
-      LocalView(EntityLocalView&& elspace, const std::shared_ptr<GlobalOrdering>& ordering, EntitySetOrdering& entity_set_ordering, SubSpacePath sub_space_path)
-        : EntityLocalView{std::move(elspace)}
+      LocalView(EntityLocalView&& elbasis, const std::shared_ptr<GlobalOrdering>& ordering, EntitySetOrdering& entity_set_ordering, SubSpacePath sub_space_path)
+        : EntityLocalView{std::move(elbasis)}
         , _index_cache(1) // DG-FV branch
         , _ordering{ordering}
         , _entity_set_ordering{entity_set_ordering}
@@ -626,15 +625,15 @@ namespace Dune::Assembler::Impl {
   };
 
 
-  template<Concept::Impl::SpaceTree Space, Dune::Concept::GridView ES, bool Blocked>
-  auto makeOrdering(const Space& space, Strategy::EntityGrouping<ES,Blocked> strategy) {
-    auto entity_ordering = makeEntityOrdering(space);
+  template<Concept::Impl::PreBasisTree PreBasis, Dune::Concept::GridView ES, bool Blocked>
+  auto makeOrdering(const PreBasis& pre_basis, Strategy::EntityGrouping<ES,Blocked> strategy) {
+    auto entity_ordering = makeEntityOrdering(pre_basis);
     using EntityOrdering = std::decay_t<decltype(*entity_ordering)>;
     // TODO: assert every leaf has same entity set
     using Ordering = EntitySetOrdering<EntityOrdering,Strategy::EntityGrouping<ES,Blocked>>;
     return std::make_unique<Ordering>(std::move(*entity_ordering));
   }
 
-} // namespace Dune::Assembler::Impl
+} // namespace Dune::PDELab::inline Experimental::Impl
 
-#endif // DUNE_ASSEMBLER_SPACE_ORDERING_ENTITY_SET_HH
+#endif // DUNE_PDELAB_BASIS_ORDERING_ENTITY_SET_HH

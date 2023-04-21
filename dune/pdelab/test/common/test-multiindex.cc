@@ -66,13 +66,4 @@ TEST(TestMultiIndex, TestHybridMultiIndex) {
   EXPECT_EQ(front(pop_front(mi)), 3);
   static_assert(front(pop_front(pop_front(mi))) == 2);
   EXPECT_EQ(front(pop_front(pop_front(mi))), 2);
-
-  // using MI = std::decay_t<decltype(mi)>;
-  // std::unordered_map<MI, int> map;
-
-  // map[mi] = 2;
-  // map[treePath(_1,4,_2,6)] = 3;
-
-  // EXPECT_EQ(map[mi], 2);
-  // EXPECT_EQ(map[treePath(_1,4,_2,6)], 3);
 }

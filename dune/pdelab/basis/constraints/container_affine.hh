@@ -1,16 +1,18 @@
-#ifndef DUNE_ASSEMBLER_SPACE_CONSTRAINTS_CONTAINER_AFFINE_HH
-#define DUNE_ASSEMBLER_SPACE_CONSTRAINTS_CONTAINER_AFFINE_HH
+#ifndef DUNE_PDELAB_BASIS_CONSTRAINTS_CONTAINER_AFFINE_HH
+#define DUNE_PDELAB_BASIS_CONSTRAINTS_CONTAINER_AFFINE_HH
 
-#include <dune/assembler/concepts/multiindex.hh>
-#include <dune/assembler/concepts/space.hh>
+#include <dune/pdelab/concepts/multiindex.hh>
+#include <dune/pdelab/concepts/basis.hh>
 
-#include <dune/assembler/common/entity_cast.hh>
-#include <dune/assembler/common/container_entry.hh>
+#include <dune/pdelab/common/multiindex.hh>
+#include <dune/pdelab/common/entity_cast.hh>
+#include <dune/pdelab/common/container_entry.hh>
 
 #include <dune/grid/concepts/gridview.hh>
 #include <dune/grid/common/mcmgmapper.hh>
 
 #include <dune/typetree/leafnode.hh>
+#include <dune/typetree/treepath.hh>
 
 #include <dune/common/float_cmp.hh>
 
@@ -26,7 +28,7 @@
 #include <vector>
 #include <utility>
 
-namespace Dune::Assembler {
+namespace Dune::PDELab::inline Experimental {
 
 
 namespace Impl {
@@ -49,7 +51,7 @@ namespace Impl {
         auto vec = std::vector(begin(linear_coefficients), end(linear_coefficients));
         std::sort(begin(vec),end(vec), [](const auto& l, const auto& r){
           // (move to dynamic multi-index to make comparison easier)
-          return ReservedMultiIndex(l.first) < ReservedMultiIndex(r.first);
+          return Dune::PDELab::MultiIndex(l.first) < Dune::PDELab::MultiIndex(r.first);
         });
         _map.emplace(std::piecewise_construct,
             std::forward_as_tuple(ci),
@@ -63,9 +65,9 @@ namespace Impl {
         // ci is already constraints, we hace to add constraints one-by-one
         for (auto [cci, coeff] : linear_coefficients) {
           // find repeated constraints
-          auto iit = std::lower_bound(begin(lcoef), end(lcoef), ReservedMultiIndex(cci) ,[](const auto& l, const auto& r){
+          auto iit = std::lower_bound(begin(lcoef), end(lcoef), Dune::PDELab::MultiIndex(cci) ,[](const auto& l, const auto& r){
             // (move to dynamic multi-index to make comparison easier)
-            return ReservedMultiIndex(l.first) < r;
+            return Dune::PDELab::MultiIndex(l.first) < r;
           });
           if ((iit == end(lcoef)) or (iit->first == cci)) // new constraint
             lcoef.insert(iit, {cci, coeff});
@@ -153,7 +155,7 @@ namespace Impl {
       std::sort(std::execution::par, begin(sorted_map), end(sorted_map),
         [](const auto& l, const auto& r){
           // (move to dynamic multi-index to make comparison easier)
-          return ReservedMultiIndex(l.first) < ReservedMultiIndex(r.first);
+          return Dune::PDELab::MultiIndex(l.first) < Dune::PDELab::MultiIndex(r.first);
         });
 
       // move sorted map to a compressed by row representation
@@ -180,6 +182,31 @@ namespace Impl {
         at_row(i);
 #endif
     }
+
+
+    template<class T>
+    class Hash;
+
+    template<class... T>
+    class Hash<TypeTree::HybridTreePath<T...>> {
+
+    public:
+
+      std::size_t operator()(const TypeTree::HybridTreePath<T...>& mi) const {
+        std::size_t hash = 9999;
+        using Tuple = typename TypeTree::HybridTreePath<T...>::Data;
+        Hybrid::forEach(mi.enumerate(), [&](auto i) {
+          using Index = std::tuple_element_t<i, Tuple>;
+          if constexpr (not Dune::IsIntegralConstant<Index>::value) {
+            hash_combine(hash, mi[i]);
+          }
+        });
+        return hash;
+      }
+    };
+
+    template<class... T>
+    struct Hash<const TypeTree::HybridTreePath<T...>> : public Hash<TypeTree::HybridTreePath<T...>> {};
 
     // slow global sparse matrix of constraints
     using Row = std::pair<Value,std::vector<std::pair<ContainerIndex, double>>>;
@@ -331,23 +358,23 @@ namespace Impl {
       }
     }
 
-    void globalCompress(Concept::Space auto space) {
+    void globalCompress(Concept::Basis auto space) {
       Base::globalCompress();
       // initialize variables for local compression
       _local_entity_offset.assign(_mapper.size(), {});
     }
 
     // build the data structures for local constraints (not thread safe)
-    template<Concept::LocalSpaceTree LocalSpaceTree>
-    void localCompress(const LocalSpaceTree& lspace_tree) {
-      if (lspace_tree.size() == 0) return;
-      std::size_t entity_index = _mapper.index(lspace_tree.element());
+    template<Concept::LocalBasisTree LocalBasisTree>
+    void localCompress(const LocalBasisTree& lbasis_tree) {
+      if (lbasis_tree.size() == 0) return;
+      std::size_t entity_index = _mapper.index(lbasis_tree.element());
       std::size_t _local_offset_begin = _local_offset.size();
       std::size_t node_offset = 0;
-      // lspace_tree may have children nodes if it refers to skeleton finite elements
-      forEachLeafNode(lspace_tree, [&](const auto& lspace_leaf) {
-        for (std::size_t dof = 0; dof != lspace_leaf.size(); ++dof) {
-          auto gdof = lspace_leaf.index(dof);
+      // lbasis_tree may have children nodes if it refers to skeleton finite elements
+      forEachLeafNode(lbasis_tree, [&](const auto& lbasis_leaf) {
+        for (std::size_t dof = 0; dof != lbasis_leaf.size(); ++dof) {
+          auto gdof = lbasis_leaf.index(dof);
           auto it = _map.find(gdof);
           if (it != _map.end()) {
             auto& [val, vec] = it->second;
@@ -357,15 +384,15 @@ namespace Impl {
             // check if linear constraints are within the local function spaces!
             [[maybe_unused]] bool cci_is_local = false;
             for (auto [cci, _] : vec) {
-              for (std::size_t jdof = 0; jdof != lspace_leaf.size(); ++jdof)
-                cci_is_local |= (cci == lspace_leaf.index(jdof));
+              for (std::size_t jdof = 0; jdof != lbasis_leaf.size(); ++jdof)
+                cci_is_local |= (cci == lbasis_leaf.index(jdof));
             }
-            // if (lspace_tree.memoryRegion()) // TODO!
+            // if (lbasis_tree.memoryRegion()) // TODO!
             if (not cci_is_local)
               DUNE_THROW(NotImplemented, "Non local constraints do not work with concurrent entity sets yet!");
           }
         }
-        node_offset += lspace_leaf.size();
+        node_offset += lbasis_leaf.size();
       });
 
       _local_entity_offset[entity_index] = {_local_offset_begin, _local_offset.size() - _local_offset_begin};
@@ -408,6 +435,6 @@ namespace Impl {
     std::vector<std::pair<ContainerIndex, double>> _local_linear;
   };
 
-} // namespace Dune::Assembler
+} // namespace Dune::PDELab::inline Experimental
 
-#endif // DUNE_ASSEMBLER_SPACE_CONSTRAINTS_CONTAINER_AFFINE_HH
+#endif // DUNE_PDELAB_BASIS_CONSTRAINTS_CONTAINER_AFFINE_HH

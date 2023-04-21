@@ -1,7 +1,7 @@
-#ifndef DUNE_ASSEMBLER_SPACE_CONSTRAINTS_DIRICHLET_HH
-#define DUNE_ASSEMBLER_SPACE_CONSTRAINTS_DIRICHLET_HH
+#ifndef DUNE_PDELAB_BASIS_CONSTRAINTS_DIRICHLET_HH
+#define DUNE_PDELAB_BASIS_CONSTRAINTS_DIRICHLET_HH
 
-#include <dune/assembler/space/constraints/container_affine.hh>
+#include <dune/pdelab/basis/constraints/container_affine.hh>
 
 #include <dune/functions/gridfunctions/gridfunction.hh>
 
@@ -9,7 +9,7 @@
 
 #include <type_traits>
 
-namespace Dune::Assembler {
+namespace Dune::PDELab::inline Experimental {
 
   // TODO check grid function concept
   template<class GridFunction>
@@ -42,19 +42,19 @@ namespace Dune::Assembler {
 
     void constrainBoundary(
       const Dune::Concept::Intersection auto& intersection,
-      const Concept::LocalSpaceLeaf auto& lspace_in,
+      const Concept::LocalBasisLeaf auto& lbasis_in,
       auto& container)
     {
-      if (lspace_in.size() == 0) return;
+      if (lbasis_in.size() == 0) return;
 
-      const auto& entity_in = lspace_in.element();
+      const auto& entity_in = lbasis_in.element();
       // find dof indices that belong to the intersection
       const auto face = intersection.indexInInside();
       const auto& refelem = referenceElement(entity_in.geometry());
       _local_function.bind(entity_in);
-      const auto& lkeys = lspace_in.finiteElement().localCoefficients();
+      const auto& lkeys = lbasis_in.finiteElement().localCoefficients();
 
-      for (std::size_t dof=0; dof != lspace_in.size(); ++dof) {
+      for (std::size_t dof=0; dof != lbasis_in.size(); ++dof) {
         // the codim to which this dof is attached to
         unsigned int codim = lkeys.localKey(dof).codim();
         if (codim==0) continue;
@@ -67,7 +67,7 @@ namespace Dune::Assembler {
             // evaluate local function at the center of the sub-entity
             std::optional<Value> dirichlet = _local_function(coord);
             if (dirichlet)
-              container.addTranslationConstraint(lspace_in.index(dof), *dirichlet);
+              container.addTranslationConstraint(lbasis_in.index(dof), *dirichlet);
           }
         }
       }
@@ -75,13 +75,13 @@ namespace Dune::Assembler {
       _local_function.unbind();
     }
 
-    void constrainVolume(const Concept::LocalSpaceLeaf auto& lspace, auto& container) const
+    void constrainVolume(const Concept::LocalBasisLeaf auto& lbasis, auto& container) const
     {}
 
     void constrainSkeleton(
       const Dune::Concept::Intersection auto& intersection,
-      const Concept::LocalSpaceLeaf auto& lspace_in,
-      const Concept::LocalSpaceLeaf auto& lspace_out,
+      const Concept::LocalBasisLeaf auto& lbasis_in,
+      const Concept::LocalBasisLeaf auto& lbasis_out,
       auto& container) const
     {}
 
@@ -89,6 +89,6 @@ namespace Dune::Assembler {
     LocalFunction _local_function;
   };
 
-} // namespace Dune::Assembler
+} // namespace Dune::PDELab::inline Experimental
 
-#endif // DUNE_ASSEMBLER_SPACE_CONSTRAINTS_DIRICHLET_HH
+#endif // DUNE_PDELAB_BASIS_CONSTRAINTS_DIRICHLET_HH

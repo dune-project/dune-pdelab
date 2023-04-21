@@ -1,1 +1,3 @@
-dune_add_test(SOURCES test-basis-ordering-entity.cc)
+dune_add_test(
+  NAME test-basis-ordering-entity
+  SOURCES entity.cc)

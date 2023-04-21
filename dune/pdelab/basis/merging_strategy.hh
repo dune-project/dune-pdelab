@@ -10,8 +10,7 @@
 
 #include <bitset>
 
-namespace Dune::PDELab::inline Experimental {
-inline namespace Strategy {
+namespace Dune::PDELab::inline Experimental::inline Strategy {
 
 template<bool ContainerBlocked>
 struct DefaultStrategy
@@ -73,8 +72,6 @@ blockedByEntity(const EntitySet& entity_Set)
   return EntityGrouping<EntitySet, true>{ entity_Set };
 }
 
-} // namespace Strategy
-
-} // namespace Dune::PDELab::inline Experimental
+} // namespace Dune::PDELab::inline Experimental::inline Strategy
 
 #endif // DUNE_PDELAB_BASIS_MERGING_STRATEGY_HH

@@ -1,14 +1,14 @@
-#ifndef DUNE_ASSEMBLER_SPACE_CONSTRAINTS_CONTAINER_HH
-#define DUNE_ASSEMBLER_SPACE_CONSTRAINTS_CONTAINER_HH
+#ifndef DUNE_PDELAB_BASIS_CONSTRAINTS_CONTAINER_HH
+#define DUNE_PDELAB_BASIS_CONSTRAINTS_CONTAINER_HH
 
-#include <dune/assembler/concepts/treenode.hh>
-#include <dune/assembler/concepts/local_space.hh>
-#include <dune/assembler/concepts/space.hh>
-#include <dune/assembler/concepts/multiindex.hh>
+#include <dune/pdelab/concepts/treenode.hh>
+#include <dune/pdelab/concepts/local_basis.hh>
+#include <dune/pdelab/concepts/basis.hh>
+#include <dune/pdelab/concepts/multiindex.hh>
 
-#include <dune/assembler/common/tree_traversal.hh>
+#include <dune/pdelab/common/tree_traversal.hh>
 
-#include <dune/assembler/space/concept.hh>
+#include <dune/pdelab/basis/prebasis/concept.hh>
 
 #include <dune/typetree/dynamicpowernode.hh>
 #include <dune/typetree/powernode.hh>
@@ -18,7 +18,7 @@
 #include <utility>
 #include <span>
 
-namespace Dune::Assembler {
+namespace Dune::PDELab::inline Experimental {
 
   template<Concept::TreeNode T>
   class VectorLocalConstraintsContainer : public TypeTree::DynamicPowerNode<T> {
@@ -131,35 +131,35 @@ namespace Dune::Assembler {
       return *_tree;
     }
 
-    template<Concept::Tree SourceTree, Concept::MultiIndex SubSpacePath>
+    template<Concept::Tree SourceTree, Concept::MultiIndex SubBasisPath>
     class LocalView {
 
-      static auto makeLocalTree(const SourceTree& source_tree, const std::shared_ptr<ConstraintsContainerTree>& gtree, SubSpacePath sub_space_path) {
+      static auto makeLocalTree(const SourceTree& source_tree, const std::shared_ptr<ConstraintsContainerTree>& gtree, SubBasisPath sub_basis_path) {
         // source tree is already on the sub space path, whereas the gtree is the root node of the tree
-        if constexpr (SubSpacePath::size() == 0)
+        if constexpr (SubBasisPath::size() == 0)
           return gtree->makeLocalViewNode(source_tree, gtree);
         else
-          return TypeTree::childStorage(*gtree, sub_space_path)->makeLocalViewNode(source_tree, TypeTree::childStorage(*gtree, sub_space_path));
+          return TypeTree::childStorage(*gtree, sub_basis_path)->makeLocalViewNode(source_tree, TypeTree::childStorage(*gtree, sub_basis_path));
       }
 
-      using TreeStorage = decltype(makeLocalTree(std::declval<SourceTree>(), std::shared_ptr<ConstraintsContainerTree>{}, SubSpacePath{}));
+      using TreeStorage = decltype(makeLocalTree(std::declval<SourceTree>(), std::shared_ptr<ConstraintsContainerTree>{}, SubBasisPath{}));
     public:
       using Tree = typename TreeStorage::element_type;
 
-      LocalView(const SourceTree& source_tree, std::shared_ptr<ConstraintsContainerTree> gtree, SubSpacePath sub_space_path)
-        : _sub_space_path{sub_space_path}
+      LocalView(const SourceTree& source_tree, std::shared_ptr<ConstraintsContainerTree> gtree, SubBasisPath sub_basis_path)
+        : _sub_basis_path{sub_basis_path}
         , _gtree{move(gtree)}
-        , _ltree{makeLocalTree(source_tree, _gtree, _sub_space_path)}
+        , _ltree{makeLocalTree(source_tree, _gtree, _sub_basis_path)}
       {}
 
       LocalView(const LocalView& other)
-        : _sub_space_path{other._sub_space_path}
+        : _sub_basis_path{other._sub_basis_path}
         , _gtree{move(other._gtree)}
         , _ltree{move(other._ltree)}
       {}
 
       LocalView(LocalView&& other)
-        : _sub_space_path{other._sub_space_path}
+        : _sub_basis_path{other._sub_basis_path}
         , _gtree{move(other._gtree)}
         , _ltree{move(other._ltree)}
       {}
@@ -211,28 +211,28 @@ namespace Dune::Assembler {
 //   }
 
     private:
-      [[no_unique_address]] SubSpacePath _sub_space_path;
+      [[no_unique_address]] SubBasisPath _sub_basis_path;
       std::shared_ptr<ConstraintsContainerTree> _gtree;
       std::shared_ptr<Tree> _ltree;
       //   std::span<LockHandle> _padlocks_view;
     };
 
-    template<Concept::Tree Tree, Concept::MultiIndex SubSpacePath>
-    Concept::LocalConstraints auto localView(const Tree& tree, SubSpacePath sub_space_path) const {
+    template<Concept::Tree Tree, Concept::MultiIndex SubBasisPath>
+    Concept::LocalConstraints auto localView(const Tree& tree, SubBasisPath sub_basis_path) const {
       assert(_assembled);
-      return LocalView{tree, _tree, sub_space_path};
+      return LocalView{tree, _tree, sub_basis_path};
     }
 
     template<Concept::Tree Tree>
     Concept::LocalConstraints auto localView(const Tree& tree) const {
-      return localView(tree, multiIndex());
+      return localView(tree, TypeTree::treePath());
     }
 
-    void assembleConstraints(Concept::Space auto space, auto constraints_ops) {
+    void assembleConstraints(Concept::Basis auto basis, auto constraints_ops) {
       _assembled = false;
       // this should only be done with root nodes
-      auto lspace_in = space.localView();
-      auto lspace_out = space.localView();
+      auto lbasis_in = basis.localView();
+      auto lbasis_out = basis.localView();
 
       bool constrained = false;
       bool intersection_constrained = false;
@@ -245,41 +245,41 @@ namespace Dune::Assembler {
       _assembled = not constrained;
       if (_assembled) return;
 
-      for (const auto& entity : elements(space.gridView())) {
-        lspace_in.bind(entity);
+      for (const auto& entity : elements(basis.entitySet())) {
+        lbasis_in.bind(entity);
         forEachLeafNode(this->tree(), [&](auto& container_node, auto path){
           auto& constraints_node = constraints_ops[path];
-          const auto& lspace_in_node = TypeTree::child(lspace_in.tree(), path);
+          const auto& lbasis_in_node = TypeTree::child(lbasis_in.tree(), path);
           if (constraints_node.doConstrainVolume())
-            constraints_node.constrainVolume(lspace_in_node, container_node);
+            constraints_node.constrainVolume(lbasis_in_node, container_node);
         });
         if (intersection_constrained) {
           // notice that there is double visit, this can be optimized if necessary
-          for (const auto& intersection : intersections(space.gridView(), entity)) {
+          for (const auto& intersection : intersections(basis.entitySet(), entity)) {
             if (intersection.neighbor()) {
-              lspace_out.bind(intersection.outside());
+              lbasis_out.bind(intersection.outside());
               forEachLeafNode(this->tree(), [&](auto& container_node, auto path){
                 auto& constraints_node = constraints_ops[path];
-                const auto& lspace_in_node = TypeTree::child(lspace_in.tree(), path);
-                const auto& lspace_out_node = TypeTree::child(lspace_out.tree(), path);
+                const auto& lbasis_in_node = TypeTree::child(lbasis_in.tree(), path);
+                const auto& lbasis_out_node = TypeTree::child(lbasis_out.tree(), path);
                 if (constraints_node.doConstrainSkeleton())
-                  constraints_node.constrainSkeleton(intersection, lspace_in_node, lspace_out_node, container_node);
+                  constraints_node.constrainSkeleton(intersection, lbasis_in_node, lbasis_out_node, container_node);
               });
-              lspace_out.unbind();
+              lbasis_out.unbind();
             } else {
               forEachLeafNode(this->tree(), [&](auto& container_node, auto path){
                 auto& constraints_node = constraints_ops[path];
-                const auto& lspace_in_node = TypeTree::child(lspace_in.tree(), path);
+                const auto& lbasis_in_node = TypeTree::child(lbasis_in.tree(), path);
                 if (constraints_node.doConstrainBoundary())
-                  constraints_node.constrainBoundary(intersection, lspace_in_node, container_node);
+                  constraints_node.constrainBoundary(intersection, lbasis_in_node, container_node);
               });
             }
           }
         }
-        lspace_in.unbind();
+        lbasis_in.unbind();
       }
 
-      this->compress(space);
+      this->compress(basis);
     }
 
     void clear() {
@@ -289,19 +289,19 @@ namespace Dune::Assembler {
       _assembled = false;
     }
 
-    void compress(Concept::Space auto space) {
-      // space must be a root space to map all entities and all sub spaces(i.e. no sub-space)
+    void compress(Concept::Basis auto basis) {
+      // basis must be a root basis to map all entities and all sub basiss(i.e. no sub-basis)
       forEachLeafNode(*_tree, [&](auto& node){
-        node.globalCompress(space);
+        node.globalCompress(basis);
       });
-      auto lspace = space.localView();
-      for (const auto& entity : elements(space.gridView())) {
-        lspace.bind(entity);
+      auto lbasis = basis.localView();
+      for (const auto& entity : elements(basis.entitySet())) {
+        lbasis.bind(entity);
         forEachLeafNode(*_tree, [&](auto& node, auto path){
-          const auto& lspace_node = TypeTree::child(lspace.tree(), path);
-          node.localCompress(lspace_node);
+          const auto& lbasis_node = TypeTree::child(lbasis.tree(), path);
+          node.localCompress(lbasis_node);
         });
-        lspace.unbind();
+        lbasis.unbind();
       }
       _assembled = true;
     }
@@ -349,13 +349,13 @@ auto makeConstraintsContainerNode(const Tree& tree, Path path, Callable callable
 // for a given tree and a callable generator `callable(leaf_node, path)`, build a constrains container tree
 auto makeConstraintsContainer(Concept::Tree auto& tree, auto callable)
 {
-  auto tree_ptr = makeConstraintsContainerNode(tree, multiIndex(), callable);
+  auto tree_ptr = makeConstraintsContainerNode(tree, TypeTree::treePath(), callable);
   using ConstraintsContainerTree = decltype(tree_ptr)::element_type;
   static_assert(Concept::Tree<ConstraintsContainerTree>);
   return std::make_shared<ConstraintsContainer<ConstraintsContainerTree>>(tree_ptr);
 }
 
 
-} // namespace Dune::Assembler
+} // namespace Dune::PDELab::inline Experimental
 
-#endif // DUNE_ASSEMBLER_SPACE_CONSTRAINTS_CONTAINER_HH
+#endif // DUNE_PDELAB_BASIS_CONSTRAINTS_CONTAINER_HH

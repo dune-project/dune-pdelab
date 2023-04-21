@@ -2,11 +2,14 @@
 #include "config.h"
 #endif
 
-#include "../../grid_fixture.hh"
+#include "../../fixture-grid.hh"
 
 #include <dune/pdelab/basis/ordering/entity.hh>
+
 #include <dune/pdelab/basis/prebasis/leaf.hh>
 #include <dune/pdelab/basis/prebasis/composite.hh>
+
+#include <dune/pdelab/basis/ordering.hh>
 
 #include <dune/pdelab/basis/merging_strategy.hh>
 

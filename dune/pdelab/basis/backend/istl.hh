@@ -1,5 +1,5 @@
-#ifndef DUNE_ASSEMBLER_DISCRETE_FUNCTION_SPACE_ISTL_BACKEND_HH
-#define DUNE_ASSEMBLER_DISCRETE_FUNCTION_SPACE_ISTL_BACKEND_HH
+#ifndef DUNE_PDELAB_BASIS_ISTL_BACKEND_HH
+#define DUNE_PDELAB_BASIS_ISTL_BACKEND_HH
 
 #include <dune/istl/bvector.hh>
 
@@ -9,7 +9,7 @@
 #include <concepts>
 #include <type_traits>
 
-namespace Dune::Assembler {
+namespace Dune::PDELab::inline Experimental {
 
   struct ISTLBaseBackend {
     template<class T>
@@ -71,6 +71,6 @@ namespace Dune::Assembler {
   // makes istl container with the range of the finite element
   static constexpr ISTLRangeBackend istl_range_field_backend{};
 
-} // namespace Dune::Assembler
+} // namespace Dune::PDELab::inline Experimental
 
-#endif // DUNE_ASSEMBLER_DISCRETE_FUNCTION_SPACE_ISTL_BACKEND_HH
+#endif // DUNE_PDELAB_BASIS_ISTL_BACKEND_HH

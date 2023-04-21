@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_TEST_GRID_FIXTURE_HH
-#define DUNE_PDELAB_TEST_GRID_FIXTURE_HH
+#ifndef DUNE_PDELAB_TEST_FIXTURE_GRID_HH
+#define DUNE_PDELAB_TEST_FIXTURE_GRID_HH
 
 #include <dune/grid/common/gridfactory.hh>
 #include <dune/grid/yaspgrid.hh>
@@ -84,4 +84,4 @@ using GridFixtures = ::testing::Types<
 #endif
 >;
 
-#endif // DUNE_PDELAB_TEST_GRID_FIXTURE_HH
+#endif // DUNE_PDELAB_TEST_FIXTURE_GRID_HH

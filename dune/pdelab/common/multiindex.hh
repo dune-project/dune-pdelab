@@ -327,6 +327,8 @@ namespace Dune {
       return hash_range(mi.begin(),mi.end());
     }
 
+    template<class... U>
+    MultiIndex(const TypeTree::HybridTreePath<U...>& tp) -> MultiIndex<std::common_type_t<U...>,sizeof...(U)>;
 
   } // namespace PDELab
 } // namespace Dune

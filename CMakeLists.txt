@@ -1,8 +1,8 @@
-# set up project
-project("dune-pdelab" C CXX)
-
 # general stuff
 cmake_minimum_required(VERSION 3.13)
+
+# set up project
+project("dune-pdelab" C CXX)
 
 # configuration options
 option(DUNE_PDELAB_ENABLE_TRACING "Enable tracing with Perfetto")

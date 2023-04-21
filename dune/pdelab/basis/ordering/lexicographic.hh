@@ -1,13 +1,13 @@
-#ifndef DUNE_ASSEMBLER_SPACE_ORDERING_LEXICOGRAPHIC_HH
-#define DUNE_ASSEMBLER_SPACE_ORDERING_LEXICOGRAPHIC_HH
+#ifndef DUNE_PDELAB_BASIS_ORDERING_LEXICOGRAPHIC_HH
+#define DUNE_PDELAB_BASIS_ORDERING_LEXICOGRAPHIC_HH
 
-#include <dune/assembler/space/concept.hh>
-#include <dune/assembler/space/merging_strategy.hh>
+#include <dune/pdelab/basis/prebasis/concept.hh>
+#include <dune/pdelab/basis/merging_strategy.hh>
 
-#include <dune/assembler/common/reservedmultiindex.hh>
-#include <dune/assembler/common/tree_traversal.hh>
+#include <dune/pdelab/common/multiindex.hh>
+#include <dune/pdelab/common/tree_traversal.hh>
 
-namespace Dune::Assembler::Impl {
+namespace Dune::PDELab::inline Experimental::Impl {
 
 template<class Node, class MS>
 class LexicographicOrderingNode
@@ -223,7 +223,7 @@ private:
   {
     // Note: Multi-index is read Inner->Outer
     // transform to reserved multi-index to avoid problems on pop back
-    auto rcs = ReservedMultiIndex<SizeType, maxContainerDepth()>{ cs };
+    auto rcs = Dune::PDELab::MultiIndex<SizeType, maxContainerDepth()>{ cs };
 
     // the next index to find out its size
     auto back_index = back(rcs);
@@ -331,37 +331,37 @@ public:
   {
   }
 
-  template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubSpacePath>
+  template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubPreBasisPath>
   auto makeLocalIndexSet(const std::shared_ptr<Ordering>& ordering,
-                         const Prefix& prefix, const SubSpacePath& sub_space_path) const
+                         const Prefix& prefix, const SubPreBasisPath& sub_pre_basis_path) const
   {
-    if constexpr (Prefix::size() < SubSpacePath::size()) {
-      auto child = sub_space_path[index_constant<Prefix::size()>{}];
-      return this->child(child).makeLocalIndexSet(ordering, push_back(prefix, child), sub_space_path);
+    if constexpr (Prefix::size() < SubPreBasisPath::size()) {
+      auto child = sub_pre_basis_path[index_constant<Prefix::size()>{}];
+      return this->child(child).makeLocalIndexSet(ordering, push_back(prefix, child), sub_pre_basis_path);
     } else {
-      using Child = std::decay_t<decltype(*this->child(0).makeLocalIndexSet(ordering, push_back(prefix, 0), sub_space_path))>;
+      using Child = std::decay_t<decltype(*this->child(0).makeLocalIndexSet(ordering, push_back(prefix, 0), sub_pre_basis_path))>;
       typename LocalNode<Child>::NodeStorage storage;
       for (std::size_t i = 0; i < degree; ++i)
-        storage[i] = this->child(i).makeLocalIndexSet(ordering, push_back(prefix, i), sub_space_path);
+        storage[i] = this->child(i).makeLocalIndexSet(ordering, push_back(prefix, i), sub_pre_basis_path);
       return std::make_unique<LocalNode<Child>>(std::move(storage));
     }
   }
 
   //! Constructs an array of the local entity orderings from the entity
   //! orderings
-  template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubSpacePath>
+  template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubPreBasisPath>
   auto makeLocalView(const std::shared_ptr<Ordering>& ordering,
-                         const Prefix& prefix, const SubSpacePath& sub_space_path) const
+                         const Prefix& prefix, const SubPreBasisPath& sub_pre_basis_path) const
   {
-    if constexpr (Prefix::size() < SubSpacePath::size()) {
-      std::size_t child = sub_space_path[index_constant<Prefix::size()>{}];
+    if constexpr (Prefix::size() < SubPreBasisPath::size()) {
+      std::size_t child = sub_pre_basis_path[index_constant<Prefix::size()>{}];
       assert(child < this->degree());
-      return this->child(child).makeLocalView(ordering, push_back(prefix, child), sub_space_path);
+      return this->child(child).makeLocalView(ordering, push_back(prefix, child), sub_pre_basis_path);
     } else {
-      using Child = std::decay_t<decltype(*this->child(0).makeLocalView(ordering, push_back(prefix, 0), sub_space_path))>;
+      using Child = std::decay_t<decltype(*this->child(0).makeLocalView(ordering, push_back(prefix, 0), sub_pre_basis_path))>;
       typename LocalNode<Child>::NodeStorage storage;
       for (std::size_t i = 0; i < degree; ++i)
-        storage[i] = this->child(i).makeLocalView(ordering, push_back(prefix, i), sub_space_path);
+        storage[i] = this->child(i).makeLocalView(ordering, push_back(prefix, i), sub_pre_basis_path);
       return std::make_unique<LocalNode<Child>>(std::move(storage));
     }
   }
@@ -419,39 +419,39 @@ public:
   {
   }
 
-  template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubSpacePath>
+  template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubPreBasisPath>
   auto makeLocalIndexSet(const std::shared_ptr<Ordering>& ordering,
-                         const Prefix& prefix, const SubSpacePath& sub_space_path) const
+                         const Prefix& prefix, const SubPreBasisPath& sub_pre_basis_path) const
   {
-    if constexpr (Prefix::size() < SubSpacePath::size()) {
-      auto child = sub_space_path[index_constant<Prefix::size()>{}];
+    if constexpr (Prefix::size() < SubPreBasisPath::size()) {
+      auto child = sub_pre_basis_path[index_constant<Prefix::size()>{}];
       assert(child < this->degree());
-      return this->child(child).makeLocalIndexSet(ordering, push_back(prefix, child), sub_space_path);
+      return this->child(child).makeLocalIndexSet(ordering, push_back(prefix, child), sub_pre_basis_path);
     } else {
       using Child = std::decay_t<decltype(*this->child(0).makeLocalIndexSet(
-        ordering, push_back(prefix, 0), sub_space_path))>;
+        ordering, push_back(prefix, 0), sub_pre_basis_path))>;
       typename LocalNode<Child>::NodeStorage storage(this->degree());
       for (std::size_t i = 0; i < this->degree(); ++i)
         storage[i] =
-          this->child(i).makeLocalIndexSet(ordering, push_back(prefix, i), sub_space_path);
+          this->child(i).makeLocalIndexSet(ordering, push_back(prefix, i), sub_pre_basis_path);
       return std::make_unique<LocalNode<Child>>(std::move(storage));
     }
   }
 
-  template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubSpacePath>
+  template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubPreBasisPath>
   auto makeLocalView(const std::shared_ptr<Ordering>& ordering,
-                         const Prefix& prefix, const SubSpacePath& sub_space_path) const
+                         const Prefix& prefix, const SubPreBasisPath& sub_pre_basis_path) const
   {
-    if constexpr (Prefix::size() < SubSpacePath::size()) {
-      auto child = sub_space_path[index_constant<Prefix::size()>{}];
+    if constexpr (Prefix::size() < SubPreBasisPath::size()) {
+      auto child = sub_pre_basis_path[index_constant<Prefix::size()>{}];
       assert(child < this->degree());
-      return this->child(child).makeLocalView(ordering, push_back(prefix, child), sub_space_path);
+      return this->child(child).makeLocalView(ordering, push_back(prefix, child), sub_pre_basis_path);
     } else {
       using Child = std::decay_t<decltype(*this->child(0).makeLocalView(
-        ordering, push_back(prefix, 0), sub_space_path))>;
+        ordering, push_back(prefix, 0), sub_pre_basis_path))>;
       typename LocalNode<Child>::NodeStorage storage(this->degree());
       for (std::size_t i = 0; i < this->degree(); ++i)
-        storage[i] = this->child(i).makeLocalView(ordering, push_back(prefix, i), sub_space_path);
+        storage[i] = this->child(i).makeLocalView(ordering, push_back(prefix, i), sub_pre_basis_path);
       return std::make_unique<LocalNode<Child>>(std::move(storage));
     }
   }
@@ -500,38 +500,38 @@ public:
     , OrderingNode{}
   {}
 
-  template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubSpacePath>
+  template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubPreBasisPath>
   auto makeLocalIndexSet(const std::shared_ptr<Ordering>& ordering,
-                         const Prefix& prefix, const SubSpacePath& sub_space_path) const
+                         const Prefix& prefix, const SubPreBasisPath& sub_pre_basis_path) const
   {
-    if constexpr (Prefix::size() < SubSpacePath::size()) {
-      auto child = sub_space_path[index_constant<Prefix::size()>{}];
+    if constexpr (Prefix::size() < SubPreBasisPath::size()) {
+      auto child = sub_pre_basis_path[index_constant<Prefix::size()>{}];
       static_assert(child < this->degree());
-      return this->child(child).makeLocalIndexSet(ordering, push_back(prefix, child), sub_space_path);
+      return this->child(child).makeLocalIndexSet(ordering, push_back(prefix, child), sub_pre_basis_path);
     } else {
       auto unfold_children = [&](auto... i) {
-        using LSpace = LocalNode<std::decay_t<decltype(*this->child(i).makeLocalIndexSet(ordering, push_back(prefix, i), sub_space_path))>...>;
-        typename LSpace::NodeStorage storage{ this->child(i).makeLocalIndexSet(ordering, push_back(prefix, i), sub_space_path)... };
-        return std::make_unique<LSpace>(std::move(storage));
+        using LPreBasis = LocalNode<std::decay_t<decltype(*this->child(i).makeLocalIndexSet(ordering, push_back(prefix, i), sub_pre_basis_path))>...>;
+        typename LPreBasis::NodeStorage storage{ this->child(i).makeLocalIndexSet(ordering, push_back(prefix, i), sub_pre_basis_path)... };
+        return std::make_unique<LPreBasis>(std::move(storage));
       };
       auto indices = std::make_index_sequence<sizeof...(ChildOrdering)>{};
       return unpackIntegerSequence(unfold_children, indices);
     }
   }
 
-  template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubSpacePath>
+  template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubPreBasisPath>
   auto makeLocalView(const std::shared_ptr<Ordering>& ordering,
-                         const Prefix& prefix, const SubSpacePath& sub_space_path) const
+                         const Prefix& prefix, const SubPreBasisPath& sub_pre_basis_path) const
   {
-    if constexpr (Prefix::size() < SubSpacePath::size()) {
-      auto child = sub_space_path[index_constant<Prefix::size()>{}];
+    if constexpr (Prefix::size() < SubPreBasisPath::size()) {
+      auto child = sub_pre_basis_path[index_constant<Prefix::size()>{}];
       static_assert(child < this->degree());
-      return this->child(child).makeLocalView(ordering, push_back(prefix, child), sub_space_path);
+      return this->child(child).makeLocalView(ordering, push_back(prefix, child), sub_pre_basis_path);
     } else {
       auto unfold_children = [&](auto... i) {
-        using LSpace = LocalNode<std::decay_t<decltype(*this->child(i).makeLocalView(ordering, push_back(prefix, i), sub_space_path))>...>;
-        typename LSpace::NodeStorage storage{ this->child(i).makeLocalView(ordering, push_back(prefix, i), sub_space_path)... };
-        return std::make_unique<LSpace>(std::move(storage));
+        using LPreBasis = LocalNode<std::decay_t<decltype(*this->child(i).makeLocalView(ordering, push_back(prefix, i), sub_pre_basis_path))>...>;
+        typename LPreBasis::NodeStorage storage{ this->child(i).makeLocalView(ordering, push_back(prefix, i), sub_pre_basis_path)... };
+        return std::make_unique<LPreBasis>(std::move(storage));
       };
       auto indices = std::make_index_sequence<sizeof...(ChildOrdering)>{};
       return unpackIntegerSequence(unfold_children, indices);
@@ -585,67 +585,67 @@ public:
   }
 };
 
-template<Concept::Impl::SpaceTree Space>
+template<Concept::Impl::PreBasisTree PreBasis>
 auto
-makeLexicographicOrdering(const Space& space)
+makeLexicographicOrdering(const PreBasis& pre_basis)
 {
 
-  using NodeTag = typename Space::NodeTag;
+  using NodeTag = typename PreBasis::NodeTag;
   using MergingStrategy =
-    typename Space::Traits::MergingStrategy;
+    typename PreBasis::Traits::MergingStrategy;
 
   static_assert(not std::is_same<NodeTag, TypeTree::LeafNodeTag>{},
     "Lexicographic merging strategy shall not be applied to leaf nodes. "
     "Consider using merging by entity."
   );
 
-  auto make_ordering = [](const auto& space){
-    return makeOrdering(space, space.mergingStrategy());
+  auto make_ordering = [](const auto& pre_basis){
+    return makeOrdering(pre_basis, pre_basis.mergingStrategy());
   };
 
   if constexpr (std::is_same<NodeTag, TypeTree::PowerNodeTag>{}) {
-    constexpr std::size_t degree = Space::degree();
-    using Child = std::decay_t<decltype(*make_ordering(space.child(0)))>;
+    constexpr std::size_t degree = PreBasis::degree();
+    using Child = std::decay_t<decltype(*make_ordering(pre_basis.child(0)))>;
     using LexicographicOrdering = ArrayLexicographicOrdering<MergingStrategy, Child, degree>;
     std::array<std::shared_ptr<Child>, degree> storage;
     for (std::size_t i = 0; i < degree; ++i)
-      storage[i] = make_ordering(space.child(i));
+      storage[i] = make_ordering(pre_basis.child(i));
     return std::make_unique<LexicographicOrdering>( std::move(storage) );
   } else if constexpr (std::is_same<NodeTag, TypeTree::DynamicPowerNodeTag>{}) {
-    std::size_t degree = space.degree();
-    using Child = std::decay_t<decltype(*make_ordering(space.child(0)))>;
+    std::size_t degree = pre_basis.degree();
+    using Child = std::decay_t<decltype(*make_ordering(pre_basis.child(0)))>;
     using LexicographicOrdering =
       VectorLexicographicOrdering<MergingStrategy, Child>;
     std::vector<std::shared_ptr<Child>> storage(degree);
     for (std::size_t i = 0; i < degree; ++i)
-      storage[i] = make_ordering(space.child(i));
+      storage[i] = make_ordering(pre_basis.child(i));
     return std::make_unique<LexicographicOrdering>( std::move(storage) );
   } else {
     static_assert(std::is_same<NodeTag, TypeTree::CompositeNodeTag>{});
     auto unfold_children = [&](auto... i) {
-      using LexicographicOrdering = TupleLexicographicOrdering<MergingStrategy, std::decay_t<decltype(*make_ordering(space.child(i)))>...>;
-      auto storage = std::tuple{ make_ordering(space.child(i))... };
+      using LexicographicOrdering = TupleLexicographicOrdering<MergingStrategy, std::decay_t<decltype(*make_ordering(pre_basis.child(i)))>...>;
+      auto storage = std::tuple{ make_ordering(pre_basis.child(i))... };
       return std::make_unique<LexicographicOrdering>( std::move(storage) );
     };
-    auto indices = std::make_index_sequence<Space::degree()>{};
+    auto indices = std::make_index_sequence<PreBasis::degree()>{};
     return unpackIntegerSequence(unfold_children, indices);
   }
 }
 
-template<Concept::Impl::SpaceTree Space>
+template<Concept::Impl::PreBasisTree PreBasis>
 auto
-makeOrdering(const Space& space, Strategy::FlatLexicographic)
+makeOrdering(const PreBasis& pre_basis, Strategy::FlatLexicographic)
 {
-  return makeLexicographicOrdering(space);
+  return makeLexicographicOrdering(pre_basis);
 }
 
-template<Concept::Impl::SpaceTree Space>
+template<Concept::Impl::PreBasisTree PreBasis>
 auto
-makeOrdering(const Space& space, Strategy::BlockedLexicographic)
+makeOrdering(const PreBasis& pre_basis, Strategy::BlockedLexicographic)
 {
-  return makeLexicographicOrdering(space);
+  return makeLexicographicOrdering(pre_basis);
 }
 
-} // namespace Dune::Assembler::Impl
+} // namespace Dune::PDELab::inline Experimental::Impl
 
-#endif // DUNE_ASSEMBLER_SPACE_ORDERING_LEXICOGRAPHIC_HH
+#endif // DUNE_PDELAB_BASIS_ORDERING_LEXICOGRAPHIC_HH

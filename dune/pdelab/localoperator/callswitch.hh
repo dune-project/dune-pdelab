@@ -25,7 +25,7 @@ namespace Dune {
       {
         template<typename LO>
         auto require(LO&& lo) -> decltype(
-           Concept::requireConvertible<bool>(lo.skip_entity(std::declval<Args>()...))
+           Dune::Concept::requireConvertible<bool>(lo.skip_entity(std::declval<Args>()...))
           );
       };
 
@@ -34,7 +34,7 @@ namespace Dune {
       {
         template<typename LO>
         auto require(LO&& lo) -> decltype(
-          Concept::requireConvertible<bool>(lo.skip_intersection(std::declval<Args>()...))
+          Dune::Concept::requireConvertible<bool>(lo.skip_intersection(std::declval<Args>()...))
           );
       };
 
