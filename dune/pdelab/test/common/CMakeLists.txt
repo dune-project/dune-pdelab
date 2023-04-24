@@ -4,3 +4,7 @@ dune_add_test(
 
 dune_add_test(
   SOURCES test-tree.cc)
+
+  dune_add_test(
+    SOURCES test-container-entry.cc
+    LINK_LIBRARIES GTest::gtest_main)
