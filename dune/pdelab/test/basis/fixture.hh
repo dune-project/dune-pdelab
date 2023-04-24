@@ -263,8 +263,6 @@ using TupleBasisFixtures = ::testing::Types<
 // so we need to split test into different exceutables
 #ifdef BASIS_FIXTURES
 using BasisFixtures = BASIS_FIXTURES;
-#else
-#error Set up a basis fixture "-DBASIS_FIXTURES=LeafBasisFixtures|ArrayBasisFixtures|VectorBasisFixtures|TupleBasisFixtures"
 #endif
 
 #endif // DUNE_PDELAB_TEST_FIXTURE_BASIS_HH
