@@ -78,8 +78,7 @@ public:
   {
     SizeType max_ls = 0;
     forEach(node(), [&](const auto& child) {
-      using std::max;
-      max_ls = max(max_ls, child.maxLocalCount());
+      max_ls += child.maxLocalCount();
     });
     return max_ls;
   }
