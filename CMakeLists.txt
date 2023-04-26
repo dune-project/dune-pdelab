@@ -44,6 +44,7 @@ target_sources(dunepdelab
     $<$<BOOL:${DUNE_PDELAB_ENABLE_TRACING}>:dune/pdelab/common/trace.cc>
     dune/pdelab/common/hostname.cc
     dune/pdelab/common/logtag.cc
+    dune/pdelab/common/dictionary.cc
 )
 
 add_subdirectory(doc)

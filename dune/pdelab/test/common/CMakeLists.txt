@@ -12,3 +12,7 @@ dune_add_test(
 dune_add_test(
   SOURCES test-for-each.cc
   LINK_LIBRARIES GTest::gtest_main)
+
+dune_add_test(
+  SOURCES test-dictionary.cc
+  LINK_LIBRARIES GTest::gtest_main)
