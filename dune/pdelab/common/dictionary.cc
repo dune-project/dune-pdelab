@@ -3,10 +3,19 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/classname.hh>
 
+#include <unordered_set>
+#include <mutex>
 #include <cassert>
 #include <algorithm>
+#include <iostream>
+#include <sstream>
 
 namespace Dune::PDELab::inline Experimental {
+
+
+inline static std::once_flag _dictionary_default_format_flag;
+inline static std::unordered_map<std::type_index, std::function<std::string(const std::any&)>> _dictionary_format;
+inline static std::unordered_map<typename Dictionary::Value const *, std::pair<Dictionary*,bool>> _dictionary_registry;
 
 Dictionary& Dictionary::sub(std::string_view key) {
   std::string_view::size_type dot = key.find(".");
@@ -14,21 +23,23 @@ Dictionary& Dictionary::sub(std::string_view key) {
     return sub(key.substr(0,dot)).sub(key.substr(dot+1));
   else {
     Dictionary * sub_view = nullptr;
-    std::any& sub_param = _param[std::string{key}];
-    if (not sub_param.has_value())
-      sub_param = std::make_any<Dictionary>();
+    Value& sub_dict = _param[std::string{key}];
+    if (not sub_dict.object.has_value())
+      sub_dict = std::make_any<Dictionary>();
 
-    if (sub_param.type() == typeid(Dictionary)) {
-      sub_view = &std::any_cast<Dictionary&>(sub_param);
-    } else if (sub_param.type() == typeid(std::shared_ptr<Dictionary>)) {
-      sub_view = std::any_cast<std::shared_ptr<Dictionary>&>(sub_param).get();
-    } else if (sub_param.type() == typeid(std::weak_ptr<Dictionary>)) {
-      if (auto observe_ptr = std::any_cast<std::weak_ptr<Dictionary>&>(sub_param).lock())
+    if (sub_dict.object.type() == typeid(Dictionary)) {
+      sub_view = &any_cast<Dictionary&>(sub_dict);
+    } else if (sub_dict.object.type() == typeid(std::shared_ptr<Dictionary>)) {
+      sub_view = any_cast<std::shared_ptr<Dictionary>&>(sub_dict).get();
+    } else if (sub_dict.object.type() == typeid(std::weak_ptr<Dictionary>)) {
+      if (auto observe_ptr = any_cast<std::weak_ptr<Dictionary>&>(sub_dict).lock())
         sub_view = observe_ptr.get();
       else
         DUNE_THROW(InvalidStateException, "Reference to \"" << key << "\" sub-dictionary does not exist anymore");
+    } else if (auto it = _dictionary_registry.find(&sub_dict); it != _dictionary_registry.end()) {
+      sub_view = it->second.first;
     } else {
-      DUNE_THROW(RangeError, "Value (" << Impl::demangle(sub_param.type().name()) << ") for '" << key << "' key is not a sub-dictionary");
+      DUNE_THROW(RangeError, "Value (" << Impl::demangle(sub_dict.object.type().name()) << ") for '" << key << "' key is not a sub-dictionary");
     }
     assert(sub_view);
     return *sub_view;
@@ -41,19 +52,21 @@ const Dictionary& Dictionary::sub(std::string_view key) const {
     return sub(key.substr(0,dot)).sub(key.substr(dot+1));
   else {
     Dictionary const * sub_view = nullptr;
-    const std::any& sub_param = _param.at(std::string{key});
-    if (not sub_param.has_value())
+    const Value& sub_dict = _param.at(std::string{key});
+    if (not sub_dict.object.has_value())
       DUNE_THROW(RangeError, "Sub-dictionary \"" << key << "\" does not exist");
 
-    if (sub_param.type() == typeid(Dictionary)) {
-      sub_view = &std::any_cast<const Dictionary&>(sub_param);
-    } else if (sub_param.type() == typeid(std::shared_ptr<Dictionary>)) {
-      sub_view = std::any_cast<const std::shared_ptr<Dictionary>&>(sub_param).get();
-    } else if (sub_param.type() == typeid(std::weak_ptr<Dictionary>)) {
-      if (auto observe_ptr = std::any_cast<const std::weak_ptr<Dictionary>&>(sub_param).lock())
+    if (sub_dict.object.type() == typeid(Dictionary)) {
+      sub_view = &any_cast<const Dictionary&>(sub_dict);
+    } else if (sub_dict.object.type() == typeid(std::shared_ptr<Dictionary>)) {
+      sub_view = any_cast<const std::shared_ptr<Dictionary>&>(sub_dict).get();
+    } else if (sub_dict.object.type() == typeid(std::weak_ptr<Dictionary>)) {
+      if (auto observe_ptr = any_cast<const std::weak_ptr<Dictionary>&>(sub_dict).lock())
         sub_view = observe_ptr.get();
       else
         DUNE_THROW(InvalidStateException, "Sub-dictionary \"" << key << "\" does not exist");
+    } else if (auto it = _dictionary_registry.find(&sub_dict); it != _dictionary_registry.end()) {
+      sub_view = it->second.first;
     } else {
       DUNE_THROW(RangeError, "Key \"" << key << "\" is not a sub-dictionary");
     }
@@ -76,13 +89,15 @@ bool Dictionary::hasKey(std::string_view key) const {
 
 bool Dictionary::hasSub(std::string_view key) const {
   if (not hasKey(key)) return false;
-  auto& sub_param = get(key);
-  return   (sub_param.type() == typeid(Dictionary))
-        or (sub_param.type() == typeid(std::shared_ptr<Dictionary>))
-        or (sub_param.type() == typeid(std::weak_ptr<Dictionary>));
+  const Value& value = get(key);
+  const std::type_index& type = value.object.type();
+  return   (type == typeid(Dictionary))
+        or (type == typeid(std::shared_ptr<Dictionary>))
+        or (type == typeid(std::weak_ptr<Dictionary>))
+        or (_dictionary_registry.contains(&value));
 }
 
-std::any& Dictionary::get(std::string_view key) {
+Dictionary::Value& Dictionary::get(std::string_view key) {
   std::string_view::size_type dot = key.find(".");
   if (dot != std::string_view::npos)
     return sub(key.substr(0,dot)).get(key.substr(dot+1));
@@ -90,7 +105,7 @@ std::any& Dictionary::get(std::string_view key) {
     return _param[std::string{key}];
 }
 
-const std::any& Dictionary::get(std::string_view key) const {
+const Dictionary::Value& Dictionary::get(std::string_view key) const {
   std::string_view::size_type dot = key.find(".");
   if (dot != std::string_view::npos)
     return sub(key.substr(0,dot)).get(key.substr(dot+1));
@@ -98,8 +113,8 @@ const std::any& Dictionary::get(std::string_view key) const {
     return _param.at(std::string{key});
 }
 
-std::any& Dictionary::operator[] (std::string_view key) { return get(key); }
-const std::any& Dictionary::operator[] (std::string_view key) const { return get(key); }
+Dictionary::Value& Dictionary::operator[] (std::string_view key) { return get(key); }
+const Dictionary::Value& Dictionary::operator[] (std::string_view key) const { return get(key); }
 
 std::vector<std::string_view> Dictionary::keys() const {
   std::vector<std::string_view> keys;
@@ -139,7 +154,7 @@ std::ostream& operator<<(std::ostream& out, const Dictionary& dict) {
 std::set<Dictionary const *> Dictionary::report(std::ostream& out, std::string indent) const {
 
   // register default formatters
-  std::call_once(_default_format_flag, []{
+  std::call_once(_dictionary_default_format_flag, []{
     auto trivial = std::tuple<std::string,
       double, bool, signed char, unsigned char, short int,
       unsigned short int, int, unsigned int, long int,
@@ -163,9 +178,22 @@ std::set<Dictionary const *> Dictionary::report(std::ostream& out, std::string i
   std::set<Dictionary const *> refs;
   out << "[" << this << "] {\n";
   for(const auto& [key, value] : _param) {
+    const std::any& object = value.object;
+    if (not value.documentation.empty()) {
+      out << indent + "  /* ";
+      for (std::size_t i = 0; i < value.documentation.size(); i += 80){
+        auto sub = value.documentation.substr(i, 80);
+        if (i != 0) out << indent + "  ";
+        out << sub;
+        if (sub.size() == 80) out << "\n";
+      }
+      out << " */\n";
+    }
     if (hasSub(key)) {
       out << indent + "  " + Dune::className<Dictionary>();
-      if (value.type() == typeid(std::weak_ptr<Dictionary>) or value.type() == typeid(std::shared_ptr<Dictionary>)) {
+      if (   object.type() == typeid(std::weak_ptr<Dictionary>)
+          or object.type() == typeid(std::shared_ptr<Dictionary>)
+          or _dictionary_registry.contains(&value)) {
         out << "& " << key;
         refs.insert(&sub(key));
         out << " = " << &sub(key) << ";\n";
@@ -174,10 +202,10 @@ std::set<Dictionary const *> Dictionary::report(std::ostream& out, std::string i
         refs.merge(sub(key).report(out, indent + "  "));
       }
     } else {
-      out << indent + "  " + Impl::demangle(value.type().name()) + " " + key;
-      if (value.has_value()) {
-        if (auto it = _format.find(value.type()); it != _format.end())
-          out << " = " + it->second(value);
+      out << indent + "  " + Impl::demangle(object.type().name()) + " " + key;
+      if (object.has_value()) {
+        if (auto it = _dictionary_format.find(object.type()); it != _dictionary_format.end())
+          out << " = " + it->second(object);
         else
           out << " = <unregistered-formatter>";
       }
@@ -186,6 +214,18 @@ std::set<Dictionary const *> Dictionary::report(std::ostream& out, std::string i
   }
   out << indent << "};\n";
   return refs;
+}
+
+void Dictionary::register_format(const std::type_index& type, std::function<std::string(const std::any&)> f) {
+  _dictionary_format[type] = f;
+}
+
+void Dictionary::register_dictionary(const Value& value, Dictionary& dict, bool reference) {
+  _dictionary_registry[&value] = {&dict, reference};
+}
+
+void Dictionary::unregister_dictionary(const Value& value) {
+  _dictionary_registry.erase(&value);
 }
 
 } // namespace Dune::PDELab::inline Experimental

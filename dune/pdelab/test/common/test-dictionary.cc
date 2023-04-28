@@ -19,7 +19,7 @@ TEST(TestDictionary, SubDictionary) {
   EXPECT_EQ(foo.template get<int>("value2"), 2);
 
   foo["value2"] = std::monostate{}; // override type
-  foo["value2"] = 3;
+  foo["value2"] = 3; // override type again
   EXPECT_EQ(foo.template get<int>("value2"), 3);
 
   foo.erase("value2");
@@ -45,7 +45,7 @@ TEST(TestDictionary, References) {
   EXPECT_THROW(foo.sub("value"), Dune::RangeError);
   EXPECT_THROW(foo.sub("value_ptr"), Dune::RangeError);
 
-  foo["sub_ref"] = Dictionary::make_reference(foo_ptr);
+  foo["sub_ref"] = std::weak_ptr(foo_ptr);
   EXPECT_EQ(&foo.sub("sub_ref.sub_ref.sub_ref.sub_ref"), &foo);
   EXPECT_EQ(foo.template get<int>("sub_ref.sub_ref.sub_ref.sub_ref.value"), 1);
   foo["copy"] = foo;
@@ -61,17 +61,14 @@ TEST(TestDictionary, BaseClass) {
   struct Foo : public Dictionary {};
   auto foo = std::make_shared<Foo>();
   foo->get("value") = 1;
-  foo->get("foo1") = Dictionary::make_reference(foo);
-  foo->get("foo2") = Dictionary::make_shared(foo);
-  boo["foo1"] = Dictionary::make_reference(foo);
-  boo["foo2"] = Dictionary::make_shared(foo);
+  foo->get("self") = std::weak_ptr(foo);
+  boo["foo1"] = std::weak_ptr(foo);
+  boo["foo2"] = foo;
   foo->get("value") = 2;
-  EXPECT_EQ(boo.sub("foo1").template get<int>("value"), 2);
-  EXPECT_EQ(boo.sub("foo2").template get<int>("value"), 2);
+  EXPECT_EQ(boo.sub("foo1.self.self").template get<int>("value"), 2);
+  EXPECT_EQ(boo.sub("foo2.self.self").template get<int>("value"), 2);
   std::cout << boo << std::endl;
 }
-
-
 
 TEST(TestDictionary, Cyclic) {
   using namespace Dune::PDELab;
@@ -79,11 +76,34 @@ TEST(TestDictionary, Cyclic) {
   {
     auto boo = std::make_shared<Dictionary>();
     foo->get("value") = 1;
-    foo->get("boo") = Dictionary::make_reference(boo);
-    boo->get("foo") = Dictionary::make_reference(foo);
+    foo->get("boo") = std::weak_ptr(boo);
+    boo->get("foo") = std::weak_ptr(foo);
     foo->get("value") = 2;
     EXPECT_EQ(boo->sub("foo.boo.foo").template get<int>("value"), 2);
     std::cout << *boo << std::endl;
   }
   EXPECT_THROW(foo->sub("boo.foo"), Dune::InvalidStateException);
+}
+
+TEST(TestDictionary, SetterGetter) {
+  using namespace Dune::PDELab;
+  Dictionary dict;
+  bool getter_used = false;
+  bool setter_used = false;
+
+  dict["value"].documentation = "Integer with setter, getter and documentation";
+  dict["value"].setter = [&](const std::any& val){ setter_used = true; };
+  dict["value"].getter = [&](const std::any& val){ getter_used = true; };
+  EXPECT_FALSE(setter_used);
+  EXPECT_FALSE(getter_used);
+
+  dict["value"] = 2;
+  EXPECT_TRUE(setter_used);
+  EXPECT_FALSE(getter_used);
+
+  [[maybe_unused]] int two = dict.get("value", 2);
+  EXPECT_TRUE(setter_used);
+  EXPECT_TRUE(getter_used);
+
+  std::cout << dict << std::endl;
 }
