@@ -2,16 +2,16 @@
 #include "config.h"
 #endif
 
-#include <dune/pdelab/common/dictionary.hh>
+#include <dune/pdelab/common/property_tree.hh>
 
 #include <dune/common/exceptions.hh>
 
 #include <gtest/gtest.h>
 
 
-TEST(TestDictionary, SubDictionary) {
+TEST(TestPropertyTree, SubPropertyTree) {
   using namespace Dune::PDELab;
-  Dictionary foo;
+  PropertyTree foo;
   foo["value1"] = 1;
   foo["value2"] = 2;
 
@@ -33,10 +33,10 @@ TEST(TestDictionary, SubDictionary) {
   std::cout << foo << std::endl;
 }
 
-TEST(TestDictionary, References) {
+TEST(TestPropertyTree, References) {
   using namespace Dune::PDELab;
-  std::shared_ptr<Dictionary> foo_ptr = std::make_shared<Dictionary>();
-  Dictionary& foo = *foo_ptr;
+  std::shared_ptr<PropertyTree> foo_ptr = std::make_shared<PropertyTree>();
+  PropertyTree& foo = *foo_ptr;
   foo["value"] = 1;
   int i = 2;
   foo["value_ptr"] = &i;
@@ -55,10 +55,10 @@ TEST(TestDictionary, References) {
   std::cout << foo << std::endl;
 }
 
-TEST(TestDictionary, BaseClass) {
+TEST(TestPropertyTree, BaseClass) {
   using namespace Dune::PDELab;
-  Dictionary boo;
-  struct Foo : public Dictionary {};
+  PropertyTree boo;
+  struct Foo : public PropertyTree {};
   auto foo = std::make_shared<Foo>();
   foo->get("value") = 1;
   foo->get("self") = std::weak_ptr(foo);
@@ -70,11 +70,11 @@ TEST(TestDictionary, BaseClass) {
   std::cout << boo << std::endl;
 }
 
-TEST(TestDictionary, Cycle) {
+TEST(TestPropertyTree, Cycle) {
   using namespace Dune::PDELab;
-  auto foo = std::make_shared<Dictionary>();
+  auto foo = std::make_shared<PropertyTree>();
   {
-    auto boo = std::make_shared<Dictionary>();
+    auto boo = std::make_shared<PropertyTree>();
     foo->get("value") = 1;
     foo->get("boo") = std::weak_ptr(boo);
     boo->get("foo") = std::weak_ptr(foo);
@@ -85,9 +85,9 @@ TEST(TestDictionary, Cycle) {
   EXPECT_THROW(foo->sub("boo.foo"), Dune::InvalidStateException);
 }
 
-TEST(TestDictionary, SetterGetter) {
+TEST(TestPropertyTree, SetterGetter) {
   using namespace Dune::PDELab;
-  Dictionary dict;
+  PropertyTree dict;
   bool getter_used = false;
   bool setter_used = false;
 
@@ -109,9 +109,9 @@ TEST(TestDictionary, SetterGetter) {
 }
 
 
-TEST(TestDictionary, Array) {
+TEST(TestPropertyTree, Array) {
   using namespace Dune::PDELab;
-  Dictionary dict;
+  PropertyTree dict;
 
   dict["value"] = 1;
   dict["array"][0] = 1;

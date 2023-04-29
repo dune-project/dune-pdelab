@@ -14,5 +14,5 @@ dune_add_test(
   LINK_LIBRARIES GTest::gtest_main)
 
 dune_add_test(
-  SOURCES test-dictionary.cc
+  SOURCES test-property-tree.cc
   LINK_LIBRARIES GTest::gtest_main)
