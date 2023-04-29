@@ -70,7 +70,7 @@ TEST(TestDictionary, BaseClass) {
   std::cout << boo << std::endl;
 }
 
-TEST(TestDictionary, Cyclic) {
+TEST(TestDictionary, Cycle) {
   using namespace Dune::PDELab;
   auto foo = std::make_shared<Dictionary>();
   {
@@ -104,6 +104,33 @@ TEST(TestDictionary, SetterGetter) {
   [[maybe_unused]] int two = dict.get("value", 2);
   EXPECT_TRUE(setter_used);
   EXPECT_TRUE(getter_used);
+
+  std::cout << dict << std::endl;
+}
+
+
+TEST(TestDictionary, Array) {
+  using namespace Dune::PDELab;
+  Dictionary dict;
+
+  dict["value"] = 1;
+  dict["array"][0] = 1;
+  dict["array"][2] = true;
+  dict["array"][3] = 'c';
+  dict["array"][4] = "foo1";
+  dict["array"][5][2] = "foo2";
+  dict["array"][5][2].documentation = "Heterogeneous array";
+  dict["array"][5][1][0] = "foo3";
+
+  for (std::size_t i = 0; i != 10; ++i)
+    dict["array"][5][0][i] = i;
+
+  std::vector<std::size_t> vec(dict["array"][5][0].size());
+  for (std::size_t i = 0; i != vec.size(); ++i)
+    vec[i] = any_cast<std::size_t>(dict["array"][5][0][i]);
+
+  for (std::size_t i = 0; i != vec.size(); ++i)
+      EXPECT_EQ(vec[i], i);
 
   std::cout << dict << std::endl;
 }
