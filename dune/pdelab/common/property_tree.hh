@@ -41,34 +41,25 @@ public:
 
   template <class T>
   T& get(std::string_view key) & {
-    return any_cast<T&>(get(key));
+    return unwrap_property_ref<T>(get(key));
   }
 
   template <class T>
   T&& get(std::string_view key) && {
-    return any_cast<T&&>(get(key));
-  }
-
-  template <class T>
-  T& get(std::string_view key, T&& default_value) {
-    return any_cast<T&>(get(key), std::forward<T>(default_value));
+    return unwrap_property_ref<T>(std::move(get(key)));
   }
 
   template <class T>
   const T& get(std::string_view key) const {
-    const Property& value = get(key);
-    try {
-      return any_cast<const T&>(value);
-    } catch (std::bad_any_cast& exception) {
-      try {
-        report_bad_key(key);
-      } catch (...) {}
-      throw exception;
-    }
+    return unwrap_property_ref<const T>(get(key));
+  }
+
+  template <class T>
+  std::remove_cvref_t<T>& get(std::string_view key, T&& default_value) {
+    return unwrap_property_ref(get(key), std::forward<T>(default_value));
   }
 
   std::vector<std::string_view> keys() const;
-  std::vector<std::string_view> subs() const;
 
   void erase(std::string_view key);
 
@@ -77,8 +68,6 @@ public:
   std::set<PropertyTree const *> report(std::ostream& out, std::string indent = "") const;
 
 private:
-  void report_bad_key(std::string_view key) const;
-
   std::unordered_map<std::string, Property> _param;
 };
 
