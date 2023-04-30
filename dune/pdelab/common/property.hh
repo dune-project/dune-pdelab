@@ -10,7 +10,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
-#include <typeindex>
+#include <typeinfo>
 #include <functional>
 #include <sstream>
 #include <set>
@@ -19,129 +19,175 @@ namespace Dune::PDELab::inline Experimental {
 
 class PropertyTree;
 
+
+struct BadPropertyCast : Dune::Exception {};
+struct BadPropertyReference : Dune::InvalidStateException {};
+
 class Property {
 
 public:
-  ~Property() {
-    *this = nullptr;
+
+  Property() = default;
+  Property(std::string_view);
+  Property(const Property&);
+  Property(Property&&);
+  ~Property();
+
+  Property& operator=(const Property&);
+  Property& operator=(Property&&);
+
+  operator std::any&() = delete;
+  operator const std::any&() const = delete;
+
+  std::size_t size() const { return as_array().size(); }
+  const std::type_info& type() const { return _object.type(); };
+  std::string_view name() const { return _name; }
+
+  bool has_tree() const;
+  PropertyTree& as_tree();
+  const PropertyTree& as_tree() const;
+
+  bool has_array() const;
+  std::vector<Property>& as_array();
+  const std::vector<Property>& as_array() const;
+
+  Property& operator[](std::size_t i);
+  const Property& operator[](std::size_t i) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const Property& ptree);
+  std::set<PropertyTree const *> report(std::ostream& out, std::string indent) const;
+
+  template<class T>
+  Property(T&& arg) {
+    *this = std::forward<T>(arg);
   }
 
   Property& operator=(std::nullptr_t) {
-    if (_clean_up) {_clean_up(); _clean_up = nullptr;};
-    object.reset();
+    if (auto clean_up = std::move(_clean_up)) clean_up();
+    _object.reset();
     return *this;
   }
 
   template<class T>
   Property& operator=(T&& t) {
     *this = nullptr;
-    object = std::forward<T>(t);
-    if (setter) setter(object);
+    _object = std::make_any<T>(std::forward<T>(t));
+    if (setter) setter(*this);
     return *this;
   }
 
   template<class T>
   requires (std::is_base_of_v<PropertyTree, T> and not std::same_as<PropertyTree,T>)
   Property& operator=(std::weak_ptr<T> ptree_ptr) {
-    auto observe_ptr = ptree_ptr.lock();
     *this = nullptr;
-    object = std::move(ptree_ptr);
-    if (observe_ptr)
-      register_ptree(*observe_ptr, true);
-    else
-      DUNE_THROW(InvalidStateException, "Weak poiner does not point anywhere");
-    if (setter) setter(object);
+    _object = ptree_ptr;
+    register_ptree(ptree_ptr);
+    if (setter) setter(*this);
     return *this;
   }
 
   template<class T>
   requires (std::is_base_of_v<PropertyTree, T> and not std::same_as<PropertyTree,T>)
   Property& operator=(std::shared_ptr<T> ptree_ptr) {
-    PropertyTree& ptree = *ptree_ptr;
+    std::weak_ptr<PropertyTree> ptree_weak = ptree_ptr;
     *this = nullptr;
-    object = std::move(ptree_ptr);
-    register_ptree(ptree, true);
-    if (setter) setter(object);
+    _object = std::move(ptree_ptr);
+    register_ptree(ptree_weak);
+    if (setter) setter(*this);
     return *this;
+  }
+
+  template<class T, class U>
+  requires std::derived_from<std::remove_reference_t<U>, Property>
+  friend T property_cast(U&& val) {
+    if (val.getter) val.getter(val);
+    try {
+      return std::any_cast<T>(std::forward<U>(val)._object);
+    } catch (std::bad_any_cast& ex) {
+      throw val.bad_cast_exception(className<T>());
+    }
   }
 
   template<class T>
-  requires (std::is_base_of_v<PropertyTree, std::remove_cv_t<T>> and not std::same_as<PropertyTree,std::remove_cv_t<T>>)
-  Property& operator=(T&& ptree_ptr) {
-    *this = nullptr;
-    object = std::forward<T>(ptree_ptr);
-    register_ptree(std::any_cast<PropertyTree&>(object), false);
-    if (setter) setter(object);
-    return *this;
+  friend std::remove_cvref_t<T>& property_cast(Property& val, T&& default_val) {
+    if (not val._object.has_value())
+      val = std::forward<T>(default_val);
+    return property_cast<std::remove_cvref_t<T>&>(val);
   }
 
-  template <class T>
-  friend T any_cast(Property& val) {
-    if (val.getter) val.getter(val.object);
-    try {
-      return std::any_cast<T>(val.object);
-    } catch (std::bad_any_cast& ex) {
-      val.report_bad_cast(className<T>());
-      throw ex;
-    }
+  template<class T>
+  requires (not std::is_reference_v<T>)
+  friend const T& unwrap_property_ref(const Property& val) {
+    using U = std::remove_const_t<T>;
+    if (val.type() == typeid(std::shared_ptr<U>))
+      return *property_cast<const std::shared_ptr<U>&>(val);
+    if (val.type() == typeid(std::shared_ptr<const U>))
+      return *property_cast<const std::shared_ptr<const U>&>(val);
+    else if (val.type() == typeid(std::weak_ptr<U>)) {
+      if (auto observe_ptr = property_cast<const std::weak_ptr<U>&>(val).lock())
+        return *observe_ptr;
+      else
+        DUNE_THROW(BadPropertyReference, "Weak pointer to \'" + className<U>() + "\' not exist anymore");
+    } else if (val.type() == typeid(std::weak_ptr<const U>)) {
+      if (auto observe_ptr = property_cast<const std::weak_ptr<const U>&>(val).lock())
+        return *observe_ptr;
+      else
+        DUNE_THROW(BadPropertyReference, "Weak pointer to \'" + className<U>() + "\' not exist anymore");
+    } else if (val.type() ==  typeid(std::reference_wrapper<U>))
+      return property_cast<std::reference_wrapper<U>>(val).get();
+    else if (val.type() ==  typeid(std::reference_wrapper<const U>))
+      return property_cast<std::reference_wrapper<const U>>(val).get();
+    else
+      return property_cast<const T&>(val);
   }
 
-  template <class T>
-  friend T any_cast(const Property& val) {
-    if (val.getter) val.getter(val.object);
-    try {
-      return std::any_cast<T>(val.object);
-    } catch (std::bad_any_cast& ex) {
-      val.report_bad_cast(className<T>());
-      throw ex;
-    }
+  template<class T>
+  requires (not std::is_reference_v<T>)
+  friend T&& unwrap_property_ref(Property&& val) {
+    if (val.type() == typeid(std::shared_ptr<T>))
+      return std::move(*property_cast<const std::shared_ptr<T>&>(val));
+    else if (val.type() == typeid(std::weak_ptr<T>)) {
+      if (auto observe_ptr = property_cast<const std::weak_ptr<T>&>(val).lock())
+        return std::move(*observe_ptr);
+      else
+        DUNE_THROW(BadPropertyReference, "Weak pointer to \'" + className<T>() + "\' not exist anymore");
+    } else if (val.type() ==  typeid(std::reference_wrapper<T>))
+      return std::move(property_cast<std::reference_wrapper<T>>(val).get());
+    else
+      return property_cast<T&&>(std::move(val));
   }
 
-  template <class T>
-  friend T any_cast(Property&& val) {
-    if (val.getter) val.getter(val.object);
-    try {
-      return std::any_cast<T>(std::move(val.object));
-    } catch (std::bad_any_cast& ex) {
-      val.report_bad_cast(className<T>());
-      throw ex;
-    }
+  template<class T>
+  requires (not std::is_reference_v<T> && not std::is_const_v<T>)
+  friend T& unwrap_property_ref(Property& val) {
+    if (val.type() == typeid(std::shared_ptr<T>))
+      return *property_cast<const std::shared_ptr<T>&>(val);
+    else if (val.type() == typeid(std::weak_ptr<T>)) {
+      if (auto observe_ptr = property_cast<const std::weak_ptr<T>&>(val).lock())
+        return *observe_ptr;
+      else
+        DUNE_THROW(BadPropertyReference, "Weak pointer to \'" + className<T>() + "\' not exist anymore");
+    } else if (val.type() ==  typeid(std::reference_wrapper<T>))
+      return property_cast<std::reference_wrapper<T>>(val).get();
+    else
+      return property_cast<T&>(val);
   }
 
-  template <class T, class U>
-  friend T any_cast(Property& val, U&& default_val) {
-    if (not val.object.has_value())
-      val = std::forward<U>(default_val);
-    return any_cast<T>(val);
+
+  template<class T>
+  friend std::remove_cvref_t<T>& unwrap_property_ref(Property& val, T&& default_val) {
+    if (val._object.has_value())
+      return unwrap_property_ref<std::remove_cvref_t<T>>(val);
+    else
+      return property_cast<std::remove_cvref_t<T>&>(val = std::forward<T>(default_val));
   }
-
-  Property& operator[](std::size_t i);
-  const Property& operator[](std::size_t i) const;
-
-  std::size_t size() const { return as_array().size(); }
-
-  bool has_property_tree() const;
-  PropertyTree& as_property_tree();
-  const PropertyTree& as_property_tree() const;
-
-  bool has_array() const;
-  std::vector<Property>& as_array();
-  const std::vector<Property>& as_array() const;
-
-  friend std::ostream& operator<<(std::ostream& out, const Property& ptree);
-
-  std::string documentation;
-  std::function<void(const std::any&)> getter;
-  std::function<void(std::any&)> setter;
-
-  std::set<PropertyTree const *> report(std::ostream& out, std::string, std::string indent) const;
 
 private:
 
-  void report_bad_cast(const std::string& type) const;
+  BadPropertyCast bad_cast_exception(const std::string& type) const;
 
-  void register_ptree(PropertyTree& ptree, bool reference);
-  void static register_format(const std::type_index& type, std::function<std::string(const Property&)> f);
+  void register_ptree(std::weak_ptr<PropertyTree> ptree);
+  void static register_format(const std::type_info& type, std::function<std::string(const Property&)> f);
 
   template<class T>
   void static register_format(std::function<std::string(const Property&)> f) {
@@ -152,13 +198,13 @@ private:
   void static register_format() {
     register_format(typeid(T), [](const Property& val) {
       std::stringstream ss;
-      ss << any_cast<const T&>(val);
+      ss << property_cast<const T&>(val);
       return ss.str();
     });
 
     register_format(typeid(T*), [](const Property& val){
       std::stringstream ss;
-      auto ptr = any_cast<T*>(val);
+      auto ptr = property_cast<T*>(val);
       ss << "[" << ptr << "]";
       if (ptr) ss << " " << *ptr;
       return ss.str();
@@ -168,7 +214,13 @@ private:
       register_format<const T>();
   }
 
-  std::any object;
+public:
+  std::string documentation;
+  std::function<void(const Property&)> getter;
+  std::function<void(Property&)> setter;
+private:
+  std::any _object;
+  std::string _name;
   std::function<void()> _clean_up;
 };
 

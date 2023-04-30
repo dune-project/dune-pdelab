@@ -8,10 +8,33 @@
 
 #include <gtest/gtest.h>
 
+TEST(TestProperty, References) {
+  Dune::PDELab::Property val = 1;
+  int& i = unwrap_property_ref<int>(val);
+  EXPECT_EQ(i, 1);
+  Dune::PDELab::Property ref = std::ref(i);
+  int& i2 = unwrap_property_ref<int>(ref);
+  EXPECT_EQ(i2, 1);
+  EXPECT_EQ(&i2, &i);
+  int&& m2 = unwrap_property_ref<int>(std::move(ref));
+  EXPECT_EQ(m2, 1);
+  Dune::PDELab::Property cref = std::cref(i2);
+  const int& i3 = unwrap_property_ref<const int>(cref);
+  EXPECT_EQ(&m2, &i3);
+  auto i4 = std::make_shared<int>(2);
+  Dune::PDELab::Property ptr = i4;
+  int& i5 = unwrap_property_ref<int>(ptr);
+  EXPECT_EQ(&*i4, &i5);
+  EXPECT_EQ(i5, 2);
+  const int& i6 = unwrap_property_ref<const int>(ptr);
+  EXPECT_EQ(&*i4, &i6);
+  int&& i7 = unwrap_property_ref<int>(std::move(ptr));
+  EXPECT_EQ(i7, 2);
+}
+
 
 TEST(TestPropertyTree, SubPropertyTree) {
-  using namespace Dune::PDELab;
-  PropertyTree foo;
+  Dune::PDELab::PropertyTree foo;
   foo["value1"] = 1;
   foo["value2"] = 2;
 
@@ -41,6 +64,22 @@ TEST(TestPropertyTree, References) {
   int i = 2;
   foo["value_ptr"] = &i;
   EXPECT_EQ(foo.template get<int*>("value_ptr"), &i);
+
+  auto shared = std::make_shared<int>(4);
+  foo["shared"] = shared;
+  EXPECT_EQ(foo.get("shared", 2), 4);
+  EXPECT_EQ(foo.template get<int>("shared"), 4);
+
+  foo["weak"] = std::weak_ptr(shared);
+  EXPECT_EQ(foo.get("weak", 2), 4);
+  EXPECT_EQ(foo.template get<int>("weak"), 4);
+
+  foo.erase("shared");
+  shared = nullptr;
+  EXPECT_THROW(foo.get("weak", 2), Dune::PDELab::BadPropertyReference);
+
+  foo["shared"] = std::make_shared<const int>(4);
+  EXPECT_THROW(foo.get("shared", 2), Dune::PDELab::BadPropertyCast);
 
   EXPECT_THROW(foo.sub("value"), Dune::RangeError);
   EXPECT_THROW(foo.sub("value_ptr"), Dune::RangeError);
@@ -92,8 +131,8 @@ TEST(TestPropertyTree, SetterGetter) {
   bool setter_used = false;
 
   dict["value"].documentation = "Integer with setter, getter and documentation";
-  dict["value"].setter = [&](const std::any& val){ setter_used = true; };
-  dict["value"].getter = [&](const std::any& val){ getter_used = true; };
+  dict["value"].setter = [&](const Property& val){ setter_used = true; };
+  dict["value"].getter = [&](const Property& val){ getter_used = true; };
   EXPECT_FALSE(setter_used);
   EXPECT_FALSE(getter_used);
 
@@ -127,7 +166,7 @@ TEST(TestPropertyTree, Array) {
 
   std::vector<std::size_t> vec(dict["array"][5][0].size());
   for (std::size_t i = 0; i != vec.size(); ++i)
-    vec[i] = any_cast<std::size_t>(dict["array"][5][0][i]);
+    vec[i] = property_cast<std::size_t>(dict["array"][5][0][i]);
 
   for (std::size_t i = 0; i != vec.size(); ++i)
       EXPECT_EQ(vec[i], i);

@@ -12,7 +12,7 @@ PropertyTree& PropertyTree::sub(std::string_view key) {
   if (dot != std::string_view::npos)
     return sub(key.substr(0,dot)).sub(key.substr(dot+1));
   else
-    return _param[std::string{key}].as_property_tree();
+    return _param.try_emplace(std::string{key}, key).first->second.as_tree();
 }
 
 const PropertyTree& PropertyTree::sub(std::string_view key) const {
@@ -20,7 +20,7 @@ const PropertyTree& PropertyTree::sub(std::string_view key) const {
   if (dot != std::string_view::npos)
     return sub(key.substr(0,dot)).sub(key.substr(dot+1));
   else
-    return _param.at(std::string{key}).as_property_tree();
+    return _param.at(std::string{key}).as_tree();
 }
 
 bool PropertyTree::hasKey(std::string_view key) const {
@@ -36,7 +36,7 @@ bool PropertyTree::hasKey(std::string_view key) const {
 
 bool PropertyTree::hasSub(std::string_view key) const {
   if (not hasKey(key)) return false;
-  return get(key).has_property_tree();
+  return get(key).has_tree();
 }
 
 Property& PropertyTree::get(std::string_view key) {
@@ -44,7 +44,7 @@ Property& PropertyTree::get(std::string_view key) {
   if (dot != std::string_view::npos)
     return sub(key.substr(0,dot)).get(key.substr(dot+1));
   else
-    return _param[std::string{key}];
+    return _param.try_emplace(std::string{key}, key).first->second;
 }
 
 const Property& PropertyTree::get(std::string_view key) const {
@@ -61,12 +61,6 @@ const Property& PropertyTree::operator[] (std::string_view key) const { return g
 std::vector<std::string_view> PropertyTree::keys() const {
   std::vector<std::string_view> keys;
   for(const auto& [key, ppt] : _param) keys.emplace_back(key);
-  return keys;
-}
-
-std::vector<std::string_view> PropertyTree::subs() const {
-  std::vector<std::string_view> keys;
-  for(const auto& [key, ppt] : _param) if (hasSub(key)) keys.emplace_back(key);
   return keys;
 }
 
@@ -94,19 +88,12 @@ std::ostream& operator<<(std::ostream& out, const PropertyTree& ptree) {
 }
 
 std::set<PropertyTree const *> PropertyTree::report(std::ostream& out, std::string indent) const {
-
   std::set<PropertyTree const *> refs;
   out << "[" << this << "] {\n";
-  for(const auto& [key, ppt] : _param) {
-    refs.merge(ppt.report(out, key, indent + "  "));
-    out << ";\n";
-  }
-  out << indent << "};\n";
+  for(const auto& [key, ppt] : _param)
+    refs.merge(ppt.report(out, indent + "  "));
+  out << indent << "}\n";
   return refs;
-}
-
-void PropertyTree::report_bad_key(std::string_view key) const {
-  std::cerr << "=> Bad cast of key '" << key << "' <=\n";
 }
 
 } // namespace Dune::PDELab::inline Experimental
