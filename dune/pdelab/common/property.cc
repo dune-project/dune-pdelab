@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <dune/pdelab/common/property_tree.hh>
 
 #include <dune/common/exceptions.hh>
@@ -5,25 +9,66 @@
 
 #include <unordered_set>
 #include <mutex>
+#include <shared_mutex>
 #include <cassert>
 #include <algorithm>
+#include <utility>
 #include <iostream>
 #include <sstream>
+#include <unordered_map>
+
+#if __cpp_lib_stacktrace >= 202011L
+#include <stacktrace>
+#endif
 
 namespace Dune::PDELab::inline Experimental {
 
 inline static std::once_flag _property_default_format_flag;
 inline static std::unordered_map<std::type_index, std::function<std::string(const Property&)>> _property_format;
-inline static std::unordered_map<Property const *, std::weak_ptr<PropertyTree>> _ptree_registry;
 
-void Property::register_ptree(std::weak_ptr<PropertyTree> ptree) {
-  _ptree_registry[this] = std::move(ptree);
+class PropertyTreeRegistry {
+public:
+  template<class F>
+  decltype(auto) unique(F apply) {
+    std::unique_lock guard{_mutex};
+    return apply(_map);
+  }
+
+  template<class F>
+  decltype(auto) shared(F apply) {
+    std::shared_lock guard{_mutex};
+    return apply(std::as_const(_map));
+  }
+
+  std::optional<Impl::WeakPropertyTree> find(Property const * key) {
+    return shared([key](const auto& map) -> std::optional<Impl::WeakPropertyTree> {
+      if (auto it = map.find(key); it != map.end())
+        return it->second;
+      else
+        return std::nullopt;
+    });
+  }
+private:
+  std::unordered_map<Property const *, Impl::WeakPropertyTree> _map;
+  std::shared_mutex _mutex;
+};
+inline static PropertyTreeRegistry _ptree_registry;
+
+void Property::register_derived_ptree(std::optional<Impl::WeakPropertyTree> ptree) {
+  if (not ptree) return;
   assert(not _clean_up);
-  _clean_up = [this]{ _ptree_registry.erase(this); };
+  _ptree_registry.unique([&](auto& map){ map[this] = ptree.value(); });
+  _clean_up = [this]{
+    _ptree_registry.unique([&](auto& map){ map.erase(this); });
+  };
 }
 
-Property::Property(std::string_view ppt_name)
-  : _name{ppt_name} {}
+Property::Property(std::string name_, std::string documentation_, Setter setter_, Getter getter_)
+  : name{std::move(name_)}
+  , documentation(std::move(documentation_))
+  , setter(std::move(setter_))
+  , getter(std::move(getter_))
+{}
 
 Property::Property(const Property& other) {
   *this = other;
@@ -38,34 +83,43 @@ Property::~Property() {
 }
 
 Property& Property::operator=(const Property& other) {
-  _name = other._name;
+  name = other.name;
   documentation = other.documentation;
   getter = other.getter;
   setter = other.setter;
   _object = other._object;
-  if (auto it = _ptree_registry.find(&other); it != _ptree_registry.end())
-    register_ptree(it->second);
+  register_derived_ptree(_ptree_registry.find(&other));
   return *this;
 }
 
+Property& Property::operator=(Property& other) {
+  return *this = std::as_const(other);
+}
+
+
 Property& Property::operator=(Property&& other) {
-  _name = std::move(other._name);
+  name = std::move(other.name);
   documentation = std::move(other.documentation);
   getter = std::move(other.getter);
   setter = std::move(other.setter);
   _object = std::move(other._object);
-  if (auto it = _ptree_registry.find(&other); it != _ptree_registry.end())
-    register_ptree(it->second);
+  register_derived_ptree(_ptree_registry.find(&other));
   if (auto clean_up = std::move(other._clean_up)) clean_up();
+  return *this;
+}
+
+Property& Property::operator=(std::nullptr_t) {
+  if (auto clean_up = std::move(_clean_up)) clean_up();
+  _object.reset();
   return *this;
 }
 
 bool Property::has_tree() const {
   const std::type_index& type = _object.type();
-  return   (type == typeid(PropertyTree))
-        or (type == typeid(std::shared_ptr<PropertyTree>))
-        or (type == typeid(std::weak_ptr<PropertyTree>))
-        or (_ptree_registry.contains(this));
+  return    (type == typeid(PropertyTree))
+         or (type == typeid(std::shared_ptr<PropertyTree>))
+         or (type == typeid(std::weak_ptr<PropertyTree>))
+         or (_ptree_registry.find(this));
 }
 
 const PropertyTree& Property::as_tree() const {
@@ -79,15 +133,16 @@ const PropertyTree& Property::as_tree() const {
       ptree = observe_ptr.get();
     else
       DUNE_THROW(InvalidStateException, "Reference to sub-PropertyTree does not exist anymore");
-  } else if (auto it = _ptree_registry.find(this); it != _ptree_registry.end()) {
-    if (auto observe_ptr = it->second.lock())
-      ptree = observe_ptr.get();
-    else
-      DUNE_THROW(InvalidStateException, "Reference to sub-PropertyTree does not exist anymore");
-  } else {
-    DUNE_THROW(RangeError, "Property (" << Impl::demangle(_object.type().name()) << ") is not a Property Tree");
+  } else if (auto ptree_opt = _ptree_registry.find(this)) {
+    std::visit([&](auto&& weak_ptr){
+      if (auto observe_ptr = weak_ptr.lock())
+        ptree = observe_ptr.get();
+      else
+        DUNE_THROW(InvalidStateException, "Reference to sub-PropertyTree does not exist anymore");
+    }, ptree_opt.value());
   }
-  assert(ptree);
+  if (not ptree)
+    throw bad_cast_exception(typeid(const PropertyTree&), "Property is not a const Property Tree");
   return *ptree;
 }
 
@@ -99,47 +154,42 @@ PropertyTree& Property::as_tree() {
   if (_object.type() == typeid(PropertyTree)) {
     ptree = &property_cast<PropertyTree&>(*this);
   } else if (_object.type() == typeid(std::shared_ptr<PropertyTree>)) {
-    ptree = property_cast<std::shared_ptr<PropertyTree>&>(*this).get();
+    ptree = property_cast<std::shared_ptr<PropertyTree>>(*this).get();
   } else if (_object.type() == typeid(std::weak_ptr<PropertyTree>)) {
-    if (auto observe_ptr = property_cast<std::weak_ptr<PropertyTree>&>(*this).lock())
+    if (auto observe_ptr = property_cast<std::weak_ptr<PropertyTree>>(*this).lock())
       ptree = observe_ptr.get();
     else
       DUNE_THROW(InvalidStateException, "Reference to sub-PropertyTree does not exist anymore");
-  } else if (auto it = _ptree_registry.find(this); it != _ptree_registry.end()) {
-    if (auto observe_ptr = it->second.lock())
-      ptree = observe_ptr.get();
-    else
-      DUNE_THROW(InvalidStateException, "Reference to sub-PropertyTree does not exist anymore");
-  } else {
-    DUNE_THROW(RangeError, "Property (" << Impl::demangle(_object.type().name()) << ") is not a PropertyTree");
+  } else if (auto ptree_opt = _ptree_registry.find(this)) {
+    std::visit([&ptree]<class T>(const T& weak_ptr){
+      if constexpr (std::same_as<T, std::weak_ptr<PropertyTree>>) {
+        if (auto observe_ptr = weak_ptr.lock())
+          ptree = observe_ptr.get();
+        else
+          DUNE_THROW(InvalidStateException, "Reference to sub-PropertyTree does not exist anymore");
+      }
+    }, ptree_opt.value());
   }
-  assert(ptree);
+  if (not ptree)
+    throw bad_cast_exception(typeid(PropertyTree&), "Property is not a const Property Tree");
   return *ptree;
 }
 
-bool Property::has_array() const {
+bool Property::has_vector() const {
   const std::type_index& type = _object.type();
   return   (type == typeid(std::vector<Property>));
 }
 
-const std::vector<Property>& Property::as_array() const {
+const std::vector<Property>& Property::as_vector() const & {
   return property_cast<const std::vector<Property>&>(*this);
 }
 
-std::vector<Property>& Property::as_array() {
-  return property_cast<std::vector<Property>&>(*this);
+std::vector<Property>& Property::as_vector() & {
+  return property_cast(*this, std::vector<Property>{});
 }
 
-const Property& Property::operator[](std::size_t i) const {
-  return as_array()[i];
-}
-
-Property& Property::operator[](std::size_t i) {
-  if (not _object.has_value())
-    *this = std::vector<Property>(i+1);
-  auto& vec = as_array();
-  if (vec.size() <= i) vec.resize(i+1);
-  return vec[i];
+std::vector<Property>&& Property::as_vector() && {
+  return std::move(property_cast(*this, std::vector<Property>{}));
 }
 
 std::set<PropertyTree const *> Property::report(std::ostream& out, std::string indent) const {
@@ -200,10 +250,10 @@ std::set<PropertyTree const *> Property::report(std::ostream& out, std::string i
     out << " */" << ((documentation.size() > 80) ? '\n' : ' ');
   }
   if (has_tree()) {
-    out << indent + Dune::className<PropertyTree>() + " " + _name + " ";
+    out << indent + Dune::className<PropertyTree>() + " " + name + " ";
     if (   _object.type() == typeid(std::weak_ptr<PropertyTree>)
         or _object.type() == typeid(std::shared_ptr<PropertyTree>)
-        or _ptree_registry.contains(this)) {
+        or _ptree_registry.find(this)) {
       refs.insert(&as_tree());
       out << "= " << &as_tree();
       out << ";\n";
@@ -211,8 +261,8 @@ std::set<PropertyTree const *> Property::report(std::ostream& out, std::string i
       refs.merge(as_tree().report(out, indent + "  "));
     }
   } else {
-    if (not indent.empty() and not _name.empty())
-      out << indent + Impl::demangle(_object.type().name()) + " " + _name + " = ";
+    if (not indent.empty() and not name.empty())
+      out << indent + Dune::Impl::demangle(_object.type().name()) + " " + name + " = ";
     if (_object.has_value()) {
       if (auto it = _property_format.find(_object.type()); it != _property_format.end())
         out <<  it->second(*this);
@@ -221,18 +271,25 @@ std::set<PropertyTree const *> Property::report(std::ostream& out, std::string i
     } else {
       out << "<empty>";
     }
-    if (not indent.empty() and not _name.empty())
+    if (not indent.empty() and not name.empty())
       out << ";\n";
   }
   return refs;
 }
 
-BadPropertyCast Property::bad_cast_exception(const std::string& type) const {
+BadPropertyCast Property::bad_cast_exception(const std::type_info& type, std::optional<std::string> other_info) const {
   std::stringstream ss;
   ss << "\n===========> Bad property cast <===========\n"
-     << "Property name          := '" << _name << "'\n"
-     << "Source type (std::any) := '" << Impl::demangle(_object.type().name()) << "'\n"
-     << "Target type            := '" << type << "'\n";
+     << "Property name          := '" << name << "'\n"
+     << "Source type (std::any) := '" << Dune::Impl::demangle(_object.type().name()) << "'\n"
+     << "Target type            := '" << Dune::Impl::demangle(type.name()) << "'\n";
+  if (other_info)
+    ss << "\n--------------- Other Info ---------------\n"
+      << other_info.value() << '\n';
+#if __cpp_lib_stacktrace >= 202011L
+  ss << "\n--------------- StackTrace ---------------\n"
+     << std::stacktrace::current() << '\n';
+#endif
   if (not documentation.empty())
     ss << "\n************* Documentation *************\n"
        << documentation << "\n"
