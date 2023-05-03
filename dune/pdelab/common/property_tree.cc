@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <dune/pdelab/common/property_tree.hh>
 
 #include <cassert>
@@ -12,7 +16,7 @@ PropertyTree& PropertyTree::sub(std::string_view key) {
   if (dot != std::string_view::npos)
     return sub(key.substr(0,dot)).sub(key.substr(dot+1));
   else
-    return _param.try_emplace(std::string{key}, key).first->second.as_tree();
+    return _param.try_emplace(std::string{key}, std::string{key}).first->second.as_tree();
 }
 
 const PropertyTree& PropertyTree::sub(std::string_view key) const {
@@ -20,7 +24,7 @@ const PropertyTree& PropertyTree::sub(std::string_view key) const {
   if (dot != std::string_view::npos)
     return sub(key.substr(0,dot)).sub(key.substr(dot+1));
   else
-    return _param.at(std::string{key}).as_tree();
+    return get(key).as_tree();
 }
 
 bool PropertyTree::hasKey(std::string_view key) const {
@@ -44,15 +48,18 @@ Property& PropertyTree::get(std::string_view key) {
   if (dot != std::string_view::npos)
     return sub(key.substr(0,dot)).get(key.substr(dot+1));
   else
-    return _param.try_emplace(std::string{key}, key).first->second;
+    return _param.try_emplace(std::string{key}, std::string{key}).first->second;
 }
 
 const Property& PropertyTree::get(std::string_view key) const {
   std::string_view::size_type dot = key.find(".");
   if (dot != std::string_view::npos)
     return sub(key.substr(0,dot)).get(key.substr(dot+1));
-  else
+  else try {
     return _param.at(std::string{key});
+  } catch (std::out_of_range&) {
+    DUNE_THROW(RangeError, "Key '" << key << "' does not exist in ParameterTree");
+  }
 }
 
 Property& PropertyTree::operator[] (std::string_view key) { return get(key); }
@@ -90,8 +97,11 @@ std::ostream& operator<<(std::ostream& out, const PropertyTree& ptree) {
 std::set<PropertyTree const *> PropertyTree::report(std::ostream& out, std::string indent) const {
   std::set<PropertyTree const *> refs;
   out << "[" << this << "] {\n";
-  for(const auto& [key, ppt] : _param)
+  for(const auto& [key, ppt] : _param) {
+    if (key != ppt.name)
+      DUNE_THROW(NotImplemented, "Property name and PropertyTree key have different values. This is not valid for IO");
     refs.merge(ppt.report(out, indent + "  "));
+  }
   out << indent << "}\n";
   return refs;
 }
