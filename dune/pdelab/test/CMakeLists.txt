@@ -17,7 +17,9 @@ enable_testing()
 include(DuneAddGTest)
 
 # create main testing library
-dune_add_library(dunepdelab-test INTERFACE NO_EXPORT)
+add_library(dunepdelab-test INTERFACE)
+# add test target to dune packages so that dune_add_test links agains it
+set_property(GLOBAL APPEND PROPERTY ALL_PKG_LIBS dunepdelab-test)
 
 target_compile_options(dunepdelab-test
   INTERFACE
@@ -36,9 +38,6 @@ target_compile_features(dunepdelab-test
   INTERFACE
     cxx_std_20
 )
-
-# add test target to dune packages so that dune_add_test links agains it
-dune_register_package_flags(LIBRARIES dunepdelab-test)
 
 # include tests executables
 add_subdirectory(fem)
@@ -253,8 +252,12 @@ dune_add_test(SOURCES testnewton-printparameters.cc)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vtk)
 
+# remove test target from dune packages so that it is not exported to other projects
+get_property(all_libs GLOBAL PROPERTY ALL_PKG_LIBS)
+list(REMOVE_ITEM ALL_PKG_LIBS dunepdelab-test)
+set_property(GLOBAL PROPERTY ALL_PKG_LIBS "${ALL_PKG_LIBS}")
+
 # check if this project is called as its own cmake project (i.e. not as subdirectory)
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
-  # ...if so, find dune-pdelab as if this was a downstream project
   finalize_dune_project()
 endif()
