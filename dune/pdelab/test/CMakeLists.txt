@@ -40,6 +40,7 @@ target_compile_features(dunepdelab-test
 )
 
 # include tests executables
+add_subdirectory(common)
 add_subdirectory(fem)
 add_subdirectory(matrixfree)
 
