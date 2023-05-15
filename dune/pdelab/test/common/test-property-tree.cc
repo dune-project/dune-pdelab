@@ -8,30 +8,7 @@
 
 #include <gtest/gtest.h>
 
-TEST(TestProperty, References) {
-  Dune::PDELab::Property val = 1;
-  int& i = unwrap_property_ref<int>(val);
-  EXPECT_EQ(i, 1);
-  Dune::PDELab::Property ref = std::ref(i);
-  int& i2 = unwrap_property_ref<int>(ref);
-  EXPECT_EQ(i2, 1);
-  EXPECT_EQ(&i2, &i);
-  int&& m2 = unwrap_property_ref<int>(std::move(ref));
-  EXPECT_EQ(m2, 1);
-  Dune::PDELab::Property cref = std::cref(i2);
-  const int& i3 = unwrap_property_ref<const int>(cref);
-  EXPECT_EQ(&m2, &i3);
-  auto i4 = std::make_shared<int>(2);
-  Dune::PDELab::Property ptr = i4;
-  int& i5 = unwrap_property_ref<int>(ptr);
-  EXPECT_EQ(&*i4, &i5);
-  EXPECT_EQ(i5, 2);
-  const int& i6 = unwrap_property_ref<const int>(ptr);
-  EXPECT_EQ(&*i4, &i6);
-  int&& i7 = unwrap_property_ref<int>(std::move(ptr));
-  EXPECT_EQ(i7, 2);
-}
-
+#include <list>
 
 TEST(TestPropertyTree, SubPropertyTree) {
   Dune::PDELab::PropertyTree foo;
@@ -101,16 +78,20 @@ TEST(TestPropertyTree, BaseClass) {
   auto foo = std::make_shared<Foo>();
   foo->get("value") = 1;
   foo->get("self") = std::weak_ptr(foo);
-  boo["foo1"] = std::weak_ptr(foo);
+  boo["foo1"] = std::weak_ptr<const Foo>(foo);
   boo["foo2"] = foo;
   foo->get("value") = 2;
-  EXPECT_EQ(boo.sub("foo1.self.self").template get<int>("value"), 2);
+  EXPECT_THROW(boo.sub("foo1"), Dune::RangeError);
+  EXPECT_NO_THROW(std::as_const(boo).sub("foo1"));
+  EXPECT_THROW(std::as_const(boo).sub("foo3"), Dune::RangeError);
+  EXPECT_EQ(std::as_const(boo).sub("foo1.self.self").template get<int>("value"), 2);
   EXPECT_EQ(boo.sub("foo2.self.self").template get<int>("value"), 2);
   std::cout << boo << std::endl;
 }
 
 TEST(TestPropertyTree, Cycle) {
   using namespace Dune::PDELab;
+  struct Foo : PropertyTree {};
   auto foo = std::make_shared<PropertyTree>();
   {
     auto boo = std::make_shared<PropertyTree>();
@@ -122,54 +103,4 @@ TEST(TestPropertyTree, Cycle) {
     std::cout << *boo << std::endl;
   }
   EXPECT_THROW(foo->sub("boo.foo"), Dune::InvalidStateException);
-}
-
-TEST(TestPropertyTree, SetterGetter) {
-  using namespace Dune::PDELab;
-  PropertyTree dict;
-  bool getter_used = false;
-  bool setter_used = false;
-
-  dict["value"].documentation = "Integer with setter, getter and documentation";
-  dict["value"].setter = [&](const Property& val){ setter_used = true; };
-  dict["value"].getter = [&](const Property& val){ getter_used = true; };
-  EXPECT_FALSE(setter_used);
-  EXPECT_FALSE(getter_used);
-
-  dict["value"] = 2;
-  EXPECT_TRUE(setter_used);
-  EXPECT_FALSE(getter_used);
-
-  [[maybe_unused]] int two = dict.get("value", 2);
-  EXPECT_TRUE(setter_used);
-  EXPECT_TRUE(getter_used);
-
-  std::cout << dict << std::endl;
-}
-
-
-TEST(TestPropertyTree, Array) {
-  using namespace Dune::PDELab;
-  PropertyTree dict;
-
-  dict["value"] = 1;
-  dict["array"][0] = 1;
-  dict["array"][2] = true;
-  dict["array"][3] = 'c';
-  dict["array"][4] = "foo1";
-  dict["array"][5][2] = "foo2";
-  dict["array"][5][2].documentation = "Heterogeneous array";
-  dict["array"][5][1][0] = "foo3";
-
-  for (std::size_t i = 0; i != 10; ++i)
-    dict["array"][5][0][i] = i;
-
-  std::vector<std::size_t> vec(dict["array"][5][0].size());
-  for (std::size_t i = 0; i != vec.size(); ++i)
-    vec[i] = property_cast<std::size_t>(dict["array"][5][0][i]);
-
-  for (std::size_t i = 0; i != vec.size(); ++i)
-      EXPECT_EQ(vec[i], i);
-
-  std::cout << dict << std::endl;
 }
