@@ -12,7 +12,7 @@ foreach(fixture LeafBasisFixtures ArrayBasisFixtures VectorBasisFixtures TupleBa
   dune_add_test(
     NAME test-basis-ordering-${fixture_id}
     COMPILE_FLAGS -DBASIS_FIXTURES=${fixture}
-    SOURCES ordering.cc)
+    SOURCES test-ordering.cc)
   gtest_discover_tests(test-basis-ordering-${fixture_id})
   add_dependencies(test-basis-ordering test-basis-ordering-${fixture_id})
 

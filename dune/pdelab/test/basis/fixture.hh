@@ -57,7 +57,7 @@ auto makeQkPreBasis(const EntitySet& entity_set) {
 }
 
 template<std::size_t k, bool Blocked, class EntitySet>
-auto makeQkDgBasis(const EntitySet& entity_set) {
+auto makeQkDgPreBasis(const EntitySet& entity_set) {
 
   using DkDGFEM = Dune::PDELab::QkDGLocalFiniteElementMap<typename EntitySet::GridView::ctype,double,k,EntitySet::dimension>;
   auto qkfem = std::make_shared<DkDGFEM>();
@@ -112,7 +112,7 @@ template<std::size_t dim, std::size_t degree, bool Blocked>
 class QkDgFixture : public StructuredGridFixture<dim> {
  protected:
   static auto makeFixtureBasis(const auto& entity_set) {
-    return makeBasis(entity_set, makeQkDgBasis<degree,Blocked>(entity_set));
+    return makeBasis(entity_set, makeQkDgPreBasis<degree,Blocked>(entity_set));
   }
   static auto spaceName() {
     using std::to_string;
@@ -142,7 +142,7 @@ template<std::size_t dim, std::size_t degree, bool leaf_blocked, MergingType com
 class CompositeQkDgFixture : public StructuredGridFixture<dim> {
  protected:
   static auto makeFixtureBasis(const auto& entity_set) {
-    auto space_qk = makeQkDgBasis<degree,leaf_blocked>(entity_set);
+    auto space_qk = makeQkDgPreBasis<degree,leaf_blocked>(entity_set);
     return makeBasis(entity_set, makeCompositePreBasis<composite_merging, composite_node, composite_blocked>(space_qk));
   }
 
