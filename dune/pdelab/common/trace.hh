@@ -24,6 +24,10 @@ PERFETTO_DEFINE_CATEGORIES(
 #define TRACE_COUNTER(...) {};
 #endif // TRACE_COUNTER
 
+namespace perfetto::TrackEvent {
+  static constexpr inline auto GetTraceTimeNs() { return int{-1}; }
+}
+
 #endif // HAVE_PERFETTO
 
 #endif // DUNE_PDELAB_COMMON_TRACE_HH
