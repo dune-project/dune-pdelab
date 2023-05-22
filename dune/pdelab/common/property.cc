@@ -114,7 +114,7 @@ Property& Property::operator=(std::nullptr_t) {
   return *this;
 }
 
-bool Property::has_tree() const {
+bool Property::is_tree() const {
   const std::type_index& type = _object.type();
   return    (type == typeid(PropertyTree))
          or (type == typeid(std::shared_ptr<PropertyTree>))
@@ -175,7 +175,7 @@ PropertyTree& Property::as_tree() {
   return *ptree;
 }
 
-bool Property::has_vector() const {
+bool Property::is_vector() const {
   const std::type_index& type = _object.type();
   return   (type == typeid(std::vector<Property>));
 }
@@ -249,7 +249,7 @@ std::set<PropertyTree const *> Property::report(std::ostream& out, std::string i
     }
     out << " */" << ((documentation.size() > 80) ? '\n' : ' ');
   }
-  if (has_tree()) {
+  if (is_tree()) {
     out << indent + Dune::className<PropertyTree>() + " " + name + " ";
     if (   _object.type() == typeid(std::weak_ptr<PropertyTree>)
         or _object.type() == typeid(std::shared_ptr<PropertyTree>)

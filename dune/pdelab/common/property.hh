@@ -137,7 +137,7 @@ public:
   const std::type_info& type() const { return _object.type(); };
 
   //! Checks whether the object contains a PropertyTree or `std::[shared|weak]_ptr<[const] T>` whenever T is a base class of PropertyTree.
-  bool has_tree() const;
+  bool is_tree() const;
 
   //! Returns a ParameterTree. If property has no value, a new ParameterTree is created.
   PropertyTree& as_tree();
@@ -145,7 +145,7 @@ public:
   const PropertyTree& as_tree() const;
 
   //! Checks whether the object contains a std::vector<Property>
-  bool has_vector() const;
+  bool is_vector() const;
   //! Returns a std::vector<Property>. If property has no value, a new std::vector<Property> is created.
   std::vector<Property>& as_vector() &;
   //! Returns a std::vector<Property>. If property has no value, a new std::vector<Property> is created.
@@ -520,7 +520,7 @@ template<class T>
 std::ranges::view auto Property::vector_view() const & {
   std::size_t bound;
   std::function<T(std::size_t)> transform;
-  if (has_vector()) {
+  if (is_vector()) {
     const auto& vec = as_vector();
     bound = vec.size();
     transform = [&](std::size_t i){ return unwrap_property_ref<const T>(vec[i]); };
@@ -535,7 +535,7 @@ template<class T>
 std::ranges::view auto Property::vector_view() & {
   std::size_t bound;
   std::function<T&(std::size_t)> transform;
-  if (has_vector()) {
+  if (is_vector()) {
     auto& vec = as_vector();
     bound = vec.size();
     transform = [&](std::size_t i) -> T& { return unwrap_property_ref<T>(vec[i]); };
@@ -550,7 +550,7 @@ template<class T>
 std::ranges::view auto Property::vector_view() && {
   std::size_t bound;
   std::function<T&&(std::size_t)> transform;
-  if (has_vector()) {
+  if (is_vector()) {
     auto&& vec = as_vector();
     bound = vec.size();
     transform = [&](std::size_t i) -> T&& { return unwrap_property_ref<T>(std::move(vec[i])); };
