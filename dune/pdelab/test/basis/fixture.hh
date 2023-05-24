@@ -102,7 +102,7 @@ class QkFixture : public StructuredGridFixture<dim> {
   static auto makeFixtureBasis(const auto& entity_set) {
     return makeBasis(entity_set, makeQkPreBasis<degree,Blocked>(entity_set));
   }
-  static auto spaceName() {
+  static auto basisName() {
     using std::to_string;
     return "Basis" + to_string(dim) + "DQ" + to_string(degree) + (Blocked ? "Blocked" : "Flat");
   }
@@ -114,7 +114,7 @@ class QkDgFixture : public StructuredGridFixture<dim> {
   static auto makeFixtureBasis(const auto& entity_set) {
     return makeBasis(entity_set, makeQkDgPreBasis<degree,Blocked>(entity_set));
   }
-  static auto spaceName() {
+  static auto basisName() {
     using std::to_string;
     return "Basis" + to_string(dim) + "DQ" + to_string(degree) + "Dg" + (Blocked ? "Blocked" : "Flat");
   }
@@ -128,7 +128,7 @@ class CompositeQkFixture : public StructuredGridFixture<dim> {
     return makeBasis(entity_set, makeCompositePreBasis<composite_merging, composite_node, composite_blocked>(space_qk));
   }
 
-  static auto spaceName() {
+  static auto basisName() {
     using std::to_string;
     return "Basis" + to_string(dim) + "DQ" + to_string(degree)
       + (leaf_blocked ? "Blocked" : "Flat")
@@ -146,7 +146,7 @@ class CompositeQkDgFixture : public StructuredGridFixture<dim> {
     return makeBasis(entity_set, makeCompositePreBasis<composite_merging, composite_node, composite_blocked>(space_qk));
   }
 
-  static auto spaceName() {
+  static auto basisName() {
     using std::to_string;
     return "Basis" + to_string(dim) + "DQ" + to_string(degree)
       + "Dg"
