@@ -138,7 +138,7 @@ public:
           for (std::size_t i = 1; i < node().degree(); ++i)
             vector_space &=
               (leaf_node.space() ==
-               TypeTree::child(node().child(i), path).space());
+               PDELab::containerEntry(node().child(i), path).space());
         });
         // if discrete-function-space was equal everywhere, reuse storage of
         // children

@@ -78,7 +78,7 @@ public:
     this->clear(lspace);
     _lconstraints.bind(lspace.element());
     forEachLeafNode(lspace.tree(), [&](const auto& lspace_node, auto path) {
-      const auto& lconstraints_node = TypeTree::child(_lconstraints.tree(), path);
+      const auto& lconstraints_node = PDELab::containerEntry(_lconstraints.tree(), path);
       auto data_ptr = data(lspace_node.path());
       for (std::size_t dof = 0; dof < lspace_node.size(); ++dof) {
         if (lconstraints_node.isConstrained(dof)) {
@@ -204,7 +204,7 @@ private:
 
     auto for_each_entry = [&](auto f){
       return [&](const auto& lspace_node, auto path) {
-        const auto& lconstraints_node = TypeTree::child(_lconstraints.tree(), path);
+        const auto& lconstraints_node = PDELab::containerEntry(_lconstraints.tree(), path);
         auto data_ptr = data(lspace_node.path());
         for (std::size_t dof = 0; dof != lspace_node.size(); ++dof) {
           if (lconstraints_node.isConstrained(dof)) {

@@ -359,7 +359,7 @@ namespace Dune::PDELab::inline Experimental {
     }
 
     [[nodiscard]] size_type dimension() const noexcept {
-      return TypeTree::child(*_ordering, _sub_basis_path).dimension();
+      return PDELab::containerEntry(*_ordering, _sub_basis_path).dimension();
     }
 
 //     [[nodiscard]] const EntitySetPartition& entitySetPartition() const noexcept {
@@ -372,16 +372,16 @@ namespace Dune::PDELab::inline Experimental {
 
 
     [[nodiscard]] std::string name() const {
-      return TypeTree::child(_pre_basis, _sub_basis_path).name();
+      return PDELab::containerEntry(_pre_basis, _sub_basis_path).name();
     }
 
     void name(std::string new_name) {
-      return TypeTree::child(_pre_basis, _sub_basis_path).name(new_name);
+      return PDELab::containerEntry(_pre_basis, _sub_basis_path).name(new_name);
     }
 
 
     [[nodiscard]] auto degree() const {
-      return TypeTree::child(_pre_basis, _sub_basis_path).degree();
+      return PDELab::containerEntry(_pre_basis, _sub_basis_path).degree();
     }
 
 
@@ -463,7 +463,7 @@ namespace Dune::PDELab::inline Experimental {
 
     [[nodiscard]] bool contains(std::size_t dim, std::size_t codim) const noexcept {
       assert(dim == EntitySet::dimension); // not sure what is dim here
-      return TypeTree::child(*_ordering, _sub_basis_path).containsCodim(codim);
+      return PDELab::containerEntry(*_ordering, _sub_basis_path).containsCodim(codim);
     }
 
     template<class Backend>
@@ -486,7 +486,7 @@ namespace Dune::PDELab::inline Experimental {
 
       bool same_leafs = true;
       forEachLeafNode(*lhs._ordering, [&](const auto& lhs_ordering, auto path){
-        same_leafs &= (&lhs_ordering == &TypeTree::child(*rhs._ordering, path));
+        same_leafs &= (&lhs_ordering == &PDELab::containerEntry(*rhs._ordering, path));
       });
       return same_leafs;
     }
@@ -500,7 +500,7 @@ namespace Dune::PDELab::inline Experimental {
     //   auto joined_sub_basis_path = join(this->_sub_basis_path, sub_basis_path);
     //   using JoinedSubBasisPath = decltype(joined_sub_basis_path);
     //   static_assert(requires {
-    //     { TypeTree::child(_pre_basis, joined_sub_basis_path).name() } -> std::convertible_to<std::string>; },
+    //     { PDELab::containerEntry(_pre_basis, joined_sub_basis_path).name() } -> std::convertible_to<std::string>; },
     //     "Child Pre-Basis node for the requested sub basis does not exist");
     //   return Basis<PreBasis, OtherEntitySetPartition, JoinedSubBasisPath>{*this, partition, joined_sub_basis_path};
     // }

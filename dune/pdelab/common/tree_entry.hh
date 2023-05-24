@@ -29,7 +29,7 @@ template<class TreeNode, Concept::FixedSizeMultiIndex MultiIndex>
 requires (MultiIndex::max_size() != 0 && Concept::ParentTreeNode<std::remove_cvref_t<TreeNode>>)
 constexpr decltype(auto) containerEntry(TreeNode&& tree_node, MultiIndex multiindex) {
   auto index = front(multiindex);
-  return containerEntry(tree_node.child(index), pop_front(multiindex));
+  return containerEntry(std::forward<TreeNode>(tree_node).child(index), pop_front(multiindex));
 }
 
 } // namespace Default

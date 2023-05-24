@@ -249,7 +249,7 @@ namespace Dune::PDELab::inline Experimental {
         lbasis_in.bind(entity);
         forEachLeafNode(this->tree(), [&](auto& container_node, auto path){
           auto& constraints_node = constraints_ops[path];
-          const auto& lbasis_in_node = TypeTree::child(lbasis_in.tree(), path);
+          const auto& lbasis_in_node = PDELab::containerEntry(lbasis_in.tree(), path);
           if (constraints_node.doConstrainVolume())
             constraints_node.constrainVolume(lbasis_in_node, container_node);
         });
@@ -260,8 +260,8 @@ namespace Dune::PDELab::inline Experimental {
               lbasis_out.bind(intersection.outside());
               forEachLeafNode(this->tree(), [&](auto& container_node, auto path){
                 auto& constraints_node = constraints_ops[path];
-                const auto& lbasis_in_node = TypeTree::child(lbasis_in.tree(), path);
-                const auto& lbasis_out_node = TypeTree::child(lbasis_out.tree(), path);
+                const auto& lbasis_in_node = PDELab::containerEntry(lbasis_in.tree(), path);
+                const auto& lbasis_out_node = PDELab::containerEntry(lbasis_out.tree(), path);
                 if (constraints_node.doConstrainSkeleton())
                   constraints_node.constrainSkeleton(intersection, lbasis_in_node, lbasis_out_node, container_node);
               });
@@ -269,7 +269,7 @@ namespace Dune::PDELab::inline Experimental {
             } else {
               forEachLeafNode(this->tree(), [&](auto& container_node, auto path){
                 auto& constraints_node = constraints_ops[path];
-                const auto& lbasis_in_node = TypeTree::child(lbasis_in.tree(), path);
+                const auto& lbasis_in_node = PDELab::containerEntry(lbasis_in.tree(), path);
                 if (constraints_node.doConstrainBoundary())
                   constraints_node.constrainBoundary(intersection, lbasis_in_node, container_node);
               });
@@ -298,7 +298,7 @@ namespace Dune::PDELab::inline Experimental {
       for (const auto& entity : elements(basis.entitySet())) {
         lbasis.bind(entity);
         forEachLeafNode(*_tree, [&](auto& node, auto path){
-          const auto& lbasis_node = TypeTree::child(lbasis.tree(), path);
+          const auto& lbasis_node = PDELab::containerEntry(lbasis.tree(), path);
           node.localCompress(lbasis_node);
         });
         lbasis.unbind();

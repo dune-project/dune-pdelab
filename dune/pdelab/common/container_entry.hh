@@ -29,7 +29,7 @@ inline namespace Default {
 template<class Container, Concept::FixedSizeMultiIndex MultiIndex>
 requires (Concept::FixedSizeMultiIndex<MultiIndex> && MultiIndex::size() == 0)
 constexpr decltype(auto) containerEntry(Container&& container, MultiIndex) {
-  return container;
+  return std::forward<Container>(container);
 }
 
 /**
@@ -47,7 +47,7 @@ constexpr decltype(auto) containerEntry(Container&& container, MultiIndex multii
 requires (Concept::FixedSizeMultiIndex<MultiIndex> && MultiIndex::size() != 0 && Concept::BracketIndexable<decltype(container),decltype(front(multiindex))>)
 {
   auto index = front(multiindex);
-  return containerEntry(container[index], pop_front(multiindex));
+  return containerEntry(std::forward<Container>(container)[index], pop_front(multiindex));
 }
 
 
@@ -57,9 +57,9 @@ requires (not Concept::FixedSizeMultiIndex<MultiIndex>)
 {
   if constexpr (Concept::BracketIndexable<decltype(container),decltype(front(multiindex))>) {
     auto index = front(multiindex);
-    return containerEntry(container[index], pop_front(multiindex));
+    return containerEntry(std::forward<Container>(container)[index], pop_front(multiindex));
   } else {
-    return container;
+    return std::forward<Container>(container);
   }
 }
 

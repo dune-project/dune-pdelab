@@ -311,7 +311,7 @@ namespace Dune::PDELab::inline Experimental::Impl {
 
         forEachLeafNode(entityLocalIndexSet(), [&]<class LeafLocalIndex>(LeafLocalIndex& leaf_local_index_set, const auto& suffix) {
           auto ordering_path = join(_sub_space_path, leaf_local_index_set.orderingViewPath());
-          const auto& leaf_ordering = TypeTree::child(*_ordering, ordering_path);
+          const auto& leaf_ordering = PDELab::containerEntry(*_ordering, ordering_path);
 
           auto& indices = leaf_local_index_set.indices();
           indices.resize(leaf_ordering.blockCount(_gt_index, _entity_index));
@@ -444,7 +444,7 @@ namespace Dune::PDELab::inline Experimental::Impl {
 
           constexpr std::size_t fem_codim = EntitySet::dimension - LeafLocalView::dimDomain;
           auto ordering_path = join(_sub_space_path, leaf_local_view.orderingViewPath());
-          const auto& leaf_ordering = TypeTree::child(*_ordering, ordering_path);
+          const auto& leaf_ordering = PDELab::containerEntry(*_ordering, ordering_path);
           const auto& fem = leaf_ordering.space().finiteElementMap();
            // TODO: document that finite element map must be thread-safe!
           leaf_local_view.bindFiniteElement(fem.find(leaf_local_view.element()));
@@ -588,7 +588,7 @@ namespace Dune::PDELab::inline Experimental::Impl {
       auto elis = entityOrdering().makeLocalIndexSet(ordering, prefix, sub_space_path);
       using EntityLocalIndexSet = std::decay_t<decltype(*elis)>;
       using LIndexSet = LocalIndexSet<EntityLocalIndexSet, GlobalOrdering, SubSpacePath>;
-      EntitySetOrdering& entity_set_ordering = TypeTree::child(*ordering, prefix);
+      EntitySetOrdering& entity_set_ordering = PDELab::containerEntry(*ordering, prefix);
       assert(&entity_set_ordering == this);
       return std::make_unique<LIndexSet>(std::move(*elis), ordering, entity_set_ordering, sub_space_path);
     }
@@ -598,7 +598,7 @@ namespace Dune::PDELab::inline Experimental::Impl {
       auto elv = entityOrdering().makeLocalView(ordering, prefix, sub_space_path);
       using EntityLocalView = std::decay_t<decltype(*elv)>;
       using LSpace = LocalView<EntityLocalView, GlobalOrdering, SubSpacePath>;
-      EntitySetOrdering& entity_set_ordering = TypeTree::child(*ordering, prefix);
+      EntitySetOrdering& entity_set_ordering = PDELab::containerEntry(*ordering, prefix);
       assert(&entity_set_ordering == this);
       return std::make_unique<LSpace>(std::move(*elv), ordering, entity_set_ordering, sub_space_path);
     }
