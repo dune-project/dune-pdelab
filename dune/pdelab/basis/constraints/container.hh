@@ -27,6 +27,12 @@ namespace Dune::PDELab::inline Experimental {
     VectorLocalConstraintsContainer(const TreeNode::NodeStorage& storage)
       : TreeNode{storage}
     {}
+
+    VectorLocalConstraintsContainer(const VectorLocalConstraintsContainer&) = delete;
+    VectorLocalConstraintsContainer(VectorLocalConstraintsContainer&&) = delete;
+
+    VectorLocalConstraintsContainer& operator=(const VectorLocalConstraintsContainer&) = delete;
+    VectorLocalConstraintsContainer& operator=(VectorLocalConstraintsContainer&&) = default;
   };
 
   template<Concept::TreeNode T>
@@ -59,6 +65,12 @@ namespace Dune::PDELab::inline Experimental {
     ArrayLocalConstraintsContainer(const TreeNode::NodeStorage& storage)
       : TreeNode{storage}
     {}
+
+    ArrayLocalConstraintsContainer(const ArrayLocalConstraintsContainer&) = delete;
+    ArrayLocalConstraintsContainer(ArrayLocalConstraintsContainer&&) = delete;
+
+    ArrayLocalConstraintsContainer& operator=(const ArrayLocalConstraintsContainer&) = delete;
+    ArrayLocalConstraintsContainer& operator=(ArrayLocalConstraintsContainer&&) = default;
   };
 
   template<Concept::TreeNode T, std::size_t k>
@@ -91,6 +103,12 @@ namespace Dune::PDELab::inline Experimental {
     TupleLocalConstraintsContainer(const TreeNode::NodeStorage& storage)
       : TreeNode{storage}
     {}
+
+    TupleLocalConstraintsContainer(const TupleLocalConstraintsContainer&) = delete;
+    TupleLocalConstraintsContainer(TupleLocalConstraintsContainer&&) = delete;
+
+    TupleLocalConstraintsContainer& operator=(const TupleLocalConstraintsContainer&) = delete;
+    TupleLocalConstraintsContainer& operator=(TupleLocalConstraintsContainer&&) = default;
   };
 
   template<Concept::TreeNode... T>
@@ -134,8 +152,9 @@ namespace Dune::PDELab::inline Experimental {
     template<Concept::Tree SourceTree, Concept::MultiIndex SubBasisPath>
     class LocalView {
 
-      static auto makeLocalTree(const SourceTree& source_tree, const std::shared_ptr<ConstraintsContainerTree>& gtree, SubBasisPath sub_basis_path) {
+      static auto makeLocalTree(const Concept::Tree auto& source_tree, const std::shared_ptr<ConstraintsContainerTree>& gtree, SubBasisPath sub_basis_path) {
         // source tree is already on the sub space path, whereas the gtree is the root node of the tree
+        // source tree is only to give the same tree structure to this tree, its contents (other than degrees) are ignored. Thus, once constructed, source_tree may be as well this->tree()
         if constexpr (SubBasisPath::size() == 0)
           return gtree->makeLocalViewNode(source_tree, gtree);
         else
@@ -145,6 +164,7 @@ namespace Dune::PDELab::inline Experimental {
       using TreeStorage = decltype(makeLocalTree(std::declval<SourceTree>(), std::shared_ptr<ConstraintsContainerTree>{}, SubBasisPath{}));
     public:
       using Tree = typename TreeStorage::element_type;
+      static_assert(std::is_same_v<TreeStorage, decltype(makeLocalTree(std::declval<Tree>(), std::shared_ptr<ConstraintsContainerTree>{}, SubBasisPath{}))>);
 
       LocalView(const SourceTree& source_tree, std::shared_ptr<ConstraintsContainerTree> gtree, SubBasisPath sub_basis_path)
         : _sub_basis_path{sub_basis_path}
@@ -152,17 +172,18 @@ namespace Dune::PDELab::inline Experimental {
         , _ltree{makeLocalTree(source_tree, _gtree, _sub_basis_path)}
       {}
 
-      LocalView(const LocalView& other)
-        : _sub_basis_path{other._sub_basis_path}
-        , _gtree{move(other._gtree)}
-        , _ltree{move(other._ltree)}
-      {}
+      LocalView(const LocalView& other) {
+        (*this) = other;
+      }
 
-      LocalView(LocalView&& other)
-        : _sub_basis_path{other._sub_basis_path}
-        , _gtree{move(other._gtree)}
-        , _ltree{move(other._ltree)}
-      {}
+      LocalView(LocalView&&) = default;
+
+      LocalView& operator=(const LocalView& other) {
+        _ltree = makeLocalTree(other.tree(), _gtree = other._gtree, _sub_basis_path = other._sub_basis_path);
+        return *this;
+      }
+
+      LocalView& operator=(LocalView&&) = default;
 
       const Tree& tree() const {
         return *_ltree;
@@ -228,7 +249,7 @@ namespace Dune::PDELab::inline Experimental {
       return localView(tree, TypeTree::treePath());
     }
 
-    void assembleConstraints(Concept::Basis auto basis, auto constraints_ops) {
+    void assembleConstraints(const Concept::Basis auto& basis, auto constraints_ops) {
       _assembled = false;
       // this should only be done with root nodes
       auto lbasis_in = basis.localView();

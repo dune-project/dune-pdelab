@@ -62,6 +62,12 @@ public:
   {
   }
 
+  LeafEntityOrdering(const LeafEntityOrdering&) = delete;
+  LeafEntityOrdering(LeafEntityOrdering&&) = default;
+
+  LeafEntityOrdering& operator=(const LeafEntityOrdering&) = delete;
+  LeafEntityOrdering& operator=(LeafEntityOrdering&&) = default;
+
   //! Access to the underlying discrete-function-space
   const Space& space() const { return _space; }
 
@@ -151,6 +157,9 @@ private:
 
     LocalIndexSet(const LocalIndexSet&) = delete;
     LocalIndexSet(LocalIndexSet&&) = default;
+
+    LocalIndexSet& operator=(const LocalIndexSet&) = delete;
+    LocalIndexSet& operator=(LocalIndexSet&&) = default;
 
     //! Grant mutable access to the underlying local container indices
     std::vector<MultiIndex>& indices() noexcept { return _indices; }
@@ -262,6 +271,9 @@ private:
       : Base{ std::move(storage) }
     {
     }
+
+    SubEntityLocalIndexSet(const SubEntityLocalIndexSet&) = delete;
+    SubEntityLocalIndexSet(SubEntityLocalIndexSet&&) = default;
   };
 
 

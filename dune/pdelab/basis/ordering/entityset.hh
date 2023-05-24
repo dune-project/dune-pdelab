@@ -48,6 +48,9 @@ namespace Dune::PDELab::inline Experimental::Impl {
     EntitySetOrdering(const EntitySetOrdering&) = delete;
     EntitySetOrdering(EntitySetOrdering&&) = delete;
 
+    EntitySetOrdering& operator=(const EntitySetOrdering&) = delete;
+    EntitySetOrdering& operator=(EntitySetOrdering&&) = default;
+
     static constexpr auto containerBlocked() {
       return std::integral_constant<bool,MergingStrategy::Blocked>{};
     }

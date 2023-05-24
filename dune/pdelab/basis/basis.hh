@@ -109,16 +109,10 @@ namespace Dune::PDELab::inline Experimental {
       }
 
       LocalIndexSetBase(const LocalIndexSetBase&) = delete;
+      LocalIndexSetBase(LocalIndexSetBase&&) = default;
 
-      LocalIndexSetBase(LocalIndexSetBase&& other)
-        : _basis{move(other._basis)}
-        , _ltree_storage{move(other._ltree_storage)}
-        , _ltree_view{other._ltree_view}
-        , _indices_view{other._indices_view}
-      {
-        if constexpr (DUNE_PDELAB_ENABLE_INDEX_ON_ROOT_NODE)
-          _indices = move(other._indices);
-      }
+      LocalIndexSetBase& operator=(const LocalIndexSetBase&) = delete;
+      LocalIndexSetBase& operator=(LocalIndexSetBase&&) = default;
 
       void bind(const Dune::Concept::Entity auto& element) {
         _ltree_storage->bind(element);
@@ -279,9 +273,16 @@ namespace Dune::PDELab::inline Experimental {
         : Base{basis, basis._ordering->makeLocalView(basis._ordering, TypeTree::treePath(), basis._sub_basis_path)}
       {}
 
-      LocalView(const LocalView& other)
-        : LocalView{other.globalBasis()}
-      {}
+      LocalView(const LocalView& other) {
+        (*this) = other;
+      }
+
+      LocalView& operator=(const LocalView& other) {
+        return (*this) = LocalView{other.globalBasis()};
+      }
+
+      LocalView(LocalView&&) = default;
+      LocalView& operator=(LocalView&&) = default;
 
       template<std::convertible_to<Element> E>
       LocalView& bind(E&& element) {

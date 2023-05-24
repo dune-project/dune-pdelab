@@ -152,6 +152,9 @@ public:
   EntityOrderingNode(const EntityOrderingNode&) = delete;
   EntityOrderingNode(EntityOrderingNode&&) = default;
 
+  EntityOrderingNode& operator=(const EntityOrderingNode&) = delete;
+  EntityOrderingNode& operator=(EntityOrderingNode&&) = default;
+
   // Check if all leaf nodes have the same fixed DOF size per geometry type at compile time
   [[nodiscard]] static consteval auto prioryFixedSize()
   {

@@ -50,6 +50,12 @@ class ArrayEntityOrdering
     {
     }
 
+    LocalNode(const LocalNode&) = delete;
+    LocalNode(LocalNode&&) = default;
+
+    LocalNode& operator=(const LocalNode&) = delete;
+    LocalNode& operator=(LocalNode&&) = default;
+
     void bindElement(const auto& entity) noexcept {
       forEach(*this, [&](auto& child){ child.bindElement(entity); });
     }
@@ -63,6 +69,12 @@ public:
     , OrderingNode{ merging_strategy }
   {
   }
+
+  ArrayEntityOrdering(const ArrayEntityOrdering&) = delete;
+  ArrayEntityOrdering(ArrayEntityOrdering&&) = default;
+
+  ArrayEntityOrdering& operator=(const ArrayEntityOrdering&) = delete;
+  ArrayEntityOrdering& operator=(ArrayEntityOrdering&&) = default;
 
   template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubSpacePath>
   auto makeLocalView(const std::shared_ptr<Ordering>& ordering,
@@ -147,6 +159,12 @@ class VectorEntityOrdering
     {
     }
 
+    LocalNode(const LocalNode&) = delete;
+    LocalNode(LocalNode&&) = default;
+
+    LocalNode& operator=(const LocalNode&) = delete;
+    LocalNode& operator=(LocalNode&&) = default;
+
     void bindElement(const auto& entity) noexcept {
       forEach(*this, [&](auto& child){ child.bindElement(entity); });
     }
@@ -161,6 +179,12 @@ public:
     for(std::size_t i = 0; i != this->degree(); ++i)
       assert(this->childStorage(i));
   }
+
+  VectorEntityOrdering(const VectorEntityOrdering&) = delete;
+  VectorEntityOrdering(VectorEntityOrdering&&) = default;
+
+  VectorEntityOrdering& operator=(const VectorEntityOrdering&) = delete;
+  VectorEntityOrdering& operator=(VectorEntityOrdering&&) = default;
 
   template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubSpacePath>
   auto makeLocalIndexSet(const std::shared_ptr<Ordering>& ordering,
@@ -236,6 +260,12 @@ class TupleEntityOrdering
     {
     }
 
+    LocalNode(const LocalNode&) = delete;
+    LocalNode(LocalNode&&) = default;
+
+    LocalNode& operator=(const LocalNode&) = delete;
+    LocalNode& operator=(LocalNode&&) = default;
+
     void bindElement(const auto& entity) noexcept {
       forEach(*this, [&](auto& child){ child.bindElement(entity); });
     }
@@ -248,6 +278,12 @@ public:
     , OrderingNode{ merging_strategy }
   {
   }
+
+  TupleEntityOrdering(const TupleEntityOrdering&) = delete;
+  TupleEntityOrdering(TupleEntityOrdering&&) = default;
+
+  TupleEntityOrdering& operator=(const TupleEntityOrdering&) = delete;
+  TupleEntityOrdering& operator=(TupleEntityOrdering&&) = default;
 
   template<class Ordering, Concept::MultiIndex Prefix, Concept::MultiIndex SubSpacePath>
   auto makeLocalIndexSet(const std::shared_ptr<Ordering>& ordering,
