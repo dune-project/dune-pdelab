@@ -222,13 +222,13 @@ namespace Dune::PDELab::inline Experimental {
       }
 
       void doubleUnbind(LocalIndexSetBase& other) {
-        unbind();
-        if (_basis == other._basis) {
+        if (_ltree_view == other._ltree_view) {
           other._ltree_view = nullptr;
           other._indices_view = nullptr;
           other._size = 0;
         } else
           other.unbind();
+        unbind();
       }
 
       Basis _basis;
