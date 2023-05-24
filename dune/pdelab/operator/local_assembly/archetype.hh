@@ -52,7 +52,6 @@ struct Archetype {
 
   void localAssemblePatternVolume(
     const PDELab::Concept::LocalBasis                  auto& ltrial,
-    const PDELab::Concept::LocalConstContainer         auto& lcoefficients,
     const PDELab::Concept::LocalBasis                  auto& ltest,
                                                        auto& lpattern);
 
