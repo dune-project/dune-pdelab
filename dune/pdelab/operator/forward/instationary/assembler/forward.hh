@@ -23,7 +23,7 @@
 namespace Dune::PDELab::inline Experimental {
 
 /**
- * @brief Residual of a MassStiffness operator using PDELab local operators
+ * @brief Residual of a Instationary operator using PDELab local operators
  *
  * @tparam Coefficients
  * @tparam Residual
@@ -85,7 +85,7 @@ public:
 
   ErrorCondition apply(const Coefficients& coefficients, Residual& residuals) override
   {
-    TRACE_EVENT("dune", "MassStiffness::Residual");
+    TRACE_EVENT("dune", "Instationary::Residual");
     bool static_dispatch_done = false;
     // unroll the loop for small sizes (important for small local operators)
     using namespace Dune::Indices;
@@ -188,21 +188,20 @@ private:
 
       bind(entity, ltest_in, ltrial_in);
 
+      for (std::size_t stage = 0; stage != stages; ++stage)
+        lres_in[stage].clear(ltest_in);
+
+      for (std::size_t step = 0; step != steps; ++step)
+        lcoeff_in[step].load(ltrial_in);
+
       if (LocalAssembly::doVolume(slop) | LocalAssembly::doVolume(mlop)) {
-        for (std::size_t stage = 0; stage != stages; ++stage) {
-          lres_in[stage].clear(ltest_in);
-
-          for (std::size_t step = 0; step != steps; ++step) {
-            TimePoint tp = sub_time_step(step);
-
-            if (do_stiff[stage][step] | do_mass[stage][step])
-              lcoeff_in[step].load(ltrial_in);
-
+        for (std::size_t step = 0; step != steps; ++step) {
+          TimePoint tp = sub_time_step(step);
+          for (std::size_t stage = 0; stage != stages; ++stage) {
             if (do_mass[stage][step]) {
               LocalMassResidual lmass_res_in_rhs{lres_in[stage], mass_weight(stage, step)};
               LocalAssembly::volume(mlop, tp, ltrial_in, lcoeff_in[step], ltest_in, lmass_res_in_rhs);
             }
-
             if (do_stiff[stage][step]) {
               LocalStiffnessResidual lstiff_res_in_rhs{lres_in[stage], stiff_weight(stage, step)};
               LocalAssembly::volume(slop, tp, ltrial_in, lcoeff_in[step], ltest_in, lstiff_res_in_rhs);

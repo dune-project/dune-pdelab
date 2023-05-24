@@ -23,7 +23,7 @@
 namespace Dune::PDELab::inline Experimental {
 
 /**
- * @brief Matrix-free jacobian of a MassStiffness operator using local operators
+ * @brief Matrix-free jacobian of a Instationary operator using local operators
  *
  * @tparam Coefficients
  * @tparam Residual
@@ -47,8 +47,6 @@ template<class          Coefficients,
 class InstationaryJacobianApplyAssembler
   : public Operator<Coefficients, Residual>
 {
-  using Base = Operator<Coefficients, Residual>;
-
   using StageCoefficients = typename std::ranges::range_value_t<Coefficients>;
   using StageResidual     = typename std::ranges::range_value_t<Residual>;
 
@@ -86,7 +84,7 @@ public:
 
   ErrorCondition apply(const Coefficients& point, Residual& jac_apply) override
   {
-    TRACE_EVENT("dune", "MassStiffness::JacobianApply");
+    TRACE_EVENT("dune", "Instationary::JacobianApply");
     bool static_dispatch_done = false;
     // unroll the loop for small sizes (important for small local operators)
     using namespace Dune::Indices;
@@ -201,24 +199,24 @@ private:
 
       bind(entity, ltest_in, ltrial_in);
 
+      for (std::size_t stage = 0; stage != stages; ++stage) {
+        ljac_apply_in[stage].clear(ltest_in);
+      }
+
+      for (std::size_t step = 0; step != steps; ++step) {
+        lpoint_in[step].load(ltrial_in);
+        if (is_linear)
+          llin_in[step].load(ltrial_in);
+      }
+
       if (LocalAssembly::doVolume(slop) | LocalAssembly::doVolume(mlop)) {
-        for (std::size_t stage = 0; stage != stages; ++stage) {
-          ljac_apply_in[stage].clear(ltest_in);
-
-          for (std::size_t step = 0; step != steps; ++step) {
-            TimePoint tp = sub_time_step(step);
-
-            if (do_stiff[stage][step] | do_mass[stage][step]) {
-              lpoint_in[step].load(ltrial_in);
-              if (is_linear)
-                llin_in[step].load(ltrial_in);
-            }
-
+        for (std::size_t step = 0; step != steps; ++step) {
+          TimePoint tp = sub_time_step(step);
+          for (std::size_t stage = 0; stage != stages; ++stage) {
             if (do_mass[stage][step]) {
               LocalMassJacApply lmass_grad_in{ljac_apply_in[stage],  mass_weight(stage, step)};
               LocalAssembly::jacobianVolumeApply(mlop, tp, ltrial_in, llin_in[step], lpoint_in[step], ltest_in, lmass_grad_in);
             }
-
             if (do_stiff[stage][step]) {
               LocalStiffnessJacApply lstiff_grad_in{ljac_apply_in[stage], stiff_weight(stage, step)};
               LocalAssembly::jacobianVolumeApply(slop, tp, ltrial_in, llin_in[step], lpoint_in[step], ltest_in, lstiff_grad_in);
