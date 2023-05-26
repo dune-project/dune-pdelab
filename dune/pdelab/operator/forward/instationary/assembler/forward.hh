@@ -239,14 +239,15 @@ private:
 
             bind(entity_out, ltest_out, ltrial_out);
 
+
+            for (std::size_t step = 0; step != steps; ++step)
+              lcoeff_out[step].load(ltrial_out);
+
             for (std::size_t stage = 0; stage != stages; ++stage) {
               lres_out[stage].clear(ltest_out);
 
               for (std::size_t step = 0; step != steps; ++step) {
-
                 TimePoint tp = sub_time_step(step);
-                if (do_mass[stage][step] | do_stiff[stage][step])
-                  lcoeff_out[step].load(ltrial_out);
 
                 if (do_mass[stage][step]) {
                   LocalMassResidual lmass_res_in_rhs{lres_in[stage],   mass_weight(stage, step)};
@@ -264,7 +265,7 @@ private:
               lres_out[stage].fetch_add(ltest_out, std::true_type());
             }
             unbind(ltest_out, ltrial_out);
-          } else if (is.boundary() & (LocalAssembly::doBoundary(slop) or LocalAssembly::doBoundary(mlop))) {
+          } else if (is.boundary() & (LocalAssembly::doBoundary(slop) | LocalAssembly::doBoundary(mlop))) {
 
             for (std::size_t stage = 0; stage != stages; ++stage) {
               for (std::size_t step = 0; step != steps; ++step) {

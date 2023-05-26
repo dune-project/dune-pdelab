@@ -254,18 +254,17 @@ private:
 
             bind(entity_out, ltest_out, ltrial_out);
 
+            for (std::size_t step = 0; step != steps; ++step) {
+              lpoint_out[step].load(ltrial_out, std::true_type());
+              if (is_linear)
+                llin_out[step].load(ltrial_out);
+            }
+
             for (std::size_t stage = 0; stage != stages; ++stage) {
               ljac_apply_out[stage].clear(ltest_out);
 
               for (std::size_t step = 0; step != steps; ++step) {
                 TimePoint tp = sub_time_step(step);
-
-                if (LocalAssembly::doSkeleton(mlop) | LocalAssembly::doSkeleton(slop))
-                  if (do_mass[stage][step] | do_stiff[stage][step]) {
-                    lpoint_out[step].load(ltrial_out, std::true_type());
-                    if (is_linear)
-                      llin_out[step].load(ltrial_out);
-                  }
 
                 if (do_mass[stage][step]) {
                   LocalMassJacApply lmass_grad_in{ljac_apply_in[stage],  mass_weight(stage, step)};
@@ -284,7 +283,7 @@ private:
             }
 
             unbind(ltest_out, ltrial_out);
-          } else if (is.boundary() & (LocalAssembly::doBoundary(slop) or LocalAssembly::doBoundary(mlop))) {
+          } else if (is.boundary() & (LocalAssembly::doBoundary(slop) | LocalAssembly::doBoundary(mlop))) {
 
             for (std::size_t stage = 0; stage != stages; ++stage) {
               for (std::size_t step = 0; step != steps; ++step) {
