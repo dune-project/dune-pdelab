@@ -13,86 +13,80 @@ namespace Impl {
 
 inline namespace Default {
 
-constexpr auto localAssembleSkipEntity(const auto& lop, const Dune::Concept::Entity auto& entity) {
-  if constexpr (requires { { lop.localAssembleSkipEntity(entity) } -> std::convertible_to<bool>; })
-    return lop.localAssembleSkipEntity(entity);
-  else
-    return std::false_type();
+constexpr auto localAssembleSkipEntity(const auto& lop, const Dune::Concept::Entity auto& entity)
+requires requires { { lop.localAssembleSkipEntity(entity) } -> std::convertible_to<bool>; }
+{
+  return lop.localAssembleSkipEntity(entity);
 }
 
-constexpr auto localAssembleSkipIntersection(const auto& lop, const Dune::Concept::Intersection auto& intersection) {
-  if constexpr (requires { { lop.localAssembleSkipIntersection(intersection) } -> std::convertible_to<bool>; })
-    return lop.localAssembleSkipIntersection(intersection);
-  else
-    return std::false_type();
+constexpr auto localAssembleSkipIntersection(const auto& lop, const Dune::Concept::Intersection auto& intersection)
+requires requires { { lop.localAssembleSkipIntersection(intersection) } -> std::convertible_to<bool>; }
+{
+  return lop.localAssembleSkipIntersection(intersection);
 }
 
-constexpr auto localAssembleIsLinear(const auto& lop) {
-  if constexpr (requires { { lop.localAssembleIsLinear() } -> std::convertible_to<bool>; })
-    return lop.localAssembleIsLinear();
-  else
-    return std::false_type();
+constexpr auto localAssembleIsLinear(const auto& lop)
+requires requires { { lop.localAssembleIsLinear() } -> std::convertible_to<bool>; }
+{
+  return lop.localAssembleIsLinear();
 }
 
-constexpr auto localAssembleDoVolume(const auto& lop) {
-  if constexpr (requires { { lop.localAssembleDoVolume() } -> std::convertible_to<bool>; })
-    return lop.localAssembleDoVolume();
-  else
-    return std::false_type();
+constexpr auto localAssembleDoVolume(const auto& lop)
+requires requires { { lop.localAssembleDoVolume() } -> std::convertible_to<bool>; }
+{
+  return lop.localAssembleDoVolume();
 }
 
-void localAssembleVolume(
-                                                  auto& lop,
+void localAssembleVolume(                         auto& lop,
                                                   auto  time_point,
   const PDELab::Concept::LocalBasis               auto& ltrial,
   const PDELab::Concept::LocalConstContainer      auto& lcoefficients,
   const PDELab::Concept::LocalBasis               auto& ltest,
   PDELab::Concept::LocalMutableContainer          auto& lresidual)
+requires requires { lop.localAssembleVolume(time_point, ltrial, lcoefficients, ltest, lresidual); }
 {
   lop.localAssembleVolume(time_point, ltrial, lcoefficients, ltest, lresidual);
 }
 
-void localAssemblePatternVolume(
-                                                  auto& lop,
+void localAssemblePatternVolume(                  auto& lop,
   const PDELab::Concept::LocalBasis               auto& ltrial,
   const PDELab::Concept::LocalBasis               auto& ltest,
                                                   auto& lpattern)
+requires requires { lop.localAssemblePatternVolume(ltrial, ltest, lpattern); }
 {
   lop.localAssemblePatternVolume(ltrial, ltest, lpattern);
 }
 
-void localAssembleJacobianVolume(
-                                                  auto& lop,
+void localAssembleJacobianVolume(                 auto& lop,
                                                   auto  time_point,
   const PDELab::Concept::LocalBasis               auto& ltrial,
   const PDELab::Concept::LocalConstContainer      auto& llin_point,
   const PDELab::Concept::LocalBasis               auto& ltest,
   PDELab::Concept::LocalMutableMatrix             auto& ljacobian)
+requires requires { lop.localAssembleJacobianVolume(time_point, ltrial, llin_point, ltest, ljacobian); }
 {
   lop.localAssembleJacobianVolume(time_point, ltrial, llin_point, ltest, ljacobian);
 }
 
-void localAssembleJacobianVolumeApply(
-                                                  auto& lop,
+void localAssembleJacobianVolumeApply(            auto& lop,
                                                   auto  time_point,
   const PDELab::Concept::LocalBasis               auto& ltrial,
   const PDELab::Concept::LocalConstContainer      auto& llin_point,
   const PDELab::Concept::LocalConstContainer      auto& lpoint,
   const PDELab::Concept::LocalBasis               auto& ltest,
   PDELab::Concept::LocalMutableContainer          auto& ljacobian)
+requires requires { lop.localAssembleJacobianVolumeApply(time_point, ltrial, llin_point, lpoint, ltest, ljacobian); }
 {
   lop.localAssembleJacobianVolumeApply(time_point, ltrial, llin_point, lpoint, ltest, ljacobian);
 }
 
-constexpr auto localAssembleDoSkeleton(const auto& lop) {
-  if constexpr (requires { { lop.localAssembleDoSkeleton() } -> std::convertible_to<bool>; })
-    return lop.localAssembleDoSkeleton();
-  else
-    return std::false_type();
+constexpr auto localAssembleDoSkeleton(const auto& lop)
+requires requires { { lop.localAssembleDoSkeleton() } -> std::convertible_to<bool>; }
+{
+  return lop.localAssembleDoSkeleton();
 }
 
-void localAssembleSkeleton(
-                                                  auto& lop,
+void localAssembleSkeleton(                       auto& lop,
   const Dune::Concept::Intersection               auto& intersection,
                                                   auto  time_point,
   const PDELab::Concept::LocalBasis               auto& ltrial_in,
@@ -103,17 +97,12 @@ void localAssembleSkeleton(
   const PDELab::Concept::LocalBasis               auto& ltest_out,
   PDELab::Concept::LocalMutableContainer          auto& lresidual_in,
   PDELab::Concept::LocalMutableContainer          auto& lresidual_out)
+requires requires { lop.localAssembleSkeleton(intersection, time_point, ltrial_in, lcoefficients_in, ltest_in, ltrial_out, lcoefficients_out, ltest_out, lresidual_in, lresidual_out); }
 {
-  lop.localAssembleSkeleton(
-    intersection, time_point,
-    ltrial_in, lcoefficients_in, ltest_in,
-    ltrial_out, lcoefficients_out, ltest_out,
-    lresidual_in,
-    lresidual_out);
+  lop.localAssembleSkeleton(intersection, time_point, ltrial_in, lcoefficients_in, ltest_in, ltrial_out, lcoefficients_out, ltest_out, lresidual_in, lresidual_out);
 }
 
-void localAssemblePatternSkeleton(
-                                          auto& lop,
+void localAssemblePatternSkeleton(        auto& lop,
   const Dune::Concept::Intersection       auto& intersection,
   const PDELab::Concept::LocalBasis       auto& ltrial_in,
   const PDELab::Concept::LocalBasis       auto& ltest_in,
@@ -123,19 +112,12 @@ void localAssemblePatternSkeleton(
                                           auto& lpattern_in_out,
                                           auto& lpattern_out_in,
                                           auto& lpattern_out_out)
+requires requires {  lop.localAssemblePatternSkeleton(intersection, ltrial_in, ltest_in, ltrial_out, ltest_out, lpattern_in_in, lpattern_in_out, lpattern_out_in, lpattern_out_out); }
 {
-  lop.localAssemblePatternSkeleton(
-    intersection,
-    ltrial_in, ltest_in,
-    ltrial_out, ltest_out,
-    lpattern_in_in,
-    lpattern_in_out,
-    lpattern_out_in,
-    lpattern_out_out);
+  lop.localAssemblePatternSkeleton(intersection, ltrial_in, ltest_in, ltrial_out, ltest_out, lpattern_in_in, lpattern_in_out, lpattern_out_in, lpattern_out_out);
 }
 
-void localAssembleJacobianSkeleton(
-                                                  auto& lop,
+void localAssembleJacobianSkeleton(                auto& lop,
   const Dune::Concept::Intersection               auto& intersection,
                                                   auto  time_point,
   const PDELab::Concept::LocalBasis               auto& ltrial_in,
@@ -148,17 +130,12 @@ void localAssembleJacobianSkeleton(
   PDELab::Concept::LocalMutableMatrix             auto& ljacobian_in_out,
   PDELab::Concept::LocalMutableMatrix             auto& ljacobian_out_in,
   PDELab::Concept::LocalMutableMatrix             auto& ljacobian_out_out)
+requires requires { lop.localAssembleJacobianSkeleton(intersection, time_point, ltrial_in, llin_point_in, ltest_in, ltrial_out, llin_point_out, ltest_out, ljacobian_in_in, ljacobian_in_out, ljacobian_out_in, ljacobian_out_out); }
 {
-  lop.localAssembleJacobianSkeleton(
-    intersection, time_point,
-    ltrial_in, llin_point_in, ltest_in,
-    ltrial_out, llin_point_out, ltest_out,
-    ljacobian_in_in, ljacobian_in_out,
-    ljacobian_out_in, ljacobian_out_out);
+  lop.localAssembleJacobianSkeleton(intersection, time_point, ltrial_in, llin_point_in, ltest_in, ltrial_out, llin_point_out, ltest_out, ljacobian_in_in, ljacobian_in_out, ljacobian_out_in, ljacobian_out_out);
 }
 
-void localAssembleJacobianSkeletonApply(
-                                                  auto& lop,
+void localAssembleJacobianSkeletonApply(          auto& lop,
   const Dune::Concept::Intersection               auto& intersection,
                                                   auto  time_point,
   const PDELab::Concept::LocalBasis               auto& ltrial_in,
@@ -171,67 +148,52 @@ void localAssembleJacobianSkeletonApply(
   const PDELab::Concept::LocalBasis               auto& ltest_out,
   PDELab::Concept::LocalMutableContainer          auto& ljacobian_in,
   PDELab::Concept::LocalMutableContainer          auto& ljacobian_out)
+requires requires { lop.localAssembleJacobianSkeletonApply(intersection, time_point, ltrial_in, llin_point_in, lpoint_in, ltest_in, ltrial_out, llin_point_out, lpoint_out, ltest_out, ljacobian_in, ljacobian_out); }
 {
-  lop.localAssembleJacobianSkeletonApply(
-    intersection, time_point,
-    ltrial_in, llin_point_in, lpoint_in, ltest_in,
-    ltrial_out, llin_point_out, lpoint_out, ltest_out,
-    ljacobian_in,
-    ljacobian_out);
+  lop.localAssembleJacobianSkeletonApply(intersection, time_point, ltrial_in, llin_point_in, lpoint_in, ltest_in, ltrial_out, llin_point_out, lpoint_out, ltest_out, ljacobian_in, ljacobian_out);
 }
 
-constexpr auto localAssembleDoBoundary(const auto& lop) {
-  if constexpr (requires { { lop.localAssembleDoBoundary() } -> std::convertible_to<bool>; })
-    return lop.localAssembleDoBoundary();
-  else
-    return std::false_type();
+constexpr auto localAssembleDoBoundary(const auto& lop)
+requires requires { { lop.localAssembleDoBoundary() } -> std::convertible_to<bool>; }
+{
+  return lop.localAssembleDoBoundary();
 }
 
-void localAssembleBoundary(
-                                                  auto& lop,
+void localAssembleBoundary(                       auto& lop,
   const Dune::Concept::Intersection               auto& intersection,
                                                   auto  time_point,
   const PDELab::Concept::LocalBasis               auto& ltrial_in,
   const PDELab::Concept::LocalConstContainer      auto& lcoefficients_in,
   const PDELab::Concept::LocalBasis               auto& ltest_in,
                                                   auto& lresidual_in)
+requires requires { lop.localAssembleBoundary(intersection, time_point, ltrial_in, lcoefficients_in, ltest_in, lresidual_in); }
 {
-  lop.localAssembleBoundary(
-    intersection, time_point,
-    ltrial_in, lcoefficients_in, ltest_in,
-    lresidual_in);
+  lop.localAssembleBoundary(intersection, time_point, ltrial_in, lcoefficients_in, ltest_in, lresidual_in);
 }
 
-void localAssemblePatternBoundary(
-                                                  auto& lop,
+void localAssemblePatternBoundary(                auto& lop,
   const Dune::Concept::Intersection               auto& intersection,
   const PDELab::Concept::LocalBasis               auto& ltrial_in,
   const PDELab::Concept::LocalBasis               auto& ltest_in,
                                                   auto& lpattern_in_in)
+requires requires { lop.localAssemblePatternBoundary(intersection, ltrial_in, ltest_in, lpattern_in_in); }
 {
-  lop.localAssemblePatternBoundary(
-    intersection,
-    ltrial_in, ltest_in,
-    lpattern_in_in);
+  lop.localAssemblePatternBoundary(intersection, ltrial_in, ltest_in, lpattern_in_in);
 }
 
-void localAssembleJacobianBoundary(
-                                                  auto& lop,
+void localAssembleJacobianBoundary(               auto& lop,
   const Dune::Concept::Intersection               auto& intersection,
                                                   auto  time_point,
   const PDELab::Concept::LocalBasis               auto& ltrial_in,
   const PDELab::Concept::LocalConstContainer      auto& llin_point_in,
   const PDELab::Concept::LocalBasis               auto& ltest_in,
   PDELab::Concept::LocalMutableContainer          auto& ljacobian_in)
+requires requires { lop.localAssembleJacobianBoundary(intersection, time_point, ltrial_in, llin_point_in, ltest_in, ljacobian_in); }
 {
-  lop.localAssembleJacobianBoundary(
-    intersection, time_point,
-    ltrial_in, llin_point_in, ltest_in,
-    ljacobian_in);
+  lop.localAssembleJacobianBoundary(intersection, time_point, ltrial_in, llin_point_in, ltest_in, ljacobian_in);
 }
 
-void localAssembleJacobianBoundaryApply(
-                                                  auto& lop,
+void localAssembleJacobianBoundaryApply(          auto& lop,
   const Dune::Concept::Intersection               auto& intersection,
                                                   auto  time_point,
   const PDELab::Concept::LocalBasis               auto& ltrial_in,
@@ -239,41 +201,66 @@ void localAssembleJacobianBoundaryApply(
   const PDELab::Concept::LocalConstContainer      auto& lpoint_in,
   const PDELab::Concept::LocalBasis               auto& ltest_in,
   PDELab::Concept::LocalMutableContainer          auto& ljacobian_in)
+requires requires { lop.localAssembleJacobianBoundaryApply(intersection, time_point, ltrial_in, llin_point_in, lpoint_in, ltest_in, ljacobian_in); }
 {
-  lop.localAssembleJacobianBoundaryApply(
-    intersection, time_point,
-    ltrial_in, llin_point_in, lpoint_in, ltest_in,
-    ljacobian_in);
+  lop.localAssembleJacobianBoundaryApply(intersection, time_point, ltrial_in, llin_point_in, lpoint_in, ltest_in, ljacobian_in);
 }
 
 } // namespace Default
 
+
 struct SkipEntity {
-  constexpr std::convertible_to<bool> auto operator()(const auto& lop, const Dune::Concept::Entity auto& entity) const {
+  constexpr auto operator()(const auto& lop, const Dune::Concept::Entity auto& entity) const
+  requires requires { { localAssembleSkipEntity(lop, entity) } -> std::convertible_to<bool>; } {
     return localAssembleSkipEntity(lop, entity);
+  }
+
+  constexpr std::false_type operator()(const auto& lop, const Dune::Concept::Entity auto& entity) const
+  requires (!requires { localAssembleSkipEntity(lop, entity); }) {
+    return {};
   }
 };
 
 struct SkipIntersection {
-  constexpr std::convertible_to<bool> auto operator()(const auto& lop, const Dune::Concept::Intersection auto& intersection) const {
+  constexpr auto operator()(const auto& lop, const Dune::Concept::Intersection auto& intersection) const
+  requires requires { { localAssembleSkipIntersection(lop, intersection) } -> std::convertible_to<bool>; } {
     return localAssembleSkipIntersection(lop, intersection);
+  }
+
+  constexpr std::false_type operator()(const auto& lop, const Dune::Concept::Intersection auto& intersection) const
+  requires (!requires { localAssembleSkipIntersection(lop, intersection); }) {
+    return {};
   }
 };
 
 struct IsLinear {
-  constexpr std::convertible_to<bool> auto operator()(const auto& lop) const {
+  constexpr auto operator()(const auto& lop) const
+  requires requires { { localAssembleIsLinear(lop) } -> std::convertible_to<bool>; } {
     return localAssembleIsLinear(lop);
+  }
+
+  constexpr std::false_type operator()(const auto& lop) const
+  requires (!requires { localAssembleIsLinear(lop); }) {
+    return {};
   }
 };
 
 struct DoVolume {
-  constexpr std::convertible_to<bool> auto operator()(const auto& lop) const {
+  constexpr auto operator()(const auto& lop) const
+  requires requires { { localAssembleDoVolume(lop) } -> std::convertible_to<bool>; }
+  {
     return localAssembleDoVolume(lop);
   }
 
-  static void apply(auto& lop, auto&& f) {
+  constexpr std::false_type operator()(const auto& lop) const
+  requires (!requires { localAssembleDoVolume(lop); }) {
+    return {};
+  }
+
+  static void and_then(auto& lop, auto&& f)
+  {
     // static/dynamic switch
-    const auto do_assemble = localAssembleDoVolume(lop);
+    const auto do_assemble = DoVolume{}(lop);
     if constexpr (requires { std::bool_constant<do_assemble>{}; } ) {
       if constexpr (do_assemble)
         f(lop);
@@ -284,74 +271,60 @@ struct DoVolume {
 };
 
 struct Volume {
-  void operator()(
-                                                    auto& lop,
-                                                    auto  time_point,
-    const PDELab::Concept::LocalBasis               auto& ltrial,
-    const PDELab::Concept::LocalConstContainer      auto& lcoefficients,
-    const PDELab::Concept::LocalBasis               auto& ltest,
-    PDELab::Concept::LocalMutableContainer          auto& lresidual) const
-  requires requires { { localAssembleDoVolume(lop) } -> std::convertible_to<bool>; }
+  template<class... Args>
+  void operator()(auto& lop, Args&&... args) const
   {
-    DoVolume::apply(lop, [&](auto& _lop){
-      localAssembleVolume(_lop, time_point, ltrial, lcoefficients, ltest, lresidual);
+    DoVolume::and_then(lop, [&](auto& _lop){
+      localAssembleVolume(_lop, std::forward<Args>(args)...);
     });
   }
 };
 
 struct PatternVolume {
-  void operator()(
-                                                    auto& lop,
-    const PDELab::Concept::LocalBasis               auto& ltrial,
-    const PDELab::Concept::LocalBasis               auto& ltest,
-                                                    auto& lpattern) const
-  requires requires { { localAssembleDoVolume(lop) } -> std::convertible_to<bool>; }
+  template<class... Args>
+  void operator()(auto& lop, Args&&... args) const
   {
-    DoVolume::apply(lop, [&](auto& _lop){
-      localAssemblePatternVolume(_lop, ltrial, ltest, lpattern);
+    DoVolume::and_then(lop, [&](auto& _lop){
+      localAssemblePatternVolume(_lop, std::forward<Args>(args)...);
     });
   }
 };
 
 struct JacobianVolume {
-  void operator()(
-                                                    auto& lop,
-                                                    auto  time_point,
-    const PDELab::Concept::LocalBasis               auto& ltrial,
-    const PDELab::Concept::LocalConstContainer      auto& llin_point,
-    const PDELab::Concept::LocalBasis               auto& ltest,
-    PDELab::Concept::LocalMutableMatrix             auto& ljacobian) const
+  template<class... Args>
+  void operator()(auto& lop, Args&&... args) const
   {
-    DoVolume::apply(lop, [&](auto& _lop){
-      localAssembleJacobianVolume(_lop, time_point, ltrial, llin_point, ltest, ljacobian);
+    DoVolume::and_then(lop, [&](auto& _lop){
+      localAssembleJacobianVolume(_lop, std::forward<Args>(args)...);
     });
   }
 };
 
 struct JacobianVolumeApply {
-  void operator()(
-                                                    auto& lop,
-                                                    auto  time_point,
-    const PDELab::Concept::LocalBasis               auto& ltrial,
-    const PDELab::Concept::LocalConstContainer      auto& llin_point,
-    const PDELab::Concept::LocalConstContainer      auto& lpoint,
-    const PDELab::Concept::LocalBasis               auto& ltest,
-    PDELab::Concept::LocalMutableContainer          auto& ljacobian) const
+  template<class... Args>
+  void operator()(auto& lop, Args&&... args) const
   {
-    DoVolume::apply(lop, [&](auto& _lop){
-      localAssembleJacobianVolumeApply(_lop, time_point, ltrial, llin_point, lpoint, ltest, ljacobian);
+    DoVolume::and_then(lop, [&](auto& _lop){
+      localAssembleJacobianVolumeApply(_lop, std::forward<Args>(args)...);
     });
   }
 };
 
 struct DoSkeleton {
-  constexpr std::convertible_to<bool> auto operator()(const auto& lop) const {
+  constexpr auto operator()(const auto& lop) const
+  requires requires { { localAssembleDoSkeleton(lop) } -> std::convertible_to<bool>; }
+  {
     return localAssembleDoSkeleton(lop);
   }
 
-  static void apply(auto& lop, auto&& f) {
+  constexpr std::false_type operator()(const auto& lop) const
+  requires (!requires { localAssembleDoSkeleton(lop); }) {
+    return {};
+  }
+
+  static void and_then(auto& lop, auto&& f) {
     // static/dynamic switch
-    const auto do_assemble = localAssembleDoSkeleton(lop);
+    const auto do_assemble = DoSkeleton{}(lop);
     if constexpr (requires { std::bool_constant<do_assemble>{}; } ) {
       if constexpr (do_assemble)
         f(lop);
@@ -362,110 +335,60 @@ struct DoSkeleton {
 };
 
 struct Skeleton {
-  void operator()(
-                                                    auto& lop,
-    const Dune::Concept::Intersection               auto& intersection,
-                                                    auto  time_point,
-    const PDELab::Concept::LocalBasis               auto& ltrial_in,
-    const PDELab::Concept::LocalConstContainer      auto& lcoefficients_in,
-    const PDELab::Concept::LocalBasis               auto& ltest_in,
-    const PDELab::Concept::LocalBasis               auto& ltrial_out,
-    const PDELab::Concept::LocalConstContainer      auto& lcoefficients_out,
-    const PDELab::Concept::LocalBasis               auto& ltest_out,
-    PDELab::Concept::LocalMutableContainer          auto& lresidual_in,
-    PDELab::Concept::LocalMutableContainer          auto& lresidual_out) const
+  template<class... Args>
+  void operator()(auto& lop, Args&&... args) const
   {
-    DoSkeleton::apply(lop, [&](auto& _lop){
-      localAssembleSkeleton(_lop, intersection, time_point,
-              ltrial_in,  lcoefficients_in, ltest_in,
-              ltrial_out, lcoefficients_out, ltest_out,
-              lresidual_in, lresidual_out);
+    DoSkeleton::and_then(lop, [&](auto& _lop){
+      localAssembleSkeleton(_lop, std::forward<Args>(args)...);
     });
   }
 };
 
 struct PatternSkeleton {
-  void operator()(
-                                                    auto& lop,
-    const Dune::Concept::Intersection               auto& intersection,
-    const PDELab::Concept::LocalBasis               auto& ltrial_in,
-    const PDELab::Concept::LocalBasis               auto& ltest_in,
-    const PDELab::Concept::LocalBasis               auto& ltrial_out,
-    const PDELab::Concept::LocalBasis               auto& ltest_out,
-                                                    auto& lresidual_in_in,
-                                                    auto& lresidual_in_out,
-                                                    auto& lresidual_out_in,
-                                                    auto& lresidual_out_out) const
+  template<class... Args>
+  void operator()(auto& lop, Args&&... args) const
   {
-    DoSkeleton::apply(lop, [&](auto& _lop){
-      localAssemblePatternSkeleton(_lop, intersection,
-                ltrial_in, ltest_in,
-                ltrial_out, ltest_out,
-                lresidual_in_in, lresidual_in_out,
-                lresidual_out_in, lresidual_out_out);
+    DoSkeleton::and_then(lop, [&](auto& _lop){
+      localAssemblePatternSkeleton(_lop, std::forward<Args>(args)...);
     });
   }
 };
 
 struct JacobianSkeleton {
-  void operator()(
-                                                    auto& lop,
-    const Dune::Concept::Intersection               auto& intersection,
-                                                    auto  time_point,
-    const PDELab::Concept::LocalBasis               auto& ltrial_in,
-    const PDELab::Concept::LocalConstContainer      auto& llin_point_in,
-    const PDELab::Concept::LocalBasis               auto& ltest_in,
-    const PDELab::Concept::LocalBasis               auto& ltrial_out,
-    const PDELab::Concept::LocalConstContainer      auto& llin_point_out,
-    const PDELab::Concept::LocalBasis               auto& ltest_out,
-    PDELab::Concept::LocalMutableMatrix             auto& ljacobian_in_in,
-    PDELab::Concept::LocalMutableMatrix             auto& ljacobian_in_out,
-    PDELab::Concept::LocalMutableMatrix             auto& ljacobian_out_in,
-    PDELab::Concept::LocalMutableMatrix             auto& ljacobian_out_out) const
+  template<class... Args>
+  void operator()(auto& lop, Args&&... args) const
   {
-    DoSkeleton::apply(lop, [&](auto& _lop){
-      localAssembleJacobianSkeleton(lop, intersection, time_point,
-                  ltrial_in, llin_point_in, ltest_in,
-                  ltrial_out, llin_point_out, ltest_out,
-                  ljacobian_in_in, ljacobian_in_out,
-                  ljacobian_out_in, ljacobian_out_out);
+    DoSkeleton::and_then(lop, [&](auto& _lop){
+      localAssembleJacobianSkeleton(_lop, std::forward<Args>(args)...);
     });
   }
 };
 
 struct JacobianSkeletonApply {
-  void operator()(
-                                                    auto& lop,
-    const Dune::Concept::Intersection               auto& intersection,
-                                                    auto  time_point,
-    const PDELab::Concept::LocalBasis               auto& ltrial_in,
-    const PDELab::Concept::LocalConstContainer      auto& llin_point_in,
-    const PDELab::Concept::LocalConstContainer      auto& lpoint_in,
-    const PDELab::Concept::LocalBasis               auto& ltest_in,
-    const PDELab::Concept::LocalBasis               auto& ltrial_out,
-    const PDELab::Concept::LocalConstContainer      auto& llin_point_out,
-    const PDELab::Concept::LocalConstContainer      auto& lpoint_out,
-    const PDELab::Concept::LocalBasis               auto& ltest_out,
-    PDELab::Concept::LocalMutableContainer          auto& ljacobian_in,
-    PDELab::Concept::LocalMutableContainer          auto& ljacobian_out) const
+  template<class... Args>
+  void operator()(auto& lop, Args&&... args) const
   {
-    DoSkeleton::apply(lop, [&](auto& _lop){
-      localAssembleJacobianSkeletonApply(_lop, intersection, time_point,
-                  ltrial_in, llin_point_in, lpoint_in, ltest_in,
-                  ltrial_out, llin_point_out, lpoint_out, ltest_out,
-                  ljacobian_in, ljacobian_out);
+    DoSkeleton::and_then(lop, [&](auto& _lop){
+      localAssembleJacobianSkeletonApply(_lop, std::forward<Args>(args)...);
     });
   }
 };
 
 struct DoBoundary {
-  constexpr std::convertible_to<bool> auto operator()(const auto& lop) const {
+
+  constexpr auto operator()(const auto& lop) const
+  requires requires { { localAssembleDoBoundary(lop) } -> std::convertible_to<bool>; } {
     return localAssembleDoBoundary(lop);
   }
 
-  static void apply(auto& lop, auto&& f) {
+  constexpr std::false_type operator()(const auto& lop) const
+  requires (!requires { localAssembleDoBoundary(lop); }) {
+    return {};
+  }
+
+  static void and_then(auto& lop, auto&& f) {
     // static/dynamic switch
-    const auto do_assemble = localAssembleDoBoundary(lop);
+    const auto do_assemble = DoBoundary{}(lop);
     if constexpr (requires { std::bool_constant<do_assemble>{}; } ) {
       if constexpr (do_assemble)
         f(lop);
@@ -477,65 +400,42 @@ struct DoBoundary {
 
 
 struct Boundary {
-  void operator()(
-                                                    auto& lop,
-    const Dune::Concept::Intersection               auto& intersection,
-                                                    auto  time_point,
-    const PDELab::Concept::LocalBasis               auto& ltrial_in,
-    const PDELab::Concept::LocalConstContainer      auto& lcoefficients_in,
-    const PDELab::Concept::LocalBasis               auto& ltest_in,
-    PDELab::Concept::LocalMutableContainer          auto& lresidual_in) const
+  template<class... Args>
+  void operator()(auto& lop, Args&&... args) const
   {
-    DoBoundary::apply(lop, [&](auto& _lop){
-      localAssembleBoundary(_lop, intersection, time_point, ltrial_in, lcoefficients_in, ltest_in, lresidual_in);
+    DoBoundary::and_then(lop, [&](auto& _lop){
+      localAssembleBoundary(_lop, std::forward<Args>(args)...);
     });
   }
 };
 
 struct PatternBoundary {
-  void operator()(
-                                                    auto& lop,
-    const Dune::Concept::Intersection               auto& intersection,
-    const PDELab::Concept::LocalBasis               auto& ltrial_in,
-    const PDELab::Concept::LocalBasis               auto& ltest_in,
-                                                    auto& lpattern_in_in) const
+  template<class... Args>
+  void operator()(auto& lop, Args&&... args) const
   {
-    DoBoundary::apply(lop, [&](auto& _lop){
-      localAssemblePatternBoundary(_lop, intersection, ltrial_in, ltest_in, lpattern_in_in);
+    DoBoundary::and_then(lop, [&](auto& _lop){
+      localAssemblePatternBoundary(_lop, std::forward<Args>(args)...);
     });
   }
 };
 
 
 struct JacobianBoundary {
-  void operator()(
-                                                    auto& lop,
-    const Dune::Concept::Intersection               auto& intersection,
-                                                    auto  time_point,
-    const PDELab::Concept::LocalBasis               auto& ltrial_in,
-    const PDELab::Concept::LocalConstContainer      auto& llin_point_in,
-    const PDELab::Concept::LocalBasis               auto& ltest_in,
-    PDELab::Concept::LocalMutableMatrix             auto& ljacobian_in) const
+  template<class... Args>
+  void operator()(auto& lop, Args&&... args) const
   {
-    DoBoundary::apply(lop, [&](auto& _lop){
-      localAssembleJacobianBoundary(_lop, intersection, time_point, ltrial_in, llin_point_in, ltest_in, ljacobian_in);
+    DoBoundary::and_then(lop, [&](auto& _lop){
+      localAssembleJacobianBoundary(_lop, std::forward<Args>(args)...);
     });
   }
 };
 
 struct JacobianBoundaryApply {
-  void operator()(
-                                                    auto& lop,
-    const Dune::Concept::Intersection               auto& intersection,
-                                                    auto  time_point,
-    const PDELab::Concept::LocalBasis               auto& ltrial_in,
-    const PDELab::Concept::LocalConstContainer      auto& llin_point_in,
-    const PDELab::Concept::LocalConstContainer      auto& lpoint_in,
-    const PDELab::Concept::LocalBasis               auto& ltest_in,
-    PDELab::Concept::LocalMutableContainer          auto& ljacobian_in) const
-  {
-    DoBoundary::apply(lop, [&](auto& _lop){
-      localAssembleJacobianBoundaryApply(lop, intersection, time_point, ltrial_in, llin_point_in, lpoint_in, ltest_in, ljacobian_in);
+  template<class... Args>
+  void operator()(auto& lop, Args&&... args) const
+{
+    DoBoundary::and_then(lop, [&](auto& _lop){
+      localAssembleJacobianBoundaryApply(_lop, std::forward<Args>(args)...);
     });
   }
 };
