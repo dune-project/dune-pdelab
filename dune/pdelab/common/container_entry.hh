@@ -98,11 +98,11 @@ template<Concept::MultiIndex Path>
 constexpr auto containerIndexSplit(const auto& map, Path path) {
   // split interleaved indices
   auto domain = unpackIntegerSequence([&](auto... i) {
-    return multiIndex(path[std::integral_constant<std::size_t,i*2+1>{}]...);
+    return TypeTree::treePath(path[std::integral_constant<std::size_t,i*2+1>{}]...);
   }, std::make_index_sequence<(Path::size()/2)>{});
 
   auto range = unpackIntegerSequence([&](auto... i) {
-    return multiIndex(path[std::integral_constant<std::size_t,i*2>{}]...);
+    return TypeTree::treePath(path[std::integral_constant<std::size_t,i*2>{}]...);
   }, std::make_index_sequence<(Path::size()/2+Path::size()%2)>{});
 
   return std::make_pair(domain, range);
