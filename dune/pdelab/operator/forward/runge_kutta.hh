@@ -12,7 +12,7 @@
 namespace Dune::PDELab::inline Experimental {
 
 /**
- * @brief OneStep operator @f$f_{\delta_t}@f$ stepping a Differentiable MassStiffness operator
+ * @brief OneStep operator @f$f_{\delta_t}@f$ stepping a Differentiable Instationary operator
  *
  * @tparam DomainStages
  * @tparam RangeStages
