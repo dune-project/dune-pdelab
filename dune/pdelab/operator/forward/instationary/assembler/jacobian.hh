@@ -80,14 +80,14 @@ public:
     PropertyTree& properties = *this;
 
     properties["container"].documentation = "Matrix (or tensor) container holding the jacobian of an instationary operator";
+    properties["container"] = std::make_shared<JacobianContainer>();
   }
 
   ErrorCondition apply(const Coefficients& coefficients, Residual& residual) override
   {
     TRACE_EVENT("dune", "Instationary::Jacobian");
     const JacobianContainer& jac = getJacobianContainer();
-    // PDELab::linearTransformation(std::execution::par_unseq, coefficients, jac, residual);
-    DUNE_THROW(NotImplemented, "");
+    PDELab::linearTransformation(std::execution::par_unseq, coefficients, jac, residual);
     return {};
   }
 
