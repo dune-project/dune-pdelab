@@ -108,11 +108,11 @@ public:
   }
 
   void fetch_add(Concept::LocalBasis auto& ltest, const Concept::LocalBasis auto& ltrial) {
-    _ltest_constraints.bind(ltest.element());
-    _ltrial_constraints.bind(ltrial.element());
-    DUNE_THROW(NotImplemented, "");
-    _ltest_constraints.unbind();
-    _ltrial_constraints.unbind();
+    // _ltest_constraints.bind(ltest.element());
+    // _ltrial_constraints.bind(ltrial.element());
+    // DUNE_THROW(NotImplemented, "");
+    // _ltest_constraints.unbind();
+    // _ltrial_constraints.unbind();
 
     if constexpr (Concept::Lockable<typename TestBasis::LocalView>)
       ltest.lock();
