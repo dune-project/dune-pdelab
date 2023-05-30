@@ -8,6 +8,10 @@
 #include <dune/pdelab/operator/adapter.hh>
 #include <dune/pdelab/operator/inverse/istl_adapter.hh>
 
+#include <dune/pdelab/pattern/basis_to_pattern.hh>
+#include <dune/pdelab/pattern/sparsity_pattern.hh>
+#include <dune/pdelab/pattern/pattern_to_matrix.hh>
+
 #include <dune/pdelab/common/convergence/reason.hh>
 
 #include <dune/pdelab/basis/basis.hh>
@@ -37,6 +41,27 @@ static constexpr double diffusion = 0.005;
 
 using Duration = double;
 using TimePoint = double;
+
+struct FullVolumePattern {
+
+  constexpr static auto localAssembleDoVolume() {
+    return std::true_type{};
+  }
+
+  void localAssemblePatternVolume(
+    const Dune::PDELab::Concept::LocalBasis            auto& ltrial,
+    const Dune::PDELab::Concept::LocalBasis            auto& ltest,
+                                                       auto& lpattern)
+  {
+    forEachLeafNode(ltrial.tree(), [&](auto& ltrial_node){
+      forEachLeafNode(ltest.tree(), [&](auto& ltest_node){
+        for (std::size_t i = 0; i != ltrial_node.size(); ++i)
+          for (std::size_t j = 0; j != ltest_node.size(); ++j)
+            lpattern.addLink(ltrial_node, i, ltrial_node, j);
+      });
+    });
+  }
+};
 
 // define a class with the local integrals for l2
 struct LocalL2 {
@@ -92,6 +117,32 @@ struct LocalL2 {
   {
     static_assert(localAssembleIsLinear());
     localAssembleVolume(time_point, ltrial, lpoint, ltest, lresidual);
+  }
+
+  void localAssembleJacobianVolume(            auto  time_point,
+    const Concept::LocalBasis                  auto& ltrial,
+    const Concept::LocalConstContainer         auto& llin_point,
+    const Concept::LocalBasis                  auto& ltest,
+    Concept::LocalMutableMatrix                auto& ljacobian)
+  {
+    const auto& geometry = ltest.element().geometry();
+
+    // obtain the local basis of the current test finite element
+    const auto& test_local_basis = ltest.tree().finiteElement().localBasis();
+
+    // loop over quadrature points
+    for (auto [position, weight] : quadratureRule(geometry, 2)) {
+      // evaluate local test function on current quadrature point for each basis
+      test_local_basis.evaluateFunction(position, _v_hats);
+
+      // compute integration factor
+      auto factor = weight * geometry.integrationElement(position);
+
+      // integrate mass matrix
+      for (std::size_t dof_i = 0; dof_i != ltest.tree().size(); ++dof_i)
+        for (std::size_t dof_j = 0; dof_j != ltrial.tree().size(); ++dof_j)
+          ljacobian.accumulate(ltest.tree(), dof_i, ltrial.tree(), dof_j, _v_hats[dof_i] * _v_hats[dof_j] * factor);
+    }
   }
 };
 
@@ -156,6 +207,36 @@ struct LocalPoisson {
   {
     static_assert(localAssembleIsLinear());
     localAssembleVolume(time_point, ltrial, lpoint, ltest, lresidual);
+  }
+
+  void localAssembleJacobianVolume(            auto  time_point,
+    const Concept::LocalBasis                  auto& ltrial,
+    const Concept::LocalConstContainer         auto& llin_point,
+    const Concept::LocalBasis                  auto& ltest,
+    Concept::LocalMutableMatrix                auto& ljacobian)
+  {
+    const auto& geometry = ltest.element().geometry();
+
+    // obtain the local basis of the current test finite element
+    const auto& test_local_basis = ltest.tree().finiteElement().localBasis();
+
+    // loop over quadrature points
+    for (auto [position, weight] : quadratureRule(geometry, 2)) {
+      // evaluate local test function on current quadrature point for each basis
+      test_local_basis.evaluateJacobian(position, _jac_v_hats);
+      // compute gradient of local test function for each basis
+      _grad_v_hats.resize(ltest.tree().size());
+      for (std::size_t dof = 0; dof != ltest.tree().size(); ++dof)
+        _grad_v_hats[dof] = (_jac_v_hats[dof] * geometry.jacobianInverse(position))[0];
+
+      // compute integration factor
+      auto factor = weight * geometry.integrationElement(position);
+
+      // integrate mass matrix
+      for (std::size_t dof_i = 0; dof_i != ltest.tree().size(); ++dof_i)
+        for (std::size_t dof_j = 0; dof_j != ltrial.tree().size(); ++dof_j)
+          ljacobian.accumulate(ltest.tree(), dof_i, ltrial.tree(), dof_j, diffusion * dot(_grad_v_hats[dof_i], _grad_v_hats[dof_j]) * factor);
+    }
   }
 };
 
@@ -279,9 +360,10 @@ TEST(TestRungeKutta, TestRungeKuttaExplicitPDE) {
 
   // convert the tree of (unordered) function spaces to an ordered function space
   auto trial = makeBasis(entity_set, leaf_pre_space);
+  using Basis = decltype(trial);
 
   // since we have a galerkin method, test and trial are the same space
-  auto test = trial;
+  Basis test = trial;
 
   // make container for storing the coefficients of the finite element problem  (e.g. std::vector<double>)
   using Domain = Dune::BlockVector<double>;
@@ -290,7 +372,27 @@ TEST(TestRungeKutta, TestRungeKuttaExplicitPDE) {
   using RungeKuttaDomain = Dune::BlockVector<Domain>;
   using RungeKuttaRange = Dune::BlockVector<Range>;
 
-  std::shared_ptr<Operator<RungeKuttaRange,RungeKuttaDomain>> instationary = makeInstationaryAssembler<RungeKuttaRange,RungeKuttaDomain>(test, trial, LocalL2{}, LocalPoisson{});
+  using RungeKuttaJacobian = Dune::DynamicMatrix<Dune::BCRSMatrix<double>>;
+
+  auto jac_resize = [&](const auto& op, RungeKuttaJacobian& jac){
+    LeafSparsePattern<Basis, Basis> pattern{test, {}, trial, {}, 5};
+    jac.resize(1,1); // runge kutta stages/sub-steps
+
+    basisToPattern(FullVolumePattern{}, pattern);
+    pattern.sort();
+    patternToMatrix(pattern, jac[0][0]);
+    jac[0][0] = 0.;
+  };
+
+  std::shared_ptr<Operator<RungeKuttaRange,RungeKuttaDomain>> instationary;
+
+  bool matrix_free = true;
+
+  // jacobian type
+  if (matrix_free)
+    instationary = makeInstationaryMatrixFreeAssembler<RungeKuttaRange,RungeKuttaDomain>(test, trial, LocalL2{}, LocalPoisson{});
+  else
+    instationary = makeInstationaryMatrixBasedAssembler<RungeKuttaRange,RungeKuttaDomain,RungeKuttaJacobian>(test, trial, LocalL2{}, LocalPoisson{}, jac_resize);
 
   // set up solver the linear problem
   // for explicit or semi-implicit methods, we need to solve the diagonal block in the runge-kutta system
