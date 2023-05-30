@@ -184,7 +184,7 @@ private:
     // operator and reset linear operator for the dx_inverse
     bool linearize = (iteration == 0) or (defect_rate > lin_threshold);
     if (linearize)
-      _derivative = getForward().derivative(x, _derivative);
+      _derivative = getForward().derivative(x, _derivative ? move(_derivative) : nullptr);
     auto& dx_inverse = getDerivativeInverse();
     dx_inverse["forward"] = std::weak_ptr<Forward>(_derivative);
 
