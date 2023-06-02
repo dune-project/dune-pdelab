@@ -582,16 +582,11 @@ namespace Dune {
               {
                 // last stage
                 x.push_back(&xnew);
-                if (r>1) xnew = *(x[r-1]); // if r=1 then xnew has already initial guess
               }
             else
               {
                 // intermediate step
                 x.push_back(new TrlV(igos.trialGridFunctionSpace()));
-                if (r>1)
-                  *(x[r]) = *(x[r-1]); // use result of last stage as initial guess
-                else
-                  *(x[r]) = xnew;
               }
 
             // compute residuals and jacobian
@@ -600,11 +595,13 @@ namespace Dune {
             alpha = 0.0;
             beta = 0.0;
 
-            // set x[r] to x[r-1] with boundary conditions interpolated from f
-            igos.interpolate(r,*x[r-1],f,*x[r]);
-
             // apply slope limiter to old solution (e.g for finite volume reconstruction scheme)
             limiter.prestage(*x[r-1]);
+
+            // set initial value from xnew or last stage
+            TrlV const * const init_guess = (r==1) ? &xnew : x[r-1];
+            // set boundary conditions
+            igos.interpolate(r,*init_guess,f,*x[r]);
 
             if(verbosityLevel>=4)
               std::cout << stagetag << "Assembling residual..." << std::endl;

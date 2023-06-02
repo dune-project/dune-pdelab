@@ -348,8 +348,10 @@ namespace Dune {
                 x.push_back(new TrlV(igos.trialGridFunctionSpace()));
               }
 
-            // set boundary conditions and initial value
-            igos.interpolate(r,*x[r-1],f,*x[r]);
+            // set initial value from xnew or last stage
+            TrlV const * const init_guess = (r==1) ? &xnew : x[r-1];
+            // set boundary conditions
+            igos.interpolate(r,*init_guess,f,*x[r]);
 
             // solve stage
             try {
