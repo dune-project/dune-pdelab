@@ -153,11 +153,15 @@ namespace Dune{
       template<typename F, typename X>
       void interpolate (const X& xold, F& f, X& x) const
       {
+        // If xold is alias of x it is rewritten by interpolate. Initial guess is then stored in tmp
+        std::optional<X> tmp;
+        const X& source = (&xold == &x) ? tmp.emplace(xold) : xold;
+
         // Interpolate f into grid function space and set corresponding coefficients
         Dune::PDELab::interpolate(f,global_assembler.trialGridFunctionSpace(),x);
 
         // Copy non-constrained dofs from old time step
-        Dune::PDELab::copy_nonconstrained_dofs(local_assembler.trialConstraints(),xold,x);
+        Dune::PDELab::copy_nonconstrained_dofs(local_assembler.trialConstraints(),source,x);
       }
 
       //! Fill pattern of jacobian matrix
