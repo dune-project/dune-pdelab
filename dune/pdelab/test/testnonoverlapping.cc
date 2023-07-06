@@ -145,7 +145,7 @@ int main(int argc, char** argv)
       // The following code builds a 2D grid with 5x3 cubes. On 2 MPI ranks, UG will by default
       // partition that grid in a way that introduces a concave corner on each rank, allowing us
       // to test the pattern extender algorithm in the GridOperator.
-      if (mpi_helper.getCollectiveCommunication().rank() == 0)
+      if (mpi_helper.getCommunication().rank() == 0)
         {
 
           const std::size_t nx = 5;

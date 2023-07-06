@@ -61,7 +61,8 @@ namespace Dune {
                            d.data()+d.size(),
                            _invDiagonal.begin(),
                            v.data(),
-                           [=](const value_type& a, const value_type& b){
+                           [this](const value_type& a,
+                                  const value_type& b){
                              return _diagonalWeight*a*b;
                            });
           }

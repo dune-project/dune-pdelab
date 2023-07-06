@@ -243,7 +243,7 @@ namespace Dune {
                        y.data() + y.size(),
                        _b_i.data(),
                        y.data(),
-                       [=](const double &a,
+                       [this](const double &a,
                            const double& b)
                        {
                          return (1-_omega)*a - _omega*b;
@@ -279,8 +279,8 @@ namespace Dune {
                        y.data()+y.size(),
                        _b_i.data(),
                        y.data(),
-                       [=](const double& a,
-                           const double& b)
+                       [this](const double& a,
+                              const double& b)
                        {
                          return (1-_omega)*a - _omega*b;
                        });

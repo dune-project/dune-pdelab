@@ -120,7 +120,7 @@ void driver(std::string basis_type, std::string part_unity_type) {
   std::array<int,dim> yasppartitions = {2, 1};
   auto yp = new YP(yasppartitions);
 
-  auto grid = std::make_shared<GM>(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication(),yp);
+  auto grid = std::make_shared<GM>(L,N,B,overlap,Dune::MPIHelper::getCommunication(),yp);
 
 
   // make problem parameters

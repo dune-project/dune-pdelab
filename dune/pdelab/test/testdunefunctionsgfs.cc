@@ -199,7 +199,7 @@ void solveParallelPoissonProblem()
   std::array<int,dim> N = {16, 16};
   std::bitset<dim> periodic(false);
   int overlap=1;
-  GridType grid(L,N,periodic,overlap,MPIHelper::getCollectiveCommunication());
+  GridType grid(L,N,periodic,overlap,MPIHelper::getCommunication());
   grid.refineOptions(false); // keep overlap in cells
   grid.globalRefine(refinement);
   using GV = GridType::LeafGridView;

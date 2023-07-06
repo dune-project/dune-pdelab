@@ -447,7 +447,7 @@ namespace Dune {
 
 #if HAVE_DUNE_UGGRID && PDELAB_SEQUENTIAL_UG
       template<int dim>
-      void assertParallelUG(Dune::CollectiveCommunication<Dune::UGGrid<dim> > comm)
+      void assertParallelUG(Dune::Communication<Dune::UGGrid<dim> > comm)
       {
         static_assert(Dune::AlwaysFalse<Dune::UGGrid<dim> >::value, "Using sequential UG in parallel environment");
       };
