@@ -122,7 +122,7 @@ int main(int argc, char** argv)
   try {
     auto& helper = Dune::MPIHelper::instance(argc,argv);
 
-    if (helper.getCollectiveCommunication().size() == 1)
+    if (helper.getCommunication().size() == 1)
       {
         std::cerr << "Communication test requires at least 2 MPI ranks" << std::endl;
         std::exit(77);

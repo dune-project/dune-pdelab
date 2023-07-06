@@ -216,7 +216,7 @@ namespace Dune {
                 std::bitset<dimworld> B(false);
 
                 // instantiate the grid
-                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication()));
+                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap,Dune::MPIHelper::getCommunication()));
             }
 
             // constructor with sizes given
@@ -246,7 +246,7 @@ namespace Dune {
                     }
 
                 // instantiate the grid
-                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication()));
+                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap,Dune::MPIHelper::getCommunication()));
             }
 
             // constructor with periodicity argument
@@ -277,7 +277,7 @@ namespace Dune {
                     }
 
                 // instantiate the grid
-                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication()));
+                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap,Dune::MPIHelper::getCommunication()));
             }
 
             // return shared pointer

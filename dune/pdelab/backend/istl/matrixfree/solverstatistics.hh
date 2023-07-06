@@ -42,7 +42,7 @@ namespace Dune{
        *
        * \param[in] comm_ Collective communication object
        */
-      SolverStatistics(const Dune::CollectiveCommunication<MPI_Comm>& comm_)
+      SolverStatistics(const Dune::Communication<MPI_Comm>& comm_)
         : data(), comm(comm_) {}
 
       /** \brief Add new data point
@@ -133,7 +133,7 @@ namespace Dune{
       // \brief local data
       std::vector<T> data;
       // \brief Collective communication object
-      const Dune::CollectiveCommunication<MPI_Comm>& comm;
+      const Dune::Communication<MPI_Comm>& comm;
     };
 
     /** \brief Write statistics result to out stream */

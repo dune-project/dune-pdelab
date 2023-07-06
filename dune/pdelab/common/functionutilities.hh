@@ -218,7 +218,7 @@ sum = gf.getGridView().comm().sum(sum);
        *             after the function returns.
        * \param rank Rank of the process to communicate the result to.
        *
-       * \note CollectiveCommunication does not provide any direct
+       * \note Communication does not provide any direct
        *       process-to-process communication, so currently this function is
        *       identical with eval_all(), with the \c rank parameter ignored.
        * \note If the GridFunctionProbe is outside the grid NaN will be stored
