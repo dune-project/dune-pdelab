@@ -221,7 +221,7 @@ private:
   // std::string name;
 };
 
-auto SSPRK33() {
+inline auto SSPRK33() {
   return InstationaryCoefficients{
     // mass
     {{ {{   -1,     1,     0,  0}},
@@ -237,7 +237,7 @@ auto SSPRK33() {
 }
 
 // https://doi.org/10.1137/S00361429013890
-auto SSPRK54() {
+inline auto SSPRK54() {
   return InstationaryCoefficients{
         { {                -1,                 1,                 0,                 0,                 0, 0},
           {-0.444370493651235,-0.555629506348765,                 1,                 0,                 0, 0},

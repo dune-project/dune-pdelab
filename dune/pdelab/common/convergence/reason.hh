@@ -78,7 +78,7 @@ const IterativeOperatorErrorCategory iterative_operator_error_category {};
 }
 
 //! Creates an error condition for a convergence reason value cr.
-ErrorCondition make_error_condition(Convergence::Reason cr) {
+inline ErrorCondition make_error_condition(Convergence::Reason cr) {
   // only negative values are errors
   int ecr = std::min(static_cast<int>(cr), int{0});
   return {ecr, iterative_operator_error_category};
