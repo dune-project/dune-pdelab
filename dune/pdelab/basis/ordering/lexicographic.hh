@@ -2,10 +2,14 @@
 #define DUNE_PDELAB_BASIS_ORDERING_LEXICOGRAPHIC_HH
 
 #include <dune/pdelab/basis/prebasis/concept.hh>
-#include <dune/pdelab/basis/merging_strategy.hh>
 
 #include <dune/pdelab/common/multiindex.hh>
 #include <dune/pdelab/common/tree_traversal.hh>
+
+#include <dune/typetree/childextraction.hh>
+#include <dune/typetree/powernode.hh>
+#include <dune/typetree/dynamicpowernode.hh>
+#include <dune/typetree/compositenode.hh>
 
 namespace Dune::PDELab::inline Experimental::Impl {
 
@@ -590,59 +594,40 @@ makeLexicographicOrdering(const PreBasis& pre_basis)
 {
 
   using NodeTag = typename PreBasis::NodeTag;
-  using MergingStrategy =
-    typename PreBasis::Traits::MergingStrategy;
+  using MergingStrategy = typename PreBasis::Traits::MergingStrategy;
 
   static_assert(not std::is_same<NodeTag, TypeTree::LeafNodeTag>{},
     "Lexicographic merging strategy shall not be applied to leaf nodes. "
     "Consider using merging by entity."
   );
 
-  auto make_ordering = [](const auto& pre_basis){
-    return makeOrdering(pre_basis, pre_basis.mergingStrategy());
-  };
-
   if constexpr (std::is_same<NodeTag, TypeTree::PowerNodeTag>{}) {
     constexpr std::size_t degree = PreBasis::degree();
-    using Child = std::decay_t<decltype(*make_ordering(pre_basis.child(0)))>;
+    using Child = std::decay_t<decltype(*pre_basis.child(0).makeOrdering())>;
     using LexicographicOrdering = ArrayLexicographicOrdering<MergingStrategy, Child, degree>;
     std::array<std::shared_ptr<Child>, degree> storage;
     for (std::size_t i = 0; i < degree; ++i)
-      storage[i] = make_ordering(pre_basis.child(i));
+      storage[i] = pre_basis.child(i).makeOrdering();
     return std::make_unique<LexicographicOrdering>( std::move(storage) );
   } else if constexpr (std::is_same<NodeTag, TypeTree::DynamicPowerNodeTag>{}) {
     std::size_t degree = pre_basis.degree();
-    using Child = std::decay_t<decltype(*make_ordering(pre_basis.child(0)))>;
+    using Child = std::decay_t<decltype(*pre_basis.child(0).makeOrdering())>;
     using LexicographicOrdering =
       VectorLexicographicOrdering<MergingStrategy, Child>;
     std::vector<std::shared_ptr<Child>> storage(degree);
     for (std::size_t i = 0; i < degree; ++i)
-      storage[i] = make_ordering(pre_basis.child(i));
+      storage[i] = pre_basis.child(i).makeOrdering();
     return std::make_unique<LexicographicOrdering>( std::move(storage) );
   } else {
     static_assert(std::is_same<NodeTag, TypeTree::CompositeNodeTag>{});
     auto unfold_children = [&](auto... i) {
-      using LexicographicOrdering = TupleLexicographicOrdering<MergingStrategy, std::decay_t<decltype(*make_ordering(pre_basis.child(i)))>...>;
-      auto storage = std::tuple{ make_ordering(pre_basis.child(i))... };
+      using LexicographicOrdering = TupleLexicographicOrdering<MergingStrategy, std::decay_t<decltype(*pre_basis.child(i).makeOrdering())>...>;
+      auto storage = std::tuple{ pre_basis.child(i).makeOrdering()... };
       return std::make_unique<LexicographicOrdering>( std::move(storage) );
     };
     auto indices = std::make_index_sequence<PreBasis::degree()>{};
     return unpackIntegerSequence(unfold_children, indices);
   }
-}
-
-template<Concept::Impl::PreBasisTree PreBasis>
-auto
-makeOrdering(const PreBasis& pre_basis, Strategy::FlatLexicographic)
-{
-  return makeLexicographicOrdering(pre_basis);
-}
-
-template<Concept::Impl::PreBasisTree PreBasis>
-auto
-makeOrdering(const PreBasis& pre_basis, Strategy::BlockedLexicographic)
-{
-  return makeLexicographicOrdering(pre_basis);
 }
 
 } // namespace Dune::PDELab::inline Experimental::Impl

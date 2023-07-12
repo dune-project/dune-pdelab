@@ -8,6 +8,11 @@
 
 #include <dune/grid/concepts/gridview.hh>
 
+#include <dune/pdelab/basis/ordering/lexicographic.hh>
+#include <dune/pdelab/basis/ordering/entityset.hh>
+#include <dune/pdelab/basis/ordering/entity.hh>
+#include <dune/pdelab/basis/prebasis/concept.hh>
+
 #include <bitset>
 
 namespace Dune::PDELab::inline Experimental::inline Strategy {
@@ -24,7 +29,12 @@ template<bool ContainerBlocked>
 void registerIndexMergingStrategy(DefaultStrategy<ContainerBlocked>);
 
 template<bool Blocked>
-struct Lexicographic : public DefaultStrategy<Blocked> {};
+struct Lexicographic : public DefaultStrategy<Blocked> {
+
+  static auto makeOrdering(const Concept::Impl::PreBasisTree auto& pre_basis) {
+    return Impl::makeLexicographicOrdering(pre_basis);
+  }
+};
 
 using FlatLexicographic = Lexicographic<false>;
 using BlockedLexicographic = Lexicographic<true>;
@@ -53,6 +63,14 @@ struct EntityGrouping : public DefaultStrategy<ContainerBlocked>
 
   EntitySet& entitySet() { return _entity_set; }
   const EntitySet& entitySet() const { return _entity_set; }
+
+  static auto makeOrdering(const Concept::Impl::PreBasisTree auto& pre_basis) {
+    return Impl::makeEntitySetOrdering(pre_basis);
+  }
+
+  static auto makeLocalOrdering(const Concept::Impl::PreBasisTree auto& pre_basis) {
+    return Impl::makeEntityOrdering(pre_basis);
+  }
 
 private:
   EntitySet _entity_set;

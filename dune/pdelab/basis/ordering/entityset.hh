@@ -1,8 +1,6 @@
 #ifndef DUNE_PDELAB_BASIS_ORDERING_ENTITY_SET_HH
 #define DUNE_PDELAB_BASIS_ORDERING_ENTITY_SET_HH
 
-#include <dune/pdelab/basis/ordering/entity.hh>
-#include <dune/pdelab/basis/merging_strategy.hh>
 #include <dune/pdelab/basis/prebasis/concept.hh>
 
 // #include <dune/pdelab/common/concurrency/vector_adaptivelock.hh>
@@ -627,13 +625,12 @@ namespace Dune::PDELab::inline Experimental::Impl {
     std::vector<VectorLockType> _gt_mutex;
   };
 
-
-  template<Concept::Impl::PreBasisTree PreBasis, Dune::Concept::GridView ES, bool Blocked>
-  auto makeOrdering(const PreBasis& pre_basis, Strategy::EntityGrouping<ES,Blocked> strategy) {
-    auto entity_ordering = makeEntityOrdering(pre_basis);
-    using EntityOrdering = std::decay_t<decltype(*entity_ordering)>;
+  template<Concept::Impl::PreBasisTree PreBasis>
+  auto makeEntitySetOrdering(const PreBasis& pre_basis) {
+    auto entity_ordering = pre_basis.makeLocalOrdering();
+    using LocalOrdering = std::decay_t<decltype(*entity_ordering)>;
     // TODO: assert every leaf has same entity set
-    using Ordering = EntitySetOrdering<EntityOrdering,Strategy::EntityGrouping<ES,Blocked>>;
+    using Ordering = EntitySetOrdering<LocalOrdering,typename PreBasis::Traits::MergingStrategy>;
     return std::make_unique<Ordering>(std::move(*entity_ordering));
   }
 

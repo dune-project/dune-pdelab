@@ -12,7 +12,6 @@
 // #include <dune/pdelab/common/communication/entity_data_handler.hh>
 
 #include <dune/pdelab/basis/prebasis/concept.hh>
-#include <dune/pdelab/basis/ordering.hh>
 #include <dune/pdelab/basis/merging_strategy.hh>
 
 #include <dune/pdelab/basis/constraints/container.hh>
@@ -35,7 +34,7 @@ namespace Dune::PDELab::inline Experimental {
   template<Dune::Concept::GridView ES, Concept::Impl::PreBasisTree PB, Concept::FixedSizeMultiIndex SubBasisPath = TypeTree::HybridTreePath<> >
   class Basis {
     // We need some types sub-basis independent so that we can shared them between templated sub-basiss
-    using Ordering = std::decay_t<decltype(*Impl::makeOrdering(std::declval<PB>()))>;
+    using Ordering = std::decay_t<decltype(*std::declval<PB>().makeOrdering())>;
     using LocalViewTree = std::decay_t<decltype(*std::declval<Ordering>().makeLocalView(std::shared_ptr<Ordering>{}, TypeTree::treePath(), SubBasisPath{}))>;
     using LocalIndexSetTree = std::decay_t<decltype(*std::declval<Ordering>().makeLocalIndexSet(std::shared_ptr<Ordering>{}, TypeTree::treePath(), SubBasisPath{}))>;
     static constexpr std::size_t ContainerDepth = Ordering::maxContainerDepth();
@@ -71,7 +70,7 @@ namespace Dune::PDELab::inline Experimental {
     Basis(const EntitySet& entity_set, const PreBasis& pre_basis)
       : _pre_basis{pre_basis}
       , _entity_set{entity_set}
-      , _ordering{Impl::makeOrdering(_pre_basis)}
+      , _ordering{_pre_basis.makeOrdering()}
       , _conforming_local_index_set{ std::make_shared<bool>(false) }
       , _sub_basis_path{TypeTree::treePath()}
     {
@@ -82,7 +81,7 @@ namespace Dune::PDELab::inline Experimental {
     friend class Basis;
 
     template<class... Args>
-    Basis(const Basis<Args...>& other_basis, const EntitySet& entity_set, SubBasisPath sub_basis_path)
+    Basis(const EntitySet& entity_set, const Basis<Args...>& other_basis, SubBasisPath sub_basis_path)
       : _pre_basis{other_basis._pre_basis}
       , _entity_set{entity_set}
       , _ordering{other_basis._ordering}
@@ -90,6 +89,12 @@ namespace Dune::PDELab::inline Experimental {
       , _conforming_local_index_set{other_basis._conforming_local_index_set}
       , _sub_basis_path{sub_basis_path}
     {}
+
+    Basis(const Basis&) = default;
+    Basis(Basis&&) = default;
+
+    Basis& operator=(const Basis&) = default;
+    Basis& operator=(Basis&&) = default;
 
   private:
     template<class LocalTree>
@@ -273,9 +278,9 @@ namespace Dune::PDELab::inline Experimental {
         : Base{basis, basis._ordering->makeLocalView(basis._ordering, TypeTree::treePath(), basis._sub_basis_path)}
       {}
 
-      LocalView(const LocalView& other) {
-        (*this) = other;
-      }
+      LocalView(const LocalView& other)
+        : LocalView{other.globalBasis()}
+      {}
 
       LocalView& operator=(const LocalView& other) {
         return (*this) = LocalView{other.globalBasis()};

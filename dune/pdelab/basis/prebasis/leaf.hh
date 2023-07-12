@@ -35,7 +35,7 @@ struct PreBasisLeafTraits
  * @tparam FEM  A Finite element map
  * @tparam CON  Constraint
  */
-template<class MergingStrategy, class FiniteElementMap, class ConstraintsOperator>
+template<class MergingStrategy, class FiniteElementMap, class ConstraintsOperator = Unconstrained>
 class PreBasis
   : public TypeTree::LeafNode
   , public PreBasisNode<PreBasisLeafTraits<MergingStrategy,FiniteElementMap,ConstraintsOperator>>
@@ -57,7 +57,7 @@ public:
    */
   PreBasis(const MergingStrategy& merging_strategy,
             std::shared_ptr<const FiniteElementMap> fem,
-            const ConstraintsOperator& constraints_op)
+            const ConstraintsOperator& constraints_op = {})
     : BaseNode{ merging_strategy }
     , _finite_element_map{ std::move(fem) }
     , _constraints_op{ constraints_op }
@@ -66,6 +66,16 @@ public:
 
   //! Copy constructor
   PreBasis(const PreBasis&) = default;
+
+  template<std::same_as<void> = void>
+  auto makeOrdering() const {
+    return BaseNode::mergingStrategy().makeOrdering(*this);
+  }
+
+  template<std::same_as<void> = void>
+  auto makeLocalOrdering() const {
+    return BaseNode::mergingStrategy().makeLocalOrdering(*this);
+  }
 
   //! Get finite element map
   const FiniteElementMap& finiteElementMap() const
