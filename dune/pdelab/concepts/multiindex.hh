@@ -9,19 +9,14 @@ namespace Dune::PDELab::inline Experimental::Concept {
   namespace Impl {
 
     template<class MI>
-    concept MultiIndexEssentials = requires(MI mi) {
+    concept MultiIndexEssentials = std::copyable<MI> && requires(MI mi) {
       { mi.size() }        -> std::convertible_to<std::size_t>;
-      { MI::max_size() }   -> std::convertible_to<std::size_t>;
-      requires std::copy_constructible<MI>;
-      requires std::is_copy_assignable_v<MI>;
-      requires std::move_constructible<MI>;
-      requires std::is_move_assignable_v<MI>;
+      { std::remove_cvref_t<MI>::max_size() }   -> std::convertible_to<std::size_t>;
     };
 
     template<class MI>
-    concept NonEmptyMultiIndex = requires(MI mi, std::integral_constant<std::size_t,0> _0)
+    concept NonEmptyMultiIndex = MultiIndexEssentials<MI> && requires(MI mi, std::integral_constant<std::size_t,0> _0)
     {
-      requires MultiIndexEssentials<MI>;
       { back(mi) }                        -> std::convertible_to<std::size_t>;
       { front(mi) }                       -> std::convertible_to<std::size_t>;
       { pop_back(mi) }                    -> MultiIndexEssentials;
@@ -41,9 +36,8 @@ namespace Dune::PDELab::inline Experimental::Concept {
    *
    */
   template<class MI>
-  concept MultiIndex = requires(MI mi, std::integral_constant<std::size_t,0> _0)
+  concept MultiIndex = Impl::MultiIndexEssentials<MI> && requires(MI mi, std::integral_constant<std::size_t,0> _0)
   {
-    requires Impl::MultiIndexEssentials<MI>;
     { push_front(mi, _0) }          -> Impl::NonEmptyMultiIndex;
     { push_front(mi, 0) }           -> Impl::NonEmptyMultiIndex;
     { push_back(mi, _0) }           -> Impl::NonEmptyMultiIndex;
@@ -55,10 +49,9 @@ namespace Dune::PDELab::inline Experimental::Concept {
   };
 
   template<class MI>
-  concept FixedSizeMultiIndex = requires(MI mi)
+  concept FixedSizeMultiIndex = MultiIndex<MI> && requires(MI mi)
   {
-    requires MultiIndex<MI>;
-    { std::integral_constant<std::size_t, MI::size()>{} } -> std::convertible_to<std::size_t>;
+    { std::integral_constant<std::size_t, std::remove_cvref_t<MI>::size()>{} } -> std::convertible_to<std::size_t>;
   };
 
 

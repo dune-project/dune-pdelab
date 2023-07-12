@@ -37,12 +37,13 @@ namespace Dune::PDELab::inline Experimental::Concept {
     template<class I>
     concept IntegralConstant = requires(I i) {
       { I::value } -> std::convertible_to<typename I::value_type>;
+      { std::integral_constant<typename I::value_type, I::value>{} }-> std::convertible_to<typename I::value_type>;
     };
 
     template<class Node>
     concept StaticTreeAccess = requires(Node node)
     {
-      { std::remove_cvref_t<Node>::degree()} -> IntegralConstant;
+      { std::remove_cvref_t<Node>::degree() } -> IntegralConstant;
       requires (std::remove_cvref_t<Node>::degree() != 0);
       requires StaticChildAccess<Node, 0>;
       requires StaticChildAccess<Node, (std::remove_cvref_t<Node>::degree()-1)>;
@@ -63,25 +64,13 @@ namespace Dune::PDELab::inline Experimental::Concept {
   };
 
   template<class Node>
-  concept TupleTreeNode = requires
-  {
-    requires Impl::StaticTreeAccess<Node>;
-    requires not Impl::DynamicChildAccess<Node>;
-  };
+  concept TupleTreeNode = (not Impl::DynamicChildAccess<Node>) && Impl::StaticTreeAccess<Node>;
 
   template<class Node>
-  concept ArrayTreeNode = requires
-  {
-    requires Impl::StaticTreeAccess<Node>;
-    requires Impl::DynamicChildAccess<Node>;
-  };
+  concept ArrayTreeNode = Impl::DynamicChildAccess<Node> && Impl::StaticTreeAccess<Node>;
 
   template<class Node>
-  concept VectorTreeNode = requires
-  {
-    requires not Impl::StaticTreeAccess<Node>;
-    requires Impl::DynamicChildAccess<Node>;
-  };
+  concept VectorTreeNode = Impl::DynamicChildAccess<Node> && (not Impl::StaticTreeAccess<Node>);
 
   template<class Node>
   concept ParentTreeNode = requires
@@ -92,7 +81,7 @@ namespace Dune::PDELab::inline Experimental::Concept {
   template<class Node>
   concept TreeNode = requires
   {
-    requires LeafTreeNode<Node> || ParentTreeNode<Node>;
+    requires ParentTreeNode<Node> || LeafTreeNode<Node>;
   };
 
 } // namespace Dune::PDELab::inline Experimental::Concept
