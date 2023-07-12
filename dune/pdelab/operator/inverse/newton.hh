@@ -21,7 +21,7 @@ namespace Dune::PDELab::inline Experimental {
  * @tparam RangeField
  */
 template<class Domain, class Range, class RangeField = double>
-class Newton : public Inverse<Domain, Range>
+class NewtonOperator : public Inverse<Domain, Range>
 {
 
   using Norm = std::function<RangeField(const Range&)>;
@@ -32,7 +32,7 @@ class Newton : public Inverse<Domain, Range>
 
 public:
 
-  Newton() {
+  NewtonOperator() {
     PropertyTree& properties = *this;
 
     properties["convergence_condition"].documentation =
@@ -63,7 +63,8 @@ public:
       = "An operator able solve (approximately) the inverse of the derivative of x. "
       "During the course of newton iterations, dx itself will be set in dx_inverse[\"forward\"]";
     properties["dx_inverse"].setter = [=](Property& dx_inv_pptr){
-      [[maybe_unused]] Solver& dx_inv = unwrap_property_ref<Solver>(dx_inv_pptr);
+      if (dx_inv_pptr.has_value())
+        [[maybe_unused]] Solver& dx_inv = unwrap_property_ref<Solver>(dx_inv_pptr);
     };
 
     if (not properties.hasKey("dx_inverse_fixed_tolerance"))
@@ -83,7 +84,7 @@ public:
         if (Dune::FloatCmp::gt(value, 1.))
           DUNE_THROW(RangeError, "Derivative inverse minimum relative reduction has to be less or equal than one");
       };
-      properties["dx_inverse_min_relative_tolerance"] = 1e-3;
+      properties["dx_inverse_min_relative_tolerance"] = 0.1;
     }
 
     properties["dx_inverse_min_relative_tolerance"].documentation
@@ -93,7 +94,7 @@ public:
         "will always be at least the value set in the parameter";
   }
 
-  Newton(const Newton&) = default;
+  NewtonOperator(const NewtonOperator&) = default;
 
   //! Solve the nonlinear problem using x as initial guess and for storing the result
   virtual ErrorCondition apply(const Range& init_residual, Domain& x) override
@@ -140,6 +141,7 @@ public:
       TRACE_COUNTER("dune", "Newton::Defect", it_timestamp, defect);
       defects.push_back(defect);
     }
+    dx_inverse["forward"] = nullptr;
     [[maybe_unused]] auto iterations = defects.size() - 1;
 
     if (not error_condition)
@@ -160,7 +162,7 @@ public:
 
 private:
 
-  virtual void prepareStep(std::span<const RangeField> defects, const Domain& x)
+  void prepareStep(std::span<const RangeField> defects, const Domain& x)
   {
     const PropertyTree& properties = *this;
     auto rel_tol                = properties.get<double     >("convergence_condition.relative_tolerance");
@@ -186,7 +188,7 @@ private:
     if (linearize)
       _derivative = getForward().derivative(x, _derivative ? move(_derivative) : nullptr);
     auto& dx_inverse = getDerivativeInverse();
-    dx_inverse["forward"] = std::weak_ptr<Forward>(_derivative);
+    dx_inverse["forward"] = std::shared_ptr<Forward>(_derivative);
 
     using std::min, std::max, std::clamp;
 
@@ -209,11 +211,11 @@ private:
         // this will set a more relaxed reduction requirement on the last newton iteration
         max_dx_inverse_rel_tol = stop_defect/(10*current_defect);
       }
-      it_dx_inverse_rel_tol = clamp<RangeField>(it_dx_inverse_rel_tol, min_dx_inverse_rel_tol, max_dx_inverse_rel_tol);
+      it_dx_inverse_rel_tol = clamp<double>(it_dx_inverse_rel_tol, min_dx_inverse_rel_tol, max_dx_inverse_rel_tol);
 
       dx_inverse["convergence_condition.relative_tolerance"] = it_dx_inverse_rel_tol;
     }
-    TRACE_COUNTER("dune", "Newton::TargetDerivativeInverse", it_timestamp, dx_inv_tolerance);
+    TRACE_COUNTER("dune", "Newton::TargetInverseRelativeTolerance", it_timestamp, it_dx_inverse_rel_tol);
   }
 
 
