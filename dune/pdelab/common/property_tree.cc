@@ -40,7 +40,7 @@ bool PropertyTree::hasKey(std::string_view key) const {
 
 bool PropertyTree::hasSub(std::string_view key) const {
   if (not hasKey(key)) return false;
-  return get(key).has_tree();
+  return get(key).is_tree();
 }
 
 Property& PropertyTree::get(std::string_view key) {
