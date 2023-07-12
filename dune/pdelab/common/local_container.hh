@@ -20,6 +20,8 @@ namespace Dune::PDELab::inline Experimental {
 
 // this class provides a buffer to store intermediate results of local computations
 // and provides the means to gather and scatter to the global container without data races
+
+// TODO: this interface does not let you know if a vector was not loaded!
 template<Concept::Basis Basis_, Concept::Container<Basis_> Container>
 class LocalContainerBuffer
 {
@@ -52,6 +54,21 @@ public:
     , _container{ std::ref(container) }
   {
     reserve(lspace);
+  }
+
+  LocalContainerBuffer(const LocalContainerBuffer& other)
+  : _buffer{other._buffer}
+  , _offsets{other._offsets}
+  , _lconstraints{other._lconstraints}
+  , _container{other._container}
+  {}
+
+  LocalContainerBuffer& operator=(const LocalContainerBuffer& other) {
+    _buffer = other._buffer;
+    _offsets = other._offsets;
+    _lconstraints = other._lconstraints;
+    _container = other._container;
+    return *this;
   }
 
   void clear(const Concept::LocalIndexSet auto& lspace) noexcept {
