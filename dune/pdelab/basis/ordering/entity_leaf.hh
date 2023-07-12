@@ -267,13 +267,21 @@ private:
   public:
     using size_type = SizeType;
     using MultiIndex = ContainerIndex;
-    SubEntityLocalIndexSet(typename Base::NodeStorage&& storage)
+    SubEntityLocalIndexSet(ViewPath view_path, typename Base::NodeStorage&& storage)
       : Base{ std::move(storage) }
+      , _view_path{ view_path }
     {
     }
 
     SubEntityLocalIndexSet(const SubEntityLocalIndexSet&) = delete;
     SubEntityLocalIndexSet(SubEntityLocalIndexSet&&) = default;
+
+    [[nodiscard]] auto orderingViewPath() const noexcept {
+        return _view_path;
+    }
+
+  private:
+    [[no_unique_address]] const ViewPath _view_path;
   };
 
 
@@ -394,9 +402,10 @@ private:
     using size_type = SizeType;
     using MultiIndex = ContainerIndex;
 
-    SubEntityLocalView(
+    SubEntityLocalView(ViewPath view_path,
       const typename Base::NodeStorage&& storage)
       : Base{ std::move(storage) }
+      , _view_path{ view_path }
     {
     }
 
@@ -412,8 +421,21 @@ private:
       assert(_sub_entities.size() <= Base::degree());
     }
 
+    [[nodiscard]] size_type size() const noexcept {
+      size_type _size = 0;
+      for (std::size_t i = 0; i != _sub_entities.size(); ++i)
+        _size += this->child(i).size();
+      return _size;
+    }
+
+    [[nodiscard]] auto orderingViewPath() const noexcept {
+        return _view_path;
+    }
+
   private:
     std::vector<std::optional<typename LV::Element>> _sub_entities;
+    [[no_unique_address]] const ViewPath _view_path;
+
   };
 
 public:
@@ -459,7 +481,7 @@ public:
       typename SLIS::NodeStorage storage(_max_sub_entities);
       for (std::size_t sub_entity = 0; sub_entity != storage.size(); ++sub_entity)
         storage[sub_entity] = std::make_unique<LIS>(push_back(view_path,sub_entity), this->disjointCodimClosure());
-      return std::make_unique<SLIS>(std::move(storage));
+      return std::make_unique<SLIS>(view_path, std::move(storage));
     }
   }
 
@@ -492,7 +514,7 @@ public:
       typename SLV::NodeStorage storage(_max_sub_entities);
       for (std::size_t sub_entity = 0; sub_entity != storage.size(); ++sub_entity)
         storage[sub_entity] = std::make_unique<LV>(push_back(view_path,sub_entity), this->disjointCodimClosure());
-      return std::make_unique<SLV>(std::move(storage));
+      return std::make_unique<SLV>(view_path, std::move(storage));
     }
   }
 

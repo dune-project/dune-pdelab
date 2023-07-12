@@ -59,6 +59,12 @@ class ArrayEntityOrdering
     void bindElement(const auto& entity) noexcept {
       forEach(*this, [&](auto& child){ child.bindElement(entity); });
     }
+
+    [[nodiscard]] std::size_t size() const noexcept {
+      std::size_t _size = 0;
+      for (std::size_t i = 0; i != this->degree(); ++i) _size += this->child(i).size();
+      return _size;
+    }
   };
 
 public:
@@ -168,6 +174,12 @@ class VectorEntityOrdering
     void bindElement(const auto& entity) noexcept {
       forEach(*this, [&](auto& child){ child.bindElement(entity); });
     }
+
+    [[nodiscard]] std::size_t size() const noexcept {
+      std::size_t _size = 0;
+      for (std::size_t i = 0; i != this->degree(); ++i) _size += this->child(i).size();
+      return _size;
+    }
   };
 
 public:
@@ -268,6 +280,12 @@ class TupleEntityOrdering
 
     void bindElement(const auto& entity) noexcept {
       forEach(*this, [&](auto& child){ child.bindElement(entity); });
+    }
+
+    [[nodiscard]] std::size_t size() const noexcept {
+      std::size_t _size = 0;
+      forEach(*this, [&](auto& child){ _size += child.size(); });
+      return _size;
     }
   };
 

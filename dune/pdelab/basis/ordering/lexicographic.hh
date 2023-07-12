@@ -295,6 +295,12 @@ struct LexicographicLocalNodeBase {
     return succed;
   };
 
+  [[nodiscard]] std::size_t size() const noexcept {
+    std::size_t _size = 0;
+    forEach(node(),[&](auto& child){ _size += child.size(); });
+    return _size;
+  }
+
   void unlock() noexcept  {
     forEach(node(),[](auto& child){ child.unlock(); });
   };

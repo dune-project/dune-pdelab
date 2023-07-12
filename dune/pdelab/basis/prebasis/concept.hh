@@ -12,8 +12,9 @@ template<class Node>
 concept PreBasisNode = requires(Node node)
 {
   { node.mergingStrategy() } -> std::convertible_to<typename std::remove_cvref_t<Node>::Traits::MergingStrategy>;
-  { node.name() } -> std::convertible_to<std::string>;
+  { node.name() } -> std::convertible_to<std::string_view>;
   node.name(std::string{});
+  node.name(std::string_view{});
   requires std::copy_constructible<Node>;
   requires std::move_constructible<Node>;
 };

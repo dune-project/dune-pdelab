@@ -377,11 +377,11 @@ namespace Dune::PDELab::inline Experimental {
     }
 
 
-    [[nodiscard]] std::string name() const {
+    [[nodiscard]] const std::string& name() const {
       return PDELab::containerEntry(_pre_basis, _sub_basis_path).name();
     }
 
-    void name(std::string new_name) {
+    void name(std::string_view new_name) {
       return PDELab::containerEntry(_pre_basis, _sub_basis_path).name(new_name);
     }
 

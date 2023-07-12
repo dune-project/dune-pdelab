@@ -32,9 +32,10 @@ namespace Dune::PDELab::inline Experimental::Concept {
   }
 
   template<class LST>
-  concept LocalBasisTree = requires(LST lbasis_tree)
+  concept LocalBasisTree = requires(const LST lbasis_tree)
   {
     requires Tree<LST>;
+    { lbasis_tree.size() } -> std::convertible_to<std::size_t>; // TODO: require this also in local_index_set
     Dune::PDELab::forEachLeafNode(lbasis_tree, [](const auto& leaf){
       Impl::requireLocalBasisLeaf(leaf);
     });
@@ -45,6 +46,7 @@ namespace Dune::PDELab::inline Experimental::Concept {
   {
     requires Dune::Concept::Entity<typename LS::Element>;
     requires std::same_as<typename LS::GlobalBasis::EntitySet::template Codim<0>::Entity, typename LS::Element>;
+    requires std::same_as<typename LS::GlobalBasis::LocalView, LS>;
     requires MultiIndex<typename LS::MultiIndex>;
     requires LocalIndexSet<LS>;
     requires LocalBasisTree<typename LS::Tree>;

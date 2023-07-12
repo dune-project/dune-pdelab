@@ -43,7 +43,7 @@ public:
   const std::string& name() const { return _name; }
 
   //! Set a name for this node
-  void name(const std::string& name) { _name = name; }
+  void name(std::string_view name) { _name = name; }
 
   //! Get merging strategy
   typename Traits::MergingStrategy& mergingStrategy()
