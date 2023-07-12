@@ -203,12 +203,14 @@ private:
       // their lifetime on every new access out of the old pointers, otherwise, we
       // would trigger UB. Also note that laundering extends to "reachable" objects
       // (i.e., bracket operator). See data() member function.
-      std::uninitialized_fill_n(reinterpret_cast<Field*>(head), lspace_node.size(), Field{0});
+      auto tail = std::uninitialized_fill_n(reinterpret_cast<Field*>(head), size, Field{0});
       // We do not call destructor in each field. Instead, we end the liftime of the object
       // prematurely. This only well defined as long as the object is trivially destructible
       static_assert(std::is_trivially_destructible_v<Field>);
       // let's store an offset wrt the buffer where this node data begins
       _offsets[lspace_node.path()] = std::distance(_buffer.data(), static_cast<std::byte*>(head));
+      // advance iterator to next position
+      head = tail;
       space -= size*sizeof(Field);
     });
   }
