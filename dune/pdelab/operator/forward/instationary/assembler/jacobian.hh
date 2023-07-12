@@ -226,9 +226,7 @@ private:
               DUNE_THROW(InvalidStateException, "skip methods should yiled the same result");
             continue;
           }
-          if (is.neighbor()) { // interior and periodic cases
-            if (LocalAssembly::doSkeleton(slop) or LocalAssembly::doSkeleton(mlop))
-              continue;
+          if (is.neighbor() and (LocalAssembly::doSkeleton(slop) | LocalAssembly::doSkeleton(mlop))) { // interior and periodic cases
 
             const auto& entity_out = is.outside();
             auto id_out = _mapper.index(entity_out);
