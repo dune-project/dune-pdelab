@@ -3,7 +3,6 @@
 
 #include <dune/pdelab/concepts/multiindex.hh>
 #include <dune/pdelab/concepts/treenode.hh>
-#include <dune/pdelab/common/tree_entry.hh>
 #include <dune/pdelab/common/for_each.hh>
 
 #include <dune/typetree/treepath.hh>

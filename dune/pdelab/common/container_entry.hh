@@ -27,9 +27,16 @@ inline namespace Default {
  * @return decltype(auto)   Entry at multi-index
  */
 template<class Container, Concept::FixedSizeMultiIndex MultiIndex>
-requires (Concept::FixedSizeMultiIndex<MultiIndex> && MultiIndex::size() == 0)
+requires (std::remove_cvref_t<MultiIndex>::size() == 0)
 constexpr decltype(auto) containerEntry(Container&& container, MultiIndex) {
   return std::forward<Container>(container);
+}
+
+template<Concept::ParentTreeNode TreeNode, Concept::FixedSizeMultiIndex MultiIndex>
+requires (std::remove_cvref_t<MultiIndex>::size() != 0)
+constexpr decltype(auto) containerEntry(TreeNode&& tree_node, MultiIndex multiindex) {
+  auto index = front(multiindex);
+  return containerEntry(std::forward<TreeNode>(tree_node).child(index), pop_front(multiindex));
 }
 
 /**
@@ -44,7 +51,7 @@ constexpr decltype(auto) containerEntry(Container&& container, MultiIndex) {
  */
 template<class Container, Concept::FixedSizeMultiIndex MultiIndex>
 constexpr decltype(auto) containerEntry(Container&& container, MultiIndex multiindex)
-requires (Concept::FixedSizeMultiIndex<MultiIndex> && MultiIndex::size() != 0 && Concept::BracketIndexable<decltype(container),decltype(front(multiindex))>)
+requires (std::remove_cvref_t<MultiIndex>::size() != 0 && Concept::BracketIndexable<decltype(container),decltype(front(multiindex))>)
 {
   auto index = front(multiindex);
   return containerEntry(std::forward<Container>(container)[index], pop_front(multiindex));
