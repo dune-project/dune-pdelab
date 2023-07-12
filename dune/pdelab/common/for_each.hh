@@ -8,7 +8,7 @@
 
 #include <dune/common/indices.hh>
 
-#ifdef HAVE_TBB
+#if HAVE_TBB
 #include <tbb/parallel_for.h>
 #include <tbb/task_group.h>
 #endif
