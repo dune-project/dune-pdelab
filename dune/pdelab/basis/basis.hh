@@ -8,7 +8,6 @@
 // #include <dune/pdelab/common/partition/identity.hh>
 #include <dune/pdelab/common/multiindex.hh>
 #include <dune/pdelab/common/container_entry.hh>
-// #include <dune/pdelab/common/container_resize.hh>
 // #include <dune/pdelab/common/communication/entity_data_handler.hh>
 
 #include <dune/pdelab/basis/prebasis/concept.hh>
@@ -475,8 +474,12 @@ namespace Dune::PDELab::inline Experimental {
     template<class Backend>
     [[nodiscard]] Container<Backend> makeContainer(Backend) const {
       Container<Backend> container{};
-      containerResize(container, *this);
-      forEachContainerEntry(container, []<class T>(T& v){v = T{0};});
+      auto resize = [&](auto& entry, Concept::MultiIndex auto path){
+        if constexpr (requires { entry.resize(this->size(path)); })
+        entry.resize(this->size(path));
+      };
+      auto set_zero = []<class T>(T& v){v = T{0};};
+      forEachContainerEntry(std::execution::par_unseq, container, set_zero, resize, std::identity{}, TypeTree::treePath());
       return container;
     }
 
