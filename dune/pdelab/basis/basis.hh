@@ -504,25 +504,25 @@ namespace Dune::PDELab::inline Experimental {
       return !(lhs == rhs);
     }
 
-    // template<Concept::GridViewPartition OtherEntitySetPartition>
-    // [[nodiscard]] auto subBasis(const OtherEntitySetPartition& partition, Concept::FixedSizeMultiIndex auto sub_basis_path) const {
-    //   auto joined_sub_basis_path = join(this->_sub_basis_path, sub_basis_path);
-    //   using JoinedSubBasisPath = decltype(joined_sub_basis_path);
-    //   static_assert(requires {
-    //     { PDELab::containerEntry(_pre_basis, joined_sub_basis_path).name() } -> std::convertible_to<std::string>; },
-    //     "Child Pre-Basis node for the requested sub basis does not exist");
-    //   return Basis<PreBasis, OtherEntitySetPartition, JoinedSubBasisPath>{*this, partition, joined_sub_basis_path};
-    // }
+    template<Dune::Concept::GridView OtherES>
+    [[nodiscard]] auto subSpace(const OtherES& es, Concept::FixedSizeMultiIndex auto sub_basis_path) const {
+      auto joined_sub_basis_path = join(this->_sub_basis_path, sub_basis_path);
+      using JoinedSubBasisPath = decltype(joined_sub_basis_path);
+      static_assert(requires {
+        { PDELab::containerEntry(_pre_basis, joined_sub_basis_path).name() } -> std::convertible_to<std::string_view>; },
+        "Child Pre-Basis node for the requested sub basis does not exist");
+      return Basis<OtherES, PreBasis, JoinedSubBasisPath>{es, *this, joined_sub_basis_path};
+    }
 
-    // [[nodiscard]] auto subBasis(Concept::FixedSizeMultiIndex auto sub_basis_path) const {
-    //   return this->subBasis(this->entitySetPartition(), sub_basis_path);
-    // }
+    [[nodiscard]] auto subSpace(Concept::FixedSizeMultiIndex auto sub_basis_path) const {
+      auto joined_sub_basis_path = join(this->_sub_basis_path, sub_basis_path);
+      if constexpr (requires { {containerEntry(_pre_basis, joined_sub_basis_path).mergingStrategy().entitySet() }; } )
+        return this->subSpace(containerEntry(_pre_basis, joined_sub_basis_path).mergingStrategy().entitySet(), sub_basis_path);
+      else
+        return this->subSpace(this->entitySet(), sub_basis_path);
+    }
 
   private:
-    auto rootBasis() const
-    {
-      return Basis<EntitySet, PreBasis>{*this, this->entitySetPartition(), TypeTree::treePath()};
-    }
 
     PreBasis _pre_basis;
     EntitySet _entity_set;
@@ -531,13 +531,6 @@ namespace Dune::PDELab::inline Experimental {
     std::shared_ptr<bool> _conforming_local_index_set;
     SubBasisPath _sub_basis_path;
   };
-
-
-  // template<Concept::Impl::PreBasisTree PreBasis, Concept::GridViewPartition EntitySetPartition>
-  // [[nodiscard]] Concept::Basis auto makeOrderedBasis(const PreBasis& pre_basis, const EntitySetPartition& partition)
-  // {
-  //   return Basis{pre_basis, partition};
-  // }
 
   template<Concept::Impl::PreBasisTree PreBasis, Dune::Concept::GridView EntitySet>
   [[nodiscard]] /*Concept::Basis*/ auto makeBasis(const EntitySet& entity_set, const PreBasis& pre_basis)
