@@ -12,48 +12,48 @@ namespace Dune::PDELab::inline Experimental::LocalAssembly {
 
 struct Archetype {
 
-  constexpr static auto localAssembleIsLinear() {
+  constexpr static auto localAssembleIsLinear() noexcept {
     return std::false_type{};
   }
 
-  constexpr static auto localAssembleSkipEntity(const Dune::Concept::Entity auto& entity) {
+  constexpr static auto localAssembleSkipEntity(const Dune::Concept::Entity auto& entity) noexcept {
     return std::false_type{};
   }
 
-  constexpr static auto localAssemblySkipIntersection(const Dune::Concept::Intersection auto& intersection) {
+  constexpr static auto localAssembleSkipIntersection(const Dune::Concept::Intersection auto& intersection) noexcept {
     return std::false_type{};
   }
 
-  constexpr static auto localAssembleDoVolume() {
+  constexpr static auto localAssembleDoVolume() noexcept {
     return std::false_type{};
   }
 
   void localAssembleVolume(
-                                                       auto  time_point,
+                                                       auto  time,
     const PDELab::Concept::LocalBasis                  auto& ltrial,
     const PDELab::Concept::LocalConstContainer         auto& lcoefficients,
     const PDELab::Concept::LocalBasis                  auto& ltest,
-    PDELab::Concept::LocalMutableContainer             auto& lresidual);
+    PDELab::Concept::LocalMutableContainer             auto& lresidual) noexcept;
 
   void localAssembleJacobianVolume(
-                                                       auto  time_point,
+                                                       auto  time,
     const PDELab::Concept::LocalBasis                  auto& ltrial,
     const PDELab::Concept::LocalConstContainer         auto& llin_point,
     const PDELab::Concept::LocalBasis                  auto& ltest,
-    PDELab::Concept::LocalMutableMatrix                auto& ljacobian);
+    PDELab::Concept::LocalMutableMatrix                auto& ljacobian) noexcept;
 
   void localAssembleJacobianVolumeApply(
-                                                       auto  time_point,
+                                                       auto  time,
     const PDELab::Concept::LocalBasis                  auto& ltrial,
     const PDELab::Concept::LocalConstContainer         auto& llin_point,
     const PDELab::Concept::LocalConstContainer         auto& lapp_point,
     const PDELab::Concept::LocalBasis                  auto& ltest,
-    PDELab::Concept::LocalMutableContainer             auto& ljacobian);
+    PDELab::Concept::LocalMutableContainer             auto& ljacobian) noexcept;
 
   void localAssemblePatternVolume(
     const PDELab::Concept::LocalBasis                  auto& ltrial,
     const PDELab::Concept::LocalBasis                  auto& ltest,
-                                                       auto& lpattern);
+                                                       auto& lpattern) noexcept;
 
   constexpr static auto localAssembleDoSkeleton() {
     return std::false_type{};
@@ -61,7 +61,7 @@ struct Archetype {
 
   void localAssembleSkeleton(
     const Dune::Concept::Intersection                  auto& intersection,
-                                                       auto  time_point,
+                                                       auto  time,
     const PDELab::Concept::LocalBasis                  auto& ltrial_in,
     const PDELab::Concept::LocalConstContainer         auto& lcoefficients_in,
     const PDELab::Concept::LocalBasis                  auto& ltest_in,
@@ -69,7 +69,7 @@ struct Archetype {
     const PDELab::Concept::LocalConstContainer         auto& lcoefficients_out,
     const PDELab::Concept::LocalBasis                  auto& ltest_out,
     PDELab::Concept::LocalMutableContainer             auto& lresidual_in,
-    PDELab::Concept::LocalMutableContainer             auto& lresidual_out);
+    PDELab::Concept::LocalMutableContainer             auto& lresidual_out) noexcept;
 
   void localAssembleJacobianSkeleton(
     const Dune::Concept::Intersection                  auto& intersection,
@@ -85,7 +85,7 @@ struct Archetype {
 
   void localAssembleJacobianSkeletonApply(
     const Dune::Concept::Intersection                  auto& intersection,
-                                                       auto  time_point,
+                                                       auto  time,
     const PDELab::Concept::LocalBasis                  auto& ltrial_in,
     const PDELab::Concept::LocalConstContainer         auto& llin_point_in,
     const PDELab::Concept::LocalConstContainer         auto& lapp_point_in,
@@ -95,7 +95,7 @@ struct Archetype {
     const PDELab::Concept::LocalConstContainer         auto& lapp_point_out,
     const PDELab::Concept::LocalBasis                  auto& ltest_out,
     PDELab::Concept::LocalMutableContainer             auto& ljacobian_in,
-    PDELab::Concept::LocalMutableContainer             auto& ljacobian_out);
+    PDELab::Concept::LocalMutableContainer             auto& ljacobian_out) noexcept;
 
   void localAssemblePatternSkeleton(
     const Dune::Concept::Intersection                  auto& intersection,
@@ -106,7 +106,7 @@ struct Archetype {
                                                        auto& lpattern_in_in,
                                                        auto& lpattern_in_out,
                                                        auto& lpattern_out_in,
-                                                       auto& lpattern_out_out);
+                                                       auto& lpattern_out_out) noexcept;
 
   constexpr static auto localAssembleDoBoundary() {
     return std::false_type{};
@@ -114,34 +114,34 @@ struct Archetype {
 
   void localAssembleBoundary(
     const Dune::Concept::Intersection                  auto& intersection,
-                                                       auto  time_point,
+                                                       auto  time,
     const PDELab::Concept::LocalBasis                  auto& ltrial_in,
     const PDELab::Concept::LocalConstContainer         auto& lcoefficients_in,
     const PDELab::Concept::LocalBasis                  auto& ltest_in,
-    PDELab::Concept::LocalMutableContainer             auto& lresidual_in);
+    PDELab::Concept::LocalMutableContainer             auto& lresidual_in) noexcept;
 
   void localAssembleJacobianBoundary(
     const Dune::Concept::Intersection                  auto& intersection,
-                                                       auto  time_point,
+                                                       auto  time,
     const PDELab::Concept::LocalBasis                  auto& ltrial_in,
     const PDELab::Concept::LocalConstContainer         auto& llin_point_in,
     const PDELab::Concept::LocalBasis                  auto& ltest_in,
-    PDELab::Concept::LocalMutableContainer             auto& ljacobian_in);
+    PDELab::Concept::LocalMutableContainer             auto& ljacobian_in) noexcept;
 
   void localAssembleJacobianBoundaryApply(
     const Dune::Concept::Intersection                  auto& intersection,
-                                                       auto  time_point,
+                                                       auto  time,
     const PDELab::Concept::LocalBasis                  auto& ltrial_in,
     const PDELab::Concept::LocalConstContainer         auto& llin_point_in,
     const PDELab::Concept::LocalConstContainer         auto& lapp_point_in,
     const PDELab::Concept::LocalBasis                  auto& ltest_in,
-    PDELab::Concept::LocalMutableContainer             auto& ljacobian_in);
+    PDELab::Concept::LocalMutableContainer             auto& ljacobian_in) noexcept;
 
   void localAssemblePatternBoundary(
     const Dune::Concept::Intersection                  auto& intersection,
     const PDELab::Concept::LocalBasis                  auto& ltrial_in,
     const PDELab::Concept::LocalBasis                  auto& ltest_in,
-                                                       auto& lpattern_in);
+                                                       auto& lpattern_in) noexcept;
 
 };
 

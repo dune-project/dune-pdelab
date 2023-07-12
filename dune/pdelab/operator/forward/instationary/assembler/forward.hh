@@ -1,6 +1,7 @@
 #ifndef DUNE_PDELAB_OPERATOR_FORWARD_INSTATIONARY_ASSEMBLER_FORWARD_HH
 #define DUNE_PDELAB_OPERATOR_FORWARD_INSTATIONARY_ASSEMBLER_FORWARD_HH
 
+#include <dune/pdelab/operator/operator.hh>
 #include <dune/pdelab/operator/forward/instationary/coefficients.hh>
 #include <dune/pdelab/operator/forward/instationary/traits.hh>
 
@@ -31,8 +32,8 @@ namespace Dune::PDELab::inline Experimental {
  * @tparam TestBasis
  * @tparam MassLocalOperator
  * @tparam StiffnessLocalOperator
- * @tparam TimePoint
- * @tparam Duration
+ * @tparam TimeQuantity
+ * @tparam DurationQuantity
  * @tparam dt_position
  */
 template<class          Coefficients,
@@ -41,8 +42,8 @@ template<class          Coefficients,
          Concept::Basis TestBasis,
          class          MassLocalOperator,
          class          StiffnessLocalOperator,
-         class TimePoint = double,
-         class Duration  = double,
+         class TimeQuantity = double,
+         class DurationQuantity  = double,
          DurationPosition dt_position = DurationPosition::StiffnessNumerator>
 class InstationaryForwardAssembler : public Operator<Coefficients, Residual>
 {
@@ -60,8 +61,8 @@ class InstationaryForwardAssembler : public Operator<Coefficients, Residual>
   using LocalTestBasis  = typename TestBasis::LocalView;
   using LocalTrialBasis = typename TrialBasis::LocalView;
 
-  using MassFactor      = typename InstationaryTraits<dt_position>::MassFactor<Duration>;
-  using StiffnessFactor = typename InstationaryTraits<dt_position>::StiffnessFactor<Duration>;
+  using MassFactor      = typename InstationaryTraits<dt_position>::MassFactor<DurationQuantity>;
+  using StiffnessFactor = typename InstationaryTraits<dt_position>::StiffnessFactor<DurationQuantity>;
 
   using LocalResidual           = LocalContainerBuffer<TestBasis, StageResidual>;
   using LocalCoefficients       = LocalContainerBuffer<TrialBasis, const StageCoefficients>;
@@ -127,8 +128,8 @@ private:
     assert(residuals.size() == stages);
 
     const InstationaryCoefficients& icoeff = getInstationaryCoefficients();
-    const TimePoint& time_point = getTimePoint();
-    const Duration& duration = getDuration();
+    const TimeQuantity& time = getTime();
+    const DurationQuantity& duration = getDuration();
 
     std::vector<std::vector<bool>> do_mass(stages);
     std::vector<std::vector<bool>> do_stiff(stages);
@@ -164,7 +165,7 @@ private:
     const auto& es = _trial.entitySet();
 
     auto sub_time_step = [&](std::size_t step) {
-      return time_point + duration * icoeff.timeWeight(step);
+      return time + duration * icoeff.timeWeight(step);
     };
 
     auto mass_weight = [&](std::size_t stage, std::size_t step) {
@@ -196,7 +197,7 @@ private:
 
       if (LocalAssembly::doVolume(slop) | LocalAssembly::doVolume(mlop)) {
         for (std::size_t step = 0; step != steps; ++step) {
-          TimePoint tp = sub_time_step(step);
+          TimeQuantity tp = sub_time_step(step);
           for (std::size_t stage = 0; stage != stages; ++stage) {
             if (do_mass[stage][step]) {
               LocalMassResidual lmass_res_in_rhs{lres_in[stage], mass_weight(stage, step)};
@@ -247,7 +248,7 @@ private:
               lres_out[stage].clear(ltest_out);
 
               for (std::size_t step = 0; step != steps; ++step) {
-                TimePoint tp = sub_time_step(step);
+                TimeQuantity tp = sub_time_step(step);
 
                 if (do_mass[stage][step]) {
                   LocalMassResidual lmass_res_in_rhs{lres_in[stage],   mass_weight(stage, step)};
@@ -269,7 +270,7 @@ private:
 
             for (std::size_t stage = 0; stage != stages; ++stage) {
               for (std::size_t step = 0; step != steps; ++step) {
-                TimePoint tp = sub_time_step(step);
+                TimeQuantity tp = sub_time_step(step);
                 if (do_mass[stage][step]) {
                   LocalMassResidual lmass_res_in_rhs{lres_in[stage], mass_weight(stage, step)};
                   LocalAssembly::boundary(mlop, is, tp, ltrial_in, lcoeff_in[step], ltest_in, lmass_res_in_rhs);
@@ -297,12 +298,12 @@ private:
     return this->template get<InstationaryCoefficients>("instationary_coefficients");
   }
 
-  const TimePoint& getTimePoint() const {
-    return this->template get<TimePoint>("time_point");
+  const TimeQuantity& getTime() const {
+    return this->template get<TimeQuantity>("time");
   }
 
-  const Duration& getDuration() const {
-    return this->template get<Duration>("duration");
+  const DurationQuantity& getDuration() const {
+    return this->template get<DurationQuantity>("duration");
   }
 
 protected:
@@ -322,8 +323,8 @@ template<class          Coefficients,
          Concept::Basis TestBasis,
          class          MassLocalOperator,
          class          StiffnessLocalOperator,
-         class TimePoint = double,
-         class Duration  = double,
+         class TimeQuantity = double,
+         class DurationQuantity  = double,
          DurationPosition dt_position = DurationPosition::StiffnessNumerator>
 auto makeInstationaryForwardAssembler(
                         const TrialBasis& trial,
@@ -331,7 +332,7 @@ auto makeInstationaryForwardAssembler(
                         const MassLocalOperator& mass_lop,
                         const StiffnessLocalOperator& stiff_lop)
 {
-  using Type = InstationaryForwardAssembler<Coefficients,Residual, TrialBasis,TestBasis, MassLocalOperator, StiffnessLocalOperator, TimePoint, Duration, dt_position>;
+  using Type = InstationaryForwardAssembler<Coefficients,Residual, TrialBasis,TestBasis, MassLocalOperator, StiffnessLocalOperator, TimeQuantity, DurationQuantity, dt_position>;
   return std::make_unique<Type>(trial, test, mass_lop, stiff_lop);
 }
 

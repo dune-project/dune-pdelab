@@ -31,7 +31,7 @@ namespace Dune::PDELab::inline Experimental {
  * @tparam TestBasis
  * @tparam MassLocalOperator
  * @tparam StiffnessLocalOperator
- * @tparam TimePoint
+ * @tparam TimeQuantity
  * @tparam Duration
  * @tparam dt_position
  */
@@ -41,8 +41,8 @@ template<class          Coefficients,
          Concept::Basis TestBasis,
          class          MassLocalOperator,
          class          StiffnessLocalOperator,
-         class TimePoint = double,
-         class Duration  = double,
+         class TimeQuantity = double,
+         class DurationQuantity  = double,
          DurationPosition dt_position = DurationPosition::StiffnessNumerator>
 class InstationaryJacobianApplyAssembler
   : public Operator<Coefficients, Residual>
@@ -59,8 +59,8 @@ class InstationaryJacobianApplyAssembler
   using LocalTestBasis  = typename TestBasis::LocalView;
   using LocalTrialBasis = typename TrialBasis::LocalView;
 
-  using MassFactor      = typename InstationaryTraits<dt_position>::MassFactor<Duration>;
-  using StiffnessFactor = typename InstationaryTraits<dt_position>::StiffnessFactor<Duration>;
+  using MassFactor      = typename InstationaryTraits<dt_position>::MassFactor<DurationQuantity>;
+  using StiffnessFactor = typename InstationaryTraits<dt_position>::StiffnessFactor<DurationQuantity>;
 
   using LocalJacobianApply      = LocalContainerBuffer<TestBasis, StageResidual>;
   using LocalCoefficients       = LocalContainerBuffer<TrialBasis, const StageCoefficients>;
@@ -128,8 +128,8 @@ private:
     assert(jac_apply.size() == stages);
 
     const InstationaryCoefficients& icoeff = getInstationaryCoefficients();
-    const TimePoint& time_point = getTimePoint();
-    const Duration& duration = getDuration();
+    const TimeQuantity& time = getTime();
+    const DurationQuantity& duration = getDuration();
 
     std::vector<std::vector<bool>> do_mass(stages);
     std::vector<std::vector<bool>> do_stiff(stages);
@@ -171,7 +171,7 @@ private:
     // }
 
     auto sub_time_step = [&](std::size_t step) {
-      return time_point + duration * icoeff.timeWeight(step);
+      return time + duration * icoeff.timeWeight(step);
     };
 
     auto mass_weight = [&](std::size_t stage, std::size_t step) {
@@ -211,7 +211,7 @@ private:
 
       if (LocalAssembly::doVolume(slop) | LocalAssembly::doVolume(mlop)) {
         for (std::size_t step = 0; step != steps; ++step) {
-          TimePoint tp = sub_time_step(step);
+          TimeQuantity tp = sub_time_step(step);
           for (std::size_t stage = 0; stage != stages; ++stage) {
             if (do_mass[stage][step]) {
               LocalMassJacApply lmass_grad_in{ljac_apply_in[stage],  mass_weight(stage, step)};
@@ -264,7 +264,7 @@ private:
               ljac_apply_out[stage].clear(ltest_out);
 
               for (std::size_t step = 0; step != steps; ++step) {
-                TimePoint tp = sub_time_step(step);
+                TimeQuantity tp = sub_time_step(step);
 
                 if (do_mass[stage][step]) {
                   LocalMassJacApply lmass_grad_in{ljac_apply_in[stage],  mass_weight(stage, step)};
@@ -287,7 +287,7 @@ private:
 
             for (std::size_t stage = 0; stage != stages; ++stage) {
               for (std::size_t step = 0; step != steps; ++step) {
-                TimePoint tp = sub_time_step(step);
+                TimeQuantity tp = sub_time_step(step);
                 if (do_mass[stage][step]) {
                   LocalMassJacApply lmass_grad_in{ljac_apply_in[stage],  mass_weight(stage, step)};
                   LocalAssembly::jacobianBoundaryApply(mlop, is, tp, ltrial_in, llin_in[step], lpoint_in[step], ltest_in, lmass_grad_in);
@@ -316,12 +316,12 @@ private:
     return this->template get<InstationaryCoefficients>("instationary_coefficients");
   }
 
-  const TimePoint& getTimePoint() const {
-    return this->template get<TimePoint>("time_point");
+  const TimeQuantity& getTime() const {
+    return this->template get<TimeQuantity>("time");
   }
 
-  const Duration& getDuration() const {
-    return this->template get<Duration>("duration");
+  const DurationQuantity& getDuration() const {
+    return this->template get<DurationQuantity>("duration");
   }
 
   const Coefficients& getLinearizationPoint() const {

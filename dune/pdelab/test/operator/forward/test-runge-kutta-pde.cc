@@ -39,8 +39,8 @@ static constexpr std::size_t dim = 1;
 static constexpr std::size_t degree = 1;
 static constexpr double diffusion = 0.005;
 
-using Duration = double;
-using TimePoint = double;
+using DurationQuantity = double;
+using TimeQuantity = double;
 
 struct FullVolumePattern {
 
@@ -75,7 +75,7 @@ struct LocalL2 {
   std::vector<Dune::FieldVector<double,1>> _v_hats;
 
   // function that evaluates the bi-linear form a(u,v)
-  void localAssembleVolume(                 auto  time_point,
+  void localAssembleVolume(                 auto  time,
     const Concept::LocalBasis               auto& ltrial,
     const Concept::LocalConstContainer      auto& lcoefficients,
     const Concept::LocalBasis               auto& ltest,
@@ -108,7 +108,7 @@ struct LocalL2 {
     }
   }
 
-  void localAssembleJacobianVolumeApply(    auto  time_point,
+  void localAssembleJacobianVolumeApply(    auto  time,
     const Concept::LocalBasis               auto& ltrial,
     const Concept::LocalConstContainer      auto& llin_point,
     const Concept::LocalConstContainer      auto& lpoint,
@@ -116,10 +116,10 @@ struct LocalL2 {
     Concept::LocalMutableContainer          auto& lresidual)
   {
     static_assert(localAssembleIsLinear());
-    localAssembleVolume(time_point, ltrial, lpoint, ltest, lresidual);
+    localAssembleVolume(time, ltrial, lpoint, ltest, lresidual);
   }
 
-  void localAssembleJacobianVolume(            auto  time_point,
+  void localAssembleJacobianVolume(            auto  time,
     const Concept::LocalBasis                  auto& ltrial,
     const Concept::LocalConstContainer         auto& llin_point,
     const Concept::LocalBasis                  auto& ltest,
@@ -160,7 +160,7 @@ struct LocalPoisson {
   std::vector<Dune::FieldVector<double,dim>>    _grad_v_hats;
 
   // function that evaluates the bi-linear form a(u,v)
-  void localAssembleVolume(                 auto  time_point,
+  void localAssembleVolume(                 auto  time,
     const Concept::LocalBasis               auto& ltrial,
     const Concept::LocalConstContainer      auto& lcoefficients,
     const Concept::LocalBasis               auto& ltest,
@@ -198,7 +198,7 @@ struct LocalPoisson {
     }
   }
 
-  void localAssembleJacobianVolumeApply(    auto  time_point,
+  void localAssembleJacobianVolumeApply(    auto  time,
     const Concept::LocalBasis               auto& ltrial,
     const Concept::LocalConstContainer      auto& llin_point,
     const Concept::LocalConstContainer      auto& lpoint,
@@ -206,10 +206,10 @@ struct LocalPoisson {
     Concept::LocalMutableContainer          auto& lresidual)
   {
     static_assert(localAssembleIsLinear());
-    localAssembleVolume(time_point, ltrial, lpoint, ltest, lresidual);
+    localAssembleVolume(time, ltrial, lpoint, ltest, lresidual);
   }
 
-  void localAssembleJacobianVolume(            auto  time_point,
+  void localAssembleJacobianVolume(            auto  time,
     const Concept::LocalBasis                  auto& ltrial,
     const Concept::LocalConstContainer         auto& llin_point,
     const Concept::LocalBasis                  auto& ltest,
@@ -435,12 +435,12 @@ TEST(TestRungeKutta, TestRungeKuttaExplicitPDE) {
   std::shared_ptr<Operator<RungeKuttaRange,RungeKuttaDomain>> inverse = std::make_shared<OperatorAdapter<RungeKuttaRange, RungeKuttaDomain>>(linear_apply);
 
   RungeKutta<RungeKuttaDomain,RungeKuttaRange> runge_kutta;
-  TimePoint time{0.5};
+  TimeQuantity time{0.5};
   runge_kutta["initial_residual"] = (Range(test.dimension()) = 0.);
   runge_kutta["inverse"] = inverse;
   runge_kutta["inverse.forward"] = std::weak_ptr(instationary);
-  runge_kutta["inverse.forward.time_point"] = std::ref(time);
-  runge_kutta["inverse.forward.duration"] = Duration{0.02};
+  runge_kutta["inverse.forward.time"] = std::ref(time);
+  runge_kutta["inverse.forward.duration"] = DurationQuantity{0.02};
   runge_kutta["instationary_coefficients"] = InstationaryCoefficients(Dune::PDELab::Alexander2Parameter<double>{});
 
   Domain x0(trial.dimension()), x1;
@@ -467,7 +467,7 @@ TEST(TestRungeKutta, TestRungeKuttaExplicitPDE) {
   // write initial condition
   vtkwriter.write(time, Dune::VTK::appendedraw);
 
-  while(Dune::FloatCmp::lt(time, TimePoint{0.6})) {
+  while(Dune::FloatCmp::lt(time, TimeQuantity{0.6})) {
     runge_kutta.apply(x1 = x0, x0).or_throw();
     // write results at this time step
     vtkwriter.write(time, Dune::VTK::appendedraw);

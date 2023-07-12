@@ -16,13 +16,13 @@ namespace Dune::PDELab::inline Experimental {
  *
  * @tparam DomainStages
  * @tparam RangeStages
- * @tparam TimePoint
- * @tparam Duration
+ * @tparam TimeQuantity
+ * @tparam DurationQuantity
  */
 template<class DomainStages,
          class RangeStages,
-         class TimePoint = double,
-         class Duration  = double>
+         class TimeQuantity = double,
+         class DurationQuantity = double>
 requires (std::ranges::range<DomainStages>  && std::copyable<DomainStages> && std::constructible_from<DomainStages, std::size_t> &&
           std::ranges::range<RangeStages>   && std::copyable<RangeStages>  && std::constructible_from<RangeStages,  std::size_t>)
 class RungeKutta : public OneStep<std::ranges::range_value_t<DomainStages>> {
@@ -31,6 +31,16 @@ class RungeKutta : public OneStep<std::ranges::range_value_t<DomainStages>> {
   using Domain = std::ranges::range_value_t<DomainStages>;
   using RangeStage = std::ranges::range_value_t<RangeStages>;
 public:
+
+  RungeKutta() {
+    PropertyTree& properties = *this;
+
+    properties["time"].documentation =
+      "Time point of the underyling problem. Also sets time in `inverse.forward.time`";
+
+    properties["duration"].documentation =
+      "Time point of the underyling problem. Also sets duration in `inverse.forward.duration`";
+  }
 
   ErrorCondition apply(const Domain& start_stage, Domain& final_stage) override
   {
@@ -46,13 +56,15 @@ public:
       DUNE_THROW(RangeError, "No other parameters[\"inverse.forward.instationary_coefficients\"] must be set in the forward model before applying the runge-kutta stepping");
 
     ErrorCondition ec;
+    forward["time"] = this->template get<TimeQuantity>("time");
+    forward["duration"]   = this->template get<DurationQuantity>("duration");
     if (tableau.type() == InstationaryCoefficients::Type::FullyImplicit)
       ec = applyFullyImplicit(start_stage, final_stage);
     else
       ec = applySemiImplicit(start_stage, final_stage);
 
     if (not ec)
-      forward.template get<TimePoint>("time_point") += forward.template get<Duration>("duration");
+      (*this)["time"] = (forward.template get<TimeQuantity>("time") += forward.template get<DurationQuantity>("duration"));
     forward["instationary_coefficients"] = nullptr;
     return ec;
   }

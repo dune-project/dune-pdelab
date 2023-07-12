@@ -13,26 +13,26 @@ using namespace Dune::PDELab::Experimental;
 
 using Domain = double;
 using Range = double;
-using TimePoint = double;
-using Duration = double;
+using TimeQuantity = double;
+using DurationQuantity = double;
 
 using RungeKuttaDomain = std::vector<Domain>;
 using RungeKuttaRange = std::vector<Range>;
 
 TEST(TestRungeKutta, ExplicitScalar) {
 
-  auto stiffness = [](TimePoint t, Domain y) {
+  auto stiffness = [](TimeQuantity t, Domain y) {
     return y - t*t + 1;
   };
 
-  auto sol = [](TimePoint t){
+  auto sol = [](TimeQuantity t){
     return t*t + 2*t + 1 - 0.5 * std::exp(t);
   };
 
   std::shared_ptr<Operator<RungeKuttaDomain,RungeKuttaRange>> forward = std::make_shared<OperatorAdapter<RungeKuttaDomain,RungeKuttaRange>>(
     [&](Operator<RungeKuttaDomain,RungeKuttaRange>& f, const RungeKuttaDomain& y, RungeKuttaRange& residual) -> ErrorCondition {
-      auto time = f.get<TimePoint>("time_point");
-      auto dt = f.get<Duration>("duration");
+      auto time = f.get<TimeQuantity>("time");
+      auto dt = f.get<DurationQuantity>("duration");
       auto tableau = f.get<InstationaryCoefficients>("instationary_coefficients");
 
       assert(residual.size() == tableau.extent(0));
@@ -61,18 +61,18 @@ TEST(TestRungeKutta, ExplicitScalar) {
     });
 
   RungeKutta<RungeKuttaDomain,RungeKuttaRange> runge_kutta;
-  TimePoint time{0.};
+  TimeQuantity time{0.};
   runge_kutta["initial_residual"] = Range{0.};
   runge_kutta["inverse"] = inverse;
   runge_kutta["inverse.forward"] = std::weak_ptr(forward);
-  runge_kutta["inverse.forward.time_point"] = std::ref(time);
-  runge_kutta["inverse.forward.duration"] = Duration{0.05};
+  runge_kutta["inverse.forward.time"] = std::ref(time);
+  runge_kutta["inverse.forward.duration"] = DurationQuantity{0.05};
   runge_kutta["instationary_coefficients"] = InstationaryCoefficients{Dune::PDELab::RK4Parameter<double>{}};
 
   Domain x0 = 0.5, x1;
   std::cout << std::format("Time      Kunge-Kutta    Analytical") << std::endl;
   std::cout << std::format("{:1.4f}    {:1.4f}         {:1.4f}", time, x0, sol(time)) << std::endl;
-  while(Dune::FloatCmp::lt(time, TimePoint{2.})) {
+  while(Dune::FloatCmp::lt(time, TimeQuantity{2.})) {
     runge_kutta.apply(x1 = x0, x0).or_throw();
     EXPECT_NEAR(x0, sol(time), 1e-6);
     std::cout << std::format("{:1.4f}    {:1.4f}         {:1.4f}", time, x0, sol(time)) << std::endl;

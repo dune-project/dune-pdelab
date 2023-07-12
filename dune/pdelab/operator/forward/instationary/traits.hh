@@ -12,14 +12,14 @@ class InstationaryTraits {
 
 public:
 
-  template<class Duration>
-  using MassFactor = std::conditional_t<(dt_position == DurationPosition::MassDenominator), decltype(double{}/Duration{}), double>;
+  template<class DurationQuantity>
+  using MassFactor = std::conditional_t<(dt_position == DurationPosition::MassDenominator), decltype(double{}/DurationQuantity{}), double>;
 
-  template<class Duration>
-  using StiffnessFactor = std::conditional_t<(dt_position == DurationPosition::StiffnessNumerator), decltype(double{}*Duration{}), double>;
+  template<class DurationQuantity>
+  using StiffnessFactor = std::conditional_t<(dt_position == DurationPosition::StiffnessNumerator), decltype(double{}*DurationQuantity{}), double>;
 
-  template<class Duration>
-  static constexpr MassFactor<Duration> massFactor(Duration duration)
+  template<class DurationQuantity>
+  static constexpr MassFactor<DurationQuantity> massFactor(DurationQuantity duration)
   {
     if constexpr (dt_position == DurationPosition::MassDenominator)
       return 1. / duration;
@@ -27,8 +27,8 @@ public:
       return 1.;
   }
 
-  template<class Duration>
-  static constexpr StiffnessFactor<Duration> stiffnessFactor(Duration duration)
+  template<class DurationQuantity>
+  static constexpr StiffnessFactor<DurationQuantity> stiffnessFactor(DurationQuantity duration)
   {
     if constexpr (dt_position == DurationPosition::StiffnessNumerator)
       return 1. * duration;

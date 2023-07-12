@@ -14,17 +14,17 @@ template<class          Coefficients,
          Concept::Basis TestBasis,
          class          MassLocalOperator,
          class          StiffnessLocalOperator,
-         class TimePoint = double,
-         class Duration  = double,
+         class TimeQuantity = double,
+         class DurationQuantity  = double,
          DurationPosition dt_position = DurationPosition::StiffnessNumerator>
-class InstationaryMatrixFreeAssembler : public InstationaryForwardAssembler<Coefficients, Residual, TrialBasis, TestBasis, MassLocalOperator, StiffnessLocalOperator, TimePoint, Duration, dt_position>
+class InstationaryMatrixFreeAssembler : public InstationaryForwardAssembler<Coefficients, Residual, TrialBasis, TestBasis, MassLocalOperator, StiffnessLocalOperator, TimeQuantity, DurationQuantity, dt_position>
 {
-  using Base = InstationaryForwardAssembler<Coefficients, Residual, TrialBasis, TestBasis, MassLocalOperator, StiffnessLocalOperator, TimePoint, Duration, dt_position>;
+  using Base = InstationaryForwardAssembler<Coefficients, Residual, TrialBasis, TestBasis, MassLocalOperator, StiffnessLocalOperator, TimeQuantity, DurationQuantity, dt_position>;
 public:
   using Base::Base;
 
   virtual std::shared_ptr<Operator<Coefficients,Residual>> derivative(const Coefficients& x, std::shared_ptr<Operator<Coefficients,Residual>> reuse_dx = nullptr) const override {
-    using Type = InstationaryJacobianApplyAssembler<Coefficients, Residual, TrialBasis, TestBasis, MassLocalOperator, StiffnessLocalOperator, TimePoint, Duration, dt_position>;
+    using Type = InstationaryJacobianApplyAssembler<Coefficients, Residual, TrialBasis, TestBasis, MassLocalOperator, StiffnessLocalOperator, TimeQuantity, DurationQuantity, dt_position>;
     std::shared_ptr<Type> dx;
     if (reuse_dx)
       dx = std::dynamic_pointer_cast<Type>(reuse_dx);
@@ -33,7 +33,7 @@ public:
 
     // TODO: assert that old basis and local operators are same as for this
 
-    dx->get("time_point")                 = this->get("time_point");
+    dx->get("time")                       = this->get("time");
     dx->get("duration")                   = this->get("duration");
     dx->get("instationary_coefficients")  = this->get("instationary_coefficients");
     dx->get("linearization_point") = x;
@@ -65,12 +65,12 @@ template<class          Coefficients,
          class          MassLocalOperator,
          class          StiffnessLocalOperator,
          class          MatrixContainer,
-         class TimePoint = double,
-         class Duration  = double,
+         class TimeQuantity = double,
+         class DurationQuantity  = double,
          DurationPosition dt_position = DurationPosition::StiffnessNumerator>
-class InstationaryMatrixBasedAssembler : public InstationaryForwardAssembler<Coefficients, Residual, TrialBasis, TestBasis, MassLocalOperator, StiffnessLocalOperator, TimePoint, Duration, dt_position>
+class InstationaryMatrixBasedAssembler : public InstationaryForwardAssembler<Coefficients, Residual, TrialBasis, TestBasis, MassLocalOperator, StiffnessLocalOperator, TimeQuantity, DurationQuantity, dt_position>
 {
-  using Base = InstationaryForwardAssembler<Coefficients, Residual, TrialBasis, TestBasis, MassLocalOperator, StiffnessLocalOperator, TimePoint, Duration, dt_position>;
+  using Base = InstationaryForwardAssembler<Coefficients, Residual, TrialBasis, TestBasis, MassLocalOperator, StiffnessLocalOperator, TimeQuantity, DurationQuantity, dt_position>;
 public:
 
   InstationaryMatrixBasedAssembler(const TrialBasis& trial,
@@ -83,14 +83,14 @@ public:
   {}
 
   virtual std::shared_ptr<Operator<Coefficients,Residual>> derivative(const Coefficients& x, std::shared_ptr<Operator<Coefficients,Residual>> reuse_dx = nullptr) const override {
-    using Jacobian = InstationaryJacobianAssembler<Coefficients, Residual, TrialBasis, TestBasis, MassLocalOperator, StiffnessLocalOperator, MatrixContainer, TimePoint, Duration, dt_position>;
+    using Jacobian = InstationaryJacobianAssembler<Coefficients, Residual, TrialBasis, TestBasis, MassLocalOperator, StiffnessLocalOperator, MatrixContainer, TimeQuantity, DurationQuantity, dt_position>;
     std::shared_ptr<Jacobian> dx;
     if (reuse_dx)
       dx = std::dynamic_pointer_cast<Jacobian>(reuse_dx);
     else
       dx = std::make_unique<Jacobian>(this->_trial, this->_test, this->_mass_lop, this->_stiff_lop);
 
-    dx->get("time_point")                 = this->get("time_point");
+    dx->get("time")                 = this->get("time");
     dx->get("duration")                   = this->get("duration");
     dx->get("instationary_coefficients")  = this->get("instationary_coefficients");
 

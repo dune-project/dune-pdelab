@@ -35,8 +35,8 @@ template<class          Coefficients,
          class          MassLocalOperator,
          class          StiffnessLocalOperator,
          class          JacobianContainer,
-         class TimePoint = double,
-         class Duration  = double,
+         class TimeQuantity = double,
+         class DurationQuantity  = double,
          DurationPosition dt_position = DurationPosition::StiffnessNumerator>
 class InstationaryJacobianAssembler
   : public Operator<Coefficients, Residual>
@@ -57,8 +57,8 @@ class InstationaryJacobianAssembler
   // stage jacobian is required to be indexable by local test and trial basis degrees of freedom (see localContainerEntry)
   using LocalJacobian = LocalMatrixBuffer<TestBasis, TrialBasis, StageJacobian>;
 
-  using MassFactor      = typename InstationaryTraits<dt_position>::MassFactor<Duration>;
-  using StiffnessFactor = typename InstationaryTraits<dt_position>::StiffnessFactor<Duration>;
+  using MassFactor      = typename InstationaryTraits<dt_position>::MassFactor<DurationQuantity>;
+  using StiffnessFactor = typename InstationaryTraits<dt_position>::StiffnessFactor<DurationQuantity>;
 
   using LocalCoefficients       = LocalContainerBuffer<TrialBasis, const StageCoefficients>;
   using LocalMassJacobian       = WeightedLocalMatrixView<LocalJacobian, MassFactor>;
@@ -119,8 +119,8 @@ private:
 
     JacobianContainer& jac = getJacobianContainer();
     const InstationaryCoefficients& icoeff = getInstationaryCoefficients();
-    const TimePoint& time_point = getTimePoint();
-    const Duration& duration = getDuration();
+    const TimeQuantity& time = getTime();
+    const DurationQuantity& duration = getDuration();
 
     // forEachContainerEntry(std::execution::par_unseq, jac, []<class T>(T& v){v = T{0.};});
 
@@ -160,7 +160,7 @@ private:
     }
 
     auto sub_time_step = [&](std::size_t step) {
-      return time_point + duration * icoeff.timeWeight(step);
+      return time + duration * icoeff.timeWeight(step);
     };
 
     auto mass_weight = [&](std::size_t stage, std::size_t step) {
@@ -200,7 +200,7 @@ private:
 
       if (LocalAssembly::doVolume(slop) | LocalAssembly::doVolume(mlop)) {
         for (std::size_t step = 0; step != steps; ++step) {
-          TimePoint tp = sub_time_step(step);
+          TimeQuantity tp = sub_time_step(step);
           for (std::size_t stage = 0; stage != stages; ++stage) {
             ljac_ii[stage][step].clear(ltest_in, ltrial_in);
             if (do_mass[stage][step]) {
@@ -249,7 +249,7 @@ private:
 
             for (std::size_t stage = 0; stage != stages; ++stage) {
               for (std::size_t step = 0; step != steps; ++step) {
-                TimePoint tp = sub_time_step(step);
+                TimeQuantity tp = sub_time_step(step);
                 ljac_io[stage][step].clear(ltest_in,  ltrial_out);
                 ljac_oi[stage][step].clear(ltest_out, ltrial_in);
                 ljac_oo[stage][step].clear(ltest_out, ltrial_out);
@@ -280,7 +280,7 @@ private:
           } else if (is.boundary() & (LocalAssembly::doBoundary(slop) | LocalAssembly::doBoundary(mlop))) {
             for (std::size_t stage = 0; stage != stages; ++stage) {
               for (std::size_t step = 0; step != steps; ++step) {
-                TimePoint tp = sub_time_step(step);
+                TimeQuantity tp = sub_time_step(step);
                 if (do_mass[stage][step]) {
                   LocalMassJacobian lmass_jac_ii{ljac_ii[stage][step], mass_weight(stage, step)};
                   LocalAssembly::jacobianBoundary(mlop, is, tp, ltrial_in, llin_in[step], ltest_in, lmass_jac_ii);
@@ -314,12 +314,12 @@ private:
     return this->template get<InstationaryCoefficients>("instationary_coefficients");
   }
 
-  const TimePoint& getTimePoint() const {
-    return this->template get<TimePoint>("time_point");
+  const TimeQuantity& getTime() const {
+    return this->template get<TimeQuantity>("time");
   }
 
-  const Duration& getDuration() const {
-    return this->template get<Duration>("duration");
+  const DurationQuantity& getDuration() const {
+    return this->template get<DurationQuantity>("duration");
   }
 
 
