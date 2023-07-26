@@ -187,7 +187,7 @@ void localAssembleJacobianBoundary(               auto& lop,
   const PDELab::Concept::LocalBasis               auto& ltrial_in,
   const PDELab::Concept::LocalConstContainer      auto& llin_point_in,
   const PDELab::Concept::LocalBasis               auto& ltest_in,
-  PDELab::Concept::LocalMutableContainer          auto& ljacobian_in)
+  PDELab::Concept::LocalMutableMatrix             auto& ljacobian_in)
 requires requires { lop.localAssembleJacobianBoundary(intersection, time, ltrial_in, llin_point_in, ltest_in, ljacobian_in); }
 {
   lop.localAssembleJacobianBoundary(intersection, time, ltrial_in, llin_point_in, ltest_in, ljacobian_in);

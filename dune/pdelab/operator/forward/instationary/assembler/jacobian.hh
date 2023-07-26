@@ -124,7 +124,7 @@ private:
     const TimeQuantity& time = getTime();
     const DurationQuantity& duration = getDuration();
 
-    // forEachContainerEntry(std::execution::par_unseq, jac, []<class T>(T& v){v = T{0.};});
+    forEachContainerEntry(std::execution::par_unseq, jac, []<class T>(T& v){v = T{0.};});
 
     std::vector<std::vector<bool>> do_mass(stages);
     std::vector<std::vector<bool>> do_stiff(stages);
@@ -160,6 +160,9 @@ private:
         ljac_oo[stage][step] = LocalJacobian{ ltest_out, ltrial_out, jac[stage][step] };
       }
     }
+
+    unbind(ltest_in, ltrial_in);
+    unbind(ltest_out, ltrial_out);
 
     auto sub_time_step = [&](std::size_t step) {
       return time + duration * icoeff.timeWeight(step);
