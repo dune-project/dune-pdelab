@@ -101,7 +101,8 @@ public:
     if (result.converged)
       return ec;
     else
-      return make_error_condition(Dune::PDELab::Convergence::Reason::DivergedNull);
+      return make_error_condition(
+        Dune::PDELab::Convergence::Reason::DivergedByDivergenceTolarance);
   }
 
   virtual ErrorCondition apply(const Range& range, Domain& domain) override {

@@ -5,8 +5,10 @@
 
 #include <dune/common/float_cmp.hh>
 
-#include <array>
+#if __has_include(<format>)
 #include <format>
+#endif
+#include <array>
 #include <string>
 
 namespace Dune::PDELab::inline Experimental {
@@ -193,6 +195,7 @@ public:
   }
 
   void print() const {
+#if __has_include(<format>)
     auto hline = [&]{std::cout << std::format("{0:>8}+{1:->{2}}+\n", ' ','-', 8*extent(1));};
     hline();
     for (std::size_t row = 0; row != extent(0); ++row) {
@@ -211,6 +214,11 @@ public:
     for (std::size_t col = 0; col != extent(1); ++col)
       std::cout << std::format(" {: 1.3f}{}", timeWeight(col), (col+1 == extent(1)) ? " |\n" : ",");
     hline();
+#else
+    DUNE_THROW(
+      NotImplemented,
+      "To print this class you need an standard library with std::format");
+#endif
   }
 
 private:

@@ -31,8 +31,8 @@ struct SharedStash
   };
 
   SharedStash(std::function<std::unique_ptr<T>()> factory)
-    : _data{std::make_shared<Data>(move(factory))}
-    , _stash{_data->_factory()}
+    : _data{ std::make_shared<Data>(std::move(factory)) }
+    , _stash{ _data->_factory() }
   {}
 
   SharedStash(const SharedStash& other)
@@ -41,9 +41,7 @@ struct SharedStash
     _stash = obtain_stash();
   }
 
-  ~SharedStash() {
-    release_stash( move(_stash) );
-  }
+  ~SharedStash() { release_stash(std::move(_stash)); }
 
   T const * operator->() const {
     assert(_stash);
@@ -78,7 +76,7 @@ private:
 #if !HAVE_TBB
     auto guard = std::unique_lock{_data->_mutex};
 #endif
-    _data->_stash_queue.push(move(ptr));
+    _data->_stash_queue.push(std::move(ptr));
   }
 
   std::shared_ptr<Data> _data;

@@ -61,8 +61,10 @@ class InstationaryForwardAssembler : public Operator<Coefficients, Residual>
   using LocalTestBasis  = typename TestBasis::LocalView;
   using LocalTrialBasis = typename TrialBasis::LocalView;
 
-  using MassFactor      = typename InstationaryTraits<dt_position>::MassFactor<DurationQuantity>;
-  using StiffnessFactor = typename InstationaryTraits<dt_position>::StiffnessFactor<DurationQuantity>;
+  using MassFactor = typename InstationaryTraits<
+    dt_position>::template MassFactor<DurationQuantity>;
+  using StiffnessFactor = typename InstationaryTraits<
+    dt_position>::template StiffnessFactor<DurationQuantity>;
 
   using LocalResidual           = LocalContainerBuffer<TestBasis, StageResidual>;
   using LocalCoefficients       = LocalContainerBuffer<TrialBasis, const StageCoefficients>;

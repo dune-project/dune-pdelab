@@ -508,7 +508,7 @@ public:
           SizeType _size = std::numeric_limits<SizeType>::max();
           // make a loop over all nodes and check which one matches the child
           // index
-          forEach(node(), [&](auto& child, auto i) {
+          forEach(this->node(), [&](auto& child, auto i) {
             if (i == child_i)
               _size = child.containerSize(next_suffix, gt_index, entity_index);
           });
@@ -682,7 +682,7 @@ private:
         _max_local_coeff_count = max_sub_entities * node().space().finiteElementMap().maxLocalSize();
       }
     } else {
-      forEach(node(), [&](auto& child, auto i) {
+      forEach(this->node(), [&](auto& child, auto i) {
         // first, set up child gt collection
         child.updateFixedSizeOrderings();
         // then, accumulate child results to this node
@@ -780,7 +780,7 @@ private:
     _fixed_size_possible = true;
 
     if constexpr (not Concept::LeafTreeNode<Node>) {
-      forEach(node(), [&](auto& child, auto path) {
+      forEach(this->node(), [&](auto& child, auto path) {
         child.collectGeometryTypes();
 
         if constexpr (not prioryFixedSize()) {
@@ -908,7 +908,7 @@ private:
     } else {
       // update node properties
       _fixed_size_possible = true;
-      forEach(node(), [&](auto& child, auto path) {
+      forEach(this->node(), [&](auto& child, auto path) {
         // update sub-tree
         child.accumulateEntityOffsets();
         _fixed_size_possible &= child.fixedSize();
@@ -919,7 +919,7 @@ private:
       const std::size_t gt_count = GlobalGeometryTypeIndex::size(dim);
       if (_fixed_size_possible) {
         // we need to update gt sizes from children and convert them to offsets
-        forEach(node(), [&](auto& child, auto i) {
+        forEach(this->node(), [&](auto& child, auto i) {
           for (std::size_t codim = 0; codim <= EntitySet::dimension; ++codim) {
             for (const auto& gt : entitySet().indexSet().types(codim)) {
               const auto gt_index = GlobalGeometryTypeIndex::index(gt);
@@ -948,7 +948,7 @@ private:
             (*_gt_entity_offsets)[gt + 1] - (*_gt_entity_offsets)[gt];
           for (SizeType e_index = 0; e_index < entity_count; ++e_index) {
             SizeType carry = 0;
-            forEach(node(), [&](auto& child, auto path) {
+            forEach(this->node(), [&](auto& child, auto path) {
               carry += child.blockCount(gt, e_index);
               (*_entity_dof_offsets)[index++] = carry;
             });

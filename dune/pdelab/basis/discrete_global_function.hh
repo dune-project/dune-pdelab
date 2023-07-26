@@ -109,7 +109,7 @@ public:
     const auto e = search.findEntity(xglobal);
     auto lfunc = localFunction(*this);
     lfunc.bind(e);
-    return lfunc(e.geometry().local(xglobal), move(storage));
+    return lfunc(e.geometry().local(xglobal), std::move(storage));
   }
 
   const EntitySet& entitySet() const {
@@ -126,7 +126,8 @@ template <Concept::Basis Basis, class Container>
 requires PDELab::Concept::LeafTreeNode<typename Basis::LocalView::Tree>
 auto makeDiscreteGlobalBasisFunction(const Basis &basis, std::shared_ptr<Container> container)
 {
-  return ScalarDiscreteFunction<Basis, Container>{basis, move(container)};
+  return ScalarDiscreteFunction<Basis, Container>{ basis,
+                                                   std::move(container) };
 }
 
 } // namespace Dune::PDELab::inline Experimental

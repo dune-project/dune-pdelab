@@ -53,7 +53,7 @@ namespace Dune::PDELab::inline Experimental {
       typename LocalView::NodeStorage storage(container->degree());
       for (std::size_t i = 0; i != storage.size(); ++i)
         storage[i] = container->child(i).makeLocalViewNode(tree.child(i), container->childStorage(i));
-      return std::make_shared<LocalView>(move(storage));
+      return std::make_shared<LocalView>(std::move(storage));
     }
   };
 
@@ -91,7 +91,7 @@ namespace Dune::PDELab::inline Experimental {
       typename LocalView::NodeStorage storage;
       for (std::size_t i = 0; i != storage.size(); ++i)
         storage[i] = container->child(i).makeLocalViewNode(tree.child(i), container->childStorage(i));
-      return std::make_shared<LocalView>(move(storage));
+      return std::make_shared<LocalView>(std::move(storage));
     }
   };
 
@@ -166,10 +166,12 @@ namespace Dune::PDELab::inline Experimental {
       using Tree = typename TreeStorage::element_type;
       static_assert(std::is_same_v<TreeStorage, decltype(makeLocalTree(std::declval<Tree>(), std::shared_ptr<ConstraintsContainerTree>{}, SubBasisPath{}))>);
 
-      LocalView(const SourceTree& source_tree, std::shared_ptr<ConstraintsContainerTree> gtree, SubBasisPath sub_basis_path)
-        : _sub_basis_path{sub_basis_path}
-        , _gtree{move(gtree)}
-        , _ltree{makeLocalTree(source_tree, _gtree, _sub_basis_path)}
+      LocalView(const SourceTree& source_tree,
+                std::shared_ptr<ConstraintsContainerTree> gtree,
+                SubBasisPath sub_basis_path)
+        : _sub_basis_path{ sub_basis_path }
+        , _gtree{ std::move(gtree) }
+        , _ltree{ makeLocalTree(source_tree, _gtree, _sub_basis_path) }
       {}
 
       LocalView(const LocalView& other) {
@@ -241,7 +243,7 @@ namespace Dune::PDELab::inline Experimental {
     template<Concept::Tree Tree, Concept::MultiIndex SubBasisPath>
     Concept::LocalConstraints auto localView(const Tree& tree, SubBasisPath sub_basis_path) const {
       assert(_assembled);
-      return LocalView{tree, _tree, sub_basis_path};
+      return LocalView<Tree, SubBasisPath>{ tree, _tree, sub_basis_path };
     }
 
     template<Concept::Tree Tree>

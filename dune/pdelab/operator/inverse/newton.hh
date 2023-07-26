@@ -7,9 +7,8 @@
 #include <dune/pdelab/common/convergence/condition.hh>
 #include <dune/pdelab/common/container_entry.hh>
 
-#include <vector>
 #include <memory>
-#include <format>
+#include <vector>
 
 namespace Dune::PDELab::inline Experimental {
 
@@ -128,6 +127,12 @@ public:
       TRACE_EVENT("dune", "Newton::Iteration", it_timestamp);
 
       prepareStep(defects, x);
+      TRACE_COUNTER("dune",
+                    "Newton::InverseTargetRelativeTolerance",
+                    it_timestamp,
+                    dx_inverse.template get<double>(
+                      "convergence_condition.relative_tolerance"));
+
       if (defects.size() > 1) correction = zero;
 
       error_condition = dx_inverse.apply(residual, correction);
@@ -186,7 +191,8 @@ private:
     // operator and reset linear operator for the dx_inverse
     bool linearize = (iteration == 0) or (defect_rate > lin_threshold);
     if (linearize)
-      _derivative = getForward().derivative(x, _derivative ? move(_derivative) : nullptr);
+      _derivative = getForward().derivative(
+        x, _derivative ? std::move(_derivative) : nullptr);
     auto& dx_inverse = getDerivativeInverse();
     dx_inverse["forward"] = std::shared_ptr<Forward>(_derivative);
 
@@ -215,7 +221,6 @@ private:
 
       dx_inverse["convergence_condition.relative_tolerance"] = it_dx_inverse_rel_tol;
     }
-    TRACE_COUNTER("dune", "Newton::TargetInverseRelativeTolerance", it_timestamp, it_dx_inverse_rel_tol);
   }
 
 

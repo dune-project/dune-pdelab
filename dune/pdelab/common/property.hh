@@ -159,19 +159,66 @@ public:
   //! Report property contents into an output stream
   std::set<PropertyTree const *> report(std::ostream& out, std::string indent) const;
 
-  // Allow property_cast to see underyling object
+  /**
+   * @brief Performs type-safe access to the contained property value
+   * @warning When T is `std::[shared|weak]_ptr<[const] V>&` where
+   * V is a base class of PropertyTree is deleted (note that other cv-ref
+   * qualifiers are allowed). This case would allow users to directily
+   * manipulate the contents of the smart pointer, thus, allowing to
+   * unintentionally invalidate the internal property registry.
+   *
+   * @tparam T    Type to cast the property value
+   * @tparam U    A qualified type of Property
+   * @param ppt   Target property object
+   * @return      Property value with type T
+   * @throws      Throws BadPropertyCast if the typeid of the requested T does
+   * not match that of the contents of ppt.
+   */
   template<class T, class U>
-  requires std::derived_from<std::remove_reference_t<U>, Property>
-  friend T property_cast(U&& ppt);
+    requires std::derived_from<std::remove_reference_t<U>, Property>
+  friend T property_cast(U&& val)
+  {
+    try {
+      if (val.getter)
+        val.getter(std::ref(val));
+      return std::any_cast<T>(std::forward<U>(val)._object);
+    } catch (std::bad_any_cast& ex) {
+      throw val.bad_cast_exception(typeid(T));
+    }
+  }
 
   // Delete property cast:  T is `std::[shared|weak]_ptr<[const] V>&` where V is a base class of PropertyTree.
   template<class T, class U>
   requires (std::derived_from<std::remove_reference_t<U>, Property> && Impl::PropertyTreePtr<T>)
   friend T property_cast(U&& val) = delete;
 
-  // Allow property_cast to see underyling object
+  /**
+   * @brief Performs type-safe access/assign to the contained property value
+   * with a default value
+   * @details If the property value has not been set, assigns value to
+   * default_val.
+   * @warning When T is `std::[shared|weak]_ptr<[const] V>&` where
+   * V is a base class of PropertyTree is deleted (note that other cv-ref
+   * qualifiers are allowed). This case would allow users to directily
+   * manipulate the contents of the smart pointer, thus, allowing to
+   * unintentionally invalidate the internal property registry.
+   *
+   * @tparam T            Type of the default value. Access will be attempted
+   * with `std::decay_t<T>`.
+   * @tparam U            A mutable reference of a property
+   * @param ppt           Target property object
+   * @param default_val   A default value to assign
+   * @throws              Throws BadPropertyCast if the typeid of the requested
+   * T does not match that of the contents of ppt.
+   * @return              Property value with type std::remove_cvref_t<T>&
+   */
   template<class T>
-  friend std::remove_cvref_t<T>& property_cast(Property& val, T&& default_val);
+  friend std::remove_cvref_t<T>& property_cast(Property& val, T&& default_val)
+  {
+    if (not val.has_value())
+      val = std::forward<T>(default_val);
+    return property_cast<std::remove_cvref_t<T>&>(val);
+  }
 
   // Delete property cast: T is `std::[shared|weak]_ptr<[const] V>&` where V is a base class of PropertyTree.
   template<Impl::PropertyTreePtr T>
@@ -288,54 +335,6 @@ Property& Property::operator=(std::shared_ptr<T> ptree_ptr) {
   maybe_register_derived_ptree(std::weak_ptr(ptree_ptr));
   if (setter) setter(*this);
   return *this;
-}
-
-/**
- * @brief Performs type-safe access to the contained property value
- * @warning When T is `std::[shared|weak]_ptr<[const] V>&` where
- * V is a base class of PropertyTree is deleted (note that other cv-ref
- * qualifiers are allowed). This case would allow users to directily manipulate
- * the contents of the smart pointer, thus, allowing to unintentionally invalidate
- * the internal property registry.
- *
- * @tparam T    Type to cast the property value
- * @tparam U    A qualified type of Property
- * @param ppt   Target property object
- * @return      Property value with type T
- * @throws      Throws BadPropertyCast if the typeid of the requested T does not match that of the contents of ppt.
- */
-template<class T, class U>
-requires std::derived_from<std::remove_reference_t<U>, Property>
-T property_cast(U&& val) {
-  try {
-    if (val.getter) val.getter(std::ref(val));
-    return std::any_cast<T>(std::forward<U>(val)._object);
-  } catch (std::bad_any_cast& ex) {
-    throw val.bad_cast_exception(typeid(T));
-  }
-}
-
-/**
- * @brief Performs type-safe access/assign to the contained property value with a default value
- * @details If the property value has not been set, assigns value to default_val.
- * @warning When T is `std::[shared|weak]_ptr<[const] V>&` where
- * V is a base class of PropertyTree is deleted (note that other cv-ref
- * qualifiers are allowed). This case would allow users to directily manipulate
- * the contents of the smart pointer, thus, allowing to unintentionally invalidate
- * the internal property registry.
- *
- * @tparam T            Type of the default value. Access will be attempted with `std::decay_t<T>`.
- * @tparam U            A mutable reference of a property
- * @param ppt           Target property object
- * @param default_val   A default value to assign
- * @throws              Throws BadPropertyCast if the typeid of the requested T does not match that of the contents of ppt.
- * @return              Property value with type std::remove_cvref_t<T>&
- */
-template<class T>
-std::remove_cvref_t<T>& property_cast(Property& val, T&& default_val) {
-  if (not val.has_value())
-    val = std::forward<T>(default_val);
-  return property_cast<std::remove_cvref_t<T>&>(val);
 }
 
 /**

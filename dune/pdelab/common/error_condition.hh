@@ -19,13 +19,20 @@ public:
   explicit BadErrorCondition(std::error_condition ec) : _ec{ec} {}
 
   //! Returns a reference to the stored value.
-  [[nodiscard]] const std::error_condition& error() const& noexcept { return _ec; }
+  [[nodiscard]] const std::error_condition& error() const& noexcept
+  {
+    return _ec;
+  }
 
   //! Returns a reference to the stored value.
   [[nodiscard]] std::error_condition& error() & noexcept { return _ec; }
 
   //! Returns a reference to the stored value.
-  [[nodiscard]] const std::error_condition&& error() && noexcept {return move(_ec); }
+  [[nodiscard]] const std::error_condition&& error() && noexcept
+  {
+    return std::move(_ec);
+  }
+
 private:
   std::error_condition _ec;
 };

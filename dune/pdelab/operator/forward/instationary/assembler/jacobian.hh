@@ -57,8 +57,10 @@ class InstationaryJacobianAssembler
   // stage jacobian is required to be indexable by local test and trial basis degrees of freedom (see localContainerEntry)
   using LocalJacobian = LocalMatrixBuffer<TestBasis, TrialBasis, StageJacobian>;
 
-  using MassFactor      = typename InstationaryTraits<dt_position>::MassFactor<DurationQuantity>;
-  using StiffnessFactor = typename InstationaryTraits<dt_position>::StiffnessFactor<DurationQuantity>;
+  using MassFactor = typename InstationaryTraits<
+    dt_position>::template MassFactor<DurationQuantity>;
+  using StiffnessFactor = typename InstationaryTraits<
+    dt_position>::template StiffnessFactor<DurationQuantity>;
 
   using LocalCoefficients       = LocalContainerBuffer<TrialBasis, const StageCoefficients>;
   using LocalMassJacobian       = WeightedLocalMatrixView<LocalJacobian, MassFactor>;

@@ -1,8 +1,11 @@
 #ifndef DUNE_PDELAB_BASIS_ORDERING_LEXICOGRAPHIC_HH
 #define DUNE_PDELAB_BASIS_ORDERING_LEXICOGRAPHIC_HH
 
+#include <dune/pdelab/concepts/lockable.hh>
+
 #include <dune/pdelab/basis/prebasis/concept.hh>
 
+#include <dune/pdelab/common/container_entry.hh>
 #include <dune/pdelab/common/multiindex.hh>
 #include <dune/pdelab/common/tree_traversal.hh>
 

@@ -221,8 +221,8 @@ private:
   {
     _lconstraints.bind(lspace.element());
 
-    auto for_each_entry = [&](auto f){
-      return [&](const auto& lspace_node, auto path) {
+    auto for_each_entry = [&](auto f) {
+      return [&, f](const auto& lspace_node, auto path) {
         const auto& lconstraints_node = PDELab::containerEntry(_lconstraints.tree(), path);
         auto data_ptr = data(lspace_node.path());
         for (std::size_t dof = 0; dof != lspace_node.size(); ++dof) {

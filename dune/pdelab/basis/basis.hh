@@ -103,10 +103,11 @@ namespace Dune::PDELab::inline Experimental {
       using GlobalBasis = Basis;
       using Tree = LocalTree;
 
-      LocalIndexSetBase(const Basis& basis, std::unique_ptr<LocalTree> ltree_storage)
-        : _basis{basis}
-        , _ltree_storage{move(ltree_storage)}
-        , _ltree_view{_ltree_storage.get()}
+      LocalIndexSetBase(const Basis& basis,
+                        std::unique_ptr<LocalTree> ltree_storage)
+        : _basis{ basis }
+        , _ltree_storage{ std::move(ltree_storage) }
+        , _ltree_view{ _ltree_storage.get() }
       {
         if constexpr (DUNE_PDELAB_ENABLE_INDEX_ON_ROOT_NODE)
           _indices = std::make_unique<MultiIndex[]>(maxSize());

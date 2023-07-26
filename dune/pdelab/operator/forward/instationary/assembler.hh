@@ -90,7 +90,7 @@ public:
     else
       dx = std::make_unique<Jacobian>(this->_trial, this->_test, this->_mass_lop, this->_stiff_lop);
 
-    dx->get("time")                 = this->get("time");
+    dx->get("time")                       = this->get("time");
     dx->get("duration")                   = this->get("duration");
     dx->get("instationary_coefficients")  = this->get("instationary_coefficients");
 
