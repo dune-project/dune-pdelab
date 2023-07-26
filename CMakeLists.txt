@@ -48,6 +48,12 @@ target_sources(dunepdelab
     dune/pdelab/common/property_tree.cc
 )
 
+target_compile_features(dunepdelab
+  PUBLIC
+    cxx_std_20
+)
+
+
 add_subdirectory(doc)
 add_subdirectory(dune)
 add_subdirectory(cmake/modules)
