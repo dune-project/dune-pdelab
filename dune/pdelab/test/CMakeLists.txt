@@ -260,8 +260,8 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vtk)
 
 # remove test target from dune packages so that it is not exported to other projects
 get_property(all_libs GLOBAL PROPERTY ALL_PKG_LIBS)
-list(REMOVE_ITEM ALL_PKG_LIBS dunepdelab-test)
-set_property(GLOBAL PROPERTY ALL_PKG_LIBS "${ALL_PKG_LIBS}")
+list(REMOVE_ITEM all_libs dunepdelab-test)
+set_property(GLOBAL PROPERTY ALL_PKG_LIBS "${all_libs}")
 
 # check if this project is called as its own cmake project (i.e. not as subdirectory)
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
