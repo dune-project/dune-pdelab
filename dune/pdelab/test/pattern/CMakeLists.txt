@@ -1,6 +1,6 @@
 dune_add_test(
   SOURCES test-sparsity-pattern.cc
-  LINK_LIBRARIES GTest::gtest_main)
+  LINK_LIBRARIES ${GTEST_MAIN_LIBRARIES})
 
 dune_add_test(
   NAME test-pattern-basis-to-matrix
