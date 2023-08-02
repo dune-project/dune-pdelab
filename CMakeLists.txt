@@ -33,15 +33,15 @@ dune_add_library(dunepdelab EXPORT_NAME PDELab)
 target_link_libraries(dunepdelab
   PUBLIC
     ${DUNE_LIBS}
-    $<$<BOOL:${TBB_FOUND}>:TBB::tbb>
-    $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
-    $<$<BOOL:${DUNE_PDELAB_ENABLE_TRACING}>:Perfetto::SDK>
+    $<TARGET_NAME_IF_EXISTS:TBB::tbb>
+    $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
+    $<TARGET_NAME_IF_EXISTS:Dune::Perfetto::SDK>
 )
 
 target_sources(dunepdelab
   PRIVATE
     $<$<NOT:$<BOOL:${MINGW}>>:dune/pdelab/common/clock.cc>
-    $<$<BOOL:${DUNE_PDELAB_ENABLE_TRACING}>:dune/pdelab/common/trace.cc>
+    $<$<TARGET_EXISTS:Dune::Perfetto::SDK>:dune/pdelab/common/trace.cc>
     dune/pdelab/common/hostname.cc
     dune/pdelab/common/logtag.cc
     dune/pdelab/common/property.cc

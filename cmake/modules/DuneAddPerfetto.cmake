@@ -25,9 +25,5 @@ if (NOT TARGET Perfetto::SDK)
       PUBLIC
         $<BUILD_INTERFACE:${perfetto_SOURCE_DIR}/sdk>
         $<INSTALL_INTERFACE:dune/external/perfetto-sdk>)
-
-    if(NOT TARGET Perfetto::SDK)
-      add_library(Perfetto::SDK ALIAS perfetto-sdk)
-    endif()
   endif()
 endif()
