@@ -81,7 +81,7 @@ constexpr void forEach(std::execution::sequenced_policy, Container&& container, 
 //! Default for each implementation of parallel policy
 template<class Container, class Callable>
 requires Concept::Range<std::remove_cvref_t<Container>>
-constexpr void forEach(std::execution::parallel_policy, Container&& container, Callable&& at_value)
+void forEach(std::execution::parallel_policy, Container&& container, Callable&& at_value)
 {
   using UContainer = std::remove_cvref_t<Container>;
 

@@ -156,7 +156,7 @@ public:
   EntityOrderingNode& operator=(EntityOrderingNode&&) = default;
 
   // Check if all leaf nodes have the same fixed DOF size per geometry type at compile time
-  [[nodiscard]] static consteval auto prioryFixedSize()
+  [[nodiscard]] static constexpr auto prioryFixedSize()
   {
     if constexpr (Concept::LeafTreeNode<Node>) {
       // base case: query information from finite element map
@@ -179,7 +179,7 @@ public:
   }
 
   // Gives the maximum size of a prefix produced by this ordering
-  [[nodiscard]] static consteval std::size_t maxContainerDepth()
+  [[nodiscard]] static constexpr std::size_t maxContainerDepth()
   {
     if constexpr (Concept::LeafTreeNode<Node>) {
       return 1;
