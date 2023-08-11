@@ -143,7 +143,7 @@ public:
    * @return T&     (Unwrapped) reference to object contained by the property
    */
   template <class T>
-  const T& get(std::string_view key) const {
+  const T& get(std::string_view key) const & {
     return unwrap_property_ref<const T>(get(key));
   }
 

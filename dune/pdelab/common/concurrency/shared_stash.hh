@@ -31,9 +31,11 @@ struct SharedStash
   };
 
   SharedStash(std::function<std::unique_ptr<T>()> factory)
-    : _data{ std::make_shared<Data>(std::move(factory)) }
-    , _stash{ _data->_factory() }
-  {}
+  {
+    _data = std::make_shared<Data>();
+    _data->_factory = std::move(factory);
+    _stash = _data->_factory();
+  }
 
   SharedStash(const SharedStash& other)
     : _data{other._data}

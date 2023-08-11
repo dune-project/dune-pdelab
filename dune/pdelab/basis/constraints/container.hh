@@ -24,7 +24,7 @@ namespace Dune::PDELab::inline Experimental {
   class VectorLocalConstraintsContainer : public TypeTree::DynamicPowerNode<T> {
     using TreeNode = TypeTree::DynamicPowerNode<T>;
   public:
-    VectorLocalConstraintsContainer(const TreeNode::NodeStorage& storage)
+    VectorLocalConstraintsContainer(const typename TreeNode::NodeStorage& storage)
       : TreeNode{storage}
     {}
 
@@ -62,7 +62,7 @@ namespace Dune::PDELab::inline Experimental {
   class ArrayLocalConstraintsContainer : public TypeTree::PowerNode<T,k> {
     using TreeNode = TypeTree::PowerNode<T,k>;
   public:
-    ArrayLocalConstraintsContainer(const TreeNode::NodeStorage& storage)
+    ArrayLocalConstraintsContainer(const typename TreeNode::NodeStorage& storage)
       : TreeNode{storage}
     {}
 
@@ -100,7 +100,7 @@ namespace Dune::PDELab::inline Experimental {
   class TupleLocalConstraintsContainer : public TypeTree::CompositeNode<T...> {
     using TreeNode = TypeTree::CompositeNode<T...>;
   public:
-    TupleLocalConstraintsContainer(const TreeNode::NodeStorage& storage)
+    TupleLocalConstraintsContainer(const typename TreeNode::NodeStorage& storage)
       : TreeNode{storage}
     {}
 
@@ -370,7 +370,7 @@ auto makeConstraintsContainerNode(const Tree& tree, Path path, Callable callable
 auto makeConstraintsContainer(Concept::Tree auto& tree, auto callable)
 {
   auto tree_ptr = makeConstraintsContainerNode(tree, TypeTree::treePath(), callable);
-  using ConstraintsContainerTree = decltype(tree_ptr)::element_type;
+  using ConstraintsContainerTree = typename decltype(tree_ptr)::element_type;
   static_assert(Concept::Tree<ConstraintsContainerTree>);
   return std::make_shared<ConstraintsContainer<ConstraintsContainerTree>>(tree_ptr);
 }

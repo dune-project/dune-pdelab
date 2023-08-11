@@ -195,24 +195,24 @@ public:
   }
 
   void print() const {
-#if __has_include(<format>)
-    auto hline = [&]{std::cout << std::format("{0:>8}+{1:->{2}}+\n", ' ','-', 8*extent(1));};
+#if __has_include(<format>) && __cpp_lib_format
+    auto hline = [&]{std::cout << fmt::format("{0:>8}+{1:->{2}}+\n", ' ','-', 8*extent(1));};
     hline();
     for (std::size_t row = 0; row != extent(0); ++row) {
       std::cout << ((row == extent(0)/2) ? "(I-α):= |" : "        |");
       for (std::size_t col = 0; col != extent(1); ++col)
-        std::cout << std::format(" {: 1.3f}{}", massWeight(row,col), (col+1 == extent(1)) ? " |\n" : ",");
+        std::cout << fmt::format(" {: 1.3f}{}", massWeight(row,col), (col+1 == extent(1)) ? " |\n" : ",");
     }
     hline();
     for (std::size_t row = 0; row != extent(0); ++row) {
       std::cout << ((row == extent(0)/2) ? "    β:= |" : "        |");
       for (std::size_t col = 0; col != extent(1); ++col)
-        std::cout << std::format(" {: 1.3f}{}", stiffnessWeight(row,col), (col+1 == extent(1)) ? " |\n" : ",");
+        std::cout << fmt::format(" {: 1.3f}{}", stiffnessWeight(row,col), (col+1 == extent(1)) ? " |\n" : ",");
     }
     hline();
     std::cout << "  d^T:= |";
     for (std::size_t col = 0; col != extent(1); ++col)
-      std::cout << std::format(" {: 1.3f}{}", timeWeight(col), (col+1 == extent(1)) ? " |\n" : ",");
+      std::cout << fmt::format(" {: 1.3f}{}", timeWeight(col), (col+1 == extent(1)) ? " |\n" : ",");
     hline();
 #else
     DUNE_THROW(

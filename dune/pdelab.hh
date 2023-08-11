@@ -122,6 +122,7 @@
 #include <dune/pdelab/common/globaldofindex.hh>
 #include <dune/pdelab/common/multiindex.hh>
 #include <dune/pdelab/common/jacobiantocurl.hh>
+#include <dune/pdelab/common/execution.hh>
 #include <dune/pdelab/stationary/linearproblem.hh>
 #include <dune/pdelab/constraints/noconstraints.hh>
 #include <dune/pdelab/constraints/hangingnodemanager.hh>

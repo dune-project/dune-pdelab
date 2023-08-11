@@ -13,6 +13,7 @@ install(FILES algebra.hh
               elementmapper.hh
               entity_cast.hh
               error_condition.hh
+              execution.hh
               exceptions.hh
               for_each.hh
               function.hh

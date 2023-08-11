@@ -13,6 +13,7 @@
 #include <dune/pdelab/pattern/pattern_to_matrix.hh>
 
 #include <dune/pdelab/common/convergence/reason.hh>
+#include <dune/pdelab/common/execution.hh>
 
 #include <dune/pdelab/basis/basis.hh>
 
@@ -423,7 +424,7 @@ TEST(TestRungeKutta, TestRungeKuttaExplicitPDE) {
     solver.apply(z, b, res);
 
     // update current solution with correction
-    Dune::PDELab::axpy(std::execution::par_unseq,x,-1.0,z);
+    Dune::PDELab::axpy(PDELab::Execution::par_unseq,x,-1.0,z);
 
     if (res.converged)
       return ErrorCondition{};
