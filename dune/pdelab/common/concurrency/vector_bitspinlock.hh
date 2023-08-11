@@ -17,7 +17,7 @@ namespace Dune::PDELab::inline Experimental {
  */
 class VectorBitSpinLock
 {
-  using T = u_char;
+  using T = unsigned char;
   static constexpr std::size_t T_BIT =  CHAR_BIT*sizeof(T);
   static constexpr T T_NULL =  T{} ^ T{};
   static_assert(std::atomic<T>::is_always_lock_free);
