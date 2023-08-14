@@ -356,7 +356,6 @@ namespace Dune::PDELab::inline Experimental::Impl {
 
       LocalView(EntityLocalView&& elbasis, const std::shared_ptr<GlobalOrdering>& ordering, EntitySetOrdering& entity_set_ordering, SubSpacePath sub_space_path)
         : EntityLocalView{std::move(elbasis)}
-        , _index_cache(1) // DG-FV branch
         , _ordering{ordering}
         , _entity_set_ordering{entity_set_ordering}
         , _sub_space_path{sub_space_path}
@@ -380,9 +379,6 @@ namespace Dune::PDELab::inline Experimental::Impl {
 
         const auto& entity_set = _entity_set_ordering.entitySet();
         if (not entity_set.contains(entity)) {
-          forEachLeafNode(entityLocalView(), [&](auto& leaf_local_space, auto) {
-            leaf_local_space.indices().resize(0);
-          });
           return;
         }
 
@@ -407,14 +403,14 @@ namespace Dune::PDELab::inline Experimental::Impl {
         //  * unrolling the codim loop allows to have a constexpr codim (countrary to local key's codim)
         //  * access them in a more regular pattern (local kyes don't offer any guarantee)
         //  * lock/unlock sub-entity mutexes
+        assert(_index_cache.empty());
         if (_entity_set_ordering.disjointCodimClosure()) {
           // DG/FV branch
           SizeType gt_index = GlobalGeometryTypeIndex::index(_entity_view->type());
           SizeType entity_index = entity_set.indexSet().index(*_entity_view);
-          _index_cache[0] = {gt_index, entity_index};
+          _index_cache.assign(1, {gt_index, entity_index});
         } else {
           std::fill(begin(_codim_offsets), end(_codim_offsets), 0);
-          _index_cache.clear();
           Dune::Hybrid::forEach(std::make_index_sequence<Element::dimension+1>{}, [&](auto codim) {
             if (codim == 0 or (EntitySetOrdering::mayContainCodim(codim) and _entity_set_ordering.containsCodim(codim))) {
               std::size_t sub_entities = _entity_view->subEntities(codim);
@@ -507,6 +503,7 @@ namespace Dune::PDELab::inline Experimental::Impl {
 
       void unbind() noexcept {
         _entity_view = nullptr;
+        _index_cache.clear();
         forEachLeafNode(entityLocalView(), [](auto& leaf_local_view) {
           leaf_local_view.unbind();
         });
@@ -528,29 +525,27 @@ namespace Dune::PDELab::inline Experimental::Impl {
 
       void lock(const std::vector<std::array<SizeType,2>>& indices) noexcept {
         // spin lock until we adquire all of the mutexes
-        auto [gt_index0, entity_index0] = indices[0];
-        if (_entity_set_ordering.disjointCodimClosure()) {
-          _entity_set_ordering.entityLockHandle(gt_index0,entity_index0).lock();
+        if (_entity_set_ordering.disjointCodimClosure() & (not indices.empty())) {
+          _entity_set_ordering.entityLockHandle(indices[0][0],indices[0][1]).lock();
         } else {
           while (not tryLockCodimClosure(indices)) {
-            _entity_set_ordering.entityLockHandle(gt_index0,entity_index0).wait();
+            // wait on first lock
+            _entity_set_ordering.entityLockHandle(indices[0][0],indices[0][1]).wait();
           }
         }
       }
 
       bool try_lock(const std::vector<std::array<SizeType,2>>& indices) noexcept {
-        if (_entity_set_ordering.disjointCodimClosure()) {
-          auto [gt_index, entity_index] = indices[0];
-          return _entity_set_ordering.entityLockHandle(gt_index,entity_index).try_lock();
+        if (_entity_set_ordering.disjointCodimClosure() & (not indices.empty())) {
+          return _entity_set_ordering.entityLockHandle(indices[0][0],indices[0][1]).try_lock();
         } else {
           return tryLockCodimClosure(indices);
         }
       }
 
       void unlock(const std::vector<std::array<SizeType,2>>& indices) noexcept {
-        if (_entity_set_ordering.disjointCodimClosure()) {
-          auto [gt_index, entity_index] = indices[0];
-          _entity_set_ordering.entityLockHandle(gt_index,entity_index).unlock();
+        if (_entity_set_ordering.disjointCodimClosure() & (not indices.empty())) {
+          _entity_set_ordering.entityLockHandle(indices[0][0],indices[0][1]).unlock();
         } else {
           for (auto [gt_index, entity_index] : indices) {
             _entity_set_ordering.entityLockHandle(gt_index,entity_index).unlock();
