@@ -525,31 +525,19 @@ namespace Dune::PDELab::inline Experimental::Impl {
 
       void lock(const std::vector<std::array<SizeType,2>>& indices) noexcept {
         // spin lock until we adquire all of the mutexes
-        if (_entity_set_ordering.disjointCodimClosure() & (not indices.empty())) {
-          _entity_set_ordering.entityLockHandle(indices[0][0],indices[0][1]).lock();
-        } else {
-          while (not tryLockCodimClosure(indices)) {
-            // wait on first lock
-            _entity_set_ordering.entityLockHandle(indices[0][0],indices[0][1]).wait();
-          }
+        while (not tryLockCodimClosure(indices)) {
+          // wait on first lock (if we are here, we have at least one lock to wait for)
+          _entity_set_ordering.entityLockHandle(indices[0][0],indices[0][1]).wait();
         }
       }
 
       bool try_lock(const std::vector<std::array<SizeType,2>>& indices) noexcept {
-        if (_entity_set_ordering.disjointCodimClosure() & (not indices.empty())) {
-          return _entity_set_ordering.entityLockHandle(indices[0][0],indices[0][1]).try_lock();
-        } else {
-          return tryLockCodimClosure(indices);
-        }
+        return tryLockCodimClosure(indices);
       }
 
       void unlock(const std::vector<std::array<SizeType,2>>& indices) noexcept {
-        if (_entity_set_ordering.disjointCodimClosure() & (not indices.empty())) {
-          _entity_set_ordering.entityLockHandle(indices[0][0],indices[0][1]).unlock();
-        } else {
-          for (auto [gt_index, entity_index] : indices) {
-            _entity_set_ordering.entityLockHandle(gt_index,entity_index).unlock();
-          }
+        for (auto [gt_index, entity_index] : indices) {
+          _entity_set_ordering.entityLockHandle(gt_index,entity_index).unlock();
         }
       }
 
