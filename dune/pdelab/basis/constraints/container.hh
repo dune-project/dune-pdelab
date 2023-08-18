@@ -145,7 +145,6 @@ namespace Dune::PDELab::inline Experimental {
     {}
 
     ConstraintsContainerTree& tree() {
-      assert(not _assembled);
       return *_tree;
     }
 
@@ -265,43 +264,41 @@ namespace Dune::PDELab::inline Experimental {
         constrained |= intersection_constrained | constraints_ops[path].doConstrainVolume();
       });
 
-      _assembled = not constrained;
-      if (_assembled) return;
-
-      for (const auto& entity : elements(basis.entitySet())) {
-        lbasis_in.bind(entity);
-        forEachLeafNode(this->tree(), [&](auto& container_node, auto path){
-          auto& constraints_node = constraints_ops[path];
-          const auto& lbasis_in_node = PDELab::containerEntry(lbasis_in.tree(), path);
-          if (constraints_node.doConstrainVolume())
-            constraints_node.constrainVolume(lbasis_in_node, container_node);
-        });
-        if (intersection_constrained) {
-          // notice that there is double visit, this can be optimized if necessary
-          for (const auto& intersection : intersections(basis.entitySet(), entity)) {
-            if (intersection.neighbor()) {
-              lbasis_out.bind(intersection.outside());
-              forEachLeafNode(this->tree(), [&](auto& container_node, auto path){
-                auto& constraints_node = constraints_ops[path];
-                const auto& lbasis_in_node = PDELab::containerEntry(lbasis_in.tree(), path);
-                const auto& lbasis_out_node = PDELab::containerEntry(lbasis_out.tree(), path);
-                if (constraints_node.doConstrainSkeleton())
-                  constraints_node.constrainSkeleton(intersection, lbasis_in_node, lbasis_out_node, container_node);
-              });
-              lbasis_out.unbind();
-            } else {
-              forEachLeafNode(this->tree(), [&](auto& container_node, auto path){
-                auto& constraints_node = constraints_ops[path];
-                const auto& lbasis_in_node = PDELab::containerEntry(lbasis_in.tree(), path);
-                if (constraints_node.doConstrainBoundary())
-                  constraints_node.constrainBoundary(intersection, lbasis_in_node, container_node);
-              });
+      if (constrained) {
+        for (const auto& entity : elements(basis.entitySet())) {
+          lbasis_in.bind(entity);
+          forEachLeafNode(this->tree(), [&](auto& container_node, auto path){
+            auto& constraints_node = constraints_ops[path];
+            const auto& lbasis_in_node = PDELab::containerEntry(lbasis_in.tree(), path);
+            if (constraints_node.doConstrainVolume())
+              constraints_node.constrainVolume(lbasis_in_node, container_node);
+          });
+          if (intersection_constrained) {
+            // notice that there is double visit, this can be optimized if necessary
+            for (const auto& intersection : intersections(basis.entitySet(), entity)) {
+              if (intersection.neighbor()) {
+                lbasis_out.bind(intersection.outside());
+                forEachLeafNode(this->tree(), [&](auto& container_node, auto path){
+                  auto& constraints_node = constraints_ops[path];
+                  const auto& lbasis_in_node = PDELab::containerEntry(lbasis_in.tree(), path);
+                  const auto& lbasis_out_node = PDELab::containerEntry(lbasis_out.tree(), path);
+                  if (constraints_node.doConstrainSkeleton())
+                    constraints_node.constrainSkeleton(intersection, lbasis_in_node, lbasis_out_node, container_node);
+                });
+                lbasis_out.unbind();
+              } else {
+                forEachLeafNode(this->tree(), [&](auto& container_node, auto path){
+                  auto& constraints_node = constraints_ops[path];
+                  const auto& lbasis_in_node = PDELab::containerEntry(lbasis_in.tree(), path);
+                  if (constraints_node.doConstrainBoundary())
+                    constraints_node.constrainBoundary(intersection, lbasis_in_node, container_node);
+                });
+              }
             }
           }
+          lbasis_in.unbind();
         }
-        lbasis_in.unbind();
       }
-
       this->compress(basis);
     }
 

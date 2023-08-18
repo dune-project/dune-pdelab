@@ -450,6 +450,10 @@ namespace Dune::PDELab::inline Experimental {
       return LocalView{*this};
     }
 
+    [[nodiscard]] const auto& constraints() const {
+      return *_constraints_container;
+    }
+
     [[nodiscard]] LocalConstraints localConstraints() const {
       return _constraints_container->localView(localView().tree(), _sub_basis_path);
     }
