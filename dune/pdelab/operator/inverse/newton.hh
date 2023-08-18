@@ -33,7 +33,7 @@ public:
 
   NewtonOperator() {
     PropertyTree& properties = *this;
-
+    properties["verbosity"] = 1;
     properties["convergence_condition"].documentation =
       "ConvergenceCondition object that controls the termination condition of the newton iteration. "
       "If not present, the parameters 'absolute_tolerance' and 'relative_tolerance' will be added.";
@@ -106,6 +106,7 @@ public:
     auto& dx_inverse = getDerivativeInverse();
     auto& line_search = getLineSearch();
     auto& forward = getForward();
+    const int verbosity = this->template get<int>("verbosity");
 
     // Calculate initial defect
     Range residual = init_residual;
@@ -114,6 +115,10 @@ public:
     RangeField defect = _norm_op(residual);
     std::vector<RangeField> defects{defect};
     TRACE_COUNTER("dune", "Newton::Defect", defect);
+    if (verbosity >= 2)
+      std::cout << "  Initial defect: "
+                << std::setw(12) << std::setprecision(4) << std::scientific
+                << defect << std::endl;
 
     Domain correction = x;
     forEachContainerEntry(std::execution::par_unseq, correction, []<class T>(T& v){v = T{0};});
@@ -144,6 +149,20 @@ public:
       if (error_condition) break;
 
       TRACE_COUNTER("dune", "Newton::Defect", it_timestamp, defect);
+      if (verbosity == 2)
+        std::cout << "  Newton iteration "
+                  << std::setw(2)
+                  << defects.size()
+                  << ".  New defect: "
+                  << std::setw(12) << std::setprecision(4) << std::scientific
+                  << defect
+                  << ".  Reduction (this): "
+                  << std::setw(12) << std::setprecision(4) << std::scientific
+                  << defects.back()/defect
+                  << ".  Reduction (total): "
+                  << std::setw(12) << std::setprecision(4) << std::scientific
+                  << defects.front()/defect
+                  << std::endl;
       defects.push_back(defect);
     }
     dx_inverse["forward"] = nullptr;
