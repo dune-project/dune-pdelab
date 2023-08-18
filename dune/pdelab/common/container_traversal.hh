@@ -6,6 +6,7 @@
 #include <dune/pdelab/common/for_each.hh>
 
 #include <dune/typetree/treepath.hh>
+#include <dune/typetree/traversal.hh>
 
 #include <utility>
 #include <execution>
@@ -43,9 +44,9 @@ forEachContainerEntry(ExcecutionPolicy policy,
   auto invoke = [&multiindex]<class Callable, class Entry>(Callable&& callable, Entry&& entry){
     static_assert(std::invocable<Callable&&, Entry&&, const MultiIndex&> or std::invocable<Callable&&, Entry&&>);
     if constexpr (std::invocable<Callable&&, Entry&&, const MultiIndex&>)
-      std::invoke(std::forward<Callable>(callable), std::forward<Entry>(entry), std::as_const(multiindex));
+      callable(std::forward<Entry>(entry), std::as_const(multiindex));
     else
-      std::invoke(std::forward<Callable>(callable), std::forward<Entry>(entry));
+      callable(std::forward<Entry>(entry));
   };
 
   invoke(std::forward<PreValue>(pre_value), std::forward<Container>(container));
@@ -114,8 +115,8 @@ void forEachContainerEntry(ExcecutionPolicy policy, Container&& container, AtVal
     policy,
     std::forward<Container>(container),
     std::forward<AtValue>(at_value),
-    std::identity{},
-    std::identity{},
+    TypeTree::NoOp{},
+    TypeTree::NoOp{},
     TypeTree::treePath()
   );
 }
@@ -135,8 +136,8 @@ void forEachContainerEntry(Container&& container, AtValue&& at_value) {
     std::execution::seq,
     std::forward<Container>(container),
     std::forward<AtValue>(at_value),
-    std::identity{},
-    std::identity{},
+    TypeTree::NoOp{},
+    TypeTree::NoOp{},
     TypeTree::treePath()
   );
 }

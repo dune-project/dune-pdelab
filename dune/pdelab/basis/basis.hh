@@ -480,7 +480,7 @@ namespace Dune::PDELab::inline Experimental {
         entry.resize(this->size(path));
       };
       auto set_zero = []<class T>(T& v){v = T{0};};
-      forEachContainerEntry(std::execution::par_unseq, container, set_zero, resize, std::identity{}, TypeTree::treePath());
+      forEachContainerEntry(std::execution::par_unseq, container, set_zero, resize, [](auto&&){}, TypeTree::treePath());
       return container;
     }
 

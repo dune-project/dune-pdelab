@@ -6,6 +6,7 @@
 #include <dune/pdelab/common/for_each.hh>
 
 #include <dune/typetree/treepath.hh>
+#include <dune/typetree/traversal.hh>
 
 #include <dune/common/indices.hh>
 
@@ -40,9 +41,9 @@ forEachNode(Node&& node,
             Prefix multiindex)
 {
   if constexpr (std::invocable<LeafCall&&, Node&&, const Prefix&>)
-    std::invoke(std::forward<LeafCall>(leaf_call), std::forward<Node>(node), std::as_const(multiindex));
+    leaf_call(std::forward<Node>(node), std::as_const(multiindex));
   else
-    std::invoke(std::forward<LeafCall>(leaf_call), std::forward<Node>(node));
+    leaf_call(std::forward<Node>(node));
 }
 
 /**
@@ -73,9 +74,9 @@ forEachNode(Node&& node,
 {
   auto invoke = [&multiindex,&node]<class Callable>(Callable&& callable){
     if constexpr (std::invocable<Callable&&, Node&&, const Prefix&>)
-      std::invoke(std::forward<Callable>(callable), std::forward<Node>(node), std::as_const(multiindex));
+      callable(std::forward<Node>(node), std::as_const(multiindex));
     else
-      std::invoke(std::forward<Callable>(callable), std::forward<Node>(node));
+      callable(std::forward<Node>(node));
   };
 
   invoke(std::forward<PreCall>(pre_call));
@@ -110,7 +111,7 @@ forEachNode(Node&& node, Callback&& callback)
     std::forward<Node>(node),
     std::forward<Callback>(callback),
     std::forward<Callback>(callback),
-    std::identity{},
+    TypeTree::NoOp{},
     TypeTree::treePath()
   );
 }
@@ -130,9 +131,9 @@ forEachLeafNode(Node&& node, Callback&& callback)
 {
   Dune::PDELab::forEachNode(
     std::forward<Node>(node),
-    std::identity{},
+    TypeTree::NoOp{},
     std::forward<Callback>(callback),
-    std::identity{},
+    TypeTree::NoOp{},
     TypeTree::treePath()
   );
 }

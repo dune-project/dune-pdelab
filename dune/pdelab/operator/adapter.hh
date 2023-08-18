@@ -27,11 +27,11 @@ public:
   }
 
   virtual ErrorCondition apply(const Domain& domain, Range& range) override {
-    return std::invoke(_capply_op, *this, domain, range);
+    return _capply_op(*this, domain, range);
   }
 
   virtual ErrorCondition apply(Domain& domain, Range& range) override {
-    return std::invoke(_apply_op, *this, domain, range);
+    return _apply_op(*this, domain, range);
   }
 
 private:
@@ -42,7 +42,7 @@ private:
     _apply_op = std::forward<F>(apply_op);
     _capply_op = [&](Operator<Domain,Range>& self, const Domain& domain, Range& range) mutable {
       Range domain_copy = domain;
-      return std::invoke(_apply_op, self, domain_copy, range);
+      return _apply_op(self, domain_copy, range);
     };
   }
 

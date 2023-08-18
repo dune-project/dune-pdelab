@@ -98,8 +98,7 @@ void linearTransformation(
       }
     });
   } else {
-    std::invoke(
-      std::forward<Callable>(callable),
+    callable(
       std::forward<Domain>(domain),
       std::forward<Map>(map),
       std::forward<Range>(range)

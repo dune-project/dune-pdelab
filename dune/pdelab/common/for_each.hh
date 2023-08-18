@@ -47,9 +47,9 @@ constexpr void forEach(std::execution::sequenced_policy, Container&& container, 
   auto invoke = [&at_value]<class Value, class Index>(Value&& value, Index index){
     static_assert(std::invocable<Callable&&, Value&&, Index> || std::invocable<Callable&&, Value&&>);
     if constexpr (std::invocable<Callable&&, Value&&, Index>)
-      std::invoke(std::forward<Callable>(at_value), std::forward<Value>(value), index);
+      at_value(std::forward<Value>(value), index);
     else
-      std::invoke(std::forward<Callable>(at_value), std::forward<Value>(value));
+      at_value(std::forward<Value>(value));
   };
 
   if constexpr (Concept::SparseDynamicRange<UContainer> ) {
@@ -88,9 +88,9 @@ void forEach(std::execution::parallel_policy, Container&& container, Callable&& 
   auto invoke = [&at_value]<class Value, class Index>(Value&& value, Index index){
     static_assert(std::invocable<Callable&&, Value&&, Index> || std::invocable<Callable&&, Value&&>);
     if constexpr (std::invocable<Callable&&, Value&&, Index>)
-      std::invoke(std::forward<Callable>(at_value), std::forward<Value>(value), index);
+      at_value(std::forward<Value>(value), index);
     else
-      std::invoke(std::forward<Callable>(at_value), std::forward<Value>(value));
+      at_value(std::forward<Value>(value));
   };
 
   // forward field vector/matrix to sequential loop
@@ -183,9 +183,9 @@ constexpr void forEach(std::execution::sequenced_policy, Container&& container, 
   auto invoke = [&at_value]<class Value, class Index>(Value&& value, Index index){
     static_assert(std::invocable<Callable&&, Value&&, Index> || std::invocable<Callable&&, Value&&>);
     if constexpr (std::invocable<Callable&&, Value&&, Index>)
-      std::invoke(std::forward<Callable>(at_value), std::forward<Value>(value), index);
+      at_value(std::forward<Value>(value), index);
     else
-      std::invoke(std::forward<Callable>(at_value), std::forward<Value>(value));
+      at_value(std::forward<Value>(value));
   };
 
   if constexpr (Concept::TupleTreeNode<Container>)
