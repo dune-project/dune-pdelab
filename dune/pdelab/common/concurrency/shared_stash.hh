@@ -53,6 +53,8 @@ struct SharedStash
     return _stash.get();
   }
 
+  explicit operator bool() const noexcept { return bool(_stash); }
+
 private:
 
   std::unique_ptr<T> obtain_stash() {
@@ -65,7 +67,7 @@ private:
     if (_data->_stash_queue.empty()) {
       ptr = _data->_factory();
     } else {
-      ptr = move(_data->_stash_queue.back());
+      ptr = std::move(_data->_stash_queue.back());
       _data->_stash_queue.pop();
     }
 #endif
