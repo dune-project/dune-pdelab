@@ -55,7 +55,7 @@ namespace Impl {
         });
         _map.emplace(std::piecewise_construct,
             std::forward_as_tuple(ci),
-            std::forward_as_tuple(translation, move(vec)));
+            std::forward_as_tuple(translation, std::move(vec)));
       } else {
         auto& ltrans = it->second.first;
         if (FloatCmp::ne<Value>(ltrans, translation)) // repeated constraint with different translation
@@ -346,7 +346,7 @@ namespace Impl {
     template<Concept::Tree Tree>
     static auto makeLocalViewNode(const Tree& tree, std::shared_ptr<const AffineConstraintsContainer> container) {
       if constexpr (Concept::LeafTreeNode<Tree>) {
-        return std::make_shared<LeafLocalView>(move(container));
+        return std::make_shared<LeafLocalView>(std::move(container));
       } else { // skeleton finite element case
         static_assert(Concept::VectorTreeNode<Tree> and Concept::LeafTreeNode<typename Tree::ChildType>);
         //! @todo Implement sub entity local view on affine constraints
@@ -382,14 +382,14 @@ namespace Impl {
             _local_translation.emplace_back(val);
             _local_linear.insert(end(_local_linear), begin(vec), end(vec));
             // check if linear constraints are within the local function spaces!
-            [[maybe_unused]] bool cci_is_local = false;
             for (auto [cci, _] : vec) {
+              bool cci_is_local = false;
               for (std::size_t jdof = 0; jdof != lbasis_leaf.size(); ++jdof)
                 cci_is_local |= (cci == lbasis_leaf.index(jdof));
+              // if (lbasis_tree.memoryRegion()) // TODO!
+              if (not cci_is_local)
+                DUNE_THROW(NotImplemented, "Non local constraints do not work with concurrent entity sets yet!");
             }
-            // if (lbasis_tree.memoryRegion()) // TODO!
-            if (not cci_is_local)
-              DUNE_THROW(NotImplemented, "Non local constraints do not work with concurrent entity sets yet!");
           }
         }
         node_offset += lbasis_leaf.size();
