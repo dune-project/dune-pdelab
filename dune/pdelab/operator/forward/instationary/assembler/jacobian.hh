@@ -10,9 +10,8 @@
 #include <dune/pdelab/common/local_container.hh>
 #include <dune/pdelab/common/local_matrix.hh>
 #include <dune/pdelab/common/tree_traversal.hh>
+#include <dune/pdelab/common/for_each_entity.hh>
 #include <dune/pdelab/common/execution.hh>
-
-// #include <dune/pdelab/common/entityset.hh>
 #include <dune/pdelab/common/algebra.hh>
 #include <dune/pdelab/common/container_entry.hh>
 
@@ -176,21 +175,19 @@ private:
       return icoeff.stiffnessWeight(stage, step) * InstationaryTraits<dt_position>::stiffnessFactor(duration);
     };
 
-    const auto is_linear = (not LocalAssembly::isLinear(_stiff_lop) | not LocalAssembly::isLinear(_mass_lop));
+    const auto is_linear = (not LocalAssembly::isLinear(_stiff_lop) || not LocalAssembly::isLinear(_mass_lop));
     const auto& es = _trial.entitySet();
+    const auto& esp = _trial.entitySetPartition();
 
-  //   Assembler::forEachElement(es,
-  //     [ this, &do_stiff, &do_mass, &stages, &steps, &es,
-  //       ltest_in, ltrial_in, ltest_out, ltrial_out,
-  //       llin_in, llin_out,
-  //       ljac_ii, ljac_io, ljac_oi, ljac_oo,
-  //       mlop = _mass_lop, slop = _stiff_lop
-  //     ] (const auto& entity) mutable
-  //   {
-    auto mlop = _mass_lop;
-    auto slop = _stiff_lop;
-    for (auto&& entity : elements(es)) {
-
+    forEachEntity(LocalAssembly::executionPolicy(_stiff_lop), esp,
+      [ this, &do_stiff, &do_mass, &stages, &steps, &es,
+        ltest_in, ltrial_in, ltest_out, ltrial_out,
+        llin_in, llin_out,
+        ljac_ii, ljac_io, ljac_oi, ljac_oo,
+        mlop = _mass_lop, slop = _stiff_lop,
+        is_linear, sub_time_step, mass_weight, stiff_weight
+      ] (const auto& entity) mutable
+    {
       if (LocalAssembly::skipEntity(mlop, entity)) {
         if (not LocalAssembly::skipEntity(slop, entity))
           DUNE_THROW(InvalidStateException, "skip methods should yiled the same result");
@@ -305,8 +302,7 @@ private:
           ljac_ii[stage][step].fetch_add(ltest_in, ltrial_in);
 
       unbind(ltest_in, ltrial_in);
-    }
-  //   });
+    });
   }
 
   JacobianContainer& getJacobianContainer() {

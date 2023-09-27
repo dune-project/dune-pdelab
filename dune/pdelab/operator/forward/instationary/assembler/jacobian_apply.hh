@@ -8,7 +8,7 @@
 
 #include <dune/pdelab/common/local_container.hh>
 #include <dune/pdelab/common/tree_traversal.hh>
-// #include <dune/pdelab/common/entityset.hh>
+#include <dune/pdelab/common/for_each_entity.hh>
 
 #include <dune/pdelab/concepts/basis.hh>
 #include <dune/pdelab/concepts/container.hh>
@@ -167,6 +167,7 @@ private:
     unbind(ltest_in, ltrial_in);
 
     const auto& es = _trial.entitySet();
+    const auto& esp = _trial.entitySetPartition();
 
     // if (_mass_lop.doSkeletonTwoSided() != _stiff_lop.doSkeletonTwoSided()) {
     //   DUNE_THROW(InvalidStateException, "doSkeletonTwoSided methods should yiled the same result");
@@ -184,14 +185,10 @@ private:
       return icoeff.stiffnessWeight(stage, step) * InstationaryTraits<dt_position>::stiffnessFactor(duration);
     };
 
-    const auto is_linear = (not LocalAssembly::isLinear(_stiff_lop) | not LocalAssembly::isLinear(_mass_lop));
+    const auto is_linear = (not LocalAssembly::isLinear(_stiff_lop) || not LocalAssembly::isLinear(_mass_lop));
 
-//     using Assembler::forEachElement;
-//     forEachElement(es, [=, this, mlop = _mass_lop, slop = _stiff_lop](
-//                         const auto& entity) mutable {
-    auto mlop = _mass_lop;
-    auto slop = _stiff_lop;
-    for (auto&& entity : elements(es)) {
+    forEachEntity(LocalAssembly::executionPolicy(_stiff_lop), esp, [=, this, mlop = _mass_lop, slop = _stiff_lop](
+                        const auto& entity) mutable {
 
       if (LocalAssembly::skipEntity(mlop, entity)) {
         if (not LocalAssembly::skipEntity(slop, entity))
@@ -306,9 +303,7 @@ private:
         ljac_apply_in[stage].fetch_add(ltest_in, std::true_type());
 
       unbind(ltest_in, ltrial_in);
-//     });
-    }
-
+    });
   }
 
   const InstationaryCoefficients& getInstationaryCoefficients() const {

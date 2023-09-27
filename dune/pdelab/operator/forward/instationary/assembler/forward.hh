@@ -9,7 +9,7 @@
 
 #include <dune/pdelab/common/local_container.hh>
 #include <dune/pdelab/common/tree_traversal.hh>
-// #include <dune/pdelab/common/entityset.hh>
+#include <dune/pdelab/common/for_each_entity.hh>
 
 #include <dune/pdelab/concepts/basis.hh>
 #include <dune/pdelab/concepts/container.hh>
@@ -165,6 +165,7 @@ private:
     unbind(ltest_in, ltrial_in);
 
     const auto& es = _trial.entitySet();
+    const auto& esp = _trial.entitySetPartition();
 
     auto sub_time_step = [&](std::size_t step) {
       return time + duration * icoeff.timeWeight(step);
@@ -178,10 +179,7 @@ private:
       return icoeff.stiffnessWeight(stage, step) * InstationaryTraits<dt_position>::stiffnessFactor(duration);
     };
 
-    // PDELab::forEachElement(es, [=, this, mlop = _mass_lop, slop = _stiff_lop, &es, &_tableau](const auto& entity) mutable {
-    auto mlop = _mass_lop;
-    auto slop = _stiff_lop;
-    for (auto&& entity : elements(es)) {
+    PDELab::forEachEntity(LocalAssembly::executionPolicy(_stiff_lop), esp, [=, this, mlop = _mass_lop, slop = _stiff_lop, &es](const auto& entity) mutable {
 
       if (LocalAssembly::skipEntity(mlop, entity)) {
         if (not LocalAssembly::skipEntity(slop, entity))
@@ -289,8 +287,7 @@ private:
         lres_in[stage].fetch_add(ltest_in, std::true_type());
 
       unbind(ltest_in, ltrial_in);
-    }
-    // });
+    });
   }
 
   const InstationaryCoefficients& getInstationaryCoefficients() const {
