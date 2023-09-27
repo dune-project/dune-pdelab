@@ -1,9 +1,7 @@
 #ifndef DUNE_PDELAB_BASIS_BASIS_HH
 #define DUNE_PDELAB_BASIS_BASIS_HH
 
-#include <dune/pdelab/concepts/multiindex.hh>
-#include <dune/pdelab/concepts/basis.hh>
-#include <dune/pdelab/concepts/local_basis.hh>
+#include <dune/pdelab/basis/constraints/container.hh>
 
 // #include <dune/pdelab/common/partition/identity.hh>
 #include <dune/pdelab/common/multiindex.hh>
@@ -14,10 +12,18 @@
 #include <dune/pdelab/basis/prebasis/concept.hh>
 #include <dune/pdelab/basis/merging_strategy.hh>
 
-#include <dune/pdelab/basis/constraints/container.hh>
-
 #include <dune/pdelab/basis/prebasis/leaf.hh>
 #include <dune/pdelab/basis/prebasis/composite.hh>
+
+#include <dune/pdelab/common/multiindex.hh>
+#include <dune/pdelab/common/container_entry.hh>
+// #include <dune/pdelab/common/communication/entity_data_handler.hh>
+#include <dune/pdelab/common/partition/identity.hh>
+
+#include <dune/pdelab/concepts/multiindex.hh>
+#include <dune/pdelab/concepts/basis.hh>
+#include <dune/pdelab/concepts/local_basis.hh>
+#include <dune/pdelab/concepts/entityset_partition.hh>
 
 #include <dune/grid/common/mcmgmapper.hh>
 
@@ -31,9 +37,9 @@
 
 namespace Dune::PDELab::inline Experimental {
 
-  template<Dune::Concept::GridView ES, Concept::Impl::PreBasisTree PB, Concept::FixedSizeMultiIndex SubBasisPath = TypeTree::HybridTreePath<> >
+  template<Dune::PDELab::Concept::EntitySetPartition ESP, Concept::Impl::PreBasisTree PB, Concept::FixedSizeMultiIndex SubBasisPath = TypeTree::HybridTreePath<> >
   class Basis {
-    // We need some types sub-basis independent so that we can shared them between templated sub-basiss
+    // We need some types sub-basis independent so that we can shared them between templated sub-basis
     using Ordering = std::decay_t<decltype(*std::declval<PB>().makeOrdering())>;
     using LocalViewTree = std::decay_t<decltype(*std::declval<Ordering>().makeLocalView(std::shared_ptr<Ordering>{}, TypeTree::treePath(), SubBasisPath{}))>;
     using LocalIndexSetTree = std::decay_t<decltype(*std::declval<Ordering>().makeLocalIndexSet(std::shared_ptr<Ordering>{}, TypeTree::treePath(), SubBasisPath{}))>;
@@ -60,35 +66,22 @@ namespace Dune::PDELab::inline Experimental {
     using Container = std::decay_t<decltype(Ordering::template makeVectorContainer<Backend>())>;
 
     using size_type = std::size_t;
-    // using EntitySetPartition = ESP;
-    using EntitySet = ES;
+    using EntitySetPartition = ESP;
+    using EntitySet = typename EntitySetPartition::EntitySet;
     using MultiIndex = Dune::PDELab::MultiIndex<size_type,ContainerDepth>;
     using SizePrefix = Dune::PDELab::MultiIndex<size_type,ContainerDepth>;
     using PreBasis = PB;
     using LocalConstraints = decltype(std::declval<RootConstraintsContainer>().localView(std::declval<LocalViewTree>(),SubBasisPath{}));
 
-    Basis(const EntitySet& entity_set, const PreBasis& pre_basis)
+    Basis(const EntitySetPartition& entity_set_partitioner, const PreBasis& pre_basis)
       : _pre_basis{pre_basis}
-      , _entity_set{entity_set}
+      , _entity_set_partition{entity_set_partitioner}
       , _ordering{_pre_basis.makeOrdering()}
       , _conforming_local_index_set{ std::make_shared<bool>(false) }
       , _sub_basis_path{TypeTree::treePath()}
     {
-      update(_entity_set);
+      update(entity_set_partitioner);
     }
-
-    template<Dune::Concept::GridView _EntitySet, Concept::Impl::PreBasisTree _PreBasis, Concept::FixedSizeMultiIndex _SubBasisPath>
-    friend class Basis;
-
-    template<class... Args>
-    Basis(const EntitySet& entity_set, const Basis<Args...>& other_basis, SubBasisPath sub_basis_path)
-      : _pre_basis{other_basis._pre_basis}
-      , _entity_set{entity_set}
-      , _ordering{other_basis._ordering}
-      , _constraints_container{other_basis._constraints_container}
-      , _conforming_local_index_set{other_basis._conforming_local_index_set}
-      , _sub_basis_path{sub_basis_path}
-    {}
 
     Basis(const Basis&) = default;
     Basis(Basis&&) = default;
@@ -97,6 +90,20 @@ namespace Dune::PDELab::inline Experimental {
     Basis& operator=(Basis&&) = default;
 
   private:
+
+    template<Dune::PDELab::Concept::EntitySetPartition _ES, Concept::Impl::PreBasisTree _PB, Concept::FixedSizeMultiIndex _SubBasisPath >
+    friend class Basis;
+
+    template<class... Args>
+    Basis(const EntitySetPartition& entity_set_partitioner, const Basis<Args...>& other_basis, SubBasisPath sub_basis_path)
+      : _pre_basis{other_basis._pre_basis}
+      , _entity_set_partition{entity_set_partitioner}
+      , _ordering{other_basis._ordering}
+      , _constraints_container{other_basis._constraints_container}
+      , _conforming_local_index_set{other_basis._conforming_local_index_set}
+      , _sub_basis_path{sub_basis_path}
+    {}
+
     template<class LocalTree>
     struct LocalIndexSetBase {
       using size_type = std::size_t;
@@ -134,7 +141,7 @@ namespace Dune::PDELab::inline Experimental {
         if constexpr (DUNE_PDELAB_ENABLE_INDEX_ON_ROOT_NODE)
           _indices_view = _indices.get();
         _ltree_view = _ltree_storage.get();
-        // _mem_region = _basis.entitySetPartition().memoryRegion(element);
+        _partition_region = _basis.entitySetPartition().region(element);
       }
 
       void unbind() {
@@ -194,20 +201,29 @@ namespace Dune::PDELab::inline Experimental {
         return *_ltree_view;
       }
 
-      // [[nodiscard]] std::convertible_to<MemoryRegion> auto memoryRegion() const noexcept {
-      //   return _mem_region; //TODO!!
-      // }
+      [[nodiscard]] std::convertible_to<EntitySetPartitioner::Region> auto partitionRegion() const noexcept {
+        if constexpr (EntitySetPartition::isRegionAlwaysUnique())
+          return EntitySetPartitioner::unique_region;
+        else
+          return _partition_region;
+      }
 
+      template<std::same_as<EntitySetPartition> P = EntitySetPartition>
+      requires (not P::isRegionAlwaysUnique())
       void lock() noexcept {
         assert(_ltree_view);
         _ltree_view->lock();
       }
 
+      template<std::same_as<EntitySetPartition> P = EntitySetPartition>
+      requires (not P::isRegionAlwaysUnique())
       [[nodiscard]] bool try_lock() noexcept {
         assert(_ltree_view);
         return _ltree_view->try_lock();
       }
 
+      template<std::same_as<EntitySetPartition> P = EntitySetPartition>
+      requires (not P::isRegionAlwaysUnique())
       void unlock() noexcept {
         assert(_ltree_view);
         _ltree_view->unlock();
@@ -222,7 +238,7 @@ namespace Dune::PDELab::inline Experimental {
           other._ltree_view = _ltree_view;
           other._indices_view = _indices_view;
           other._size = _size;
-          // other._mem_region = _mem_region;
+          other._partition_region = _partition_region;
         } else
           other.bind(element);
       }
@@ -243,7 +259,7 @@ namespace Dune::PDELab::inline Experimental {
       LocalTree * _ltree_view = nullptr;
       std::unique_ptr<MultiIndex[]> _indices;
       MultiIndex const * _indices_view = nullptr;
-      // MemoryRegion _mem_region;
+      EntitySetPartitioner::Region _partition_region;
     };
 
   public:
@@ -369,12 +385,12 @@ namespace Dune::PDELab::inline Experimental {
       return PDELab::containerEntry(*_ordering, _sub_basis_path).dimension();
     }
 
-//     [[nodiscard]] const EntitySetPartition& entitySetPartition() const noexcept {
-//       return _entity_set;
-//     }
+    [[nodiscard]] const EntitySetPartition& entitySetPartition() const noexcept {
+      return _entity_set_partition;
+    }
 
     [[nodiscard]] EntitySet entitySet() const noexcept {
-      return _entity_set;
+      return _entity_set_partition.entitySet();
     }
 
 
@@ -391,11 +407,15 @@ namespace Dune::PDELab::inline Experimental {
       return PDELab::containerEntry(_pre_basis, _sub_basis_path).degree();
     }
 
+    template<class = void>
+    void update(const EntitySet& es) {
+      DUNE_THROW(NotImplemented, "");
+    }
 
     template<class = void>
-    void update(const EntitySet& entity_set) {
+    void update(const EntitySetPartition& entity_set_partition) {
       static_assert(SubBasisPath::size() == 0, "Update of function basiss only be called on root basis");
-      _entity_set = entity_set;
+      _entity_set_partition = entity_set_partition;
       _ordering->update(); // TODO: how to inform entity ordering about updated multidomaingrid?
 
       _constraints_container = makeConstraintsContainer(_pre_basis, ConstraintsContainerGenerator{});
@@ -492,7 +512,7 @@ namespace Dune::PDELab::inline Experimental {
     [[nodiscard]] friend bool operator==(const Basis& lhs, const Basis& rhs) noexcept {
       // // entity sets may be equally comparable
       // if constexpr (std::equality_comparable<EntitySetPartition>) {
-      //   if (lhs._entity_set != rhs._entity_set)
+      //   if (lhs._entity_set_partition != rhs._entity_set_partition)
       //     return false;
       // }
 
@@ -510,14 +530,19 @@ namespace Dune::PDELab::inline Experimental {
       return !(lhs == rhs);
     }
 
-    template<Dune::Concept::GridView OtherES>
-    [[nodiscard]] auto subSpace(const OtherES& es, Concept::FixedSizeMultiIndex auto sub_basis_path) const {
+    template<Dune::PDELab::Concept::EntitySetPartition OtherESP>
+    [[nodiscard]] auto subSpace(const OtherESP& esp, Concept::FixedSizeMultiIndex auto sub_basis_path) const {
       auto joined_sub_basis_path = join(this->_sub_basis_path, sub_basis_path);
       using JoinedSubBasisPath = decltype(joined_sub_basis_path);
       static_assert(requires {
         { PDELab::containerEntry(_pre_basis, joined_sub_basis_path).name() } -> std::convertible_to<std::string_view>; },
         "Child Pre-Basis node for the requested sub basis does not exist");
-      return Basis<OtherES, PreBasis, JoinedSubBasisPath>{es, *this, joined_sub_basis_path};
+      return Basis<OtherESP, PreBasis, JoinedSubBasisPath>{esp, *this, joined_sub_basis_path};
+    }
+
+    template<Dune::Concept::GridView OtherES>
+    [[nodiscard]] auto subSpace(const OtherES& es, Concept::FixedSizeMultiIndex auto sub_basis_path) const {
+      return subSpace(EntitySetPartitioner::Identity{es}, sub_basis_path);
     }
 
     [[nodiscard]] auto subSpace(Concept::FixedSizeMultiIndex auto sub_basis_path) const {
@@ -525,23 +550,28 @@ namespace Dune::PDELab::inline Experimental {
       if constexpr (requires { {containerEntry(_pre_basis, joined_sub_basis_path).mergingStrategy().entitySet() }; } )
         return this->subSpace(containerEntry(_pre_basis, joined_sub_basis_path).mergingStrategy().entitySet(), sub_basis_path);
       else
-        return this->subSpace(this->entitySet(), sub_basis_path);
+        return this->subSpace(this->entitySetPartition(), sub_basis_path);
     }
 
   private:
 
     PreBasis _pre_basis;
-    EntitySet _entity_set;
+    EntitySetPartition _entity_set_partition;
     std::shared_ptr<Ordering> _ordering;
     std::shared_ptr<RootConstraintsContainer> _constraints_container;
     std::shared_ptr<bool> _conforming_local_index_set;
     SubBasisPath _sub_basis_path;
   };
 
-  template<Concept::Impl::PreBasisTree PreBasis, Dune::Concept::GridView EntitySet>
-  [[nodiscard]] /*Concept::Basis*/ auto makeBasis(const EntitySet& entity_set, const PreBasis& pre_basis)
+
+  [[nodiscard]] Concept::Basis auto makeBasis(const Concept::EntitySetPartition auto& entity_set_partition, const Concept::Impl::PreBasisTree auto& pre_basis)
   {
-    return Basis{entity_set, pre_basis};
+    return Basis{entity_set_partition, pre_basis};
+  }
+
+  [[nodiscard]] Concept::Basis auto makeBasis(const Dune::Concept::GridView auto& entity_set, const Concept::Impl::PreBasisTree auto& pre_basis)
+  {
+    return makeBasis(EntitySetPartitioner::Identity{entity_set}, pre_basis);
   }
 
 } // namespace Dune::PDELab::inline Experimental

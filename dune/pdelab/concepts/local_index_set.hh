@@ -6,7 +6,7 @@
 #include <dune/pdelab/concepts/lockable.hh>
 
 #include <dune/pdelab/common/tree_traversal.hh>
-// #include <dune/pdelab/common/concurrency/memory_region.hh>
+#include <dune/pdelab/common/partition/region.hh>
 
 #include <concepts>
 
@@ -37,7 +37,7 @@ namespace Dune::PDELab::inline Experimental::Concept {
     { lindex_set.size() }           -> std::convertible_to<typename LIS::size_type>;
     { lindex_set.maxSize() }        -> std::convertible_to<typename LIS::size_type>;
     { lindex_set.conforming() }     -> std::convertible_to<bool>;
-    // { lindex_set.memoryRegion() }   -> std::convertible_to<MemoryRegion>;
+    { lindex_set.partitionRegion() }-> std::convertible_to<EntitySetPartitioner::Region>;
     { lindex_set.tree() }           -> std::convertible_to<const typename LIS::Tree&>;
     { lindex_set.index(dof)  }      -> std::convertible_to<typename LIS::MultiIndex>;
     { lindex_set.globalBasis() }    -> std::convertible_to<const typename LIS::GlobalBasis&>;
