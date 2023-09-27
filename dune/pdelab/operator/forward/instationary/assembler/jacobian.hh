@@ -203,7 +203,7 @@ private:
         for (std::size_t step = 0; step != steps; ++step)
           llin_in[step].load(ltrial_in);
 
-      if (LocalAssembly::doVolume(slop) | LocalAssembly::doVolume(mlop)) {
+      if (LocalAssembly::doVolume(slop) || LocalAssembly::doVolume(mlop)) {
         for (std::size_t step = 0; step != steps; ++step) {
           TimeQuantity tp = sub_time_step(step);
           for (std::size_t stage = 0; stage != stages; ++stage) {
@@ -220,8 +220,8 @@ private:
         }
       }
 
-      if (  LocalAssembly::doSkeleton(slop) | LocalAssembly::doBoundary(slop)
-          | LocalAssembly::doSkeleton(mlop) | LocalAssembly::doBoundary(mlop)) {
+      if (  LocalAssembly::doSkeleton(slop) || LocalAssembly::doBoundary(slop)
+          || LocalAssembly::doSkeleton(mlop) || LocalAssembly::doBoundary(mlop)) {
 
         auto id_in = _mapper.index(entity);
 
@@ -231,7 +231,7 @@ private:
               DUNE_THROW(InvalidStateException, "skip methods should yiled the same result");
             continue;
           }
-          if (is.neighbor() and (LocalAssembly::doSkeleton(slop) | LocalAssembly::doSkeleton(mlop))) { // interior and periodic cases
+          if (is.neighbor() and (LocalAssembly::doSkeleton(slop) || LocalAssembly::doSkeleton(mlop))) { // interior and periodic cases
 
             const auto& entity_out = is.outside();
             auto id_out = _mapper.index(entity_out);
@@ -280,7 +280,7 @@ private:
               }
             }
             unbind(ltest_out, ltrial_out);
-          } else if (is.boundary() & (LocalAssembly::doBoundary(slop) | LocalAssembly::doBoundary(mlop))) {
+          } else if (is.boundary() && (LocalAssembly::doBoundary(slop) || LocalAssembly::doBoundary(mlop))) {
             for (std::size_t stage = 0; stage != stages; ++stage) {
               for (std::size_t step = 0; step != steps; ++step) {
                 TimeQuantity tp = sub_time_step(step);

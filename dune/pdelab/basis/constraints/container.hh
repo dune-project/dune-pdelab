@@ -260,8 +260,8 @@ namespace Dune::PDELab::inline Experimental {
       bool intersection_constrained = false;
       this->clear();
       forEachLeafNode(this->tree(), [&](const auto& container_node, auto path){
-        intersection_constrained |= constraints_ops[path].doConstrainSkeleton() | constraints_ops[path].doConstrainBoundary();
-        constrained |= intersection_constrained | constraints_ops[path].doConstrainVolume();
+        intersection_constrained |= constraints_ops[path].doConstrainSkeleton() || constraints_ops[path].doConstrainBoundary();
+        constrained |= intersection_constrained || constraints_ops[path].doConstrainVolume();
       });
 
       if (constrained) {

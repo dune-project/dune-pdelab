@@ -67,7 +67,7 @@ void basisToPattern(LocalOperator lop, Pattern& pattern) {
     }
 
 
-    if (LocalAssembly::doSkeleton(lop) | LocalAssembly::doBoundary(lop)) {
+    if (LocalAssembly::doSkeleton(lop) || LocalAssembly::doBoundary(lop)) {
 
       auto id_in = _mapper.index(entity);
 

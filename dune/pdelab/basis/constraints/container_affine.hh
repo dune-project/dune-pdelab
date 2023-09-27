@@ -198,10 +198,10 @@ namespace Impl {
 
 
     template<class T>
-    class Hash;
+    struct Hash;
 
     template<class... T>
-    class Hash<TypeTree::HybridTreePath<T...>> {
+    struct Hash<TypeTree::HybridTreePath<T...>> {
 
     public:
 
@@ -399,7 +399,7 @@ namespace Impl {
               bool cci_is_local = false;
               for (std::size_t jdof = 0; jdof != lbasis_leaf.size(); ++jdof)
                 cci_is_local |= (cci == lbasis_leaf.index(jdof));
-              // if (lbasis_tree.memoryRegion()) // TODO!
+              // if (lbasis_tree.partitionRegion()) // TODO: get this somehow else as this is not available in leaf nodes
               if (not cci_is_local)
                 DUNE_THROW(NotImplemented, "Non local constraints do not work with concurrent entity sets yet!");
             }
