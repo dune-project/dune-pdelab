@@ -43,7 +43,9 @@ struct SharedStash
     _stash = obtain_stash();
   }
 
-  ~SharedStash() { release_stash(std::move(_stash)); }
+  SharedStash(SharedStash&&) = default;
+
+  ~SharedStash() { release_stash(); }
 
   T const * operator->() const {
     assert(_stash);
@@ -69,18 +71,20 @@ private:
     if (_data->_stash_queue.empty()) {
       ptr = _data->_factory();
     } else {
-      ptr = std::move(_data->_stash_queue.back());
+      ptr = std::move(_data->_stash_queue.front());
       _data->_stash_queue.pop();
     }
 #endif
     return ptr;
   }
 
-  void release_stash(std::unique_ptr<T> ptr) noexcept {
+  void release_stash() noexcept {
+    if(_stash) {
 #if !HAVE_TBB
-    auto guard = std::unique_lock{_data->_mutex};
+      auto guard = std::unique_lock{_data->_mutex};
 #endif
-    _data->_stash_queue.push(std::move(ptr));
+      _data->_stash_queue.push(std::move(_stash));
+    }
   }
 
   std::shared_ptr<Data> _data;
