@@ -11,6 +11,7 @@
 #include <dune/typetree/treecontainer.hh>
 
 #include <functional>
+#include <mutex>
 #include <utility>
 #include <vector>
 
@@ -108,47 +109,55 @@ public:
     _lcontainer[test_node.path()][trial_node.path()][trial_node.size()*test_dof + trial_dof] += val;
   }
 
-  void fetch_add(Concept::LocalBasis auto& ltest, const Concept::LocalBasis auto& ltrial) {
+  template<Concept::LocalBasis LocalBasisTest, Concept::LocalBasis LocalBasisTrial>
+  void fetch_add(LocalBasisTest& ltest, const LocalBasisTrial& ltrial) {
     _ltest_constraints.bind(ltest.element());
     _ltrial_constraints.bind(ltrial.element());
 
-    if constexpr (Concept::Lockable<typename TestBasis::LocalView>)
-      ltest.lock();
-
-    forEachLeafNode(ltest.tree(), [&](const auto& ltest_node, auto test_path) {
-      const auto& ltest_constrain = containerEntry(_ltest_constraints.tree(), test_path);
-      for (std::size_t test_dof = 0; test_dof != ltest_node.size(); ++test_dof) {
-        if (ltest_constrain.isConstrained(test_dof)) {
-          if (ltest_constrain.linearCoefficients(test_dof).empty()) {
-            // Dirichlet constraint case:
-            // Technically, we need to set 1. on the trial DOF corresponding to the test DOF.
-            // However, note that trees may be different (e.g. operator splitting), how to constrain the right space?
-            // TODO the following is only valid if the trial tree is the same as the test tree
-            // the problem is that we don't know how to identify the "diagonal" entry!
-            const auto& ltrial_node = containerEntry(ltrial.tree(), test_path);
-            const auto& ltrial_constrain = containerEntry(_ltrial_constraints.tree(), test_path);
-            assert(ltrial_node.size() == ltest_node.size());
-            assert(ltrial_constrain.isConstrained(test_dof));
-            assert(ltrial_constrain.linearCoefficients(test_dof).empty());
-            localContainerEntry(_container.get(), ltest_node, test_dof, ltrial_node, test_dof) = 1.;
-          } else {
-            DUNE_THROW(NotImplemented, "Hanging nodes not implemented yet");
-          }
+    {
+      auto scope_guard = [&](){
+        if constexpr (Concept::Lockable<LocalBasisTest>) {
+          if (ltest.partitionRegion() == EntitySetPartitioner::shared_region)
+            return std::unique_lock{ltest};
+          else
+            return std::unique_lock{ltest, std::defer_lock};
         } else {
-          forEachLeafNode(ltrial.tree(), [&](const auto& ltrial_node, auto trial_path) {
-            for (std::size_t trial_dof = 0; trial_dof != ltrial_node.size(); ++trial_dof) {
-              const auto& val = _lcontainer[ltest_node.path()][ltrial_node.path()][ltrial_node.size()*test_dof + trial_dof];
-              using value_type = std::remove_cvref_t<decltype(val)>;
-              if (val != value_type{0.})
-                localContainerEntry(_container.get(), ltest_node, test_dof, ltrial_node, trial_dof) += val;
-            }
-          });
+          return nullptr;
         }
-      }
-    });
+      }();
 
-    if constexpr (Concept::Lockable<typename TestBasis::LocalView>)
-      ltest.unlock();
+      forEachLeafNode(ltest.tree(), [&](const auto& ltest_node, auto test_path) {
+        const auto& ltest_constrain = containerEntry(_ltest_constraints.tree(), test_path);
+        for (std::size_t test_dof = 0; test_dof != ltest_node.size(); ++test_dof) {
+          if (ltest_constrain.isConstrained(test_dof)) {
+            if (ltest_constrain.linearCoefficients(test_dof).empty()) {
+              // Dirichlet constraint case:
+              // Technically, we need to set 1. on the trial DOF corresponding to the test DOF.
+              // However, note that trees may be different (e.g. operator splitting), how to constrain the right space?
+              // TODO the following is only valid if the trial tree is the same as the test tree
+              // the problem is that we don't know how to identify the "diagonal" entry!
+              const auto& ltrial_node = containerEntry(ltrial.tree(), test_path);
+              const auto& ltrial_constrain = containerEntry(_ltrial_constraints.tree(), test_path);
+              assert(ltrial_node.size() == ltest_node.size());
+              assert(ltrial_constrain.isConstrained(test_dof));
+              assert(ltrial_constrain.linearCoefficients(test_dof).empty());
+              localContainerEntry(_container.get(), ltest_node, test_dof, ltrial_node, test_dof) = 1.;
+            } else {
+              DUNE_THROW(NotImplemented, "Hanging nodes not implemented yet");
+            }
+          } else {
+            forEachLeafNode(ltrial.tree(), [&](const auto& ltrial_node, auto trial_path) {
+              for (std::size_t trial_dof = 0; trial_dof != ltrial_node.size(); ++trial_dof) {
+                const auto& val = _lcontainer[ltest_node.path()][ltrial_node.path()][ltrial_node.size()*test_dof + trial_dof];
+                using value_type = std::remove_cvref_t<decltype(val)>;
+                if (val != value_type{0.})
+                  localContainerEntry(_container.get(), ltest_node, test_dof, ltrial_node, trial_dof) += val;
+              }
+            });
+          }
+        }
+      });
+    }
 
     _ltest_constraints.unbind();
     _ltrial_constraints.unbind();

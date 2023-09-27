@@ -248,9 +248,9 @@ private:
             if (not is_correction)
               containerEntry(_container.get(), lspace_node.index(dof)) = lconstraints_node.translationValue(dof);
             const auto& linear_coeff = lconstraints_node.linearCoefficients(dof);
-            // if (not linear_coeff.empty() and lspace.memoryRegion() == MemoryRegion::Shared) [[unlikely]]
-            //   DUNE_THROW(NotImplemented, "The concurrency model for non correction methods with generic affine constraints is missing. "
-            //                               "Consider using a local space without linear constraints or a single threaded assembly.");
+            if (not linear_coeff.empty() and lspace.partitionRegion() == EntitySetPartitioner::shared_region)
+              DUNE_THROW(NotImplemented, "The concurrency model for non correction methods with generic affine constraints is missing. "
+                                          "Consider using a local space without linear constraints or a single threaded assembly.");
             for (auto [ci, weight] : linear_coeff) {
               containerEntry(_container.get(), ci) += weight * data_ptr[dof];
             }
@@ -262,15 +262,18 @@ private:
     };
 
     if constexpr (Concept::BasicLockable<LocalBasis>) {
-      std::optional<std::scoped_lock<LocalBasis>> lck;
-      // if (lspace.memoryRegion() == MemoryRegion::Shared) [[unlikely]] lck.emplace(lspace);
+      auto scope_guard = [&](){
+        if (lspace.partitionRegion() == EntitySetPartitioner::shared_region)
+          return std::unique_lock{lspace};
+        else
+          return std::unique_lock{lspace, std::defer_lock};
+      }();
       forEachLeafNode(lspace.tree(), for_each_entry(fapply));
-    // } else if (lspace.memoryRegion() == MemoryRegion::Shared) {
-    } else
+    } else if (lspace.partitionRegion() == EntitySetPartitioner::shared_region) {
       forEachLeafNode(lspace.tree(), for_each_entry(fapply_atomic));
-    // } else {
-      // forEachLeafNode(lspace.tree(), for_each_entry(fapply));
-    // }
+    } else {
+      forEachLeafNode(lspace.tree(), for_each_entry(fapply));
+    }
 
     _lconstraints.unbind();
   }
