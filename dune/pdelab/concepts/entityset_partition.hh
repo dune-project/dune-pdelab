@@ -1,6 +1,8 @@
 #ifndef DUNE_PDELAB_CONCEPT_ENTITY_SET_PARTITION_HH
 #define DUNE_PDELAB_CONCEPT_ENTITY_SET_PARTITION_HH
 
+#include <dune/pdelab/common/partition/region.hh>
+
 #include <dune/grid/concepts/entity.hh>
 #include <dune/grid/concepts/gridview.hh>
 
@@ -31,17 +33,31 @@ namespace Dune::PDELab::inline Experimental::Concept {
  */
 template<class ESP>
 concept EntitySetPartition = requires(const ESP partition, const typename ESP::Entity& entity) {
+
   // holds specific kind of entities (codimension is fixed)
   requires Dune::Concept::Entity<typename ESP::Entity>;
-  { partition.isHalo(entity) }   -> std::convertible_to<bool>;
+
+  // says if an entity is in the unique/shared region
+  { partition.region(entity) } -> std::convertible_to<EntitySetPartitioner::Region>;
+
+  // true if region is Unique for every entity
+  { ESP::isRegionAlwaysUnique() } -> std::convertible_to<bool>;
+  // max number of labels in all partitions
+  { ESP::maxLabels() } -> std::convertible_to<std::size_t>;
+  // max number of patches in all labels
+  { ESP::maxPatches() } -> std::convertible_to<std::size_t>;
+  // max number of entities in all entities
+  { ESP::maxEntities() } -> std::convertible_to<std::size_t>;
 
   // partition holds the (unpartitioned) entity set
   requires Dune::Concept::GridView<typename ESP::EntitySet>;
   { partition.entitySet() }      -> std::convertible_to<typename ESP::EntitySet>;
 
+  { partition.range() }          -> std::convertible_to<const typename ESP::PartitionSet&>;
+
   // range over labels in the partition
-  requires std::ranges::range<ESP>;
-  requires std::convertible_to<std::ranges::range_value_t<ESP>, const typename ESP::LabelSet&>;
+  requires std::ranges::range<typename ESP::PartitionSet>;
+  requires std::convertible_to<std::ranges::range_value_t<typename ESP::PartitionSet>, const typename ESP::LabelSet&>;
 
   // range over patches in the label
   requires std::ranges::range<typename ESP::LabelSet>;

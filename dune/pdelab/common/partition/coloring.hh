@@ -9,7 +9,7 @@
 #include <set>
 #include <vector>
 
-namespace Dune::PDELab::inline Experimental::EntitySetPartition::Impl {
+namespace Dune::PDELab::inline Experimental::EntitySetPartitioner::Impl {
 
 /**
  * @brief Adapts a partition with one label set into a colored partition
@@ -20,10 +20,10 @@ namespace Dune::PDELab::inline Experimental::EntitySetPartition::Impl {
  * @tparam BasePartition  An entity set partition with one label set
  */
 template<class BasePartition>
-class ColoringAdaptor : public ColoredOverlapMixin {
+class ColoringAdaptor : public ColoredHaloMixin {
 public:
   //! Uderlying grid view
-  using GridView = typename BasePartition::GridView;
+  using EntitySet = typename BasePartition::EntitySet;
   //! Entity being partitioned
   using Entity = typename BasePartition::Entity;
   //! Range of entities grouped by a patch
@@ -37,7 +37,7 @@ protected:
   void update(BasePartition&& base, std::size_t halo) {
     // pre-condition: there is only one label on the base partition
     // post-condition: patches in the same color do not have entities in their halo
-   Dune::MultipleCodimMultipleGeomTypeMapper<GridView> mapper{base.gridView(), [](GeometryType gt, int dimgrid) { return true; }};
+   Dune::MultipleCodimMultipleGeomTypeMapper<EntitySet> mapper{base.entitySet(), [](GeometryType gt, int dimgrid) { return true; }};
 
     std::size_t no_id = std::numeric_limits<std::size_t>::max();
     // assign patch id to each entity
@@ -74,7 +74,7 @@ protected:
     add_link = [&](const Entity& entity_in, const Entity& entity_out, std::size_t current_halo) {
       add_entity_link(entity_in, entity_out);
       if ((current_halo--) != 0)
-        for (const auto& intersection : intersections(base.gridView(), entity_out))
+        for (const auto& intersection : intersections(base.entitySet(), entity_out))
           if (intersection.neighbor())
             add_link(entity_in, intersection.outside(), current_halo);
     };
@@ -181,23 +181,23 @@ public:
  * @param halo            Distance another entity in the same label set is considered connected
  */
   explicit ColoringAdaptor(BasePartition&& base_partition, std::size_t halo)
-    : _grid_view{base_partition.gridView()}
+    : _entity_set{base_partition.entitySet()}
     , _partition_set{std::make_shared<PartitionSet>()}
   {
     update(std::move(base_partition), halo);
   }
 
   //! Uderlying grid view
-  [[nodiscard]] GridView gridView() const { return _grid_view; }
+  [[nodiscard]] EntitySet entitySet() const { return _entity_set; }
 
   //! Range of the partition set
   [[nodiscard]] const PartitionSet& range() const noexcept { return *_partition_set; }
 
 private:
-  GridView _grid_view;
+  EntitySet _entity_set;
   std::shared_ptr<PartitionSet> _partition_set;
 };
 
-} // namespace Dune::PDELab::EntitySetPartition::Impl
+} // namespace Dune::PDELab::EntitySetPartitioner::Impl
 
 #endif // DUNE_PDELAB_COMMON_PARTITION_COLORING_HH

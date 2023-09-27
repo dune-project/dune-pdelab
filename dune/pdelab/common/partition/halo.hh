@@ -3,7 +3,7 @@
 
 
 #include <dune/pdelab/concepts/entityset_partition.hh>
-// #include <dune/pdelab/common/trace.hh>
+#include <dune/pdelab/common/trace.hh>
 
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/concepts/gridview.hh>
@@ -17,7 +17,7 @@
 #include <execution>
 
 // splits a grid view into several entity sets grouped by color
-namespace Dune::PDELab::inline Experimental::EntitySetPartition::Impl {
+namespace Dune::PDELab::inline Experimental::EntitySetPartitioner::Impl {
 
 /**
  * @brief Colored halo mixin
@@ -31,20 +31,34 @@ struct ColoredHaloMixin {
    * @param entity   The entity to test
    * @return std::false_type
    */
-  constexpr static auto isHalo(auto&& entity) { return std::false_type(); }
+  constexpr static Region region(auto&& entity) { return unique_region; }
+
+  constexpr static auto isRegionAlwaysUnique() { return std::true_type(); }
+
+  [[nodiscard]] static auto maxLabels() {
+    return std::numeric_limits<std::size_t>::max();
+  }
+
+  [[nodiscard]] static auto maxPatches() {
+    return std::numeric_limits<std::size_t>::max();
+  }
+
+  [[nodiscard]] static auto maxEntities() {
+    return std::numeric_limits<std::size_t>::max();
+  }
 };
 
 /**
  * @brief Uncolored halo mixin
  * @details Calculates and stores the overlap of the patches wrt halo
- * @see EntitySetPartition
+ * @see EntitySetPartitioner
  */
 template<Dune::Concept::GridView GV>
 class UncoloredHaloMixin {
 public:
 
-  explicit UncoloredHaloMixin(const GV& grid_view)
-    : _mapper{std::make_shared<Dune::MultipleCodimMultipleGeomTypeMapper<GV>>(grid_view, [](GeometryType gt, int dimgrid) { return true; })}
+  explicit UncoloredHaloMixin(const GV& entity_set)
+    : _mapper{std::make_shared<Dune::MultipleCodimMultipleGeomTypeMapper<GV>>(entity_set, [](GeometryType gt, int dimgrid) { return true; })}
     , _entity_halo{std::make_shared<std::vector<bool>>()}
   {}
 
@@ -54,10 +68,24 @@ public:
    * @return true if entity is in the halo, false otherwise.
    */
   template<Dune::Concept::Entity Entity>
-  [[nodiscard]] bool isHalo(const Entity& entity) const {
+  [[nodiscard]] Region region(const Entity& entity) const {
     assert(_entity_halo);
     assert((Entity::codimension == 0 or Entity::dimension == 0) && "NotImplemented");
-    return (*_entity_halo)[_mapper->index(entity)];
+    return (*_entity_halo)[_mapper->index(entity)] ? EntitySetPartitioner::Region::Shared : EntitySetPartitioner::Region::Unique;
+  }
+
+  constexpr static auto isRegionAlwaysUnique() { return std::false_type(); }
+
+  [[nodiscard]] static auto maxLabels() {
+    return std::numeric_limits<typename GV::IndexSet::IndexType>::max();
+  }
+
+  [[nodiscard]] static auto maxPatches() {
+    return std::numeric_limits<typename GV::IndexSet::IndexType>::max();
+  }
+
+  [[nodiscard]] static auto maxEntities() {
+    return std::numeric_limits<typename GV::IndexSet::IndexType>::max();
   }
 
 protected:
@@ -67,7 +95,7 @@ protected:
   requires std::is_base_of_v<UncoloredHaloMixin<GV>, Super>
   void updatePartitionHalo(const Super& super, std::size_t halo) {
     static_assert(std::same_as<GV, typename Super::EntitySet>);
-    // TRACE_EVENT("dune", "EntitySet::updatePartitionHalo");
+    TRACE_EVENT("dune", "EntitySet::updatePartitionHalo");
     static_assert(Super::Entity::dimension == Super::EntitySet::dimension,
       "Not implemented: Partition overlap information is only available on codim == 0 entities");
 
@@ -139,7 +167,7 @@ protected:
       });
     };
 
-    for (const auto& concurrent_entity_sets : super) {
+    for (const auto& concurrent_entity_sets : super.range()) {
       // phase 1: assign an owner to each used sub-entity
       for_each_element(concurrent_entity_sets, mark_owner);
 
@@ -156,6 +184,6 @@ private:
   std::shared_ptr<std::vector<bool>> _entity_halo;
 };
 
-} // namespace Dune::Assembler::EntitySetPartition::Impl
+} // namespace Dune::Assembler::EntitySetPartitioner::Impl
 
 #endif // DUNE_PDELAB_COMMON_PARTITION_HALO_HH
