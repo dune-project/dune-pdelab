@@ -206,6 +206,12 @@ requires requires { lop.localAssembleJacobianBoundaryApply(intersection, time, l
   lop.localAssembleJacobianBoundaryApply(intersection, time, ltrial_in, llin_point_in, lpoint_in, ltest_in, ljacobian_in);
 }
 
+auto localAssembleExecutionPolicy(const auto& lop)
+requires requires { lop.executionPolicy(); }
+{
+  return lop.executionPolicy();
+}
+
 } // namespace Default
 
 
@@ -440,6 +446,16 @@ struct JacobianBoundaryApply {
   }
 };
 
+struct ExecutionPolicy {
+  auto operator()(const auto& lop) const noexcept
+  {
+    if constexpr (requires { localAssembleExecutionPolicy(lop); })
+      return localAssembleExecutionPolicy(lop);
+    else
+      return std::execution::seq;
+  }
+};
+
 } // namespace Impl
 
 namespace Default = Impl::Default;
@@ -467,6 +483,7 @@ inline const Impl::PatternBoundary        patternBoundary{};
 inline const Impl::JacobianBoundary       jacobianBoundary{};
 inline const Impl::JacobianBoundaryApply  jacobianBoundaryApply{};
 
+inline const Impl::ExecutionPolicy        executionPolicy{};
 
 } // namespace Dune::PDELab::inline Experimental::LocalAssembly
 

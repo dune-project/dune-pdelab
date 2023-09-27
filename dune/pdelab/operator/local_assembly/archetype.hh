@@ -12,6 +12,10 @@ namespace Dune::PDELab::inline Experimental::LocalAssembly {
 
 struct Archetype {
 
+  constexpr static auto executionPolicy() {
+    return std::execution::seq;
+  }
+
   constexpr static auto localAssembleIsLinear() noexcept {
     return std::false_type{};
   }
