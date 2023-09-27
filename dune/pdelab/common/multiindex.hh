@@ -160,6 +160,7 @@ namespace Dune {
       MultiIndex(const ReservedVector<T,n>& rv) : ReservedVector<T,n>{rv}
       {}
 
+#if __cpp_concepts >= 201907L
       template<std::size_t _n>
       requires (n != _n)
       MultiIndex(const MultiIndex<T,_n>& rv)
@@ -169,6 +170,7 @@ namespace Dune {
         for (std::size_t i = 0; i < std::min(n,_n); ++i)
           (*this)[i] = rv[i];
       }
+#endif
 
       template<class... U>
       MultiIndex(const TypeTree::HybridTreePath<U...>& tp)
