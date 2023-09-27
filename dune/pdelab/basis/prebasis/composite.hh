@@ -154,6 +154,11 @@ public:
     return BaseNode::mergingStrategy().makeOrdering(*this);
   }
 
+  template<std::same_as<void> = void>
+  auto makeLocalOrdering() const {
+    return BaseNode::mergingStrategy().makeLocalOrdering(*this);
+  }
+
   PreBasisTuple(const MergingStrategy& merging_strategy, const std::tuple<std::shared_ptr<Nodes>...>& nodes)
     : TreeNode{ nodes }
     , BaseNode{ merging_strategy }
