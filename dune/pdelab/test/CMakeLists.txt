@@ -28,10 +28,11 @@ target_compile_options(dunepdelab-test
     $<$<BOOL:${COVERAGE_REPORT}>:--coverage>
 )
 
+
 target_link_libraries(dunepdelab-test
   INTERFACE
     dunepdelab
-    ${GTEST_LIBRARIES}
+    GTest::gtest
     $<$<BOOL:${COVERAGE_REPORT}>:gcov>
 )
 
