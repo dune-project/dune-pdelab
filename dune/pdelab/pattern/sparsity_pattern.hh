@@ -552,6 +552,7 @@ public:
             sub_pattern_ptr = &(it->second);
         } else {
           // not found but col order is in idx range
+          // store last value in range to store it later in the overflow
           auto overflow_content = std::move(*prev(end));
 
           // shift values in idx range to the right
@@ -563,7 +564,7 @@ public:
             _overflow.insert({ row, overflow_content });
             *it = col;
           } else {
-            auto [ovf_it, _] = _overflow.insert({ { row, overflow_content.first }, std::make_shared<SubPattern>(std::move(overflow_content.second)) });
+            _overflow.insert({ { row, overflow_content.first }, std::make_shared<SubPattern>(std::move(overflow_content.second)) });
             *it = { col, make_sub_pattern() };
             sub_pattern_ptr = &it->second;
           }

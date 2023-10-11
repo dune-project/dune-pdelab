@@ -262,7 +262,7 @@ private:
     };
 
     if constexpr (Concept::BasicLockable<LocalBasis>) {
-      auto scope_guard = [&](){
+      [[maybe_unused]] auto scope_guard = [&](){
         if (lspace.partitionRegion() == EntitySetPartitioner::shared_region)
           return std::unique_lock{lspace};
         else

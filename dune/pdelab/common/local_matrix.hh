@@ -115,7 +115,7 @@ public:
     _ltrial_constraints.bind(ltrial.element());
 
     {
-      auto scope_guard = [&](){
+      [[maybe_unused]] auto scope_guard = [&](){
         if constexpr (Concept::Lockable<LocalBasisTest>) {
           if (ltest.partitionRegion() == EntitySetPartitioner::shared_region)
             return std::unique_lock{ltest};
