@@ -54,8 +54,8 @@ void linearTransformation(
     using namespace Dune::Indices;
     using std::as_const;
     auto [t_domain_mi, t_range_mi] = containerIndexSplit(as_const(map), push_back(map_mi, _0));
-    const auto domain_loop = std::same_as<decltype(t_range_mi),  decltype(range_mi)>;
-    const auto range_loop  = std::same_as<decltype(t_domain_mi), decltype(domain_mi)>;
+    const auto range_loop = std::same_as<decltype(t_range_mi),  decltype(range_mi)>;
+    const auto domain_loop = std::same_as<decltype(t_domain_mi), decltype(domain_mi)>;
     static_assert(domain_loop xor range_loop);
 
     const auto loop_policy = [&policy]{
