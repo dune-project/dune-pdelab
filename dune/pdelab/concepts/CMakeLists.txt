@@ -1,5 +1,6 @@
 install(FILES basis.hh
               container.hh
+              entityset_partition.hh
               indexable.hh
               local_basis.hh
               local_constraints.hh

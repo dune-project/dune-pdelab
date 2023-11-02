@@ -15,6 +15,7 @@ install(FILES algebra.hh
               error_condition.hh
               execution.hh
               exceptions.hh
+              for_each_entity.hh
               for_each.hh
               function.hh
               functionutilities.hh
@@ -48,3 +49,4 @@ install(FILES algebra.hh
 
 add_subdirectory(concurrency)
 add_subdirectory(convergence)
+add_subdirectory(partition)
