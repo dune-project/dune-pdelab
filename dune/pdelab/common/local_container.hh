@@ -15,6 +15,12 @@
 #include <utility>
 #include <vector>
 #include <mutex>
+#ifdef DUNE_PDELAB_USE_BOOST_ATOMIC_REF
+#include <boost/atomic/atomic_ref.hpp>
+using boost::atomic_ref;
+#else
+using std::atomic_ref;
+#endif
 
 namespace Dune::PDELab::inline Experimental {
 
@@ -119,7 +125,7 @@ public:
   void fetch_add(Concept::LocalBasis auto& lspace, std::convertible_to<bool> auto is_correction) noexcept {
     forEachEntryStore(lspace, is_correction,
       [](auto& lhs, auto rhs){lhs += rhs;},
-      [](auto& lhs, auto rhs){std::atomic_ref(lhs).fetch_add(rhs, std::memory_order::relaxed);}
+      [](auto& lhs, auto rhs){atomic_ref(lhs).fetch_add(rhs, std::memory_order::relaxed);}
     );
   }
 
@@ -130,7 +136,7 @@ public:
   void store(Concept::LocalBasis auto& lspace, std::convertible_to<bool> auto is_correction) noexcept {
     forEachEntryStore(lspace, is_correction,
       [](auto& lhs, auto rhs){lhs = rhs;},
-      [](auto& lhs, auto rhs){std::atomic_ref(lhs).store(rhs, std::memory_order::relaxed);}
+      [](auto& lhs, auto rhs){atomic_ref(lhs).store(rhs, std::memory_order::relaxed);}
     );
   }
 

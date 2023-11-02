@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <optional>
+#include <numeric>
 #include <thread>
 #include <mutex>
 

@@ -27,7 +27,7 @@ namespace Impl {
 
 template<class ExecutionPolicy, class Domain, class Map, class Range, class Callable>
 void linearTransformation(
-  ExecutionPolicy,
+  ExecutionPolicy&& policy,
   Domain&&    domain,
   Map&&       map,
   Range&&     range,
@@ -57,30 +57,30 @@ void linearTransformation(
     const auto range_loop  = std::same_as<decltype(t_domain_mi), decltype(domain_mi)>;
     static_assert(domain_loop xor range_loop);
 
-    auto loop_policy = []{
+    const auto loop_policy = [&policy]{
       constexpr auto const_map    = std::is_const_v<std::remove_reference_t<Map>>;
       constexpr auto const_domain = std::is_const_v<std::remove_reference_t<Domain>>;
       constexpr auto const_range  = std::is_const_v<std::remove_reference_t<Range>>;
       if constexpr (!const_map)
-        return std::execution::seq;
+        return &std::execution::seq;
       if constexpr (const_domain and const_range)
-        return ExecutionPolicy{};
+        return &policy;
       if constexpr (!const_domain and !const_range)
-        return std::execution::seq;
+        return &std::execution::seq;
       else if constexpr ((range_loop and !const_range) or (domain_loop and !const_domain))
-        return ExecutionPolicy{};
+        return &policy;
       else
-        return std::execution::seq;
+        return &std::execution::seq;
     }();
 
-    PDELab::forEach(loop_policy, std::forward<Map>(map), [&]<class MapEntry>(MapEntry&& map_entry, auto i){
+    PDELab::forEach(*loop_policy, std::forward<Map>(map), [&]<class MapEntry>(MapEntry&& map_entry, auto i){
       // containerEntry only works if index split does not reorder the indices
       auto new_map_mi = push_back(map_mi, i);
       auto [new_domain_mi, new_range_mi] = containerIndexSplit(as_const(map), new_map_mi);
       if constexpr (domain_loop) {
         // assert(new_domain_mi == push_back(domain_mi, i));
         Impl::linearTransformation(
-          ExecutionPolicy{},
+          std::forward<ExecutionPolicy>(policy),
           PDELab::containerEntry(std::forward<Domain>(domain), TypeTree::treePath(i)),
           std::forward<MapEntry>(map_entry),
           std::forward<Range>(range),
@@ -89,7 +89,7 @@ void linearTransformation(
       } else {
         // assert(new_range_mi == push_back(range_mi, i));
         Impl::linearTransformation(
-          ExecutionPolicy{},
+          std::forward<ExecutionPolicy>(policy),
           std::forward<Domain>(domain),
           std::forward<MapEntry>(map_entry),
           PDELab::containerEntry(std::forward<Range>(range), TypeTree::treePath(i)),
@@ -113,7 +113,7 @@ template<class ExecutionPolicy, class Domain, class Map, class Range, class Call
 requires std::is_execution_policy_v<std::decay_t<ExecutionPolicy>>
 void linearTransformation(ExecutionPolicy&& policy, Domain&& domain, Map&& map, Range&& range, Callable&& callable){
   Impl::linearTransformation(
-    policy,
+    std::forward<ExecutionPolicy>(policy),
     std::forward<Domain>(domain),
     std::forward<Map>(map),
     std::forward<Range>(range),
@@ -137,7 +137,7 @@ void linearTransformation(Domain&& domain, Map&& map, Range&& range, Callable&& 
 template<class ExecutionPolicy, class Domain, class Map, class Range>
 requires std::is_execution_policy_v<std::decay_t<ExecutionPolicy>>
 void linearTransformation(ExecutionPolicy&& policy, const Domain& domain, const Map& map, Range& range){
-  linearTransformation(policy, domain, map, range, [](const auto& x, const auto& a, auto& y){y += a*x;});
+  linearTransformation(std::forward<ExecutionPolicy>(policy), domain, map, range, [](const auto& x, const auto& a, auto& y){y += a*x;});
 }
 
 template<class Domain, class Map, class Range>

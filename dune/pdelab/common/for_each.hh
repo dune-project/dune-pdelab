@@ -40,7 +40,7 @@ inline namespace Default {
 //! Default for each implementation
 template<class Container, class Callable>
 requires Concept::Range<std::remove_cvref_t<Container>>
-constexpr void forEach(std::execution::sequenced_policy, Container&& container, Callable&& at_value)
+constexpr void forEach(const std::execution::sequenced_policy&, Container&& container, Callable&& at_value)
 {
   using UContainer = std::remove_cvref_t<Container>;
 
@@ -81,7 +81,7 @@ constexpr void forEach(std::execution::sequenced_policy, Container&& container, 
 //! Default for each implementation of parallel policy
 template<class Container, class Callable>
 requires Concept::Range<std::remove_cvref_t<Container>>
-void forEach(std::execution::parallel_policy, Container&& container, Callable&& at_value)
+void forEach(const std::execution::parallel_policy&, Container&& container, Callable&& at_value)
 {
   using UContainer = std::remove_cvref_t<Container>;
 
@@ -161,7 +161,7 @@ void forEach(std::execution::parallel_policy, Container&& container, Callable&& 
 //! Default for each implementation of parallel unsequenced policy
 template<class Container, class Callable>
 requires Concept::Range<std::remove_cvref_t<Container>>
-constexpr void forEach(std::execution::parallel_unsequenced_policy, Container&& container, Callable& at_value)
+constexpr void forEach(const std::execution::parallel_unsequenced_policy&, Container&& container, Callable& at_value)
 {
   forEach(std::execution::par, std::forward<Container>(container), std::forward<Callable>(at_value));
 }
@@ -178,7 +178,7 @@ constexpr void forEach(std::execution::parallel_unsequenced_policy, Container&& 
  */
 template<class Container, class Callable>
 requires Concept::ParentTreeNode<std::remove_cvref_t<Container>>
-constexpr void forEach(std::execution::sequenced_policy, Container&& container, Callable&& at_value)
+constexpr void forEach(const std::execution::sequenced_policy&, Container&& container, Callable&& at_value)
 {
   auto invoke = [&at_value]<class Value, class Index>(Value&& value, Index index){
     static_assert(std::invocable<Callable&&, Value&&, Index> || std::invocable<Callable&&, Value&&>);

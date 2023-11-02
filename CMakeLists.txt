@@ -6,6 +6,7 @@ project("dune-pdelab" C CXX)
 
 # configuration options
 option(DUNE_PDELAB_ENABLE_TRACING "Enable tracing with Perfetto")
+option(DUNE_PDELAB_USE_BOOST_ATOMIC_REF "Use boost atomic_ref" OFF)
 
 # guess dune-common build dir
 if(NOT (dune-common_DIR OR dune-common_ROOT OR
@@ -53,6 +54,9 @@ target_compile_features(dunepdelab
     cxx_std_20
 )
 
+if(DUNE_PDELAB_USE_BOOST_ATOMIC_REF)
+    target_compile_definitions(dunepdelab PUBLIC DUNE_PDELAB_USE_BOOST_ATOMIC_REF)
+endif()
 
 add_subdirectory(doc)
 add_subdirectory(dune)

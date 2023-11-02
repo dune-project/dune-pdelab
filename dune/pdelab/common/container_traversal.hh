@@ -32,9 +32,9 @@ template<
   class PreValue,
   class PostValue,
   Concept::MultiIndex MultiIndex>
-requires (std::is_execution_policy_v<ExcecutionPolicy>)
+requires (std::is_execution_policy_v<std::decay_t<ExcecutionPolicy>>)
 constexpr void
-forEachContainerEntry(ExcecutionPolicy policy,
+forEachContainerEntry(ExcecutionPolicy&& policy,
             Container&& container,
             AtValue&& at_value,
             PreValue&& pre_value,
@@ -52,9 +52,9 @@ forEachContainerEntry(ExcecutionPolicy policy,
   invoke(std::forward<PreValue>(pre_value), std::forward<Container>(container));
 
   if constexpr (Concept::Range<std::remove_cvref_t<Container>> )
-    Dune::PDELab::forEach(policy, std::forward<Container>(container), [&]<class Entry>(Entry&& entry, auto i){
+    Dune::PDELab::forEach(std::forward<ExcecutionPolicy>(policy), std::forward<Container>(container), [&]<class Entry>(Entry&& entry, auto i){
       forEachContainerEntry(
-        policy,
+        std::forward<ExcecutionPolicy>(policy),
         std::forward<Entry>(entry),
         std::forward<AtValue>(at_value),
         std::forward<PreValue>(pre_value),
@@ -109,10 +109,10 @@ forEachContainerEntry(
  * @tparam AtValue            Functor to be applied at each value
  */
 template<class ExcecutionPolicy, class Container, class AtValue>
-requires (std::is_execution_policy_v<ExcecutionPolicy>)
-void forEachContainerEntry(ExcecutionPolicy policy, Container&& container, AtValue&& at_value) {
+requires (std::is_execution_policy_v<std::decay_t<ExcecutionPolicy>>)
+void forEachContainerEntry(ExcecutionPolicy&& policy, Container&& container, AtValue&& at_value) {
   forEachContainerEntry(
-    policy,
+    std::forward<ExcecutionPolicy>(policy),
     std::forward<Container>(container),
     std::forward<AtValue>(at_value),
     TypeTree::NoOp{},
