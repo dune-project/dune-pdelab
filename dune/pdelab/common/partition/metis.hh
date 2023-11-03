@@ -16,7 +16,15 @@
 #error This file should only be included if metis is available
 #endif
 
-#include <metis.h>
+#if HAVE_SCOTCH_METIS
+extern "C" {
+  #include <scotch.h>
+}
+#endif
+
+extern "C" {
+  #include <metis.h>
+}
 
 #include <vector>
 #include <memory>
