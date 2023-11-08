@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <thread>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 
 #define PERFETTO_CATEGORIES

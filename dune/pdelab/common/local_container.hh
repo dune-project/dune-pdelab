@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 #include <mutex>
+#include <atomic>
 
 namespace Dune::PDELab::inline Experimental {
 
@@ -117,10 +118,14 @@ public:
   }
 
   void fetch_add(Concept::LocalBasis auto& lspace, std::convertible_to<bool> auto is_correction) noexcept {
+#if __cpp_lib_atomic_ref
     forEachEntryStore(lspace, is_correction,
       [](auto& lhs, auto rhs){lhs += rhs;},
       [](auto& lhs, auto rhs){std::atomic_ref(lhs).fetch_add(rhs, std::memory_order::relaxed);}
     );
+#else
+    DUNE_THROW(NotImplemented, "To enable this feature std::atomic_ref is required");
+#endif
   }
 
   void fetch_add(Concept::LocalBasis auto& lspace) noexcept {
@@ -128,10 +133,14 @@ public:
   }
 
   void store(Concept::LocalBasis auto& lspace, std::convertible_to<bool> auto is_correction) noexcept {
+#if __cpp_lib_atomic_ref
     forEachEntryStore(lspace, is_correction,
       [](auto& lhs, auto rhs){lhs = rhs;},
       [](auto& lhs, auto rhs){std::atomic_ref(lhs).store(rhs, std::memory_order::relaxed);}
     );
+#else
+    DUNE_THROW(NotImplemented, "To enable this feature std::atomic_ref is required");
+#endif
   }
 
   void store(Concept::LocalBasis auto& lspace) noexcept {
