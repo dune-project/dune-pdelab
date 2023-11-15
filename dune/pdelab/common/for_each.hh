@@ -5,16 +5,16 @@
 #include <dune/pdelab/concepts/treenode.hh>
 
 #include <dune/pdelab/common/multiindex.hh>
+#include <dune/pdelab/common/execution.hh>
 
 #include <dune/common/indices.hh>
 
 #if HAVE_TBB
-#include <tbb/parallel_for.h>
-#include <tbb/task_group.h>
+#include <oneapi/tbb/parallel_for.h>
+#include <oneapi/tbb/task_group.h>
 #endif
 
 #include <utility>
-#include <execution>
 
 namespace Dune {
 
@@ -40,7 +40,7 @@ inline namespace Default {
 //! Default for each implementation
 template<class Container, class Callable>
 requires Concept::Range<std::remove_cvref_t<Container>>
-constexpr void forEach(const std::execution::sequenced_policy&, Container&& container, Callable&& at_value)
+constexpr void forEach(const PDELab::Execution::SequencedPolicy&, Container&& container, Callable&& at_value)
 {
   using UContainer = std::remove_cvref_t<Container>;
 
@@ -80,8 +80,7 @@ constexpr void forEach(const std::execution::sequenced_policy&, Container&& cont
 
 //! Default for each implementation of parallel policy
 template<class Container, class Callable>
-requires Concept::Range<std::remove_cvref_t<Container>>
-void forEach(const std::execution::parallel_policy&, Container&& container, Callable&& at_value)
+void forEach(const PDELab::Execution::ParallelPolicy&, Container&& container, Callable&& at_value)
 {
   using UContainer = std::remove_cvref_t<Container>;
 
@@ -95,7 +94,7 @@ void forEach(const std::execution::parallel_policy&, Container&& container, Call
 
   // forward field vector/matrix to sequential loop
   if constexpr (ExcludeParallelForEach<UContainer>::value) {
-    forEach(std::execution::seq, std::forward<Container>(container), std::forward<Callable>(at_value));
+    forEach(PDELab::Execution::seq, std::forward<Container>(container), std::forward<Callable>(at_value));
   } else {
     tbb::task_group task_group;
 
@@ -125,13 +124,7 @@ void forEach(const std::execution::parallel_policy&, Container&& container, Call
         }
       };
 
-      auto tbb_range = [&container]{
-        // if possible use native TBB blocked range otherwise use custom forward range
-        if constexpr (requires { tbb::blocked_range{std::begin(container), std::end(container), 1000}; })
-          return tbb::blocked_range{std::begin(container), std::end(container), 1000};
-        else
-          return forward_range{std::begin(container), std::end(container)};
-      }();
+      auto tbb_range = forward_range{std::begin(container), std::end(container)};
       if constexpr (Concept::SparseDynamicRange<UContainer>) {
         tbb::parallel_for(tbb_range ,[&](auto range){
           for (auto it = std::begin(range); it != std::end(range); ++it)
@@ -161,9 +154,9 @@ void forEach(const std::execution::parallel_policy&, Container&& container, Call
 //! Default for each implementation of parallel unsequenced policy
 template<class Container, class Callable>
 requires Concept::Range<std::remove_cvref_t<Container>>
-constexpr void forEach(const std::execution::parallel_unsequenced_policy&, Container&& container, Callable& at_value)
+constexpr void forEach(const PDELab::Execution::ParallelUnsequencedPolicy&, Container&& container, Callable&& at_value)
 {
-  forEach(std::execution::par, std::forward<Container>(container), std::forward<Callable>(at_value));
+  forEach(PDELab::Execution::par, std::forward<Container>(container), std::forward<Callable>(at_value));
 }
 
 #endif // HAVE_TBB
@@ -178,7 +171,7 @@ constexpr void forEach(const std::execution::parallel_unsequenced_policy&, Conta
  */
 template<class Container, class Callable>
 requires Concept::ParentTreeNode<std::remove_cvref_t<Container>>
-constexpr void forEach(const std::execution::sequenced_policy&, Container&& container, Callable&& at_value)
+constexpr void forEach(const PDELab::Execution::SequencedPolicy&, Container&& container, Callable&& at_value)
 {
   auto invoke = [&at_value]<class Value, class Index>(Value&& value, Index index){
     static_assert(std::invocable<Callable&&, Value&&, Index> || std::invocable<Callable&&, Value&&>);
@@ -199,11 +192,11 @@ constexpr void forEach(const std::execution::sequenced_policy&, Container&& cont
 
 //! Default for each implementation
 template<class ExecutionPolicy, class Container, class Callable>
-requires (std::is_execution_policy_v<std::decay_t<ExecutionPolicy>> && !std::same_as<std::decay_t<ExecutionPolicy>, std::execution::sequenced_policy>)
+requires (PDELab::Execution::is_execution_policy_v<std::decay_t<ExecutionPolicy>> && !std::same_as<std::decay_t<ExecutionPolicy>, PDELab::Execution::SequencedPolicy>)
 constexpr void forEach(ExecutionPolicy&& policy, Container&& container, Callable&& at_value)
 {
   // if policy is not tag dispatched, use sequential policy
-  forEach(std::execution::seq, std::forward<Container>(container), std::forward<Callable>(at_value));
+  forEach(PDELab::Execution::seq, std::forward<Container>(container), std::forward<Callable>(at_value));
 }
 
 //! Default for each implementation
@@ -211,7 +204,7 @@ template<class Container, class Callable>
 constexpr void forEach(Container&& container, Callable&& at_value)
 {
   // use sequential policy if none is asked
-  forEach(std::execution::seq, std::forward<Container>(container), std::forward<Callable>(at_value));
+  forEach(PDELab::Execution::seq, std::forward<Container>(container), std::forward<Callable>(at_value));
 }
 
 } // namespace Default
@@ -239,7 +232,7 @@ struct ForEach {
    * @param at_value     Function object that receives every entity, and optionally an iteration index
    */
   template<class ExecutionPolicy, class Container, class Callable>
-  requires std::is_execution_policy_v<std::decay_t<ExecutionPolicy>>
+  requires PDELab::Execution::is_execution_policy_v<std::decay_t<ExecutionPolicy>>
   constexpr void operator()(ExecutionPolicy&& policy, Container&& container, Callable&& at_value) const {
     forEach(policy, std::forward<Container>(container), std::forward<Callable>(at_value));
   }

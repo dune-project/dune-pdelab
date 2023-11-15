@@ -21,7 +21,13 @@
 #include <tbb/concurrent_unordered_map.h>
 #endif
 
-
+#if __cpp_lib_execution
+#include <execution>
+#include <algorithm>
+#elif __has_include(<oneapi/dpl/execution>)
+#include <oneapi/dpl/execution>
+#include <oneapi/dpl/algorithm>
+#endif
 #include <tuple>
 #include <span>
 #include <unordered_map>
@@ -143,6 +149,14 @@ namespace Impl {
     }
 
     void globalCompress() {
+#if __cpp_lib_execution
+      using std::execution::par;
+      using std::sort;
+#elif __has_include(<oneapi/dpl/execution>)
+      using oneapi::dpl::sort;
+      using oneapi::dpl::execution::par;
+#endif
+
       _global_offset.clear();
       _global_constraints.clear();
 
@@ -150,9 +164,8 @@ namespace Impl {
       std::vector<std::pair<ContainerIndex, std::pair<Value,std::vector<std::pair<ContainerIndex, double>>>>> sorted_map;
       for(const auto& [row, constraints] : _map)
         sorted_map.push_back({row, constraints});
-
       // sort multi-indices with a lexicographic compare
-      std::sort(std::execution::par, begin(sorted_map), end(sorted_map),
+      sort(par, begin(sorted_map), end(sorted_map),
         [](const auto& l, const auto& r){
           // (move to dynamic multi-index to make comparison easier)
           return Dune::PDELab::MultiIndex(l.first) < Dune::PDELab::MultiIndex(r.first);

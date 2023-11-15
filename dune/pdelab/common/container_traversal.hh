@@ -4,12 +4,12 @@
 #include <dune/pdelab/concepts/multiindex.hh>
 
 #include <dune/pdelab/common/for_each.hh>
+#include <dune/pdelab/common/execution.hh>
 
 #include <dune/typetree/treepath.hh>
 #include <dune/typetree/traversal.hh>
 
 #include <utility>
-#include <execution>
 
 namespace Dune::PDELab::inline Experimental {
 
@@ -18,7 +18,7 @@ namespace Dune::PDELab::inline Experimental {
  * @details Functors may accept one or two values. The first one being the entry
  * to be evaluated, and the second one the multi-index of such entry
  *
- * @tparam ExcecutionPolicy   The execution policy. @see std::execution
+ * @tparam ExecutionPolicy   The execution policy. @see std::execution
  * @tparam Container          Recursive container to be traversed
  * @tparam AtValue            Functor to be applied at each value
  * @tparam PreValue           Functor to be applied before each value
@@ -26,15 +26,15 @@ namespace Dune::PDELab::inline Experimental {
  * @tparam MultiIndex         Multi-index representing the current position of the container
  */
 template<
-  class ExcecutionPolicy,
+  class ExecutionPolicy,
   class Container,
   class AtValue,
   class PreValue,
   class PostValue,
   Concept::MultiIndex MultiIndex>
-requires (std::is_execution_policy_v<std::decay_t<ExcecutionPolicy>>)
+requires (PDELab::Execution::is_execution_policy_v<std::decay_t<ExecutionPolicy>>)
 constexpr void
-forEachContainerEntry(ExcecutionPolicy&& policy,
+forEachContainerEntry(ExecutionPolicy&& policy,
             Container&& container,
             AtValue&& at_value,
             PreValue&& pre_value,
@@ -52,9 +52,9 @@ forEachContainerEntry(ExcecutionPolicy&& policy,
   invoke(std::forward<PreValue>(pre_value), std::forward<Container>(container));
 
   if constexpr (Concept::Range<std::remove_cvref_t<Container>> )
-    Dune::PDELab::forEach(std::forward<ExcecutionPolicy>(policy), std::forward<Container>(container), [&]<class Entry>(Entry&& entry, auto i){
+    Dune::PDELab::forEach(std::forward<ExecutionPolicy>(policy), std::forward<Container>(container), [&]<class Entry>(Entry&& entry, auto i){
       forEachContainerEntry(
-        std::forward<ExcecutionPolicy>(policy),
+        std::forward<ExecutionPolicy>(policy),
         std::forward<Entry>(entry),
         std::forward<AtValue>(at_value),
         std::forward<PreValue>(pre_value),
@@ -90,7 +90,7 @@ forEachContainerEntry(
             Concept::MultiIndex auto multiindex)
 {
   forEachContainerEntry(
-    std::execution::seq,
+    PDELab::Execution::seq,
     std::forward<Container>(container),
     std::forward<AtValue>(at_value),
     std::forward<PreValue>(pre_value),
@@ -104,15 +104,15 @@ forEachContainerEntry(
  * @details Functors may accept one or two values. The first one being the entry
  * to be evaluated, and the second one the multi-index of such entry
  *
- * @tparam ExcecutionPolicy   The execution policy. @see std::execution
+ * @tparam ExecutionPolicy   The execution policy. @see std::execution
  * @tparam Container          Recursive container to be traversed
  * @tparam AtValue            Functor to be applied at each value
  */
-template<class ExcecutionPolicy, class Container, class AtValue>
-requires (std::is_execution_policy_v<std::decay_t<ExcecutionPolicy>>)
-void forEachContainerEntry(ExcecutionPolicy&& policy, Container&& container, AtValue&& at_value) {
+template<class ExecutionPolicy, class Container, class AtValue>
+requires (PDELab::Execution::is_execution_policy_v<std::decay_t<ExecutionPolicy>>)
+void forEachContainerEntry(ExecutionPolicy&& policy, Container&& container, AtValue&& at_value) {
   forEachContainerEntry(
-    std::forward<ExcecutionPolicy>(policy),
+    std::forward<ExecutionPolicy>(policy),
     std::forward<Container>(container),
     std::forward<AtValue>(at_value),
     TypeTree::NoOp{},
@@ -133,7 +133,7 @@ void forEachContainerEntry(ExcecutionPolicy&& policy, Container&& container, AtV
 template<class Container, class AtValue>
 void forEachContainerEntry(Container&& container, AtValue&& at_value) {
   forEachContainerEntry(
-    std::execution::seq,
+    PDELab::Execution::seq,
     std::forward<Container>(container),
     std::forward<AtValue>(at_value),
     TypeTree::NoOp{},

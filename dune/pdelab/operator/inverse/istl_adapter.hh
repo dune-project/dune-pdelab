@@ -1,11 +1,11 @@
 #ifndef DUNE_PDELAB_OPERATOR_ISTL_ADAPTER_HH
 #define DUNE_PDELAB_OPERATOR_ISTL_ADAPTER_HH
 
-
 #include <dune/pdelab/operator/operator.hh>
 
 #include <dune/pdelab/common/algebra.hh>
 #include <dune/pdelab/common/container_entry.hh>
+#include <dune/pdelab/common/execution.hh>
 
 #include <dune/istl/operators.hh>
 #include <dune/istl/scalarproducts.hh>
@@ -32,7 +32,7 @@ class LinearSolver : public Operator<Range,Domain>
       {}
 
       void apply (const Domain& x, Range& y) const override {
-        forEachContainerEntry(std::execution::par_unseq, y, []<class T>(T& v){v = T{0};});
+        forEachContainerEntry(PDELab::Execution::par_unseq, y, []<class T>(T& v){v = T{0};});
         _forward.apply(x,y).or_throw();
       }
 
@@ -42,7 +42,7 @@ class LinearSolver : public Operator<Range,Domain>
       void applyscaleadd (field_type alpha, const Domain& x, Range& y) const override {
         tmp = y;
         this->apply(x,tmp);
-        Dune::PDELab::axpy(std::execution::par_unseq, y, alpha, tmp);
+        Dune::PDELab::axpy(PDELab::Execution::par_unseq, y, alpha, tmp);
       }
 
       SolverCategory::Category category() const override {

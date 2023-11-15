@@ -24,6 +24,7 @@
 #include <numeric>
 #include <thread>
 #include <mutex>
+#include <numeric>
 
 #ifndef DUNE_PDELAB_VECTOR_LOCK_TYPE
 #define DUNE_PDELAB_VECTOR_LOCK_TYPE VectorBitSpinLock // VectorSpinLock, VectorBitSpinLock, VectorAdaptiveLock

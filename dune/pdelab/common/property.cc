@@ -110,6 +110,7 @@ Property& Property::operator=(Property&& other) {
 
 Property& Property::operator=(std::nullptr_t) {
   if (auto clean_up = std::move(_clean_up)) clean_up();
+  _clean_up = {};
   _object.reset();
   return *this;
 }

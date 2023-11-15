@@ -7,6 +7,7 @@
 #include <dune/pdelab/common/algebra.hh>
 #include <dune/pdelab/common/trace.hh>
 #include <dune/pdelab/common/property_tree.hh>
+#include <dune/pdelab/common/execution.hh>
 
 #include <memory>
 #include <functional>
@@ -49,7 +50,7 @@ namespace Dune::PDELab::inline Experimental {
       TRACE_EVENT("dune", "Newton::LineSearchNone");
 
       // point -= direction
-      PDELab::axpy(std::execution::par_unseq, point, -1.0, direction);
+      PDELab::axpy(PDELab::Execution::par_unseq, point, -1.0, direction);
 
       // evaluate || f(x) + z ||
       op.apply(point, residual).or_throw();

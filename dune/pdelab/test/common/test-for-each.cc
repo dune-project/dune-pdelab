@@ -3,6 +3,7 @@
 #endif
 
 #include <dune/pdelab/common/for_each.hh>
+#include <dune/pdelab/common/execution.hh>
 
 #include <dune/common/tuplevector.hh>
 
@@ -44,7 +45,7 @@ TEST(TestForEach, Vector) {
   });
 
   std::atomic<std::size_t> asum{0};
-  forEach(std::execution::par_unseq, as_const(container), [&container,&asum](const auto& entry, int i){
+  forEach(PDELab::Execution::par_unseq, as_const(container), [&container,&asum](const auto& entry, int i){
     EXPECT_EQ(container[i], entry);
     asum.fetch_add(entry, std::memory_order::relaxed);
   });
@@ -71,7 +72,7 @@ TEST(TestForEach, Map) {
   });
 
   std::atomic<std::size_t> asum{0};
-  forEach(std::execution::par_unseq, as_const(container), [&container,&asum](const auto& entry){
+  forEach(PDELab::Execution::par_unseq, as_const(container), [&container,&asum](const auto& entry){
     EXPECT_EQ(container[entry.first], entry.second);
     asum.fetch_add(entry.second, std::memory_order::relaxed);
   });
@@ -95,8 +96,8 @@ TEST(TestForEach, TupleVector) {
   EXPECT_NEAR(sum,  12, 1e-12);
 
   std::atomic<std::size_t> asum{0};
-  forEach(std::execution::par_unseq, as_const(container), [&asum](const auto& entry1){
-    forEach(std::execution::par_unseq, entry1, [&asum](const auto& entry2){
+  forEach(PDELab::Execution::par_unseq, as_const(container), [&asum](const auto& entry1){
+    forEach(PDELab::Execution::par_unseq, entry1, [&asum](const auto& entry2){
       asum.fetch_add(entry2, std::memory_order::relaxed);
     });
   });

@@ -100,10 +100,10 @@ public:
 
   //! gets a common size for all active geometry types if available at compile time
   // this needs the the Space::Traits::FiniteElementMap::size(...) is static constexpr.
-  static consteval std::optional<std::size_t> commonSizePerGeometryType() {
+  static constexpr std::optional<std::size_t> commonSizePerGeometryType() {
     using FEM = typename Space::Traits::FiniteElementMap;
     std::size_t size = 0;
-    const auto fem_size = [](auto gt) consteval {
+    const auto fem_size = [](auto gt) constexpr {
       if constexpr (requires { { FEM::size(gt) } -> std::convertible_to<std::size_t>; })
         return FEM::size(gt);
       else

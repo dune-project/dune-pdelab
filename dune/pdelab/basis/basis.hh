@@ -8,6 +8,7 @@
 // #include <dune/pdelab/common/partition/identity.hh>
 #include <dune/pdelab/common/multiindex.hh>
 #include <dune/pdelab/common/container_entry.hh>
+#include <dune/pdelab/common/execution.hh>
 // #include <dune/pdelab/common/communication/entity_data_handler.hh>
 
 #include <dune/pdelab/basis/prebasis/concept.hh>
@@ -44,9 +45,9 @@ namespace Dune::PDELab::inline Experimental {
     struct ConstraintsContainerGenerator {
       template<Concept::Impl::PreBasisLeaf PreBasisLeaf, Concept::FixedSizeMultiIndex Path>
       auto operator()(const PreBasisLeaf& pre_basis_leaf, Path) const {
-        using EntitySet = PreBasisLeaf::Traits::MergingStrategy::EntitySet;
+        using EntitySet = typename PreBasisLeaf::Traits::MergingStrategy::EntitySet;
         using MultiIndex = typename TypeTree::ChildForTreePath<RootLocalViewTree,Path>::MultiIndex;
-        using ConstraintsContainer = PreBasisLeaf::Traits::ConstraintsOperator::template Container<MultiIndex, EntitySet>;
+        using ConstraintsContainer = typename PreBasisLeaf::Traits::ConstraintsOperator::template Container<MultiIndex, EntitySet>;
         return std::make_shared<ConstraintsContainer>(pre_basis_leaf.mergingStrategy().entitySet());
       }
     };
@@ -484,7 +485,7 @@ namespace Dune::PDELab::inline Experimental {
         entry.resize(this->size(path));
       };
       auto set_zero = []<class T>(T& v){v = T{0};};
-      forEachContainerEntry(std::execution::par_unseq, container, set_zero, resize, [](auto&&){}, TypeTree::treePath());
+      forEachContainerEntry(PDELab::Execution::par_unseq, container, set_zero, resize, [](auto&&){}, TypeTree::treePath());
       return container;
     }
 
