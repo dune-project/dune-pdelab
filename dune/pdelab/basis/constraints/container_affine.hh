@@ -149,13 +149,6 @@ namespace Impl {
     }
 
     void globalCompress() {
-#if __cpp_lib_execution
-      using std::execution::par;
-      using std::sort;
-#elif __has_include(<oneapi/dpl/execution>)
-      using oneapi::dpl::sort;
-      using oneapi::dpl::execution::par;
-#endif
 
       _global_offset.clear();
       _global_constraints.clear();
@@ -165,11 +158,17 @@ namespace Impl {
       for(const auto& [row, constraints] : _map)
         sorted_map.push_back({row, constraints});
       // sort multi-indices with a lexicographic compare
-      sort(par, begin(sorted_map), end(sorted_map),
-        [](const auto& l, const auto& r){
+      auto compare_mi = [](const auto& l, const auto& r){
           // (move to dynamic multi-index to make comparison easier)
           return Dune::PDELab::MultiIndex(l.first) < Dune::PDELab::MultiIndex(r.first);
-        });
+        };
+#if __cpp_lib_execution
+      std::sort(std::execution::par, begin(sorted_map), end(sorted_map), compare_mi);
+#elif __has_include(<oneapi/dpl/execution>)
+      oneapi::dpl::sort(oneapi::dpl::execution::par, begin(sorted_map), end(sorted_map), compare_mi);
+#else
+      std::sort(begin(sorted_map), end(sorted_map), compare_mi);
+#endif
 
       // move sorted map to a compressed by row representation
       auto offset = 0;
