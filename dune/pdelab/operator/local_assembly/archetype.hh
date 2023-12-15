@@ -4,6 +4,8 @@
 #include <dune/pdelab/concepts/container.hh>
 #include <dune/pdelab/concepts/local_basis.hh>
 
+#include <dune/pdelab/common/execution.hh>
+
 #include <dune/grid/concepts.hh>
 
 #include <type_traits>
@@ -13,7 +15,7 @@ namespace Dune::PDELab::inline Experimental::LocalAssembly {
 struct Archetype {
 
   constexpr static auto executionPolicy() {
-    return std::execution::seq;
+    return Execution::seq;
   }
 
   constexpr static auto localAssembleIsLinear() noexcept {

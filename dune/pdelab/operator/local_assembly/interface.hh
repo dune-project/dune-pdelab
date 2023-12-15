@@ -4,6 +4,8 @@
 #include <dune/pdelab/concepts/basis.hh>
 #include <dune/pdelab/concepts/container.hh>
 
+#include <dune/pdelab/common/execution.hh>
+
 #include <dune/grid/concepts/intersection.hh>
 #include <dune/grid/concepts/entity.hh>
 
@@ -452,7 +454,7 @@ struct ExecutionPolicy {
     if constexpr (requires { localAssembleExecutionPolicy(lop); })
       return localAssembleExecutionPolicy(lop);
     else
-      return std::execution::seq;
+      return Execution::seq;
   }
 };
 
