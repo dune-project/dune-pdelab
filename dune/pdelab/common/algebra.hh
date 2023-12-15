@@ -58,7 +58,7 @@ void linearTransformation(
     const auto domain_loop = std::same_as<decltype(t_domain_mi), decltype(domain_mi)>;
     static_assert(domain_loop xor range_loop);
 
-    const auto loop_policy = [&policy]{
+    const auto loop_policy = [&]{
       constexpr auto const_map    = std::is_const_v<std::remove_reference_t<Map>>;
       constexpr auto const_domain = std::is_const_v<std::remove_reference_t<Domain>>;
       constexpr auto const_range  = std::is_const_v<std::remove_reference_t<Range>>;

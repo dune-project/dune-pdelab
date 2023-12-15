@@ -100,7 +100,6 @@ protected:
       "Not implemented: Partition overlap information is only available on codim == 0 entities");
 
     using Entity = typename Super::Entity;
-    const std::size_t no_id = std::numeric_limits<std::size_t>::max();
     using mo = std::memory_order;
 
     // if halo is too big, mark all entities to belong to the halo
@@ -108,14 +107,18 @@ protected:
     _entity_halo->assign(_mapper->size(), max_overlap);
     if (max_overlap) return;
 
-    std::vector<std::size_t> entity_owner(_mapper->size(), no_id);
-    std::vector<char> entity_in_overlap(_mapper->size(), 0);
+    std::vector<std::atomic_size_t> entity_owner(_mapper->size());
+    std::vector<std::atomic_bool> entity_in_overlap(_mapper->size());
+    for (std::size_t i = 0; i != _mapper->size(); ++i) {
+      entity_owner[i].store(std::numeric_limits<std::size_t>::max(), mo::relaxed);
+      entity_in_overlap[i].store(false, mo::relaxed);
+    }
 
     auto mark_owner = [&](const Entity& entity, std::size_t id, auto) {
       Hybrid::forEach(std::make_index_sequence<Entity::dimension+1>{}, [&](auto codim){
         for (const auto& sub_entity : subEntities(entity, Dune::Codim<codim>{})) {
           auto entity_index = _mapper->index(sub_entity);
-          std::atomic_ref(entity_owner[entity_index]).store(id, mo::relaxed);
+          entity_owner[entity_index].store(id, mo::relaxed);
         }
       });
     };
@@ -124,9 +127,9 @@ protected:
       Hybrid::forEach(std::make_index_sequence<Entity::dimension+1>{}, [&](auto codim){
         for (const auto& sub_entity : subEntities(entity, Dune::Codim<codim>{})) {
           auto entity_index = _mapper->index(sub_entity);
-          auto owner = entity_owner[entity_index];
+          auto owner = entity_owner[entity_index].load(mo::relaxed);
           if (owner != id)
-            std::atomic_ref(entity_in_overlap[entity_index]).store(true, mo::relaxed);
+            entity_in_overlap[entity_index].store(true, mo::relaxed);
         }
       });
     };
@@ -147,7 +150,7 @@ protected:
       Hybrid::forEach(std::make_index_sequence<Entity::dimension+1>{}, [&](auto codim){
         for (const auto& sub_entity : subEntities(entity, Dune::Codim<codim>{})) {
           auto sub_entity_index = _mapper->index(sub_entity);
-          bool in_overlap = entity_in_overlap[sub_entity_index];
+          bool in_overlap = entity_in_overlap[sub_entity_index].load(mo::relaxed);
           if (in_overlap) {
             std::unique_lock lg{marker_mutex};
             // TODO: propagate value to other codimensions
