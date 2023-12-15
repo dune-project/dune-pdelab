@@ -27,7 +27,7 @@ public:
   //! Entity being partitioned
   using Entity = typename BasePartition::Entity;
   //! Range of entities grouped by a patch
-  using PatchSet = BasePartition::PatchSet;
+  using PatchSet = typename BasePartition::PatchSet;
   //! Range of patches grouped by a label
   using LabelSet = std::vector<PatchSet>;
   //! Range of labels

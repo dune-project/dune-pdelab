@@ -22,6 +22,28 @@
 
 namespace Dune::PDELab::inline Experimental {
 
+namespace Impl {
+  void atomic_store_relaxed(auto& a, auto b) {
+#if !(__cpp_lib_atomic_ref || __has_include(<boost/atomic/atomic_ref.hpp>))
+    DUNE_THROW(NotImplemented, "To enable this feature std::atomic_ref or boost::atomic_ref is required");
+#elif __cpp_lib_atomic_ref
+    std::atomic_ref(a).store(b, std::memory_order::relaxed);
+#else
+    boost::atomic_ref(a).store(b, boost::memory_order::relaxed);
+#endif
+  }
+
+  auto atomic_fetch_add_relaxed(auto& a, auto b) {
+#if !(__cpp_lib_atomic_ref || __has_include(<boost/atomic/atomic_ref.hpp>))
+    DUNE_THROW(NotImplemented, "To enable this feature std::atomic_ref or boost::atomic_ref is required");
+#elif __cpp_lib_atomic_ref
+    return std::atomic_ref(a).fetch_add(b, std::memory_order::relaxed);
+#else
+    return boost::atomic_ref(a).fetch_add(b, boost::memory_order::relaxed);
+#endif
+  }
+}
+
 // this class provides a buffer to store intermediate results of local computations
 // and provides the means to gather and scatter to the global container without data races
 
@@ -121,16 +143,9 @@ public:
   }
 
   void fetch_add(Concept::LocalBasis auto& lspace, std::convertible_to<bool> auto is_correction) noexcept {
-#if !(__cpp_lib_atomic_ref || __has_include(<boost/atomic/atomic_ref.hpp>))
-    DUNE_THROW(NotImplemented, "To enable this feature std::atomic_ref or boost::atomic_ref is required");
-#elif __cpp_lib_atomic_ref
-    using std::atomic_ref;
-#else
-    using boost::atomic_ref;
-#endif
     forEachEntryStore(lspace, is_correction,
       [](auto& lhs, auto rhs){lhs += rhs;},
-      [](auto& lhs, auto rhs){atomic_ref(lhs).fetch_add(rhs, std::memory_order::relaxed);}
+      [](auto& lhs, auto rhs){Impl::atomic_fetch_add_relaxed(lhs, rhs);}
     );
   }
 
@@ -139,16 +154,9 @@ public:
   }
 
   void store(Concept::LocalBasis auto& lspace, std::convertible_to<bool> auto is_correction) noexcept {
-#if !(__cpp_lib_atomic_ref || __has_include(<boost/atomic/atomic_ref.hpp>))
-    DUNE_THROW(NotImplemented, "To enable this feature std::atomic_ref or boost::atomic_ref is required");
-#elif __cpp_lib_atomic_ref
-    using std::atomic_ref;
-#else
-    using boost::atomic_ref;
-#endif
     forEachEntryStore(lspace, is_correction,
       [](auto& lhs, auto rhs){lhs = rhs;},
-      [](auto& lhs, auto rhs){atomic_ref(lhs).store(rhs, std::memory_order::relaxed);}
+      [](auto& lhs, auto rhs){Impl::atomic_store_relaxed(lhs, rhs);}
     );
   }
 
