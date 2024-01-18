@@ -389,17 +389,14 @@ public:
     _sorted = true;
   }
 
-  //! Discard all internal data.
-  /**
-   * The purpose of this method is to release all internal memory before calling
-   * BCRSMatrix::endindices(). That way, the matrix creation process never
-   * consumes substantially more memory as required by the matrix after
-   * construction, as the second copy of the column indices is about as large as
-   * the data array.
-   */
+
+  //! Remove all links stored in the pattern
   void clear()
   {
-    _indices.clear();
+    if constexpr (isLeaf)
+      _indices.assign(_indices.size(), empty_col);
+    else
+      _indices.assign(_indices.size(), { empty_col, SubPattern{} });
     _overflow.clear();
   }
 
