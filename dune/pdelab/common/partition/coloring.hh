@@ -6,8 +6,10 @@
 
 #include <dune/grid/common/mcmgmapper.hh>
 
+#include <memory_resource>
 #include <set>
 #include <vector>
+
 
 namespace Dune::PDELab::inline Experimental::EntitySetPartitioner::Impl {
 
@@ -37,75 +39,85 @@ protected:
   void update(BasePartition&& base, std::size_t halo) {
     // pre-condition: there is only one label on the base partition
     // post-condition: patches in the same color do not have entities in their halo
-   Dune::MultipleCodimMultipleGeomTypeMapper<EntitySet> mapper{base.entitySet(), [](GeometryType gt, int dimgrid) { return true; }};
+    std::pmr::monotonic_buffer_resource mr;
+    std::pmr::vector<std::pmr::vector<std::size_t>> connectivity(&mr);
+    {
+      TRACE_EVENT("dune", "EntitySet::GridConnectivity");
+      Dune::MultipleCodimMultipleGeomTypeMapper<EntitySet> mapper{base.entitySet(), [](GeometryType gt, int dimgrid) { return true; }};
 
-    std::size_t no_id = std::numeric_limits<std::size_t>::max();
-    // assign patch id to each entity
-    std::vector<std::size_t> patch_id(mapper.size(), no_id);
+      std::size_t no_id = std::numeric_limits<std::size_t>::max();
+      // assign patch id to each entity
+      std::vector<std::size_t> patch_id(mapper.size(), no_id);
 
-    std::size_t label = 0;
-    std::size_t patch = 0;
-    for (const auto& label_set : base.range()) {
-      for (const auto& patch_set : label_set) {
-        for (const auto& entity : patch_set) {
-          patch_id[mapper.index(entity)] = patch;
+      std::size_t label = 0;
+      std::size_t patch = 0;
+      for (const auto& label_set : base.range()) {
+        for (const auto& patch_set : label_set) {
+          for (const auto& entity : patch_set) {
+            patch_id[mapper.index(entity)] = patch;
+          }
+          ++patch;
         }
-        ++patch;
+        ++label;
       }
-      ++label;
+
+      // check pre-condition
+      if (label != 1)
+        DUNE_THROW(InvalidStateException, "Partition should only contain one label at setup");
+
+      auto get_patch_id = [&](const Entity& entity) -> std::size_t {
+        return patch_id[mapper.index(entity)];
+      };
+
+      auto entity_links = std::vector<std::set<std::size_t>>(patch);
+      auto add_entity_link = [&](const Entity& entity_in, const Entity& entity_out) {
+        entity_links[get_patch_id(entity_in)].insert(get_patch_id(entity_out));
+        entity_links[get_patch_id(entity_out)].insert(get_patch_id(entity_in));
+      };
+
+      std::function<void(const Entity&, const Entity&, std::size_t)> add_link;
+      add_link = [&](const Entity& entity_in, const Entity& entity_out, std::size_t current_halo) {
+        add_entity_link(entity_in, entity_out);
+        if ((current_halo--) != 0)
+          for (const auto& intersection : intersections(base.entitySet(), entity_out))
+            if (intersection.neighbor())
+              add_link(entity_in, intersection.outside(), current_halo);
+      };
+
+      // make patch conectivity graph according to halo
+      for (const auto& label_set : base.range())
+        for (const auto& patch_set : label_set)
+          for (const auto& entity : patch_set)
+            add_link(entity, entity, halo+1);
+
+      connectivity.reserve(connectivity.size());
+      for(auto neighbor : entity_links)
+        connectivity.emplace_back(neighbor.begin(), neighbor.end());
     }
+    {
+      TRACE_EVENT("dune", "EntitySet::Coloring");
+      // perfom actual coloring
+      auto [colors, color_count] = make_colors(connectivity);
 
-    // check pre-condition
-    if (label != 1)
-      DUNE_THROW(InvalidStateException, "Partition should only contain one label at setup");
+      // debug: print vertex index, color, and neighbors
+      // for (std::size_t i = 0; i != connectivity.size(); ++i) {
+      //   std::cout << i << ", " << colors[i] << ": [";
+      //   for (auto j : connectivity[i])
+      //     std::cout << j << ", ";
+      //   std::cout << "]" << std::endl;
+      // }
 
-    auto get_patch_id = [&](const Entity& entity) -> std::size_t {
-      return patch_id[mapper.index(entity)];
-    };
-
-    std::vector<std::set<std::size_t>> connectivity(patch);
-
-    auto add_entity_link = [&](const Entity& entity_in, const Entity& entity_out) {
-      connectivity[get_patch_id(entity_in)].insert(get_patch_id(entity_out));
-      connectivity[get_patch_id(entity_out)].insert(get_patch_id(entity_in));
-    };
-
-    std::function<void(const Entity&, const Entity&, std::size_t)> add_link;
-    add_link = [&](const Entity& entity_in, const Entity& entity_out, std::size_t current_halo) {
-      add_entity_link(entity_in, entity_out);
-      if ((current_halo--) != 0)
-        for (const auto& intersection : intersections(base.entitySet(), entity_out))
-          if (intersection.neighbor())
-            add_link(entity_in, intersection.outside(), current_halo);
-    };
-
-    // make patch conectivity graph according to halo
-    for (const auto& label_set : base.range())
-      for (const auto& patch_set : label_set)
-        for (const auto& entity : patch_set)
-          add_link(entity, entity, halo+1);
-
-    // perfom actual coloring
-    auto [colors, color_count] = make_colors(connectivity);
-
-    // debug: print vertex index, color, and neighbors
-    // for (std::size_t i = 0; i != connectivity.size(); ++i) {
-    //   std::cout << i << ", " << colors[i] << ": [";
-    //   for (auto j : connectivity[i])
-    //     std::cout << j << ", ";
-    //   std::cout << "]" << std::endl;
-    // }
-
-    // assing colored partitions
-    _partition_set->assign(color_count, LabelSet{});
-    patch = 0;
-    for (auto& label_set : base.range())
-      for (auto& patch_set : label_set)
-        (*_partition_set)[colors[patch++]].emplace_back(std::move(patch_set));
+      // assing colored partitions
+      _partition_set->assign(color_count, LabelSet{});
+      std::size_t patch = 0;
+      for (auto& label_set : base.range())
+        for (auto& patch_set : label_set)
+          (*_partition_set)[colors[patch++]].emplace_back(std::move(patch_set));
+    }
   }
 
   // use DSatur to color graph (https://en.wikipedia.org/wiki/DSatur#Pseudocode)
-  auto make_colors(const std::vector<std::set<std::size_t>>& graph, bool verify = false) {
+  auto make_colors(const std::pmr::vector<std::pmr::vector<std::size_t>>& graph, bool verify = false) {
     const std::size_t uncolored = std::numeric_limits<std::size_t>::max();
     std::vector<std::size_t> colors(graph.size(), uncolored);
     std::vector<std::size_t> saturation(graph.size(), 0);
