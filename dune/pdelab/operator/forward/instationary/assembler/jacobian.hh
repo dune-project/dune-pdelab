@@ -88,7 +88,8 @@ public:
   {
     TRACE_EVENT("dune", "Instationary::Jacobian");
     const JacobianContainer& jac = getJacobianContainer();
-    PDELab::linearTransformation(PDELab::Execution::par_unseq, coefficients, jac, residual);
+    // PDELab::linearTransformation(PDELab::Execution::par, coefficients, jac, residual);
+    jac[0][0].mv(coefficients[0], residual[0]);
     return {};
   }
 
