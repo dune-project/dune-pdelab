@@ -4,6 +4,8 @@
 
 #include <dune/pdelab/concepts/entityset_partition.hh>
 #include <dune/pdelab/common/trace.hh>
+#include <dune/pdelab/common/for_each.hh>
+#include <dune/pdelab/common/execution.hh>
 
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/concepts/gridview.hh>
@@ -14,7 +16,6 @@
 #include <memory>
 #include <atomic>
 #include <mutex>
-#include <execution>
 
 // splits a grid view into several entity sets grouped by color
 namespace Dune::PDELab::inline Experimental::EntitySetPartitioner::Impl {
@@ -164,7 +165,7 @@ protected:
     auto for_each_element = [halo](const auto& entity_sets, auto apply){
       auto patches = std::distance(entity_sets.begin(), entity_sets.end());
       auto partitions = std::ranges::iota_view<std::size_t, std::size_t>(0, patches);
-      std::for_each(std::execution::par, partitions.begin(), partitions.end(), [&](auto patch_id){
+      forEach(Execution::par, partitions, [&](auto patch_id){
         for (const auto& entity : entity_sets[patch_id])
           apply(entity, patch_id, halo);
       });
