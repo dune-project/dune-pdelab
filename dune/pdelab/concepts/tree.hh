@@ -11,11 +11,17 @@
 
 namespace Dune::PDELab::inline Experimental::Concept {
 
+  namespace Impl {
+    struct EmptyTreeVisitor {
+      void operator()(auto&& TreeNode, auto MultiIndex);
+    };
+  }
+
   template<class T>
   concept Tree = requires(T tree)
   {
     // a tree is a traversable object where each node is a tree node
-    Dune::PDELab::forEachNode(tree, []<TreeNode Node, MultiIndex Path>(Node&&, Path){});
+    Dune::PDELab::forEachNode(tree, Impl::EmptyTreeVisitor{});
   };
 
 } // namespace Dune::PDELab::inline Experimental::Concept
