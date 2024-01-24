@@ -27,8 +27,6 @@ void basisToPattern(LocalOperator lop, Pattern& pattern) {
 
   using Mapper = Dune::MultipleCodimMultipleGeomTypeMapper<typename TrialBasis::EntitySet>;
 
-  pattern.clear();
-
   TestBasis test{ pattern.rowSizeProvider() };
   TrialBasis trial{ pattern.colSizeProvider() };
   Mapper  _mapper{ trial.entitySet(), Dune::mcmgElementLayout() };
