@@ -6,7 +6,9 @@
 
 #include <dune/grid/common/mcmgmapper.hh>
 
+#if (__cpp_lib_memory_resource >= 201603L) && (__cpp_lib_polymorphic_allocator >= 201902L)
 #include <memory_resource>
+#endif
 #include <set>
 #include <vector>
 
@@ -39,8 +41,12 @@ protected:
   void update(BasePartition&& base, std::size_t halo) {
     // pre-condition: there is only one label on the base partition
     // post-condition: patches in the same color do not have entities in their halo
-    std::pmr::monotonic_buffer_resource mr;
-    std::pmr::vector<std::pmr::vector<std::size_t>> connectivity(&mr);
+#if (__cpp_lib_memory_resource >= 201603L) && (__cpp_lib_polymorphic_allocator >= 201902L)
+    auto mr = std::pmr::monotonic_buffer_resource{};
+    auto connectivity = std::pmr::vector<std::pmr::vector<std::size_t>>(&mr);
+#else
+    auto connectivity = std::vector<std::vector<std::size_t>>();
+#endif
     {
       TRACE_EVENT("dune", "EntitySet::GridConnectivity");
       Dune::MultipleCodimMultipleGeomTypeMapper<EntitySet> mapper{base.entitySet(), [](GeometryType gt, int dimgrid) { return true; }};
@@ -117,7 +123,7 @@ protected:
   }
 
   // use DSatur to color graph (https://en.wikipedia.org/wiki/DSatur#Pseudocode)
-  auto make_colors(const std::pmr::vector<std::pmr::vector<std::size_t>>& graph, bool verify = false) {
+  auto make_colors(const auto& graph, bool verify = false) {
     const std::size_t uncolored = std::numeric_limits<std::size_t>::max();
     std::vector<std::size_t> colors(graph.size(), uncolored);
     std::vector<std::size_t> saturation(graph.size(), 0);
