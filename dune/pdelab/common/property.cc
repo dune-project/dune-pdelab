@@ -56,7 +56,7 @@ inline static PropertyTreeRegistry _ptree_registry;
 
 void Property::register_derived_ptree(std::optional<Impl::WeakPropertyTree> ptree) {
   if (not ptree) return;
-  assert(not _clean_up);
+  if (_clean_up) _clean_up();
   _ptree_registry.unique([&](auto& map){ map[this] = ptree.value(); });
   _clean_up = [this]{
     _ptree_registry.unique([&](auto& map){ map.erase(this); });
