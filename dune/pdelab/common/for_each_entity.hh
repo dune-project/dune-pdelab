@@ -18,10 +18,11 @@ void forEachEntity(const ExecutionPolicy& policy, const EntitySetPartition& enti
   for (const auto& label : entity_set_partition.range()) {
     TRACE_EVENT("dune", "forEachEntity::Label");
     forEach(policy, label, [&](const auto& patch) mutable {
+      TRACE_EVENT_BEGIN("dune", "forEachEntity::Patch", perfetto::ThreadTrack::Current());
       auto _fapply = fapply;
-      // TRACE_EVENT("dune", "forEachEntity::Patch");
       for (auto&& entity : patch)
         _fapply(entity);
+      TRACE_EVENT_END("dune", perfetto::ThreadTrack::Current());
     });
   }
 }

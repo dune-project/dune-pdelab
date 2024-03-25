@@ -6,7 +6,7 @@ if (NOT TARGET Perfetto::SDK)
   FetchContent_Declare(
     perfetto
     GIT_REPOSITORY https://android.googlesource.com/platform/external/perfetto
-    GIT_TAG        v32.1
+    GIT_TAG        v43.2
   )
 
   # configure perfetto targets
