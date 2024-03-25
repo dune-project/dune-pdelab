@@ -72,7 +72,7 @@ public:
     properties["dx_inverse_fixed_tolerance"].documentation
       = "Whether dx_inverse relative reduction is fixed between newton iterations. "
         "The newton method may have a better guess for a relative reduction on the for "
-        "the dx_inverse correction at each iteration. If this is set to true, the newton "
+        "the dx_inverse correction at each iteration. If this is set to 'false', the newton "
         "application will modify the `dx_inverse[\"convergence_condition.relative_tolerance\"]` "
         "property before each iteration of the newton method";
 

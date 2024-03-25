@@ -35,7 +35,7 @@ namespace Dune::PDELab::inline Experimental::Convergence
   static Property makeAbsoluteTolerance(std::optional<T> abs_tolerance = std::nullopt) {
     Property ppt{
       /*name*/   "absolute_tolerance",
-      /*doc*/    "Minimum relative tolerance ||ri|| to accept convergence",
+      /*doc*/    "Minimum absolute tolerance ||ri|| to accept convergence",
       [](const Property& ppt){
         if (not ppt.has_value()) return;
         [[maybe_unused]] double rel_tolerance = unwrap_property_ref<const double>(ppt);
@@ -50,7 +50,7 @@ namespace Dune::PDELab::inline Experimental::Convergence
   static Property makeIterationRange() {
     return Property{
       /*name*/   "iteration_range",
-      /*doc*/    "Interation range [min_it, max_it] allowed to assert convergence",
+      /*doc*/    "Iteration range [min_it, max_it] allowed to assert convergence",
       /*setter*/ [](const Property& ppt){
         if (not ppt.has_value()) return;
         auto& array = ppt.as_vector();
