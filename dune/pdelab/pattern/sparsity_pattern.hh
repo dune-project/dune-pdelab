@@ -584,7 +584,7 @@ public:
 
 protected:
   //! Marker value indicating an empty array entry.
-  static constexpr size_type empty_col = std::numeric_limits<size_type>::max();
+  inline static constexpr size_type empty_col = std::numeric_limits<size_type>::max();
 
   RowSizeProvider const * _row_size_provider = nullptr;
   ColSizeProvider const * _col_size_provider = nullptr;
