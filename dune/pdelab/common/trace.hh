@@ -83,6 +83,15 @@ private:
 #define TRACE_EVENT(...) {};
 #endif // TRACE_EVENT
 
+#ifndef TRACE_EVENT_BEGIN
+#define TRACE_EVENT_BEGIN(...) {};
+#endif // TRACE_EVENT_BEGIN
+
+#ifndef TRACE_EVENT_END
+#define TRACE_EVENT_END(...) {};
+#endif // TRACE_EVENT_END
+
+
 #ifndef TRACE_COUNTER
 #define TRACE_COUNTER(...) {};
 #endif // TRACE_COUNTER
