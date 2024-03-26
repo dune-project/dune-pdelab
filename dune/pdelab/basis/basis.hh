@@ -320,7 +320,7 @@ namespace Dune::PDELab::inline Experimental {
         return *this;
       }
 
-      template<std::convertible_to<Element> E>
+      template<class E>
       friend void bind(E&& element, LocalView& lbasis0, auto& lbasis1) {
         lbasis0.bind(std::forward<E>(element));
         lbasis1.bind(lbasis0.element());
@@ -332,7 +332,7 @@ namespace Dune::PDELab::inline Experimental {
       }
 
 #if DUNE_PDELAB_ENABLE_DOUBLE_BIND
-      template<std::convertible_to<Element> E>
+      template<class E>
       friend void bind(E&& element, LocalView& lbasis0, LocalView& lbasis1) {
         lbasis0.bindElement(std::forward<E>(element));
         lbasis1.bindElement(lbasis0.element());
@@ -564,9 +564,10 @@ namespace Dune::PDELab::inline Experimental {
   };
 
 
-  [[nodiscard]] Concept::Basis auto makeBasis(const Concept::EntitySetPartition auto& entity_set_partition, const Concept::Impl::PreBasisTree auto& pre_basis)
+  template<Concept::EntitySetPartition EntitySetPartition, Concept::Impl::PreBasisTree PreBasis>
+  [[nodiscard]] Concept::Basis auto makeBasis(const EntitySetPartition& entity_set_partition, const PreBasis& pre_basis)
   {
-    return Basis{entity_set_partition, pre_basis};
+    return Basis<EntitySetPartition, PreBasis>{entity_set_partition, pre_basis};
   }
 
   [[nodiscard]] Concept::Basis auto makeBasis(const Dune::Concept::GridView auto& entity_set, const Concept::Impl::PreBasisTree auto& pre_basis)
