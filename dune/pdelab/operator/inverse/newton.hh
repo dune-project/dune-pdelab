@@ -117,7 +117,7 @@ public:
     std::vector<RangeField> defects{defect};
     TRACE_COUNTER("dune", "Newton::Defect", defect);
     if (verbosity >= 2)
-      std::cout << "  Initial defect: "
+      std::cout << "Initial non-linear defect: "
                 << std::setw(12) << std::setprecision(4) << std::scientific
                 << defect << std::endl;
 
@@ -131,7 +131,6 @@ public:
     while (Convergence::Reason::Iterating == (convergence_reason = conv_cond.evaluate(defects))){
       [[maybe_unused]] auto it_timestamp = perfetto::TrackEvent::GetTraceTimeNs();
       TRACE_EVENT("dune", "Newton::Iteration", it_timestamp);
-
       prepareStep(defects, x);
       TRACE_COUNTER("dune",
                     "Newton::InverseTargetRelativeTolerance",
@@ -141,7 +140,16 @@ public:
 
       if (defects.size() > 1) correction = zero;
 
+      if (verbosity >= 4)
+        std::cout << "Solving linearized system..." << std::endl;
+
       error_condition = dx_inverse.apply(residual, correction);
+      // if (verbosity >= 4)
+      //   std::cout << "          linear solver iterations:     "
+      //             << std::setw(12) << _linearSolver.result().iterations << std::endl
+      //             << "          linear defect reduction:      "
+      //             << std::setw(12) << std::setprecision(4) << std::scientific
+      //             << _linearSolver.result().reduction << std::endl;
       if (error_condition) break;
 
       defect = defects.back();
@@ -150,20 +158,24 @@ public:
       if (error_condition) break;
 
       TRACE_COUNTER("dune", "Newton::Defect", it_timestamp, defect);
-      if (verbosity == 2)
-        std::cout << "  Newton iteration "
-                  << std::setw(2)
-                  << defects.size()
-                  << ".  New defect: "
-                  << std::setw(12) << std::setprecision(4) << std::scientific
+      if (verbosity >= 2)
+        std::cout << "Newton iteration "
+                  << (defects.size() - 1)
+                  << ", defect: "
+                  << std::setprecision(4) << std::scientific
                   << defect
-                  << ".  Reduction (this): "
-                  << std::setw(12) << std::setprecision(4) << std::scientific
+                  << ", reduction (this): "
+                  << std::setprecision(4) << std::scientific
                   << defects.back()/defect
-                  << ".  Reduction (total): "
-                  << std::setw(12) << std::setprecision(4) << std::scientific
-                  << defects.front()/defect
-                  << std::endl;
+                  << ", reduction (total): "
+                  << std::setprecision(4) << std::scientific
+                  << defects.front()/defect;
+      if (verbosity >= 3)
+        std::cout << ", defect (this):                       "
+                  << std::setprecision(4) << std::scientific
+                  << defect;
+      if (verbosity >= 2)
+        std::cout << std::endl;
       defects.push_back(defect);
     }
     dx_inverse["forward"] = nullptr;
@@ -178,6 +190,16 @@ public:
     TRACE_COUNTER("dune", "Newton::ConvergenceRate",   newton_timestamp, std::pow(reduction, 1.0/iterations));
     TRACE_COUNTER("dune", "Newton::ConvergenceReason", newton_timestamp, static_cast<int>(convergence_reason));
 
+    if (verbosity >= 1)
+      std::cout << "Newton "
+                << (error_condition ? "failed" : "succeded")
+                << " after "
+                << iterations
+                << " iterations with a reduction of "
+                << std::setprecision(4) << std::scientific
+                << reduction
+                << std::endl;
+
     return error_condition;
   }
 
@@ -190,10 +212,11 @@ private:
   void prepareStep(std::span<const RangeField> defects, const Domain& x)
   {
     const PropertyTree& properties = *this;
-    auto rel_tol                = properties.get<double     >("convergence_condition.relative_tolerance");
-    auto dx_inverse_fixed_tol   = properties.get<bool       >("dx_inverse_fixed_tolerance");
-    auto min_dx_inverse_rel_tol = properties.get<double     >("dx_inverse_min_relative_tolerance");
-    auto lin_threshold          = properties.get<double     >("linearization_threshold");
+    const auto rel_tol                = properties.get<double     >("convergence_condition.relative_tolerance");
+    const auto dx_inverse_fixed_tol   = properties.get<bool       >("dx_inverse_fixed_tolerance");
+    const auto min_dx_inverse_rel_tol = properties.get<double     >("dx_inverse_min_relative_tolerance");
+    const auto lin_threshold          = properties.get<double     >("linearization_threshold");
+    const auto verbosity              = properties.get<int        >("verbosity");
 
     // absolute tolerance is optional
     std::optional<RangeField> abs_tol;
@@ -210,9 +233,12 @@ private:
     // if defect is above the linearization threshold, linearize differential
     // operator and reset linear operator for the dx_inverse
     bool linearize = (iteration == 0) or (defect_rate > lin_threshold);
-    if (linearize)
+    if (linearize) {
+      if (verbosity>=3)
+        std::cout << "Linearizing problem..." << std::endl;
       _derivative = getForward().derivative(
         x, _derivative ? std::move(_derivative) : nullptr);
+    }
     auto& dx_inverse = getDerivativeInverse();
     dx_inverse["forward"] = std::shared_ptr<Forward>(_derivative);
 
@@ -238,7 +264,10 @@ private:
         max_dx_inverse_rel_tol = stop_defect/(10*current_defect);
       }
       it_dx_inverse_rel_tol = clamp<double>(it_dx_inverse_rel_tol, min_dx_inverse_rel_tol, max_dx_inverse_rel_tol);
-
+      if (verbosity >= 3)
+        std::cout << "Requested linear reduction: "
+                  << std::setprecision(4) << std::scientific
+                  << it_dx_inverse_rel_tol << std::endl;
       dx_inverse["convergence_condition.relative_tolerance"] = it_dx_inverse_rel_tol;
     }
   }
