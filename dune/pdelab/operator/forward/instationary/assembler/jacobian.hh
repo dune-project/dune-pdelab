@@ -146,8 +146,8 @@ private:
 
     std::vector<LocalCoefficients> llin_in, llin_out;
     for (std::size_t step = 0; step != steps; ++step) {
-      llin_in.emplace_back(LocalCoefficients{ ltrial_in, linearization_point[step] });
-      llin_out.emplace_back(LocalCoefficients{ ltrial_in, linearization_point[step] });
+      llin_in.emplace_back(LocalCoefficients{ ltrial_in, &linearization_point[step] });
+      llin_out.emplace_back(LocalCoefficients{ ltrial_in, &linearization_point[step] });
     }
 
     LocalJacobian ljac_ini{ _test, _trial, jac[0][0] };

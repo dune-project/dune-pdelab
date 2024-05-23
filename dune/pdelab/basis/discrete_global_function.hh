@@ -38,7 +38,7 @@ private:
     LocalFunction(const Basis& basis, const std::shared_ptr<const Container>& container)
       : _container{container}
       , _lbasis{basis.localView()}
-      , _lcontainer{basis, *_container}
+      , _lcontainer{basis, _container.get()}
     {}
 
     LocalFunction(const LocalFunction& other) = default;

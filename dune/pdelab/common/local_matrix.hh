@@ -27,12 +27,12 @@ concept Coefficient = requires(T v)
   requires std::copyable<T>;
 };
 
-template<Concept::Basis _TestBasis, Concept::Basis _TrialBasis, class Container>
+template<Concept::Basis TestBasis_, Concept::Basis TrialBasis_, class Container>
 class LocalMatrixView
 {
 public:
-  using TestBasis = _TestBasis;
-  using TrialBasis = _TrialBasis;
+  using TestBasis = TestBasis_;
+  using TrialBasis = TrialBasis_;
   using Weight = int;
 
   LocalMatrixView(const auto&, const auto&, Container& container)
@@ -175,6 +175,14 @@ public:
 
   [[nodiscard]] static constexpr Weight weight() { return 1; }
 
+  [[nodiscard]] const auto& operator()(const Concept::LeafTreeNode auto& ltest_node, auto test_dof, const Concept::LeafTreeNode auto& ltrial_node, auto trial_dof) const {
+    return _lcontainer[ltest_node.path()][ltrial_node.path()][ltrial_node.size()*test_dof + trial_dof];
+  }
+
+  [[nodiscard]] auto& operator()(const Concept::LeafTreeNode auto& ltest_node, auto test_dof, const Concept::LeafTreeNode auto& ltrial_node, auto trial_dof) {
+    return _lcontainer[ltest_node.path()][ltrial_node.path()][ltrial_node.size()*test_dof + trial_dof];
+  }
+
 private:
 
   LocalTreeContainer _lcontainer;
@@ -227,13 +235,13 @@ struct LocalMatrixApplyView {
   using TrialBasis = typename TrialContainer::Basis;
 
   void accumulate(const auto& ltest, auto test_dof, const auto& ltrial, auto trial_dof, auto value) {
-    ltest_container.accumulate(ltest, test_dof, ltria_container(ltrial, trial_dof) * value);
+    ltest_container.accumulate(ltest, test_dof, ltrial_container(ltrial, trial_dof) * value);
   }
 
-  // [[nodiscard]] static constexpr Weight weight() { return ltest_container.weight(); ??? }
+  [[nodiscard]] auto weight() const { return ltest_container.weight(); }
 
   TestContaienr& ltest_container;
-  const TrialContainer& ltria_container;
+  const TrialContainer& ltrial_container;
 };
 
 

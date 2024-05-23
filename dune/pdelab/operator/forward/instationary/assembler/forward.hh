@@ -152,14 +152,14 @@ private:
 
     std::vector<LocalCoefficients> lcoeff_in, lcoeff_out;
     for (std::size_t step = 0; step != steps; ++step) {
-      lcoeff_in.emplace_back(LocalCoefficients{ ltrial_in, std::cref(coefficients[step]) });
-      lcoeff_out.emplace_back(LocalCoefficients{ ltrial_in, std::cref(coefficients[step]) });
+      lcoeff_in.emplace_back(LocalCoefficients{ ltrial_in, &coefficients[step] });
+      lcoeff_out.emplace_back(LocalCoefficients{ ltrial_in, &coefficients[step] });
     }
 
     std::vector<LocalResidual> lres_in, lres_out;
     for (std::size_t stage = 0; stage != stages; ++stage) {
-      lres_in.emplace_back(LocalResidual{ ltest_in, std::ref(residuals[stage]) });
-      lres_out.emplace_back(LocalResidual{ ltest_in, std::ref(residuals[stage]) });
+      lres_in.emplace_back(LocalResidual{ ltest_in, &residuals[stage] });
+      lres_out.emplace_back(LocalResidual{ ltest_in, &residuals[stage] });
     }
 
     unbind(ltest_in, ltrial_in);

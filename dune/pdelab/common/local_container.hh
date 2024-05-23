@@ -48,12 +48,12 @@ namespace Impl {
 // and provides the means to gather and scatter to the global container without data races
 
 // TODO: this interface does not let you know if a vector was not loaded!
-template<Concept::Basis Basis_, Concept::Container<Basis_> Container>
+template<Concept::Basis Basis_, Concept::Container<Basis_> Container_>
 class LocalContainerBuffer
 {
   template<class LeafNode>
   struct LeafToField {
-    using Field = std::decay_t<decltype(localContainerEntry(std::declval<Container&>(), std::declval<LeafNode>(), 0))>;
+    using Field = std::decay_t<decltype(localContainerEntry(std::declval<Container_&>(), std::declval<LeafNode>(), 0))>;
   };
 
   using LocalTreeContainer = TypeTree::UniformTreeContainer<std::size_t, typename Basis_::LocalView::Tree>;
@@ -61,11 +61,12 @@ class LocalContainerBuffer
 public:
 
   using Basis = Basis_;
+  using Container = Container_;
   using Weight = int;
 
-  LocalContainerBuffer(const Basis& space, Container& container)
+  LocalContainerBuffer(const Basis& space, Container* container = nullptr)
     : _lconstraints{ space.localConstraints() }
-    , _container{ std::ref(container) }
+    , _container{ container }
   {
     auto it = space.entitySet().template begin<0>();
     if (space.entitySet().size(0) == 0)
@@ -75,12 +76,20 @@ public:
     reserve(lspace);
   }
 
-  LocalContainerBuffer(const Concept::LocalIndexSet auto& lspace, Container& container)
+  LocalContainerBuffer(const Basis& space, Container& container)
+    : LocalContainerBuffer{space, &container}
+  {}
+
+  LocalContainerBuffer(const Concept::LocalIndexSet auto& lspace, Container* container = nullptr)
     : _lconstraints{ lspace.globalBasis().localConstraints() }
-    , _container{ std::ref(container) }
+    , _container{ container }
   {
     reserve(lspace);
   }
+
+  LocalContainerBuffer(const Concept::LocalIndexSet auto& lspace, Container& container)
+    : LocalContainerBuffer{lspace, &container}
+  {}
 
   LocalContainerBuffer(const LocalContainerBuffer& other)
   : _buffer{other._buffer}
@@ -128,9 +137,9 @@ public:
           if (not is_correction)
             data_ptr[dof] = lconstraints_node.translationValue(dof); // TODO handle units!
           for (auto [ci, weight] : lconstraints_node.linearCoefficients(dof))
-            data_ptr[dof] += weight * containerEntry(_container.get(), lspace_node.index(dof));
+            data_ptr[dof] += weight * containerEntry(*_container, lspace_node.index(dof));
         } else {
-          data_ptr[dof] = localContainerEntry(_container.get(), lspace_node, dof);
+          data_ptr[dof] = localContainerEntry(*_container, lspace_node, dof);
         }
       }
     });
@@ -254,16 +263,16 @@ private:
         for (std::size_t dof = 0; dof != lspace_node.size(); ++dof) {
           if (lconstraints_node.isConstrained(dof)) {
             if (not is_correction)
-              containerEntry(_container.get(), lspace_node.index(dof)) = lconstraints_node.translationValue(dof);
+              containerEntry(*_container, lspace_node.index(dof)) = lconstraints_node.translationValue(dof);
             const auto& linear_coeff = lconstraints_node.linearCoefficients(dof);
             if (not linear_coeff.empty() and lspace.partitionRegion() == EntitySetPartitioner::shared_region)
               DUNE_THROW(NotImplemented, "The concurrency model for non correction methods with generic affine constraints is missing. "
                                           "Consider using a local space without linear constraints or a single threaded assembly.");
             for (auto [ci, weight] : linear_coeff) {
-              containerEntry(_container.get(), ci) += weight * data_ptr[dof];
+              containerEntry(*_container, ci) += weight * data_ptr[dof];
             }
           } else {
-            f(localContainerEntry(_container.get(), lspace_node, dof), data_ptr[dof]);
+            f(localContainerEntry(*_container, lspace_node, dof), data_ptr[dof]);
           }
         }
       };
@@ -289,7 +298,7 @@ private:
   std::vector<std::byte> _buffer;
   LocalTreeContainer _offsets;
   LocalConstraints _lconstraints;
-  std::reference_wrapper<Container> _container;
+  Container* _container;
 };
 
 
@@ -297,6 +306,7 @@ template<Concept::LocalMutableContainer LocalContainer, class WeightType>
 class WeightedLocalContainerView {
 public:
   using Basis = typename LocalContainer::Basis;
+  using Container = typename LocalContainer::Container;
   using Weight = decltype(typename LocalContainer::Weight{} * WeightType{});
 
   WeightedLocalContainerView(LocalContainer& lcontainer, WeightType weight)

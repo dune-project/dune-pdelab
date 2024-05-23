@@ -152,16 +152,16 @@ private:
 
     std::vector<LocalCoefficients> lpoint_in, lpoint_out, llin_in, llin_out;
     for (std::size_t step = 0; step != steps; ++step) {
-      lpoint_in.emplace_back(LocalCoefficients{ ltrial_in, point[step] });
-      lpoint_out.emplace_back(LocalCoefficients{ ltrial_in, point[step] });
-      llin_in.emplace_back(LocalCoefficients{ ltrial_in, lin_point[step] });
-      llin_out.emplace_back(LocalCoefficients{ ltrial_in, lin_point[step] });
+      lpoint_in.emplace_back(LocalCoefficients{ ltrial_in, &point[step] });
+      lpoint_out.emplace_back(LocalCoefficients{ ltrial_in, &point[step] });
+      llin_in.emplace_back(LocalCoefficients{ ltrial_in, &lin_point[step] });
+      llin_out.emplace_back(LocalCoefficients{ ltrial_in, &lin_point[step] });
     }
 
     std::vector<LocalJacobianApply> ljac_apply_in, ljac_apply_out;
     for (std::size_t stage = 0; stage != stages; ++stage) {
-      ljac_apply_in.emplace_back(LocalJacobianApply{ ltrial_in, jac_apply[stage] });
-      ljac_apply_out.emplace_back(LocalJacobianApply{ ltrial_in, jac_apply[stage] });
+      ljac_apply_in.emplace_back(LocalJacobianApply{ ltrial_in, &jac_apply[stage] });
+      ljac_apply_out.emplace_back(LocalJacobianApply{ ltrial_in, &jac_apply[stage] });
     }
 
     unbind(ltest_in, ltrial_in);
