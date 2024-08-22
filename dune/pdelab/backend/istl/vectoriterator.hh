@@ -77,32 +77,30 @@ namespace Dune {
 
         template<typename V>
         struct vector_iterator_base
-          : public std::iterator<std::forward_iterator_tag,
-                                 typename V::field_type,
-                                 typename std::ptrdiff_t,
-                                 typename V::field_type*,
-                                 typename V::field_type&
-                                 >
         {
           typedef V vector;
           typedef V& vector_reference;
           typedef typename tags::container<V>::type::base_tag vector_tag;
           static const bool is_const = false;
+          using iterator_category = std::forward_iterator_tag;
+          using value_type = typename V::field_type;
+          using difference_type = typename std::ptrdiff_t;
+          using pointer = typename V::field_type*;
+          using reference = typename V::field_type&;
         };
 
         template<typename V>
         struct vector_iterator_base<const V>
-          : public std::iterator<std::forward_iterator_tag,
-                                 typename V::field_type,
-                                 typename std::ptrdiff_t,
-                                 const typename V::field_type*,
-                                 const typename V::field_type&
-                                 >
         {
           typedef V vector;
           typedef const V& vector_reference;
           typedef typename tags::container<V>::type::base_tag vector_tag;
           static const bool is_const = true;
+          using iterator_category = std::forward_iterator_tag;
+          using value_type = typename V::field_type;
+          using difference_type = typename std::ptrdiff_t;
+          using pointer = const typename V::field_type*;
+          using reference = const typename V::field_type&;
         };
 
       }
