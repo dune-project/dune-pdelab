@@ -15,6 +15,8 @@ Changes
 PDELab git master (will be PDELab 2.9)
 --------------------------------------
 
+-   Remove dependency on the deprecated `std::iterator`
+
 -   Fixed the initial guess in OneStepMethod for constrained vectors.
 
 -   Fixed the interpolate function behavior when input and output vector are references to the same object.
