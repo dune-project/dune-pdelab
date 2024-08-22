@@ -19,24 +19,24 @@ namespace Dune {
       FilenameHelper(const char *basename_, int i_=0)
         : i(i_)
       {
-        sprintf(basename,"%s",basename_);
+        snprintf(basename,255,"%s",basename_);
       }
 
       FilenameHelper(const std::string & basename_, int i_=0)
         : i(i_)
       {
-        sprintf(basename,"%s",basename_.c_str());
+        snprintf(basename,255,"%s",basename_.c_str());
       }
 
       const char *getName (int i_)
       {
-        sprintf(fname,"%s-%05d",basename,i_);
+        snprintf(fname,255,"%s-%05d",basename,i_);
         return fname;
       }
 
       const char *getName ()
       {
-        sprintf(fname,"%s-%05d",basename,i);
+        snprintf(fname,255,"%s-%05d",basename,i);
         return fname;
       }
 
