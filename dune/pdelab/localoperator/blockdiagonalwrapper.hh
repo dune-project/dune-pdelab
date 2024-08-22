@@ -23,7 +23,7 @@ namespace Dune {
           : _view(view), _diagonal(diagonal)
         {}
 
-        const auto weight()
+        auto weight()
         {
           return _view.weight();
         }
@@ -33,7 +33,7 @@ namespace Dune {
           return _view.data();
         }
 
-        const auto data() const
+        auto data() const
         {
           return _view.data();
         }

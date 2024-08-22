@@ -156,7 +156,7 @@ namespace Dune {
       }
 
       //! Access underlying container, const version
-      const auto data() const
+      auto data() const
       {
         return _container.data();
       }
@@ -247,7 +247,7 @@ namespace Dune {
       }
 
       //! Access underlying container, const version
-      const auto data() const
+      auto data() const
       {
         return _container.data();
       }

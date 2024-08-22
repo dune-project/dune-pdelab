@@ -171,7 +171,7 @@ namespace Dune {
           return _container.data();
         }
 
-        const auto data() const
+        auto data() const
         {
           return _container.data();
         }

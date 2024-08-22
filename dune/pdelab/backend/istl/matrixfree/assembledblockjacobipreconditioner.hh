@@ -38,7 +38,7 @@ namespace Dune {
           return _container.data();
         }
 
-        const auto data() const
+        auto data() const
         {
           return _container.data();
         }
@@ -163,7 +163,7 @@ namespace Dune {
       void alpha_volume(const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
       {
         // Matrix for storing the LU decomposition of the block diagonal
-        const int size = lfsu.size();
+        const auto size = lfsu.size();
         assert(lfsv.size() == size);
 
         // Assemble local block diagonal

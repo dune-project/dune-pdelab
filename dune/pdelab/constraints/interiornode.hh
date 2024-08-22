@@ -80,7 +80,7 @@ namespace Dune {
         typedef typename GV::Grid::ctype ctype;
 
         interior.resize(gv.indexSet().size(dim));
-        for(int i=0; i< interior.size(); i++)
+        for(std::size_t i=0; i< interior.size(); i++)
           interior[i] = true;
 
         // loop over all cells
