@@ -63,7 +63,7 @@ namespace Dune{
        *
        * Calculates total number of invocations
        */
-      const size_t size() const {
+      size_t size() const {
         size_t local_size = data.size();
         size_t global_size =  comm.sum(local_size);
         return global_size;
@@ -73,7 +73,7 @@ namespace Dune{
        *
        * Calculates global average over all processors and invocations
        */
-      const double avg() const {
+      double avg() const {
         double s_local = (double) std::accumulate(data.begin(),data.end(),0);
         size_t local_size = data.size();
         double global_size = (double) comm.sum(local_size);
@@ -85,7 +85,7 @@ namespace Dune{
        *
        * Calculates standard deviation
        */
-      const double stddev() const {
+      double stddev() const {
         using std::sqrt;
         double s_local = (double) std::accumulate(data.begin(),data.end(),0);
         double ss_local = (double) std::inner_product(data.begin(),data.end(),
