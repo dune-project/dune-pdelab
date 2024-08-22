@@ -10,7 +10,6 @@
 #include <type_traits>
 
 #include <dune/common/version.hh>
-#include <dune/common/iteratorrange.hh>
 #include <dune/geometry/referenceelements.hh>
 #include <dune/geometry/typeindex.hh>
 #include <dune/grid/common/capabilities.hh>
@@ -61,7 +60,7 @@ namespace Dune {
 
       using Index = typename BaseIndexSet::IndexType;
 
-      using Types = IteratorRange<std::vector<GeometryType>::const_iterator>;
+      using Types = std::vector<GeometryType>;
 
       using CodimMask = std::bitset<GV::dimension + 1>;
 
@@ -405,7 +404,7 @@ namespace Dune {
                 // reverse order because we store in ascending order with regard to the codim, not the dim
                 return y.dim() < x.dim();
               });
-            _per_codim_geometry_types[codim] = {range.first,range.second};
+            _per_codim_geometry_types[codim] = Types{range.first,range.second};
           }
 
         std::partial_sum(_gt_offsets.begin(),_gt_offsets.end(),_gt_offsets.begin());
@@ -461,7 +460,7 @@ namespace Dune {
       Types types() const
       {
         assert(!needsUpdate());
-        return {_geometry_types.begin(),_geometry_types.end()};
+        return _geometry_types;
       }
 
       PartitionViewEntitySetIndexSetBase(const GV& gv, CodimMask wanted_codims)
