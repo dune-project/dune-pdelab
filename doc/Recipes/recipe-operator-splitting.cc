@@ -1179,7 +1179,7 @@ int main(int argc, char** argv)
   int overlap=1;
   int refinement = 1;
   YaspPartition<dim> yp;
-  std::shared_ptr<Grid> gridp = std::shared_ptr<Grid>(new Grid(L,N,periodic,overlap,Dune::MPIHelper::getCollectiveCommunication(),&yp));
+  std::shared_ptr<Grid> gridp = std::shared_ptr<Grid>(new Grid(L,N,periodic,overlap,Dune::MPIHelper::getCommunication(),&yp));
   gridp->refineOptions(false); // keep overlap in cells
   gridp->globalRefine(refinement);
   using GV = Grid::LeafGridView;

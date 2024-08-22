@@ -241,7 +241,7 @@ int main(int argc, char** argv)
   Dune::FieldVector<DF,dim> L{1.,1.};
   std::array<int,dim> N{16,16};
   std::bitset<dim> B(false); // periodic boundary (left-right, up-bottom)
-  std::shared_ptr<Grid> gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));//,Dune::MPIHelper::getCollectiveCommunication()));
+  std::shared_ptr<Grid> gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));//,Dune::MPIHelper::getCommunication()));
   gridp->refineOptions(false); // keep overlap in cells
   gridp->globalRefine(refinement);
   //! [Define gv]
