@@ -37,8 +37,6 @@ dune_symlink_to_source_files(FILES matrix_free_linear.ini)
 #============================
 # Nonlinear Matrix-Free Tests
 #============================
-message("EIGEN ${HAVE_EIGEN}")
-
 dune_add_test(NAME matrix_free_nonlinear_partial_matrix_free_fastdg
               SOURCES matrix_free_nonlinear.cc
               COMPILE_DEFINITIONS PARTIAL_MATRIX_FREE FASTDG
