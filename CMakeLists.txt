@@ -1,8 +1,8 @@
-# set up project
-project("dune-pdelab" C CXX)
-
 # general stuff
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.13)
+
+# set up project
+project(dune-pdelab C CXX)
 
 # guess dune-common build dir
 if(NOT (dune-common_DIR OR dune-common_ROOT OR
