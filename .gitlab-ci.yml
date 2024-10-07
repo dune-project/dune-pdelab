@@ -10,6 +10,15 @@ variables:
   OMP_NUM_THREADS: 1
   DUNECI_PARALLEL: 4
 
+
+include:
+  - project: 'core/ci-config'
+    ref: master
+    file: 'config/common/master.yml'
+  - project: 'core/ci-config'
+    ref: master
+    file: 'jobs/common/master.yml'
+
 .dune_setup: &dune_setup |-
   . /duneci/bin/duneci-init-job
   duneci-install-module https://gitlab.dune-project.org/core/dune-common.git
@@ -23,17 +32,22 @@ variables:
   duneci-install-module https://gitlab.dune-project.org/staging/dune-functions.git
   duneci-install-module https://gitlab.dune-project.org/extensions/dune-multidomaingrid.git
 
-.common: &common
-  script:
-    - duneci-standard-test
-    # test tutorials as well
-    - export DUNE_CONTROL_PATH=$(pwd):/duneci/modules:$DUNE_CONTROL_PATH
-    - duneci-install-module https://gitlab.dune-project.org/pdelab/dune-pdelab-tutorials.git
-  tags:
-    - "duneci"
+before_script:
+  - *dune_setup
 
-debian:11--gcc:
-  <<: *common
+
+# test tutorials as well
+pdelab-tutorials:
+  stage: downstream
+  trigger:
+    project: pdelab/dune-pdelab-tutorials
+    strategy: depend
+  rules:
+    - when: manual
+      # allow_failure: true
+
+debian:11 gcc-10-20:
+  extends: .common
   image: registry.dune-project.org/docker/ci/debian:11
   before_script:
     - *dune_setup
@@ -65,14 +79,3 @@ debian:11--gcc:
   # gcovr reports results (`--print-summary` option above). With this line we extract the
   # result (% of covered lines) to report them in gitlab
   coverage: /^\s*lines:\s*\d+.\d+\%/
-
-debian:11--clang:
-  <<: *common
-  image: registry.dune-project.org/docker/ci/debian:11
-  before_script:
-    - *dune_setup
-  variables:
-    DUNECI_TOOLCHAIN: clang-11-20
-  artifacts:
-    reports:
-      junit: junit/*.xml
