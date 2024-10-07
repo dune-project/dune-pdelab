@@ -4,7 +4,6 @@
 #include <cstddef>
 
 #include <dune/common/std/type_traits.hh>
-#include <dune/common/keywords.hh>
 
 #include <dune/geometry/type.hh>
 
