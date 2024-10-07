@@ -1,3 +1,6 @@
+# All libraries unders this directory use pdelab
+link_libraries(dunepdelab)
+
 add_subdirectory(fem)
 add_subdirectory(matrixfree)
 
