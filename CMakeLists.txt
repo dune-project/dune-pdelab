@@ -25,14 +25,15 @@ dune_project()
 # Disable the upstream testing magic, that builds tests during "make test"
 set(DUNE_TEST_MAGIC OFF)
 
-# Use the enable all packages feature
-dune_enable_all_packages(MODULE_LIBRARIES dunepdelab)
+# Create a target for dune-pdelab with a Dune::PDELab alias
+dune_add_library(dunepdelab EXPORT_NAME PDELab)
+dune_target_enable_all_packages(dunepdelab)
 
 if(NOT MINGW)
   set(clock_cc "dune/pdelab/common/clock.cc")
 endif()
 
-dune_library_add_sources(dunepdelab SOURCES
+target_sources(dunepdelab PRIVATE
   ${clock_cc}
   dune/pdelab/common/hostname.cc
   dune/pdelab/common/logtag.cc
