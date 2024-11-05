@@ -176,7 +176,7 @@ private:
       return icoeff.stiffnessWeight(stage, step) * InstationaryTraits<dt_position>::stiffnessFactor(duration);
     };
 
-    const auto is_linear = (not LocalAssembly::isLinear(_stiff_lop) || not LocalAssembly::isLinear(_mass_lop));
+    const auto is_nonlinear = (not LocalAssembly::isLinear(_stiff_lop) || not LocalAssembly::isLinear(_mass_lop));
     const auto& es = _trial.entitySet();
     const auto& esp = _trial.entitySetPartition();
 
@@ -186,7 +186,7 @@ private:
         llin_in, llin_out,
         ljac_ii, ljac_io, ljac_oi, ljac_oo,
         mlop = _mass_lop, slop = _stiff_lop,
-        is_linear, sub_time_step, mass_weight, stiff_weight
+        is_nonlinear, sub_time_step, mass_weight, stiff_weight
       ] (const auto& entity) mutable
     {
       if (LocalAssembly::skipEntity(mlop, entity)) {
@@ -197,7 +197,7 @@ private:
 
       bind(entity, ltest_in, ltrial_in);
 
-      if (is_linear)
+      if (is_nonlinear)
         for (std::size_t step = 0; step != steps; ++step)
           llin_in[step].load(ltrial_in);
 
@@ -245,7 +245,7 @@ private:
             bind(entity_out, ltest_out, ltrial_out);
 
             for (std::size_t step = 0; step != steps; ++step)
-              if (is_linear)
+              if (is_nonlinear)
                 llin_out[step].load(ltrial_out);
 
             for (std::size_t stage = 0; stage != stages; ++stage) {
