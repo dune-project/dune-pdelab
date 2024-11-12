@@ -21,13 +21,17 @@
 #include <tbb/concurrent_unordered_map.h>
 #endif
 
-#if __cpp_lib_execution
+// disabled by default due to memory leaks: https://github.com/oneapi-src/oneDPL/pull/1589
+#if DUNE_PDELAB_ENABLE_PARALLEL_SORT
+#if __cpp_lib_execution >= 201603L
 #include <execution>
 #include <algorithm>
 #elif __has_include(<oneapi/dpl/execution>)
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/algorithm>
 #endif
+#endif
+
 #include <tuple>
 #include <span>
 #include <unordered_map>
@@ -162,13 +166,16 @@ namespace Impl {
           // (move to dynamic multi-index to make comparison easier)
           return Dune::PDELab::MultiIndex(l.first) < Dune::PDELab::MultiIndex(r.first);
         };
-#if __cpp_lib_execution
-      std::sort(std::execution::par, begin(sorted_map), end(sorted_map), compare_mi);
-#elif __has_include(<oneapi/dpl/execution>)
-      oneapi::dpl::sort(oneapi::dpl::execution::par, begin(sorted_map), end(sorted_map), compare_mi);
-#else
-      std::sort(begin(sorted_map), end(sorted_map), compare_mi);
+
+      sort(
+#if DUNE_PDELAB_ENABLE_PARALLEL_SORT and (__cpp_lib_execution >= 201603L)
+        std::execution::par,
+#elif DUNE_PDELAB_ENABLE_PARALLEL_SORT and __has_include(<oneapi/dpl/execution>)
+        oneapi::dpl::execution::par,
 #endif
+        std::begin(sorted_map),
+        std::end(sorted_map),
+        compare_mi);
 
       // move sorted map to a compressed by row representation
       auto offset = 0;
