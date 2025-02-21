@@ -19,8 +19,6 @@ foreach(geometry ${geometries})
                       FEM_FACTORY_FEM_CLASS=Dune::PDELab::RaviartThomasLocalFiniteElementMap
                       FEM_FACTORY_ORDER=${order}
                       GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids"
-                      CMAKE_GUARD GMP_FOUND
-
     )
   endforeach()
 endforeach()
@@ -36,7 +34,6 @@ dune_add_test(NAME testrt2cube2dfem
                   FEM_FACTORY_FEM_CLASS=Dune::PDELab::RaviartThomasLocalFiniteElementMap
                   FEM_FACTORY_ORDER=2
                   GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids"
-                  CMAKE_GUARD GMP_FOUND
 )
 
 # RT 0 and RT1 in 3D for cube
@@ -51,8 +48,6 @@ foreach(order 0 1)
                     FEM_FACTORY_FEM_CLASS=Dune::PDELab::RaviartThomasLocalFiniteElementMap
                     FEM_FACTORY_ORDER=${order}
                     GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids"
-                    CMAKE_GUARD GMP_FOUND
-
   )
 endforeach()
 
@@ -68,7 +63,6 @@ foreach(geometry ${geometries})
                       FEM_FACTORY_FEM_CLASS=Dune::PDELab::BrezziDouglasMariniLocalFiniteElementMap
                       FEM_FACTORY_ORDER=1
                       GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids"
-                      CMAKE_GUARD GMP_FOUND
    )
 endforeach()
 
@@ -104,8 +98,6 @@ foreach(dimension ${dimensions})
                       FEM_FACTORY=PKFEMFactory
                       FEM_FACTORY_ORDER=${order}
                       GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids"
-                      CMAKE_GUARD GMP_FOUND
-
     )
   endforeach()
 endforeach()
@@ -120,7 +112,5 @@ foreach(dimension ${dimensions})
                     USE_RANNACHER_TUREK_FEM_FACTORY
                     FEM_FACTORY=RannacherTurekFEMFactory
                     GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids"
-                    CMAKE_GUARD GMP_FOUND
-
   )
 endforeach()
