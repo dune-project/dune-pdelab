@@ -12,7 +12,6 @@
 #include <dune/functions/functionspacebases/lagrangebasis.hh>
 #include <dune/functions/functionspacebases/powerbasis.hh>
 #include <dune/functions/gridfunctions/discreteglobalbasisfunction.hh>
-#include <dune/functions/functionspacebases/hierarchicvectorwrapper.hh>
 
 #include <dune/pdelab.hh>
 
