@@ -20,6 +20,7 @@ foreach(geometry ${geometries})
                       FEM_FACTORY_ORDER=${order}
                       GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids"
                       CMAKE_GUARD GMP_FOUND
+
     )
   endforeach()
 endforeach()
@@ -51,6 +52,7 @@ foreach(order 0 1)
                     FEM_FACTORY_ORDER=${order}
                     GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids"
                     CMAKE_GUARD GMP_FOUND
+
   )
 endforeach()
 
@@ -103,6 +105,7 @@ foreach(dimension ${dimensions})
                       FEM_FACTORY_ORDER=${order}
                       GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids"
                       CMAKE_GUARD GMP_FOUND
+
     )
   endforeach()
 endforeach()
@@ -118,5 +121,6 @@ foreach(dimension ${dimensions})
                     FEM_FACTORY=RannacherTurekFEMFactory
                     GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids"
                     CMAKE_GUARD GMP_FOUND
+
   )
 endforeach()
