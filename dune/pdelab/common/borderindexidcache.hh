@@ -95,6 +95,7 @@ namespace Dune {
 
         auto& index_set = _entity_set.indexSet();
 
+        // clean data structures
         // Skip codim 0 - cells can't ever be border entities
         for (int codim = 1; codim <= Grid::dimension; ++codim)
           {
@@ -104,7 +105,7 @@ namespace Dune {
             for (auto gt : index_set.types(codim))
               {
                 _border_entities[GlobalGeometryTypeIndex::index(gt)].resize(index_set.size(gt));
-                _index_to_id[GlobalGeometryTypeIndex::index(gt)];
+                _index_to_id[GlobalGeometryTypeIndex::index(gt)].clear();
               }
           }
         create_for_codim<Grid::dimension>();
