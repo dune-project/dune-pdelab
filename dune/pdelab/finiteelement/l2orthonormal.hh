@@ -749,7 +749,7 @@ DUNE_NO_DEPRECATED_END
 
     //! \brief Local interpolation of a function
     template<typename F, typename C>
-    void interpolate (const F& ff, std::vector<C>& out) const
+    void interpolate (const F& f, std::vector<C>& out) const
     {
       // select quadrature rule
       typedef typename FieldTraits<typename LB::Traits::RangeFieldType>::real_type RealFieldType;
@@ -758,8 +758,6 @@ DUNE_NO_DEPRECATED_END
       const int d = LB::Traits::dimDomain;
       const Dune::QuadratureRule<RealFieldType,d>&
         rule = Dune::QuadratureRules<RealFieldType,d>::rule(lb.type(),2*lb.order());
-
-      auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
 
       // prepare result
       out.resize(LB::n);

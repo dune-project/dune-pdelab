@@ -262,10 +262,9 @@ namespace Dune
 
       //! \brief Local interpolation of a function
       template<typename F, typename C>
-      void interpolate (const F& ff, std::vector<C>& out) const
+      void interpolate (const F& f, std::vector<C>& out) const
       {
         typename LB::Traits::DomainType x;
-        auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
 
         out.resize(QkSize<k,d>::value);
 
@@ -290,10 +289,9 @@ namespace Dune
     public:
       //! \brief Local interpolation of a function
       template<typename F, typename C>
-      void interpolate (const F& ff, std::vector<C>& out) const
+      void interpolate (const F& f, std::vector<C>& out) const
       {
         typename LB::Traits::DomainType x(0.5);
-        auto&& f = Impl::makeFunctionWithCallOperator<typename LB::Traits::DomainType>(ff);
 
         out.resize(1);
         out[0] = f(x);
