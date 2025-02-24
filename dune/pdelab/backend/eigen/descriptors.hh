@@ -20,7 +20,7 @@ namespace Dune {
       template<typename GFS, typename E>
       class VectorContainer;
 
-      template<typename GFSV, typename GFSU, typename ET, int _Options>
+      template<typename GFSV, typename GFSU, typename ET, int Options>
       class MatrixContainer;
 
       template<typename M>
@@ -53,7 +53,7 @@ namespace Dune {
 
       };
 
-      template<int _Options = ::Eigen::RowMajor>
+      template<int Options = ::Eigen::RowMajor>
       struct MatrixBackend
       {
         typedef std::size_t size_type;
@@ -70,7 +70,7 @@ namespace Dune {
         template<typename VV, typename VU, typename E>
         struct MatrixHelper
         {
-          typedef PDELab::Eigen::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace, E, _Options> type;
+          typedef PDELab::Eigen::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace, E, Options> type;
         };
       };
 
