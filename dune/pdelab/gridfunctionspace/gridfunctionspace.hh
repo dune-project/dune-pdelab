@@ -37,13 +37,7 @@ namespace Dune {
 
 #include <dune/pdelab/common/partitionviewentityset.hh>
 #include <dune/pdelab/backend/interface.hh>
-
-// we just want the descriptors here, so we temporarily switch off the warning for
-// directly including ISTL backend headers
-#define _DUNE_PDELAB_SUPPRESS_ISTL_HH_WARNING
 #include <dune/pdelab/backend/istl/descriptors.hh>
-#undef _DUNE_PDELAB_SUPPRESS_ISTL_HH_WARNING
-
 #include <dune/pdelab/constraints/noconstraints.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/datahandleprovider.hh>
