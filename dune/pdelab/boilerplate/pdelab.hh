@@ -1487,10 +1487,10 @@ namespace Dune {
                                   const typename Traits::DomainType& x,
                                   typename Traits::RangeType& y) const
             {
-                typename Traits::DomainType x_ = e.geometry().global(x);
-                std::vector<double> x__(x.size());
-                for (size_t i=0; i<x.size(); ++i) x__[i]=x_[i];
-                y = f(x__);
+                typename Traits::DomainType x_global = e.geometry().global(x);
+                std::vector<double> x_vec(x.size());
+                for (size_t i=0; i<x.size(); ++i) x_vec[i]=x_global[i];
+                y = f(x_vec);
             }
 
             inline const typename FS::GV& getGridView () const
