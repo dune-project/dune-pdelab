@@ -1,3 +1,5 @@
+# All libraries unders this directory use pdelab
+link_libraries(Dune::PDELab)
 
 dune_add_test(SOURCES recipe-geometry-grid.cc)
 dune_add_test(SOURCES recipe-integrating-grid-functions.cc)
