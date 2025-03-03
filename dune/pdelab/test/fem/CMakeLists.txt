@@ -78,7 +78,10 @@ foreach(dimension ${dimensions})
                         USE_OPB_FEM_FACTORY
                         FEM_FACTORY=OPBFEMFactory
                         FEM_FACTORY_ORDER=${order}
-                        GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids")
+                        GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids"
+                        CMAKE_GUARD GMP_FOUND
+                        )
+
       endforeach()
   endforeach()
 endforeach()

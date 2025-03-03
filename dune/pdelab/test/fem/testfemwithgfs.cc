@@ -20,7 +20,9 @@
 // Include snippets for the different FEMs
 
 #include "rtbdmfem.hh"
+#ifdef USE_OPB_FEM_FACTORY
 #include "opbfem.hh"
+#endif
 #include "pkfem.hh"
 #include "rannacherturekfem.hh"
 
