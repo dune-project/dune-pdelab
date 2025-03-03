@@ -151,7 +151,7 @@ namespace Dune {
             gfs_.gridView().comm().broadcast(&couplings, 1, rank);
 
             // Communicate row's pattern
-            rank_type entries_pos[couplings];
+            std::vector<rank_type> entries_pos(couplings);
             if (rank == my_rank_) {
               rank_type cnt = 0;
               for (rank_type basis_index2 = 0; basis_index2 < local_basis_sizes_[my_rank_]; basis_index2++) {
@@ -166,10 +166,10 @@ namespace Dune {
                 }
               }
             }
-            gfs_.gridView().comm().broadcast(entries_pos, couplings, rank);
+            gfs_.gridView().comm().broadcast(entries_pos.data(), entries_pos.size(), rank);
 
             // Communicate actual entries
-            field_type entries[couplings];
+            std::vector<field_type> entries(couplings);
             if (rank == my_rank_) {
               rank_type cnt = 0;
               for (rank_type basis_index2 = 0; basis_index2 < local_basis_sizes_[my_rank_]; basis_index2++) {
@@ -183,7 +183,7 @@ namespace Dune {
                 }
               }
             }
-            gfs_.gridView().comm().broadcast(entries, couplings, rank);
+            gfs_.gridView().comm().broadcast(entries.data(), entries.size(), rank);
 
             // Build matrix row based on pattern
             for (rank_type i = 0; i < couplings; i++)
@@ -219,8 +219,8 @@ namespace Dune {
 
         using Dune::PDELab::Backend::native;
 
-        rank_type recvcounts[ranks_];
-        rank_type displs[ranks_];
+        std::vector<rank_type> recvcounts(ranks_);
+        std::vector<rank_type> displs(ranks_);
         for (rank_type rank = 0; rank < ranks_; rank++) {
           displs[rank] = 0;
         }
@@ -230,8 +230,8 @@ namespace Dune {
             displs[i] += local_basis_sizes_[rank];
         }
 
-        field_type buf_defect[global_basis_size_];
-        field_type buf_defect_local[local_basis_sizes_[my_rank_]];
+        std::vector<field_type> buf_defect(global_basis_size_);
+        std::vector<field_type> buf_defect_local(local_basis_sizes_[my_rank_]);
 
         for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
           buf_defect_local[basis_index] = 0.0;
@@ -239,7 +239,7 @@ namespace Dune {
             buf_defect_local[basis_index] += native(*subdomainbasis_->get_basis_vector(basis_index))[i] * native(fine)[i];
         }
 
-        MPI_Allgatherv(&buf_defect_local, local_basis_sizes_[my_rank_], MPITraits<field_type>::getType(), &buf_defect, recvcounts, displs, MPITraits<field_type>::getType(), gfs_.gridView().comm());
+        MPI_Allgatherv(buf_defect_local.data(), local_basis_sizes_[my_rank_], MPITraits<field_type>::getType(), buf_defect.data(), recvcounts.data(), displs.data(), MPITraits<field_type>::getType(), gfs_.gridView().comm());
         for (rank_type basis_index = 0; basis_index < global_basis_size_; basis_index++) {
           restricted[basis_index] = buf_defect[basis_index];
         }

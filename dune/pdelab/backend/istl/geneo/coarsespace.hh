@@ -32,6 +32,10 @@ public:
    * \return Size of the basis
    */
   virtual int basis_size() = 0;
+
+  /*! \brief Virtual destructor
+   */
+  virtual ~CoarseSpace() {}
 };
 
 #endif //DUNE_PDELAB_BACKEND_ISTL_GENEO_COARSESPACE_HH
