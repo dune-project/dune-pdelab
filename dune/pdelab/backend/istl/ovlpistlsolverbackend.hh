@@ -49,14 +49,14 @@ namespace Dune {
       typedef typename X::ElementType field_type;
 
       OverlappingOperator (const CC& cc_, const M& A)
-        : cc(cc_), _A_(A)
+        : cc(cc_), A_(A)
       {}
 
       //! apply operator to x:  \f$ y = A(x) \f$
       virtual void apply (const domain_type& x, range_type& y) const override
       {
         using Backend::native;
-        native(_A_).mv(native(x),native(y));
+        native(A_).mv(native(x),native(y));
         Dune::PDELab::set_constrained_dofs(cc,0.0,y);
       }
 
@@ -64,7 +64,7 @@ namespace Dune {
       virtual void applyscaleadd (field_type alpha, const domain_type& x, range_type& y) const override
       {
         using Backend::native;
-        native(_A_).usmv(alpha,native(x),native(y));
+        native(A_).usmv(alpha,native(x),native(y));
         Dune::PDELab::set_constrained_dofs(cc,0.0,y);
       }
 
@@ -76,12 +76,12 @@ namespace Dune {
       //! get matrix via *
       virtual const M& getmat () const override
       {
-        return _A_;
+        return A_;
       }
 
     private:
       const CC& cc;
-      const M& _A_;
+      const M& A_;
     };
 
     // new scalar product assuming at least overlap 1

@@ -43,14 +43,14 @@ namespace Dune
        * \tparam GFSU
        * \tparam ET Number type used for the matrix entries
        */
-      template<typename GFSV, typename GFSU, typename ET, int _Options>
+      template<typename GFSV, typename GFSU, typename ET, int Options>
       class MatrixContainer
-        : public Backend::impl::Wrapper<::Eigen::SparseMatrix<ET,_Options>>
+        : public Backend::impl::Wrapper<::Eigen::SparseMatrix<ET,Options>>
       {
 
       public:
 
-        typedef ::Eigen::SparseMatrix<ET,_Options> Container;
+        typedef ::Eigen::SparseMatrix<ET,Options> Container;
 
       private:
 

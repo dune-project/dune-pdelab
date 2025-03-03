@@ -75,7 +75,7 @@ namespace Dune {
        *       destruct the constructed object.
        */
       NonoverlappingOperator (const GFS& gfs_, const M& A)
-        : gfs(gfs_), _A_(A)
+        : gfs(gfs_), A_(A)
       { }
 
       //! apply operator
@@ -88,7 +88,7 @@ namespace Dune {
       {
         using Backend::native;
         // apply local operator; now we have sum y_p = sequential y
-        native(_A_).mv(native(x),native(y));
+        native(A_).mv(native(x),native(y));
 
         // accumulate y on border
         Dune::PDELab::AddDataHandle<GFS,Y> adddh(gfs,y);
@@ -106,7 +106,7 @@ namespace Dune {
       {
         using Backend::native;
         // apply local operator; now we have sum y_p = sequential y
-        native(_A_).usmv(alpha,native(x),native(y));
+        native(A_).usmv(alpha,native(x),native(y));
 
         // accumulate y on border
         Dune::PDELab::AddDataHandle<GFS,Y> adddh(gfs,y);
@@ -122,12 +122,12 @@ namespace Dune {
       //! extract the matrix
       virtual const M& getmat () const override
       {
-        return _A_;
+        return A_;
       }
 
     private:
       const GFS& gfs;
-      const M& _A_;
+      const M& A_;
     };
 
     // parallel scalar product assuming no overlap
