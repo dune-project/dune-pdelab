@@ -107,7 +107,7 @@ template <typename Number, typename LType>
 class Parameters
 {
   Number time = 0.;
-  Number finaltime = 1.; // reduced to get a reasonable testing run time
+  Number finaltime = 0.6; // reduced to get a reasonable testing run time
   Number dt = 0.2;
   Number othertime = 0.; // used in contaminant temporal part to find out which flow data should be loaded
   Number grav = -9.81; // negative, acts in a direction (0,-1)
