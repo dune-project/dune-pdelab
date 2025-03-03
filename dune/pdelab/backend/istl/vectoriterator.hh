@@ -84,7 +84,7 @@ namespace Dune {
           static const bool is_const = false;
           using iterator_category = std::forward_iterator_tag;
           using value_type = typename V::field_type;
-          using difference_type = typename std::ptrdiff_t;
+          using difference_type = std::ptrdiff_t;
           using pointer = typename V::field_type*;
           using reference = typename V::field_type&;
         };
@@ -98,7 +98,7 @@ namespace Dune {
           static const bool is_const = true;
           using iterator_category = std::forward_iterator_tag;
           using value_type = typename V::field_type;
-          using difference_type = typename std::ptrdiff_t;
+          using difference_type = std::ptrdiff_t;
           using pointer = const typename V::field_type*;
           using reference = const typename V::field_type&;
         };
