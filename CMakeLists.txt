@@ -19,15 +19,18 @@ list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH}
 #include the dune macros
 include(DuneMacros)
 
+# deactivate global include-directories
+dune_policy(SET DP_DEFAULT_INCLUDE_DIRS NEW)
+
 # start a dune project with information from dune.module
 dune_project()
 
-# Disable the upstream testing magic, that builds tests during "make test"
-set(DUNE_TEST_MAGIC OFF)
-
 # Create a target for dune-pdelab with a Dune::PDELab alias
 dune_add_library(dunepdelab EXPORT_NAME PDELab)
-dune_target_enable_all_packages(dunepdelab)
+target_link_libraries(dunepdelab PUBLIC ${DUNE_LIBS})
+
+# set include directories to target
+dune_default_include_directories(dunepdelab PUBLIC)
 
 if(NOT MINGW)
   set(clock_cc "dune/pdelab/common/clock.cc")
@@ -53,4 +56,4 @@ add_subdirectory(cmake/modules)
 add_subdirectory(lib)
 
 # finalize the dune project, e.g. generating config.h etc.
-finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
+finalize_dune_project()

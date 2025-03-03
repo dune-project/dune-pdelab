@@ -25,6 +25,10 @@
 #include <dune/common/version.hh>
 #include <dune/typetree/typetree.hh>
 
+#if DUNE_VERSION_GTE_REV(DUNE_COMMON,2,10,0)
+#include <dune-pdelab-config.hh>
+#endif
+
 // This alias should be removed after a PDELab 2.7 release.
 #if DUNE_VERSION_LT_REV(DUNE_TYPETREE,2,7,1)
 namespace Dune {
