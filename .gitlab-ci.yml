@@ -44,38 +44,4 @@ pdelab-tutorials:
     strategy: depend
   rules:
     - when: manual
-      # allow_failure: true
-
-debian:11 gcc-10-20:
-  extends: .common
-  image: registry.dune-project.org/docker/ci/debian:11
-  before_script:
-    - *dune_setup
-    - echo "CMAKE_FLAGS+=' -DCOVERAGE_REPORT=ON' " >> /duneci/cmake-flags/overage.opts
-  after_script:
-    - gcovr $GCOVR_OPTS $CI_PROJECT_DIR/build-cmake
-  variables:
-    # Create a coverage report 
-    #
-    # Notes:
-    # - Only works for gcc
-    # - The gcov executable needs to match the version of the gcc toolchain
-    GCOVR_OPTS:
-      --gcov-executable gcov-10
-      --root $CI_PROJECT_DIR
-      --exclude $CI_PROJECT_DIR/dune/pdelab/test
-      --exclude $CI_PROJECT_DIR/build-cmake
-      --exclude-unreachable-branches
-      --xml-pretty
-      --print-summary
-      --output $CI_PROJECT_DIR/coverage.xml
-    DUNECI_TOOLCHAIN: gcc-10-20
-  artifacts:
-    reports:
-      junit: junit/*.xml
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage.xml
-  # gcovr reports results (`--print-summary` option above). With this line we extract the
-  # result (% of covered lines) to report them in gitlab
-  coverage: /^\s*lines:\s*\d+.\d+\%/
+      allow_failure: false
