@@ -1,7 +1,7 @@
 # dune module information file
 
 Module: dune-pdelab
-Version: 2.9-git
+Version: 2.9
 Maintainer: dune-pdelab@lists.dune-project.org
 Depends: dune-grid (>= 2.9) dune-localfunctions (>= 2.9) dune-istl (>= 2.9) dune-typetree (>= 2.9) dune-functions (>= 2.9)
 Suggests: dune-alugrid dune-multidomaingrid

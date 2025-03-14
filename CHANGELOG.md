@@ -1,7 +1,7 @@
 PDELab
 ======
 
-This is the 2.9-git version of PDELab, a PDE discretization toolkit built
+This is the 2.9 version of PDELab, a PDE discretization toolkit built
 on top of the [DUNE][] framework. It is intended to be used with the master
 branch of the Dune core modules. License information can be found in the file
 [LICENSE.md][].
@@ -12,7 +12,7 @@ to the [PDELab bugtracker][] instead.
 Changes
 =======
 
-PDELab git master (will be PDELab 2.9)
+PDELab 2.9
 --------------------------------------
 
 -   The class `ParititionViewEntitySet` used within grid function spaces to represent sets of
