@@ -213,12 +213,12 @@ namespace Dune {
       /*!
         \brief Prepare the preconditioner.
       */
-      virtual void pre (X& x, Y& b) const override {}
+      virtual void pre (X& x, Y& b) override {}
 
       /*!
         \brief Apply the precondioner.
       */
-      virtual void apply (X& v, const Y& d) const override
+      virtual void apply (X& v, const Y& d) override
       {
         v = d;
       }
