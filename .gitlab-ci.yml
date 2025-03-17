@@ -14,10 +14,10 @@ variables:
 include:
   - project: 'core/ci-config'
     ref: master
-    file: 'config/common/master.yml'
+    file: 'config/common/releases/2.10.yml'
   - project: 'core/ci-config'
     ref: master
-    file: 'jobs/common/master.yml'
+    file: 'jobs/common/releases/2.10.yml'
 
 .dune_setup: &dune_setup |-
   . /duneci/bin/duneci-init-job
