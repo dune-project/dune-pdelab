@@ -23,7 +23,6 @@
 #include<dune/localfunctions/common/localbasis.hh>
 #include<dune/localfunctions/common/localkey.hh>
 #include<dune/localfunctions/common/localfiniteelementtraits.hh>
-#include<dune/localfunctions/common/localinterpolation.hh>
 
 /** @defgroup PB Polynomial Basis
  *  @ingroup FiniteElementMap
