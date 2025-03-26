@@ -20,7 +20,7 @@ list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH}
 include(DuneMacros)
 
 # deactivate global include-directories
-if (dune-common_VERSION VERSION_GREATER 2.10.0)
+if (dune-common_VERSION VERSION_GREATER_EQUAL 2.11.0)
   dune_policy(SET DP_DEFAULT_INCLUDE_DIRS NEW)
 endif()
 
@@ -32,7 +32,7 @@ dune_add_library(dunepdelab EXPORT_NAME PDELab)
 target_link_libraries(dunepdelab PUBLIC ${DUNE_LIBS})
 
 # set include directories to target
-if (dune-common_VERSION VERSION_GREATER 2.10.0)
+if (dune-common_VERSION VERSION_GREATER_EQUAL 2.11.0)
   dune_default_include_directories(dunepdelab PUBLIC)
 endif()
 
