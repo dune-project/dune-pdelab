@@ -49,7 +49,46 @@ namespace Dune {
 
       namespace {
 
+        template<typename Ordering, typename GFS, typename GFSTP, typename OrderingTP>
+        constexpr auto create_ordering_treepath_for_sub_gfs(
+          const Ordering& ordering, const GFS& gfs, GFSTP gfs_tp, OrderingTP ordering_tp)
+        {
+          using namespace Dune::TypeTree;
 
+          if constexpr (gfs_tp.size() == 0)
+          {
+            return ordering_tp;
+          }
+          else
+          {
+            // Get the ordering at the current subtree position.
+            using SubOrdering = TypeTree::ChildForTreePath<Ordering,OrderingTP>;
+
+            // 1. Only descend in the GFS tree if the current ordering child consumes a tree index entry.
+            // 2. Insert either GFS child index or synthesized child index (always 0) in the ordering treepath.
+            // 3. Keep (synthesized ordering node) or drop (ordering with associated GFS) first entry of GFS TreePath.
+            if constexpr (SubOrdering::consume_tree_index)
+            {
+              // we now know that SubGFS = GFS;
+              auto subordering_tp = push_back(OrderingTP(), front(GFSTP()));
+              auto subgfs_tp = pop_front(GFSTP());
+
+              // Recurse into child trees.
+              return create_ordering_treepath_for_sub_gfs(
+                ordering, gfs, subgfs_tp, subordering_tp);
+            }
+            else
+            {
+              // using SubGFS = typename GFS::template Child<TypeTree::front(GFSTP())>::type;
+              auto subordering_tp = push_back(OrderingTP(), Indices::_0);
+              auto subgfs_tp = gfs_tp;
+
+              // Recurse into child trees.
+              return create_ordering_treepath_for_sub_gfs(
+                ordering, gfs.child(front(gfs_tp)), subgfs_tp, subordering_tp);
+            }
+          }
+        }
 
         // ********************************************************************************
         // Helper TMPs
@@ -63,48 +102,13 @@ namespace Dune {
         template<typename Ordering, typename GFS, typename GFSTP, typename OrderingTP = TypeTree::StaticTreePath<> >
         struct find_ordering_treepath_for_sub_gfs
         {
-
-          // Get the ordering at the current subtree position.
-          using SubOrdering = TypeTree::ChildForTreePath<Ordering,OrderingTP>;
-
-          // Only descend in the GFS tree if the current ordering child consumes a tree index entry.
-          typedef typename std::conditional<
-            SubOrdering::consume_tree_index,
-            typename GFS::template Child<TypeTree::TreePathFront<GFSTP>::value>::type,
-            GFS
-            >::type SubGFS;
-
-          // Insert either GFS child index or synthesized child index (always 0) in the ordering treepath.
-          typedef typename TypeTree::TreePathPushBack<
-            OrderingTP,
-            (SubOrdering::consume_tree_index ? TypeTree::TreePathFront<GFSTP>::value : 0)
-            >::type SubOrderingTP;
-
-          // Keep (synthesized ordering node) or drop (ordering with associated GFS) first entry of GFS TreePath.
-          typedef typename std::conditional<
-            SubOrdering::consume_tree_index,
-            typename TypeTree::TreePathPopFront<GFSTP>::type,
-            GFSTP
-            >::type SubGFSTP;
-
-          // Recurse into child trees.
-          typedef typename find_ordering_treepath_for_sub_gfs<
-            Ordering,
-            SubGFS,
-            SubGFSTP,
-            SubOrderingTP
-            >::type type;
-
-        };
-
-        //! End of recursion for TreePath-deducing TMP.
-        template<typename Ordering, typename GFS, typename OrderingTP>
-        struct find_ordering_treepath_for_sub_gfs<Ordering,GFS,TypeTree::StaticTreePath<>,OrderingTP>
-        {
-
-          // We have found the correct ordering TreePath, so let's return it.
-          typedef OrderingTP type;
-
+          using type = decltype(
+            create_ordering_treepath_for_sub_gfs(
+              std::declval<Ordering>(),
+              std::declval<GFS>(),
+              GFSTP(),
+              OrderingTP())
+            );
         };
 
       } // anonymous namespace
@@ -167,7 +171,7 @@ namespace Dune {
 
         std::size_t subSpaceDepth() const
         {
-          return TypeTree::TreePathSize<SubSpacePath>::value;
+          return SubSpacePath().size();
         }
 
         //! Returns the ordering associated with this GridFunctionSubSpace.
@@ -217,8 +221,12 @@ namespace Dune {
 
       protected:
 
+        DefaultSubSpaceFeatures(const GFS& gfs, TreePath tree_path)
+          : _ordering(gfs.orderingStorage(), create_ordering_treepath_for_sub_gfs(gfs.ordering(), gfs, tree_path, TypeTree::treePath()))
+        {}
+
         DefaultSubSpaceFeatures(const GFS& gfs)
-          : _ordering(gfs.orderingStorage())
+          : DefaultSubSpaceFeatures(gfs, TreePath())
         {}
 
       private:
@@ -294,8 +302,8 @@ namespace Dune {
 
       protected:
 
-        SubSpaceFeatureProvider(const GFS& gfs)
-          : DefaultSubSpaceFeatures<GFS,TreePath,Tag>(gfs)
+        SubSpaceFeatureProvider(const GFS& gfs, TreePath tree_path)
+          : DefaultSubSpaceFeatures<GFS,TreePath,Tag>(gfs, tree_path)
         {}
 
       };
@@ -310,8 +318,8 @@ namespace Dune {
 
       protected:
 
-        SubSpaceFeatureProvider(const GFS& gfs)
-          : DefaultSubSpaceFeatures<GFS,TreePath,Tag>(gfs)
+        SubSpaceFeatureProvider(const GFS& gfs, TreePath tree_path)
+          : DefaultSubSpaceFeatures<GFS,TreePath,Tag>(gfs,tree_path)
         {}
 
       };
@@ -325,8 +333,8 @@ namespace Dune {
 
       protected:
 
-        SubSpaceFeatureProvider(const GFS& gfs)
-          : DefaultSubSpaceFeatures<GFS,TreePath,LeafGridFunctionSpaceTag>(gfs)
+        SubSpaceFeatureProvider(const GFS& gfs, TreePath tree_path)
+          : DefaultSubSpaceFeatures<GFS,TreePath,LeafGridFunctionSpaceTag>(gfs, tree_path)
         {}
 
       };
@@ -399,26 +407,35 @@ namespace Dune {
       public:
 
         //! Construct a GridFunctionSubSpace from the storage object of a root space.
-        explicit GridFunctionSubSpace(std::shared_ptr<const GFS> gfs_storage)
-          : NodeT(TypeTree::childStorage(*gfs_storage,TreePath()))
-          , FeatureT(*gfs_storage)
+        explicit GridFunctionSubSpace(std::shared_ptr<const GFS> gfs_storage, TreePath tree_path)
+          : NodeT(TypeTree::childStorage(*gfs_storage,tree_path))
+          , FeatureT(*gfs_storage, tree_path)
           , _base_gfs(gfs_storage)
         {
           this->inheritDataSetType(childGridFunctionSpace());
         }
+
+        //! Construct a GridFunctionSubSpace from the storage object of a root space.
+        explicit GridFunctionSubSpace(std::shared_ptr<const GFS> gfs_storage)
+          : GridFunctionSubSpace(gfs_storage, TreePath())
+        {}
 
         // We can mask out the following constructors if we don't have template aliases,
         // as we perform the necessary reference <-> shared_ptr conversions in the derived
         // interface class.
 
         //! Construct a GridFunctionSubSpace from a root space.
-        explicit GridFunctionSubSpace(const GFS& gfs)
-          : NodeT(TypeTree::childStorage(gfs,TreePath()))
-          , FeatureT(gfs)
+        explicit GridFunctionSubSpace(const GFS& gfs, TreePath tree_path)
+          : NodeT(TypeTree::childStorage(gfs,tree_path))
+          , FeatureT(gfs,tree_path)
           , _base_gfs(stackobject_to_shared_ptr(gfs))
         {
           this->inheritDataSetType(childGridFunctionSpace());
         }
+
+        explicit GridFunctionSubSpace(const GFS& gfs)
+          : GridFunctionSubSpace(gfs, TreePath())
+        {}
 
         //! Construct a GridFunctionSubSpace from the storage of another GridFunctionSubSpace.
         /**
@@ -432,13 +449,18 @@ namespace Dune {
          *       copy constructor.
          */
         template<typename TP>
-        explicit GridFunctionSubSpace(std::shared_ptr<const GridFunctionSubSpace<GFS,TP> > gfs_storage, typename std::enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
-          : NodeT(TypeTree::childStorage(gfs_storage->baseGridFunctionSpace(),TreePath()))
-          , FeatureT(gfs_storage->baseGridFunctionSpace())
+        explicit GridFunctionSubSpace(std::shared_ptr<const GridFunctionSubSpace<GFS,TP> > gfs_storage, TreePath tree_path, typename std::enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
+          : NodeT(TypeTree::childStorage(gfs_storage->baseGridFunctionSpace(),tree_path))
+          , FeatureT(gfs_storage->baseGridFunctionSpace(), tree_path)
           , _base_gfs(gfs_storage->baseGridFunctionSpaceStorage())
         {
           setDataSetType(childGridFunctionSpace().dataSetType());
         }
+
+        template<typename TP>
+        explicit GridFunctionSubSpace(std::shared_ptr<const GridFunctionSubSpace<GFS,TP> > gfs_storage, typename std::enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
+          : GridFunctionSubSpace(gfs_storage, TreePath())
+        {}
 
         //! Construct a GridFunctionSubSpace from another GridFunctionSubSpace.
         /**
@@ -452,13 +474,18 @@ namespace Dune {
          *       copy constructor.
          */
         template<typename TP>
-        explicit GridFunctionSubSpace(const GridFunctionSubSpace<GFS,TP>& gfs, typename std::enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
-          : NodeT(TypeTree::childStorage(gfs.baseGridFunctionSpace(),TreePath()))
-          , FeatureT(gfs.baseGridFunctionSpace())
+        explicit GridFunctionSubSpace(const GridFunctionSubSpace<GFS,TP>& gfs, TreePath tree_path, typename std::enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
+          : NodeT(TypeTree::childStorage(gfs.baseGridFunctionSpace(),tree_path))
+          , FeatureT(gfs.baseGridFunctionSpace(), tree_path)
           , _base_gfs(gfs.baseGridFunctionSpaceStorage())
         {
           this->inheritDataSetType(childGridFunctionSpace());
         }
+
+        template<typename TP>
+        explicit GridFunctionSubSpace(const GridFunctionSubSpace<GFS,TP>& gfs, typename std::enable_if<!std::is_same<TP,TreePath>::value,void*>::type = nullptr)
+          : GridFunctionSubSpace(gfs, TreePath())
+        {}
 
       public:
 
@@ -548,13 +575,9 @@ namespace Dune {
                                  TreePath
                                  >
       {
+        using SubSpaceTreePath = decltype(TypeTree::join(SubGFSTreePath(), TreePath()));
         typedef GridFunctionSubSpace<
-          BaseGFS,
-          typename TypeTree::TreePathConcat<
-            SubGFSTreePath,
-            TreePath
-            >::type
-          > type;
+          BaseGFS,SubSpaceTreePath> type;
       };
 
 #endif // DOXYGEN

@@ -19,23 +19,6 @@ namespace Dune {
     namespace gfs {
 
       // ********************************************************************************
-      // utility functions for copying a tree path to an iterator range in reverse order
-      // ********************************************************************************
-
-      template<typename It>
-      void extract_tree_path_elements(TypeTree::StaticTreePath<>, It it)
-      {
-        // end of recursion
-      }
-
-      template<typename TP, typename It>
-      void extract_tree_path_elements(TP, It it)
-      {
-        *it = TypeTree::TreePathBack<TP>::value;
-        extract_tree_path_elements(typename TypeTree::TreePathPopBack<TP>::type(),++it);
-      }
-
-      // ********************************************************************************
       // intermediate base class for LocalFunctionSpaces of GridFunctionSubSpace
       // ********************************************************************************
 
@@ -52,19 +35,25 @@ namespace Dune {
 
         template<typename... T>
         SubSpaceLocalFunctionSpaceNode(T&&... t)
-          : LFS(std::forward<T>(t)...)
-        {
-          extract_tree_path_elements(typename GFS::SubSpacePath(),_tree_path.begin());
-        }
+          : LFS(std::forward<T>(t)...) // default initialize _tree_path
+        {}
+
+        template<typename... T>
+        SubSpaceLocalFunctionSpaceNode(typename GFS::SubSpacePath tp, T&&... t)
+          : LFS(std::forward<T>(t)...), _tree_path(tp)
+        {}
 
         // modify bind to fill up the DOFIndices with our subspace path
         template<typename E>
         void bind(const E& e)
         {
           LFS::bind(e);
-          for (auto di= this->_dof_index_storage.begin(), end=this->_dof_index_storage.end();
-               di!=end; ++di)
-            complete_dof_index(*di);
+          for (auto && dof_idx : this->_dof_index_storage)
+          {
+            Hybrid::forEach(reverse(_tree_path), [&](const auto& tree_idx){
+              dof_idx.treeIndex().push_back(tree_idx);
+            });
+          }
         }
 
         std::size_t subSpaceDepth() const
@@ -73,15 +62,7 @@ namespace Dune {
         }
 
       private:
-
-        //! Extends DOFIndex up to the root of the original DOFIndex tree.
-        void complete_dof_index(typename Traits::DOFIndex& di) const
-        {
-          std::copy(_tree_path.begin(),_tree_path.end(),std::back_inserter(di.treeIndex()));
-        }
-
-        std::array<std::size_t,TypeTree::TreePathSize<typename GFS::SubSpacePath>::value> _tree_path;
-
+        typename GFS::SubSpacePath _tree_path;
       };
 
       // forward declaration for use in LocalFunctionSpace specialization.

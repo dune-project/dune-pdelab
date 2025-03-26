@@ -89,12 +89,16 @@ namespace Dune {
        *                           the root of the DOFIndex tree to the DOFIndices passed to this
        *                           ordering.
        */
-      explicit SubOrdering(std::shared_ptr<const BaseOrdering> base_ordering)
-        : NodeT(base_ordering->child(TreePath()))
+      explicit SubOrdering(std::shared_ptr<const BaseOrdering> base_ordering, TreePath tree_path)
+        : NodeT(base_ordering->child(tree_path))
         , _base_ordering(base_ordering)
       {
         update();
       }
+
+      explicit SubOrdering(std::shared_ptr<const BaseOrdering> base_ordering)
+        : SubOrdering(base_ordering, TreePath())
+      {}
 
       //! Updates this SubOrdering.
       void update()
@@ -139,24 +143,19 @@ namespace Dune {
 
       // Template recursion for walking up the TreePath to the BaseOrdering
       template<typename TP, typename ItIn, typename ItOut>
-      typename std::enable_if<
-        (TypeTree::TreePathSize<TP>::value > 0)
-          >::type
-      map_lfs_indices_to_root_space(TP, ItIn begin, ItIn end, ItOut out) const
+      void map_lfs_indices_to_root_space(TP tp, ItIn begin, ItIn end, ItOut out) const
       {
-        map_lfs_indices_in_ancestor(TP(),begin,end,out);
-        // recurse further up to the tree
-        map_lfs_indices_to_root_space(typename TypeTree::TreePathPopBack<TP>::type(),begin,end,out);
-      }
-
-      // End of template recursion for walking up the TreePath to the BaseOrdering
-      template<typename TP, typename ItIn, typename ItOut>
-      typename std::enable_if<
-        (TypeTree::TreePathSize<TP>::value == 0)
-          >::type
-      map_lfs_indices_to_root_space(TP, ItIn begin, ItIn end, ItOut out) const
-      {
-        map_lfs_indices_in_ancestor(TP(),begin,end,out);
+        if constexpr (tp.size() == 0)
+        {
+          // End of template recursion for walking up the TreePath to the BaseOrdering
+          map_lfs_indices_in_ancestor(tp,begin,end,out);
+        }
+        else
+        {
+          map_lfs_indices_in_ancestor(tp,begin,end,out);
+          // recurse further up to the tree
+          map_lfs_indices_to_root_space(pop_back(tp),begin,end,out);
+        }
       }
 
     public:
