@@ -12,6 +12,10 @@ to the [PDELab bugtracker][] instead.
 Changes
 =======
 
+Master (will become release 2.11)
+
+- Subspaces learned to handle dynamic tree paths
+
 PDELab 2.9
 --------------------------------------
 

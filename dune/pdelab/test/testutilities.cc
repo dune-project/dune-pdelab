@@ -132,8 +132,8 @@ void testinterpolate (const GV& gv)
   SUBGFS1 subgfs1(cgfs);
   typedef Dune::PDELab::GridFunctionSubSpace<PGFS,Dune::TypeTree::StaticTreePath<0> > PSUBGFS0;
   PSUBGFS0 psubgfs0(pgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,Dune::TypeTree::StaticTreePath<1> > PSUBGFS1;
-  PSUBGFS1 psubgfs1(pgfs);
+  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,Dune::TypeTree::HybridTreePath<std::size_t> > PSUBGFS1;
+  PSUBGFS1 psubgfs1(pgfs, Dune::TypeTree::treePath(1));
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<SUBGFS0,CV> DGF0;
