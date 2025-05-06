@@ -359,7 +359,7 @@ namespace Dune {
 
               // Build a simple name based on the component's TreePath (e.g. 0_2_3)
               for (std::size_t i = 0; i < tp.size(); ++i)
-                name_stream << (i > 0 ? _separator : "") << tp.element(i);
+                name_stream << (i > 0 ? _separator : "") << tp[i];
 
               if (!_suffix.empty())
                 name_stream << _separator << _suffix;

@@ -850,7 +850,7 @@ namespace Dune {
           std::stringstream name;
           name << s;
           for (std::size_t i=0; i < treePath.size(); ++i)
-            name << "_" << treePath.element(i);
+            name << "_" << treePath[i];
           w.addVertexData(std::make_shared< VTKGridFunctionAdapter<T> >(t,name.str()));
         }
       };
