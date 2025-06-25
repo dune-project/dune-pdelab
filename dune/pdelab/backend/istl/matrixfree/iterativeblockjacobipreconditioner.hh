@@ -337,8 +337,7 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
       void alpha_volume(const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
       {
-        const std::size_t size = lfsu.size();
-        assert(lfsv.size() == size);
+        assert(lfsv.size() == lfsu.size());
 
         // Assemble point diagonal
         std::size_t cache_idx = _mapper.index(eg.entity());
