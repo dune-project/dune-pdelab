@@ -3,9 +3,11 @@
 #ifndef DUNE_PDELAB_COMMON_MULTIINDEX_HH
 #define DUNE_PDELAB_COMMON_MULTIINDEX_HH
 
-#include <dune/common/reservedvector.hh>
+#include <dune/typetree/treepath.hh>
+
 #include <dune/geometry/typeindex.hh>
 
+#include <dune/common/reservedvector.hh>
 #include <dune/common/hash.hh>
 
 #include <algorithm>
@@ -34,7 +36,11 @@ namespace Dune {
 
       //! The maximum possible depth of the MultiIndex.
       static const std::size_t max_depth = n;
+
       using typename base_type::size_type;
+      using typename base_type::value_type;
+      using typename base_type::reference;
+      using typename base_type::const_reference;
 
       class View
       {
@@ -150,19 +156,131 @@ namespace Dune {
         this->resize(view.size());
       }
 
+      //! Copy constructor from ReservedVector
+      MultiIndex(const ReservedVector<T,n>& rv) : ReservedVector<T,n>{rv}
+      {}
+
+      //! Copy constructor from a multi-index of different size
+      template<std::size_t _n>
+      requires (n != _n)
+      MultiIndex(const MultiIndex<T,_n>& rv)
+      {
+        assert(rv.size() <= n);
+        this->resize(rv.size());
+        for (std::size_t i = 0; i < std::min(n,_n); ++i)
+          (*this)[i] = rv[i];
+      }
+
+      //! Copy constructor from a hybrid multi-index
+      template<class... U>
+      MultiIndex(const TypeTree::HybridTreePath<U...>& tp)
+      {
+        this->resize(tp.size());
+        Dune::Hybrid::forEach(tp.enumerate(),[&](auto i){
+          (*this)[i] = tp[i];
+        });
+      }
+
+
       void set(typename ReservedVector<T,n>::value_type index)
       {
         this->clear();
         this->push_back(index);
       }
 
-      //! Erases the first element of the multi-index, O(N) time.
+      //! Returns the front element of the MultiIndex.
+      friend reference front(MultiIndex& mi){
+        return mi.front();
+      }
+
+      //! Returns the front element of the MultiIndex.
+      friend const_reference front(const MultiIndex& mi){
+        return mi.front();
+      }
+
+      //! Returns the back element of the MultiIndex.
+      friend reference back(MultiIndex& mi) {
+        return mi.back();
+      }
+
+      //! Returns the back element of the MultiIndex.
+      friend const_reference back(const MultiIndex& mi) {
+        return mi.back();
+      }
+
+      //! Returns a copy of a multi-index with appended element.
+      friend MultiIndex push_back(MultiIndex mi, const value_type& t)
+      {
+        mi.push_back(t);
+        return mi;
+      }
+
+      //! Appends an element to the beginning of a vector, up to the maximum size n, O(n) time.
+      void push_front(const value_type& t)
+      {
+        size_type sz = this->size() + 1;
+        this->resize(sz);
+        std::copy_backward(std::begin(*this), std::begin(*this)+sz-1, std::begin(*this)+sz);
+        (*this)[0] = t;
+      }
+
+      //! Returns a copy of a multi-index with prepended element.
+      friend MultiIndex push_front(MultiIndex mi, const value_type& t)
+      {
+        mi.push_front(t);
+        return mi;
+      }
+
+      //! Returns a copy of a multi-index without the back element.
+      friend MultiIndex pop_back(MultiIndex mi)
+      {
+        mi.pop_back();
+        return mi;
+      }
+
+      //! Erases the last element of the vector, O(1) time.
       void pop_front()
       {
         size_type sz = this->size();
         assert(not this->empty());
-        std::copy(std::begin(*this)+1, std::begin(*this)+sz, std::begin(*this));
+        if (sz > 1)
+          std::copy(std::begin(*this)+1, std::begin(*this)+sz, std::begin(*this));
         this->resize(--sz);
+      }
+
+      //! Returns a copy of a multi-index without the front element.
+      friend MultiIndex pop_front(MultiIndex mi)
+      {
+        mi.pop_front();
+        return mi;
+      }
+
+      //! Accumulates a value to the back element of the MultiIndex.
+      friend MultiIndex accumulate_back(MultiIndex mi, const value_type& t) {
+        mi.back() += t;
+        return mi;
+      }
+
+      //! Accumulates a value to the front element of the MultiIndex.
+      friend MultiIndex accumulate_front(MultiIndex mi, const value_type& t) {
+        mi.front() += t;
+        return mi;
+      }
+
+      //! Concatenates two MultiIndices into a new MultiIndex, up to the maximum size n.
+      friend MultiIndex join(MultiIndex head, const MultiIndex& tail) {
+        assert(head.size() + tail.size() <= MultiIndex::max_size());
+        size_type head_size = head.size();
+        head.resize(head.size() + tail.size());
+        std::copy(tail.cbegin(), tail.cend(), head.begin()+head_size);
+        return head;
+      }
+
+      //! Reverses the order of elements in the MultiIndex.
+      friend MultiIndex reverse(MultiIndex rv) {
+        if constexpr (MultiIndex::max_size() > 1)
+          std::reverse(rv.begin(),rv.end());
+        return rv;
       }
 
       //! Writes a pretty representation of the MultiIndex to the given std::ostream.
@@ -223,6 +341,8 @@ namespace Dune {
       return hash_range(mi.begin(),mi.end());
     }
 
+    template<class... U>
+    MultiIndex(const TypeTree::HybridTreePath<U...>& tp) -> MultiIndex<std::common_type_t<U...>,sizeof...(U)>;
 
   } // namespace PDELab
 } // namespace Dune
