@@ -31,3 +31,5 @@ install(FILES benchmarkhelper.hh
               utility.hh
               vtkexport.hh
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/common)
+
+add_subdirectory(partition)

@@ -54,10 +54,25 @@ if(COVERAGE_REPORT)
   target_link_libraries(dunepdelab PUBLIC gcov)
 endif()
 
+add_dune_metis_flags(dunepdelab)
+
+if (METIS_FOUND)
+  list(APPEND DUNE_PDELAB_PACKAGE_DEPENDENCIES "find_dependency(METIS)")
+endif()
+
+
 add_subdirectory(doc)
 add_subdirectory(dune)
 add_subdirectory(cmake/modules)
 add_subdirectory(lib)
+
+# write contents into DUNE_CUSTOM_PKG_CONFIG_SECTION, which will be injected into dune-common-config.cmake
+string(JOIN "\n" DUNE_CUSTOM_PKG_CONFIG_SECTION
+  # make sure that Find<module>.cmake provided by dune-common can be found by cmake
+  [[list(APPEND CMAKE_MODULE_PATH "${dune-common_MODULE_PATH}")]]
+  ${DUNE_PDELAB_PACKAGE_DEPENDENCIES}
+)
+
 
 # finalize the dune project, e.g. generating config.h etc.
 finalize_dune_project()
