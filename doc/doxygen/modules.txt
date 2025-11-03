@@ -28,6 +28,51 @@
     @defgroup MultiStepMethods Multi-step methods
     @ingroup  Operator
 
+  @defgroup Partition Entity Set Partitions
+  @{
+    @ingroup PDELab
+
+    @brief Handles the partitioning over a set of entities (e.g. a grid view)
+
+    ## Overview
+    The partition is defined as three nested containers that reflect the structure of the partition.
+    The first and outermost partition is a container of LabelSets. Each LabelSet is a container of
+    PatchSets, finally, a PatchSet is a container of grid entities.
+    The partition is non-overlapping, meaning that every entity of the entity set is
+    present in the partition but not repeated.
+
+    ## Label sets
+    For a given halo distance N, entities within a label set have the guarantee to not be
+    connected to any other label entity within at-most N edges on the grid hyper-graph.
+
+    ## Halo Region
+    For a given halo distance N, the halo overlap of the entity set refers to the entities connected
+    to any other patch in the same label set within at at-most N edges on the grid hyper-graph.
+    Other entities are consireded to be in the halo interior.
+    Among others, the halo overlap helps to determine computation regions that are shared with another patch of
+    the same label (e.g., for concurrent computations).
+
+    ## Coloring
+    When more than one label is present in the partition and all entities are in the halo interior, we say that the partition is colored.
+    Partitions providing this guarantee are Dune::PDELab::EntitySetPartition::MetisColored and Dune::PDELab::EntitySetPartition::IteratorSplitColored.
+
+    ## Usage
+    Partitions in this group allow to have colored and uncolored partitions parameterized by the halo distance and number of total patches.
+    The halo distance is specified at construction of the partition and is a problem dependent requirement.
+    For example, conforming grids with only volume integrals typically need a halo distance equal to 0 (e.g., due to shared vertices).
+
+    @code{.cpp}
+    using GridView = /*...*/;
+    GridView gv = /*...*/;
+    Dune::PDELab::EntitySetPartition::MetisColored<GridView> partition(gv);
+
+    for(const auto& labelSet : partition)
+      for(const auto& patchSet : partition) // maybe multi-threaded
+        for(const auto& entity : patchSet)
+          /* do entity operation */;
+    @endcode
+  @}
+
   @defgroup Backend Backends
   @ingroup  PDELab
 
