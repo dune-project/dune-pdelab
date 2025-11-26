@@ -1,7 +1,7 @@
 #include <cassert>
 #include <iostream>
 #include <sstream>
-#include <dune/typetree/hybridmultiindex.hh>
+#include <dune/common/hybridmultiindex.hh>
 #include <dune/pdelab/common/multiindex.hh>
 
 #include <dune/common/test/testsuite.hh>
