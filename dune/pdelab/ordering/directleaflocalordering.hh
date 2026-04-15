@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_ORDERING_DIRECTLEAFLOCALORDERING_HH
 #define DUNE_PDELAB_ORDERING_DIRECTLEAFLOCALORDERING_HH
 
+#include <type_traits>
+
 #include <dune/typetree/leafnode.hh>
 
 #include <dune/geometry/referenceelements.hh>
@@ -213,7 +215,8 @@ namespace Dune {
         const auto& fe = _fem->find(cell);
         const typename FESwitch::Coefficients& coeffs = FESwitch::coefficients(fe);
 
-        _max_local_size = std::max(_max_local_size,coeffs.size());
+        using CommonSizeType = std::common_type_t<typename Traits::SizeType, std::decay_t<decltype(coeffs.size())>>;
+        _max_local_size = std::max(CommonSizeType(_max_local_size), CommonSizeType(coeffs.size()));
 
         auto ref_el = ReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
 
