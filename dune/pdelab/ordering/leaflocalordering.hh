@@ -103,7 +103,7 @@ namespace Dune {
         const auto& fe = _fem->find(cell);
         const typename FESwitch::Coefficients& coeffs = FESwitch::coefficients(fe);
 
-        this->_max_local_size = std::max(this->_max_local_size,coeffs.size());
+        this->_max_local_size = std::max<std::size_t>(this->_max_local_size,coeffs.size());
 
         const auto& ref_el =
           ReferenceElements<typename Traits::EntitySet::Traits::CoordinateField,Traits::EntitySet::dimension>::general(cell.type());
@@ -128,7 +128,7 @@ namespace Dune {
         const auto& fe = _fem->find(cell);
         const typename FESwitch::Coefficients& coeffs = FESwitch::coefficients(fe);
 
-        this->_max_local_size = std::max(this->_max_local_size,coeffs.size());
+        this->_max_local_size = std::max<std::size_t>(this->_max_local_size,coeffs.size());
 
         typedef typename Traits::SizeType size_type;
 
