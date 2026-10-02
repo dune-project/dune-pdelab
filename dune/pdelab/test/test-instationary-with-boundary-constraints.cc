@@ -224,7 +224,7 @@ bool do_simulation (double T, double dt, GM& grid, std::string basename)
 
   // Decide wether the errors are too big
   bool fail = false;
-  if (l2error_implicit>1e-3 || l2error_explicit>1e-3 || l2error_compare>1e-10)
+  if (l2error_implicit[0]>1e-3 || l2error_explicit[0]>1e-3 || l2error_compare[0]>1e-10)
      fail = true;
 
   return fail;

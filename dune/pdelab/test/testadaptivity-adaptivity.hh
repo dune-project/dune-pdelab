@@ -84,7 +84,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
     estgo.residual(u,eta);
 
     for (unsigned int i=0; i<eta.flatsize(); i++)
-      native(eta)[i] = sqrt(native(eta)[i]); // eta contains squares
+      native(eta)[i][0] = sqrt(native(eta)[i][0]); // eta contains squares
 
     // Use eta to refine the grid following two different strategies based
     // (1) element fraction

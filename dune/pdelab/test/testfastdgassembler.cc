@@ -171,7 +171,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   vtkwriter.write("testfastdgassembler",Dune::VTK::appendedraw);
 
   bool test_fail = false;
-  if (l2errorsquared>1e-08)
+  if (l2errorsquared[0]>1e-08)
     test_fail = true;
   return test_fail;
 }

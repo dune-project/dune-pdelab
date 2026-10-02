@@ -230,7 +230,7 @@ bool runDG(const GV& gv, const FEM& fem, Problem& problem)
   std::cout << "l2 error squared: " << l2errorsquared << std::endl;
 
   bool test_fail = false;
-  if (l2errorsquared>5e-6)
+  if (l2errorsquared[0]>5e-6)
     test_fail = true;
   return test_fail;
 }

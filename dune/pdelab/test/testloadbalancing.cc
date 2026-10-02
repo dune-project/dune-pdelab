@@ -200,20 +200,20 @@ int main(int argc, char** argv)
     // Print difference between integrals
     if (gfs.gridView().comm().rank()==0){
       std::cout << "Difference between numerical integrals: "
-                << std::abs(sum-sum2) << std::endl;
+                << std::abs(sum[0]-sum2[0]) << std::endl;
     }
     // Print difference between integrals
     if (gfs.gridView().comm().rank()==0){
       std::cout << "Difference between numerical integrals for second function: "
-                << std::abs(sum_second-sum2_second) << std::endl;
+                << std::abs(sum_second[0]-sum2_second[0]) << std::endl;
     }
 
     // If difference is too large the test fails
-    if (std::abs(sum-sum2)>1e-13){
+    if (std::abs(sum[0]-sum2[0])>1e-13){
       return 1;
     }
     // If difference for second function is too large the test fails
-    if (std::abs(sum_second-sum2_second)>1e-13){
+    if (std::abs(sum_second[0]-sum2_second[0])>1e-13){
       return 1;
     }
 

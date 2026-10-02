@@ -131,7 +131,7 @@ int main(int argc, char** argv)
         typename GO::Traits::Domain x(gfs,0.0);
         go.residual(x,x);
         std::cout << Dune::PDELab::Backend::native(x)[0] << std::endl;
-        success &= (Dune::PDELab::Backend::native(x)[0] == 2. + 3.);
+        success &= (Dune::PDELab::Backend::native(x)[0][0] == 2. + 3.);
     }
 
     // This block tests a deprecated feature - we suppress the deprecation warning
@@ -164,7 +164,7 @@ int main(int argc, char** argv)
         typename GO::Traits::Domain x(gfs,0.0);
         go.residual(x,x);
         std::cout << Dune::PDELab::Backend::native(x)[0] << std::endl;
-        success &= (Dune::PDELab::Backend::native(x)[0] == 2*2. - 3.);
+        success &= (Dune::PDELab::Backend::native(x)[0][0] == 2*2. - 3.);
     }
 
     // This block tests a deprecated feature - we suppress the deprecation warning

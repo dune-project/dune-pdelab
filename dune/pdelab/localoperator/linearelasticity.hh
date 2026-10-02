@@ -260,7 +260,7 @@ namespace Dune {
 
             // integrate f
             for (size_type i=0; i<lfsv.size(); i++)
-              r.accumulate(lfsv,i, -y[d]*phi[i] * factor);
+              r.accumulate(lfsv,i, -y[d]*phi[i][0] * factor);
           }
         }
       }
@@ -318,7 +318,7 @@ namespace Dune {
 
             // integrate f
             for (size_type i=0; i<lfsv.size(); i++)
-              r.accumulate(lfsv,i, y[d]*phi[i] * factor);
+              r.accumulate(lfsv,i, y[d]*phi[i][0] * factor);
           }
         }
       }

@@ -299,7 +299,7 @@ public:
     LFS lfs_;
     LFSCache lfs_cache_;
     XView x_view_;
-    mutable std::vector<ElementaryRange> xl_;
+    mutable std::vector<VectorRange> xl_;
     mutable std::vector<Range> yb_;
     const Element* element_;
   };
