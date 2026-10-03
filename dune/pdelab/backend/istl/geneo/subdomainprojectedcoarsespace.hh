@@ -253,7 +253,7 @@ namespace Dune {
         // Prolongate result
         for (rank_type basis_index = 0; basis_index < local_basis_sizes_[my_rank_]; basis_index++) {
           X local_result(*subdomainbasis_->get_basis_vector(basis_index));
-          native(local_result) *= coarse[my_basis_array_offset_ + basis_index];
+          native(local_result) *= coarse[my_basis_array_offset_ + basis_index][0];
           prolongated += local_result;
         }
       }

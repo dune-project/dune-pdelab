@@ -310,7 +310,7 @@ namespace Dune {
               FESwitch::basis(child_lfs.finiteElement()).evaluateFunction(x,_basis);
 
               for (std::size_t i = 0; i < child_lfs.size(); ++i)
-                y[k] += _data->_x_local(child_lfs,i) * _basis[i];
+                y[k] += _data->_x_local(child_lfs,i) * _basis[i][0];
             }
         }
 

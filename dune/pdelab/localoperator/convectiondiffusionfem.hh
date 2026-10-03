@@ -105,7 +105,7 @@ namespace Dune {
             // evaluate u
             RF u=0.0;
             for (size_type i=0; i<lfsu.size(); i++)
-              u += x(lfsu,i)*phi[i];
+              u += x(lfsu,i)*phi[i][0];
 
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             auto& js = cache.evaluateJacobian(ip.position(),lfsu.finiteElement().localBasis());
@@ -131,7 +131,7 @@ namespace Dune {
             // integrate (A grad u)*grad phi_i - u b*grad phi_i + c*u*phi_i
             RF factor = ip.weight() * geo.integrationElement(ip.position());
             for (size_type i=0; i<lfsu.size(); i++)
-              r.accumulate(lfsu,i,( Agradu*gradphi[i] - u*(b*gradphi[i]) + (c*u-f)*phi[i] )*factor);
+              r.accumulate(lfsu,i,( Agradu*gradphi[i] - u*(b*gradphi[i]) + (c*u-f)*phi[i][0] )*factor);
           }
       }
 
@@ -198,7 +198,7 @@ namespace Dune {
             RF factor = ip.weight() * geo.integrationElement(ip.position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
-                mat.accumulate(lfsu,i,lfsu,j,( Agradphi[j]*gradphi[i]-phi[j]*(b*gradphi[i])+c*phi[j]*phi[i] )*factor);
+                mat.accumulate(lfsu,i,lfsu,j,( Agradphi[j]*gradphi[i]-phi[j][0]*(b*gradphi[i])+c*phi[j][0]*phi[i][0] )*factor);
           }
       }
 
@@ -249,7 +249,7 @@ namespace Dune {
                 // integrate j
                 auto factor = ip.weight()*geo.integrationElement(ip.position());
                 for (size_type i=0; i<lfsu_s.size(); i++)
-                  r_s.accumulate(lfsu_s,i,j*phi[i]*factor);
+                  r_s.accumulate(lfsu_s,i,j*phi[i][0]*factor);
               }
 
             if (bctype==ConvectionDiffusionBoundaryConditions::Outflow)
@@ -257,7 +257,7 @@ namespace Dune {
                 // evaluate u
                 RF u=0.0;
                 for (size_type i=0; i<lfsu_s.size(); i++)
-                  u += x_s(lfsu_s,i)*phi[i];
+                  u += x_s(lfsu_s,i)*phi[i][0];
 
                 // evaluate velocity field and outer unit normal
                 auto b = param.b(cell_inside,local);
@@ -269,7 +269,7 @@ namespace Dune {
                 // integrate o
                 auto factor = ip.weight()*geo.integrationElement(ip.position());
                 for (size_type i=0; i<lfsu_s.size(); i++)
-                  r_s.accumulate(lfsu_s,i,( (b*n)*u + o)*phi[i]*factor);
+                  r_s.accumulate(lfsu_s,i,( (b*n)*u + o)*phi[i][0]*factor);
               }
           }
       }
@@ -320,7 +320,7 @@ namespace Dune {
             auto factor = ip.weight()*geo.integrationElement(ip.position());
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
-                mat_s.accumulate(lfsu_s,i,lfsu_s,j,(b*n)*phi[j]*phi[i]*factor);
+                mat_s.accumulate(lfsu_s,i,lfsu_s,j,(b*n)*phi[j][0]*phi[i][0]*factor);
           }
       }
 
@@ -410,7 +410,7 @@ namespace Dune {
             // evaluate u
             RF u=0.0;
             for (size_type i=0; i<lfsu.size(); i++)
-              u += x(lfsu,i)*phi[i];
+              u += x(lfsu,i)*phi[i][0];
 
             // evaluate reaction term
             auto c = param.c(cell,ip.position());
@@ -734,7 +734,7 @@ namespace Dune {
             // evaluate u
             RF u=0.0;
             for (size_type i=0; i<lfsu.size(); i++)
-              u += x(lfsu,i)*phi[i];
+              u += x(lfsu,i)*phi[i][0];
 
             // integrate f^2
             auto factor = ip.weight() * geo.integrationElement(ip.position());
@@ -914,7 +914,7 @@ namespace Dune {
             // evaluate u
             RF u=0.0;
             for (size_type i=0; i<lfsu.size(); i++)
-              u += x(lfsu,i)*phi[i];
+              u += x(lfsu,i)*phi[i][0];
 
             // integrate jump
             auto factor = ip.weight() * geo.integrationElement(ip.position());

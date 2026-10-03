@@ -222,7 +222,7 @@ void testgridviewfunction (const GV& gv)
         Dune::FieldVector<double,dim> pos(0.0);
         auto gpos = it->geometry().global(pos);
         value = localf(pos);
-        assert(std::abs(value - pow(gpos[0],k)) < 1e-6);
+        assert(std::abs(value[0] - pow(gpos[0],k)) < 1e-6);
         if (maxDiffOrder >= 1) {
             jacobian = derivative(localf)(pos);
             assert(std::abs(jacobian[0][0] - k*pow(gpos[0],k-1)) < 1e-6);

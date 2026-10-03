@@ -217,7 +217,7 @@ int main(int argc, char **argv)
 
   std::cout << std::endl << "l2 error squared: " << l2errorsquared << std::endl;
 
-  if (l2errorsquared>1e-14){
+  if (l2errorsquared[0]>1e-14){
     return 1;
   }
 

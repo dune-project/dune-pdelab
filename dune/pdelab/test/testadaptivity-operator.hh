@@ -81,7 +81,7 @@ public:
         // compute u at integration point
         RF u=0.0;
         for (size_type i=0; i<lfsu.size(); ++i)
-          u += x(lfsu,i)*phi[i];
+          u += x(lfsu,i)*phi[i][0];
 
         // evaluate gradient of basis functions on reference element
         std::vector<Jacobian> js(lfsu.size());
@@ -108,7 +108,7 @@ public:
         // integrate grad u * grad phi_i + a*u*phi_i - f phi_i
         RF factor = it->weight()*eg.geometry().integrationElement(it->position());
         for (size_type i=0; i<lfsu.size(); ++i)
-          r.accumulate(lfsu, i, (gradu*gradphi[i] + a*u*phi[i] - f*phi[i]) * factor);
+          r.accumulate(lfsu, i, (gradu*gradphi[i] + a*u*phi[i][0] - f*phi[i][0]) * factor);
       }
   }
 
@@ -156,7 +156,7 @@ public:
         // evaluate u (e.g. flux may depend on u)
         RF u=0.0;
         for (size_type i=0; i<lfsu_s.size(); ++i)
-          u += x_s(lfsu_s,i)*phi[i];
+          u += x_s(lfsu_s,i)*phi[i][0];
 
         // evaluate flux boundary condition
         auto globalpos = ig.geometry().global(it->position());
@@ -169,7 +169,7 @@ public:
         // integrate j
         RF factor = it->weight()*ig.geometry().integrationElement(it->position());
         for (size_type i=0; i<lfsu_s.size(); ++i)
-          r_s.accumulate(lfsu_s,i,j*phi[i]*factor);
+          r_s.accumulate(lfsu_s,i,j*phi[i][0]*factor);
       }
   }
 

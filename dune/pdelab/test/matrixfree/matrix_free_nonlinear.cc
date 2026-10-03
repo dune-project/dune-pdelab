@@ -400,7 +400,7 @@ int main(int argc, char** argv)
     // Let the test fail if the error is too large
     bool testfail(false);
     using std::isnan;
-    if (isnan(error) or abs(error)>1e-6)
+    if (isnan(error[0]) or abs(error[0])>1e-6)
       testfail = true;
     if (iteration_difference > 10)
       testfail = true;

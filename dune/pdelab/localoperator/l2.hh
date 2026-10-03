@@ -73,12 +73,12 @@ namespace Dune {
               // Evaluate u
               RF u=0.0;
               for (size_type i=0; i<lfsu.size(); i++)
-                u += RF(x(lfsu,i)*phi[i]);
+                u += RF(x(lfsu,i)*phi[i][0]);
 
               // u*phi_i
               auto factor = _scaling * qp.weight() * geo.integrationElement(qp.position());
               for (size_type i=0; i<lfsu.size(); i++)
-                r.accumulate(lfsv,i, u*phi[i]*factor);
+                r.accumulate(lfsv,i, u*phi[i][0]*factor);
             }
         }
 

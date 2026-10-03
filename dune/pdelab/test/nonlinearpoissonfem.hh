@@ -78,7 +78,7 @@ public:
           geo.integrationElement(ip.position());
         auto f=param.f(eg.entity(),ip.position());
         for (size_t i=0; i<lfsv.size(); i++)
-          r.accumulate(lfsv,i,-f*phihat[i]*factor);
+          r.accumulate(lfsv,i,-f*phihat[i][0]*factor);
       }
   }
 
@@ -117,7 +117,7 @@ public:
           globalgeo.integrationElement(ip.position());
         auto j = param.j(ig.intersection(),ip.position());
         for (size_t i=0; i<lfsv.size(); i++)
-          r.accumulate(lfsv,i,j*phihat[i]*factor);
+          r.accumulate(lfsv,i,j*phihat[i][0]*factor);
       }
   }
 
@@ -148,7 +148,7 @@ public:
         // evaluate u
         RF u=0.0;
         for (size_t i=0; i<lfsu.size(); i++)
-          u += x(lfsu,i)*phihat[i];
+          u += x(lfsu,i)*phihat[i][0];
 
         // evaluate gradient of shape functions
         auto& gradphihat = cache.evaluateJacobian(ip.position(),
@@ -171,7 +171,7 @@ public:
         auto q = param.q(u);
         for (size_t i=0; i<lfsu.size(); i++)
           r.accumulate(lfsu,i,(gradu*gradphi[i][0]+
-                               q*phihat[i])*factor);
+                               q*phihat[i][0])*factor);
       }
   }
 };

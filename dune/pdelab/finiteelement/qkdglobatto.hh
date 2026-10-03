@@ -10,6 +10,7 @@
 #include <dune/localfunctions/common/localkey.hh>
 #include <dune/localfunctions/common/localfiniteelementtraits.hh>
 #include <dune/localfunctions/common/localtoglobaladaptors.hh>
+#include <dune/localfunctions/utility/field.hh>
 #include <dune/pdelab/finiteelement/qkdglagrange.hh>
 
 namespace Dune
@@ -226,7 +227,7 @@ namespace Dune
             for (int j=0; j<d; j++)
               x[j] = poly.x(alpha[j]);
 
-            out[i] = f(x);
+            field_cast(f(x), out[i]);
           }
       }
     };
@@ -242,7 +243,7 @@ namespace Dune
       {
         typename LB::Traits::DomainType x(0.5);
         out.resize(1);
-        out[0] = f(x);
+        field_cast(f(x), out[0]);
       }
     };
 

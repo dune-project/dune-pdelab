@@ -139,7 +139,7 @@ namespace Dune {
             // evaluate u
             RF u=0.0;
             for (size_type i=0; i<lfsu.size(); i++)
-              u += x[i]*phi[i];
+              u += x[i]*phi[i][0];
 
             // evaluate gradient of basis functions
             auto& js = cache[order].evaluateJacobian(ip.position(),lfsu.finiteElement().localBasis());
@@ -170,7 +170,7 @@ namespace Dune {
             // integrate (A grad u - bu)*grad phi_i + a*u*phi_i
             RF factor = ip.weight() * geo.integrationElement(ip.position()) * t_weight;
             for (size_type i=0; i<lfsv.size(); i++)
-              r.data()[i] += ( Agradu*gradpsi[i] - u*(b*gradpsi[i]) + c*u*psi[i] )*factor;
+              r.data()[i] += ( Agradu*gradpsi[i] - u*(b*gradpsi[i]) + c*u*psi[i][0] )*factor;
           }
       }
 
@@ -238,7 +238,7 @@ namespace Dune {
             auto factor = ip.weight() * geo.integrationElement(ip.position()) * t_weight;
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
-                mat.data()[lfsu.size()*i+j] += (( Agradphi[j]*gradphi[i] - phi[j]*(b*gradphi[i]) + c*phi[j]*phi[i] )*factor);
+                mat.data()[lfsu.size()*i+j] += (( Agradphi[j]*gradphi[i] - phi[j][0]*(b*gradphi[i]) + c*phi[j][0]*phi[i][0] )*factor);
           }
       }
 
@@ -357,10 +357,10 @@ namespace Dune {
             // evaluate u
             RF u_s=0.0;
             for (size_type i=0; i<lfsu_s.size(); i++)
-              u_s += x_s[i]*phi_s[i];
+              u_s += x_s[i]*phi_s[i][0];
             RF u_n=0.0;
             for (size_type i=0; i<lfsu_n.size(); i++)
-              u_n += x_n[i]*phi_n[i];
+              u_n += x_n[i]*phi_n[i][0];
 
             // evaluate gradient of basis functions
             auto& gradphi_s = cache[order_s].evaluateJacobian(iplocal_s,lfsu_s.finiteElement().localBasis());
@@ -405,16 +405,16 @@ namespace Dune {
             // convection term
             auto term1 = (omegaup_s*u_s + omegaup_n*u_n) * normalflux *factor;
             for (size_type i=0; i<lfsv_s.size(); i++)
-              r_s.data()[i] += (term1 * psi_s[i]);
+              r_s.data()[i] += (term1 * psi_s[i][0]);
             for (size_type i=0; i<lfsv_n.size(); i++)
-              r_n.data()[i] += (-term1 * psi_n[i]);
+              r_n.data()[i] += (-term1 * psi_n[i][0]);
 
             // diffusion term
             auto term2 =  -(omega_s*(An_F_s*gradu_s) + omega_n*(An_F_n*gradu_n)) * factor;
             for (size_type i=0; i<lfsv_s.size(); i++)
-              r_s.data()[i] += (term2 * psi_s[i]);
+              r_s.data()[i] += (term2 * psi_s[i][0]);
             for (size_type i=0; i<lfsv_n.size(); i++)
-              r_n.data()[i] += (-term2 * psi_n[i]);
+              r_n.data()[i] += (-term2 * psi_n[i][0]);
 
             // (non-)symmetric IP term
             auto term3 = (u_s-u_n) * factor;
@@ -426,9 +426,9 @@ namespace Dune {
             // standard IP term integral
             auto term4 = penalty_factor * (u_s-u_n) * factor;
             for (size_type i=0; i<lfsv_s.size(); i++)
-              r_s.data()[i] += (term4 * psi_s[i]);
+              r_s.data()[i] += (term4 * psi_s[i][0]);
             for (size_type i=0; i<lfsv_n.size(); i++)
-              r_n.data()[i] += (-term4 * psi_n[i]);
+              r_n.data()[i] += (-term4 * psi_n[i][0]);
           }
       }
 
@@ -572,37 +572,37 @@ namespace Dune {
             for (size_type j=0; j<lfsu_s.size(); j++) {
               auto temp1 = -(An_F_s*tgradphi_s[j])*omega_s*factor;
               for (size_type i=0; i<lfsu_s.size(); i++) {
-                mat_ss.data()[lfsu_s.size()*i+j] += (omegaup_s * phi_s[j] * normalflux *factor * phi_s[i]);
-                mat_ss.data()[lfsu_s.size()*i+j] += (temp1 * phi_s[i]);
-                mat_ss.data()[lfsu_s.size()*i+j] += (phi_s[j] * factor * theta * omega_s * (An_F_s*tgradphi_s[i]));
-                mat_ss.data()[lfsu_s.size()*i+j] += (phi_s[j] * ipfactor * phi_s[i]);
+                mat_ss.data()[lfsu_s.size()*i+j] += (omegaup_s * phi_s[j][0] * normalflux *factor * phi_s[i][0]);
+                mat_ss.data()[lfsu_s.size()*i+j] += (temp1 * phi_s[i][0]);
+                mat_ss.data()[lfsu_s.size()*i+j] += (phi_s[j][0] * factor * theta * omega_s * (An_F_s*tgradphi_s[i]));
+                mat_ss.data()[lfsu_s.size()*i+j] += (phi_s[j][0] * ipfactor * phi_s[i][0]);
               }
             }
             for (size_type j=0; j<lfsu_n.size(); j++) {
               auto temp1 = -(An_F_n*tgradphi_n[j])*omega_n*factor;
               for (size_type i=0; i<lfsu_s.size(); i++) {
-                mat_sn.data()[lfsu_s.size()*i+j] += (omegaup_n * phi_n[j] * normalflux *factor * phi_s[i]);
-                mat_sn.data()[lfsu_s.size()*i+j] += (temp1 * phi_s[i]);
-                mat_sn.data()[lfsu_s.size()*i+j] += (-phi_n[j] * factor * theta * omega_s * (An_F_s*tgradphi_s[i]));
-                mat_sn.data()[lfsu_s.size()*i+j] += (-phi_n[j] * ipfactor * phi_s[i]);
+                mat_sn.data()[lfsu_s.size()*i+j] += (omegaup_n * phi_n[j][0] * normalflux *factor * phi_s[i][0]);
+                mat_sn.data()[lfsu_s.size()*i+j] += (temp1 * phi_s[i][0]);
+                mat_sn.data()[lfsu_s.size()*i+j] += (-phi_n[j][0] * factor * theta * omega_s * (An_F_s*tgradphi_s[i]));
+                mat_sn.data()[lfsu_s.size()*i+j] += (-phi_n[j][0] * ipfactor * phi_s[i][0]);
               }
             }
             for (size_type j=0; j<lfsu_s.size(); j++) {
               auto temp1 = -(An_F_s*tgradphi_s[j])*omega_s*factor;
               for (size_type i=0; i<lfsu_n.size(); i++) {
-                mat_ns.data()[lfsu_n.size()*i+j] += (-omegaup_s * phi_s[j] * normalflux *factor * phi_n[i]);
-                mat_ns.data()[lfsu_n.size()*i+j] += (-temp1 * phi_n[i]);
-                mat_ns.data()[lfsu_n.size()*i+j] += (phi_s[j] * factor * theta * omega_n * (An_F_n*tgradphi_n[i]));
-                mat_ns.data()[lfsu_n.size()*i+j] += (-phi_s[j] * ipfactor * phi_n[i]);
+                mat_ns.data()[lfsu_n.size()*i+j] += (-omegaup_s * phi_s[j][0] * normalflux *factor * phi_n[i][0]);
+                mat_ns.data()[lfsu_n.size()*i+j] += (-temp1 * phi_n[i][0]);
+                mat_ns.data()[lfsu_n.size()*i+j] += (phi_s[j][0] * factor * theta * omega_n * (An_F_n*tgradphi_n[i]));
+                mat_ns.data()[lfsu_n.size()*i+j] += (-phi_s[j][0] * ipfactor * phi_n[i][0]);
               }
             }
             for (size_type j=0; j<lfsu_n.size(); j++) {
               auto temp1 = -(An_F_n*tgradphi_n[j])*omega_n*factor;
               for (size_type i=0; i<lfsu_n.size(); i++) {
-                mat_nn.data()[lfsu_n.size()*i+j] += (-omegaup_n * phi_n[j] * normalflux *factor * phi_n[i]);
-                mat_nn.data()[lfsu_n.size()*i+j] += (-temp1 * phi_n[i]);
-                mat_nn.data()[lfsu_n.size()*i+j] += (-phi_n[j] * factor * theta * omega_n * (An_F_n*tgradphi_n[i]));
-                mat_nn.data()[lfsu_n.size()*i+j] += (phi_n[j] * ipfactor * phi_n[i]);
+                mat_nn.data()[lfsu_n.size()*i+j] += (-omegaup_n * phi_n[j][0] * normalflux *factor * phi_n[i][0]);
+                mat_nn.data()[lfsu_n.size()*i+j] += (-temp1 * phi_n[i][0]);
+                mat_nn.data()[lfsu_n.size()*i+j] += (-phi_n[j][0] * factor * theta * omega_n * (An_F_n*tgradphi_n[i]));
+                mat_nn.data()[lfsu_n.size()*i+j] += (phi_n[j][0] * ipfactor * phi_n[i][0]);
               }
             }
           }
@@ -703,7 +703,7 @@ namespace Dune {
 
                 // integrate
                 for (size_type i=0; i<lfsv_s.size(); i++)
-                  r_s.accumulate(lfsv_s,i,j * psi_s[i] * factor);
+                  r_s.accumulate(lfsv_s,i,j * psi_s[i][0] * factor);
 
                 continue;
               }
@@ -711,7 +711,7 @@ namespace Dune {
             // evaluate u
             RF u_s=0.0;
             for (size_type i=0; i<lfsu_s.size(); i++)
-              u_s += x_s[i]*phi_s[i];
+              u_s += x_s[i]*phi_s[i][0];
 
             // evaluate velocity field and upwinding, assume H(div) velocity field => choose any side
             auto b = param.b(cell_inside,iplocal_s);
@@ -728,14 +728,14 @@ namespace Dune {
                 // convection term
                 auto term1 = u_s * normalflux *factor;
                 for (size_type i=0; i<lfsv_s.size(); i++)
-                  r_s.data()[i] += (term1 * psi_s[i]);
+                  r_s.data()[i] += (term1 * psi_s[i][0]);
 
                 // evaluate flux boundary condition
                 auto o = param.o(ig.intersection(),ip.position());
 
                 // integrate
                 for (size_type i=0; i<lfsv_s.size(); i++)
-                  r_s.data()[i] += (o * psi_s[i] * factor);
+                  r_s.data()[i] += (o * psi_s[i][0] * factor);
 
                 continue;
               }
@@ -774,12 +774,12 @@ namespace Dune {
             // convection term
             auto term1 = (omegaup_s*u_s + omegaup_n*g) * normalflux *factor;
             for (size_type i=0; i<lfsv_s.size(); i++)
-              r_s.data()[i] += (term1 * psi_s[i]);
+              r_s.data()[i] += (term1 * psi_s[i][0]);
 
             // diffusion term
             auto term2 =  (An_F_s*gradu_s) * factor;
             for (size_type i=0; i<lfsv_s.size(); i++)
-              r_s.data()[i] += (-term2 * psi_s[i]);
+              r_s.data()[i] += (-term2 * psi_s[i][0]);
 
             // (non-)symmetric IP term
             auto term3 = (u_s-g) * factor;
@@ -789,7 +789,7 @@ namespace Dune {
             // standard IP term
             auto term4 = penalty_factor * (u_s-g) * factor;
             for (size_type i=0; i<lfsv_s.size(); i++)
-              r_s.data()[i] += (term4 * psi_s[i]);
+              r_s.data()[i] += (term4 * psi_s[i][0]);
           }
       }
 
@@ -892,7 +892,7 @@ namespace Dune {
                 // convection term
                 for (size_type j=0; j<lfsu_s.size(); j++)
                   for (size_type i=0; i<lfsu_s.size(); i++)
-                    mat_ss.data()[lfsu_s.size()*i+j] += (phi_s[j] * normalflux * factor * phi_s[i]);
+                    mat_ss.data()[lfsu_s.size()*i+j] += (phi_s[j][0] * normalflux * factor * phi_s[i][0]);
 
                 continue;
               }
@@ -910,22 +910,22 @@ namespace Dune {
             // convection term
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
-                mat_ss.data()[lfsu_s.size()*i+j] += (omegaup_s * phi_s[j] * normalflux * factor * phi_s[i]);
+                mat_ss.data()[lfsu_s.size()*i+j] += (omegaup_s * phi_s[j][0] * normalflux * factor * phi_s[i][0]);
 
             // diffusion term
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
-                mat_ss.data()[lfsu_s.size()*i+j] += (-(An_F_s*tgradphi_s[j]) * factor * phi_s[i]);
+                mat_ss.data()[lfsu_s.size()*i+j] += (-(An_F_s*tgradphi_s[j]) * factor * phi_s[i][0]);
 
             // (non-)symmetric IP term
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
-                mat_ss.data()[lfsu_s.size()*i+j] += (phi_s[j] * factor * theta * (An_F_s*tgradphi_s[i]));
+                mat_ss.data()[lfsu_s.size()*i+j] += (phi_s[j][0] * factor * theta * (An_F_s*tgradphi_s[i]));
 
             // standard IP term
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
-                mat_ss.data()[lfsu_s.size()*i+j] += (penalty_factor * phi_s[j] * phi_s[i] * factor);
+                mat_ss.data()[lfsu_s.size()*i+j] += (penalty_factor * phi_s[j][0] * phi_s[i][0] * factor);
           }
       }
 
@@ -959,7 +959,7 @@ namespace Dune {
             // integrate f
             auto factor = ip.weight() * geo.integrationElement(ip.position()) * t_weight;
             for (size_type i=0; i<lfsv.size(); i++)
-              r.data()[i] += (-f*phi[i]*factor);
+              r.data()[i] += (-f*phi[i][0]*factor);
           }
       }
 

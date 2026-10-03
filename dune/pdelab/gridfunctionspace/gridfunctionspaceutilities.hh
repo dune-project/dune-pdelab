@@ -874,7 +874,7 @@ namespace Dune {
               evaluateFunction(x,yb);
             y[k] = 0.0;
             for (unsigned int i=0; i<yb.size(); i++)
-              y[k] += xl[lfs.child(remap[k]).localIndex(i)]*yb[i];
+              y[k] += xl[lfs.child(remap[k]).localIndex(i)]*yb[i][0];
           }
       }
 

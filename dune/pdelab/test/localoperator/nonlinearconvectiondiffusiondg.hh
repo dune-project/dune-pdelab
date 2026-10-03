@@ -105,7 +105,7 @@ namespace Dune {
           // Evaluate u
           RF u = 0.0;
           for (size_type i=0; i<lfsu.size(); i++)
-            u += x(lfsu,i) * phi[i];
+            u += x(lfsu,i) * phi[i][0];
 
           // Evaluate nonlinearity
           auto q = param.q(u);
@@ -113,7 +113,7 @@ namespace Dune {
           // Add integral q(u)*phi_i
           RF factor = ip.weight() * geo.integrationElement(ip.position());
           for (size_type i=0; i<lfsv.size(); i++)
-            r.accumulate(lfsv, i, q * psi[i] * factor);
+            r.accumulate(lfsv, i, q * psi[i][0] * factor);
         }
       }
 
@@ -145,7 +145,7 @@ namespace Dune {
           // Evaluate u
           RF u = 0.0;
           for (size_type i=0; i<lfsu.size(); i++)
-            u += x(lfsu,i) * phi[i];
+            u += x(lfsu,i) * phi[i][0];
 
           // Evaluate nonlinearity
           auto qprime = param.qprime(u);
@@ -153,12 +153,12 @@ namespace Dune {
           // Evaluate z
           RF z_eval = 0.0;
           for (size_type i=0; i<lfsu.size(); i++)
-            z_eval += z(lfsu,i) * phi[i];
+            z_eval += z(lfsu,i) * phi[i][0];
 
           // Add integral qprime * z * psi_i
           RF factor = ip.weight() * geo.integrationElement(ip.position());
           for (size_type i=0; i<lfsv.size(); i++)
-            y.accumulate(lfsv, i, qprime * z_eval * psi[i] * factor);
+            y.accumulate(lfsv, i, qprime * z_eval * psi[i][0] * factor);
         }
       }
 
@@ -191,7 +191,7 @@ namespace Dune {
           // Evaluate u
           RF u=0.0;
           for (size_type i=0; i<lfsu.size(); i++)
-            u += x(lfsu,i)*phi[i];
+            u += x(lfsu,i)*phi[i][0];
 
           // Evaluate nonlinearity
           auto qprime = param.qprime(u);
@@ -200,7 +200,7 @@ namespace Dune {
           RF factor = ip.weight() * geo.integrationElement(ip.position());
           for (size_type j=0; j<lfsu.size(); j++)
             for (size_type i=0; i<lfsu.size(); i++)
-              mat.accumulate(lfsv, i, lfsu, j, qprime * phi[j]* psi[i] * factor);
+              mat.accumulate(lfsv, i, lfsu, j, qprime * phi[j][0]* psi[i][0] * factor);
         }
       }
 

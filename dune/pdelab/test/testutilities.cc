@@ -294,13 +294,13 @@ void testtaylorhood (const GV& gv)
 
   // check entries
   for (int i=0; i<25; i++)
-    if (Dune::PDELab::Backend::native(xg)[i]!=1.0)
+    if (Dune::PDELab::Backend::native(xg)[i][0]!=1.0)
       exit(1);
   for (int i=25; i<50; i++)
-    if (Dune::PDELab::Backend::native(xg)[i]!=2.0)
+    if (Dune::PDELab::Backend::native(xg)[i][0]!=2.0)
       exit(1);
   for (int i=50; i<59; i++)
-    if (Dune::PDELab::Backend::native(xg)[i]!=3.0)
+    if (Dune::PDELab::Backend::native(xg)[i][0]!=3.0)
       exit(1);
   std::cout << "all entries correct" << std::endl;
 
